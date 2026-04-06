@@ -91,6 +91,13 @@ describe('Reference functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
+    it('fixture "add_with_origin" -> ok', async () => {
+      if (typeof referenceHandler.addRef !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(referenceHandler.addRef({ source: "page-1", target: "doc-1", origin: "origin-redesign" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
     it('fixture "another_ref" -> ok', async () => {
       if (typeof referenceHandler.addRef !== 'function') return;
       const storage = createInMemoryStorage();
@@ -374,7 +381,7 @@ describe('Reference functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('addRef'), input: fc.record({ source: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('addRef'), input: fc.record({ source: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }), origin: fc.string() }) }),
               fc.record({ action: fc.constant('removeRef'), input: fc.record({ source: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('getRefs'), input: fc.record({ source: fc.string() }) }),
               fc.record({ action: fc.constant('resolveTarget'), input: fc.record({ target: fc.string({ minLength: 1, maxLength: 50 }) }) }),
@@ -407,7 +414,7 @@ describe('Reference functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('addRef'), input: fc.record({ source: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('addRef'), input: fc.record({ source: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }), origin: fc.string() }) }),
               fc.record({ action: fc.constant('removeRef'), input: fc.record({ source: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('getRefs'), input: fc.record({ source: fc.string() }) }),
               fc.record({ action: fc.constant('resolveTarget'), input: fc.record({ target: fc.string({ minLength: 1, maxLength: 50 }) }) }),
@@ -455,7 +462,7 @@ describe('Reference functional handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ source: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }) }),
+          fc.record({ source: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }), origin: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
             const result = await safeInvoke(async () => {

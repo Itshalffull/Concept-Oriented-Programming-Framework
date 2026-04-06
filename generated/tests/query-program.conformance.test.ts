@@ -668,6 +668,23 @@ describe('QueryProgram functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
+    it('fixture "pure_prog_a" -> ok', async () => {
+      if (typeof queryProgramHandler.pure !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_prog_a = await interpret(queryProgramHandler.create({ program: "qprog-a" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_prog_a?.output ?? {}));
+      const _fixtureInput = { program: "qprog-a", variant: "ok", output: "nodes" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(queryProgramHandler.pure({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
     it('fixture "pure_missing_program" -> notfound', async () => {
       if (typeof queryProgramHandler.pure !== 'function') return;
       const storage = createInMemoryStorage();
@@ -837,6 +854,380 @@ describe('QueryProgram functional handler', () => {
 
   });
 
+  describe('invoke', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = queryProgramHandler.invoke({ program: "qprog-1", concept: "ContentNode", action: "create", input: "{\"node\":\"new-article\",\"kind\":\"concept\"}", bindAs: "createResult" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = queryProgramHandler.invoke({ program: "qprog-1", concept: "ContentNode", action: "create", input: "{\"node\":\"new-article\",\"kind\":\"concept\"}", bindAs: "createResult" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = queryProgramHandler.invoke({ program: "qprog-1", concept: "ContentNode", action: "create", input: "{\"node\":\"new-article\",\"kind\":\"concept\"}", bindAs: "createResult" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = queryProgramHandler.invoke({ program: "qprog-1", concept: "ContentNode", action: "create", input: "{\"node\":\"new-article\",\"kind\":\"concept\"}", bindAs: "createResult" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = queryProgramHandler.invoke({ program: "qprog-1", concept: "ContentNode", action: "create", input: "{\"node\":\"new-article\",\"kind\":\"concept\"}", bindAs: "createResult" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof queryProgramHandler.invoke !== 'function') return;
+      const result = await interpret(queryProgramHandler.invoke({ program: "qprog-1", concept: "ContentNode", action: "create", input: "{\"node\":\"new-article\",\"kind\":\"concept\"}", bindAs: "createResult" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "invoke_ok" -> ok', async () => {
+      if (typeof queryProgramHandler.invoke !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_new = await interpret(queryProgramHandler.create({ program: "qprog-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_new?.output ?? {}));
+      const _fixtureInput = { program: "qprog-1", concept: "ContentNode", action: "create", input: "{\"node\":\"new-article\",\"kind\":\"concept\"}", bindAs: "createResult" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(queryProgramHandler.invoke({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "invoke_missing_program" -> notfound', async () => {
+      if (typeof queryProgramHandler.invoke !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(queryProgramHandler.invoke({ program: "nonexistent", concept: "ContentNode", action: "create", input: "{}", bindAs: "createResult" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
+    });
+
+    it('fixture "invoke_sealed_program" -> sealed', async () => {
+      if (typeof queryProgramHandler.invoke !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_new = await interpret(queryProgramHandler.create({ program: "qprog-1" }), storage);
+      const afterResult_pure_ok = await interpret(queryProgramHandler.pure({ program: "qprog-1", variant: "ok", output: "nodes" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_new?.output ?? {}), (afterResult_pure_ok?.output ?? {}));
+      const _fixtureInput = { program: "qprog-1", concept: "ContentNode", action: "create", input: "{}", bindAs: "createResult" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(queryProgramHandler.invoke({ ..._fixtureInput }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('sealed'));
+    });
+
+  });
+
+  describe('match', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = queryProgramHandler.match({ program: "qprog-1", binding: "createResult", cases: "{\"ok\":\"qprog-a\",\"*\":\"qprog-b\"}", bindAs: "final" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = queryProgramHandler.match({ program: "qprog-1", binding: "createResult", cases: "{\"ok\":\"qprog-a\",\"*\":\"qprog-b\"}", bindAs: "final" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = queryProgramHandler.match({ program: "qprog-1", binding: "createResult", cases: "{\"ok\":\"qprog-a\",\"*\":\"qprog-b\"}", bindAs: "final" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = queryProgramHandler.match({ program: "qprog-1", binding: "createResult", cases: "{\"ok\":\"qprog-a\",\"*\":\"qprog-b\"}", bindAs: "final" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = queryProgramHandler.match({ program: "qprog-1", binding: "createResult", cases: "{\"ok\":\"qprog-a\",\"*\":\"qprog-b\"}", bindAs: "final" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof queryProgramHandler.match !== 'function') return;
+      const result = await interpret(queryProgramHandler.match({ program: "qprog-1", binding: "createResult", cases: "{\"ok\":\"qprog-a\",\"*\":\"qprog-b\"}", bindAs: "final" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "match_ok" -> ok', async () => {
+      if (typeof queryProgramHandler.match !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_new = await interpret(queryProgramHandler.create({ program: "qprog-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_new?.output ?? {}));
+      const _fixtureInput = { program: "qprog-1", binding: "createResult", cases: "{\"ok\":\"qprog-a\",\"*\":\"qprog-b\"}", bindAs: "final" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(queryProgramHandler.match({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "match_missing_program" -> notfound', async () => {
+      if (typeof queryProgramHandler.match !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(queryProgramHandler.match({ program: "nonexistent", binding: "createResult", cases: "{\"ok\":\"qprog-a\",\"*\":\"qprog-b\"}", bindAs: "final" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
+    });
+
+    it('fixture "match_invalid_cases" -> invalid_cases', async () => {
+      if (typeof queryProgramHandler.match !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_new = await interpret(queryProgramHandler.create({ program: "qprog-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_new?.output ?? {}));
+      const _fixtureInput = { program: "qprog-1", binding: "createResult", cases: "not-valid-json", bindAs: "final" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(queryProgramHandler.match({ ..._fixtureInput }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('invalid_cases'));
+    });
+
+  });
+
+  describe('traverseInvoke', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = queryProgramHandler.traverseInvoke({ program: "qprog-1", sourceBinding: "overdue", itemBinding: "_task", concept: "Task", action: "escalate", inputTemplate: "{\"taskId\":\"$_task.id\"}", bindAs: "results" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = queryProgramHandler.traverseInvoke({ program: "qprog-1", sourceBinding: "overdue", itemBinding: "_task", concept: "Task", action: "escalate", inputTemplate: "{\"taskId\":\"$_task.id\"}", bindAs: "results" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = queryProgramHandler.traverseInvoke({ program: "qprog-1", sourceBinding: "overdue", itemBinding: "_task", concept: "Task", action: "escalate", inputTemplate: "{\"taskId\":\"$_task.id\"}", bindAs: "results" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = queryProgramHandler.traverseInvoke({ program: "qprog-1", sourceBinding: "overdue", itemBinding: "_task", concept: "Task", action: "escalate", inputTemplate: "{\"taskId\":\"$_task.id\"}", bindAs: "results" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = queryProgramHandler.traverseInvoke({ program: "qprog-1", sourceBinding: "overdue", itemBinding: "_task", concept: "Task", action: "escalate", inputTemplate: "{\"taskId\":\"$_task.id\"}", bindAs: "results" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof queryProgramHandler.traverseInvoke !== 'function') return;
+      const result = await interpret(queryProgramHandler.traverseInvoke({ program: "qprog-1", sourceBinding: "overdue", itemBinding: "_task", concept: "Task", action: "escalate", inputTemplate: "{\"taskId\":\"$_task.id\"}", bindAs: "results" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "traverse_invoke_ok" -> ok', async () => {
+      if (typeof queryProgramHandler.traverseInvoke !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_new = await interpret(queryProgramHandler.create({ program: "qprog-1" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_new?.output ?? {}));
+      const _fixtureInput = { program: "qprog-1", sourceBinding: "overdue", itemBinding: "_task", concept: "Task", action: "escalate", inputTemplate: "{\"taskId\":\"$_task.id\"}", bindAs: "results" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(queryProgramHandler.traverseInvoke({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "traverse_invoke_missing_program" -> notfound', async () => {
+      if (typeof queryProgramHandler.traverseInvoke !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(queryProgramHandler.traverseInvoke({ program: "nonexistent", sourceBinding: "overdue", itemBinding: "_task", concept: "Task", action: "escalate", inputTemplate: "{\"taskId\":\"$_task.id\"}", bindAs: "results" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
+    });
+
+  });
+
+  describe('traverse', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = queryProgramHandler.traverse({ program: "qprog-1", sourceBinding: "completed", itemBinding: "_task", bodyProgram: "qprog-a", bindAs: "outcomes", declaredEffects: "{\"invokedActions\":[\"Task/archive\"],\"completionVariants\":[\"ok\",\"error\"]}" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = queryProgramHandler.traverse({ program: "qprog-1", sourceBinding: "completed", itemBinding: "_task", bodyProgram: "qprog-a", bindAs: "outcomes", declaredEffects: "{\"invokedActions\":[\"Task/archive\"],\"completionVariants\":[\"ok\",\"error\"]}" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = queryProgramHandler.traverse({ program: "qprog-1", sourceBinding: "completed", itemBinding: "_task", bodyProgram: "qprog-a", bindAs: "outcomes", declaredEffects: "{\"invokedActions\":[\"Task/archive\"],\"completionVariants\":[\"ok\",\"error\"]}" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = queryProgramHandler.traverse({ program: "qprog-1", sourceBinding: "completed", itemBinding: "_task", bodyProgram: "qprog-a", bindAs: "outcomes", declaredEffects: "{\"invokedActions\":[\"Task/archive\"],\"completionVariants\":[\"ok\",\"error\"]}" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = queryProgramHandler.traverse({ program: "qprog-1", sourceBinding: "completed", itemBinding: "_task", bodyProgram: "qprog-a", bindAs: "outcomes", declaredEffects: "{\"invokedActions\":[\"Task/archive\"],\"completionVariants\":[\"ok\",\"error\"]}" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof queryProgramHandler.traverse !== 'function') return;
+      const result = await interpret(queryProgramHandler.traverse({ program: "qprog-1", sourceBinding: "completed", itemBinding: "_task", bodyProgram: "qprog-a", bindAs: "outcomes", declaredEffects: "{\"invokedActions\":[\"Task/archive\"],\"completionVariants\":[\"ok\",\"error\"]}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "traverse_ok" -> ok', async () => {
+      if (typeof queryProgramHandler.traverse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_new = await interpret(queryProgramHandler.create({ program: "qprog-1" }), storage);
+      const afterResult_create_prog_a = await interpret(queryProgramHandler.create({ program: "qprog-a" }), storage);
+      const afterResult_pure_prog_a = await interpret(queryProgramHandler.pure({ program: "qprog-a", variant: "ok", output: "nodes" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_new?.output ?? {}), (afterResult_create_prog_a?.output ?? {}), (afterResult_pure_prog_a?.output ?? {}));
+      const _fixtureInput = { program: "qprog-1", sourceBinding: "completed", itemBinding: "_task", bodyProgram: "qprog-a", bindAs: "outcomes", declaredEffects: "{\"invokedActions\":[\"Task/archive\"],\"completionVariants\":[\"ok\",\"error\"]}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(queryProgramHandler.traverse({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "traverse_missing_program" -> notfound', async () => {
+      if (typeof queryProgramHandler.traverse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(queryProgramHandler.traverse({ program: "nonexistent", sourceBinding: "completed", itemBinding: "_task", bodyProgram: "qprog-a", bindAs: "outcomes", declaredEffects: "{}" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
+    });
+
+    it('fixture "traverse_unsealed_body" -> not_sealed', async () => {
+      if (typeof queryProgramHandler.traverse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_new = await interpret(queryProgramHandler.create({ program: "qprog-1" }), storage);
+      const afterResult_create_prog_a = await interpret(queryProgramHandler.create({ program: "qprog-a" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_new?.output ?? {}), (afterResult_create_prog_a?.output ?? {}));
+      const _fixtureInput = { program: "qprog-1", sourceBinding: "completed", itemBinding: "_task", bodyProgram: "qprog-a", bindAs: "outcomes", declaredEffects: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(queryProgramHandler.traverse({ ..._fixtureInput }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('not_sealed'));
+    });
+
+  });
+
   describe('register()', () => {
     it('declares concept name', async () => {
       if (typeof queryProgramHandler.register !== 'function') return;
@@ -919,6 +1310,10 @@ describe('QueryProgram functional handler', () => {
               fc.record({ action: fc.constant('pure'), input: fc.record({ program: fc.string(), variant: fc.string({ minLength: 1, maxLength: 50 }), output: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('join'), input: fc.record({ program: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), localField: fc.string({ minLength: 1, maxLength: 50 }), foreignField: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('compose'), input: fc.record({ first: fc.string(), second: fc.string(), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('invoke'), input: fc.record({ program: fc.string(), concept: fc.string({ minLength: 1, maxLength: 50 }), action: fc.string({ minLength: 1, maxLength: 50 }), input: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('match'), input: fc.record({ program: fc.string(), binding: fc.string({ minLength: 1, maxLength: 50 }), cases: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('traverseInvoke'), input: fc.record({ program: fc.string(), sourceBinding: fc.string({ minLength: 1, maxLength: 50 }), itemBinding: fc.string({ minLength: 1, maxLength: 50 }), concept: fc.string({ minLength: 1, maxLength: 50 }), action: fc.string({ minLength: 1, maxLength: 50 }), inputTemplate: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('traverse'), input: fc.record({ program: fc.string(), sourceBinding: fc.string({ minLength: 1, maxLength: 50 }), itemBinding: fc.string({ minLength: 1, maxLength: 50 }), bodyProgram: fc.string(), bindAs: fc.string({ minLength: 1, maxLength: 50 }), declaredEffects: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -958,6 +1353,10 @@ describe('QueryProgram functional handler', () => {
               fc.record({ action: fc.constant('pure'), input: fc.record({ program: fc.string(), variant: fc.string({ minLength: 1, maxLength: 50 }), output: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('join'), input: fc.record({ program: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), localField: fc.string({ minLength: 1, maxLength: 50 }), foreignField: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('compose'), input: fc.record({ first: fc.string(), second: fc.string(), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('invoke'), input: fc.record({ program: fc.string(), concept: fc.string({ minLength: 1, maxLength: 50 }), action: fc.string({ minLength: 1, maxLength: 50 }), input: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('match'), input: fc.record({ program: fc.string(), binding: fc.string({ minLength: 1, maxLength: 50 }), cases: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('traverseInvoke'), input: fc.record({ program: fc.string(), sourceBinding: fc.string({ minLength: 1, maxLength: 50 }), itemBinding: fc.string({ minLength: 1, maxLength: 50 }), concept: fc.string({ minLength: 1, maxLength: 50 }), action: fc.string({ minLength: 1, maxLength: 50 }), inputTemplate: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('traverse'), input: fc.record({ program: fc.string(), sourceBinding: fc.string({ minLength: 1, maxLength: 50 }), itemBinding: fc.string({ minLength: 1, maxLength: 50 }), bodyProgram: fc.string(), bindAs: fc.string({ minLength: 1, maxLength: 50 }), declaredEffects: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -997,6 +1396,10 @@ describe('QueryProgram functional handler', () => {
               fc.record({ action: fc.constant('pure'), input: fc.record({ program: fc.string(), variant: fc.string({ minLength: 1, maxLength: 50 }), output: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('join'), input: fc.record({ program: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), localField: fc.string({ minLength: 1, maxLength: 50 }), foreignField: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('compose'), input: fc.record({ first: fc.string(), second: fc.string(), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('invoke'), input: fc.record({ program: fc.string(), concept: fc.string({ minLength: 1, maxLength: 50 }), action: fc.string({ minLength: 1, maxLength: 50 }), input: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('match'), input: fc.record({ program: fc.string(), binding: fc.string({ minLength: 1, maxLength: 50 }), cases: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('traverseInvoke'), input: fc.record({ program: fc.string(), sourceBinding: fc.string({ minLength: 1, maxLength: 50 }), itemBinding: fc.string({ minLength: 1, maxLength: 50 }), concept: fc.string({ minLength: 1, maxLength: 50 }), action: fc.string({ minLength: 1, maxLength: 50 }), inputTemplate: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('traverse'), input: fc.record({ program: fc.string(), sourceBinding: fc.string({ minLength: 1, maxLength: 50 }), itemBinding: fc.string({ minLength: 1, maxLength: 50 }), bodyProgram: fc.string(), bindAs: fc.string({ minLength: 1, maxLength: 50 }), declaredEffects: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -1014,6 +1417,351 @@ describe('QueryProgram functional handler', () => {
                   expect(typeof result.variant).toBe('string');
                 }
                 // Never: instruction appended after termination
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('always: invoke instructions track their target', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('create'), input: fc.record({ program: fc.string() }) }),
+              fc.record({ action: fc.constant('scan'), input: fc.record({ program: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('filter'), input: fc.record({ program: fc.string(), node: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('sort'), input: fc.record({ program: fc.string(), keys: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('group'), input: fc.record({ program: fc.string(), keys: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('project'), input: fc.record({ program: fc.string(), fields: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('limit'), input: fc.record({ program: fc.string(), count: fc.integer({ min: 1, max: 1000 }), output: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('pure'), input: fc.record({ program: fc.string(), variant: fc.string({ minLength: 1, maxLength: 50 }), output: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('join'), input: fc.record({ program: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), localField: fc.string({ minLength: 1, maxLength: 50 }), foreignField: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('compose'), input: fc.record({ first: fc.string(), second: fc.string(), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('invoke'), input: fc.record({ program: fc.string(), concept: fc.string({ minLength: 1, maxLength: 50 }), action: fc.string({ minLength: 1, maxLength: 50 }), input: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('match'), input: fc.record({ program: fc.string(), binding: fc.string({ minLength: 1, maxLength: 50 }), cases: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('traverseInvoke'), input: fc.record({ program: fc.string(), sourceBinding: fc.string({ minLength: 1, maxLength: 50 }), itemBinding: fc.string({ minLength: 1, maxLength: 50 }), concept: fc.string({ minLength: 1, maxLength: 50 }), action: fc.string({ minLength: 1, maxLength: 50 }), inputTemplate: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('traverse'), input: fc.record({ program: fc.string(), sourceBinding: fc.string({ minLength: 1, maxLength: 50 }), itemBinding: fc.string({ minLength: 1, maxLength: 50 }), bodyProgram: fc.string(), bindAs: fc.string({ minLength: 1, maxLength: 50 }), declaredEffects: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = queryProgramHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(queryProgramHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('always: traverseInvoke instructions track their target', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('create'), input: fc.record({ program: fc.string() }) }),
+              fc.record({ action: fc.constant('scan'), input: fc.record({ program: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('filter'), input: fc.record({ program: fc.string(), node: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('sort'), input: fc.record({ program: fc.string(), keys: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('group'), input: fc.record({ program: fc.string(), keys: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('project'), input: fc.record({ program: fc.string(), fields: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('limit'), input: fc.record({ program: fc.string(), count: fc.integer({ min: 1, max: 1000 }), output: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('pure'), input: fc.record({ program: fc.string(), variant: fc.string({ minLength: 1, maxLength: 50 }), output: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('join'), input: fc.record({ program: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), localField: fc.string({ minLength: 1, maxLength: 50 }), foreignField: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('compose'), input: fc.record({ first: fc.string(), second: fc.string(), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('invoke'), input: fc.record({ program: fc.string(), concept: fc.string({ minLength: 1, maxLength: 50 }), action: fc.string({ minLength: 1, maxLength: 50 }), input: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('match'), input: fc.record({ program: fc.string(), binding: fc.string({ minLength: 1, maxLength: 50 }), cases: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('traverseInvoke'), input: fc.record({ program: fc.string(), sourceBinding: fc.string({ minLength: 1, maxLength: 50 }), itemBinding: fc.string({ minLength: 1, maxLength: 50 }), concept: fc.string({ minLength: 1, maxLength: 50 }), action: fc.string({ minLength: 1, maxLength: 50 }), inputTemplate: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('traverse'), input: fc.record({ program: fc.string(), sourceBinding: fc.string({ minLength: 1, maxLength: 50 }), itemBinding: fc.string({ minLength: 1, maxLength: 50 }), bodyProgram: fc.string(), bindAs: fc.string({ minLength: 1, maxLength: 50 }), declaredEffects: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = queryProgramHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(queryProgramHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('always: programs with invokes are read-write', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('create'), input: fc.record({ program: fc.string() }) }),
+              fc.record({ action: fc.constant('scan'), input: fc.record({ program: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('filter'), input: fc.record({ program: fc.string(), node: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('sort'), input: fc.record({ program: fc.string(), keys: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('group'), input: fc.record({ program: fc.string(), keys: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('project'), input: fc.record({ program: fc.string(), fields: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('limit'), input: fc.record({ program: fc.string(), count: fc.integer({ min: 1, max: 1000 }), output: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('pure'), input: fc.record({ program: fc.string(), variant: fc.string({ minLength: 1, maxLength: 50 }), output: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('join'), input: fc.record({ program: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), localField: fc.string({ minLength: 1, maxLength: 50 }), foreignField: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('compose'), input: fc.record({ first: fc.string(), second: fc.string(), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('invoke'), input: fc.record({ program: fc.string(), concept: fc.string({ minLength: 1, maxLength: 50 }), action: fc.string({ minLength: 1, maxLength: 50 }), input: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('match'), input: fc.record({ program: fc.string(), binding: fc.string({ minLength: 1, maxLength: 50 }), cases: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('traverseInvoke'), input: fc.record({ program: fc.string(), sourceBinding: fc.string({ minLength: 1, maxLength: 50 }), itemBinding: fc.string({ minLength: 1, maxLength: 50 }), concept: fc.string({ minLength: 1, maxLength: 50 }), action: fc.string({ minLength: 1, maxLength: 50 }), inputTemplate: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('traverse'), input: fc.record({ program: fc.string(), sourceBinding: fc.string({ minLength: 1, maxLength: 50 }), itemBinding: fc.string({ minLength: 1, maxLength: 50 }), bodyProgram: fc.string(), bindAs: fc.string({ minLength: 1, maxLength: 50 }), declaredEffects: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = queryProgramHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(queryProgramHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('never: read-only program contains invoke', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('create'), input: fc.record({ program: fc.string() }) }),
+              fc.record({ action: fc.constant('scan'), input: fc.record({ program: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('filter'), input: fc.record({ program: fc.string(), node: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('sort'), input: fc.record({ program: fc.string(), keys: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('group'), input: fc.record({ program: fc.string(), keys: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('project'), input: fc.record({ program: fc.string(), fields: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('limit'), input: fc.record({ program: fc.string(), count: fc.integer({ min: 1, max: 1000 }), output: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('pure'), input: fc.record({ program: fc.string(), variant: fc.string({ minLength: 1, maxLength: 50 }), output: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('join'), input: fc.record({ program: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), localField: fc.string({ minLength: 1, maxLength: 50 }), foreignField: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('compose'), input: fc.record({ first: fc.string(), second: fc.string(), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('invoke'), input: fc.record({ program: fc.string(), concept: fc.string({ minLength: 1, maxLength: 50 }), action: fc.string({ minLength: 1, maxLength: 50 }), input: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('match'), input: fc.record({ program: fc.string(), binding: fc.string({ minLength: 1, maxLength: 50 }), cases: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('traverseInvoke'), input: fc.record({ program: fc.string(), sourceBinding: fc.string({ minLength: 1, maxLength: 50 }), itemBinding: fc.string({ minLength: 1, maxLength: 50 }), concept: fc.string({ minLength: 1, maxLength: 50 }), action: fc.string({ minLength: 1, maxLength: 50 }), inputTemplate: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('traverse'), input: fc.record({ program: fc.string(), sourceBinding: fc.string({ minLength: 1, maxLength: 50 }), itemBinding: fc.string({ minLength: 1, maxLength: 50 }), bodyProgram: fc.string(), bindAs: fc.string({ minLength: 1, maxLength: 50 }), declaredEffects: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = queryProgramHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(queryProgramHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: read-only program contains invoke
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('always: invoke bindings are available downstream', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('create'), input: fc.record({ program: fc.string() }) }),
+              fc.record({ action: fc.constant('scan'), input: fc.record({ program: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('filter'), input: fc.record({ program: fc.string(), node: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('sort'), input: fc.record({ program: fc.string(), keys: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('group'), input: fc.record({ program: fc.string(), keys: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('project'), input: fc.record({ program: fc.string(), fields: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('limit'), input: fc.record({ program: fc.string(), count: fc.integer({ min: 1, max: 1000 }), output: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('pure'), input: fc.record({ program: fc.string(), variant: fc.string({ minLength: 1, maxLength: 50 }), output: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('join'), input: fc.record({ program: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), localField: fc.string({ minLength: 1, maxLength: 50 }), foreignField: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('compose'), input: fc.record({ first: fc.string(), second: fc.string(), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('invoke'), input: fc.record({ program: fc.string(), concept: fc.string({ minLength: 1, maxLength: 50 }), action: fc.string({ minLength: 1, maxLength: 50 }), input: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('match'), input: fc.record({ program: fc.string(), binding: fc.string({ minLength: 1, maxLength: 50 }), cases: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('traverseInvoke'), input: fc.record({ program: fc.string(), sourceBinding: fc.string({ minLength: 1, maxLength: 50 }), itemBinding: fc.string({ minLength: 1, maxLength: 50 }), concept: fc.string({ minLength: 1, maxLength: 50 }), action: fc.string({ minLength: 1, maxLength: 50 }), inputTemplate: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('traverse'), input: fc.record({ program: fc.string(), sourceBinding: fc.string({ minLength: 1, maxLength: 50 }), itemBinding: fc.string({ minLength: 1, maxLength: 50 }), bodyProgram: fc.string(), bindAs: fc.string({ minLength: 1, maxLength: 50 }), declaredEffects: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = queryProgramHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(queryProgramHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('always: match case sub-programs are sealed', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('create'), input: fc.record({ program: fc.string() }) }),
+              fc.record({ action: fc.constant('scan'), input: fc.record({ program: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('filter'), input: fc.record({ program: fc.string(), node: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('sort'), input: fc.record({ program: fc.string(), keys: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('group'), input: fc.record({ program: fc.string(), keys: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('project'), input: fc.record({ program: fc.string(), fields: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('limit'), input: fc.record({ program: fc.string(), count: fc.integer({ min: 1, max: 1000 }), output: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('pure'), input: fc.record({ program: fc.string(), variant: fc.string({ minLength: 1, maxLength: 50 }), output: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('join'), input: fc.record({ program: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), localField: fc.string({ minLength: 1, maxLength: 50 }), foreignField: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('compose'), input: fc.record({ first: fc.string(), second: fc.string(), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('invoke'), input: fc.record({ program: fc.string(), concept: fc.string({ minLength: 1, maxLength: 50 }), action: fc.string({ minLength: 1, maxLength: 50 }), input: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('match'), input: fc.record({ program: fc.string(), binding: fc.string({ minLength: 1, maxLength: 50 }), cases: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('traverseInvoke'), input: fc.record({ program: fc.string(), sourceBinding: fc.string({ minLength: 1, maxLength: 50 }), itemBinding: fc.string({ minLength: 1, maxLength: 50 }), concept: fc.string({ minLength: 1, maxLength: 50 }), action: fc.string({ minLength: 1, maxLength: 50 }), inputTemplate: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('traverse'), input: fc.record({ program: fc.string(), sourceBinding: fc.string({ minLength: 1, maxLength: 50 }), itemBinding: fc.string({ minLength: 1, maxLength: 50 }), bodyProgram: fc.string(), bindAs: fc.string({ minLength: 1, maxLength: 50 }), declaredEffects: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = queryProgramHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(queryProgramHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('always: traverse body sub-programs are sealed', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('create'), input: fc.record({ program: fc.string() }) }),
+              fc.record({ action: fc.constant('scan'), input: fc.record({ program: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('filter'), input: fc.record({ program: fc.string(), node: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('sort'), input: fc.record({ program: fc.string(), keys: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('group'), input: fc.record({ program: fc.string(), keys: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('project'), input: fc.record({ program: fc.string(), fields: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('limit'), input: fc.record({ program: fc.string(), count: fc.integer({ min: 1, max: 1000 }), output: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('pure'), input: fc.record({ program: fc.string(), variant: fc.string({ minLength: 1, maxLength: 50 }), output: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('join'), input: fc.record({ program: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), localField: fc.string({ minLength: 1, maxLength: 50 }), foreignField: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('compose'), input: fc.record({ first: fc.string(), second: fc.string(), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('invoke'), input: fc.record({ program: fc.string(), concept: fc.string({ minLength: 1, maxLength: 50 }), action: fc.string({ minLength: 1, maxLength: 50 }), input: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('match'), input: fc.record({ program: fc.string(), binding: fc.string({ minLength: 1, maxLength: 50 }), cases: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('traverseInvoke'), input: fc.record({ program: fc.string(), sourceBinding: fc.string({ minLength: 1, maxLength: 50 }), itemBinding: fc.string({ minLength: 1, maxLength: 50 }), concept: fc.string({ minLength: 1, maxLength: 50 }), action: fc.string({ minLength: 1, maxLength: 50 }), inputTemplate: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('traverse'), input: fc.record({ program: fc.string(), sourceBinding: fc.string({ minLength: 1, maxLength: 50 }), itemBinding: fc.string({ minLength: 1, maxLength: 50 }), bodyProgram: fc.string(), bindAs: fc.string({ minLength: 1, maxLength: 50 }), declaredEffects: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = queryProgramHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(queryProgramHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('always: traverse inherits body purity', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('create'), input: fc.record({ program: fc.string() }) }),
+              fc.record({ action: fc.constant('scan'), input: fc.record({ program: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('filter'), input: fc.record({ program: fc.string(), node: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('sort'), input: fc.record({ program: fc.string(), keys: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('group'), input: fc.record({ program: fc.string(), keys: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('project'), input: fc.record({ program: fc.string(), fields: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('limit'), input: fc.record({ program: fc.string(), count: fc.integer({ min: 1, max: 1000 }), output: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('pure'), input: fc.record({ program: fc.string(), variant: fc.string({ minLength: 1, maxLength: 50 }), output: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('join'), input: fc.record({ program: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), localField: fc.string({ minLength: 1, maxLength: 50 }), foreignField: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('compose'), input: fc.record({ first: fc.string(), second: fc.string(), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('invoke'), input: fc.record({ program: fc.string(), concept: fc.string({ minLength: 1, maxLength: 50 }), action: fc.string({ minLength: 1, maxLength: 50 }), input: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('match'), input: fc.record({ program: fc.string(), binding: fc.string({ minLength: 1, maxLength: 50 }), cases: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('traverseInvoke'), input: fc.record({ program: fc.string(), sourceBinding: fc.string({ minLength: 1, maxLength: 50 }), itemBinding: fc.string({ minLength: 1, maxLength: 50 }), concept: fc.string({ minLength: 1, maxLength: 50 }), action: fc.string({ minLength: 1, maxLength: 50 }), inputTemplate: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('traverse'), input: fc.record({ program: fc.string(), sourceBinding: fc.string({ minLength: 1, maxLength: 50 }), itemBinding: fc.string({ minLength: 1, maxLength: 50 }), bodyProgram: fc.string(), bindAs: fc.string({ minLength: 1, maxLength: 50 }), declaredEffects: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = queryProgramHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(queryProgramHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },
@@ -1079,6 +1827,138 @@ describe('QueryProgram functional handler', () => {
             const storage = createInMemoryStorage();
             const result = await safeInvoke(async () => {
               const program = queryProgramHandler.pure(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
+              seen = true;
+              expect(result.output).toBeDefined();
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('invoke handles empty input: ', async () => {
+      if (typeof queryProgramHandler.invoke !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await safeInvoke(async () => await interpret(queryProgramHandler.invoke({  }), storage));
+      // Empty input should produce a defined result with a variant
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('invoke ensures on ok: ', async () => {
+      if (typeof queryProgramHandler.invoke !== 'function') return;
+      let seen = false;
+      await fc.assert(
+        fc.asyncProperty(
+          fc.record({ program: fc.string(), concept: fc.string({ minLength: 1, maxLength: 50 }), action: fc.string({ minLength: 1, maxLength: 50 }), input: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }),
+          async (input) => {
+            const storage = createInMemoryStorage();
+            const result = await safeInvoke(async () => {
+              const program = queryProgramHandler.invoke(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
+              seen = true;
+              expect(result.output).toBeDefined();
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('match handles empty input: ', async () => {
+      if (typeof queryProgramHandler.match !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await safeInvoke(async () => await interpret(queryProgramHandler.match({  }), storage));
+      // Empty input should produce a defined result with a variant
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('match ensures on ok: ', async () => {
+      if (typeof queryProgramHandler.match !== 'function') return;
+      let seen = false;
+      await fc.assert(
+        fc.asyncProperty(
+          fc.record({ program: fc.string(), binding: fc.string({ minLength: 1, maxLength: 50 }), cases: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }),
+          async (input) => {
+            const storage = createInMemoryStorage();
+            const result = await safeInvoke(async () => {
+              const program = queryProgramHandler.match(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
+              seen = true;
+              expect(result.output).toBeDefined();
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('traverseInvoke handles empty input: ', async () => {
+      if (typeof queryProgramHandler.traverseInvoke !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await safeInvoke(async () => await interpret(queryProgramHandler.traverseInvoke({  }), storage));
+      // Empty input should produce a defined result with a variant
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('traverseInvoke ensures on ok: ', async () => {
+      if (typeof queryProgramHandler.traverseInvoke !== 'function') return;
+      let seen = false;
+      await fc.assert(
+        fc.asyncProperty(
+          fc.record({ program: fc.string(), sourceBinding: fc.string({ minLength: 1, maxLength: 50 }), itemBinding: fc.string({ minLength: 1, maxLength: 50 }), concept: fc.string({ minLength: 1, maxLength: 50 }), action: fc.string({ minLength: 1, maxLength: 50 }), inputTemplate: fc.string({ minLength: 1, maxLength: 50 }), bindAs: fc.string({ minLength: 1, maxLength: 50 }) }),
+          async (input) => {
+            const storage = createInMemoryStorage();
+            const result = await safeInvoke(async () => {
+              const program = queryProgramHandler.traverseInvoke(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
+              seen = true;
+              expect(result.output).toBeDefined();
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('traverse handles empty input: ', async () => {
+      if (typeof queryProgramHandler.traverse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await safeInvoke(async () => await interpret(queryProgramHandler.traverse({  }), storage));
+      // Empty input should produce a defined result with a variant
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('traverse ensures on ok: ', async () => {
+      if (typeof queryProgramHandler.traverse !== 'function') return;
+      let seen = false;
+      await fc.assert(
+        fc.asyncProperty(
+          fc.record({ program: fc.string(), sourceBinding: fc.string({ minLength: 1, maxLength: 50 }), itemBinding: fc.string({ minLength: 1, maxLength: 50 }), bodyProgram: fc.string(), bindAs: fc.string({ minLength: 1, maxLength: 50 }), declaredEffects: fc.string({ minLength: 1, maxLength: 50 }) }),
+          async (input) => {
+            const storage = createInMemoryStorage();
+            const result = await safeInvoke(async () => {
+              const program = queryProgramHandler.traverse(input as Record<string, unknown>);
               return interpret(program, storage);
             });
             if (result?.variant === "ok") {

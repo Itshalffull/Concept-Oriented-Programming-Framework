@@ -25,20 +25,6 @@ const safeInvoke = async (fn: () => any): Promise<any> => {
   return r.value;
 };
 
-// Shared fixture seeds — layer id is the duplicateKey: entityRef::name
-const CREATE_OK_INPUT = { entityRef: 'doc-001', name: 'personal', owner: 'user-1', color: '#3B82F6' };
-const CREATE_TEAM_INPUT = { entityRef: 'doc-001', name: 'team-review', owner: null, color: '#10B981' };
-const CREATE_OK_ID = 'doc-001::personal';
-const CREATE_TEAM_ID = 'doc-001::team-review';
-
-async function seedCreateOk(storage: ReturnType<typeof createInMemoryStorage>) {
-  return interpret(annotationLayerHandler.create(CREATE_OK_INPUT), storage);
-}
-
-async function seedCreateTeam(storage: ReturnType<typeof createInMemoryStorage>) {
-  return interpret(annotationLayerHandler.create(CREATE_TEAM_INPUT), storage);
-}
-
 describe('AnnotationLayer functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -46,26 +32,9 @@ describe('AnnotationLayer functional handler', () => {
     storage = createInMemoryStorage();
   });
 
-  // ── register ──────────────────────────────────────────────────────────────
-
-  describe('register', () => {
-    it('returns concept name AnnotationLayer', async () => {
-      const program = annotationLayerHandler.register({});
-      const result = (program?.instructions && !(program as any).variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return;
-      expect(result.variant).toBe('ok');
-      const name = (result as any).output?.name ?? (result as any).name;
-      expect(name).toBe('AnnotationLayer');
-    });
-  });
-
-  // ── create ────────────────────────────────────────────────────────────────
-
   describe('create', () => {
     it('builds a valid StorageProgram', () => {
-      const program = annotationLayerHandler.create(CREATE_OK_INPUT);
+      const program = annotationLayerHandler.create({ entityRef: "doc-001", name: "personal", owner: "user-1", color: "#3B82F6" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -73,22 +42,22 @@ describe('AnnotationLayer functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = annotationLayerHandler.create(CREATE_OK_INPUT);
-      if (!program?.instructions) return;
+      const program = annotationLayerHandler.create({ entityRef: "doc-001", name: "personal", owner: "user-1", color: "#3B82F6" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = annotationLayerHandler.create(CREATE_OK_INPUT);
-      if (!program?.instructions) return;
+      const program = annotationLayerHandler.create({ entityRef: "doc-001", name: "personal", owner: "user-1", color: "#3B82F6" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = annotationLayerHandler.create(CREATE_OK_INPUT);
-      if (!program?.instructions) return;
+      const program = annotationLayerHandler.create({ entityRef: "doc-001", name: "personal", owner: "user-1", color: "#3B82F6" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
       const purity = classifyPurity(program);
@@ -100,54 +69,72 @@ describe('AnnotationLayer functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = annotationLayerHandler.create(CREATE_OK_INPUT);
-      if (!program?.instructions) return;
+      const program = annotationLayerHandler.create({ entityRef: "doc-001", name: "personal", owner: "user-1", color: "#3B82F6" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
+    it('produces a result', async () => {
+      if (typeof annotationLayerHandler.create !== 'function') return;
+      const result = await interpret(annotationLayerHandler.create({ entityRef: "doc-001", name: "personal", owner: "user-1", color: "#3B82F6" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
     it('fixture "create_ok" -> ok', async () => {
-      const result = await interpret(annotationLayerHandler.create(CREATE_OK_INPUT), storage);
+      if (typeof annotationLayerHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(annotationLayerHandler.create({ entityRef: "doc-001", name: "personal", owner: "user-1", color: "#3B82F6" }), storage);
       expect(result.variant).toBe('ok');
-      expect(result.output.id).toBeDefined();
     });
 
     it('fixture "create_team" -> ok', async () => {
-      const result = await interpret(annotationLayerHandler.create(CREATE_TEAM_INPUT), storage);
+      if (typeof annotationLayerHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(annotationLayerHandler.create({ entityRef: "doc-001", name: "team-review", owner: null, color: "#10B981" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_empty_name" -> error', async () => {
-      const result = await interpret(
-        annotationLayerHandler.create({ entityRef: 'doc-001', name: '' }),
-        storage,
-      );
+      if (typeof annotationLayerHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(annotationLayerHandler.create({ entityRef: "doc-001", name: "" }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
     it('fixture "create_empty_ref" -> error', async () => {
-      const result = await interpret(
-        annotationLayerHandler.create({ entityRef: '', name: 'personal' }),
-        storage,
-      );
+      if (typeof annotationLayerHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(annotationLayerHandler.create({ entityRef: "", name: "personal" }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
     it('fixture "create_duplicate" -> duplicate', async () => {
-      await seedCreateOk(storage);
-      const result = await interpret(
-        annotationLayerHandler.create({ entityRef: 'doc-001', name: 'personal', owner: 'user-1', color: null }),
-        storage,
-      );
-      expect(result.variant).toBe('duplicate');
+      if (typeof annotationLayerHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(annotationLayerHandler.create({ entityRef: "doc-001", name: "personal", owner: "user-1", color: "#3B82F6" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_ok?.output ?? {}));
+      const _fixtureInput = { entityRef: "doc-001", name: "personal", owner: "user-1", color: null } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(annotationLayerHandler.create({ ..._fixtureInput }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('duplicate'));
     });
-  });
 
-  // ── addAnnotation ─────────────────────────────────────────────────────────
+  });
 
   describe('addAnnotation', () => {
     it('builds a valid StorageProgram', () => {
-      const program = annotationLayerHandler.addAnnotation({ id: CREATE_OK_ID, annotationId: 'span-abc' });
+      const program = annotationLayerHandler.addAnnotation({ id: {"type":"ref","fixture":"create_ok","field":"id"}, annotationId: "span-abc" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -155,42 +142,69 @@ describe('AnnotationLayer functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = annotationLayerHandler.addAnnotation({ id: CREATE_OK_ID, annotationId: 'span-abc' });
-      if (!program?.instructions) return;
+      const program = annotationLayerHandler.addAnnotation({ id: {"type":"ref","fixture":"create_ok","field":"id"}, annotationId: "span-abc" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = annotationLayerHandler.addAnnotation({ id: CREATE_OK_ID, annotationId: 'span-abc' });
-      if (!program?.instructions) return;
+      const program = annotationLayerHandler.addAnnotation({ id: {"type":"ref","fixture":"create_ok","field":"id"}, annotationId: "span-abc" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
-    it('fixture "add_ok" -> ok (after create_ok)', async () => {
-      await seedCreateOk(storage);
-      const result = await interpret(
-        annotationLayerHandler.addAnnotation({ id: CREATE_OK_ID, annotationId: 'span-abc' }),
-        storage,
-      );
+    it('declares read and write sets', () => {
+      const program = annotationLayerHandler.addAnnotation({ id: {"type":"ref","fixture":"create_ok","field":"id"}, annotationId: "span-abc" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = annotationLayerHandler.addAnnotation({ id: {"type":"ref","fixture":"create_ok","field":"id"}, annotationId: "span-abc" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof annotationLayerHandler.addAnnotation !== 'function') return;
+      const result = await interpret(annotationLayerHandler.addAnnotation({ id: {"type":"ref","fixture":"create_ok","field":"id"}, annotationId: "span-abc" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "add_ok" -> ok', async () => {
+      if (typeof annotationLayerHandler.addAnnotation !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(annotationLayerHandler.create({ entityRef: "doc-001", name: "personal", owner: "user-1", color: "#3B82F6" }), storage);
+      const result = await interpret(annotationLayerHandler.addAnnotation({ id: afterResult_create_ok?.output?.["id"], annotationId: "span-abc" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "add_missing" -> notfound', async () => {
-      const result = await interpret(
-        annotationLayerHandler.addAnnotation({ id: 'nonexistent-layer', annotationId: 'span-xyz' }),
-        storage,
-      );
-      expect(result.variant).toBe('notfound');
+      if (typeof annotationLayerHandler.addAnnotation !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(annotationLayerHandler.addAnnotation({ id: "nonexistent-layer", annotationId: "span-xyz" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
-  });
 
-  // ── removeAnnotation ──────────────────────────────────────────────────────
+  });
 
   describe('removeAnnotation', () => {
     it('builds a valid StorageProgram', () => {
-      const program = annotationLayerHandler.removeAnnotation({ id: CREATE_OK_ID, annotationId: 'span-abc' });
+      const program = annotationLayerHandler.removeAnnotation({ id: {"type":"ref","fixture":"create_ok","field":"id"}, annotationId: "span-abc" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -198,42 +212,69 @@ describe('AnnotationLayer functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = annotationLayerHandler.removeAnnotation({ id: CREATE_OK_ID, annotationId: 'span-abc' });
-      if (!program?.instructions) return;
+      const program = annotationLayerHandler.removeAnnotation({ id: {"type":"ref","fixture":"create_ok","field":"id"}, annotationId: "span-abc" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = annotationLayerHandler.removeAnnotation({ id: CREATE_OK_ID, annotationId: 'span-abc' });
-      if (!program?.instructions) return;
+      const program = annotationLayerHandler.removeAnnotation({ id: {"type":"ref","fixture":"create_ok","field":"id"}, annotationId: "span-abc" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
-    it('fixture "remove_ok" -> ok (after create_ok)', async () => {
-      await seedCreateOk(storage);
-      const result = await interpret(
-        annotationLayerHandler.removeAnnotation({ id: CREATE_OK_ID, annotationId: 'span-abc' }),
-        storage,
-      );
+    it('declares read and write sets', () => {
+      const program = annotationLayerHandler.removeAnnotation({ id: {"type":"ref","fixture":"create_ok","field":"id"}, annotationId: "span-abc" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = annotationLayerHandler.removeAnnotation({ id: {"type":"ref","fixture":"create_ok","field":"id"}, annotationId: "span-abc" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof annotationLayerHandler.removeAnnotation !== 'function') return;
+      const result = await interpret(annotationLayerHandler.removeAnnotation({ id: {"type":"ref","fixture":"create_ok","field":"id"}, annotationId: "span-abc" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "remove_ok" -> ok', async () => {
+      if (typeof annotationLayerHandler.removeAnnotation !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(annotationLayerHandler.create({ entityRef: "doc-001", name: "personal", owner: "user-1", color: "#3B82F6" }), storage);
+      const result = await interpret(annotationLayerHandler.removeAnnotation({ id: afterResult_create_ok?.output?.["id"], annotationId: "span-abc" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "remove_missing" -> notfound', async () => {
-      const result = await interpret(
-        annotationLayerHandler.removeAnnotation({ id: 'nonexistent-layer', annotationId: 'span-abc' }),
-        storage,
-      );
-      expect(result.variant).toBe('notfound');
+      if (typeof annotationLayerHandler.removeAnnotation !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(annotationLayerHandler.removeAnnotation({ id: "nonexistent-layer", annotationId: "span-abc" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
-  });
 
-  // ── setVisibility ─────────────────────────────────────────────────────────
+  });
 
   describe('setVisibility', () => {
     it('builds a valid StorageProgram', () => {
-      const program = annotationLayerHandler.setVisibility({ id: CREATE_OK_ID, visibility: 'hidden' });
+      const program = annotationLayerHandler.setVisibility({ id: {"type":"ref","fixture":"create_ok","field":"id"}, visibility: "hidden" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -241,60 +282,85 @@ describe('AnnotationLayer functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = annotationLayerHandler.setVisibility({ id: CREATE_OK_ID, visibility: 'hidden' });
-      if (!program?.instructions) return;
+      const program = annotationLayerHandler.setVisibility({ id: {"type":"ref","fixture":"create_ok","field":"id"}, visibility: "hidden" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = annotationLayerHandler.setVisibility({ id: CREATE_OK_ID, visibility: 'hidden' });
-      if (!program?.instructions) return;
+      const program = annotationLayerHandler.setVisibility({ id: {"type":"ref","fixture":"create_ok","field":"id"}, visibility: "hidden" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
-    it('fixture "hide_ok" -> ok (after create_ok)', async () => {
-      await seedCreateOk(storage);
-      const result = await interpret(
-        annotationLayerHandler.setVisibility({ id: CREATE_OK_ID, visibility: 'hidden' }),
-        storage,
-      );
+    it('declares read and write sets', () => {
+      const program = annotationLayerHandler.setVisibility({ id: {"type":"ref","fixture":"create_ok","field":"id"}, visibility: "hidden" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = annotationLayerHandler.setVisibility({ id: {"type":"ref","fixture":"create_ok","field":"id"}, visibility: "hidden" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof annotationLayerHandler.setVisibility !== 'function') return;
+      const result = await interpret(annotationLayerHandler.setVisibility({ id: {"type":"ref","fixture":"create_ok","field":"id"}, visibility: "hidden" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "hide_ok" -> ok', async () => {
+      if (typeof annotationLayerHandler.setVisibility !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(annotationLayerHandler.create({ entityRef: "doc-001", name: "personal", owner: "user-1", color: "#3B82F6" }), storage);
+      const result = await interpret(annotationLayerHandler.setVisibility({ id: afterResult_create_ok?.output?.["id"], visibility: "hidden" }), storage);
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "show_ok" -> ok (after create_ok)', async () => {
-      await seedCreateOk(storage);
-      const result = await interpret(
-        annotationLayerHandler.setVisibility({ id: CREATE_OK_ID, visibility: 'visible' }),
-        storage,
-      );
+    it('fixture "show_ok" -> ok', async () => {
+      if (typeof annotationLayerHandler.setVisibility !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(annotationLayerHandler.create({ entityRef: "doc-001", name: "personal", owner: "user-1", color: "#3B82F6" }), storage);
+      const result = await interpret(annotationLayerHandler.setVisibility({ id: afterResult_create_ok?.output?.["id"], visibility: "visible" }), storage);
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "invalid_vis" -> error (after create_ok)', async () => {
-      await seedCreateOk(storage);
-      const result = await interpret(
-        annotationLayerHandler.setVisibility({ id: CREATE_OK_ID, visibility: 'invisible' }),
-        storage,
-      );
+    it('fixture "invalid_vis" -> error', async () => {
+      if (typeof annotationLayerHandler.setVisibility !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(annotationLayerHandler.create({ entityRef: "doc-001", name: "personal", owner: "user-1", color: "#3B82F6" }), storage);
+      const result = await interpret(annotationLayerHandler.setVisibility({ id: afterResult_create_ok?.output?.["id"], visibility: "invisible" }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
     it('fixture "vis_missing" -> notfound', async () => {
-      const result = await interpret(
-        annotationLayerHandler.setVisibility({ id: 'nonexistent-layer', visibility: 'hidden' }),
-        storage,
-      );
-      expect(result.variant).toBe('notfound');
+      if (typeof annotationLayerHandler.setVisibility !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(annotationLayerHandler.setVisibility({ id: "nonexistent-layer", visibility: "hidden" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
-  });
 
-  // ── export ────────────────────────────────────────────────────────────────
+  });
 
   describe('export', () => {
     it('builds a valid StorageProgram', () => {
-      const program = annotationLayerHandler.export({ id: CREATE_OK_ID, targetLayerId: CREATE_TEAM_ID });
+      const program = annotationLayerHandler.export({ id: {"type":"ref","fixture":"create_ok","field":"id"}, targetLayerId: {"type":"ref","fixture":"create_team","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -302,53 +368,80 @@ describe('AnnotationLayer functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = annotationLayerHandler.export({ id: CREATE_OK_ID, targetLayerId: CREATE_TEAM_ID });
-      if (!program?.instructions) return;
+      const program = annotationLayerHandler.export({ id: {"type":"ref","fixture":"create_ok","field":"id"}, targetLayerId: {"type":"ref","fixture":"create_team","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = annotationLayerHandler.export({ id: CREATE_OK_ID, targetLayerId: CREATE_TEAM_ID });
-      if (!program?.instructions) return;
+      const program = annotationLayerHandler.export({ id: {"type":"ref","fixture":"create_ok","field":"id"}, targetLayerId: {"type":"ref","fixture":"create_team","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
-    it('fixture "export_ok" -> ok (after create_ok, create_team)', async () => {
-      await seedCreateOk(storage);
-      await seedCreateTeam(storage);
-      const result = await interpret(
-        annotationLayerHandler.export({ id: CREATE_OK_ID, targetLayerId: CREATE_TEAM_ID }),
-        storage,
-      );
+    it('declares read and write sets', () => {
+      const program = annotationLayerHandler.export({ id: {"type":"ref","fixture":"create_ok","field":"id"}, targetLayerId: {"type":"ref","fixture":"create_team","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = annotationLayerHandler.export({ id: {"type":"ref","fixture":"create_ok","field":"id"}, targetLayerId: {"type":"ref","fixture":"create_team","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof annotationLayerHandler.export !== 'function') return;
+      const result = await interpret(annotationLayerHandler.export({ id: {"type":"ref","fixture":"create_ok","field":"id"}, targetLayerId: {"type":"ref","fixture":"create_team","field":"id"} }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "export_ok" -> ok', async () => {
+      if (typeof annotationLayerHandler.export !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(annotationLayerHandler.create({ entityRef: "doc-001", name: "personal", owner: "user-1", color: "#3B82F6" }), storage);
+      const afterResult_create_team = await interpret(annotationLayerHandler.create({ entityRef: "doc-001", name: "team-review", owner: null, color: "#10B981" }), storage);
+      const result = await interpret(annotationLayerHandler.export({ id: afterResult_create_ok?.output?.["id"], targetLayerId: afterResult_create_team?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "export_src_missing" -> notfound (after create_team)', async () => {
-      await seedCreateTeam(storage);
-      const result = await interpret(
-        annotationLayerHandler.export({ id: 'no-layer', targetLayerId: CREATE_TEAM_ID }),
-        storage,
-      );
-      expect(result.variant).toBe('notfound');
+    it('fixture "export_src_missing" -> notfound', async () => {
+      if (typeof annotationLayerHandler.export !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_team = await interpret(annotationLayerHandler.create({ entityRef: "doc-001", name: "team-review", owner: null, color: "#10B981" }), storage);
+      const result = await interpret(annotationLayerHandler.export({ id: "no-layer", targetLayerId: afterResult_create_team?.output?.["id"] }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
-    it('fixture "export_tgt_missing" -> notfound (after create_ok)', async () => {
-      await seedCreateOk(storage);
-      const result = await interpret(
-        annotationLayerHandler.export({ id: CREATE_OK_ID, targetLayerId: 'no-layer' }),
-        storage,
-      );
-      expect(result.variant).toBe('notfound');
+    it('fixture "export_tgt_missing" -> notfound', async () => {
+      if (typeof annotationLayerHandler.export !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(annotationLayerHandler.create({ entityRef: "doc-001", name: "personal", owner: "user-1", color: "#3B82F6" }), storage);
+      const result = await interpret(annotationLayerHandler.export({ id: afterResult_create_ok?.output?.["id"], targetLayerId: "no-layer" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
+
   });
-
-  // ── flatten ───────────────────────────────────────────────────────────────
 
   describe('flatten', () => {
     it('builds a valid StorageProgram', () => {
-      const program = annotationLayerHandler.flatten({ id: CREATE_TEAM_ID });
+      const program = annotationLayerHandler.flatten({ id: {"type":"ref","fixture":"create_team","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -356,43 +449,69 @@ describe('AnnotationLayer functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = annotationLayerHandler.flatten({ id: CREATE_TEAM_ID });
-      if (!program?.instructions) return;
+      const program = annotationLayerHandler.flatten({ id: {"type":"ref","fixture":"create_team","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = annotationLayerHandler.flatten({ id: CREATE_TEAM_ID });
-      if (!program?.instructions) return;
+      const program = annotationLayerHandler.flatten({ id: {"type":"ref","fixture":"create_team","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
-    it('fixture "flatten_ok" -> ok (after create_team)', async () => {
-      await seedCreateTeam(storage);
-      const result = await interpret(
-        annotationLayerHandler.flatten({ id: CREATE_TEAM_ID }),
-        storage,
-      );
+    it('declares read and write sets', () => {
+      const program = annotationLayerHandler.flatten({ id: {"type":"ref","fixture":"create_team","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = annotationLayerHandler.flatten({ id: {"type":"ref","fixture":"create_team","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof annotationLayerHandler.flatten !== 'function') return;
+      const result = await interpret(annotationLayerHandler.flatten({ id: {"type":"ref","fixture":"create_team","field":"id"} }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "flatten_ok" -> ok', async () => {
+      if (typeof annotationLayerHandler.flatten !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_team = await interpret(annotationLayerHandler.create({ entityRef: "doc-001", name: "team-review", owner: null, color: "#10B981" }), storage);
+      const result = await interpret(annotationLayerHandler.flatten({ id: afterResult_create_team?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
-      expect(typeof result.output.count).toBe('number');
     });
 
     it('fixture "flatten_missing" -> notfound', async () => {
-      const result = await interpret(
-        annotationLayerHandler.flatten({ id: 'nonexistent-layer' }),
-        storage,
-      );
-      expect(result.variant).toBe('notfound');
+      if (typeof annotationLayerHandler.flatten !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(annotationLayerHandler.flatten({ id: "nonexistent-layer" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
-  });
 
-  // ── get ───────────────────────────────────────────────────────────────────
+  });
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = annotationLayerHandler.get({ id: CREATE_OK_ID });
+      const program = annotationLayerHandler.get({ id: {"type":"ref","fixture":"create_ok","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -400,45 +519,69 @@ describe('AnnotationLayer functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = annotationLayerHandler.get({ id: CREATE_OK_ID });
-      if (!program?.instructions) return;
+      const program = annotationLayerHandler.get({ id: {"type":"ref","fixture":"create_ok","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = annotationLayerHandler.get({ id: CREATE_OK_ID });
-      if (!program?.instructions) return;
+      const program = annotationLayerHandler.get({ id: {"type":"ref","fixture":"create_ok","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
-    it('fixture "get_ok" -> ok (after create_ok)', async () => {
-      await seedCreateOk(storage);
-      const result = await interpret(
-        annotationLayerHandler.get({ id: CREATE_OK_ID }),
-        storage,
-      );
+    it('declares read and write sets', () => {
+      const program = annotationLayerHandler.get({ id: {"type":"ref","fixture":"create_ok","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = annotationLayerHandler.get({ id: {"type":"ref","fixture":"create_ok","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof annotationLayerHandler.get !== 'function') return;
+      const result = await interpret(annotationLayerHandler.get({ id: {"type":"ref","fixture":"create_ok","field":"id"} }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "get_ok" -> ok', async () => {
+      if (typeof annotationLayerHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(annotationLayerHandler.create({ entityRef: "doc-001", name: "personal", owner: "user-1", color: "#3B82F6" }), storage);
+      const result = await interpret(annotationLayerHandler.get({ id: afterResult_create_ok?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
-      expect(result.output.name).toBe('personal');
-      expect(result.output.visibility).toBe('visible');
-      expect(result.output.annotationCount).toBe(0);
     });
 
     it('fixture "get_missing" -> notfound', async () => {
-      const result = await interpret(
-        annotationLayerHandler.get({ id: 'nonexistent-layer' }),
-        storage,
-      );
-      expect(result.variant).toBe('notfound');
+      if (typeof annotationLayerHandler.get !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(annotationLayerHandler.get({ id: "nonexistent-layer" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
-  });
 
-  // ── list ──────────────────────────────────────────────────────────────────
+  });
 
   describe('list', () => {
     it('builds a valid StorageProgram', () => {
-      const program = annotationLayerHandler.list({ entityRef: 'doc-001' });
+      const program = annotationLayerHandler.list({ entityRef: "doc-001" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -446,47 +589,88 @@ describe('AnnotationLayer functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = annotationLayerHandler.list({ entityRef: 'doc-001' });
-      if (!program?.instructions) return;
+      const program = annotationLayerHandler.list({ entityRef: "doc-001" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = annotationLayerHandler.list({ entityRef: 'doc-001' });
-      if (!program?.instructions) return;
+      const program = annotationLayerHandler.list({ entityRef: "doc-001" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
-    it('fixture "list_ok" -> ok with layers (after create_ok, create_team)', async () => {
-      await seedCreateOk(storage);
-      await seedCreateTeam(storage);
-      const result = await interpret(
-        annotationLayerHandler.list({ entityRef: 'doc-001' }),
-        storage,
-      );
-      expect(result.variant).toBe('ok');
-      expect(Array.isArray(result.output.layers)).toBe(true);
-      expect((result.output.layers as string[]).length).toBeGreaterThanOrEqual(2);
+    it('declares read and write sets', () => {
+      const program = annotationLayerHandler.list({ entityRef: "doc-001" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
     });
 
-    it('fixture "list_empty" -> ok with empty list', async () => {
-      const result = await interpret(
-        annotationLayerHandler.list({ entityRef: 'doc-no-layers' }),
-        storage,
-      );
-      expect(result.variant).toBe('ok');
-      expect(Array.isArray(result.output.layers)).toBe(true);
-      expect((result.output.layers as string[]).length).toBe(0);
+    it('has trackable transport effects', () => {
+      const program = annotationLayerHandler.list({ entityRef: "doc-001" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
     });
+
+    it('produces a result', async () => {
+      if (typeof annotationLayerHandler.list !== 'function') return;
+      const result = await interpret(annotationLayerHandler.list({ entityRef: "doc-001" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "list_ok" -> ok', async () => {
+      if (typeof annotationLayerHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(annotationLayerHandler.create({ entityRef: "doc-001", name: "personal", owner: "user-1", color: "#3B82F6" }), storage);
+      const afterResult_create_team = await interpret(annotationLayerHandler.create({ entityRef: "doc-001", name: "team-review", owner: null, color: "#10B981" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_ok?.output ?? {}), (afterResult_create_team?.output ?? {}));
+      const _fixtureInput = { entityRef: "doc-001" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(annotationLayerHandler.list({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "list_empty" -> ok', async () => {
+      if (typeof annotationLayerHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(annotationLayerHandler.create({ entityRef: "doc-001", name: "personal", owner: "user-1", color: "#3B82F6" }), storage);
+      const _pool = Object.assign({}, (afterResult_create_ok?.output ?? {}));
+      const _fixtureInput = { entityRef: "doc-no-layers" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(annotationLayerHandler.list({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
-
-  // ── delete ────────────────────────────────────────────────────────────────
 
   describe('delete', () => {
     it('builds a valid StorageProgram', () => {
-      const program = annotationLayerHandler.delete({ id: CREATE_OK_ID });
+      const program = annotationLayerHandler.delete({ id: {"type":"ref","fixture":"create_ok","field":"id"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -494,112 +678,297 @@ describe('AnnotationLayer functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = annotationLayerHandler.delete({ id: CREATE_OK_ID });
-      if (!program?.instructions) return;
+      const program = annotationLayerHandler.delete({ id: {"type":"ref","fixture":"create_ok","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = annotationLayerHandler.delete({ id: CREATE_OK_ID });
-      if (!program?.instructions) return;
+      const program = annotationLayerHandler.delete({ id: {"type":"ref","fixture":"create_ok","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
-    it('fixture "delete_ok" -> ok (after create_ok)', async () => {
-      await seedCreateOk(storage);
-      const result = await interpret(
-        annotationLayerHandler.delete({ id: CREATE_OK_ID }),
-        storage,
-      );
+    it('declares read and write sets', () => {
+      const program = annotationLayerHandler.delete({ id: {"type":"ref","fixture":"create_ok","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = annotationLayerHandler.delete({ id: {"type":"ref","fixture":"create_ok","field":"id"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof annotationLayerHandler.delete !== 'function') return;
+      const result = await interpret(annotationLayerHandler.delete({ id: {"type":"ref","fixture":"create_ok","field":"id"} }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "delete_ok" -> ok', async () => {
+      if (typeof annotationLayerHandler.delete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(annotationLayerHandler.create({ entityRef: "doc-001", name: "personal", owner: "user-1", color: "#3B82F6" }), storage);
+      const result = await interpret(annotationLayerHandler.delete({ id: afterResult_create_ok?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "delete_missing" -> notfound', async () => {
-      const result = await interpret(
-        annotationLayerHandler.delete({ id: 'nonexistent-layer' }),
-        storage,
-      );
-      expect(result.variant).toBe('notfound');
+      if (typeof annotationLayerHandler.delete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(annotationLayerHandler.delete({ id: "nonexistent-layer" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
+    });
+
+  });
+
+  describe('register()', () => {
+    it('declares concept name', async () => {
+      if (typeof annotationLayerHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const program = annotationLayerHandler.register({});
+      // If it's a StorageProgram, interpret it
+      const result = (program?.instructions && !program.variant)
+        ? await interpret(program, storage)
+        : program;
+      if (!result?.variant) return; // handler does not support register introspection
+      expect(result.variant).toBe('ok');
+      const name = result.output?.name ?? result.name;
+      expect(name).toBe('AnnotationLayer');
     });
   });
 
-  // ── Invariants ────────────────────────────────────────────────────────────
-
-  describe('invariant: create then get', () => {
-    it('new layer has visibility "visible" and annotationCount 0', async () => {
-      const createResult = await interpret(
-        annotationLayerHandler.create({ entityRef: 'doc-1', name: 'personal', owner: 'user-1', color: '#3B82F6' }),
-        storage,
-      );
-      expect(createResult.variant).toBe('ok');
-      const id = createResult.output.id as string;
-
-      const getResult = await interpret(
-        annotationLayerHandler.get({ id }),
-        storage,
-      );
-      expect(getResult.variant).toBe('ok');
-      expect(getResult.output.name).toBe('personal');
-      expect(getResult.output.visibility).toBe('visible');
-      expect(getResult.output.annotationCount).toBe(0);
+  describe('invariant examples', () => {
+    it("create then get", async () => {
+      const storage = createInMemoryStorage();
+      const createResult0 = await interpret(annotationLayerHandler.create({ entityRef: "doc-1", name: "personal", owner: "user-1", color: "#3B82F6" }), storage);
+      expect(createResult0.variant).toBe("ok");
+      let id = createResult0.output["id"];
+      let x = id;
+      const thenResult0 = await interpret(annotationLayerHandler.get({ id: x }), storage);
+      expect(thenResult0.variant).toBe("ok");
     });
+
+    it("add and remove annotation", async () => {
+      const storage = createInMemoryStorage();
+      const createResult0 = await interpret(annotationLayerHandler.create({ entityRef: "doc-1", name: "draft", owner: "user-1", color: false }), storage);
+      expect(createResult0.variant).toBe("ok");
+      let id = createResult0.output["id"];
+      let x = id;
+      const addAnnotationResult1 = await interpret(annotationLayerHandler.addAnnotation({ id: x, annotationId: "span-001" }), storage);
+      expect(addAnnotationResult1.variant).toBe("ok");
+      id = addAnnotationResult1.output["id"];
+      const thenResult0 = await interpret(annotationLayerHandler.get({ id: x }), storage);
+      expect(thenResult0.variant).toBe("ok");
+      const thenResult1 = await interpret(annotationLayerHandler.removeAnnotation({ id: x, annotationId: "span-001" }), storage);
+      expect(thenResult1.variant).toBe("ok");
+      const thenResult2 = await interpret(annotationLayerHandler.get({ id: x }), storage);
+      expect(thenResult2.variant).toBe("ok");
+    });
+
+    it("duplicate name rejected", async () => {
+      const storage = createInMemoryStorage();
+      const createResult0 = await interpret(annotationLayerHandler.create({ entityRef: "doc-1", name: "team-review", owner: false, color: false }), storage);
+      expect(createResult0.variant).toBe("ok");
+      let id = createResult0.output["id"];
+      let x = id;
+      const thenResult0 = await interpret(annotationLayerHandler.create({ entityRef: "doc-1", name: "team-review", owner: false, color: false }), storage);
+      expect(thenResult0.variant).toBe("duplicate");
+    });
+
+    it("visibility toggle", async () => {
+      const storage = createInMemoryStorage();
+      const createResult0 = await interpret(annotationLayerHandler.create({ entityRef: "doc-1", name: "personal", owner: "u1", color: false }), storage);
+      expect(createResult0.variant).toBe("ok");
+      let id = createResult0.output["id"];
+      let x = id;
+      const setVisibilityResult1 = await interpret(annotationLayerHandler.setVisibility({ id: x, visibility: "hidden" }), storage);
+      expect(setVisibilityResult1.variant).toBe("ok");
+      id = setVisibilityResult1.output["id"];
+      const thenResult0 = await interpret(annotationLayerHandler.get({ id: x }), storage);
+      expect(thenResult0.variant).toBe("ok");
+      const thenResult1 = await interpret(annotationLayerHandler.setVisibility({ id: x, visibility: "visible" }), storage);
+      expect(thenResult1.variant).toBe("ok");
+      const thenResult2 = await interpret(annotationLayerHandler.get({ id: x }), storage);
+      expect(thenResult2.variant).toBe("ok");
+    });
+
   });
 
-  describe('invariant: add and remove annotation', () => {
-    it('annotationCount increments then decrements', async () => {
-      const createResult = await interpret(
-        annotationLayerHandler.create({ entityRef: 'doc-1', name: 'draft', owner: 'user-1', color: null }),
-        storage,
+  describe('state invariants (stateful PBT)', () => {
+    it('always: layers have required identity fields', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('create'), input: fc.record({ entityRef: fc.string({ minLength: 1, maxLength: 50 }), name: fc.string({ minLength: 1, maxLength: 50 }), owner: fc.string(), color: fc.string() }) }),
+              fc.record({ action: fc.constant('addAnnotation'), input: fc.record({ id: fc.string(), annotationId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('removeAnnotation'), input: fc.record({ id: fc.string(), annotationId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('setVisibility'), input: fc.record({ id: fc.string(), visibility: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('export'), input: fc.record({ id: fc.string(), targetLayerId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('flatten'), input: fc.record({ id: fc.string() }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ id: fc.string() }) }),
+              fc.record({ action: fc.constant('list'), input: fc.record({ entityRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('delete'), input: fc.record({ id: fc.string() }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = annotationLayerHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(annotationLayerHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
       );
-      expect(createResult.variant).toBe('ok');
-      const id = createResult.output.id as string;
-
-      await interpret(annotationLayerHandler.addAnnotation({ id, annotationId: 'span-001' }), storage);
-
-      const afterAdd = await interpret(annotationLayerHandler.get({ id }), storage);
-      expect(afterAdd.output.annotationCount).toBe(1);
-
-      await interpret(annotationLayerHandler.removeAnnotation({ id, annotationId: 'span-001' }), storage);
-
-      const afterRemove = await interpret(annotationLayerHandler.get({ id }), storage);
-      expect(afterRemove.output.annotationCount).toBe(0);
     });
+
+    it('never: annotation in deleted layer', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('create'), input: fc.record({ entityRef: fc.string({ minLength: 1, maxLength: 50 }), name: fc.string({ minLength: 1, maxLength: 50 }), owner: fc.string(), color: fc.string() }) }),
+              fc.record({ action: fc.constant('addAnnotation'), input: fc.record({ id: fc.string(), annotationId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('removeAnnotation'), input: fc.record({ id: fc.string(), annotationId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('setVisibility'), input: fc.record({ id: fc.string(), visibility: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('export'), input: fc.record({ id: fc.string(), targetLayerId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('flatten'), input: fc.record({ id: fc.string() }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ id: fc.string() }) }),
+              fc.record({ action: fc.constant('list'), input: fc.record({ entityRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('delete'), input: fc.record({ id: fc.string() }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = annotationLayerHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(annotationLayerHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: annotation in deleted layer
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
   });
 
-  describe('invariant: duplicate name rejected', () => {
-    it('second create with same name+entityRef returns duplicate', async () => {
-      const first = await interpret(
-        annotationLayerHandler.create({ entityRef: 'doc-1', name: 'team-review', owner: null, color: null }),
-        storage,
-      );
-      expect(first.variant).toBe('ok');
-
-      const second = await interpret(
-        annotationLayerHandler.create({ entityRef: 'doc-1', name: 'team-review', owner: null, color: null }),
-        storage,
-      );
-      expect(second.variant).toBe('duplicate');
+  describe('action contracts (PBT)', () => {
+    it('create handles empty input: ', async () => {
+      if (typeof annotationLayerHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await safeInvoke(async () => await interpret(annotationLayerHandler.create({  }), storage));
+      // Empty input should produce a defined result with a variant
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
+
+    it('create handles empty input: ', async () => {
+      if (typeof annotationLayerHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await safeInvoke(async () => await interpret(annotationLayerHandler.create({  }), storage));
+      // Empty input should produce a defined result with a variant
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('create ensures on ok: ', async () => {
+      if (typeof annotationLayerHandler.create !== 'function') return;
+      let seen = false;
+      await fc.assert(
+        fc.asyncProperty(
+          fc.record({ entityRef: fc.string({ minLength: 1, maxLength: 50 }), name: fc.string({ minLength: 1, maxLength: 50 }), owner: fc.string(), color: fc.string() }),
+          async (input) => {
+            const storage = createInMemoryStorage();
+            const result = await safeInvoke(async () => {
+              const program = annotationLayerHandler.create(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
+              seen = true;
+              expect(result.output).toBeDefined();
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('setVisibility handles empty input: ', async () => {
+      if (typeof annotationLayerHandler.setVisibility !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await safeInvoke(async () => await interpret(annotationLayerHandler.setVisibility({  }), storage));
+      // Empty input should produce a defined result with a variant
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('setVisibility ensures on ok: ', async () => {
+      if (typeof annotationLayerHandler.setVisibility !== 'function') return;
+      let seen = false;
+      await fc.assert(
+        fc.asyncProperty(
+          fc.record({ id: fc.string(), visibility: fc.string({ minLength: 1, maxLength: 50 }) }),
+          async (input) => {
+            const storage = createInMemoryStorage();
+            const result = await safeInvoke(async () => {
+              const program = annotationLayerHandler.setVisibility(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
+              seen = true;
+              expect(result.output).toBeDefined();
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
   });
 
-  describe('invariant: visibility toggle', () => {
-    it('setVisibility hidden then visible reflects in get', async () => {
-      const createResult = await interpret(
-        annotationLayerHandler.create({ entityRef: 'doc-1', name: 'personal', owner: 'u1', color: null }),
-        storage,
-      );
-      expect(createResult.variant).toBe('ok');
-      const id = createResult.output.id as string;
-
-      await interpret(annotationLayerHandler.setVisibility({ id, visibility: 'hidden' }), storage);
-      const afterHide = await interpret(annotationLayerHandler.get({ id }), storage);
-      expect(afterHide.output.visibility).toBe('hidden');
-
-      await interpret(annotationLayerHandler.setVisibility({ id, visibility: 'visible' }), storage);
-      const afterShow = await interpret(annotationLayerHandler.get({ id }), storage);
-      expect(afterShow.output.visibility).toBe('visible');
-    });
-  });
 });

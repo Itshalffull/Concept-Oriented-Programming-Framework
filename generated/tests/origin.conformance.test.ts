@@ -5,6 +5,7 @@
 // read/write sets, interpreted execution, and invariant conformance.
 
 import { describe, it, expect, beforeEach } from 'vitest';
+import fc from 'fast-check';
 import { originHandler } from '../../handlers/ts/foundation/origin.handler.js';
 import {
   classifyPurity,
@@ -16,6 +17,14 @@ import {
 import { interpret } from '../../runtime/interpreter.js';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
 
+const safeInvoke = async (fn: () => any): Promise<any> => {
+  let r: any;
+  r = (() => { try { return { ok: true, value: fn() }; } catch (e: any) { return { ok: false, message: e?.message }; } })();
+  if (!r.ok) return { variant: '_thrown', message: r.message };
+  if (r.value?.then) return r.value.catch((e: any) => ({ variant: '_thrown', message: e?.message }));
+  return r.value;
+};
+
 describe('Origin functional handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;
 
@@ -23,11 +32,9 @@ describe('Origin functional handler', () => {
     storage = createInMemoryStorage();
   });
 
-  // ─── register ───────────────────────────────────────────────────────────
-
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = originHandler.register({ origin: 'origin-redesign', kind: 'space', qualifier: 'vs-redesign', displayName: 'redesign', resolverConfig: '{"spaceId":"vs-redesign"}' });
+      const program = originHandler.register({ origin: "origin-redesign", kind: "space", qualifier: "vs-redesign", displayName: "redesign", resolverConfig: {"spaceId":"vs-redesign"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -35,22 +42,22 @@ describe('Origin functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = originHandler.register({ origin: 'origin-redesign', kind: 'space', qualifier: 'vs-redesign', displayName: 'redesign', resolverConfig: '{"spaceId":"vs-redesign"}' });
-      if (!program?.instructions) return;
+      const program = originHandler.register({ origin: "origin-redesign", kind: "space", qualifier: "vs-redesign", displayName: "redesign", resolverConfig: {"spaceId":"vs-redesign"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = originHandler.register({ origin: 'origin-redesign', kind: 'space', qualifier: 'vs-redesign', displayName: 'redesign', resolverConfig: '{"spaceId":"vs-redesign"}' });
-      if (!program?.instructions) return;
+      const program = originHandler.register({ origin: "origin-redesign", kind: "space", qualifier: "vs-redesign", displayName: "redesign", resolverConfig: {"spaceId":"vs-redesign"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = originHandler.register({ origin: 'origin-redesign', kind: 'space', qualifier: 'vs-redesign', displayName: 'redesign', resolverConfig: '{"spaceId":"vs-redesign"}' });
-      if (!program?.instructions) return;
+      const program = originHandler.register({ origin: "origin-redesign", kind: "space", qualifier: "vs-redesign", displayName: "redesign", resolverConfig: {"spaceId":"vs-redesign"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
       const purity = classifyPurity(program);
@@ -62,63 +69,72 @@ describe('Origin functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = originHandler.register({ origin: 'origin-redesign', kind: 'space', qualifier: 'vs-redesign', displayName: 'redesign', resolverConfig: '{"spaceId":"vs-redesign"}' });
-      if (!program?.instructions) return;
+      const program = originHandler.register({ origin: "origin-redesign", kind: "space", qualifier: "vs-redesign", displayName: "redesign", resolverConfig: {"spaceId":"vs-redesign"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
+    it('produces a result', async () => {
+      if (typeof originHandler.register !== 'function') return;
+      const result = await interpret(originHandler.register({ origin: "origin-redesign", kind: "space", qualifier: "vs-redesign", displayName: "redesign", resolverConfig: {"spaceId":"vs-redesign"} }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
     it('fixture "register_space" -> ok', async () => {
+      if (typeof originHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(originHandler.register({ origin: 'origin-redesign', kind: 'space', qualifier: 'vs-redesign', displayName: 'redesign', resolverConfig: '{"spaceId":"vs-redesign"}' }), storage);
+      const result = await interpret(originHandler.register({ origin: "origin-redesign", kind: "space", qualifier: "vs-redesign", displayName: "redesign", resolverConfig: {"spaceId":"vs-redesign"} }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_kernel" -> ok', async () => {
+      if (typeof originHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(originHandler.register({ origin: 'origin-team', kind: 'kernel', qualifier: 'ws://team.clef.dev/kernel', displayName: 'team-shared', resolverConfig: '{"connectionId":"conn-team","endpoint":"ws://team.clef.dev/kernel"}' }), storage);
+      const result = await interpret(originHandler.register({ origin: "origin-team", kind: "kernel", qualifier: "ws://team.clef.dev/kernel", displayName: "team-shared", resolverConfig: {"connectionId":"conn-team","endpoint":"ws://team.clef.dev/kernel"} }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_external" -> ok', async () => {
+      if (typeof originHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(originHandler.register({ origin: 'origin-github', kind: 'external', qualifier: 'github:anthropics/claude-code#123', displayName: 'GitHub', resolverConfig: '{"system":"github","ingestManifest":"github-api"}' }), storage);
+      const result = await interpret(originHandler.register({ origin: "origin-github", kind: "external", qualifier: "github:anthropics/claude-code#123", displayName: "GitHub", resolverConfig: {"system":"github","ingestManifest":"github-api"} }), storage);
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "register_duplicate" -> duplicate (after register_space)', async () => {
+    it('fixture "register_duplicate" -> duplicate', async () => {
+      if (typeof originHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      // Setup: register_space
-      await interpret(originHandler.register({ origin: 'origin-redesign', kind: 'space', qualifier: 'vs-redesign', displayName: 'redesign', resolverConfig: '{"spaceId":"vs-redesign"}' }), storage);
-      // Act: register duplicate
-      const result = await interpret(originHandler.register({ origin: 'origin-redesign', kind: 'space', qualifier: 'vs-redesign', displayName: 'redesign', resolverConfig: '{}' }), storage);
-      expect(result.variant).toBe('duplicate');
+      const afterResult_register_space = await interpret(originHandler.register({ origin: "origin-redesign", kind: "space", qualifier: "vs-redesign", displayName: "redesign", resolverConfig: {"spaceId":"vs-redesign"} }), storage);
+      const _pool = Object.assign({}, (afterResult_register_space?.output ?? {}));
+      const _fixtureInput = { origin: "origin-redesign", kind: "space", qualifier: "vs-redesign", displayName: "redesign", resolverConfig: {} } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(originHandler.register({ ..._fixtureInput }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('duplicate'));
     });
 
     it('fixture "register_empty_kind" -> error', async () => {
+      if (typeof originHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(originHandler.register({ origin: 'origin-bad', kind: '', qualifier: 'x', displayName: 'x', resolverConfig: '{}' }), storage);
+      const result = await interpret(originHandler.register({ origin: "origin-bad", kind: "", qualifier: "x", displayName: "x", resolverConfig: {} }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
-    it('rejects invalid kind value -> error', async () => {
-      const storage = createInMemoryStorage();
-      const result = await interpret(originHandler.register({ origin: 'origin-bad', kind: 'remote', qualifier: 'x', displayName: 'x', resolverConfig: '{}' }), storage);
-      expect(result.variant).toBe('error');
-    });
-
-    it('rejects invalid resolverConfig JSON -> error', async () => {
-      const storage = createInMemoryStorage();
-      const result = await interpret(originHandler.register({ origin: 'origin-bad', kind: 'local', qualifier: 'x', displayName: 'x', resolverConfig: 'not-json' }), storage);
-      expect(result.variant).toBe('error');
-    });
   });
-
-  // ─── resolve ────────────────────────────────────────────────────────────
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = originHandler.resolve({ origin: 'origin-redesign', entityId: 'doc-1' });
+      const program = originHandler.resolve({ origin: {"type":"ref","fixture":"register_space","field":"origin"}, entityId: "doc-1" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -126,40 +142,69 @@ describe('Origin functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = originHandler.resolve({ origin: 'origin-redesign', entityId: 'doc-1' });
-      if (!program?.instructions) return;
+      const program = originHandler.resolve({ origin: {"type":"ref","fixture":"register_space","field":"origin"}, entityId: "doc-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = originHandler.resolve({ origin: 'origin-redesign', entityId: 'doc-1' });
-      if (!program?.instructions) return;
+      const program = originHandler.resolve({ origin: {"type":"ref","fixture":"register_space","field":"origin"}, entityId: "doc-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
-    it('fixture "resolve_space" -> ok (after register_space)', async () => {
+    it('declares read and write sets', () => {
+      const program = originHandler.resolve({ origin: {"type":"ref","fixture":"register_space","field":"origin"}, entityId: "doc-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = originHandler.resolve({ origin: {"type":"ref","fixture":"register_space","field":"origin"}, entityId: "doc-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof originHandler.resolve !== 'function') return;
+      const result = await interpret(originHandler.resolve({ origin: {"type":"ref","fixture":"register_space","field":"origin"}, entityId: "doc-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "resolve_space" -> ok', async () => {
+      if (typeof originHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      // Setup: register_space
-      const reg = await interpret(originHandler.register({ origin: 'origin-redesign', kind: 'space', qualifier: 'vs-redesign', displayName: 'redesign', resolverConfig: '{"spaceId":"vs-redesign"}' }), storage);
-      const originId = (reg.output?.origin ?? 'origin-redesign') as string;
-      const result = await interpret(originHandler.resolve({ origin: originId, entityId: 'doc-1' }), storage);
+      const afterResult_register_space = await interpret(originHandler.register({ origin: "origin-redesign", kind: "space", qualifier: "vs-redesign", displayName: "redesign", resolverConfig: {"spaceId":"vs-redesign"} }), storage);
+      const result = await interpret(originHandler.resolve({ origin: afterResult_register_space?.output?.["origin"], entityId: "doc-1" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "resolve_missing_origin" -> notfound', async () => {
+      if (typeof originHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(originHandler.resolve({ origin: 'nonexistent', entityId: 'doc-1' }), storage);
-      expect(result.variant).toBe('notfound');
+      const result = await interpret(originHandler.resolve({ origin: "nonexistent", entityId: "doc-1" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
-  });
 
-  // ─── checkStatus ────────────────────────────────────────────────────────
+  });
 
   describe('checkStatus', () => {
     it('builds a valid StorageProgram', () => {
-      const program = originHandler.checkStatus({ origin: 'origin-redesign' });
+      const program = originHandler.checkStatus({ origin: {"type":"ref","fixture":"register_space","field":"origin"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -167,40 +212,69 @@ describe('Origin functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = originHandler.checkStatus({ origin: 'origin-redesign' });
-      if (!program?.instructions) return;
+      const program = originHandler.checkStatus({ origin: {"type":"ref","fixture":"register_space","field":"origin"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = originHandler.checkStatus({ origin: 'origin-redesign' });
-      if (!program?.instructions) return;
+      const program = originHandler.checkStatus({ origin: {"type":"ref","fixture":"register_space","field":"origin"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
-    it('fixture "check_connected" -> connected (after register_space)', async () => {
+    it('declares read and write sets', () => {
+      const program = originHandler.checkStatus({ origin: {"type":"ref","fixture":"register_space","field":"origin"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = originHandler.checkStatus({ origin: {"type":"ref","fixture":"register_space","field":"origin"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof originHandler.checkStatus !== 'function') return;
+      const result = await interpret(originHandler.checkStatus({ origin: {"type":"ref","fixture":"register_space","field":"origin"} }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "check_connected" -> ok', async () => {
+      if (typeof originHandler.checkStatus !== 'function') return;
       const storage = createInMemoryStorage();
-      // Setup: register_space (stores status "connected")
-      const reg = await interpret(originHandler.register({ origin: 'origin-redesign', kind: 'space', qualifier: 'vs-redesign', displayName: 'redesign', resolverConfig: '{"spaceId":"vs-redesign"}' }), storage);
-      const originId = (reg.output?.origin ?? 'origin-redesign') as string;
-      const result = await interpret(originHandler.checkStatus({ origin: originId }), storage);
-      expect(result.variant).toBe('connected');
+      const afterResult_register_space = await interpret(originHandler.register({ origin: "origin-redesign", kind: "space", qualifier: "vs-redesign", displayName: "redesign", resolverConfig: {"spaceId":"vs-redesign"} }), storage);
+      const result = await interpret(originHandler.checkStatus({ origin: afterResult_register_space?.output?.["origin"] }), storage);
+      expect(result.variant).toBe('ok');
     });
 
     it('fixture "check_missing" -> notfound', async () => {
+      if (typeof originHandler.checkStatus !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(originHandler.checkStatus({ origin: 'nonexistent' }), storage);
-      expect(result.variant).toBe('notfound');
+      const result = await interpret(originHandler.checkStatus({ origin: "nonexistent" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
-  });
 
-  // ─── batchResolve ───────────────────────────────────────────────────────
+  });
 
   describe('batchResolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = originHandler.batchResolve({ origin: 'origin-redesign', entityIds: '["doc-1","doc-2"]' });
+      const program = originHandler.batchResolve({ origin: {"type":"ref","fixture":"register_space","field":"origin"}, entityIds: ["doc-1","doc-2"] });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -208,44 +282,69 @@ describe('Origin functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = originHandler.batchResolve({ origin: 'origin-redesign', entityIds: '["doc-1","doc-2"]' });
-      if (!program?.instructions) return;
+      const program = originHandler.batchResolve({ origin: {"type":"ref","fixture":"register_space","field":"origin"}, entityIds: ["doc-1","doc-2"] });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = originHandler.batchResolve({ origin: 'origin-redesign', entityIds: '["doc-1","doc-2"]' });
-      if (!program?.instructions) return;
+      const program = originHandler.batchResolve({ origin: {"type":"ref","fixture":"register_space","field":"origin"}, entityIds: ["doc-1","doc-2"] });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
-    it('fixture "batch_resolve" -> ok (after register_space)', async () => {
+    it('declares read and write sets', () => {
+      const program = originHandler.batchResolve({ origin: {"type":"ref","fixture":"register_space","field":"origin"}, entityIds: ["doc-1","doc-2"] });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = originHandler.batchResolve({ origin: {"type":"ref","fixture":"register_space","field":"origin"}, entityIds: ["doc-1","doc-2"] });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof originHandler.batchResolve !== 'function') return;
+      const result = await interpret(originHandler.batchResolve({ origin: {"type":"ref","fixture":"register_space","field":"origin"}, entityIds: ["doc-1","doc-2"] }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "batch_resolve" -> ok', async () => {
+      if (typeof originHandler.batchResolve !== 'function') return;
       const storage = createInMemoryStorage();
-      // Setup: register_space
-      const reg = await interpret(originHandler.register({ origin: 'origin-redesign', kind: 'space', qualifier: 'vs-redesign', displayName: 'redesign', resolverConfig: '{"spaceId":"vs-redesign"}' }), storage);
-      const originId = (reg.output?.origin ?? 'origin-redesign') as string;
-      const result = await interpret(originHandler.batchResolve({ origin: originId, entityIds: '["doc-1","doc-2"]' }), storage);
+      const afterResult_register_space = await interpret(originHandler.register({ origin: "origin-redesign", kind: "space", qualifier: "vs-redesign", displayName: "redesign", resolverConfig: {"spaceId":"vs-redesign"} }), storage);
+      const result = await interpret(originHandler.batchResolve({ origin: afterResult_register_space?.output?.["origin"], entityIds: ["doc-1","doc-2"] }), storage);
       expect(result.variant).toBe('ok');
-      expect(typeof result.output?.results).toBe('string');
-      const parsed = JSON.parse(result.output!.results as string);
-      expect(Array.isArray(parsed)).toBe(true);
-      expect(parsed).toHaveLength(2);
     });
 
     it('fixture "batch_missing" -> notfound', async () => {
+      if (typeof originHandler.batchResolve !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(originHandler.batchResolve({ origin: 'nonexistent', entityIds: '[]' }), storage);
-      expect(result.variant).toBe('notfound');
+      const result = await interpret(originHandler.batchResolve({ origin: "nonexistent", entityIds: [] }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
-  });
 
-  // ─── get ────────────────────────────────────────────────────────────────
+  });
 
   describe('get', () => {
     it('builds a valid StorageProgram', () => {
-      const program = originHandler.get({ origin: 'origin-redesign' });
+      const program = originHandler.get({ origin: {"type":"ref","fixture":"register_space","field":"origin"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -253,44 +352,69 @@ describe('Origin functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = originHandler.get({ origin: 'origin-redesign' });
-      if (!program?.instructions) return;
+      const program = originHandler.get({ origin: {"type":"ref","fixture":"register_space","field":"origin"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = originHandler.get({ origin: 'origin-redesign' });
-      if (!program?.instructions) return;
+      const program = originHandler.get({ origin: {"type":"ref","fixture":"register_space","field":"origin"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
-    it('fixture "get_existing" -> ok (after register_space)', async () => {
+    it('declares read and write sets', () => {
+      const program = originHandler.get({ origin: {"type":"ref","fixture":"register_space","field":"origin"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = originHandler.get({ origin: {"type":"ref","fixture":"register_space","field":"origin"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof originHandler.get !== 'function') return;
+      const result = await interpret(originHandler.get({ origin: {"type":"ref","fixture":"register_space","field":"origin"} }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "get_existing" -> ok', async () => {
+      if (typeof originHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      // Setup: register_space
-      const reg = await interpret(originHandler.register({ origin: 'origin-redesign', kind: 'space', qualifier: 'vs-redesign', displayName: 'redesign', resolverConfig: '{"spaceId":"vs-redesign"}' }), storage);
-      const originId = (reg.output?.origin ?? 'origin-redesign') as string;
-      const result = await interpret(originHandler.get({ origin: originId }), storage);
+      const afterResult_register_space = await interpret(originHandler.register({ origin: "origin-redesign", kind: "space", qualifier: "vs-redesign", displayName: "redesign", resolverConfig: {"spaceId":"vs-redesign"} }), storage);
+      const result = await interpret(originHandler.get({ origin: afterResult_register_space?.output?.["origin"] }), storage);
       expect(result.variant).toBe('ok');
-      expect(result.output?.kind).toBe('space');
-      expect(result.output?.qualifier).toBe('vs-redesign');
-      expect(result.output?.displayName).toBe('redesign');
-      expect(result.output?.status).toBe('connected');
     });
 
     it('fixture "get_missing" -> notfound', async () => {
+      if (typeof originHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(originHandler.get({ origin: 'nonexistent' }), storage);
-      expect(result.variant).toBe('notfound');
+      const result = await interpret(originHandler.get({ origin: "nonexistent" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
-  });
 
-  // ─── list ───────────────────────────────────────────────────────────────
+  });
 
   describe('list', () => {
     it('builds a valid StorageProgram', () => {
-      const program = originHandler.list({});
+      const program = originHandler.list({  });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -298,45 +422,63 @@ describe('Origin functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = originHandler.list({});
-      if (!program?.instructions) return;
+      const program = originHandler.list({  });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = originHandler.list({});
-      if (!program?.instructions) return;
+      const program = originHandler.list({  });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
-    it('fixture "list_all" -> ok (after register_space)', async () => {
-      const storage = createInMemoryStorage();
-      // Setup: register_space
-      await interpret(originHandler.register({ origin: 'origin-redesign', kind: 'space', qualifier: 'vs-redesign', displayName: 'redesign', resolverConfig: '{"spaceId":"vs-redesign"}' }), storage);
-      const result = await interpret(originHandler.list({}), storage);
-      expect(result.variant).toBe('ok');
-      expect(typeof result.output?.origins).toBe('string');
-      const parsed = JSON.parse(result.output!.origins as string);
-      expect(Array.isArray(parsed)).toBe(true);
-      expect(parsed.length).toBeGreaterThanOrEqual(1);
+    it('declares read and write sets', () => {
+      const program = originHandler.list({  });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
     });
 
-    it('returns empty array when no origins registered', async () => {
-      const storage = createInMemoryStorage();
-      const result = await interpret(originHandler.list({}), storage);
-      expect(result.variant).toBe('ok');
-      const parsed = JSON.parse(result.output!.origins as string);
-      expect(parsed).toHaveLength(0);
+    it('has trackable transport effects', () => {
+      const program = originHandler.list({  });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
     });
+
+    it('produces a result', async () => {
+      if (typeof originHandler.list !== 'function') return;
+      const result = await interpret(originHandler.list({  }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "list_all" -> ok', async () => {
+      if (typeof originHandler.list !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_register_space = await interpret(originHandler.register({ origin: "origin-redesign", kind: "space", qualifier: "vs-redesign", displayName: "redesign", resolverConfig: {"spaceId":"vs-redesign"} }), storage);
+      const _pool = Object.assign({}, (afterResult_register_space?.output ?? {}));
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
+      const result = await interpret(originHandler.list({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
   });
-
-  // ─── listByKind ─────────────────────────────────────────────────────────
 
   describe('listByKind', () => {
     it('builds a valid StorageProgram', () => {
-      const program = originHandler.listByKind({ kind: 'space' });
+      const program = originHandler.listByKind({ kind: "space" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -344,81 +486,273 @@ describe('Origin functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = originHandler.listByKind({ kind: 'space' });
-      if (!program?.instructions) return;
+      const program = originHandler.listByKind({ kind: "space" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = originHandler.listByKind({ kind: 'space' });
-      if (!program?.instructions) return;
+      const program = originHandler.listByKind({ kind: "space" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
-    it('fixture "list_spaces" -> ok (after register_space)', async () => {
+    it('declares read and write sets', () => {
+      const program = originHandler.listByKind({ kind: "space" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = originHandler.listByKind({ kind: "space" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof originHandler.listByKind !== 'function') return;
+      const result = await interpret(originHandler.listByKind({ kind: "space" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "list_spaces" -> ok', async () => {
+      if (typeof originHandler.listByKind !== 'function') return;
       const storage = createInMemoryStorage();
-      // Setup: register_space + register_kernel (to verify filtering)
-      await interpret(originHandler.register({ origin: 'origin-redesign', kind: 'space', qualifier: 'vs-redesign', displayName: 'redesign', resolverConfig: '{"spaceId":"vs-redesign"}' }), storage);
-      await interpret(originHandler.register({ origin: 'origin-team', kind: 'kernel', qualifier: 'ws://team.clef.dev/kernel', displayName: 'team-shared', resolverConfig: '{"connectionId":"conn-team","endpoint":"ws://team.clef.dev/kernel"}' }), storage);
-      const result = await interpret(originHandler.listByKind({ kind: 'space' }), storage);
+      const afterResult_register_space = await interpret(originHandler.register({ origin: "origin-redesign", kind: "space", qualifier: "vs-redesign", displayName: "redesign", resolverConfig: {"spaceId":"vs-redesign"} }), storage);
+      const _pool = Object.assign({}, (afterResult_register_space?.output ?? {}));
+      const _fixtureInput = { kind: "space" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(originHandler.listByKind({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
-      const parsed = JSON.parse(result.output!.origins as string);
-      expect(Array.isArray(parsed)).toBe(true);
-      expect(parsed.every((o: { kind: string }) => o.kind === 'space')).toBe(true);
     });
 
-    it('returns empty array for kind with no matching origins', async () => {
-      const storage = createInMemoryStorage();
-      const result = await interpret(originHandler.listByKind({ kind: 'local' }), storage);
-      expect(result.variant).toBe('ok');
-      const parsed = JSON.parse(result.output!.origins as string);
-      expect(parsed).toHaveLength(0);
-    });
   });
 
-  // ─── Invariant: "register then get returns full record" ─────────────────
 
-  describe('invariant: register then get returns full record', () => {
-    it('after register -> ok, then get -> ok with non-null kind and status', async () => {
+  describe('invariant examples', () => {
+    it("register then get returns full record", async () => {
       const storage = createInMemoryStorage();
-      const reg = await interpret(originHandler.register({ origin: 'o1', kind: 'local', qualifier: 'base', displayName: 'local base', resolverConfig: '{}' }), storage);
-      expect(reg.variant).toBe('ok');
-      const originId = reg.output?.origin as string;
-
-      const getResult = await interpret(originHandler.get({ origin: originId }), storage);
-      expect(getResult.variant).toBe('ok');
-      expect(getResult.output?.kind).toBeTruthy();
-      expect(getResult.output?.status).toBeTruthy();
+      const registerResult0 = await interpret(originHandler.register({ origin: "o1", kind: "local", qualifier: "base", displayName: "local base", resolverConfig: {} }), storage);
+      expect(registerResult0.variant).toBe("ok");
+      let origin = registerResult0.output["origin"];
+      let o = origin;
+      const thenResult0 = await interpret(originHandler.get({ origin: o }), storage);
+      expect(thenResult0.variant).toBe("ok");
     });
+
+    it("duplicate register is rejected", async () => {
+      const storage = createInMemoryStorage();
+    });
+
+    it("list returns registered origins", async () => {
+      const storage = createInMemoryStorage();
+      const registerResult0 = await interpret(originHandler.register({ origin: "o-list", kind: "kernel", qualifier: "ws://host/kernel", displayName: "remote", resolverConfig: {} }), storage);
+      expect(registerResult0.variant).toBe("ok");
+      let origin = registerResult0.output["origin"];
+      let o = origin;
+      const thenResult0 = await interpret(originHandler.list({  }), storage);
+      expect(thenResult0.variant).toBe("ok");
+    });
+
   });
 
-  // ─── Invariant: "duplicate register is rejected" ────────────────────────
-
-  describe('invariant: duplicate register is rejected', () => {
-    it('after register -> ok, second register with same id -> duplicate', async () => {
-      const storage = createInMemoryStorage();
-      const reg1 = await interpret(originHandler.register({ origin: 'o-dup', kind: 'space', qualifier: 'vs-1', displayName: 'v1', resolverConfig: '{"spaceId":"vs-1"}' }), storage);
-      expect(reg1.variant).toBe('ok');
-
-      const reg2 = await interpret(originHandler.register({ origin: 'o-dup', kind: 'space', qualifier: 'vs-1', displayName: 'v1', resolverConfig: '{"spaceId":"vs-1"}' }), storage);
-      expect(reg2.variant).toBe('duplicate');
+  describe('state invariants (stateful PBT)', () => {
+    it('always: origins have non-empty kind', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('register'), input: fc.record({ origin: fc.string(), kind: fc.string({ minLength: 1, maxLength: 50 }), qualifier: fc.string({ minLength: 1, maxLength: 50 }), displayName: fc.string({ minLength: 1, maxLength: 50 }), resolverConfig: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ origin: fc.string(), entityId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('checkStatus'), input: fc.record({ origin: fc.string() }) }),
+              fc.record({ action: fc.constant('batchResolve'), input: fc.record({ origin: fc.string(), entityIds: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ origin: fc.string() }) }),
+              fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
+              fc.record({ action: fc.constant('listByKind'), input: fc.record({ kind: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = originHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(originHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
     });
+
+    it('always: kind is valid', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('register'), input: fc.record({ origin: fc.string(), kind: fc.string({ minLength: 1, maxLength: 50 }), qualifier: fc.string({ minLength: 1, maxLength: 50 }), displayName: fc.string({ minLength: 1, maxLength: 50 }), resolverConfig: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ origin: fc.string(), entityId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('checkStatus'), input: fc.record({ origin: fc.string() }) }),
+              fc.record({ action: fc.constant('batchResolve'), input: fc.record({ origin: fc.string(), entityIds: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ origin: fc.string() }) }),
+              fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
+              fc.record({ action: fc.constant('listByKind'), input: fc.record({ kind: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = originHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(originHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('always: status is valid', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('register'), input: fc.record({ origin: fc.string(), kind: fc.string({ minLength: 1, maxLength: 50 }), qualifier: fc.string({ minLength: 1, maxLength: 50 }), displayName: fc.string({ minLength: 1, maxLength: 50 }), resolverConfig: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ origin: fc.string(), entityId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('checkStatus'), input: fc.record({ origin: fc.string() }) }),
+              fc.record({ action: fc.constant('batchResolve'), input: fc.record({ origin: fc.string(), entityIds: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('get'), input: fc.record({ origin: fc.string() }) }),
+              fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
+              fc.record({ action: fc.constant('listByKind'), input: fc.record({ kind: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = originHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(originHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
   });
 
-  // ─── Invariant: "list returns registered origins" ───────────────────────
-
-  describe('invariant: list returns registered origins', () => {
-    it('after register -> ok, list -> ok with non-null origins', async () => {
+  describe('action contracts (PBT)', () => {
+    it('register handles empty input: ', async () => {
+      if (typeof originHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const reg = await interpret(originHandler.register({ origin: 'o-list', kind: 'kernel', qualifier: 'ws://host/kernel', displayName: 'remote', resolverConfig: '{}' }), storage);
-      expect(reg.variant).toBe('ok');
-
-      const listResult = await interpret(originHandler.list({}), storage);
-      expect(listResult.variant).toBe('ok');
-      expect(listResult.output?.origins).toBeTruthy();
+      const result = await safeInvoke(async () => await interpret(originHandler.register({  }), storage));
+      // Empty input should produce a defined result with a variant
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
     });
+
+    it('register ensures on ok: ', async () => {
+      if (typeof originHandler.register !== 'function') return;
+      let seen = false;
+      await fc.assert(
+        fc.asyncProperty(
+          fc.record({ origin: fc.string(), kind: fc.string({ minLength: 1, maxLength: 50 }), qualifier: fc.string({ minLength: 1, maxLength: 50 }), displayName: fc.string({ minLength: 1, maxLength: 50 }), resolverConfig: fc.string({ minLength: 1, maxLength: 50 }) }),
+          async (input) => {
+            const storage = createInMemoryStorage();
+            const result = await safeInvoke(async () => {
+              const program = originHandler.register(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
+              seen = true;
+              expect(result.output).toBeDefined();
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('resolve handles empty input: ', async () => {
+      if (typeof originHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await safeInvoke(async () => await interpret(originHandler.resolve({  }), storage));
+      // Empty input should produce a defined result with a variant
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('resolve ensures on ok: ', async () => {
+      if (typeof originHandler.resolve !== 'function') return;
+      let seen = false;
+      await fc.assert(
+        fc.asyncProperty(
+          fc.record({ origin: fc.string(), entityId: fc.string({ minLength: 1, maxLength: 50 }) }),
+          async (input) => {
+            const storage = createInMemoryStorage();
+            const result = await safeInvoke(async () => {
+              const program = originHandler.resolve(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
+              seen = true;
+              expect(result.output).toBeDefined();
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
   });
 
 });

@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { fluxProviderHandler } from '../../handlers/ts/deploy/flux-provider.handler.js';
+import { fluxProviderHandler } from '../../handlers/ts/app/flux-provider.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,

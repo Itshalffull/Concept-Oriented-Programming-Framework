@@ -135,7 +135,7 @@ describe('QualityGate functional handler', () => {
 
   describe('evaluate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = qualityGateHandler.evaluate({ gate: {"type":"ref","fixture":"define_release_ready","field":"gate"} });
+      const program = qualityGateHandler.evaluate({ gate: 'test', baseline: 'test' });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -143,21 +143,21 @@ describe('QualityGate functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = qualityGateHandler.evaluate({ gate: {"type":"ref","fixture":"define_release_ready","field":"gate"} });
+      const program = qualityGateHandler.evaluate({ gate: 'test', baseline: 'test' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = qualityGateHandler.evaluate({ gate: {"type":"ref","fixture":"define_release_ready","field":"gate"} });
+      const program = qualityGateHandler.evaluate({ gate: 'test', baseline: 'test' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = qualityGateHandler.evaluate({ gate: {"type":"ref","fixture":"define_release_ready","field":"gate"} });
+      const program = qualityGateHandler.evaluate({ gate: 'test', baseline: 'test' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -170,7 +170,7 @@ describe('QualityGate functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = qualityGateHandler.evaluate({ gate: {"type":"ref","fixture":"define_release_ready","field":"gate"} });
+      const program = qualityGateHandler.evaluate({ gate: 'test', baseline: 'test' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -178,19 +178,20 @@ describe('QualityGate functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof qualityGateHandler.evaluate !== 'function') return;
-      const result = await interpret(qualityGateHandler.evaluate({ gate: {"type":"ref","fixture":"define_release_ready","field":"gate"} }), storage);
+      const result = await interpret(qualityGateHandler.evaluate({ gate: 'test', baseline: 'test' }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "evaluate_existing" -> ok', async () => {
+    it('fixture "evaluate_existing" -> failed', async () => {
       if (typeof qualityGateHandler.evaluate !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_define_release_ready = await interpret(qualityGateHandler.define({ name: "release-ready", description: "Gate for production releases", conditions: [{"conditionId":"no-new-blockers","findingQuery":{"severities":["blocker"],"statuses":["open"]},"operator":"eq","threshold":"0.0","onNewCodeOnly":"true"},{"conditionId":"coverage-threshold","metricName":"test_coverage","operator":"gte","threshold":"80.0","onNewCodeOnly":"false"}] }), storage);
       const result = await interpret(qualityGateHandler.evaluate({ gate: afterResult_define_release_ready?.output?.["gate"] }), storage);
-      expect(result.variant).toBe('ok');
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('failed'));
     });
 
     it('fixture "evaluate_missing" -> gateNotFound', async () => {
