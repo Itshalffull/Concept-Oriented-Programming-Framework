@@ -1,0 +1,51 @@
+# Schema page edit display mode — default display for ContentNode pages
+# that have a content-native schema with childSchema property.
+# Auto-created by ContentNativeSchemaCreatesPageDisplayMode sync.
+# Uses a sidebar layout: property fields on the left, children ViewShell
+# (block list with schema-block-editor rows) in the main area.
+# See schema-page-display.sync.
+
+display_mode:
+  name: schema-page-edit
+  version: 1
+  description: "Default page-edit display mode for content-native schema pages with child blocks"
+  default: false
+
+target_schemas:
+  - property: childSchema
+    present: true
+
+layout: schema-page-sidebar-layout
+
+zone_mapping:
+  sidebar:
+    source: schema_properties
+    widget: fieldset-widget
+    props:
+      show_labels: true
+      editable: true
+      group_by: field_group
+      sticky: true
+
+  main:
+    source: children_view
+    widget: view-embed
+    props:
+      editable: true
+      drag_reorder: true
+      show_add_button: true
+      add_button_label: "Add block"
+      empty_state: "No blocks yet. Click 'Add block' to create the first one."
+
+  header:
+    source: entity_header
+    widget: entity-header
+    props:
+      show_name: true
+      show_avatar: true
+      show_status_badge: true
+      editable: true
+
+permissions:
+  view: viewer
+  edit: editor
