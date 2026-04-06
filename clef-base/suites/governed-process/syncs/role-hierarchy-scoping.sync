@@ -1,0 +1,112 @@
+# Role and hierarchy scoping syncs — wire roles to circles, enforce hierarchy,
+# and handle inheritance so that circle membership, lead-link designation, and
+# role hierarchy produce consistent access-control effects automatically.
+
+sync RoleScopedToCircle [eager]
+  purpose {
+    When a role is created, associate it with its owning circle via Relation
+    so the role becomes discoverable within that circle's governance scope.
+  }
+when {
+  Role/create: [ name: ?name; permissions: ?perms; polity: ?polity ]
+    => ok(role: ?role)
+}
+then {
+  Relation/link: [ relation: "circle_role"; source: ?polity; target: ?role ]
+}
+
+sync ParentCircleLeadManagesChild [eager]
+  purpose {
+    When a child circle is created under a parent, grant the parent's
+    lead-link management permission over the child circle so that
+    parent-circle representatives can govern child-circle roles and processes.
+  }
+when {
+  Circle/create: [ name: ?name; domain: ?domain; parent: ?parent ]
+    => ok(circle: ?child)
+}
+where {
+  Circle: { ?parent leadLink: ?leadLink }
+}
+then {
+  Permission/grant: [
+    who: ?leadLink;
+    where: ?child;
+    what: "manage";
+    condition: none;
+    grantedBy: "system"
+  ]
+}
+
+sync RoleInheritance [eager]
+  purpose {
+    When a member is assigned to a parent role that declares sub-roles via
+    hierarchy, propagate the assignment to each child role so that holders
+    of the parent automatically inherit the capacities of its sub-roles.
+  }
+when {
+  Role/assign: [ role: ?parentRole; member: ?member; assignedBy: ?by ]
+    => ok(assignment: ?assignment)
+}
+where {
+  Role: { ?parentRole hierarchy: ?childRole }
+}
+then {
+  Role/assign: [ role: ?childRole; member: ?member; assignedBy: "inherited" ]
+}
+
+sync CircleMembershipEnablesRoleAccess [eager]
+  purpose {
+    When a member is added to a circle, grant them permission to hold roles
+    scoped to that circle so that circle membership is a prerequisite for
+    role assignment within that circle's governance boundary.
+  }
+when {
+  Circle/assignMember: [ circle: ?circle; member: ?member ]
+    => ok(circle: ?circle; member: ?member)
+}
+then {
+  Permission/grant: [
+    who: ?member;
+    where: ?circle;
+    what: "hold_role";
+    condition: none;
+    grantedBy: "membership"
+  ]
+}
+
+sync LeadLinkAssignsRole [eager]
+  purpose {
+    When a circle's lead-link is set, auto-assign the circle-scoped lead-link
+    governance role to that person so that role-based permission checks
+    immediately reflect the new link designation.
+  }
+when {
+  Circle/setLinks: [ circle: ?circle; repLink: ?rep; leadLink: ?lead ]
+    => ok(circle: ?circle)
+}
+then {
+  Role/assign: [
+    role: concat(?circle, "-lead-link");
+    member: ?lead;
+    assignedBy: "circle-governance"
+  ]
+}
+
+sync RepLinkAssignsRole [eager]
+  purpose {
+    When a circle's rep-link is set, auto-assign the circle-scoped rep-link
+    governance role to that person so that the representative's capacities
+    within the parent circle are enforced through the role system.
+  }
+when {
+  Circle/setLinks: [ circle: ?circle; repLink: ?rep; leadLink: ?lead ]
+    => ok(circle: ?circle)
+}
+then {
+  Role/assign: [
+    role: concat(?circle, "-rep-link");
+    member: ?rep;
+    assignedBy: "circle-governance"
+  ]
+}

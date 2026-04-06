@@ -1,0 +1,61 @@
+# Role — Content-Native Schema Definition
+# A role is a page with responsibility blocks. Each responsibility is an
+# Outline child with the "role-responsibility" child schema overlay
+# describing what the role holder is accountable for, what permissions
+# it grants, and any constraints.
+
+name: role
+version: 1
+
+fields:
+  - name: name
+    type: string
+    required: true
+  - name: purpose
+    type: string
+    required: true
+  - name: circle
+    type: string
+  - name: parent_role
+    type: string
+  - name: max_holders
+    type: number
+  - name: term_expiry
+    type: string
+  - name: status
+    type: string
+    default: "active"
+    enum: [active, vacant, suspended, dissolved]
+
+contentNative:
+  childSchema: role-responsibility
+  defaultTemplate: standard-role
+
+childSchemaDefinition:
+  name: role-section
+  isChildSchema: true
+  fields:
+    - name: section_type
+      type: string
+      required: true
+      enum: [accountability, domain, constraint, context]
+    - name: required
+      type: boolean
+      default: true
+
+defaultBlocks:
+  - sectionType: accountability
+    section_type: accountability
+    required: true
+    description: "Core accountability — what this role is responsible for"
+    defaultContent: "Describe the primary accountability of this role."
+  - sectionType: domain
+    section_type: domain
+    required: false
+    description: "Domain — the area this role has authority over"
+    defaultContent: "Define the domain of authority for this role."
+  - sectionType: constraints
+    section_type: constraint
+    required: false
+    description: "Constraints and boundaries on role authority"
+    defaultContent: "Define any limitations or boundaries on this role."
