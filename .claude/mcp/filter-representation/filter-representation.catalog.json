@@ -1,0 +1,42 @@
+[
+  {
+    "name": "filter_representation_register_kind",
+    "briefDescription": "Register a representation kind provider so that parse and print \n dispatches ...",
+    "category": "FilterRepresentation",
+    "concept": "FilterRepresentation",
+    "action": "registerKind",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "filter_representation_register",
+    "briefDescription": "Register a named representation provider of a given kind .",
+    "category": "FilterRepresentation",
+    "concept": "FilterRepresentation",
+    "action": "register",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "filter_representation_parse",
+    "briefDescription": "Forward direction : convert a representation string authored in the \n given k...",
+    "category": "FilterRepresentation",
+    "concept": "FilterRepresentation",
+    "action": "parse",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "filter_representation_print",
+    "briefDescription": "Reverse direction : convert a canonical FilterNode IR JSON string into \n the ...",
+    "category": "FilterRepresentation",
+    "concept": "FilterRepresentation",
+    "action": "print",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "filter_representation_can_print",
+    "briefDescription": "Check whether the kind provider can faithfully represent the given \n FilterNo...",
+    "category": "FilterRepresentation",
+    "concept": "FilterRepresentation",
+    "action": "canPrint",
+    "alwaysLoaded": false
+  }
+]

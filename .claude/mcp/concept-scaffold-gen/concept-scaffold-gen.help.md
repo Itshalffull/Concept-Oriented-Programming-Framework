@@ -141,5 +141,5 @@ npx tsx cli/src/index.ts test-gen --coverage --concept User
 ```bash
 npx vitest run tests/scaffold-generators.test.ts
 ```
-**Related tools:** [object Object], [object Object], [object Object], [object Object]
+**Related tools:** [object Object], [object Object], [object Object], [object Object], [object Object]
 

@@ -1,0 +1,26 @@
+[
+  {
+    "name": "sort_spec_create",
+    "briefDescription": "Register a new named sort spec with the given key array .",
+    "category": "SortSpec",
+    "concept": "SortSpec",
+    "action": "create",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "sort_spec_compose",
+    "briefDescription": "Concatenate the key arrays of the primary and secondary sort specs , \n produc...",
+    "category": "SortSpec",
+    "concept": "SortSpec",
+    "action": "compose",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "sort_spec_evaluate",
+    "briefDescription": "Apply the named sort spec s keys to the JSON serialized row array , returning...",
+    "category": "SortSpec",
+    "concept": "SortSpec",
+    "action": "evaluate",
+    "alwaysLoaded": false
+  }
+]

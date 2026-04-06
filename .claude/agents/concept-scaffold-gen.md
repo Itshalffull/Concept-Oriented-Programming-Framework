@@ -6,6 +6,7 @@ tools: Read, Grep, Glob, Edit, Write, Bash, mcp__vibe_kanban
 skills:
   - concept-scaffold-gen
   - create-concept
+  - create-view-query
   - spec-parser
   - score-api
 ---

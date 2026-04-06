@@ -312,3 +312,4 @@ See [templates/sync-scaffold.md](templates/sync-scaffold.md) for copy-paste temp
 | `/create-suite` | Bundle concepts and their syncs into a reusable suite |
 | `/create-implementation` | Write the implementation that handles actions syncs invoke |
 | `/configure-deployment` | Assign syncs to engines in deployment manifests |
+| `/create-view-query` | For view-layer syncs (compile-query, execute-query, view-resolve, compose-filters), understand the QueryProgram pipeline and how view specs wire together |

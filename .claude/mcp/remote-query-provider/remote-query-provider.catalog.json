@@ -1,0 +1,26 @@
+[
+  {
+    "name": "remote_query_provider_register",
+    "briefDescription": "Register a remote query provider for an external API source .",
+    "category": "RemoteQueryProvider",
+    "concept": "RemoteQueryProvider",
+    "action": "register",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "remote_query_provider_execute",
+    "briefDescription": "Execute a query program against the remote API : \n 1 .",
+    "category": "RemoteQueryProvider",
+    "concept": "RemoteQueryProvider",
+    "action": "execute",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "remote_query_provider_plan_pushdown",
+    "briefDescription": "Split a query program into pushdown ( handled by API ) and \n residual ( handl...",
+    "category": "RemoteQueryProvider",
+    "concept": "RemoteQueryProvider",
+    "action": "planPushdown",
+    "alwaysLoaded": false
+  }
+]

@@ -1,0 +1,10 @@
+[
+  {
+    "name": "presentation_spec_create",
+    "briefDescription": "Register a new named presentation with the given display type , opaque \n JSON...",
+    "category": "PresentationSpec",
+    "concept": "PresentationSpec",
+    "action": "create",
+    "alwaysLoaded": false
+  }
+]

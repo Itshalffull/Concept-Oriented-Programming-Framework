@@ -151,3 +151,4 @@ npx vitest run tests/scaffold-generators.test.ts
 - /create-handler — Generate handler implementations for the concept
 - /create-sync — Generate sync rules connecting the concept
 - /test-gen — Generate tests from invariants (TestGen/generate, TestGen/coverage)
+- /create-view-query — For view-layer concepts, compose with QueryProgram/FilterSpec/SortSpec instead of ad-hoc data fetching

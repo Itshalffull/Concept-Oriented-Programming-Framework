@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-02T19:30:50.672Z",
+  "generatedAt": "2026-04-06T12:50:41.121Z",
   "files": [
     {
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\spec-parser\\spec-parser.commands.ts",
@@ -22,7 +22,7 @@
     {
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\spec-parser\\references\\concept-grammar.md",
       "relativePath": "claude-skills/spec-parser/references/concept-grammar.md",
-      "hash": "ea54441504328f464c4c27f5947008f7cd6e11117de7e4196c46fa2f86060b66",
+      "hash": "4ca8510476670e9dfe0f429a5dbdacbab722e59ebd427d56d076d8154bb13d42",
       "target": "claude-skills"
     },
     {
@@ -364,7 +364,7 @@
     {
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\concept-scaffold-gen\\SKILL.md",
       "relativePath": "claude-skills/concept-scaffold-gen/SKILL.md",
-      "hash": "f4e73989d79b22754927519db52a29bcb2e6b047a205f9f6a1e41b0bfd35f1f0",
+      "hash": "9b568d1e3ad37b513c2e06fc7b9ea97fe8685d7c84c356632cc17ba5ca375941",
       "target": "claude-skills"
     },
     {
@@ -412,7 +412,7 @@
     {
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\handler-scaffold-gen\\SKILL.md",
       "relativePath": "claude-skills/handler-scaffold-gen/SKILL.md",
-      "hash": "b4189a0b6a2a27dfc26ed69bd9c56907fe2d641cadff12deca29b68bc406cc17",
+      "hash": "112a42d5b1ae2a43a5f252e87e8ec849ad74984e10bc19b4f2d7abfc401e5b3c",
       "target": "claude-skills"
     },
     {
@@ -581,18 +581,6 @@
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\generator\\SKILL.md",
       "relativePath": "claude-skills/generator/SKILL.md",
       "hash": "25b914bf414669971ae07857adb1d405e59f652c25603c1ee242be917ab5ed17",
-      "target": "claude-skills"
-    },
-    {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\projection\\projection.commands.ts",
-      "relativePath": "claude-skills/projection/projection.commands.ts",
-      "hash": "e768fbfbac430805f45cb3ebf18bb866f512536b2bd39cded57b729db11cbd01",
-      "target": "claude-skills"
-    },
-    {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\projection\\SKILL.md",
-      "relativePath": "claude-skills/projection/SKILL.md",
-      "hash": "f2ac43031522208d5e1555a952cea5724bddd8da1ee08c1b90367c094bfb4aa5",
       "target": "claude-skills"
     },
     {
@@ -1598,6 +1586,168 @@
       "target": "claude-skills"
     },
     {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\query-program\\query-program.commands.ts",
+      "relativePath": "claude-skills/query-program/query-program.commands.ts",
+      "hash": "82bb4d127437daee568fe163918ec86cbb5de63faf07079c83f667a84afd4baa",
+      "target": "claude-skills"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\query-program\\SKILL.md",
+      "relativePath": "claude-skills/query-program/SKILL.md",
+      "hash": "babe9950c16650bc53193321f60199ccdb7eef1934674ea7987d7c2b5a4097d5",
+      "target": "claude-skills"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\query-program\\references\\query-program-grammar.md",
+      "relativePath": "claude-skills/query-program/references/query-program-grammar.md",
+      "hash": "0bf71815ecf0cededa6d90f72d78b4696932fa112c74d71559b54356d31857c4",
+      "target": "claude-skills"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\query-execution\\query-execution.commands.ts",
+      "relativePath": "claude-skills/query-execution/query-execution.commands.ts",
+      "hash": "170027845724d4c5a45ca46fe0eb288d2161b9ea8239cafc3925922ad6895882",
+      "target": "claude-skills"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\query-execution\\SKILL.md",
+      "relativePath": "claude-skills/query-execution/SKILL.md",
+      "hash": "c544bb6a2f689962fad12979f61902024c4682e5528c8a6102758970658c4bdd",
+      "target": "claude-skills"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\sort-spec\\sort-spec.commands.ts",
+      "relativePath": "claude-skills/sort-spec/sort-spec.commands.ts",
+      "hash": "ab6be3d92351126bf3f83da36e07bfbc8b5097b27458c10c7daeaabd1d028a85",
+      "target": "claude-skills"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\sort-spec\\SKILL.md",
+      "relativePath": "claude-skills/sort-spec/SKILL.md",
+      "hash": "48ea530ef5c64d24ad270f17aaf4f038b04952fe46a9e0097e7f21ac8aed179b",
+      "target": "claude-skills"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\group-spec\\group-spec.commands.ts",
+      "relativePath": "claude-skills/group-spec/group-spec.commands.ts",
+      "hash": "368cfc56ab864b543e8353a3975b3313b9fdb8af1c13a8ba4dd6ddf294e04170",
+      "target": "claude-skills"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\group-spec\\SKILL.md",
+      "relativePath": "claude-skills/group-spec/SKILL.md",
+      "hash": "955830f7c2008d7d629465eebda22b573477b8b295a6b1db4b8adef68188740f",
+      "target": "claude-skills"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\projection-spec\\projection-spec.commands.ts",
+      "relativePath": "claude-skills/projection-spec/projection-spec.commands.ts",
+      "hash": "c67f716aa471669dcc3571d0c96085b2e27d0f541a190a93ad1df262b74fbdbd",
+      "target": "claude-skills"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\projection-spec\\SKILL.md",
+      "relativePath": "claude-skills/projection-spec/SKILL.md",
+      "hash": "c0816000514372a0c39f461879f970650d273444cf9494ffab6cecec2e7c7599",
+      "target": "claude-skills"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\presentation-spec\\presentation-spec.commands.ts",
+      "relativePath": "claude-skills/presentation-spec/presentation-spec.commands.ts",
+      "hash": "62143ab379b9005102d222b09f7daa3e8ec0ece22d645326a78b819ae60adb8b",
+      "target": "claude-skills"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\presentation-spec\\SKILL.md",
+      "relativePath": "claude-skills/presentation-spec/SKILL.md",
+      "hash": "d6e4330f097c424fa4fa7a417f8246600fc0ec56651eb967acd596744920683f",
+      "target": "claude-skills"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\interaction-spec\\interaction-spec.commands.ts",
+      "relativePath": "claude-skills/interaction-spec/interaction-spec.commands.ts",
+      "hash": "b16d00024c96838f2e2acad855af5800340c21f0124e4d219f0df587e5742aed",
+      "target": "claude-skills"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\interaction-spec\\SKILL.md",
+      "relativePath": "claude-skills/interaction-spec/SKILL.md",
+      "hash": "a6f7c45ed09865ff1f25b8a86d1f6e18b2cab4caa206b0a1df91a1a3b9e586f2",
+      "target": "claude-skills"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\view-shell\\view-shell.commands.ts",
+      "relativePath": "claude-skills/view-shell/view-shell.commands.ts",
+      "hash": "152d06ba423ba2e712920bb7e3bf522cd6ba0e1a514c5565a3fa91525807fbeb",
+      "target": "claude-skills"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\view-shell\\SKILL.md",
+      "relativePath": "claude-skills/view-shell/SKILL.md",
+      "hash": "fe79ffb74238c48e287ae68f2592a763e1af27384b785f343c24cca839e92a18",
+      "target": "claude-skills"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\filter-representation\\filter-representation.commands.ts",
+      "relativePath": "claude-skills/filter-representation/filter-representation.commands.ts",
+      "hash": "f5224f2d51544ccc828c832afb9b554228e79c29dd2af38e9c7dacda63cd7d83",
+      "target": "claude-skills"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\filter-representation\\SKILL.md",
+      "relativePath": "claude-skills/filter-representation/SKILL.md",
+      "hash": "9cf1495ab2e429e078c17a275a336a3e4eee24e7d9e2a9a2d80c653e2a91daad",
+      "target": "claude-skills"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\remote-query-provider\\remote-query-provider.commands.ts",
+      "relativePath": "claude-skills/remote-query-provider/remote-query-provider.commands.ts",
+      "hash": "c87dfd6f1216e24e87a87ee9a69eb2b5843e4da2142ea7320a68def2790467a2",
+      "target": "claude-skills"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\remote-query-provider\\SKILL.md",
+      "relativePath": "claude-skills/remote-query-provider/SKILL.md",
+      "hash": "116ae17e2b6d1ca65c543afdf6d02157626b7eaa9519cd6144da2f27c176e2ad",
+      "target": "claude-skills"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\connection\\connection.commands.ts",
+      "relativePath": "claude-skills/connection/connection.commands.ts",
+      "hash": "57f342e7aef87a17dba1b2f39584086dff8c80d881fa500bd99050e0bb58d3d9",
+      "target": "claude-skills"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\connection\\SKILL.md",
+      "relativePath": "claude-skills/connection/SKILL.md",
+      "hash": "4cd19382887e73050fb2fd7ddd2f1230c1f4c978edc42a8c67fdfc7b83288e72",
+      "target": "claude-skills"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\page-map\\page-map.commands.ts",
+      "relativePath": "claude-skills/page-map/page-map.commands.ts",
+      "hash": "19fd7119625a1d97fefdd67ab69a517c31e0afe4f1434a34d191485d334aa8f3",
+      "target": "claude-skills"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\page-map\\SKILL.md",
+      "relativePath": "claude-skills/page-map/SKILL.md",
+      "hash": "c3496e45453a1c31c800bb5114b6f3d3b9cdc8faf0ce6468823207152c692d2a",
+      "target": "claude-skills"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\pilot\\pilot.commands.ts",
+      "relativePath": "claude-skills/pilot/pilot.commands.ts",
+      "hash": "757ab669e84230b9dd8a9c79195ae303f9c98f274aa239a8683cb4d90c795c3e",
+      "target": "claude-skills"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\skills\\pilot\\SKILL.md",
+      "relativePath": "claude-skills/pilot/SKILL.md",
+      "hash": "981c3fd8548a7b6d1d32adb7508feaeb5b43dadcdeaecd3496822824527171c8",
+      "target": "claude-skills"
+    },
+    {
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\cli\\src\\spec-parser\\spec-parser.command.ts",
       "relativePath": "cli/spec-parser/spec-parser.command.ts",
       "hash": "1b6d48f437d405aee428037824a1188b0d4dc601cab01b165029e8ce56969a58",
@@ -1774,7 +1924,7 @@
     {
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\cli\\src\\concept-scaffold-gen\\concept-scaffold-gen.help.md",
       "relativePath": "cli/concept-scaffold-gen/concept-scaffold-gen.help.md",
-      "hash": "97c8127e5c0cc40c412b9c591849a38816cd2198c5d3fc10282cf8cbafa597a4",
+      "hash": "ddb868fd06686f075d0676a8fb53d42119b5e487aa08f00f594e84f4471985ef",
       "target": "cli"
     },
     {
@@ -1798,7 +1948,7 @@
     {
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\cli\\src\\handler-scaffold-gen\\handler-scaffold-gen.help.md",
       "relativePath": "cli/handler-scaffold-gen/handler-scaffold-gen.help.md",
-      "hash": "918d52753cc7749a7007549d0ad3544999f41f0b6f04e69da74334f50dd3b0f8",
+      "hash": "97140165b430577ace0203152df040a5eccf716170460deae245b27f50bde641",
       "target": "cli"
     },
     {
@@ -1877,12 +2027,6 @@
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\cli\\src\\generator\\generator.command.ts",
       "relativePath": "cli/generator/generator.command.ts",
       "hash": "7b0573d1569d6710bb4cc38fa10211b7472ad130c8b1e7d5e8c8c833b9507cbd",
-      "target": "cli"
-    },
-    {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\cli\\src\\projection\\projection.command.ts",
-      "relativePath": "cli/projection/projection.command.ts",
-      "hash": "82dcc9179acc7b0834088406f1c574a9692ca901d5e9f4c74affb9ae69fd8467",
       "target": "cli"
     },
     {
@@ -2396,6 +2540,90 @@
       "target": "cli"
     },
     {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\cli\\src\\query-program\\query-program.command.ts",
+      "relativePath": "cli/query-program/query-program.command.ts",
+      "hash": "61937b62893089c5b6c06fb2bf6eb8ed9df22571322104340b9b378d4be777d2",
+      "target": "cli"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\cli\\src\\query-program\\query-program.help.md",
+      "relativePath": "cli/query-program/query-program.help.md",
+      "hash": "f3916673941502d6ed65c7ad4aaf3b1e13e6eaf3d46c04baec605f52eb8952b4",
+      "target": "cli"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\cli\\src\\query-execution\\query-execution.command.ts",
+      "relativePath": "cli/query-execution/query-execution.command.ts",
+      "hash": "de5d0e4478b46213cc334cb8800edeb2f47e2436cb07ebe1573756e4bf61583e",
+      "target": "cli"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\cli\\src\\sort-spec\\sort-spec.command.ts",
+      "relativePath": "cli/sort-spec/sort-spec.command.ts",
+      "hash": "48e5b3e76106db21099035a84803629c27f540083aafb314a0a43682de6a9d0c",
+      "target": "cli"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\cli\\src\\group-spec\\group-spec.command.ts",
+      "relativePath": "cli/group-spec/group-spec.command.ts",
+      "hash": "6a0ff4140f3b236f937287fc9abc16e03eb8f17f26b725fcb47769c9a33f0352",
+      "target": "cli"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\cli\\src\\projection-spec\\projection-spec.command.ts",
+      "relativePath": "cli/projection-spec/projection-spec.command.ts",
+      "hash": "1c5a896e416ce5c6a914f80acf55ea917335d0e18e7a78ede2cea2537d8b0b9c",
+      "target": "cli"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\cli\\src\\presentation-spec\\presentation-spec.command.ts",
+      "relativePath": "cli/presentation-spec/presentation-spec.command.ts",
+      "hash": "66e7e406156eda0706b911fcf609b1277e41c8d03eb2f7cc2734a85e0c99d004",
+      "target": "cli"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\cli\\src\\interaction-spec\\interaction-spec.command.ts",
+      "relativePath": "cli/interaction-spec/interaction-spec.command.ts",
+      "hash": "2a86ddbeca30a2ea701297bf622ae6ba01e67572263d232b9cfa099ffc67cc3f",
+      "target": "cli"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\cli\\src\\view-shell\\view-shell.command.ts",
+      "relativePath": "cli/view-shell/view-shell.command.ts",
+      "hash": "8fb0c736ca664abd5a06d838a296b60456a68629f5dcc795feb6904e5d132a84",
+      "target": "cli"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\cli\\src\\filter-representation\\filter-representation.command.ts",
+      "relativePath": "cli/filter-representation/filter-representation.command.ts",
+      "hash": "924f401962eeac304aa90cd0f88b84097f85413e77c227248b8f0df4a9c8d811",
+      "target": "cli"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\cli\\src\\remote-query-provider\\remote-query-provider.command.ts",
+      "relativePath": "cli/remote-query-provider/remote-query-provider.command.ts",
+      "hash": "daf73ac57337a2b579a6fde216a9d59759855106aff9035e501d71334cde8507",
+      "target": "cli"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\cli\\src\\connection\\connection.command.ts",
+      "relativePath": "cli/connection/connection.command.ts",
+      "hash": "bbaaf5410840a27987fba81f03aeafdb76a97b22229c49e64be81dcadbd28a3e",
+      "target": "cli"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\cli\\src\\page-map\\page-map.command.ts",
+      "relativePath": "cli/page-map/page-map.command.ts",
+      "hash": "ceae0ab825ab191ed4aaa7875ddfde157a0e221d18406d7c37cb80e9eceefb6e",
+      "target": "cli"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\cli\\src\\pilot\\pilot.command.ts",
+      "relativePath": "cli/pilot/pilot.command.ts",
+      "hash": "2782f3b1c0ec20c877a5dcedf9e2e0fdbde6430006414aad5231b4b047b916a3",
+      "target": "cli"
+    },
+    {
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\spec-parser\\spec-parser.tools.ts",
       "relativePath": "mcp/spec-parser/spec-parser.tools.ts",
       "hash": "a7b625ef6e448f49a27b1cd3af7e3b0be2ad8f175647cf601f9a7ba4d34aaa50",
@@ -2668,7 +2896,7 @@
     {
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\concept-scaffold-gen\\concept-scaffold-gen.help.md",
       "relativePath": "mcp/concept-scaffold-gen/concept-scaffold-gen.help.md",
-      "hash": "48960c072836ad55904004834cde758c402e09f98b0b53b0597f02c9db38f243",
+      "hash": "0847cfd99146dc90935e2e1d796395f6d6a957909df71681874963ab30154201",
       "target": "mcp"
     },
     {
@@ -2704,7 +2932,7 @@
     {
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\handler-scaffold-gen\\handler-scaffold-gen.help.md",
       "relativePath": "mcp/handler-scaffold-gen/handler-scaffold-gen.help.md",
-      "hash": "b473b1988c5d00ed33919a579853d0428eb05d2fa98ca8942baf6d770c09cc0a",
+      "hash": "70326d8704b875862d5273eb14bf85fc36fbd5a1aaaa7e2b83a3c900ea6fa4bc",
       "target": "mcp"
     },
     {
@@ -2825,18 +3053,6 @@
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\generator\\generator.catalog.json",
       "relativePath": "mcp/generator/generator.catalog.json",
       "hash": "60f9f7422a080f74fde1a9068960174a2928ff9985724414433d91a5602f9fe2",
-      "target": "mcp"
-    },
-    {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\projection\\projection.tools.ts",
-      "relativePath": "mcp/projection/projection.tools.ts",
-      "hash": "f4ad9b52399481dead6f1b4502dde9842fefb3de20d03d60949473de4d26005b",
-      "target": "mcp"
-    },
-    {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\projection\\projection.catalog.json",
-      "relativePath": "mcp/projection/projection.catalog.json",
-      "hash": "83bff5b89ae3da24745e0c63dc8edb830060354bdbd76cab92f90b8ee443f3b1",
       "target": "mcp"
     },
     {
@@ -3842,9 +4058,171 @@
       "target": "mcp"
     },
     {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\query-program\\query-program.tools.ts",
+      "relativePath": "mcp/query-program/query-program.tools.ts",
+      "hash": "fa2afb2a3cee22ae300d275842440c228605be6cba9066d6a41c1da68727a55f",
+      "target": "mcp"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\query-program\\query-program.catalog.json",
+      "relativePath": "mcp/query-program/query-program.catalog.json",
+      "hash": "cfe6e9212ab347610aee1c2702693ca406b09ce61c84d0afa7c48c1acb4ea2ca",
+      "target": "mcp"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\query-program\\query-program.help.md",
+      "relativePath": "mcp/query-program/query-program.help.md",
+      "hash": "b9b3137a47b0e47f920c8ee2882276714c241b5e3300f9d761f5929560b5a44d",
+      "target": "mcp"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\query-execution\\query-execution.tools.ts",
+      "relativePath": "mcp/query-execution/query-execution.tools.ts",
+      "hash": "11748fade63be136d8359c08c8d1493dda0c4ccaf32e291089801ad4a7001406",
+      "target": "mcp"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\query-execution\\query-execution.catalog.json",
+      "relativePath": "mcp/query-execution/query-execution.catalog.json",
+      "hash": "042b8c9e96fa4c1f12fa160b9a3ea772a0f4e138fbe78d15cf51dd1ffac1b330",
+      "target": "mcp"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\sort-spec\\sort-spec.tools.ts",
+      "relativePath": "mcp/sort-spec/sort-spec.tools.ts",
+      "hash": "dbbea24581ff3cdd8b673e7f85cfebe8278d5336218c1476f19f59b973e76853",
+      "target": "mcp"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\sort-spec\\sort-spec.catalog.json",
+      "relativePath": "mcp/sort-spec/sort-spec.catalog.json",
+      "hash": "d9c0c213a03b620fe0dcbfe2b1925828f73ca7f5d143a709c42beff115566b82",
+      "target": "mcp"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\group-spec\\group-spec.tools.ts",
+      "relativePath": "mcp/group-spec/group-spec.tools.ts",
+      "hash": "e16c303caf73d91ad5d59d889d66f4f068d219874ae2c4ee9ec4b812b89f8590",
+      "target": "mcp"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\group-spec\\group-spec.catalog.json",
+      "relativePath": "mcp/group-spec/group-spec.catalog.json",
+      "hash": "bdb4f2c035afdb681d62d76caccfffa8acc3afab41411cc015e1e924dd642e18",
+      "target": "mcp"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\projection-spec\\projection-spec.tools.ts",
+      "relativePath": "mcp/projection-spec/projection-spec.tools.ts",
+      "hash": "6794a2d58e949ff84c457c38171f3c139d8a895cc14c623bd456f9effb7cdd56",
+      "target": "mcp"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\projection-spec\\projection-spec.catalog.json",
+      "relativePath": "mcp/projection-spec/projection-spec.catalog.json",
+      "hash": "08e21a03e530d2b587cafaa2ad2f9f6988b1b3d389e4da0a969a92afd93df407",
+      "target": "mcp"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\presentation-spec\\presentation-spec.tools.ts",
+      "relativePath": "mcp/presentation-spec/presentation-spec.tools.ts",
+      "hash": "b2975507da199f0fbf11ef9682352be33b231e9893dfa0f68d453550cb0a655f",
+      "target": "mcp"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\presentation-spec\\presentation-spec.catalog.json",
+      "relativePath": "mcp/presentation-spec/presentation-spec.catalog.json",
+      "hash": "b0b8c6f1c36fcc4c130b34721c71c2d29be925d6a76feef9c8ecde8599bcafee",
+      "target": "mcp"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\interaction-spec\\interaction-spec.tools.ts",
+      "relativePath": "mcp/interaction-spec/interaction-spec.tools.ts",
+      "hash": "d6b9c74731baecfad79fb76005c43493612c22985094744262b739f3d06e656b",
+      "target": "mcp"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\interaction-spec\\interaction-spec.catalog.json",
+      "relativePath": "mcp/interaction-spec/interaction-spec.catalog.json",
+      "hash": "b1835d778a8244e0bfee8833cf4ed6dbefef5a6e9df15d9eb7e0b855ebdf528e",
+      "target": "mcp"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\view-shell\\view-shell.tools.ts",
+      "relativePath": "mcp/view-shell/view-shell.tools.ts",
+      "hash": "bcc8cc0a0237828bb2b78ece107c0f44102ce201fb6308018fcc701555891123",
+      "target": "mcp"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\view-shell\\view-shell.catalog.json",
+      "relativePath": "mcp/view-shell/view-shell.catalog.json",
+      "hash": "e0c4a00d04f79bc026da15610de2a1de459625525d6588b5ea3fb461b5a746a7",
+      "target": "mcp"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\filter-representation\\filter-representation.tools.ts",
+      "relativePath": "mcp/filter-representation/filter-representation.tools.ts",
+      "hash": "f3727c6f194fc21b02b77b8d691de034e6f6f14725f0509f09bc252dee417181",
+      "target": "mcp"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\filter-representation\\filter-representation.catalog.json",
+      "relativePath": "mcp/filter-representation/filter-representation.catalog.json",
+      "hash": "8629798703da3a4103b29578e52b35e51ca647d57db8eb7ab471ccab71b13701",
+      "target": "mcp"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\remote-query-provider\\remote-query-provider.tools.ts",
+      "relativePath": "mcp/remote-query-provider/remote-query-provider.tools.ts",
+      "hash": "479283032b5ac55932e63cc4553914190f8db341d788f2a3968160c29991f9e3",
+      "target": "mcp"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\remote-query-provider\\remote-query-provider.catalog.json",
+      "relativePath": "mcp/remote-query-provider/remote-query-provider.catalog.json",
+      "hash": "fc1f9777e6c6a64c1f28de104ec463284b1c25e28d2ad66808ff3be1810b1a80",
+      "target": "mcp"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\connection\\connection.tools.ts",
+      "relativePath": "mcp/connection/connection.tools.ts",
+      "hash": "0149214bf652395f0c87213a8dff476938e44bfe9aafe6a30f026ec5478dce8d",
+      "target": "mcp"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\connection\\connection.catalog.json",
+      "relativePath": "mcp/connection/connection.catalog.json",
+      "hash": "3422e9f27ae178960d5ae5d88f4d1add3594803126b9f6550926a40e6cdf56a8",
+      "target": "mcp"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\page-map\\page-map.tools.ts",
+      "relativePath": "mcp/page-map/page-map.tools.ts",
+      "hash": "5976604ec0b5ad0beafcfe5f6d61f845eaf0bfc75e80ec26860550974e12ca53",
+      "target": "mcp"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\page-map\\page-map.catalog.json",
+      "relativePath": "mcp/page-map/page-map.catalog.json",
+      "hash": "c1157b0de4280f098f7571e861268ce924318a693a9660dce2eff40a691f7bca",
+      "target": "mcp"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\pilot\\pilot.tools.ts",
+      "relativePath": "mcp/pilot/pilot.tools.ts",
+      "hash": "9925cbf0e9c320ab445909c5514110501dad4c17b29dd338eaafb54a6571f29a",
+      "target": "mcp"
+    },
+    {
+      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\mcp\\pilot\\pilot.catalog.json",
+      "relativePath": "mcp/pilot/pilot.catalog.json",
+      "hash": "31072b17e16411aac9d7029f0f1fbebf3a5d6d3e9e21d7d523a1ad909e2e9b93",
+      "target": "mcp"
+    },
+    {
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\agents\\concept-scaffold-gen.md",
       "relativePath": "claude-agents/concept-scaffold-gen.md",
-      "hash": "2ab051ef7bb62e08b14a7476562ae8613e52e449e29e94d9a2208909772714c4",
+      "hash": "fc47d0fa58453e05c292ec8efb1ad77c2f9b2ec6da5a335ffbe6638cfe6b31db",
       "target": "claude-agents"
     },
     {
@@ -3856,7 +4234,7 @@
     {
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\.claude\\agents\\handler-scaffold-gen.md",
       "relativePath": "claude-agents/handler-scaffold-gen.md",
-      "hash": "090c2bcb52679c748c257c1f490de76b880fe5dd58ad917d23ed99108ebe4c18",
+      "hash": "60549b38a4c89f007bce3bb34865eb252d554e80ba1ffc2632a0cf7f747a02ae",
       "target": "claude-agents"
     },
     {
@@ -3872,33 +4250,21 @@
       "target": "claude-agents"
     },
     {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\generated\\specs\\openapi.yaml",
-      "relativePath": "openapi/openapi.yaml",
-      "hash": "3b704a5c57f7f4c2ab3357c5a8af2dbbd664fd99b72eebebb6942693ea891eb0",
-      "target": "openapi"
-    },
-    {
-      "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\generated\\specs\\asyncapi.yaml",
-      "relativePath": "asyncapi/asyncapi.yaml",
-      "hash": "8cab37b9711db29ce779d94b912bb09d94f529bb9c744b568b65dbb6746cc38e",
-      "target": "asyncapi"
-    },
-    {
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\CLAUDE.md",
       "relativePath": "project-instructions/CLAUDE.md",
-      "hash": "952fa313b5b612cee534f9e02a8d62eb633fdd1cad3455f2023ff8fee304cef5",
+      "hash": "482db93be518f0e75fce729c12919fafcea139e434d8bd6fbe482086b8d671d1",
       "target": "project-instructions"
     },
     {
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\AGENTS.md",
       "relativePath": "project-instructions/AGENTS.md",
-      "hash": "fdc04f2b13167ad1fd6f49277aa4b72494242b510c83f85523ef8c6b73aab63f",
+      "hash": "b6f79275d6079449748536bdcd9fb6cffb1dfaea9aae33abdbfc780f1e6ff0ff",
       "target": "project-instructions"
     },
     {
       "path": "C:\\Users\\Matt\\OneDrive\\buildamodule-resource-pack\\Documents\\GitHub\\Concept-Oriented-Programming-Framework\\GEMINI.md",
       "relativePath": "project-instructions/GEMINI.md",
-      "hash": "af1bd37a83ad2d10312dda40d0d76cfb379b9f870b0ab9324ba2b6eb90c2a640",
+      "hash": "45980f7f9797ca8fb032e053cecf90aebb4e0b9a82fee3366590c91fbf93bf25",
       "target": "project-instructions"
     }
   ],

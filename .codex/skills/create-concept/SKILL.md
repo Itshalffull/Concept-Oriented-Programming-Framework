@@ -564,3 +564,4 @@ For complete examples with design rationale:
 | `/create-derived-concept` | Name a composition of this concept + others as a derived concept |
 | `/create-implementation` | Write the TypeScript implementation for this concept |
 | `/decompose-feature` | Break down a feature into concepts before designing each one |
+| `/create-view-query` | For view-layer data concepts, compose with QueryProgram/FilterSpec/SortSpec/GroupSpec/ProjectionSpec instead of building ad-hoc data fetching. Use when the concept participates in a data-driven view pipeline. |

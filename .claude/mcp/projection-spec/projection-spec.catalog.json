@@ -1,0 +1,26 @@
+[
+  {
+    "name": "projection_spec_create",
+    "briefDescription": "Register a new named projection spec with the given field array .",
+    "category": "ProjectionSpec",
+    "concept": "ProjectionSpec",
+    "action": "create",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "projection_spec_merge",
+    "briefDescription": "The merged projection is stored and its combined field array is returned .",
+    "category": "ProjectionSpec",
+    "concept": "ProjectionSpec",
+    "action": "merge",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "projection_spec_evaluate",
+    "briefDescription": "Projected rows returned as a JSON array .",
+    "category": "ProjectionSpec",
+    "concept": "ProjectionSpec",
+    "action": "evaluate",
+    "alwaysLoaded": false
+  }
+]

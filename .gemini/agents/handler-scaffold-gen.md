@@ -9,6 +9,7 @@ skills:
   - create-implementation
   - create-sync
   - create-derived-concept
+  - create-view-query
   - spec-parser
   - sync-parser
   - sync-compiler

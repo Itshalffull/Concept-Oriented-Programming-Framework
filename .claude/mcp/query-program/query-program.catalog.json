@@ -1,0 +1,82 @@
+[
+  {
+    "name": "query_program_create",
+    "briefDescription": "Initialize an empty query program ready to receive instructions .",
+    "category": "QueryProgram",
+    "concept": "QueryProgram",
+    "action": "create",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "query_program_scan",
+    "briefDescription": "Append a Scan instruction that reads all records from the named \n source rela...",
+    "category": "QueryProgram",
+    "concept": "QueryProgram",
+    "action": "scan",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "query_program_filter",
+    "briefDescription": "Append a Filter instruction that applies a serialized FilterNode \n predicate ...",
+    "category": "QueryProgram",
+    "concept": "QueryProgram",
+    "action": "filter",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "query_program_sort",
+    "briefDescription": "Append a Sort instruction that orders the current record set \n by the given J...",
+    "category": "QueryProgram",
+    "concept": "QueryProgram",
+    "action": "sort",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "query_program_group",
+    "briefDescription": "Append a Group instruction that partitions the current record set \n by the gi...",
+    "category": "QueryProgram",
+    "concept": "QueryProgram",
+    "action": "group",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "query_program_project",
+    "briefDescription": "Append a Project instruction that selects a subset of fields \n from each record .",
+    "category": "QueryProgram",
+    "concept": "QueryProgram",
+    "action": "project",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "query_program_limit",
+    "briefDescription": "Append a Limit instruction that truncates the current record set \n to at most...",
+    "category": "QueryProgram",
+    "concept": "QueryProgram",
+    "action": "limit",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "query_program_pure",
+    "briefDescription": "Terminate the program with a return value consisting of a \n variant tag and o...",
+    "category": "QueryProgram",
+    "concept": "QueryProgram",
+    "action": "pure",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "query_program_join",
+    "briefDescription": "Append a Join instruction that enriches the current record set \n by joining a...",
+    "category": "QueryProgram",
+    "concept": "QueryProgram",
+    "action": "join",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "query_program_compose",
+    "briefDescription": "Monadic bind : create a new program that runs first , binds its \n terminal ou...",
+    "category": "QueryProgram",
+    "concept": "QueryProgram",
+    "action": "compose",
+    "alwaysLoaded": false
+  }
+]

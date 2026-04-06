@@ -1,0 +1,18 @@
+[
+  {
+    "name": "group_spec_create",
+    "briefDescription": "Register a new named group spec with its serialized GroupingConfig and \n Aggr...",
+    "category": "GroupSpec",
+    "concept": "GroupSpec",
+    "action": "create",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "group_spec_evaluate",
+    "briefDescription": "Apply the named group spec s GroupingConfig to the JSON serialized row \n arra...",
+    "category": "GroupSpec",
+    "concept": "GroupSpec",
+    "action": "evaluate",
+    "alwaysLoaded": false
+  }
+]

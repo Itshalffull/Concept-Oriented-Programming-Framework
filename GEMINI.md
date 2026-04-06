@@ -140,11 +140,33 @@ Key concepts:
 - **Completion Coverage** (`specs/monadic/completion-coverage.concept`):
   Verifies every completion variant has a matching sync handler.
 
-**Render Transforms** (`specs/surface/render-transform.concept`)
+**RenderProgram Transforms** (`specs/surface/render-transform.concept`)
 Functorial composition layer for Surface rendering. Theme switching,
 a11y adaptations, and bind rewrites are composable transformations over
 render programs — satisfying functor identity and composition laws.
 Providers: `token-remap`, `a11y-adapt`, `bind-rewrite`, `custom`.
+
+**QueryProgram** (`specs/view/query-program.concept`)
+Composable query instruction sequences for data-driven views. A
+QueryProgram describes what a view fetches and transforms (scan, filter,
+sort, group, project, join, limit) without executing side effects.
+Programs are sealed after `pure` (no further instructions allowed) and
+can be composed via monadic bind. The view suite decomposes each concern
+into independent concepts: FilterSpec, SortSpec, GroupSpec,
+ProjectionSpec, DataSourceSpec, PresentationSpec, InteractionSpec,
+ViewShell (assembly), FilterRepresentation (UI authoring formats),
+QueryExecution (dispatch to kernel/in-memory/remote/federated backends),
+and RemoteQueryProvider (external API with pushdown optimization).
+- Suite: `specs/view/suite.yaml`
+- Syncs: `syncs/view/` (view-resolve, compile-query, execute-query, etc.)
+
+**Three Program Monads** — Clef has three inspectable instruction
+sequence types, each for a different layer:
+- **StorageProgram** — handler layer: describes storage reads/writes
+- **RenderProgram** — surface layer: describes UI rendering instructions
+- **QueryProgram** — view layer: describes data fetch/transform pipelines
+All three share the pattern of pure data description → analysis →
+interpretation, but operate on different domains.
 
 **Suites** (`suite.yaml` manifests)
 Packages of related concepts and syncs with required/recommended tiers,
@@ -243,6 +265,7 @@ manifests from scratch without using the generator.
 | Managing suites | `/suite-manager` | `SuiteManager/*` |
 | Configuring an interface manifest | — | `InterfaceScaffoldGen/generate` |
 | Adding a language target | `/add-language-target` | — |
+| Designing view query pipelines | `/create-view-query` | — |
 
 ### What NOT to Do
 

@@ -224,6 +224,20 @@ concepts:
   - specs/surface/providers/custom-transform-provider.concept
   - specs/surface/providers/transform-extraction-provider.concept
 
+  # ─── View decomposition suite (specs/view/) ────────
+  - specs/view/query-program.concept
+  - specs/view/query-execution.concept
+  - specs/view/filter-spec.concept
+  - specs/view/sort-spec.concept
+  - specs/view/group-spec.concept
+  - specs/view/projection-spec.concept
+  - specs/view/data-source-spec.concept
+  - specs/view/presentation-spec.concept
+  - specs/view/interaction-spec.concept
+  - specs/view/view-shell.concept
+  - specs/view/filter-representation.concept
+  - specs/view/remote-query-provider.concept
+
   # ─── Connected Bind & Surface Pilot ────────────────
   - specs/bind/connection.concept
   - specs/bind/credential.concept
@@ -3005,6 +3019,8 @@ workflows:
         description: "Generate sync rules connecting the concept"
       - name: test-gen
         description: "Generate tests from invariants (TestGen/generate, TestGen/coverage)"
+      - name: create-view-query
+        description: "For view-layer concepts, compose with QueryProgram/FilterSpec/SortSpec instead of ad-hoc data fetching"
     anti-patterns:
       - title: "Purpose describes implementation"
         description: "Purpose block says how the concept works instead of why it exists."
@@ -3592,6 +3608,8 @@ workflows:
         description: "Use SchemaGen for more advanced handler generation"
       - name: concept-validator
         description: "Validate concept specs before generating handlers"
+      - name: create-view-query
+        description: "For view-layer concepts, use QueryProgram pipelines instead of ad-hoc filtering/sorting"
     anti-patterns:
       - title: "Missing error variant"
         description: "Handler doesn't return error variant on failure — caller gets an unstructured exception."
@@ -4796,6 +4814,198 @@ workflows:
     related-workflows:
       - name: functional-handler-builder
         description: "StorageProgram monad — the handler-side equivalent of render program transforms"
+
+  # ─── View Query Pipeline: create-view-query ────────
+  create-view-query:
+    concept: QueryProgram
+    steps:
+      - action: create
+        title: "Create QueryProgram"
+        prose: "Initialize an empty query program. The program starts with no instructions, no bindings, and terminated=false."
+      - action: scan
+        title: "Scan Data Source"
+        prose: "Append a Scan instruction that reads all records from a named source relation. The record set is bound to a bindAs name."
+      - action: filter
+        title: "Apply Filter"
+        prose: "Append a Filter instruction with a serialized FilterNode predicate. Only records satisfying the predicate are kept."
+      - action: sort
+        title: "Apply Sort"
+        prose: "Append a Sort instruction ordering records by a JSON SortKey array. Empty keys preserve existing order."
+      - action: group
+        title: "Apply Grouping"
+        prose: "Append a Group instruction partitioning records by key fields with aggregation options (count, sum, list)."
+      - action: project
+        title: "Project Fields"
+        prose: "Append a Project instruction selecting a subset of fields from each record. Unselected fields are dropped."
+      - action: join
+        title: "Join Relations"
+        prose: "Append a Join instruction enriching records by joining against a second relation on matching fields (e.g., schema membership joins)."
+      - action: limit
+        title: "Limit Records"
+        prose: "Append a Limit instruction truncating to at most N records."
+      - action: pure
+        title: "Terminate Program"
+        prose: "Seal the program with a terminal variant and output binding. No further instructions may be appended. The program's terminated flag becomes true."
+      - action: compose
+        title: "Compose Programs"
+        prose: "Monadic bind: chain two programs — run first, bind its output to bindAs, then continue with second. Inherits the union of both readFields."
+    checklists:
+      create:
+        - "Does the view have a DataSourceSpec defining where data comes from?"
+        - "Are FilterSpec, SortSpec, GroupSpec, ProjectionSpec defined as independent concepts?"
+        - "Is the ViewShell wired to assemble individual specs via view-resolve.sync?"
+        - "Does the query terminate with pure (sealed)?"
+        - "For joined views, is join before filter (not after)?"
+      filter:
+        - "FilterNode tree is valid JSON?"
+        - "Field references in the tree match the data source schema?"
+        - "Parameters use {{varName}} syntax for runtime substitution?"
+        - "Filters composed via FilterSpec/compose, not manual AND trees?"
+      sort:
+        - "Sort key direction is 'asc' or 'desc'?"
+        - "Composition order correct? (primary sort first, tiebreaker second)"
+    design-principles:
+      - title: "Decomposed View Configuration"
+        rule: "Each view concern (filter, sort, group, project, data source, presentation) is its own independent concept. They compose through syncs into ViewShell, not through imports or coupling."
+      - title: "QueryProgram is Sealed After Pure"
+        rule: "Once pure() is called, the program is terminated. No further instructions can be appended. This is the monadic return — it enables safe caching/memoization and prevents accidental mutation."
+      - title: "FilterSpec is Algebraic"
+        rule: "Filters compose via AND trees. The identity filter is {type:'true'}. Composition is associative. This enables incremental filter building in UIs."
+      - title: "SortSpec Composition is Ordered"
+        rule: "Sort composition is NOT commutative. compose(byName, byDate) means sort by name then break ties by date. This matches user mental models."
+      - title: "Pushdown for Remote Sources"
+        rule: "RemoteQueryProvider splits a QueryProgram into pushdown (sent to API) and residual (executed in-memory). Views over REST APIs get the same composable experience as local queries."
+    references:
+      - path: references/query-program-grammar.md
+        label: "QueryProgram instruction grammar and pipeline reference"
+        tier: reference
+        content: |
+          # QueryProgram — Instruction Grammar Reference
+
+          A `QueryProgram` is an ordered sequence of query instructions describing
+          what a view fetches and transforms, without executing side effects.
+
+          ## Instruction Types
+
+          | Instruction | Action | Parameters | Effect |
+          |-------------|--------|-----------|--------|
+          | Scan | `scan` | source, bindAs | Read all records from source relation |
+          | Filter | `filter` | node (FilterNode JSON), bindAs | Keep only matching records |
+          | Sort | `sort` | keys (SortKey[] JSON), bindAs | Order records |
+          | Group | `group` | keys, config (aggregation), bindAs | Partition and aggregate |
+          | Project | `project` | fields (field[] JSON), bindAs | Select subset of fields |
+          | Limit | `limit` | count, output | Truncate to N records |
+          | Join | `join` | source, localField, foreignField, bindAs | Enrich via relation join |
+          | Pure | `pure` | variant, output | Seal program (terminal) |
+          | Compose | `compose` | first, second, bindAs | Monadic bind (chain) |
+
+          ## FilterNode Types
+
+          ```json
+          { "type": "eq", "field": "kind", "value": "concept" }
+          { "type": "neq", "field": "status", "value": "archived" }
+          { "type": "gt", "field": "count", "value": 10 }
+          { "type": "gte", "field": "count", "value": 10 }
+          { "type": "lt", "field": "count", "value": 100 }
+          { "type": "lte", "field": "count", "value": 100 }
+          { "type": "contains", "field": "name", "value": "auth" }
+          { "type": "in", "field": "status", "value": ["active", "draft"] }
+          { "type": "exists", "field": "metadata.tags" }
+          { "type": "and", "children": [ <FilterNode>, ... ] }
+          { "type": "or", "children": [ <FilterNode>, ... ] }
+          { "type": "not", "child": <FilterNode> }
+          { "type": "true" }    // identity — matches everything
+          ```
+
+          ## SortKey Format
+
+          ```json
+          [
+            { "field": "name", "direction": "asc" },
+            { "field": "updatedAt", "direction": "desc" }
+          ]
+          ```
+
+          Empty array `[]` = identity sort (preserves existing order).
+
+          ## Pipeline Shapes
+
+          **Simple**: `scan → filter → sort → project → pure`
+
+          **With schema join**: `scan → join(membership) → filter → sort → project → pure`
+
+          **With grouping**: `scan → filter → group(aggregation) → sort → project → pure`
+
+          **Remote pushdown**: QueryProgram → `planPushdown` → API call + residual in-memory
+
+          **Composed**: `compose(programA, programB, bindAs)` — chain two programs
+
+          ## View Suite Concepts
+
+          | Concept | Role |
+          |---------|------|
+          | DataSourceSpec | Declares where data comes from (concept-action, remote-api, search-index, inline) |
+          | FilterSpec | Named predicate trees with algebraic composition and normalization |
+          | SortSpec | Ordered sort keys with non-commutative composition |
+          | GroupSpec | Hierarchical grouping with aggregation and HAVING |
+          | ProjectionSpec | Field selection, formatting, computed fields, weights |
+          | PresentationSpec | Display type (table, card-grid, board, etc.) and hints |
+          | InteractionSpec | Row actions, bulk operations, user controls |
+          | ViewShell | Assembles all specs into a resolved view config |
+          | FilterRepresentation | Converts FilterNode IR ↔ UI formats (toggle-group, DSL, URL params) |
+          | QueryExecution | Dispatches programs to kernel/in-memory/remote/federated providers |
+          | RemoteQueryProvider | External API execution with pushdown optimization |
+
+          ## Syncs
+
+          | Sync | Tier | What it does |
+          |------|------|-------------|
+          | view-resolve | required | Assembles specs into ViewShell |
+          | compose-filters | recommended | Composes FilterSpec predicates with FilterRepresentation |
+          | compile-query | optional | Builds QueryProgram from ViewShell |
+          | execute-query | optional | Dispatches QueryProgram to QueryExecution |
+          | filter-from-dsl | optional | Parses DSL string → FilterSpec |
+          | filter-to-dsl | optional | Serializes FilterSpec → DSL string |
+          | execute-remote-query | optional | Routes to RemoteQueryProvider |
+          | compile-remote-query | optional | Compiles for remote data sources |
+    related-workflows:
+      - name: functional-handler-builder
+        description: "StorageProgram monad — the handler equivalent's instruction grammar"
+      - name: functorial-render
+        description: "RenderProgram transforms — the Surface rendering equivalent"
+      - name: create-concept
+        description: "Design concept specs for custom view concepts"
+      - name: create-sync
+        description: "Wire view concepts together in query execution flows"
+      - name: create-widget
+        description: "Design the UI widget that renders query results"
+    anti-patterns:
+      - title: "Building filters as raw JSON in handlers"
+        description: "Bypasses composition, normalization, validation, and field reference tracking."
+        bad: |
+          // Hardcoded filter in handler
+          const results = items.filter(i => i.kind === 'concept');
+        good: |
+          // Declarative FilterSpec
+          FilterSpec/create: { name: "by-kind", tree: '{"type":"eq","field":"kind","value":"concept"}' }
+          // Composed via sync into QueryProgram
+      - title: "Mutating a QueryProgram after pure"
+        description: "Violates the sealed invariant. Programs are immutable after termination."
+        bad: |
+          QueryProgram/pure(program: q, variant: "ok", output: "nodes")
+          QueryProgram/filter(program: q, ...)  // → sealed error!
+        good: |
+          // Create a new program, or compose two programs
+          QueryProgram/compose(first: q1, second: q2, bindAs: "result")
+      - title: "Monolithic view config objects"
+        description: "Can't compose, can't reuse across views, can't independently test."
+        bad: |
+          View/create: { dataSource: {...}, filter: {...}, sort: {...}, display: {...} }
+        good: |
+          // Independent specs composed through syncs
+          DataSourceSpec/create: { name: "src", kind: "concept-action", ... }
+          FilterSpec/create: { name: "f1", tree: '...', ... }
+          SortSpec/create: { name: "s1", keys: '[...]' }
 
 # ─── ANNOTATIONS ─────────────────────────────────────
 # Rich metadata for skills and CLI: tool permissions,
@@ -7547,11 +7757,33 @@ project-instructions:
     - **Completion Coverage** (`specs/monadic/completion-coverage.concept`):
       Verifies every completion variant has a matching sync handler.
 
-    **Render Transforms** (`specs/surface/render-transform.concept`)
+    **RenderProgram Transforms** (`specs/surface/render-transform.concept`)
     Functorial composition layer for Surface rendering. Theme switching,
     a11y adaptations, and bind rewrites are composable transformations over
     render programs — satisfying functor identity and composition laws.
     Providers: `token-remap`, `a11y-adapt`, `bind-rewrite`, `custom`.
+
+    **QueryProgram** (`specs/view/query-program.concept`)
+    Composable query instruction sequences for data-driven views. A
+    QueryProgram describes what a view fetches and transforms (scan, filter,
+    sort, group, project, join, limit) without executing side effects.
+    Programs are sealed after `pure` (no further instructions allowed) and
+    can be composed via monadic bind. The view suite decomposes each concern
+    into independent concepts: FilterSpec, SortSpec, GroupSpec,
+    ProjectionSpec, DataSourceSpec, PresentationSpec, InteractionSpec,
+    ViewShell (assembly), FilterRepresentation (UI authoring formats),
+    QueryExecution (dispatch to kernel/in-memory/remote/federated backends),
+    and RemoteQueryProvider (external API with pushdown optimization).
+    - Suite: `specs/view/suite.yaml`
+    - Syncs: `syncs/view/` (view-resolve, compile-query, execute-query, etc.)
+
+    **Three Program Monads** — Clef has three inspectable instruction
+    sequence types, each for a different layer:
+    - **StorageProgram** — handler layer: describes storage reads/writes
+    - **RenderProgram** — surface layer: describes UI rendering instructions
+    - **QueryProgram** — view layer: describes data fetch/transform pipelines
+    All three share the pattern of pure data description → analysis →
+    interpretation, but operate on different domains.
 
     **Suites** (`suite.yaml` manifests)
     Packages of related concepts and syncs with required/recommended tiers,
@@ -7650,6 +7882,7 @@ project-instructions:
     | Managing suites | `/suite-manager` | `SuiteManager/*` |
     | Configuring an interface manifest | — | `InterfaceScaffoldGen/generate` |
     | Adding a language target | `/add-language-target` | — |
+    | Designing view query pipelines | `/create-view-query` | — |
 
     ### What NOT to Do
 
@@ -8095,6 +8328,7 @@ agent-annotations:
     model: sonnet
     skills:
       - create-concept
+      - create-view-query
       - spec-parser
       - score-api
     tools: Read, Grep, Glob, Edit, Write, Bash, mcp__vibe_kanban
@@ -8152,6 +8386,7 @@ agent-annotations:
       - create-implementation
       - create-sync
       - create-derived-concept
+      - create-view-query
       - spec-parser
       - sync-parser
       - sync-compiler

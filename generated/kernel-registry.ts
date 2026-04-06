@@ -67,6 +67,18 @@ import { kernelViewResolverHandler } from '../handlers/ts/kernel-view-resolver.h
 import { reactViewResolverHandler } from '../handlers/ts/react-view-resolver.handler';
 import { versionPinHandler } from '../handlers/ts/content/version-pin.handler';
 import { originHandler } from '../handlers/ts/foundation/origin.handler';
+import { filterSpecHandler } from '../handlers/ts/view/filter-spec.handler';
+import { sortSpecHandler } from '../handlers/ts/view/sort-spec.handler';
+import { groupSpecHandler } from '../handlers/ts/view/group-spec.handler';
+import { projectionSpecHandler } from '../handlers/ts/view/projection-spec.handler';
+import { dataSourceSpecHandler } from '../handlers/ts/view/data-source-spec.handler';
+import { presentationSpecHandler } from '../handlers/ts/view/presentation-spec.handler';
+import { interactionSpecHandler } from '../handlers/ts/view/interaction-spec.handler';
+import { viewShellHandler } from '../handlers/ts/view/view-shell.handler';
+import { queryProgramHandler } from '../handlers/ts/view/query-program.handler';
+import { queryExecutionHandler } from '../handlers/ts/view/query-execution.handler';
+import { filterRepresentationHandler } from '../handlers/ts/view/filter-representation.handler';
+import { remoteQueryProviderHandler } from '../handlers/ts/view/remote-query-provider.handler';
 
 export interface RegistryEntry {
   uri: string;
@@ -142,6 +154,19 @@ export const REGISTRY_ENTRIES: RegistryEntry[] = [
   { uri: 'urn:clef/ReactViewResolver', handler: reactViewResolverHandler, storageName: 'react-view-resolver', storageType: 'standard' },
   { uri: 'urn:clef/VersionPin', handler: versionPinHandler, storageName: 'version-pin', storageType: 'standard' },
   { uri: 'urn:clef/Origin', handler: originHandler, storageName: 'origin', storageType: 'standard' },
+  // View suite — spec concepts, query pipeline, and remote provider
+  { uri: 'urn:clef/FilterSpec', handler: filterSpecHandler, storageName: 'filter-spec', storageType: 'standard' },
+  { uri: 'urn:clef/SortSpec', handler: sortSpecHandler, storageName: 'sort-spec', storageType: 'standard' },
+  { uri: 'urn:clef/GroupSpec', handler: groupSpecHandler, storageName: 'group-spec', storageType: 'standard' },
+  { uri: 'urn:clef/ProjectionSpec', handler: projectionSpecHandler, storageName: 'projection-spec', storageType: 'standard' },
+  { uri: 'urn:clef/DataSourceSpec', handler: dataSourceSpecHandler, storageName: 'data-source-spec', storageType: 'standard' },
+  { uri: 'urn:clef/PresentationSpec', handler: presentationSpecHandler, storageName: 'presentation-spec', storageType: 'standard' },
+  { uri: 'urn:clef/InteractionSpec', handler: interactionSpecHandler, storageName: 'interaction-spec', storageType: 'standard' },
+  { uri: 'urn:clef/ViewShell', handler: viewShellHandler, storageName: 'view-shell', storageType: 'standard' },
+  { uri: 'urn:clef/QueryProgram', handler: queryProgramHandler, storageName: 'query-program', storageType: 'standard' },
+  { uri: 'urn:clef/QueryExecution', handler: queryExecutionHandler, storageName: 'query-execution', storageType: 'standard' },
+  { uri: 'urn:clef/FilterRepresentation', handler: filterRepresentationHandler, storageName: 'filter-representation', storageType: 'standard' },
+  { uri: 'urn:clef/RemoteQueryProvider', handler: remoteQueryProviderHandler, storageName: 'remote-query-provider', storageType: 'standard' },
 ];
 
 export const SYNC_FILES: string[] = [

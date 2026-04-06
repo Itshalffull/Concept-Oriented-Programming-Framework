@@ -790,3 +790,4 @@ See [templates/implementation-scaffold.md](templates/implementation-scaffold.md)
 | `/create-storage-adapter` | Write the storage backend this implementation uses |
 | `/create-transport-adapter` | Write the transport that delivers actions to this implementation |
 | `/create-suite` | Bundle this implementation into a suite with its concept and syncs |
+| `/create-view-query` | For view-layer concept implementations, use QueryProgram instructions (scan, filter, sort, group, project, join, pure) instead of ad-hoc data retrieval. Clef has three program monads: **StorageProgram** (handler layer), **RenderProgram** (surface layer), **QueryProgram** (view layer). |

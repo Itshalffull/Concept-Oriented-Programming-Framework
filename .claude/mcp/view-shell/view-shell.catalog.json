@@ -1,0 +1,26 @@
+[
+  {
+    "name": "view_shell_create",
+    "briefDescription": "Register a new named view shell with the given title , description , and \n ch...",
+    "category": "ViewShell",
+    "concept": "ViewShell",
+    "action": "create",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "view_shell_update",
+    "briefDescription": "Replace the title , description , and all child spec references for the \n nam...",
+    "category": "ViewShell",
+    "concept": "ViewShell",
+    "action": "update",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "view_shell_resolve",
+    "briefDescription": "Hydrate all referenced child specs into a complete ViewConfig JSON string .",
+    "category": "ViewShell",
+    "concept": "ViewShell",
+    "action": "resolve",
+    "alwaysLoaded": false
+  }
+]

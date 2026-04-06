@@ -1,0 +1,10 @@
+[
+  {
+    "name": "interaction_spec_create",
+    "briefDescription": "Register a new named interaction spec with the given create form config , \n r...",
+    "category": "InteractionSpec",
+    "concept": "InteractionSpec",
+    "action": "create",
+    "alwaysLoaded": false
+  }
+]
