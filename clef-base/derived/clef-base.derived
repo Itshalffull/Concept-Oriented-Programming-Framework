@@ -22,6 +22,7 @@ derived ClefBase [X] {
     ProcessPlatform [X]
     ViewAndSurface [X]
     DiagrammingPlatform [X]
+    GovernedProcess [X]
     ClefBaseIntegrations [X]
   }
 
