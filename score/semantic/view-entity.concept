@@ -1,0 +1,235 @@
+# @fixtures-added
+@version(1)
+@category("score-semantic")
+@visibility("public")
+concept ViewEntity [V] {
+
+  purpose {
+    Queryable representation of a parsed .view manifest file — the
+    view-level counterpart to ConceptEntity and WidgetEntity. Links
+    the view's name, shell reference, purpose, purity classification,
+    invoked actions, projected fields, filter constraints, sort fields,
+    group fields, and invariant declarations as a traversable structure.
+    Enables queries like "what views invoke Task/escalate?", "which views
+    are read-write?", and "what invariants does this view declare?".
+  }
+
+  state {
+    views: set V
+    identity {
+      name: V -> String
+      sourceFile: V -> String
+      shellRef: V -> String
+      purposeText: V -> String
+    }
+    analysis {
+      purity: V -> String
+      invokedActions: V -> String
+      projectedFields: V -> String
+      filterFields: V -> String
+      sortFields: V -> String
+      groupFields: V -> String
+    }
+    invariants_data {
+      invariantCount: V -> Int
+      invariantNames: V -> String
+      invariantsSerialized: V -> String
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action upsert(name: String, sourceFile: String, shellRef: String,
+                  purposeText: String, purity: String,
+                  invokedActions: String, projectedFields: String,
+                  filterFields: String, sortFields: String,
+                  groupFields: String, invariantCount: Int,
+                  invariantNames: String, invariantsSerialized: String) {
+      -> ok(view: V) {
+        Register or update the view entity with the parsed .view manifest
+        metadata. If a view with this name already exists its fields are
+        overwritten; otherwise a new entity is created.
+      }
+      -> error(message: String) {
+        The name is empty or storage failed, preventing the upsert.
+      }
+      fixture upsert_readonly {
+        name: "content-list",
+        sourceFile: "specs/view/views/content-list.view",
+        shellRef: "content-list",
+        purposeText: "Browse all content with schema-based filtering.",
+        purity: "read-only",
+        invokedActions: "[]",
+        projectedFields: "[\"id\",\"name\",\"kind\"]",
+        filterFields: "[\"kind\",\"status\"]",
+        sortFields: "[\"name\",\"updatedAt\"]",
+        groupFields: "[]",
+        invariantCount: 2,
+        invariantNames: "[\"purity is read-only\",\"no invoke instructions\"]",
+        invariantsSerialized: "[]"
+      }
+      fixture upsert_readwrite {
+        name: "task-board-actions",
+        sourceFile: "specs/view/views/task-board-actions.view",
+        shellRef: "task-board",
+        purposeText: "Task board with bulk escalate and archive actions.",
+        purity: "read-write",
+        invokedActions: "[\"Task/escalate\",\"Task/archive\"]",
+        projectedFields: "[\"id\",\"title\",\"assignee\",\"status\"]",
+        filterFields: "[\"status\",\"assignee\"]",
+        sortFields: "[\"dueDate\",\"priority\"]",
+        groupFields: "[\"status\"]",
+        invariantCount: 3,
+        invariantNames: "[\"purity is read-write\",\"invokes only Task concept\",\"all invoke variants covered\"]",
+        invariantsSerialized: "[]"
+      }
+      fixture upsert_empty_name {
+        name: "",
+        sourceFile: "specs/view/views/x.view",
+        shellRef: "x",
+        purposeText: "",
+        purity: "read-only",
+        invokedActions: "[]",
+        projectedFields: "[]",
+        filterFields: "[]",
+        sortFields: "[]",
+        groupFields: "[]",
+        invariantCount: 0,
+        invariantNames: "[]",
+        invariantsSerialized: "[]"
+      } -> error
+    }
+
+    action get(name: String) {
+      -> ok(view: V, sourceFile: String, shellRef: String,
+            purposeText: String, purity: String,
+            invokedActions: String, projectedFields: String,
+            filterFields: String, sortFields: String,
+            groupFields: String, invariantCount: Int,
+            invariantNames: String, invariantsSerialized: String) {
+        Return the full view entity record for the named view.
+      }
+      -> notfound(message: String) {
+        No view entity with this name has been registered.
+      }
+      fixture get_ok { name: $upsert_readonly.view } after upsert_readonly
+      fixture get_missing { name: "nonexistent-view" } -> notfound
+    }
+
+    action list() {
+      -> ok(views: String) {
+        Return the names of all registered view entities as a serialized
+        JSON array of strings.
+      }
+      fixture list_ok {} after upsert_readonly
+    }
+
+    action findByShell(shellRef: String) {
+      -> ok(views: String) {
+        Return all view entity names whose shell reference matches
+        shellRef, as a serialized JSON array of strings.
+      }
+      -> notfound(message: String) {
+        No view entities reference this shell.
+      }
+      fixture find_by_shell_ok { shellRef: "content-list" } after upsert_readonly
+      fixture find_by_shell_missing { shellRef: "nonexistent-shell" } -> notfound
+    }
+
+    action findByPurity(purity: String) {
+      -> ok(views: String) {
+        Return all view entity names whose compiled purity classification
+        matches purity (one of "pure", "read-only", "read-write"), as a
+        serialized JSON array of strings.
+      }
+      fixture find_readonly { purity: "read-only" } after upsert_readonly
+      fixture find_readwrite { purity: "read-write" } after upsert_readwrite
+    }
+
+    action findByInvokedAction(action: String) {
+      -> ok(views: String) {
+        Return all view entity names whose invokedActions list contains
+        the given "Concept/action" string, as a serialized JSON array.
+        Returns an empty array when no views invoke this action.
+      }
+      fixture find_by_action_ok { action: "Task/escalate" } after upsert_readwrite
+      fixture find_by_action_none { action: "Unknown/noop" } after upsert_readwrite
+    }
+
+    action remove(name: String) {
+      -> ok() {
+        The view entity for this name has been deleted. All associated
+        state (identity, analysis, invariants_data) is removed.
+      }
+      -> notfound(message: String) {
+        No view entity with this name exists to remove.
+      }
+      fixture remove_ok { name: $upsert_readonly.view } after upsert_readonly
+      fixture remove_missing { name: "nonexistent-view" } -> notfound
+    }
+  }
+
+  invariant {
+  example "upserted entity is retrievable": {
+    after upsert(name: "content-list", sourceFile: "specs/view/views/content-list.view",
+                 shellRef: "content-list", purposeText: "Browse all content.",
+                 purity: "read-only", invokedActions: "[]",
+                 projectedFields: "[\"id\",\"name\"]", filterFields: "[\"kind\"]",
+                 sortFields: "[\"name\"]", groupFields: "[]",
+                 invariantCount: 1, invariantNames: "[\"purity is read-only\"]",
+                 invariantsSerialized: "[]") -> ok(view: v)
+    then get(name: "content-list") -> ok(purity: "read-only")
+  }
+
+  example "findByPurity returns subset": {
+    after upsert(name: "content-list", sourceFile: "specs/view/views/content-list.view",
+                 shellRef: "content-list", purposeText: "Browse all content.",
+                 purity: "read-only", invokedActions: "[]",
+                 projectedFields: "[]", filterFields: "[]",
+                 sortFields: "[]", groupFields: "[]",
+                 invariantCount: 0, invariantNames: "[]",
+                 invariantsSerialized: "[]") -> ok(view: v1)
+    after upsert(name: "task-board-actions", sourceFile: "specs/view/views/task-board-actions.view",
+                 shellRef: "task-board", purposeText: "Task board with actions.",
+                 purity: "read-write", invokedActions: "[\"Task/escalate\"]",
+                 projectedFields: "[]", filterFields: "[]",
+                 sortFields: "[]", groupFields: "[]",
+                 invariantCount: 0, invariantNames: "[]",
+                 invariantsSerialized: "[]") -> ok(view: v2)
+    then findByPurity(purity: "read-only") -> ok(views: r)
+  }
+
+  always "every views entry has non-empty name": {
+    forall v in views:
+      v.name != none
+  }
+
+  always "every views entry has valid purity": {
+    forall v in views:
+      v.purity in {"pure", "read-only", "read-write"}
+  }
+
+  never "empty name in views": {
+    exists v in views:
+      v.name = ""
+  }
+
+  never "empty sourceFile in views": {
+    exists v in views:
+      v.sourceFile = ""
+  }
+
+  action upsert {
+    requires: name != ""
+    requires: sourceFile != ""
+    ensures ok: views contains result.view
+  }
+
+  action remove {
+    ensures ok: views not contains result
+  }
+  }
+}

@@ -470,6 +470,12 @@ concept PageMap [P] {
     ensures ok: true
   }
 
+  action findByView {
+    requires: viewName != ""
+    ensures ok: entries != none
+    ensures notfound: entries' == entries
+  }
+
   action list {
     requires: hostRef != ""
     ensures ok: true
