@@ -75,3 +75,7 @@ entries:
   - name: check-verification-list-step-source
     kind: concept-action
     config: '{"concept":"CheckVerification","action":"list","params":{"step_ref":"{{stepRef}}"}}'
+
+  - name: reference-get-refs-source
+    kind: concept-action
+    config: '{"concept":"Reference","action":"getRefs","params":{"source":"{{entityId}}"}}'

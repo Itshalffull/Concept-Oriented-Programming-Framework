@@ -90,3 +90,7 @@ entries:
   - name: graph-neighbors-context-filter
     tree: '{"type":"field","field":"neighbor_of","operator":"equals","source_type":"contextual","context_binding":"context.entity","fallback_behavior":"hide"}'
     sourceType: contextual
+
+  - name: snippet-backlinks-context-filter
+    tree: '{"type":"field","field":"source_type","operator":"equals","value":"snippet-reference","source_type":"contextual","context_binding":"context.entity","fallback_behavior":"show"}'
+    sourceType: contextual

@@ -87,3 +87,6 @@ entries:
 
   - name: step-checks-fields
     fields: '[{"key":"cv","label":"Check ID","formatter":"code"},{"key":"check_ref","label":"Check","formatter":"badge"},{"key":"status","label":"Status","formatter":"badge"},{"key":"mode","label":"Mode","formatter":"badge"},{"key":"result_score","label":"Score"},{"key":"result_evidence","label":"Evidence","formatter":"truncate"}]'
+
+  - name: snippet-backlinks-fields
+    fields: '[{"key":"node","label":"Referencing Entity"},{"key":"type","label":"Reference Type","formatter":"badge"}]'

@@ -2,10 +2,14 @@
 # Per spec §2.1: Views filter by Schema membership, not by "type" field.
 # Each view specifies defaultDisplayMode for per-item rendering through DisplayMode.
 # useDisplayMode defaults to true; set to 'false' for holistic layouts (graph, stat-cards, canvas).
+#
+# NOTE: Entries marked DEPRECATED have been migrated to ViewShell.seeds.yaml (MAG-525).
+# DO NOT delete — the dual-path fallback in ViewRenderer still uses these until MAG-527.
 
 concept: View
 action: create
 entries:
+  # DEPRECATED — migrated to ViewShell.seeds.yaml (MAG-525)
   - view: content-list
     dataSource: '{"concept":"ContentNode","query":"schema IN (''all'')"}'
     layout: table
@@ -15,6 +19,7 @@ entries:
     description: Browse all content entities in the system. Every entity is a ContentNode with Schemas applied.
     filters: '[{"field":"schemas","label":"Schema","type":"toggle-group"}]'
     defaultDisplayMode: table-row
+  # DEPRECATED — migrated to ViewShell.seeds.yaml (MAG-525)
   - view: schemas-list
     dataSource: '{"concept":"Schema","action":"list"}'
     layout: table
@@ -23,6 +28,7 @@ entries:
     title: Schemas
     description: Composable data shapes applied to ContentNodes. A ContentNode's identity is the set of Schemas applied to it.
     defaultDisplayMode: table-row
+  # DEPRECATED — migrated to ViewShell.seeds.yaml (MAG-525)
   - view: workflows-list
     dataSource: '{"concept":"Workflow","action":"list"}'
     layout: table
@@ -31,6 +37,7 @@ entries:
     title: Workflows
     description: Content moderation state machines with states and transitions.
     defaultDisplayMode: table-row
+  # DEPRECATED — migrated to ViewShell.seeds.yaml (MAG-525)
   - view: automations-list
     dataSource: '{"concept":"AutomationRule","action":"list"}'
     layout: table
@@ -39,6 +46,7 @@ entries:
     title: Automations
     description: Event-condition-action rules that fire automatically.
     defaultDisplayMode: table-row
+  # DEPRECATED — migrated to ViewShell.seeds.yaml (MAG-525)
   - view: taxonomy-list
     dataSource: '{"concept":"Taxonomy","action":"list"}'
     layout: table
@@ -47,6 +55,7 @@ entries:
     title: Taxonomy
     description: Hierarchical classification using Vocabularies and Terms.
     defaultDisplayMode: table-row
+  # DEPRECATED — migrated to ViewShell.seeds.yaml (MAG-525)
   - view: themes-list
     dataSource: '{"concept":"Theme","action":"list"}'
     layout: card-grid
@@ -55,6 +64,7 @@ entries:
     title: Themes
     description: Design system themes with token inheritance.
     defaultDisplayMode: card
+  # DEPRECATED — migrated to ViewShell.seeds.yaml (MAG-525)
   - view: display-modes-list
     dataSource: '{"concept":"DisplayMode","action":"list"}'
     layout: card-grid
@@ -64,6 +74,7 @@ entries:
     description: Named rendering configurations per (Schema, mode_id) pair. Strategy is Layout, ComponentMapping, or flat field list.
     filters: '[{"field":"schema","label":"Schema","type":"toggle-group"}]'
     defaultDisplayMode: card
+  # DEPRECATED — migrated to ViewShell.seeds.yaml (MAG-525)
   - view: views-list
     dataSource: '{"concept":"View","action":"list"}'
     layout: table
@@ -72,6 +83,7 @@ entries:
     title: Views
     description: Saved queries with display configuration. Each view renders items through a display mode.
     defaultDisplayMode: table-row
+  # DEPRECATED — migrated to ViewShell.seeds.yaml (MAG-525)
   - view: mappings-list
     dataSource: '{"concept":"ComponentMapping","action":"list"}'
     layout: table
@@ -80,6 +92,7 @@ entries:
     title: Component Mappings
     description: Widget-to-data bindings. Each mapping pairs a widget with entity fields mapped to its slots and props.
     defaultDisplayMode: table-row
+  # DEPRECATED — migrated to ViewShell.seeds.yaml (MAG-525)
   - view: dashboard-stats
     dataSource: '{"concept":"ContentNode","action":"stats"}'
     layout: stat-cards
@@ -88,6 +101,7 @@ entries:
     title: System Stats
     description: ''
     useDisplayMode: 'false'
+  # DEPRECATED — migrated to ViewShell.seeds.yaml (MAG-525)
   - view: dashboard-concepts
     dataSource: '{"concept":"ContentNode","action":"list","params":{"schemaFilter":"Concept"}}'
     layout: table
@@ -96,6 +110,7 @@ entries:
     title: Registered Concepts
     description: ''
     defaultDisplayMode: table-row
+  # DEPRECATED — migrated to ViewShell.seeds.yaml (MAG-525)
   - view: concept-graph
     dataSource: '{"concept":"ContentNode","action":"list"}'
     layout: canvas
@@ -105,6 +120,7 @@ entries:
     description: Full system topology — concepts, schemas, syncs, suites, and their relationships. Includes graph analysis algorithms, overlays, and report generation.
     filters: '[{"field":"schemas","label":"Schema","type":"toggle-group"}]'
     useDisplayMode: 'false'
+  # DEPRECATED — migrated to ViewShell.seeds.yaml (MAG-525)
   - view: score-schemas
     dataSource: '{"concept":"Schema","action":"list"}'
     layout: card-grid
@@ -113,6 +129,7 @@ entries:
     title: Schema Browser
     description: Browse all schema definitions.
     defaultDisplayMode: card
+  # DEPRECATED — migrated to ViewShell.seeds.yaml (MAG-525)
   - view: syncs-list
     dataSource: '{"concept":"ContentNode","action":"list","params":{"schemaFilter":"Sync"}}'
     layout: table
@@ -122,6 +139,7 @@ entries:
     description: Synchronization rules wiring concepts together through pattern matching.
     filters: '[{"field":"suite","label":"Suite","type":"toggle-group"},{"field":"tier","label":"Tier","type":"toggle-group"}]'
     defaultDisplayMode: table-row
+  # DEPRECATED — migrated to ViewShell.seeds.yaml (MAG-525)
   - view: installed-suites
     dataSource: '{"concept":"AppInstallation","action":"list","params":{"status":"installed"}}'
     layout: table
@@ -130,6 +148,7 @@ entries:
     title: Installed Suites
     description: Concept suite packages installed in this kernel.
     defaultDisplayMode: table-row
+  # DEPRECATED — migrated to ViewShell.seeds.yaml (MAG-525)
   - view: entity-properties
     dataSource: '{"concept":"ContentNode","action":"get","params":{"node":"{{entityId}}"}}'
     layout: detail
@@ -138,6 +157,7 @@ entries:
     title: Properties
     description: ''
     defaultDisplayMode: detail
+  # DEPRECATED — migrated to ViewShell.seeds.yaml (MAG-525)
   - view: entity-content
     dataSource: '{"concept":"ContentNode","action":"get","params":{"node":"{{entityId}}"}}'
     layout: content-body
@@ -146,6 +166,7 @@ entries:
     title: Content
     description: ''
     defaultDisplayMode: content-body
+  # DEPRECATED — migrated to ViewShell.seeds.yaml (MAG-525)
   - view: entity-same-schema
     dataSource: '{"concept":"ContentNode","action":"list","params":{"schemaFilter":"{{entityPrimarySchema}}"}}'
     layout: table
@@ -154,6 +175,7 @@ entries:
     title: Same Schema
     description: Other entities with the same primary schema.
     defaultDisplayMode: table-row
+  # DEPRECATED — migrated to ViewShell.seeds.yaml (MAG-525)
   - view: entity-all-content
     dataSource: '{"concept":"ContentNode","action":"list"}'
     layout: table
@@ -163,6 +185,7 @@ entries:
     description: Browse all entities in the system.
     filters: '[{"field":"schemas","label":"Schema","type":"toggle-group"}]'
     defaultDisplayMode: table-row
+  # DEPRECATED — migrated to ViewShell.seeds.yaml (MAG-525)
   - view: process-catalog
     dataSource: '{"concept":"AutomationRule","action":"list"}'
     layout: card-grid
@@ -172,6 +195,7 @@ entries:
     description: Browse automation processes as cards — event-condition-action rules that drive system behavior.
     filters: '[{"field":"enabled","label":"Status","type":"toggle-group"}]'
     defaultDisplayMode: process-card
+  # DEPRECATED — migrated to ViewShell.seeds.yaml (MAG-525)
   - view: automations-rules-list
     dataSource: '{"concept":"AutomationRule","action":"list"}'
     layout: table
@@ -180,6 +204,7 @@ entries:
     title: Automation Rules
     description: All automation rules configured in the system as a sortable table.
     defaultDisplayMode: table-row
+  # DEPRECATED — migrated to ViewShell.seeds.yaml (MAG-525)
   - view: version-spaces-list
     dataSource: '{"concept":"ContentNode","action":"list","params":{"schemaFilter":"VersionSpace"}}'
     layout: card-grid
@@ -188,6 +213,7 @@ entries:
     title: Version Spaces
     description: Named content variations — like git branches for content.
     defaultDisplayMode: card
+  # DEPRECATED — migrated to ViewShell.seeds.yaml (MAG-525)
   - view: backlinks
     dataSource: '{"concept":"ContentNode","action":"list","params":{"type":"backlink"}}'
     layout: table
@@ -197,6 +223,7 @@ entries:
     description: Entities that link to this entity.
     filters: '[{"field":"target","operator":"equals","source_type":"contextual","context_binding":"context.entity","fallback_behavior":"hide"}]'
     defaultDisplayMode: compact
+  # DEPRECATED — migrated to ViewShell.seeds.yaml (MAG-525)
   - view: snippet-backlinks
     dataSource: '{"concept":"Reference","action":"getRefs","params":{"source":"{{entityId}}"}}'
     layout: table
@@ -206,6 +233,7 @@ entries:
     description: Entities that embed a span from this entity as a snippet-embed or inline reference (§8.6).
     filters: '[{"field":"source_type","operator":"equals","value":"snippet-reference","source_type":"contextual","context_binding":"context.entity","fallback_behavior":"show"}]'
     defaultDisplayMode: compact
+  # DEPRECATED — migrated to ViewShell.seeds.yaml (MAG-525)
   - view: similar-entities
     dataSource: '{"concept":"ContentNode","action":"list"}'
     layout: card-grid
@@ -215,6 +243,7 @@ entries:
     description: Semantically related entities based on content similarity.
     filters: '[{"field":"similar_to","operator":"embedding_similarity","source_type":"contextual","context_binding":"context.entity","fallback_behavior":"hide"}]'
     defaultDisplayMode: card
+  # DEPRECATED — migrated to ViewShell.seeds.yaml (MAG-525)
   - view: unlinked-references
     dataSource: '{"concept":"ContentNode","action":"list"}'
     layout: table
@@ -224,6 +253,7 @@ entries:
     description: Entities that mention this entity but do not have a formal link.
     filters: '[{"field":"mentions","operator":"contains","source_type":"contextual","context_binding":"context.entity","fallback_behavior":"hide"}]'
     defaultDisplayMode: table-row
+  # DEPRECATED — migrated to ViewShell.seeds.yaml (MAG-525)
   - view: graph-neighbors
     dataSource: '{"concept":"ContentNode","action":"list"}'
     layout: graph
@@ -233,6 +263,7 @@ entries:
     description: Direct connections in the knowledge graph.
     filters: '[{"field":"neighbor_of","operator":"equals","source_type":"contextual","context_binding":"context.entity","fallback_behavior":"hide"}]'
     useDisplayMode: 'false'
+  # DEPRECATED — migrated to ViewShell.seeds.yaml (MAG-525)
   - view: deployment-overview
     dataSource: '{"concept":"ContentNode","action":"list","params":{"schemaFilter":"VersionSpace"}}'
     layout: card-grid
@@ -242,6 +273,7 @@ entries:
     description: Version spaces acting as deployment environments — deploy (promote) or rollback (archive) spaces.
     filters: '[{"field":"status","label":"Status","type":"toggle-group"},{"field":"visibility","label":"Visibility","type":"toggle-group"}]'
     defaultDisplayMode: card
+  # DEPRECATED — migrated to ViewShell.seeds.yaml (MAG-525)
   - view: step-checks
     dataSource: '{"concept":"CheckVerification","action":"list","params":{"step_ref":"{{stepRef}}"}}'
     layout: table

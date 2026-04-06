@@ -311,3 +311,14 @@ entries:
     projection: step-checks-fields
     presentation: step-checks-presentation
     interaction: navigate-check-cv
+
+  - name: snippet-backlinks
+    title: Snippet Backlinks
+    description: Entities that embed a span from this entity as a snippet-embed or inline reference (§8.6).
+    dataSource: reference-get-refs-source
+    filter: snippet-backlinks-context-filter
+    sort: natural-order
+    group: ''
+    projection: snippet-backlinks-fields
+    presentation: backlinks-presentation
+    interaction: navigate-content-node

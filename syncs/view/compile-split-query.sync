@@ -1,0 +1,276 @@
+# Split-execution query compilation — partition filters by sourceType and produce two
+# QueryPrograms: a backend program pushed to the kernel provider, and a residual program
+# evaluated in-memory against the backend result rows.
+#
+# Each variant corresponds to one of four backend program shapes driven by the guards in
+# Section 7 of view-query-split-execution-flow.md:
+#
+#   CompileSplitQuery                  — scan → filter(B) → sort → project → pure
+#   CompileSplitQueryWithSchemaJoin    — scan → join(membership) → filter(B) → sort → project → pure
+#   CompileSplitQueryWithGroup         — scan → filter(B) → group → sort → project → pure
+#   CompileSplitQueryWithSchemaJoinAndGroup — scan → join → filter(B) → group → sort → project → pure
+#
+# In all variants the residual program is: filter(residual) → pure
+# The residual program uses an inline-empty scan as its data source placeholder;
+# execute-split-query.sync injects the backend result rows before dispatching it.
+#
+# Filter routing rules (Section 2 of view-query-split-execution-flow.md):
+#   sourceType "system"      → backend bucket (always-on invariant)
+#   sourceType "contextual"  → backend bucket (URL/navigation-context bound)
+#   sourceType "interactive" → residual bucket (user toggle/search)
+#   sourceType "search"      → residual bucket (default; promoted to backend if
+#                               DataSourceSpec.pushdownOps includes "search")
+#
+# When a bucket is empty, the identity node {"type":"true"} is used as a no-op placeholder.
+# See Architecture doc Section 16.12 for the full split-execution design.
+
+# ── Variant 1: Baseline (no schema join, no group) ─────────────────────────────────────
+
+sync CompileSplitQuery [eager]
+  purpose: "Partition filters by sourceType and compile two QueryPrograms — a backend program pushed to the kernel provider and a residual program evaluated in-memory against the backend result — for views with no schema join and no grouping."
+when {
+  ViewShell/resolveHydrated: [ name: ?name ]
+    => ok(view: ?view; dataSource: ?dataSource; filter: ?filter; sort: ?sort; group: ?group; projection: ?projection)
+}
+where {
+  guard(?group = "")
+  DataSourceSpec/get: [ name: ?dataSource ]
+    => ok(source: _; kind: ?sourceKind; config: ?sourceConfig; parameters: _)
+  guard(?sourceConfig != "node")
+  FilterSpec/get: [ name: ?filter ]
+    => ok(filter: _; tree: ?filterTree; sourceType: ?sourceType; fieldRefs: _)
+  // Route filter tree to backend or residual bucket by sourceType.
+  // Backend bucket: system or contextual. Identity node used for the other bucket.
+  any(?filterTree; '{"type":"true"}' = ?backendFilterTree)
+  filter(?sourceType = "system" or ?sourceType = "contextual")
+  any(?filterTree; '{"type":"true"}' = ?residualFilterTree)
+  filter(?sourceType = "interactive" or ?sourceType = "search")
+  SortSpec/get: [ name: ?sort ]
+    => ok(sort: _; keys: ?sortKeys)
+  ProjectionSpec/get: [ name: ?projection ]
+    => ok(projection: _; fields: ?projectionFields)
+  bind(uuid() as ?backendProgram)
+  bind(uuid() as ?residualProgram)
+}
+then {
+  // ── Backend program ──────────────────────────────────────────────────────────────────
+  QueryProgram/create: [ program: ?backendProgram; tag: "backend"; viewKey: ?name ]
+}
+then {
+  QueryProgram/scan: [ program: ?backendProgram; source: ?sourceConfig; bindAs: "records" ]
+}
+then {
+  QueryProgram/filter: [ program: ?backendProgram; node: ?backendFilterTree; bindAs: "filtered" ]
+}
+then {
+  QueryProgram/sort: [ program: ?backendProgram; keys: ?sortKeys; bindAs: "sorted" ]
+}
+then {
+  QueryProgram/project: [ program: ?backendProgram; fields: ?projectionFields; bindAs: "projected" ]
+}
+then {
+  QueryProgram/pure: [ program: ?backendProgram; variant: "ok"; output: "projected" ]
+}
+then {
+  // ── Residual program ─────────────────────────────────────────────────────────────────
+  // Inline scan is a placeholder; execute-split-query.sync replaces rows with backend result.
+  QueryProgram/create: [ program: ?residualProgram; tag: "residual"; viewKey: ?name ]
+}
+then {
+  QueryProgram/scan: [ program: ?residualProgram; source: '{"kind":"inline","rows":[]}'; bindAs: "records" ]
+}
+then {
+  QueryProgram/filter: [ program: ?residualProgram; node: ?residualFilterTree; bindAs: "filtered" ]
+}
+then {
+  QueryProgram/pure: [ program: ?residualProgram; variant: "ok"; output: "filtered" ]
+}
+
+# ── Variant 2: With schema join (sourceConfig = "node", no group) ──────────────────────
+
+sync CompileSplitQueryWithSchemaJoin [eager]
+  purpose: "Partition filters and compile two QueryPrograms for ContentNode sources, inserting a membership join between scan and filter in the backend program so schema predicates can operate on the enriched schemas field. No grouping."
+when {
+  ViewShell/resolveHydrated: [ name: ?name ]
+    => ok(view: ?view; dataSource: ?dataSource; filter: ?filter; sort: ?sort; group: ?group; projection: ?projection)
+}
+where {
+  guard(?group = "")
+  DataSourceSpec/get: [ name: ?dataSource ]
+    => ok(source: _; kind: _; config: ?sourceConfig; parameters: _)
+  guard(?sourceConfig = "node")
+  FilterSpec/get: [ name: ?filter ]
+    => ok(filter: _; tree: ?filterTree; sourceType: ?sourceType; fieldRefs: _)
+  any(?filterTree; '{"type":"true"}' = ?backendFilterTree)
+  filter(?sourceType = "system" or ?sourceType = "contextual")
+  any(?filterTree; '{"type":"true"}' = ?residualFilterTree)
+  filter(?sourceType = "interactive" or ?sourceType = "search")
+  SortSpec/get: [ name: ?sort ]
+    => ok(sort: _; keys: ?sortKeys)
+  ProjectionSpec/get: [ name: ?projection ]
+    => ok(projection: _; fields: ?projectionFields)
+  bind(uuid() as ?backendProgram)
+  bind(uuid() as ?residualProgram)
+}
+then {
+  QueryProgram/create: [ program: ?backendProgram; tag: "backend"; viewKey: ?name ]
+}
+then {
+  QueryProgram/scan: [ program: ?backendProgram; source: "node"; bindAs: "records" ]
+}
+then {
+  // Join membership relation for schema enrichment before the backend filter runs.
+  QueryProgram/join: [ program: ?backendProgram; source: "membership"; localField: "node"; foreignField: "entity_id"; bindAs: "schemas" ]
+}
+then {
+  QueryProgram/filter: [ program: ?backendProgram; node: ?backendFilterTree; bindAs: "filtered" ]
+}
+then {
+  QueryProgram/sort: [ program: ?backendProgram; keys: ?sortKeys; bindAs: "sorted" ]
+}
+then {
+  QueryProgram/project: [ program: ?backendProgram; fields: ?projectionFields; bindAs: "projected" ]
+}
+then {
+  QueryProgram/pure: [ program: ?backendProgram; variant: "ok"; output: "projected" ]
+}
+then {
+  QueryProgram/create: [ program: ?residualProgram; tag: "residual"; viewKey: ?name ]
+}
+then {
+  QueryProgram/scan: [ program: ?residualProgram; source: '{"kind":"inline","rows":[]}'; bindAs: "records" ]
+}
+then {
+  QueryProgram/filter: [ program: ?residualProgram; node: ?residualFilterTree; bindAs: "filtered" ]
+}
+then {
+  QueryProgram/pure: [ program: ?residualProgram; variant: "ok"; output: "filtered" ]
+}
+
+# ── Variant 3: With group (no schema join) ─────────────────────────────────────────────
+
+sync CompileSplitQueryWithGroup [eager]
+  purpose: "Partition filters and compile two QueryPrograms for views with a non-empty GroupSpec, inserting the group step between filter and sort in the backend program. Interactive filters operate on already-grouped rows in the residual program."
+when {
+  ViewShell/resolveHydrated: [ name: ?name ]
+    => ok(view: ?view; dataSource: ?dataSource; filter: ?filter; sort: ?sort; group: ?group; projection: ?projection)
+}
+where {
+  guard(?group != "")
+  DataSourceSpec/get: [ name: ?dataSource ]
+    => ok(source: _; kind: _; config: ?sourceConfig; parameters: _)
+  guard(?sourceConfig != "node")
+  FilterSpec/get: [ name: ?filter ]
+    => ok(filter: _; tree: ?filterTree; sourceType: ?sourceType; fieldRefs: _)
+  any(?filterTree; '{"type":"true"}' = ?backendFilterTree)
+  filter(?sourceType = "system" or ?sourceType = "contextual")
+  any(?filterTree; '{"type":"true"}' = ?residualFilterTree)
+  filter(?sourceType = "interactive" or ?sourceType = "search")
+  GroupSpec/get: [ name: ?group ]
+    => ok(group: _; grouping: ?groupingConfig; aggregations: ?aggregations; having: _)
+  SortSpec/get: [ name: ?sort ]
+    => ok(sort: _; keys: ?sortKeys)
+  ProjectionSpec/get: [ name: ?projection ]
+    => ok(projection: _; fields: ?projectionFields)
+  bind(uuid() as ?backendProgram)
+  bind(uuid() as ?residualProgram)
+}
+then {
+  QueryProgram/create: [ program: ?backendProgram; tag: "backend"; viewKey: ?name ]
+}
+then {
+  QueryProgram/scan: [ program: ?backendProgram; source: ?sourceConfig; bindAs: "records" ]
+}
+then {
+  QueryProgram/filter: [ program: ?backendProgram; node: ?backendFilterTree; bindAs: "filtered" ]
+}
+then {
+  // Group aggregation runs in the backend program, after the backend filter.
+  QueryProgram/group: [ program: ?backendProgram; keys: ?groupingConfig; config: ?aggregations; bindAs: "grouped" ]
+}
+then {
+  QueryProgram/sort: [ program: ?backendProgram; keys: ?sortKeys; bindAs: "sorted" ]
+}
+then {
+  QueryProgram/project: [ program: ?backendProgram; fields: ?projectionFields; bindAs: "projected" ]
+}
+then {
+  QueryProgram/pure: [ program: ?backendProgram; variant: "ok"; output: "projected" ]
+}
+then {
+  QueryProgram/create: [ program: ?residualProgram; tag: "residual"; viewKey: ?name ]
+}
+then {
+  QueryProgram/scan: [ program: ?residualProgram; source: '{"kind":"inline","rows":[]}'; bindAs: "records" ]
+}
+then {
+  QueryProgram/filter: [ program: ?residualProgram; node: ?residualFilterTree; bindAs: "filtered" ]
+}
+then {
+  QueryProgram/pure: [ program: ?residualProgram; variant: "ok"; output: "filtered" ]
+}
+
+# ── Variant 4: With schema join and group ──────────────────────────────────────────────
+
+sync CompileSplitQueryWithSchemaJoinAndGroup [eager]
+  purpose: "Partition filters and compile two QueryPrograms for ContentNode sources that also have a GroupSpec — combining the membership join (for schema enrichment) with group aggregation in the backend program."
+when {
+  ViewShell/resolveHydrated: [ name: ?name ]
+    => ok(view: ?view; dataSource: ?dataSource; filter: ?filter; sort: ?sort; group: ?group; projection: ?projection)
+}
+where {
+  guard(?group != "")
+  DataSourceSpec/get: [ name: ?dataSource ]
+    => ok(source: _; kind: _; config: ?sourceConfig; parameters: _)
+  guard(?sourceConfig = "node")
+  FilterSpec/get: [ name: ?filter ]
+    => ok(filter: _; tree: ?filterTree; sourceType: ?sourceType; fieldRefs: _)
+  any(?filterTree; '{"type":"true"}' = ?backendFilterTree)
+  filter(?sourceType = "system" or ?sourceType = "contextual")
+  any(?filterTree; '{"type":"true"}' = ?residualFilterTree)
+  filter(?sourceType = "interactive" or ?sourceType = "search")
+  GroupSpec/get: [ name: ?group ]
+    => ok(group: _; grouping: ?groupingConfig; aggregations: ?aggregations; having: _)
+  SortSpec/get: [ name: ?sort ]
+    => ok(sort: _; keys: ?sortKeys)
+  ProjectionSpec/get: [ name: ?projection ]
+    => ok(projection: _; fields: ?projectionFields)
+  bind(uuid() as ?backendProgram)
+  bind(uuid() as ?residualProgram)
+}
+then {
+  QueryProgram/create: [ program: ?backendProgram; tag: "backend"; viewKey: ?name ]
+}
+then {
+  QueryProgram/scan: [ program: ?backendProgram; source: "node"; bindAs: "records" ]
+}
+then {
+  QueryProgram/join: [ program: ?backendProgram; source: "membership"; localField: "node"; foreignField: "entity_id"; bindAs: "schemas" ]
+}
+then {
+  QueryProgram/filter: [ program: ?backendProgram; node: ?backendFilterTree; bindAs: "filtered" ]
+}
+then {
+  QueryProgram/group: [ program: ?backendProgram; keys: ?groupingConfig; config: ?aggregations; bindAs: "grouped" ]
+}
+then {
+  QueryProgram/sort: [ program: ?backendProgram; keys: ?sortKeys; bindAs: "sorted" ]
+}
+then {
+  QueryProgram/project: [ program: ?backendProgram; fields: ?projectionFields; bindAs: "projected" ]
+}
+then {
+  QueryProgram/pure: [ program: ?backendProgram; variant: "ok"; output: "projected" ]
+}
+then {
+  QueryProgram/create: [ program: ?residualProgram; tag: "residual"; viewKey: ?name ]
+}
+then {
+  QueryProgram/scan: [ program: ?residualProgram; source: '{"kind":"inline","rows":[]}'; bindAs: "records" ]
+}
+then {
+  QueryProgram/filter: [ program: ?residualProgram; node: ?residualFilterTree; bindAs: "filtered" ]
+}
+then {
+  QueryProgram/pure: [ program: ?residualProgram; variant: "ok"; output: "filtered" ]
+}
