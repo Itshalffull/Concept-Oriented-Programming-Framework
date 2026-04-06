@@ -741,16 +741,17 @@ Purity: `read-only`. No invoke instructions. Cached normally.
    (done: 7973b2eb)
 3. ~~Write ExecuteInvoke and InvokeComplete syncs~~
    (done: 7973b2eb)
-4. Update QueryExecution handler to implement coroutine-style
-   pause/resume
+4. ~~Update QueryExecution handler to implement coroutine-style
+   pause/resume~~ (done: 7ac9f581)
 5. Integration test: invoke dispatches through sync engine and
    returns completion
 
 ### Phase 3: Static analysis providers
 
-1. ~~Create InvokeEffectProvider concept~~ (done: 7973b2eb)
+1. ~~Create InvokeEffectProvider concept and handler~~
+   (concept: 7973b2eb, handler: 7ac9f581)
+2. ~~Create QueryPurityProvider concept~~ (done: 7ac9f581)
    and handler
-2. Create QueryPurityProvider concept and handler
 3. Create QueryCompletionCoverage concept and handler
 4. Register providers in the view suite manifest
 5. Wire analysis syncs (analyze on program seal)

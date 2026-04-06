@@ -1,0 +1,169 @@
+@version(1)
+@category("view")
+@visibility("public")
+concept QueryCompletionCoverage [C] {
+
+  purpose {
+    Verify that every invoke and traverseInvoke instruction's possible
+    completion variants have matching downstream handling via match
+    instructions. For each invoke, determines the set of possible
+    completion variants from the target concept spec. Checks that the
+    program handles each variant (via a downstream match instruction on
+    the invoke's bindAs) or explicitly ignores it. For traverse bodies,
+    checks coverage within the body sub-program. Reports covered and
+    uncovered variants.
+  }
+
+  state {
+    results: set C
+    covered: C -> set String
+    uncovered: C -> set String
+    totalVariants: C -> Int
+    coveredCount: C -> Int
+  }
+
+  actions {
+
+    action check(program: String, conceptSpecs: String) {
+      -> ok(result: C, covered: String, uncovered: String) {
+        For each invoke and traverseInvoke instruction, look up the
+        target concept's action variants in conceptSpecs (a JSON object
+        mapping "Concept/action" to variant arrays). Check that the
+        program handles each variant via a downstream match on the
+        invoke's bindAs. Return covered and uncovered as JSON arrays
+        of "Concept/action:variant" strings. An empty uncovered array
+        means every reachable variant is handled.
+      }
+      -> error(message: String) {
+        The program or conceptSpecs could not be parsed as valid JSON,
+        or a referenced concept/action key is missing from conceptSpecs.
+      }
+
+      fixture check_fully_covered {
+        program: "{\"instructions\":[{\"tag\":\"invoke\",\"concept\":\"Article\",\"action\":\"archive\",\"args\":{},\"bindAs\":\"r\"},{\"tag\":\"match\",\"bindAs\":\"r\",\"cases\":[{\"variant\":\"ok\",\"program\":{\"instructions\":[],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[],\"invocations\":[]}}},{\"variant\":\"error\",\"program\":{\"instructions\":[],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[],\"invocations\":[]}}}]}],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[],\"invocations\":[\"Article/archive\"]}}",
+        conceptSpecs: "{\"Article/archive\":[\"ok\",\"error\"]}"
+      }
+      fixture check_partially_covered {
+        program: "{\"instructions\":[{\"tag\":\"invoke\",\"concept\":\"Article\",\"action\":\"create\",\"args\":{},\"bindAs\":\"r\"},{\"tag\":\"match\",\"bindAs\":\"r\",\"cases\":[{\"variant\":\"ok\",\"program\":{\"instructions\":[],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[],\"invocations\":[]}}}]}],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[],\"invocations\":[\"Article/create\"]}}",
+        conceptSpecs: "{\"Article/create\":[\"ok\",\"duplicate\",\"error\"]}"
+      }
+      fixture check_no_invokes {
+        program: "{\"instructions\":[{\"tag\":\"scan\",\"source\":\"articles\",\"bindAs\":\"rows\"}],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[],\"invocations\":[]}}",
+        conceptSpecs: "{}"
+      }
+      fixture check_invalid {
+        program: "not valid json{{{",
+        conceptSpecs: "{}"
+      } -> error
+    }
+
+    action report(result: C) {
+      -> ok(covered: String, uncovered: String, totalVariants: Int, coveredCount: Int) {
+        Return the full coverage report for a stored result, including
+        both the covered and uncovered variant arrays as JSON, the total
+        variant count across all invokes, and the count of covered variants.
+      }
+      -> notfound() {
+        No coverage result exists with this identifier.
+      }
+
+      fixture report_existing {
+        result: $check_fully_covered.result
+      } after check_fully_covered
+      fixture report_missing {
+        result: "nonexistent-result-id"
+      } -> notfound
+    }
+
+    action listUncovered(result: C) {
+      -> ok(uncovered: String) {
+        Return only the uncovered variants for quick inspection. Returns
+        a JSON array of "Concept/action:variant" strings that are reachable
+        but have no downstream match case in the program.
+      }
+      -> notfound() {
+        No coverage result exists with this identifier.
+      }
+
+      fixture list_uncovered_existing {
+        result: $check_partially_covered.result
+      } after check_partially_covered
+      fixture list_uncovered_missing {
+        result: "nonexistent-result-id"
+      } -> notfound
+    }
+
+  }
+
+  example "fully covered invoke yields empty uncovered": {
+    after check(
+      program: "{\"instructions\":[{\"tag\":\"invoke\",\"concept\":\"Article\",\"action\":\"archive\",\"args\":{},\"bindAs\":\"r\"},{\"tag\":\"match\",\"bindAs\":\"r\",\"cases\":[{\"variant\":\"ok\",\"program\":{\"instructions\":[],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[],\"invocations\":[]}}},{\"variant\":\"error\",\"program\":{\"instructions\":[],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[],\"invocations\":[]}}}]}],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[],\"invocations\":[\"Article/archive\"]}}",
+      conceptSpecs: "{\"Article/archive\":[\"ok\",\"error\"]}")
+      -> ok(result: r, covered: cv, uncovered: uv)
+    then uv = "[]"
+  }
+
+  example "invoke missing match case yields non-empty uncovered": {
+    after check(
+      program: "{\"instructions\":[{\"tag\":\"invoke\",\"concept\":\"Article\",\"action\":\"create\",\"args\":{},\"bindAs\":\"r\"},{\"tag\":\"match\",\"bindAs\":\"r\",\"cases\":[{\"variant\":\"ok\",\"program\":{\"instructions\":[],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[],\"invocations\":[]}}}]}],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[],\"invocations\":[\"Article/create\"]}}",
+      conceptSpecs: "{\"Article/create\":[\"ok\",\"duplicate\",\"error\"]}")
+      -> ok(result: r, covered: cv, uncovered: uv)
+    then uv != "[]"
+  }
+
+  example "program with no invokes yields empty covered and uncovered": {
+    after check(
+      program: "{\"instructions\":[{\"tag\":\"scan\",\"source\":\"articles\",\"bindAs\":\"rows\"}],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[],\"invocations\":[]}}",
+      conceptSpecs: "{}")
+      -> ok(result: r, covered: cv, uncovered: uv)
+    then cv = "[]" and uv = "[]"
+  }
+
+  example "invalid program returns error with message": {
+    after check(program: "not valid json{{{", conceptSpecs: "{}")
+      -> error(message: m)
+    then m != ""
+  }
+
+  example "report after check returns stored totals": {
+    after check(
+      program: "{\"instructions\":[{\"tag\":\"invoke\",\"concept\":\"Article\",\"action\":\"archive\",\"args\":{},\"bindAs\":\"r\"},{\"tag\":\"match\",\"bindAs\":\"r\",\"cases\":[{\"variant\":\"ok\",\"program\":{\"instructions\":[],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[],\"invocations\":[]}}},{\"variant\":\"error\",\"program\":{\"instructions\":[],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[],\"invocations\":[]}}}]}],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[],\"invocations\":[\"Article/archive\"]}}",
+      conceptSpecs: "{\"Article/archive\":[\"ok\",\"error\"]}")
+      -> ok(result: r, covered: cv, uncovered: uv)
+    then report(result: r) -> ok(coveredCount: n, totalVariants: t)
+    then n <= t
+  }
+
+  always "covered count does not exceed total variants": {
+    forall c in results:
+    c.coveredCount <= c.totalVariants
+  }
+
+  always "covered and uncovered are disjoint": {
+    forall c in results:
+    c.coveredCount + size(c.uncovered) = c.totalVariants
+  }
+
+  never "uncovered variant that is also covered": {
+    exists c in results: c.covered intersects c.uncovered
+  }
+
+  action check {
+    requires: program != "" and conceptSpecs != ""
+    ensures ok: result in results and coveredCount >= 0 and totalVariants >= 0
+    ensures error: result not in results
+  }
+
+  action report {
+    requires: result != ""
+    ensures ok: coveredCount <= totalVariants
+    ensures notfound: result not in results
+  }
+
+  action listUncovered {
+    requires: result != ""
+    ensures ok: uncovered != ""
+    ensures notfound: result not in results
+  }
+
+}
