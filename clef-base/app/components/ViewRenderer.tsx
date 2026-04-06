@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ViewRenderer — generic component that loads a View config entity from the
+ * ViewRenderer — generic component that loads a ViewShell config from the
  * kernel and renders it using the appropriate display type component.
  *
  * Per spec §2.1: ContentNode identity = set of applied Schemas.
@@ -10,7 +10,7 @@
  * (both toggle-group filters on the `schemas` field and schemaFilter params).
  *
  * Flow:
- * 1. invoke('View', 'get', { view: viewId }) → loads the View config
+ * 1. invoke('ViewShell', 'resolveHydrated', { name: viewId }) → loads the hydrated View config
  * 2. Parse dataSource → { concept, action, params }
  * 3. invoke(concept, action, params) → fetches the data
  * 4. If ContentNode data, enrich with Schema memberships
@@ -217,12 +217,11 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
 
   const isInlineMode = !!inlineData;
 
-  // Step 1a: Try ViewShell/resolveHydrated first (new dual-path resolution).
+  // Step 1: Load ViewShell/resolveHydrated — the sole config resolution path.
   // resolveHydrated returns fully hydrated child spec data — filter trees, sort keys,
   // projection fields, data source config, presentation, interaction — all as JSON
   // strings. Each field on the result is a JSON-encoded spec object, not just a
-  // reference name. If ViewShell is not registered in the kernel or the view name is
-  // not found, this silently returns null — zero impact on the existing View/get path.
+  // reference name.
   const { data: shellResult, loading: shellLoading, error: shellError } =
     useConceptQuery<{
       view: string;
@@ -250,9 +249,9 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
   //   presentation: { name, displayType, hints, ... }
   //   interaction:  { name, createForm, rowClick, rowActions, pickerMode }
   //
-  // When kernel hydration succeeds we skip the legacy View/get path entirely.
-  // When it fails (notfound or kernel not wired) shellResult is null and we
-  // fall back to View/get as before.
+  // When kernel hydration succeeds shellViewConfig is populated. When the view
+  // is not found or the kernel returns notfound, shellViewConfig is null and
+  // ViewRenderer renders an empty/error state.
 
   // Hydrated spec objects extracted from the resolveHydrated response
   interface HydratedDataSource { name: string; kind: string; config: string; parameters: string }
@@ -362,16 +361,10 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
     } satisfies ViewConfig;
   }, [hydratedSpecs, shellResult]);
 
-  // Step 1b: Load the legacy View config (skip if pure inline mode with no viewId).
-  // When ViewShell resolved successfully we still run this query (it's a hook and
-  // must be called unconditionally) but its result will be superseded.
-  const { data: legacyViewConfig, loading: legacyConfigLoading, error: legacyConfigError } =
-    useConceptQuery<ViewConfig>('View', 'get', { view: viewId ?? '__none__' });
-
-  // Dual-path merge: prefer ViewShell when it returned data, fall back to View/get.
-  const viewConfig = shellViewConfig ?? legacyViewConfig;
-  const configLoading = shellLoading || (shellViewConfig == null && legacyConfigLoading);
-  const configError = shellViewConfig != null ? null : (shellError ? null : legacyConfigError);
+  // ViewShell is the sole config source — use resolved shell config directly.
+  const viewConfig = shellViewConfig;
+  const configLoading = shellLoading;
+  const configError = shellError ?? null;
 
   // Parse the config
   let dataSource: DataSourceConfig | null = null;
