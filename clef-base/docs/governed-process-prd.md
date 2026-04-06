@@ -86,3 +86,14 @@ ViewShell registrations for governance-process pages.
 | 5.2 | active-proposals | Card grid of proposals, filterable by status/circle | **done** | dce12a1e |
 | 5.3 | reputation-leaderboard | Table of members ranked by reputation | **done** | dce12a1e |
 | 5.4 | governance-activity | Timeline of all governance events | **done** | dce12a1e |
+
+### Phase 6: Org Designer & Role Hierarchy
+Visual org chart designer using the diagramming suite + role/hierarchy scoping.
+
+| # | Deliverable | Status | Commit |
+|---|-------------|--------|--------|
+| 6.1 | Role content-native schema (role-section child blocks) | **done** | c38900e2 |
+| 6.2 | Role/hierarchy scoping syncs (5 syncs) | **done** | c38900e2 |
+| 6.3 | GovernanceOrgNotation provider concept | **done** | c38900e2 |
+| 6.4 | Canvas-to-governance bridge syncs (7 syncs) | **done** | 02bc7d8b |
+| 6.5 | Org designer view (canvas with governance-org notation) | **done** | see below |

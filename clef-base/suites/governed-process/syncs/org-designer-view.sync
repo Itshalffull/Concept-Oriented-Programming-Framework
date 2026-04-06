@@ -1,0 +1,44 @@
+# Org designer view — a Canvas-based view for visually designing
+# governance structures. Uses the governance-org notation for
+# validation and the hierarchical layout by default.
+# Nodes are circles and roles, connectors are governance relationships.
+
+sync RegisterOrgDesignerDataSource [eager]
+  purpose { Data source for the org designer canvas. }
+when {
+  Schema/defineSchema: [ schema: "circle"; fields: ?fields ]
+    => ok()
+}
+then {
+  DataSourceSpec/create: [ name: "org-designer-source"; config: "{\"concept\":\"Canvas\",\"filter\":{\"notation\":\"governance-org\"}}" ]
+}
+
+sync RegisterOrgDesignerPresentation [eager]
+  purpose { Canvas presentation for the org designer. }
+when {
+  Schema/defineSchema: [ schema: "circle"; fields: ?fields ]
+    => ok()
+}
+then {
+  PresentationSpec/create: [ name: "org-designer-presentation"; displayType: "canvas"; hints: "{\"notation\":\"governance-org\",\"layout\":\"hierarchical\",\"layoutSwitchable\":true,\"availableLayouts\":[\"hierarchical\",\"force-directed\",\"circular\"],\"nodeTypes\":[\"circle\",\"role\",\"process-binding\"],\"connectorTypes\":[\"parent_of\",\"contains_role\",\"delegates_to\",\"bound_process\"],\"editable\":true,\"showMinimap\":true,\"showToolbar\":true}" ]
+}
+
+sync RegisterOrgDesignerInteraction [eager]
+  purpose { Interaction spec for the org designer with drag-create and connect. }
+when {
+  Schema/defineSchema: [ schema: "circle"; fields: ?fields ]
+    => ok()
+}
+then {
+  InteractionSpec/create: [ name: "org-designer-interaction"; config: "{\"createForm\":true,\"createFormOptions\":[{\"type\":\"circle\",\"label\":\"Add Circle\",\"schema\":\"circle\"},{\"type\":\"role\",\"label\":\"Add Role\",\"schema\":\"role\"}],\"dragCreate\":true,\"connectMode\":true,\"rowActions\":[\"edit\",\"delete\",\"duplicate\"]}" ]
+}
+
+sync RegisterOrgDesignerView [eager]
+  purpose { Register the org designer ViewShell. }
+when {
+  Schema/defineSchema: [ schema: "circle"; fields: ?fields ]
+    => ok()
+}
+then {
+  ViewShell/create: [ name: "org-designer"; dataSource: "org-designer-source"; filter: ""; sort: ""; group: ""; projection: ""; presentation: "org-designer-presentation"; interaction: "org-designer-interaction" ]
+}
