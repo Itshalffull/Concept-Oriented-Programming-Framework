@@ -718,13 +718,15 @@ Purity: `read-only`. No invoke instructions. Cached normally.
 
 ### Phase 1: Core instructions & purity tracking
 
-1. Add `invoke`, `match`, `traverseInvoke`, and `traverse` actions
-   to `query-program.concept`
-2. Add `invokedActions`, `purity`, `matchCases`, `traverseBodies`
-   state fields
-3. Add invariants (invoke tracking, purity classification, match
-   sub-program sealing, traverse body sealing, purity inheritance)
-4. Add fixtures and conformance tests for all four new actions
+1. ~~Add `invoke`, `match`, `traverseInvoke`, and `traverse` actions
+   to `query-program.concept`~~ (done: 406f382e)
+2. ~~Add `invokedActions`, `purity`, `matchCases`, `traverseBodies`
+   state fields~~ (done: 406f382e)
+3. ~~Add invariants (invoke tracking, purity classification, match
+   sub-program sealing, traverse body sealing, purity inheritance)~~
+   (done: 406f382e)
+4. ~~Add fixtures and conformance tests for all four new actions~~
+   (done: 406f382e)
 5. Update QueryProgram handler to implement the new actions
 6. Update runtime DSL (if QueryProgram has one) with builder
    functions for all four instructions
