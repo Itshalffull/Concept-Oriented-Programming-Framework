@@ -1,0 +1,107 @@
+derived ProcessPlatform [P] {
+
+  purpose {
+    Complete process execution platform — process specifications and runtime
+    (ProcessSpec, ProcessRun, StepRun), flow tokens and variables, event-driven
+    execution dispatch, connector calls and webhooks, timers, human-in-the-loop
+    work items and approvals, escalation, LLM-powered steps, process
+    conversations, retry policies, compensation plans, checkpoints, milestones,
+    and process metrics.
+  }
+
+  composes {
+    ProcessSpec [P]
+    ProcessRun [P]
+    StepRun [P]
+    FlowToken [P]
+    ProcessVariable [P]
+    ProcessEvent [P]
+    ExecutionDispatch [P]
+    ConnectorCall [P]
+    WebhookInbox [P]
+    Timer [P]
+    WorkItem [P]
+    Approval [P]
+    Escalation [P]
+    LLMCall [P]
+    ProcessConversation [P]
+    RetryPolicy [P]
+    CompensationPlan [P]
+    Checkpoint [P]
+    Milestone [P]
+    ProcessMetric [P]
+  }
+
+  syncs {
+    required: [
+      run-start-dispatches-steps,
+      step-complete-advances-token,
+      token-advance-dispatches-next-step,
+      step-failure-triggers-retry,
+      retry-exhausted-triggers-compensation,
+      approval-complete-resumes-run,
+      escalation-reassigns-work-item,
+      checkpoint-on-milestone,
+      metric-on-run-complete
+    ]
+    recommended: [
+      webhook-triggers-event,
+      event-triggers-dispatch,
+      timer-fires-event,
+      llm-step-populates-variable,
+      conversation-context-from-variables,
+      compensation-on-unrecoverable-failure,
+      milestone-notifies-conversation
+    ]
+  }
+
+  surface {
+    action defineProcess(name: String, steps: String) {
+      entry: ProcessSpec/define(name: name, steps: steps)
+    }
+
+    action startProcess(spec: P, input: String) {
+      entry: ProcessRun/start(spec: spec, input: input)
+    }
+
+    action approveStep(workItem: P) {
+      entry: Approval/approve(workItem: workItem)
+    }
+
+    action escalate(workItem: P, reason: String) {
+      entry: Escalation/escalate(workItem: workItem, reason: reason)
+    }
+
+    action checkpoint(processRun: P) {
+      entry: Checkpoint/create(processRun: processRun)
+    }
+
+    query getProcessStatus(processRun: P)
+      -> ProcessRun/getStatus(processRun: processRun)
+
+    query listWorkItems(assignee: String)
+      -> WorkItem/list(assignee: assignee)
+
+    query getMetrics(processSpec: P)
+      -> ProcessMetric/get(processSpec: processSpec)
+  }
+
+  principle {
+    after defineProcess(name: "onboarding", steps: "[{\"id\":\"welcome\",\"type\":\"automated\"},{\"id\":\"review\",\"type\":\"approval\"}]")
+    then startProcess(spec: derivedContext, input: "{\"userId\":\"u-1\"}")
+    executes automated steps and pauses at human approval gates
+    and  listWorkItems(assignee: "reviewer@example.com") surfaces the pending approval
+    then approveStep(workItem: derivedContext)
+    resumes the run and advances to the next step
+    and  getProcessStatus(processRun: derivedContext) reflects the completed state
+    and  getMetrics(processSpec: derivedContext) records duration and outcome
+  }
+
+  principle {
+    after startProcess(spec: derivedContext, input: "{\"retries\":0}")
+    when a step fails the retry policy re-dispatches up to the configured limit
+    then on exhaustion the compensation plan undoes completed steps in reverse order
+    and  checkpoint(processRun: derivedContext) enables recovery from the last safe state
+    should the process be resumed after an infrastructure failure
+  }
+}
