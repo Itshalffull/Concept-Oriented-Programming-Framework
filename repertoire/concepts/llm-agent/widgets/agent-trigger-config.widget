@@ -7,7 +7,7 @@ widget agent-trigger-config {
     content_event, process_event, or manual), configure type-specific settings
     such as cron expressions, webhook URL paths, content type filters, and process
     step patterns, and set the strategy, tool bindings, and cooldown for spawned
-    sessions. Also surfaces the trigger's firing history as a chronological log.
+    sessions. Also surfaces the trigger firing history as a chronological log.
   }
 
   requires @1 {

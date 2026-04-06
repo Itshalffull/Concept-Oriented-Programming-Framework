@@ -35,41 +35,33 @@ const _agentSessionHandler: FunctionalConceptHandler = {
       return complete(createProgram(), 'error', { message: 'tools must be a valid JSON array' }) as StorageProgram<Result>;
     }
 
-    // Check if persona page exists in storage -> notfound variant when missing
+    // Create the session — persona page validation via PersonaCompiler is handled by syncs
+    const sessionId = randomId();
+    const agentLoopId = randomId();
+    const conversationId = randomId();
+    const now = new Date().toISOString();
+
+    const record = {
+      session: sessionId,
+      personaPageId,
+      compilationId: '',
+      agentLoopId,
+      conversationId,
+      strategy,
+      tools,
+      context,
+      status: 'active',
+      createdAt: now,
+      updatedAt: now,
+      totalTokens: 0,
+      totalCost: 0,
+      metadata: '{}',
+      snapshot: '',
+    };
+
     let p = createProgram();
-    p = spGet(p, 'personaPage', personaPageId, 'persona');
-    p = branch(p, 'persona',
-      (b) => {
-        // Persona page found — create the session
-        const sessionId = randomId();
-        const agentLoopId = randomId();
-        const conversationId = randomId();
-        const now = new Date().toISOString();
-
-        const record = {
-          session: sessionId,
-          personaPageId,
-          compilationId: '',
-          agentLoopId,
-          conversationId,
-          strategy,
-          tools,
-          context,
-          status: 'active',
-          createdAt: now,
-          updatedAt: now,
-          totalTokens: 0,
-          totalCost: 0,
-          metadata: '{}',
-          snapshot: '',
-        };
-
-        let b2 = put(b, 'session', sessionId, record);
-        return complete(b2, 'ok', { session: sessionId, agentLoopId, conversationId }) as StorageProgram<Result>;
-      },
-      (b) => complete(b, 'notfound', { message: `Persona page "${personaPageId}" does not exist or carries no agent-persona schema` }),
-    );
-    return p as StorageProgram<Result>;
+    p = put(p, 'session', sessionId, record);
+    return complete(p, 'ok', { session: sessionId, agentLoopId, conversationId }) as StorageProgram<Result>;
   },
 
   invoke(input: Record<string, unknown>) {
