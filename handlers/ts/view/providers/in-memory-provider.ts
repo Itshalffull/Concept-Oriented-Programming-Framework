@@ -521,10 +521,12 @@ export const name = 'in-memory' as const;
 export const kind = 'in-memory' as const;
 export const capabilities: ProviderCapability[] = ['filter', 'sort', 'group', 'project', 'limit'];
 
-export default {
+export const inMemoryProvider = {
   name,
   kind,
   capabilities,
   execute,
   planPushdown,
-};
+} as const;
+
+export default inMemoryProvider;

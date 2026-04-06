@@ -106,6 +106,22 @@ concept ViewShell [V] {
       fixture list_all {}
     }
 
+    action resolveHydrated(name: String) {
+      -> ok(view: V, title: String, description: String, dataSource: String, filter: String, sort: String, group: String, projection: String, presentation: String, interaction: String) {
+        Load the ViewShell entry by name, then fetch each non-empty child spec
+        by calling the corresponding concept's get action. Returns fully hydrated
+        data — actual FilterNode trees as JSON strings, SortKey arrays, ProjectionField
+        arrays, DataSourceConfig objects, PresentationSpec fields, InteractionSpec
+        fields, GroupSpec fields — not just reference name strings. Child specs that
+        are not registered (empty ref or notfound) are returned as empty strings.
+      }
+      -> notfound(message: String) {
+        No view with this name is registered.
+      }
+      fixture resolve_hydrated_existing { name: $create_content_list.view } after create_content_list
+      fixture resolve_hydrated_missing { name: "nonexistent" } -> notfound
+    }
+
   }
 
   example "create then get returns view": {

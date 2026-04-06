@@ -1,0 +1,28 @@
+# QueryExecution provider seeds — register execution kinds and providers at boot time.
+#
+# Order matters: registerKind must succeed before register is called for each kind.
+# The seed loader applies documents in order within a file, so registerKind entries
+# appear first (document 1) and register entries appear second (document 2).
+#
+# Provider capability targets (per PRD Section 3.4 / MAG-518):
+#   kernel:    ["scan", "filter", "sort", "limit", "join"]
+#   in-memory: ["filter", "sort", "group", "project", "limit"]
+
+concept: QueryExecution
+action: registerKind
+entries:
+  - kind: kernel
+  - kind: in-memory
+
+---
+
+concept: QueryExecution
+action: register
+entries:
+  - name: default-kernel
+    kind: kernel
+    capabilities: '["scan","filter","sort","limit","join"]'
+
+  - name: in-memory
+    kind: in-memory
+    capabilities: '["filter","sort","group","project","limit"]'

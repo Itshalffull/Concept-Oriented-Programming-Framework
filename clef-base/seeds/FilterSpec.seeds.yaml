@@ -4,6 +4,36 @@
 # Interactive toggle-group filters start with tree: '{"type":"true"}' (show all);
 # actual filtering happens at runtime when the user clicks toggles.
 # Contextual filters derive their value from page context (e.g., current entity).
+#
+# ── sourceType Classification Rationale (MAG-517) ─────────────────────────────
+#
+# sourceType routing rules determine which execution tier processes each filter:
+#
+#   system      → Backend pushdown (all tiers except E2EE)
+#                 Always-on invariant filters. Never change per interaction.
+#                 Examples: soft-delete exclusion, tenant scoping, identity
+#                 pass-through. Backend enforcing them reduces data exposure.
+#
+#   contextual  → Backend pushdown (all tiers except E2EE)
+#                 Derived from URL parameters or navigation context (e.g.,
+#                 context.entity). Resolved before the query executes; stable
+#                 for the lifetime of the page visit.
+#
+#   interactive → Local residual (all tiers)
+#                 User-driven toggle clicks and facet selections. Change
+#                 frequently during a session. Running in-memory avoids a
+#                 round-trip per user interaction.
+#
+#   search      → Local residual by default; backend pushdown if the provider
+#                 declares "search" in its pushdownOps.
+#
+# Classification summary for this file:
+#   identity-filter                   → system     (always-on no-op pass-through)
+#   *-toggle-filter (6 entries)       → interactive (user toggle-group controls)
+#   *-context-filter (4 entries)      → contextual (bound to context.entity)
+#
+# All entries in this file are correctly classified per the routing rules above.
+# ──────────────────────────────────────────────────────────────────────────────
 
 concept: FilterSpec
 action: create

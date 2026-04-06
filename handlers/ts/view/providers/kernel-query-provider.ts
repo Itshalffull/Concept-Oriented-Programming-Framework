@@ -5,7 +5,7 @@
  * formal execution provider conforming to the execute/planPushdown interface
  * declared in query-execution.concept.
  *
- * Capabilities: ["filter", "sort", "limit"]
+ * Capabilities: ["scan", "filter", "sort", "limit", "join"]
  *
  * execute(program):
  *   Parses a serialized QueryProgram (JSON with `instructions` array).
@@ -20,9 +20,9 @@
  *
  * planPushdown(program, capabilities):
  *   Partitions instructions into:
- *   - pushdown  — only "scan" instructions (the native concept-action fetch)
- *   - residual  — everything else (filter, sort, group, project, limit),
- *                 all executed in-memory by execute().
+ *   - pushdown  — scan, filter (system/contextual), sort, limit, join
+ *   - residual  — group, project, and interactive/search filters
+ *                 (evaluated in-memory by the in-memory provider).
  *
  * See architecture doc Section 10.1 (ConceptManifest IR) for concept patterns.
  */
@@ -199,14 +199,19 @@ export function execute(
 }
 
 /**
- * Split a QueryProgram into pushdown and residual partitions.
+ * Split a QueryProgram into pushdown and residual partitions based on the
+ * kernel provider's declared capabilities: ["scan", "filter", "sort", "limit", "join"].
  *
- * Pushdown contains only "scan" instructions — these are executed natively
- * by the concept action fetch layer.
+ * Pushdown receives: scan, filter (system/contextual), sort, limit, join.
+ * Residual receives: group, project, and any instructions not in the capability set.
  *
- * Residual contains all other instructions (filter, sort, group, project,
- * limit) — these are executed in-memory by this provider.
+ * Note: the caller is responsible for ensuring only system/contextual filter
+ * instructions are passed for pushdown. Interactive and search filters should
+ * be routed to the residual program by compile-split-query.sync before
+ * planPushdown is called (see architecture doc Section 5.1).
  */
+const KERNEL_CAPABILITIES = new Set<string>(['scan', 'filter', 'sort', 'limit', 'join']);
+
 export function planPushdown(programJson: string): PushdownPlan | null {
   const program = parseProgram(programJson);
   if (program === null) return null;
@@ -215,7 +220,7 @@ export function planPushdown(programJson: string): PushdownPlan | null {
   const residualInstructions: Instruction[] = [];
 
   for (const instruction of program.instructions) {
-    if (instruction.type === 'scan') {
+    if (KERNEL_CAPABILITIES.has(instruction.type)) {
       pushdownInstructions.push(instruction);
     } else {
       residualInstructions.push(instruction);
@@ -233,7 +238,7 @@ export function planPushdown(programJson: string): PushdownPlan | null {
 export const kernelQueryProvider = {
   name: 'default-kernel',
   kind: 'kernel',
-  capabilities: ['filter', 'sort', 'limit'] as const,
+  capabilities: ['scan', 'filter', 'sort', 'limit', 'join'] as const,
   execute,
   planPushdown,
 } as const;

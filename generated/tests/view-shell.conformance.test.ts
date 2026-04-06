@@ -401,6 +401,76 @@ describe('ViewShell functional handler', () => {
 
   });
 
+  describe('resolveHydrated', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = viewShellHandler.resolveHydrated({ name: {"type":"ref","fixture":"create_content_list","field":"view"} });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = viewShellHandler.resolveHydrated({ name: {"type":"ref","fixture":"create_content_list","field":"view"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = viewShellHandler.resolveHydrated({ name: {"type":"ref","fixture":"create_content_list","field":"view"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = viewShellHandler.resolveHydrated({ name: {"type":"ref","fixture":"create_content_list","field":"view"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = viewShellHandler.resolveHydrated({ name: {"type":"ref","fixture":"create_content_list","field":"view"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof viewShellHandler.resolveHydrated !== 'function') return;
+      const result = await interpret(viewShellHandler.resolveHydrated({ name: {"type":"ref","fixture":"create_content_list","field":"view"} }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "resolve_hydrated_existing" -> ok', async () => {
+      if (typeof viewShellHandler.resolveHydrated !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_content_list = await interpret(viewShellHandler.create({ name: "content-list", title: "Content", description: "Browse all content entities.", dataSource: "content-list-source", filter: "schema-filter", sort: "by-name", group: "", projection: "content-list-fields", presentation: "content-table", interaction: "content-list-controls" }), storage);
+      const result = await interpret(viewShellHandler.resolveHydrated({ name: afterResult_create_content_list?.output?.["view"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_hydrated_missing" -> notfound', async () => {
+      if (typeof viewShellHandler.resolveHydrated !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(viewShellHandler.resolveHydrated({ name: "nonexistent" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
+    });
+
+  });
+
   describe('register()', () => {
     it('declares concept name', async () => {
       if (typeof viewShellHandler.register !== 'function') return;
@@ -473,6 +543,7 @@ describe('ViewShell functional handler', () => {
               fc.record({ action: fc.constant('update'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), title: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }), dataSource: fc.string({ minLength: 1, maxLength: 50 }), filter: fc.string({ minLength: 1, maxLength: 50 }), sort: fc.string({ minLength: 1, maxLength: 50 }), group: fc.string({ minLength: 1, maxLength: 50 }), projection: fc.string({ minLength: 1, maxLength: 50 }), presentation: fc.string({ minLength: 1, maxLength: 50 }), interaction: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('resolve'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
+              fc.record({ action: fc.constant('resolveHydrated'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -507,6 +578,7 @@ describe('ViewShell functional handler', () => {
               fc.record({ action: fc.constant('update'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), title: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }), dataSource: fc.string({ minLength: 1, maxLength: 50 }), filter: fc.string({ minLength: 1, maxLength: 50 }), sort: fc.string({ minLength: 1, maxLength: 50 }), group: fc.string({ minLength: 1, maxLength: 50 }), projection: fc.string({ minLength: 1, maxLength: 50 }), presentation: fc.string({ minLength: 1, maxLength: 50 }), interaction: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('resolve'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
+              fc.record({ action: fc.constant('resolveHydrated'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -541,6 +613,7 @@ describe('ViewShell functional handler', () => {
               fc.record({ action: fc.constant('update'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), title: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }), dataSource: fc.string({ minLength: 1, maxLength: 50 }), filter: fc.string({ minLength: 1, maxLength: 50 }), sort: fc.string({ minLength: 1, maxLength: 50 }), group: fc.string({ minLength: 1, maxLength: 50 }), projection: fc.string({ minLength: 1, maxLength: 50 }), presentation: fc.string({ minLength: 1, maxLength: 50 }), interaction: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('resolve'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
+              fc.record({ action: fc.constant('resolveHydrated'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

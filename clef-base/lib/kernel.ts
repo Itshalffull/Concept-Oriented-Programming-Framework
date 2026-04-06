@@ -8,6 +8,7 @@ import type { Kernel } from '../../runtime/self-hosted';
 
 import { REGISTRY_ENTRIES, SYNC_FILES } from '../../generated/kernel-registry';
 import { setEntityReflectorKernel } from '../../handlers/ts/app/entity-reflector.handler';
+import { setViewShellKernel } from '../../handlers/ts/view/view-shell.handler';
 import { bootstrapIdentity, getIdentityStorage } from './identity';
 import {
   pickActiveTheme,
@@ -66,6 +67,9 @@ export function getKernel(): Kernel {
 
   // Wire EntityReflector kernel reference
   setEntityReflectorKernel(kernel);
+
+  // Wire ViewShell kernel reference so resolveHydrated can dispatch cross-concept gets
+  setViewShellKernel(kernel);
 
   // Seed data + populate RuntimeRegistry + reflect entities
   _seedPromise = seedData(kernel, result.registrations, result.loadedSyncs).then(() => bootstrapIdentity(kernel));

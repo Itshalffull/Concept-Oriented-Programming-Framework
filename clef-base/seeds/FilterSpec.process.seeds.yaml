@@ -4,6 +4,35 @@
 # actual filtering happens at runtime when the user clicks toggles.
 # Views without filters (process-dashboard-stats, run-dashboard, process-steps-editor,
 # process-edges-editor, process-chat, process-health, process-completion-trend) get no entry.
+#
+# ── sourceType Classification Rationale (MAG-517) ─────────────────────────────
+#
+# sourceType routing rules determine which execution tier processes each filter:
+#
+#   system      → Backend pushdown (all tiers except E2EE)
+#                 Always-on invariant filters. Never change per interaction.
+#
+#   contextual  → Backend pushdown (all tiers except E2EE)
+#                 Derived from URL parameters or navigation context.
+#                 Resolved before the query executes.
+#
+#   interactive → Local residual (all tiers)
+#                 User-driven toggle clicks and facet selections. Change
+#                 frequently during a session; must stay local to avoid
+#                 a round-trip per user interaction.
+#
+#   search      → Local residual by default; backend pushdown if the provider
+#                 declares "search" in its pushdownOps.
+#
+# Classification summary for this file:
+#   All 6 entries are toggle-group filters driven by user interaction
+#   (spec status, run status, step status/type, work item status/priority,
+#   check status/mode, check mode). All are correctly classified as
+#   sourceType: interactive — they change per user click and must run
+#   in the local residual program, not be pushed to the backend.
+#
+# All entries in this file are correctly classified per the routing rules above.
+# ──────────────────────────────────────────────────────────────────────────────
 
 concept: FilterSpec
 action: create
