@@ -1,0 +1,23 @@
+# QueryProgram → analysis providers: trigger static analysis on program seal
+
+sync AnalyzeOnSeal [eager]
+  purpose: "When a QueryProgram is sealed via pure, trigger InvokeEffectProvider and QueryPurityProvider to analyze the program's instruction tree for invoked actions and purity classification."
+when {
+  QueryProgram/pure: [ program: ?program ]
+    => ok(program: ?program)
+}
+then {
+  InvokeEffectProvider/analyze: [
+    program: ?program ]
+}
+then {
+  QueryPurityProvider/analyze: [
+    program: ?program ]
+}
+
+# Note: QueryCompletionCoverage/analyze also requires conceptSpecs (the set of
+# concept manifests whose variant completions are being verified for coverage).
+# Because conceptSpecs are not available from the QueryProgram/pure seal event
+# alone, that analysis leg is wired separately — via a dedicated sync that
+# matches both QueryProgram/pure and a ConceptManifest/load (or equivalent)
+# completion so that both the sealed program and the spec set are in scope.

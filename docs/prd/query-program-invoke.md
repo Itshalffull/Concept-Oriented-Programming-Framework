@@ -750,9 +750,10 @@ Purity: `read-only`. No invoke instructions. Cached normally.
 
 1. ~~Create InvokeEffectProvider concept and handler~~
    (concept: 7973b2eb, handler: 7ac9f581)
-2. ~~Create QueryPurityProvider concept~~ (done: 7ac9f581)
+2. ~~Create QueryPurityProvider concept and handler~~
+   (concept: 7ac9f581, handler: f0baf406)
+3. ~~Create QueryCompletionCoverage concept~~ (done: f0baf406)
    and handler
-3. Create QueryCompletionCoverage concept and handler
 4. Register providers in the view suite manifest
 5. Wire analysis syncs (analyze on program seal)
 
