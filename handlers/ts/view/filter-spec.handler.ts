@@ -11,28 +11,9 @@ import {
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import { type FilterNode, evaluateFilterNode } from './types.ts';
 
 type Result = { variant: string; [key: string]: unknown };
-
-// ─── FilterNode type hierarchy ─────────────────────────────────────────────
-
-type FilterNode =
-  | { type: 'true' }
-  | { type: 'false' }
-  | { type: 'eq'; field: string; value: unknown }
-  | { type: 'neq'; field: string; value: unknown }
-  | { type: 'lt'; field: string; value: unknown }
-  | { type: 'lte'; field: string; value: unknown }
-  | { type: 'gt'; field: string; value: unknown }
-  | { type: 'gte'; field: string; value: unknown }
-  | { type: 'in'; field: string; values: unknown[] }
-  | { type: 'not_in'; field: string; values: unknown[] }
-  | { type: 'exists'; field: string }
-  | { type: 'function'; name: 'contains' | 'startsWith' | 'endsWith' | 'matches'; field: string; value: string }
-  | { type: 'and'; conditions: FilterNode[] }
-  | { type: 'or'; conditions: FilterNode[] }
-  | { type: 'not'; condition: FilterNode }
-  | { type: 'param'; name: string };
 
 // ─── Field reference extraction ────────────────────────────────────────────
 
@@ -75,61 +56,6 @@ function extractParameters(node: FilterNode): string[] {
   }
   walk(node);
   return params;
-}
-
-// ─── Predicate evaluation ──────────────────────────────────────────────────
-
-function evaluateNode(node: FilterNode, row: Record<string, unknown>): boolean {
-  switch (node.type) {
-    case 'true': return true;
-    case 'false': return false;
-
-    case 'eq': return row[node.field] === node.value;
-    case 'neq': return row[node.field] !== node.value;
-    case 'lt': return (row[node.field] as number) < (node.value as number);
-    case 'lte': return (row[node.field] as number) <= (node.value as number);
-    case 'gt': return (row[node.field] as number) > (node.value as number);
-    case 'gte': return (row[node.field] as number) >= (node.value as number);
-
-    case 'in': {
-      const fieldVal = row[node.field];
-      // Array fields: intersection — any element of fieldVal is in values
-      if (Array.isArray(fieldVal)) {
-        return (fieldVal as unknown[]).some(v => node.values.includes(v));
-      }
-      return node.values.includes(fieldVal);
-    }
-
-    case 'not_in': {
-      const fieldVal = row[node.field];
-      if (Array.isArray(fieldVal)) {
-        return !(fieldVal as unknown[]).some(v => node.values.includes(v));
-      }
-      return !node.values.includes(fieldVal);
-    }
-
-    case 'exists': {
-      const v = row[node.field];
-      return v !== null && v !== undefined;
-    }
-
-    case 'function': {
-      const str = String(row[node.field] ?? '');
-      switch (node.name) {
-        case 'contains': return str.includes(node.value);
-        case 'startsWith': return str.startsWith(node.value);
-        case 'endsWith': return str.endsWith(node.value);
-        case 'matches': return new RegExp(node.value).test(str);
-      }
-    }
-
-    case 'and': return node.conditions.every(c => evaluateNode(c, row));
-    case 'or': return node.conditions.some(c => evaluateNode(c, row));
-    case 'not': return !evaluateNode(node.condition, row);
-
-    // Unresolved param: treat as identity (true)
-    case 'param': return true;
-  }
 }
 
 // ─── Compose helper (with identity simplification) ─────────────────────────
@@ -366,7 +292,7 @@ const _handler: FunctionalConceptHandler = {
         } catch {
           return { rows: JSON.stringify([]) };
         }
-        const matching = rows.filter(row => evaluateNode(tree, row));
+        const matching = rows.filter(row => evaluateFilterNode(tree, row));
         return { rows: JSON.stringify(matching) };
       }),
     ) as StorageProgram<Result>;
