@@ -752,10 +752,10 @@ Purity: `read-only`. No invoke instructions. Cached normally.
    (concept: 7973b2eb, handler: 7ac9f581)
 2. ~~Create QueryPurityProvider concept and handler~~
    (concept: 7ac9f581, handler: f0baf406)
-3. ~~Create QueryCompletionCoverage concept~~ (done: f0baf406)
-   and handler
-4. Register providers in the view suite manifest
-5. Wire analysis syncs (analyze on program seal)
+3. ~~Create QueryCompletionCoverage concept and handler~~
+   (concept: f0baf406, handler: 44a43b60)
+4. ~~Register providers in the view suite manifest~~ (done: 44a43b60)
+5. ~~Wire analysis syncs (analyze on program seal)~~ (done: 44a43b60)
 
 ### Phase 4: View integration
 

@@ -1,0 +1,19 @@
+# View action query compilation sync — when a ViewShell is resolved and its
+# InteractionSpec has a createProgram reference, build the invoke-bearing
+# QueryProgram shell for the interaction config
+
+sync CompileActionQuery [eager]
+  purpose: "When a ViewShell is resolved and its InteractionSpec has a createProgram reference, compile an invoke-bearing QueryProgram from the interaction config, wiring the concept action invocation into the query pipeline."
+when {
+  ViewShell/resolve: [ name: ?name ]
+    => ok(view: ?view)
+}
+where {
+  ViewShell: { ?view interaction: ?interaction }
+  InteractionSpec/get: [ name: ?interaction ]
+    => ok(interaction: _; createForm: ?createForm; rowClick: _; rowActions: _; pickerMode: _; createProgram: ?createProgram; actionProgram: _)
+  guard(?createProgram != none)
+}
+then {
+  QueryProgram/create: [ program: ?createProgram ]
+}
