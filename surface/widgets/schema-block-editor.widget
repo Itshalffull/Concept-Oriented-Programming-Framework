@@ -4,16 +4,21 @@ widget schema-block-editor {
   purpose {
     General-purpose editor for ContentNode blocks that carry a child schema
     overlay. Automatically renders schema property fields as a collapsible
-    metadata strip alongside the block's content body. The metadata strip
+    metadata strip alongside the block's content zone. The metadata strip
     uses FormBuilder-generated fields driven by the schema definition —
     numbers get sliders or numeric inputs, booleans get toggles, enums get
-    select dropdowns, strings get text inputs. The content body renders as a
-    rich text editor. Visual differentiation distinguishes schema-annotated
-    blocks from plain content blocks: a tinted background, a schema type
-    badge, and a collapsible metadata strip. This widget is the DEFAULT
-    display for any block with isChildSchema=true schema overlay. Specific
-    content types can override individual fields via FieldPlacement or
-    replace the entire widget via ComponentMapping.
+    select dropdowns, strings get text inputs. The content zone renders the
+    block's own Outline children as a nested view — it is Outline all the
+    way down. Each child is resolved through the display pipeline: children
+    with a schema overlay render as schema-block-editors (recursive),
+    children without a schema render as plain content blocks (text, embeds,
+    transclusions), and children representing complex property sub-fields
+    render as FieldItemList groups. Visual differentiation distinguishes
+    schema-annotated blocks from plain content blocks: a tinted background,
+    a schema type badge, and a collapsible metadata strip. This widget is
+    the DEFAULT display for any block with isChildSchema=true schema overlay.
+    Specific content types can override individual fields via FieldPlacement
+    or replace the entire widget via ComponentMapping.
   }
 
   requires @1 {
@@ -21,7 +26,7 @@ widget schema-block-editor {
       blockId: String;
       schemaName: String;
       schemaFields: list;
-      content: String;
+      children: list;
       isTranscluded: Bool;
     }
     actions {
@@ -39,7 +44,8 @@ widget schema-block-editor {
     metadataField:          container  { Single property field rendered by FormBuilder — repeated per schema field }
     fieldLabel:             text       { Property field label }
     fieldControl:           widget     { Auto-selected edit widget: slider, toggle, select, text-input — via Interactor classification and WidgetResolver }
-    contentBody:            widget     { Rich text editor for the block's ContentNode body }
+    contentZone:            container  { Nested Outline children view — recursive: schema children get schema-block-editor, plain children get content-block, complex fields get field-item-list }
+    contentBody:            widget     { Embedded ViewShell of this block's Outline children, resolved through the display pipeline }
     transclusionIndicator:  container  { Badge shown when block content is transcluded via SyncedContent — click to navigate to source }
     collapseToggle:         action     { Toggle metadata strip visibility }
     removeButton:           action     { Remove this block from the Outline }
@@ -116,10 +122,13 @@ widget schema-block-editor {
         role: "group";
         aria-labelledby: fieldLabel;
       };
-      contentBody -> {
-        role: "textbox";
-        aria-multiline: "true";
+      contentZone -> {
+        role: "region";
         aria-label: "Block content";
+      };
+      contentBody -> {
+        role: "list";
+        aria-label: "Child blocks";
       };
       transclusionIndicator -> {
         role: "link";
@@ -146,7 +155,7 @@ widget schema-block-editor {
     blockId: String
     schemaName: String = ""
     schemaFields: list { key: String, type: String, value: String, enum: option list String } = []
-    content: String = ""
+    children: list { id: String, type: String, schema: option String, content: String } = []
     isTranscluded: Bool = false
     transclusionSource: option String
     metadataVisible: Bool = true
@@ -192,10 +201,15 @@ widget schema-block-editor {
       value: self.value;
       onInput: send(UPDATE_FIELD, { key: self.key, value: self.value });
     }
+    contentZone -> {
+      data-part: "content-zone";
+      data-block-id: ?blockId;
+      data-has-children: if ?children then "true" else "false";
+    }
     contentBody -> {
       data-part: "content-body";
-      value: ?content;
-      onInput: send(UPDATE_CONTENT, { value: self.value });
+      data-view-name: concat(?blockId, "-children");
+      data-block-id: ?blockId;
     }
     transclusionIndicator -> {
       data-part: "transclusion-indicator";
@@ -226,13 +240,13 @@ widget schema-block-editor {
     bind {
       blockId: node;
       schemaName: schema;
-      content: content;
+      children: children;
     }
   }
 
   compose {
     fieldControl:  widget("auto-field",  { mode: "edit" });
-    contentBody:   widget("rich-text",   { mode: "edit", placeholder: "Block content..." });
+    contentBody:   widget("view-embed",  { viewName: concat(blockId, "-children"), editable: true, dragReorder: true, showAddButton: true, emptyWidget: "rich-text" });
     collapseToggle: widget("toggle",     { size: "sm" });
   }
 
