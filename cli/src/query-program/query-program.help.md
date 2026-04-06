@@ -12,6 +12,8 @@ Build sequences of query instructions as inspectable , composable data . A Query
 - **QueryProgram is Sealed After Pure:** Once pure() is called, the program is terminated. No further instructions can be appended. This is the monadic return — it enables safe caching/memoization and prevents accidental mutation.
 - **FilterSpec is Algebraic:** Filters compose via AND trees. The identity filter is {type:'true'}. Composition is associative. This enables incremental filter building in UIs.
 - **SortSpec Composition is Ordered:** Sort composition is NOT commutative. compose(byName, byDate) means sort by name then break ties by date. This matches user mental models.
+- **Schema-Scoped Data Sources:** When a view shows data from a single schema, ALWAYS use listBySchema in the DataSourceSpec instead of list + client-side schema filter. listBySchema does a server-side join returning pre-filtered, schema-enriched results in one query. Use list only when the view genuinely shows all content types with interactive schema toggles.
+- **Split Execution by sourceType:** Filters are partitioned by sourceType for split execution: system + contextual push to backend, interactive + search run locally in-memory. This lets views fetch pre-filtered data from the kernel while keeping toggle filters responsive without round-trips. For E2EE (encrypted-local kind), ALL processing runs locally after client-side decrypt.
 - **Pushdown for Remote Sources:** RemoteQueryProvider splits a QueryProgram into pushdown (sent to API) and residual (executed in-memory). Views over REST APIs get the same composable experience as local queries.
 **create:**
 - [ ] Does the view have a DataSourceSpec defining where data comes from?
@@ -33,6 +35,23 @@ Build sequences of query instructions as inspectable , composable data . A Query
 
 - [QueryProgram instruction grammar and pipeline reference](references/query-program-grammar.md)
 ## Anti-Patterns
+
+### Using list + client-side schema filter instead of listBySchema
+Fetches ALL nodes then filters locally — full table scan every time. listBySchema does a server-side join returning only matching nodes with schemas pre-attached.
+
+**Bad:**
+```
+DataSourceSpec/create: { config: '{"concept":"ContentNode","action":"list","params":{"schemaFilter":"Concept"}}' }
+// Fetches ALL ContentNodes, then filters to Concepts client-side
+
+```
+
+**Good:**
+```
+DataSourceSpec/create: { config: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Concept"}}' }
+// Server-side join — returns only Concept nodes with schemas array
+
+```
 
 ### Building filters as raw JSON in handlers
 Bypasses composition, normalization, validation, and field reference tracking.

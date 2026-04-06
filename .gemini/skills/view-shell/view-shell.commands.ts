@@ -12,4 +12,4 @@ export async function handleViewShellSkill(
   return JSON.stringify(result.body, null, 2);
 }
 
-export const viewShellSkillCommands = ['create', 'get', 'update', 'resolve', 'list'];
+export const viewShellSkillCommands = ['create', 'get', 'update', 'resolve', 'list', 'resolveHydrated'];

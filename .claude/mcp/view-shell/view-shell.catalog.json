@@ -22,5 +22,13 @@
     "concept": "ViewShell",
     "action": "resolve",
     "alwaysLoaded": false
+  },
+  {
+    "name": "view_shell_resolve_hydrated",
+    "briefDescription": "Load the ViewShell entry by name , then fetch each non empty child spec \n by ...",
+    "category": "ViewShell",
+    "concept": "ViewShell",
+    "action": "resolveHydrated",
+    "alwaysLoaded": false
   }
 ]
