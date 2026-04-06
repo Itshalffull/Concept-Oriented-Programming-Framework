@@ -1,14 +1,57 @@
-# When an entity page's schema has a childSchema property, replace the
-# main content zone of the triple-zone layout with the children ViewShell
-# (schema-block-editors + plain content blocks). The sidebar (schema
-# property fields) and related zone (backlinks, references) stay unchanged.
+# Schema children display mode for the triple-zone entity page.
 #
-# This makes structured content types (agent personas, constitutions,
-# process specs, proposals) display their block editor in the same
-# triple-zone entity page — no separate page or tab needed.
+# Registered as a display mode ("structured-content") for content types
+# with a childSchema property. By default, replaces the main content zone
+# of the triple-zone layout with the children ViewShell — mixing
+# schema-overlaid blocks (metadata strip + content) and plain blocks
+# (text, embeds, transclusions) in the same Outline.
+#
+# The sidebar zone (schema property fields) and related zone (backlinks,
+# references, semantic embeddings) are unchanged.
+#
+# Because this is a display mode, it can be swapped — the entity page
+# can switch between "structured-content" (block editor) and the default
+# "canvas" (rendered content) display modes for the main zone.
+
+# === Register the Display Mode ===
+# When a schema has childSchema, create a "structured-content" display
+# mode that renders the main zone as a children ViewShell.
+
+sync RegisterStructuredContentDisplayMode [eager]
+  purpose { Register the structured-content display mode for schemas with child blocks. }
+when {
+  Schema/defineSchema: [ schema: ?schema; fields: ?fields ]
+    => ok()
+}
+where {
+  Property: { ?schema key: "childSchema"; value: ?childSchema }
+}
+then {
+  DisplayMode/create: [ schema: ?schema; mode_id: "structured-content"; name: concat(?schema, " Structured Content") ]
+}
+
+# Set the display mode to use the children ViewShell as its content source.
+
+sync StructuredContentModeUsesChildrenView [eager]
+  purpose { Configure the structured-content display mode to render the children ViewShell. }
+when {
+  DisplayMode/create: [ schema: ?schema; mode_id: "structured-content" ]
+    => ok(mode: ?mode)
+}
+where {
+  Property: { ?schema key: "childSchema"; value: ?childSchema }
+}
+then {
+  DisplayMode/set_component_mapping: [ mode: ?mode; mapping: concat(?schema, "-children-view-embed") ]
+}
+
+# === Default Main Zone Override ===
+# When resolving the entity page for a schema with childSchema, override
+# the main zone to use the structured-content display mode instead of
+# the default canvas/content rendering.
 
 sync SchemaChildrenOverridesMainZone [eager]
-  purpose { Replace triple-zone main content zone with children ViewShell when schema has childSchema. }
+  purpose { Override triple-zone main content zone with structured-content display mode. }
 when {
   DisplayMode/resolve: [ entity_id: ?entity_id; mode: "entity-page" ]
     => [ ok: ?display_config ]
@@ -18,37 +61,37 @@ where {
   Property: { ?schema key: "childSchema"; value: ?childSchema }
 }
 then {
-  ViewShell/resolve: [ name: concat(?schema, "-children") ]
+  Layout/configureZones: [ layout: "triple-zone-default"; zones: concat("{\"main\":{\"source\":\"display_mode\",\"displayMode\":\"structured-content\",\"schema\":\"", ?schema, "\",\"entityId\":\"", ?entity_id, "\",\"props\":{\"editable\":true,\"dragReorder\":true,\"showAddButton\":true,\"addButtonLabel\":\"Add block\"}}}") ]
 }
 
-# Populate the main zone with the resolved children view.
-# The triple-zone widget reads this as the main zone content source.
+# === Component Mapping for Structured Content ===
+# Register the ComponentMapping that renders the children ViewShell
+# as the structured-content display mode's widget.
 
-sync MainZoneRendersChildrenView [eager]
-  purpose { Render the children ViewShell in the main zone of the triple-zone layout. }
+sync RegisterStructuredContentMapping [eager]
+  purpose { Register ComponentMapping for structured-content display mode. }
 when {
-  ViewShell/resolve: [ name: ?viewName ]
-    => [ view: ?view ]
+  DisplayMode/create: [ schema: ?schema; mode_id: "structured-content" ]
+    => ok(mode: ?mode)
 }
 where {
-  Property: { ?viewName key: "zoneTarget"; value: "main" }
+  Property: { ?schema key: "childSchema"; value: ?childSchema }
 }
 then {
-  Layout/configureZones: [ layout: "triple-zone-default"; zones: concat("{\"main\":{\"source\":\"view\",\"viewName\":\"", ?viewName, "\",\"widget\":\"view-embed\",\"props\":{\"editable\":true,\"dragReorder\":true,\"showAddButton\":true}}}") ]
+  ComponentMapping/create: [ mapping: concat(?schema, "-children-view-embed"); scope_schema: ?schema; scope_display_mode: "structured-content"; widget_id: "view-embed"; widget_variant: "block-list" ]
 }
 
-# Tag the children ViewShell with its zone target so the main zone
-# renderer knows to pick it up.
+# Bind the ComponentMapping slots to the children ViewShell.
 
-sync TagChildrenViewForMainZone [eager]
-  purpose { Tag the auto-created children ViewShell as targeting the main zone. }
+sync BindStructuredContentMappingSlots [eager]
+  purpose { Bind the structured-content mapping to the children ViewShell data source. }
 when {
-  ViewShell/create: [ name: ?name; dataSource: ?ds; filter: ?f; sort: ?s; group: ?g; projection: ?p; presentation: ?pres; interaction: ?i ]
+  ComponentMapping/create: [ mapping: ?mapping; scope_schema: ?schema; scope_display_mode: "structured-content" ]
     => ok()
 }
 where {
-  filter(?name, endsWith, "-children")
+  Property: { ?schema key: "childSchema"; value: ?childSchema }
 }
 then {
-  Property/set: [ entity: ?name; key: "zoneTarget"; value: "main" ]
+  ComponentMapping/bindSlot: [ mapping: ?mapping; slot: "viewName"; source_type: "static_value"; config: concat("{\"value\":\"", ?schema, "-children\"}") ]
 }
