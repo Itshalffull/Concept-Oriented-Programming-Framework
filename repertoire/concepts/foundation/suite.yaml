@@ -33,5 +33,8 @@ syncs:
   - name: intent-discovery
     file: syncs/intent-discovery.sync
     tier: recommended
+  - name: content-native-schema
+    file: syncs/content-native-schema.sync
+    tier: required
 
 dependencies: []
