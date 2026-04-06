@@ -1,0 +1,385 @@
+@version(1)
+widget circle-dashboard {
+
+  purpose {
+    Overview dashboard for a governance Circle (team). Displays a member list
+    with roles and reputation scores, bound processes with status indicators,
+    active proposals with quorum voting progress, and a recent governance
+    activity timeline (votes, role changes, policy updates). Aggregate metrics
+    summarise member count, active processes, open proposals, and total
+    reputation. Provides quick actions to add a member, start a process, and
+    create a proposal.
+  }
+
+  requires @1 {
+    fields {
+      members: list;
+      processes: list;
+      proposals: list;
+      activity: list;
+    }
+    actions {
+      addMember: { };
+      startProcess: { };
+      createProposal: { };
+    }
+  }
+
+  anatomy {
+    root:                 container  { Dashboard wrapper }
+    header:               container  { Circle name, domain, and governance model badge }
+    circleName:           text       { Display name of the circle }
+    domainBadge:          container  { Domain scope label }
+    governanceModelBadge: container  { Governance model tag (e.g. sociocracy, holacracy) }
+    metricsRow:           container  { Aggregate metrics summary strip }
+    memberCount:          text       { Total member count }
+    activeProcessCount:   text       { Count of active bound processes }
+    openProposalCount:    text       { Count of open proposals }
+    totalReputation:      text       { Sum of reputation across all members }
+    membersSection:       container  { Member list with roles and reputation }
+    memberRow:            container  { Single member entry }
+    memberName:           text       { Member display name }
+    memberRole:           container  { Role badge for the member }
+    memberReputation:     text       { Reputation score for the member }
+    memberStatus:         container  { Active or inactive indicator }
+    processesSection:     container  { Bound processes list }
+    processRow:           container  { Single process entry }
+    processName:          text       { Process display name }
+    processStatus:        container  { Process status indicator badge }
+    startProcessButton:   action     { Start a new bound process }
+    proposalsSection:     container  { Active proposals list }
+    proposalRow:          container  { Single proposal entry }
+    proposalTitle:        text       { Proposal display title }
+    proposalStatus:       container  { Proposal status badge }
+    proposalVoteProgress: widget     { Quorum progress bar for this proposal }
+    activitySection:      container  { Recent governance activity timeline }
+    activityItem:         container  { Single activity event entry }
+    activityDescription:  text       { Human-readable description of the activity event }
+    activityTimestamp:    text       { When the activity event occurred }
+    addMemberButton:      action     { Add a new member to the circle }
+    createProposalButton: action     { Create a new governance proposal }
+  }
+
+  states {
+    overview [initial] {
+      on SELECT_MEMBER -> memberDetail;
+      on SELECT_PROCESS -> processDetail;
+      on SELECT_PROPOSAL -> proposalDetail;
+      on ADD_MEMBER -> addingMember;
+      on CREATE_PROPOSAL -> creatingProposal;
+      on REFRESH -> overview;
+    }
+
+    memberDetail {
+      on BACK -> overview;
+      entry [navigateToMemberDetail];
+    }
+
+    processDetail {
+      on BACK -> overview;
+      entry [navigateToProcessDetail];
+    }
+
+    proposalDetail {
+      on BACK -> overview;
+      entry [navigateToProposalDetail];
+    }
+
+    addingMember {
+      on COMPLETE -> overview;
+      on CANCEL -> overview;
+      entry [openAddMemberForm];
+      exit [closeAddMemberForm];
+    }
+
+    creatingProposal {
+      on COMPLETE -> overview;
+      on CANCEL -> overview;
+      entry [openCreateProposalForm];
+      exit [closeCreateProposalForm];
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      ArrowDown -> FOCUS_NEXT;
+      ArrowUp -> FOCUS_PREV;
+      Enter -> SELECT_MEMBER;
+      n -> ADD_MEMBER;
+      p -> CREATE_PROPOSAL;
+      Escape -> BACK;
+    }
+    focus {
+      trap: false;
+      initial: membersSection;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Circle dashboard";
+      };
+      header -> {
+        role: "banner";
+        aria-label: concat(?circleName, " circle");
+      };
+      metricsRow -> {
+        role: "group";
+        aria-label: "Circle metrics";
+      };
+      membersSection -> {
+        role: "region";
+        aria-label: "Members";
+      };
+      memberRow -> {
+        role: "row";
+        aria-label: concat(self.name, ", ", self.role, ", reputation ", self.reputation);
+      };
+      processesSection -> {
+        role: "region";
+        aria-label: "Processes";
+      };
+      processRow -> {
+        role: "row";
+        aria-label: concat(self.name, " process, ", self.status);
+      };
+      startProcessButton -> {
+        role: "button";
+        aria-label: "Start new process";
+      };
+      proposalsSection -> {
+        role: "region";
+        aria-label: "Proposals";
+      };
+      proposalRow -> {
+        role: "row";
+        aria-label: concat(self.title, " proposal, ", self.status);
+      };
+      activitySection -> {
+        role: "region";
+        aria-label: "Recent governance activity";
+      };
+      activityItem -> {
+        role: "listitem";
+        aria-label: concat(self.description, " at ", self.timestamp);
+      };
+      addMemberButton -> {
+        role: "button";
+        aria-label: "Add member";
+      };
+      createProposalButton -> {
+        role: "button";
+        aria-label: "Create proposal";
+      };
+    }
+  }
+
+  props {
+    circleId: String
+    circleName: String = ""
+    domain: String = ""
+    governanceModel: String = "sociocracy"
+    members: list { id: String, name: String, role: String, reputation: Float, active: Bool } = []
+    processes: list { id: String, name: String, status: String } = []
+    proposals: list { id: String, title: String, status: String, quorumProgress: Float } = []
+    activity: list { description: String, timestamp: String } = []
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 25;
+    when {
+      concept: "Circle";
+    }
+    bind {
+      circleName: name;
+      domain: domain;
+      governanceModel: governance_model;
+      members: members;
+      processes: processes;
+      proposals: proposals;
+      activity: activity;
+    }
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+    }
+    header -> {
+      data-part: "header";
+    }
+    circleName -> {
+      data-part: "circle-name";
+      text: ?circleName;
+    }
+    domainBadge -> {
+      data-part: "domain-badge";
+      text: ?domain;
+      data-visible: if ?domain == "" then "false" else "true";
+    }
+    governanceModelBadge -> {
+      data-part: "governance-model-badge";
+      text: ?governanceModel;
+    }
+    metricsRow -> {
+      data-part: "metrics-row";
+    }
+    memberCount -> {
+      data-part: "member-count";
+      text: concat(?members.length, " members");
+    }
+    activeProcessCount -> {
+      data-part: "active-process-count";
+      text: concat(?processes.length, " processes");
+    }
+    openProposalCount -> {
+      data-part: "open-proposal-count";
+      text: concat(?proposals.length, " proposals");
+    }
+    totalReputation -> {
+      data-part: "total-reputation";
+      text: concat(?members.totalReputation, " rep");
+    }
+    membersSection -> {
+      data-part: "members-section";
+      data-visible: if ?members.length > 0 then "true" else "false";
+    }
+    memberRow -> {
+      data-part: "member-row";
+      data-id: self.id;
+      data-active: if self.active then "true" else "false";
+      tabindex: if self.isFocused then "0" else "-1";
+      onClick: send(SELECT_MEMBER, { id: self.id });
+    }
+    memberName -> {
+      data-part: "member-name";
+      text: self.name;
+    }
+    memberRole -> {
+      data-part: "member-role";
+      text: self.role;
+    }
+    memberReputation -> {
+      data-part: "member-reputation";
+      text: self.reputation;
+    }
+    memberStatus -> {
+      data-part: "member-status";
+      data-active: if self.active then "true" else "false";
+    }
+    processesSection -> {
+      data-part: "processes-section";
+      data-visible: if ?processes.length > 0 then "true" else "false";
+    }
+    processRow -> {
+      data-part: "process-row";
+      data-id: self.id;
+      data-status: self.status;
+      onClick: send(SELECT_PROCESS, { id: self.id });
+    }
+    processName -> {
+      data-part: "process-name";
+      text: self.name;
+    }
+    processStatus -> {
+      data-part: "process-status";
+      data-status: self.status;
+    }
+    startProcessButton -> {
+      data-part: "start-process-button";
+      role: "button";
+      onClick: send(SELECT_PROCESS);
+      aria-label: "Start new process";
+    }
+    proposalsSection -> {
+      data-part: "proposals-section";
+      data-visible: if ?proposals.length > 0 then "true" else "false";
+    }
+    proposalRow -> {
+      data-part: "proposal-row";
+      data-id: self.id;
+      data-status: self.status;
+      onClick: send(SELECT_PROPOSAL, { id: self.id });
+    }
+    proposalTitle -> {
+      data-part: "proposal-title";
+      text: self.title;
+    }
+    proposalStatus -> {
+      data-part: "proposal-status";
+      data-status: self.status;
+    }
+    proposalVoteProgress -> {
+      data-part: "proposal-vote-progress";
+      data-progress: self.quorumProgress;
+    }
+    activitySection -> {
+      data-part: "activity-section";
+      data-visible: if ?activity.length > 0 then "true" else "false";
+    }
+    activityItem -> {
+      data-part: "activity-item";
+    }
+    activityDescription -> {
+      data-part: "activity-description";
+      text: self.description;
+    }
+    activityTimestamp -> {
+      data-part: "activity-timestamp";
+      text: self.timestamp;
+    }
+    addMemberButton -> {
+      data-part: "add-member-button";
+      role: "button";
+      onClick: send(ADD_MEMBER);
+      aria-label: "Add member";
+    }
+    createProposalButton -> {
+      data-part: "create-proposal-button";
+      role: "button";
+      onClick: send(CREATE_PROPOSAL);
+      aria-label: "Create proposal";
+    }
+  }
+
+  compose {
+    memberStatus: widget("badge", { variant: "dot" });
+    memberRole: widget("badge", { variant: "outline", size: "sm" });
+    processStatus: widget("badge", { variant: "solid", size: "sm" });
+    proposalStatus: widget("badge", { variant: "outline", size: "sm" });
+    proposalVoteProgress: widget("progress-bar", { });
+    governanceModelBadge: widget("badge", { variant: "subtle" });
+  }
+
+  invariant {
+    example "select_member transitions from overview": { after transition(from: "overview", event: "SELECT_MEMBER") -> ok then state = "memberDetail" }
+    example "back from memberDetail returns to overview": { after transition(from: "memberDetail", event: "BACK") -> ok then state = "overview" }
+    example "select_process transitions from overview": { after transition(from: "overview", event: "SELECT_PROCESS") -> ok then state = "processDetail" }
+    example "back from processDetail returns to overview": { after transition(from: "processDetail", event: "BACK") -> ok then state = "overview" }
+    example "select_proposal transitions from overview": { after transition(from: "overview", event: "SELECT_PROPOSAL") -> ok then state = "proposalDetail" }
+    example "back from proposalDetail returns to overview": { after transition(from: "proposalDetail", event: "BACK") -> ok then state = "overview" }
+    example "add_member transitions from overview": { after transition(from: "overview", event: "ADD_MEMBER") -> ok then state = "addingMember" }
+    example "cancel addingMember returns to overview": { after transition(from: "addingMember", event: "CANCEL") -> ok then state = "overview" }
+    example "complete addingMember returns to overview": { after transition(from: "addingMember", event: "COMPLETE") -> ok then state = "overview" }
+    example "create_proposal transitions from overview": { after transition(from: "overview", event: "CREATE_PROPOSAL") -> ok then state = "creatingProposal" }
+    example "cancel creatingProposal returns to overview": { after transition(from: "creatingProposal", event: "CANCEL") -> ok then state = "overview" }
+    example "complete creatingProposal returns to overview": { after transition(from: "creatingProposal", event: "COMPLETE") -> ok then state = "overview" }
+    example "refresh stays in overview": { after transition(from: "overview", event: "REFRESH") -> ok then state = "overview" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
+    always "members section visible only when members exist": { ?members.length > 0 implies membersSection.data-visible == "true" }
+    always "processes section visible only when processes exist": { ?processes.length > 0 implies processesSection.data-visible == "true" }
+    always "proposals section visible only when proposals exist": { ?proposals.length > 0 implies proposalsSection.data-visible == "true" }
+    always "activity section visible only when activity exists": { ?activity.length > 0 implies activitySection.data-visible == "true" }
+    "Metrics row must reflect current counts from props at all times";
+    "Each memberRow must render exactly one entry per item in props.members";
+    "Each proposalRow must include a proposalVoteProgress bar bound to quorumProgress";
+    "Keyboard shortcut n must fire ADD_MEMBER event from overview state";
+    "Keyboard shortcut p must fire CREATE_PROPOSAL event from overview state";
+    "addMemberButton and createProposalButton must be accessible in every state";
+  }
+
+}

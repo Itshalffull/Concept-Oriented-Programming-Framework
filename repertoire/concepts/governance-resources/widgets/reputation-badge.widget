@@ -1,0 +1,200 @@
+@version(1)
+widget reputation-badge {
+
+  purpose {
+    Compact reputation display showing a member's numeric score, rank tier
+    (bronze/silver/gold/platinum), trend arrow (up/down/stable), and derived
+    voting weight. Designed for inline use in member lists, circle dashboards,
+    and vote ballots. Clicking the badge expands an inline history panel
+    listing recent reputation changes with reasons, amounts, and timestamps.
+  }
+
+  requires @1 {
+    fields {
+      memberId: String;
+      score: Float;
+      rank: String;
+      trend: String;
+      weight: Float;
+      history: list;
+    }
+  }
+
+  anatomy {
+    root:             container  { Compact badge wrapper; collapses and expands history }
+    score:            text       { Numeric reputation score }
+    rankIcon:         container  { Tier icon representing bronze/silver/gold/platinum }
+    trendArrow:       container  { Up/down/stable trend indicator arrow }
+    weightLabel:      text       { Derived voting weight computed from reputation }
+    expandedPanel:    container  { Expanded history view, hidden in compact state }
+    historyItem:      container  { Single reputation change entry in the history list }
+    historyReason:    text       { Human-readable reason for the reputation change }
+    historyAmount:    text       { Signed change amount: +10, -5, etc. }
+    historyTimestamp: text       { When the reputation change occurred }
+  }
+
+  states {
+    compact [initial] {
+      on EXPAND -> expanded;
+    }
+
+    expanded {
+      on COLLAPSE -> compact;
+    }
+  }
+
+  accessibility {
+    role: group;
+    keyboard {
+      Enter -> EXPAND;
+      Space -> EXPAND;
+      Escape -> COLLAPSE;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: concat("Reputation badge for member ", ?memberId, ": ", ?score, " points, ", ?rank, " rank");
+        aria-expanded: if state == "expanded" then "true" else "false";
+      };
+      score -> {
+        aria-label: concat(?score, " reputation points");
+      };
+      rankIcon -> {
+        role: "img";
+        aria-label: concat(?rank, " tier");
+      };
+      trendArrow -> {
+        role: "img";
+        aria-label: concat("Trend: ", ?trend);
+      };
+      weightLabel -> {
+        aria-label: concat("Voting weight: ", ?weight);
+      };
+      expandedPanel -> {
+        role: "region";
+        aria-label: "Reputation history";
+        aria-live: "polite";
+      };
+      historyItem -> {
+        role: "listitem";
+        aria-label: concat(self.reason, " ", self.amount);
+      };
+    }
+  }
+
+  props {
+    memberId: String
+    score: Float = 0
+    rank: union "bronze" | "silver" | "gold" | "platinum" = "bronze"
+    trend: union "up" | "down" | "stable" = "stable"
+    weight: Float = 1.0
+    history: list { reason: String, amount: Float, timestamp: String } = []
+  }
+
+  affordance {
+    serves: entity-inline;
+    specificity: 20;
+    when {
+      concept: "Reputation";
+    }
+    bind {
+      memberId: memberId;
+      score: score;
+      rank: rank;
+      trend: trend;
+      weight: votingWeight;
+      history: changeHistory;
+    }
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-rank: ?rank;
+      data-trend: ?trend;
+      role: "group";
+      aria-label: concat("Reputation: ", ?score, " (", ?rank, ")");
+      aria-expanded: if state == "expanded" then "true" else "false";
+      tabindex: "0";
+      onClick: send(EXPAND);
+      onKeyDown: send(EXPAND);
+    }
+    score -> {
+      data-part: "score";
+      text: ?score;
+    }
+    rankIcon -> {
+      data-part: "rank-icon";
+      data-rank: ?rank;
+      aria-hidden: "true";
+    }
+    trendArrow -> {
+      data-part: "trend-arrow";
+      data-trend: ?trend;
+      aria-hidden: "true";
+    }
+    weightLabel -> {
+      data-part: "weight-label";
+      text: ?weight;
+    }
+    expandedPanel -> {
+      data-part: "expanded-panel";
+      role: "region";
+      aria-label: "Reputation history";
+      data-visible: if state == "expanded" then "true" else "false";
+      aria-live: "polite";
+    }
+    historyItem -> {
+      data-part: "history-item";
+      role: "listitem";
+      data-amount: self.amount;
+    }
+    historyReason -> {
+      data-part: "history-reason";
+      text: self.reason;
+    }
+    historyAmount -> {
+      data-part: "history-amount";
+      text: self.amount;
+      data-sign: if self.amount > 0 then "positive" else if self.amount < 0 then "negative" else "neutral";
+    }
+    historyTimestamp -> {
+      data-part: "history-timestamp";
+      text: self.timestamp;
+    }
+  }
+
+  compose {
+    rankIcon: widget("badge", { variant: "icon" });
+    trendArrow: widget("trend-indicator", { direction: ?trend });
+  }
+
+  invariant {
+    example "expand transitions from compact": { after transition(from: "compact", event: "EXPAND") -> ok then state = "expanded" }
+    example "collapse transitions from expanded": { after transition(from: "expanded", event: "COLLAPSE") -> ok then state = "compact" }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
+    always "expanded panel visible only in expanded state": {
+      expandedPanel.data-visible = "true" implies state = "expanded"
+    }
+    never "history panel visible in compact state": {
+      state = "compact" and expandedPanel.data-visible = "true"
+    }
+    action root.onClick {
+      requires: state = "compact"
+      ensures ok: state = "expanded"
+    }
+    "Rank icon must reflect one of bronze, silver, gold, or platinum tiers";
+    "Trend arrow must indicate up, down, or stable direction";
+    "History amounts must display with sign prefix (+ or -)";
+    "Badge must be keyboard activatable with Enter and Space";
+    "Escape must collapse the expanded panel";
+  }
+
+}
