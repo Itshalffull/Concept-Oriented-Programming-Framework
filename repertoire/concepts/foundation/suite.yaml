@@ -20,6 +20,8 @@ concepts:
     spec: content-parser.concept
   - name: Intent
     spec: intent.concept
+  - name: ContentCompiler
+    spec: content-compiler.concept
 
 syncs:
   - name: content-lifecycle

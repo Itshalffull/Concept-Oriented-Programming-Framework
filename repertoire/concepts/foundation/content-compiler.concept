@@ -1,0 +1,174 @@
+# @fixtures-added
+@version(1)
+concept ContentCompiler [X] {
+
+  purpose {
+    Compile a schema-overlaid content page into a structured concept-specific
+    output. Given a ContentNode page with a Schema overlay applied via
+    Schema/applyTo, walks the page's Outline block tree, reads each block's
+    Property metadata and ContentNode body (resolving SyncedContent
+    transclusions), and dispatches to a registered compilation provider via
+    PluginRegistry. The provider transforms the walked content into a
+    concept-specific output (e.g., PromptAssembly for agent personas,
+    CalendarEvent for meeting notes, ProcessSpec for workflows). ContentCompiler
+    has zero awareness of which providers exist — routing syncs resolve the
+    page's schema to the correct provider at call time via PluginRegistry.
+  }
+
+  state {
+    compilations: set X
+    pageId: X -> String
+    schema: X -> String
+    outputRef: X -> option String
+    status: X -> String
+    lastCompiledAt: X -> String
+    metadata: X -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action compile(pageId: String) {
+      -> ok(compilation: X, schema: String, outputRef: String, metadata: String) {
+        Looks up the page's Schema overlay, then dispatches to PluginRegistry
+        to find the registered compilation provider for that schema. The provider
+        walks the Outline block tree, reads Property metadata and ContentNode
+        bodies (resolving SyncedContent transclusions), and produces the output.
+        Sets status to "compiled" and records lastCompiledAt. The schema string
+        is an opaque key passed through to the routing sync, which resolves it
+        via PluginRegistry — ContentCompiler does not validate or interpret this
+        string.
+      }
+      -> notfound(message: String) {
+        No page exists with this identifier or the page has no Schema overlay
+        applied, so there is no schema key to dispatch on.
+      }
+      -> invalid(message: String) {
+        The page exists and has a Schema overlay, but the provider returned an
+        error — either the page has no content blocks or the provider failed to
+        produce a valid output from the block tree.
+      }
+
+      fixture compile_page { pageId: "persona-research-bot" }
+      fixture compile_missing { pageId: "nonexistent" } -> notfound
+      fixture compile_empty { pageId: "empty-page" } -> invalid
+    }
+
+    action recompile(compilation: X) {
+      -> ok(compilation: X, outputRef: String, metadata: String) {
+        Re-walks the block tree and regenerates the output via the provider.
+        Updates status from "stale" to "compiled" and refreshes lastCompiledAt
+        and metadata with the new provider result.
+      }
+      -> notfound(message: String) {
+        No compilation record exists with this identifier.
+      }
+      -> invalid(message: String) {
+        The compilation record exists but the underlying page is no longer
+        valid — blocks have been removed or the Schema overlay has been
+        detached.
+      }
+
+      fixture recompile_existing { compilation: $compile_page.compilation } after compile_page
+      fixture recompile_missing { compilation: "nonexistent" } -> notfound
+    }
+
+    action markStale(compilation: X) {
+      -> ok(compilation: X) {
+        Sets status to "stale", signalling that source blocks have changed and
+        the cached output no longer reflects the current page content. Called
+        by syncs when blocks are edited, reordered, or when a SyncedContent
+        transclusion source is updated.
+      }
+      -> notfound(message: String) {
+        No compilation record exists with this identifier.
+      }
+
+      fixture mark_stale { compilation: $compile_page.compilation } after compile_page
+      fixture mark_stale_missing { compilation: "nonexistent" } -> notfound
+    }
+
+    action getOutput(compilation: X) {
+      -> ok(outputRef: String, schema: String, status: String, metadata: String) {
+        Returns the cached output reference, the schema name used to compile it,
+        the current status, and the provider metadata. When status is "stale"
+        the output is present but outdated relative to the current block tree.
+      }
+      -> notfound(message: String) {
+        No compilation record exists with this identifier.
+      }
+
+      fixture get_output { compilation: $compile_page.compilation } after compile_page
+      fixture get_output_missing { compilation: "nonexistent" } -> notfound
+    }
+
+    action listByPage(pageId: String) {
+      -> ok(compilations: String) {
+        Returns all compilation records for the given page as a JSON array,
+        including historical compilations for diffing output evolution across
+        recompile cycles.
+      }
+      -> notfound(message: String) {
+        No compilations exist for this page identifier.
+      }
+
+      fixture list_compilations { pageId: "persona-research-bot" } after compile_page
+      fixture list_missing { pageId: "nonexistent" } -> notfound
+    }
+
+    action listBySchema(schema: String) {
+      -> ok(compilations: String) {
+        Returns all compilation records that used the given schema name as a
+        JSON array. Enables queries such as "all compiled agent personas" or
+        "all compiled meeting notes" without scanning every compilation record.
+      }
+
+      fixture list_by_schema { schema: "agent-persona" } after compile_page
+    }
+  }
+
+  example "compile-then-get": {
+
+    after compile(pageId: "page-1") -> ok(compilation: c, schema: _, outputRef: r, metadata: _)
+
+        then getOutput(compilation: c) -> ok(outputRef: r, schema: _, status: "compiled", metadata: _)
+
+  }
+
+  example "compile-then-stale-then-recompile": {
+
+    after compile(pageId: "page-1") -> ok(compilation: c, schema: _, outputRef: _, metadata: _)
+
+        and markStale(compilation: c) -> ok(compilation: c)
+
+        then recompile(compilation: c) -> ok(compilation: c, outputRef: _, metadata: _)
+
+  }
+
+
+  always "valid-status" {
+
+    forall x in compilations:
+
+      x.status != none
+
+  }
+
+  never "orphaned-pageId" {
+
+    exists x in compilations:
+
+      x.pageId = none
+
+  }
+
+  action compile {
+
+    requires: pageId != ""
+
+    ensures ok: compilations contains result.compilation
+
+  }
+}

@@ -1,5 +1,5 @@
-# Mark persona compilations stale when instruction blocks are edited
-# so the cached PromptAssembly gets recompiled before next use.
+# Mark compilations stale when instruction blocks are edited
+# so the cached output gets recompiled before next use.
 
 sync BlockEditStalesCompilation [eager]
   purpose { Invalidate cached compilations when instruction blocks change. }
@@ -11,7 +11,7 @@ where {
   Schema: { ?block associations: "instruction-block" }
 }
 then {
-  PersonaCompiler/markStale: [ compilation: ?block ]
+  ContentCompiler/markStale: [ compilation: ?block ]
 }
 
 sync BlockPropertyStalesCompilation [eager]
@@ -24,5 +24,5 @@ where {
   Schema: { ?block associations: "instruction-block" }
 }
 then {
-  PersonaCompiler/markStale: [ compilation: ?block ]
+  ContentCompiler/markStale: [ compilation: ?block ]
 }

@@ -3,7 +3,7 @@ widget persona-card {
 
   purpose {
     Compact card representation of an agent persona for display in grid
-    and gallery views. Shows the persona's avatar, name, description,
+    and gallery views. Shows the persona avatar, name, description,
     status badge, model info, active session count, and a quick action
     bar with spawn, edit, and overflow menu controls. Used as the card
     item in the agent dashboard grid and agent library view. Clicking

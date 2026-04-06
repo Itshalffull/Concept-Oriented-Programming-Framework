@@ -1,0 +1,32 @@
+# AgentSession spawn triggers compilation of the persona page to
+# produce a PromptAssembly, then creates AgentLoop and Conversation.
+
+sync SessionCompilesPersona [eager]
+  purpose { Compile the persona page when a session spawns so the agent receives a resolved PromptAssembly before its first step. }
+when {
+  AgentSession/spawn: [personaPageId: ?persona; strategy: ?strategy; tools: ?tools; context: ?ctx]
+    => ok(session: ?session)
+}
+then {
+  ContentCompiler/compile: [pageId: ?persona]
+}
+
+sync SessionCreatesAgentLoop [eager]
+  purpose { Create the AgentLoop for a new session so the agent can begin executing its strategy against the provided tools. }
+when {
+  AgentSession/spawn: [personaPageId: ?persona; strategy: ?strategy; tools: ?tools; context: ?ctx]
+    => ok(session: ?session; agentLoopId: ?loop)
+}
+then {
+  AgentLoop/create: [available_tools: ?tools; max_iterations: 50]
+}
+
+sync SessionCreatesConversation [eager]
+  purpose { Create the Conversation for a new session so turn history is tracked from the first message. }
+when {
+  AgentSession/spawn: [personaPageId: ?persona; strategy: ?strategy; tools: ?tools; context: ?ctx]
+    => ok(session: ?session; conversationId: ?conv)
+}
+then {
+  Conversation/create: [context_strategy: ?strategy]
+}
