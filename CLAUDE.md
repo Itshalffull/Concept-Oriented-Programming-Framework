@@ -266,6 +266,7 @@ manifests from scratch without using the generator.
 | Configuring an interface manifest | — | `InterfaceScaffoldGen/generate` |
 | Adding a language target | `/add-language-target` | — |
 | Designing view query pipelines | `/create-view-query` | — |
+| Creating a content-native schema type | — | `ContentTypeScaffoldGen/generate` |
 
 ### What NOT to Do
 
@@ -694,6 +695,189 @@ fill→Binding/writeField, submit→Binding/invoke).
 as parameter. Agent's own instance = independent navigation.
 User's instance = agent drives or observes the user's screen.
 Read-only vs read-write enforced by kernel auth, not Navigator.
+
+---
+
+## Clef Base — The Content-Native Application Platform
+
+Clef Base (`clef-base/`) is the reference application platform built
+on Clef. It composes 150+ concepts from the repertoire into a unified,
+content-native runtime where **everything is content and content is
+everything**.
+
+### Philosophy: Radical Content Fluidity
+
+In Clef Base, the boundary between "structured data" and "free-form
+content" dissolves:
+
+- **A page IS a database record** — any ContentNode can be promoted
+  to a PageAsRecord with typed schema fields via Schema/applyTo.
+  The same entity is simultaneously a free-form document AND a
+  structured record.
+- **Schemas are overlays, not containers** — Schema/applyTo adds
+  typed fields to any entity. Multiple schemas can be applied to
+  the same entity. Fields come from Property, structure from Outline.
+- **Everything lives in one content pool** — ContentStorage is the
+  single persistence layer. Agent personas, process specs, meeting
+  notes, diagrams, views — they're all ContentNodes with different
+  schema overlays.
+- **Content compiles to concept output** — ContentCompiler walks a
+  page's Outline block tree and produces concept-specific output
+  (e.g., PromptAssembly for agent personas, CalendarEvent for
+  meeting notes). Schema Properties drive provider selection via
+  PluginRegistry.
+- **Cross-reference everything** — Reference/Backlink/Relation
+  create a navigable content graph. A persona page can reference
+  a knowledge base page. A process spec can embed a diagram.
+  A view can transclude blocks from any page via SyncedContent.
+- **Any modality** — text, images, diagrams, canvases, code,
+  structured data — all stored as ContentNodes, all referenceable,
+  all searchable, all versionable.
+
+### Architecture: Single Content Pool
+
+```
+ContentNode (universal typed unit)
+├── Schema overlay → typed fields via Property
+├── Outline → hierarchical block tree
+├── SyncedContent → transclusion from other pages
+├── Reference/Backlink → content graph
+├── Version → full history
+├── ContentCompiler → concept-specific output
+└── ViewShell → data-driven display
+```
+
+Every feature in Clef Base builds on this foundation:
+
+| Feature | How It Uses Content |
+|---------|-------------------|
+| Agent Personas | ContentNode + Schema("agent-persona") + Outline blocks → ContentCompiler → PromptAssembly |
+| Views | ViewShell + FilterSpec + SortSpec + ProjectionSpec → QueryProgram → display |
+| Diagrams | Canvas nodes ARE ContentNodes → Reference creates linking graph → GraphAnalysis queries structure |
+| Processes | ProcessSpec pages with step blocks → execution engine |
+| Forms | Schema fields → auto-generated form fields via ComponentMapping |
+| Search | ContentNode save → SearchIndex/index sync → full-text + semantic search |
+
+### Content-Native Schema System
+
+To make any data type content-native, set Properties on its Schema:
+
+```
+Schema/defineSchema("meeting-notes", "title,date,attendees")
+Property/set("meeting-notes", "childSchema", "agenda-item")
+Property/set("meeting-notes", "defaultTemplate", "meeting-template")
+Property/set("meeting-notes", "compilationProvider", "CalendarEvent")
+Property/set("meeting-notes", "displayWidget", "meeting-editor")
+```
+
+General syncs in `foundation/syncs/content-native-schema.sync`
+automatically wire everything:
+- New pages get schema overlay + PageAsRecord promotion
+- Default block tree scaffolded from Template
+- Child blocks get child schema overlay
+- ContentCompiler provider registered via PluginRegistry
+- Block edits mark compilations stale
+
+Use `ContentTypeScaffoldGen/generate` or the content-type-scaffold-gen
+agent to generate `.schema.yaml` files that declare all of this.
+
+### The Derived Concept Hierarchy
+
+ClefBase is organized as a hierarchy of derived concepts, each
+representing a meaningful platform capability:
+
+```
+ClefBase (root — clef-base/derived/clef-base.derived)
+├── ContentPlatform
+│   ├── ContentFoundation (ContentNode, ContentStorage, Outline,
+│   │                       Property, TypeSystem, PageAsRecord,
+│   │                       ContentParser, ContentCompiler, Intent)
+│   ├── ClassificationSystem (Schema, Tag, Taxonomy, Namespace)
+│   ├── LinkingSystem (Reference, Backlink, Relation, Alias)
+│   └── ContentAuthoring (DailyNote, Comment, SyncedContent,
+│                          Template, Canvas, Version, etc.)
+├── InfrastructurePlatform
+│   ├── InfrastructureCore (PluginRegistry, Cache, EventBus, etc.)
+│   ├── VersioningSystem (ContentHash, DAGHistory, Branch, Merge, etc.)
+│   ├── CollaborationSystem (Replica, ConflictResolution, etc.)
+│   ├── IdentityAndAccess (Authentication, Authorization, Session)
+│   └── AutomationSystem (Workflow, AutomationRule, Queue)
+├── LLMPlatform (LLMProvider, Conversation, PromptAssembly,
+│                 AgentLoop, AgentSession, AgentTrigger, Constitution,
+│                 AgentMemory, ToolBinding, VectorIndex, etc.)
+├── ProcessPlatform (ProcessSpec, ProcessRun, WorkItem, Approval,
+│                     LLMCall, ProcessConversation, RetryPolicy, etc.)
+├── ViewAndSurface (ViewShell, FilterSpec, SortSpec, QueryProgram,
+│                    RenderProgram, RenderTransform, etc.)
+├── DiagrammingPlatform (Canvas, ConnectorPort, DiagramNotation,
+│                         DiagramExport, GraphAnalysis, etc.)
+└── ClefBaseIntegrations
+    ├── EntityLifecycle (save→cache/search/alias/provenance)
+    ├── VersionSpaceIntegration (version-aware load/save)
+    ├── IdentityIntegration (access control enforcement)
+    ├── SurfaceIntegration (graph→panels, score→widgets)
+    ├── ComponentMappingSystem (SlotSource + 8 providers)
+    ├── ViewResolverSystem (Kernel + React resolvers)
+    ├── StorageAdapters (PostgreSQL, SQLite)
+    ├── OfflineFirstSystem (replica sync/conflict)
+    ├── HonoRoutingSystem (HTTP routing)
+    └── ConceptBrowserSystem (package install pipeline)
+```
+
+### Workflow: Integrating with Clef Base
+
+When adding a new feature to Clef Base:
+
+1. **Design the content type** — What schema fields does it need?
+   What child blocks? What compilation output?
+   ```
+   ContentTypeScaffoldGen/generate --name "my-feature"
+   ```
+
+2. **Create the widget** — How does this content type display
+   and edit?
+   ```
+   /create-widget --name my-feature-editor
+   ```
+
+3. **Create views** — What list/grid/timeline views are needed?
+   ```
+   /create-view-query --name my-feature-library
+   ```
+
+4. **Wire entity lifecycle** — The general content-native syncs
+   handle most wiring automatically. Add feature-specific syncs
+   only for cross-concept behavior.
+
+5. **Update the derived hierarchy** — Add your feature to the
+   appropriate derived concept (or create a new one) and
+   compose into ClefBaseIntegrations.
+
+### What the User Experiences
+
+From the user's perspective, Clef Base feels like a completely
+fluid workspace:
+
+- **Create anything** — Click "new page", pick a schema (or none),
+  start typing. The page is immediately searchable, referenceable,
+  and versionable.
+- **Structure emerges** — Apply schemas to add typed fields.
+  Combine multiple schemas on one page. Fields appear in the
+  property sidebar; the body stays free-form.
+- **Everything connects** — Type `[[` to reference any page.
+  Drag content between pages. Transclude blocks that stay synced.
+  View backlinks to see what references this page.
+- **Views over everything** — Create filtered, sorted, grouped
+  views over any schema type. Card grids, tables, timelines,
+  boards — all driven by ViewShell configuration.
+- **Agents are pages** — An agent persona is just a page with
+  the "agent-persona" schema. Edit its prompt blocks like any
+  other content. Compile and run.
+- **Diagrams are content** — Canvas nodes are ContentNodes.
+  Connect them, analyze the graph, export to any format.
+  Reference diagram nodes from pages and vice versa.
+- **Offline-first** — Work without network. Changes sync and
+  conflicts resolve automatically on reconnect.
 
 ---
 
