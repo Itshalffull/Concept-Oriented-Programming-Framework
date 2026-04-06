@@ -259,6 +259,65 @@ Several views return blank when empty instead of guiding the user:
 
 ---
 
+## Detailed Component Findings
+
+### ViewEditor (1,104 lines) — 70% Complete
+
+**What works**: Split editor-preview layout, 11 display layout options, field configurator with 9 formatters, filter toggles, sort/group config, create button config, row click navigation, raw JSON view, live preview on save.
+
+**Key bugs and gaps**:
+- **Fake drag-and-drop**: Field configurator shows drag handle icons (⣿) but has NO drag functionality — only up/down arrow buttons. Advertised UX feature doesn't work.
+- **No field autocomplete**: Users manually type field names with no dropdown of available fields from the data source. Typos silently fail to render.
+- **Limited formatters**: Only 9 options (badge, boolean-badge, date, json-count, schema-badges, code, truncate, json). Missing: link, currency, percentage, duration, custom.
+- **Minimal filter config**: Only `toggle-group` type. Can't configure operators, labels, default values, or contextual filters through UI.
+- **Single-field grouping only**: Complex or nested grouping not possible.
+- **No save validation**: Broken configs save without warning; error messages are raw backend responses.
+- **Preview requires manual save**: No debounced auto-preview; slow iteration loop.
+- **Create form field types**: Only text, textarea, select — no date, checkbox, number, email.
+
+### ViewRenderer (1,048 lines) — 85% Complete
+
+**What works**: Data rendered in selected layout with live toggle filtering, schema badges, row click navigation, row/bulk actions, grouping, empty states.
+
+**Key bugs and gaps**:
+- **Row/bulk actions fail silently**: No error feedback when actions fail. No try/catch around `invoke()` calls in bulk action handler.
+- **Null safety issues**: `params[paramKey] = row[rowField]` has no null check — row actions crash if field value is missing.
+- **No pagination**: All data loaded at once. 1000+ rows cause performance degradation.
+- **No inline editing**: Views are read-only. Must navigate to detail view for edits.
+- **No retry on fetch failure**: "Query failed" message with no retry button.
+- **Display mode rendering N+1**: Each row invokes DisplayMode.resolve() separately — 100+ rows = 100+ kernel round-trips with no caching.
+- **Filter toggle UX**: No "clear all" button, no search within filter values, wraps unpredictably on small screens.
+- **Group collapse state lost**: Re-expands unexpectedly when filtering or sorting.
+
+### SchemasView — 40% Complete
+
+**What works**: List schemas (name, field count, extends, associations). Create schema with name + comma-separated fields.
+
+**Key gaps**:
+- **No schema editor**: Can't edit existing schemas, add/remove fields, or change inheritance after creation.
+- **Create form too simplistic**: "Fields (comma-separated)" input with no field type, validation, or constraint config.
+- **No field visualization**: Schema definition is opaque in list view — can't see field types or structure at a glance.
+
+### ViewsView — 50% Complete
+
+**Key gaps**:
+- Create dialog only has 3 fields (ID, data source, layout) — must create then immediately edit.
+- No view duplication, deletion, or search/filter.
+
+### DisplayModesView — 60% Complete, Confusing UX
+
+**Key gaps**:
+- Three rendering strategy tabs (Component | Layout | Flat Fields) with no explanation of when to use which.
+- No validation of component mapping or layout ID references — accepts non-existent values.
+- No preview of what the display mode looks like.
+- No delete support — "Clear" only clears internal config.
+
+### MappingsView — ~20% Complete (Stub)
+
+Only shows list and edit link. No actual mapping editor visible.
+
+---
+
 ## Technical Health
 
 | Metric | Value |
