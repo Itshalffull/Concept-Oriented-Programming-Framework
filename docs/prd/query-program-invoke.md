@@ -1,6 +1,6 @@
 # PRD: QueryProgram `invoke` Instruction
 
-**Status:** Draft (Open Questions Resolved)
+**Status:** Implemented
 **Author:** Claude
 **Date:** 2026-04-06
 
@@ -763,10 +763,10 @@ Purity: `read-only`. No invoke instructions. Cached normally.
    InteractionSpec for invoke-bearing QueryPrograms~~ (done: 021113fa)
 2. ~~Write CompileActionQuery sync (builds invoke-bearing programs
    from InteractionSpec configs)~~ (done: 021113fa)
-3. Update Pilot/submit to dispatch through invoke-bearing
-   QueryPrograms when available
-4. End-to-end test: view renders, user clicks action, invoke
-   executes through sync engine, view refreshes
+3. ~~Update Pilot/submit to dispatch through invoke-bearing
+   QueryPrograms when available~~ (done: a83161c4)
+4. ~~End-to-end test: view renders, user clicks action, invoke
+   executes through sync engine, view refreshes~~ (done: a83161c4)
 
 ## Resolved Design Decisions
 
