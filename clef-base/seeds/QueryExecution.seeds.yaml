@@ -7,12 +7,16 @@
 # Provider capability targets (per PRD Section 3.4 / MAG-518):
 #   kernel:    ["scan", "filter", "sort", "limit", "join"]
 #   in-memory: ["filter", "sort", "group", "project", "limit"]
+#   e2ee:      ["scan"]  — fetch ciphertext only; all other ops are residual
+#              (E2EE decrypt runs client-side between backend scan and residual;
+#               see view-query-three-tier-execution.md Section 6 and MAG-524)
 
 concept: QueryExecution
 action: registerKind
 entries:
   - kind: kernel
   - kind: in-memory
+  - kind: e2ee
 
 ---
 
@@ -26,3 +30,7 @@ entries:
   - name: in-memory
     kind: in-memory
     capabilities: '["filter","sort","group","project","limit"]'
+
+  - name: e2ee-local
+    kind: e2ee
+    capabilities: '["scan"]'

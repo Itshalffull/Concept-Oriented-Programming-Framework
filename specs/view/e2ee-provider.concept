@@ -1,0 +1,118 @@
+# @fixtures-added
+@version(1)
+@category("view")
+concept E2EEProvider [K] {
+
+  purpose {
+    Client-side decryption bridge for encrypted-local data sources. Transforms
+    ciphertext rows fetched from the kernel into plaintext before the residual
+    query pipeline runs locally. Key material never leaves the client and no
+    filter predicates are sent to the backend — this is the security invariant
+    that makes E2EE views safe.
+  }
+
+  state {
+    keys: set K
+    keyRef: K -> String
+    keyMaterial: K -> String
+  }
+
+  actions {
+    action decrypt(rows: String, keyRef: String) {
+      -> ok(rows: String) {
+        Decrypt a JSON array of ciphertext row objects using the key identified
+        by keyRef. Returns a JSON array of plaintext row objects ready for the
+        in-memory residual query pipeline. The decrypt operation runs entirely
+        client-side — no data or key material is sent to the backend.
+      }
+      -> notfound(message: String) {
+        No key is registered with the given keyRef. The ciphertext cannot be
+        decrypted until the appropriate key material is loaded.
+      }
+      -> error(message: String) {
+        The rows string is not valid JSON, the ciphertext is malformed, or
+        decryption failed due to a key mismatch or corrupted payload.
+      }
+
+      fixture decrypt_ok { rows: '[{"ciphertext":"dGVzdA=="}]', keyRef: "vault-key-1" } after load_key
+      fixture decrypt_missing_key { rows: '[{"ciphertext":"dGVzdA=="}]', keyRef: "nonexistent" } -> notfound
+      fixture decrypt_invalid_rows { rows: "not-json", keyRef: "vault-key-1" } -> error
+    }
+
+    action loadKey(keyRef: String, keyMaterial: String) {
+      -> ok(key: K) {
+        Register key material for the given keyRef so that subsequent decrypt
+        calls can use it. The keyRef comes from the DataSourceSpec configuration
+        for the encrypted-local data source.
+      }
+      -> duplicate(key: K) {
+        A key with this keyRef is already loaded. Returns the existing key entry.
+      }
+      -> error(message: String) {
+        The keyRef is empty or the keyMaterial is empty and cannot be registered.
+      }
+
+      fixture load_key { keyRef: "vault-key-1", keyMaterial: "c2VjcmV0LWtleS1tYXRlcmlhbA==" }
+      fixture load_duplicate { keyRef: "vault-key-1", keyMaterial: "c2VjcmV0LWtleS1tYXRlcmlhbA==" } after load_key -> duplicate
+      fixture load_empty_ref { keyRef: "", keyMaterial: "abc" } -> error
+      fixture load_empty_material { keyRef: "vault-key-1", keyMaterial: "" } -> error
+    }
+
+    action unloadKey(keyRef: String) {
+      -> ok() {
+        Remove key material for the given keyRef from in-memory storage.
+        Used to clear sensitive key material after it is no longer needed.
+      }
+      -> notfound(message: String) {
+        No key is registered with the given keyRef.
+      }
+
+      fixture unload_ok { keyRef: "vault-key-1" } after load_key
+      fixture unload_missing { keyRef: "nonexistent" } -> notfound
+    }
+  }
+
+  example "loadKey then decrypt succeeds": {
+    after loadKey(keyRef: "vault-key-1", keyMaterial: "c2VjcmV0LWtleS1tYXRlcmlhbA==") -> ok(key: k)
+    then decrypt(rows: '[{"ciphertext":"dGVzdA=="}]', keyRef: "vault-key-1") -> ok(rows: r)
+    and  r != none
+  }
+
+  example "decrypt without key returns notfound": {
+    decrypt(rows: '[{"ciphertext":"dGVzdA=="}]', keyRef: "missing-key") -> notfound(message: m)
+    and  m != none
+  }
+
+  example "unload removes key from decrypt path": {
+    after loadKey(keyRef: "vault-key-1", keyMaterial: "c2VjcmV0LWtleS1tYXRlcmlhbA==") -> ok(key: k)
+    and  unloadKey(keyRef: "vault-key-1") -> ok()
+    then decrypt(rows: '[{"ciphertext":"dGVzdA=="}]', keyRef: "vault-key-1") -> notfound(message: m)
+  }
+
+  always "loaded keys have non-empty refs": {
+    forall k in keys:
+    keyRef(k) != ""
+  }
+
+  action decrypt {
+    requires: rows != ""
+    requires: keyRef != ""
+    ensures ok: rows != none
+    ensures notfound: keys' == keys
+    ensures error: keys' == keys
+  }
+
+  action loadKey {
+    requires: keyRef != ""
+    requires: keyMaterial != ""
+    ensures ok: key in keys
+    ensures ok: keyRef(key) == keyRef
+    ensures duplicate: keys' == keys
+  }
+
+  action unloadKey {
+    requires: keyRef != ""
+    ensures ok: keyRef not in keys
+    ensures notfound: keys' == keys
+  }
+}
