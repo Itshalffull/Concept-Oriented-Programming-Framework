@@ -1,0 +1,54 @@
+# When an entity page's schema has a childSchema property, replace the
+# main content zone of the triple-zone layout with the children ViewShell
+# (schema-block-editors + plain content blocks). The sidebar (schema
+# property fields) and related zone (backlinks, references) stay unchanged.
+#
+# This makes structured content types (agent personas, constitutions,
+# process specs, proposals) display their block editor in the same
+# triple-zone entity page — no separate page or tab needed.
+
+sync SchemaChildrenOverridesMainZone [eager]
+  purpose { Replace triple-zone main content zone with children ViewShell when schema has childSchema. }
+when {
+  DisplayMode/resolve: [ entity_id: ?entity_id; mode: "entity-page" ]
+    => [ ok: ?display_config ]
+}
+where {
+  Schema: { ?entity_id associations: ?schema };
+  Property: { ?schema key: "childSchema"; value: ?childSchema }
+}
+then {
+  ViewShell/resolve: [ name: concat(?schema, "-children") ]
+}
+
+# Populate the main zone with the resolved children view.
+# The triple-zone widget reads this as the main zone content source.
+
+sync MainZoneRendersChildrenView [eager]
+  purpose { Render the children ViewShell in the main zone of the triple-zone layout. }
+when {
+  ViewShell/resolve: [ name: ?viewName ]
+    => [ view: ?view ]
+}
+where {
+  Property: { ?viewName key: "zoneTarget"; value: "main" }
+}
+then {
+  Layout/configureZones: [ layout: "triple-zone-default"; zones: concat("{\"main\":{\"source\":\"view\",\"viewName\":\"", ?viewName, "\",\"widget\":\"view-embed\",\"props\":{\"editable\":true,\"dragReorder\":true,\"showAddButton\":true}}}") ]
+}
+
+# Tag the children ViewShell with its zone target so the main zone
+# renderer knows to pick it up.
+
+sync TagChildrenViewForMainZone [eager]
+  purpose { Tag the auto-created children ViewShell as targeting the main zone. }
+when {
+  ViewShell/create: [ name: ?name; dataSource: ?ds; filter: ?f; sort: ?s; group: ?g; projection: ?p; presentation: ?pres; interaction: ?i ]
+    => ok()
+}
+where {
+  filter(?name, endsWith, "-children")
+}
+then {
+  Property/set: [ entity: ?name; key: "zoneTarget"; value: "main" ]
+}
