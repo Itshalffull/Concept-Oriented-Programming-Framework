@@ -66,13 +66,42 @@ concept QueryExecution [E] {
         providers of the given kind. Returns the result rows and execution
         metadata as JSON strings.
       }
+      -> invoke_pending(concept: String, action: String, input: String, continuation: String) {
+        The program contains an invoke instruction that requires dispatch
+        through the sync engine. concept/action/input identify the invocation.
+        continuation is a JSON-serialized structured program suffix containing
+        remainingInstructions, bindings, programId, and instructionIndex.
+        The caller must dispatch the invoke and call resumeAfterInvoke with
+        the result.
+      }
       -> error(message: String) {
         The kind is not registered, or the program could not be parsed or
         executed by the backend.
       }
 
       fixture execute_kernel { program: '{"instructions":[]}', kind: "kernel" } after register_kernel
+      fixture execute_invoke_pending { program: '{"instructions":[{"type":"invoke","concept":"Task","action":"complete","input":"{}"}]}', kind: "kernel" } after register_kernel
       fixture execute_unknown { program: '{}', kind: "unknown" } -> error
+    }
+
+    action resumeAfterInvoke(continuation: String, variant: String, output: String) {
+      -> ok(rows: String, metadata: String) {
+        The invoke completed and the remaining program executed successfully.
+        Returns final result rows and execution metadata.
+      }
+      -> invoke_pending(concept: String, action: String, input: String, continuation: String) {
+        The remaining program contains another invoke instruction. Same
+        coroutine yield pattern as execute — the caller must dispatch this
+        invoke and call resumeAfterInvoke again with the result.
+      }
+      -> error(message: String) {
+        The continuation is invalid, the invoke result could not be bound,
+        or the remaining program failed.
+      }
+
+      fixture resume_ok { continuation: '{"remainingInstructions":[],"bindings":{},"programId":"p1","instructionIndex":1}', variant: "ok", output: '{"rows":[]}' } after register_kernel
+      fixture resume_chain { continuation: '{"remainingInstructions":[{"type":"invoke","concept":"Task","action":"archive","input":"{}"}],"bindings":{},"programId":"p2","instructionIndex":2}', variant: "ok", output: '{}' } after register_kernel
+      fixture resume_invalid { continuation: "not-json", variant: "ok", output: "{}" } -> error
     }
 
     action planPushdown(program: String, provider: String) {
@@ -180,6 +209,12 @@ concept QueryExecution [E] {
   action execute {
     requires: program != ""
     requires: kind != ""
+    ensures ok: rows != none
+    ensures error: providers' == providers
+  }
+
+  action resumeAfterInvoke {
+    requires: continuation != ""
     ensures ok: rows != none
     ensures error: providers' == providers
   }

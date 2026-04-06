@@ -727,9 +727,11 @@ Purity: `read-only`. No invoke instructions. Cached normally.
    (done: 406f382e)
 4. ~~Add fixtures and conformance tests for all four new actions~~
    (done: 406f382e)
-5. Update QueryProgram handler to implement the new actions
-6. Update runtime DSL (if QueryProgram has one) with builder
-   functions for all four instructions
+5. ~~Update QueryProgram handler to implement the new actions~~
+   (done: 8aad6aea)
+6. ~~Update runtime DSL (if QueryProgram has one) with builder
+   functions for all four instructions~~ (N/A — no QueryProgram
+   runtime DSL exists; instructions are built via handler actions)
 
 ### Phase 2: Execution support
 
