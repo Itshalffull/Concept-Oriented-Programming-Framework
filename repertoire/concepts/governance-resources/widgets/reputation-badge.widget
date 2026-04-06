@@ -2,7 +2,7 @@
 widget reputation-badge {
 
   purpose {
-    Compact reputation display showing a member's numeric score, rank tier
+    Compact reputation display showing a member numeric score, rank tier
     (bronze/silver/gold/platinum), trend arrow (up/down/stable), and derived
     voting weight. Designed for inline use in member lists, circle dashboards,
     and vote ballots. Clicking the badge expands an inline history panel

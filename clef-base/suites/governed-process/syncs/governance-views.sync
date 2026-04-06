@@ -1,0 +1,214 @@
+# Governance view registrations.
+# Four views for the governed-process integration.
+
+# === 5.1 Circle Processes View ===
+# Table of processes available to a circle, filterable by status.
+
+sync RegisterCircleProcessesDataSource [eager]
+  purpose { Register data source for processes bound to a circle. }
+when {
+  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+    => ok()
+}
+then {
+  DataSourceSpec/create: [name: "circle-processes-source"; config: "{\"concept\":\"ProcessSpec\",\"filter\":{\"boundCircle\":\"${circleId}\"},\"joinSchema\":true}"]
+}
+
+sync RegisterCircleProcessesFilter [eager]
+  purpose { Register filter spec for the circle processes view so members can narrow by status. }
+when {
+  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+    => ok()
+}
+then {
+  FilterSpec/create: [name: "circle-processes-filter"; filter: "{\"fields\":[{\"key\":\"status\",\"type\":\"select\",\"options\":[\"draft\",\"active\",\"suspended\",\"archived\"]}]}"]
+}
+
+sync RegisterCircleProcessesSort [eager]
+  purpose { Register sort spec for the circle processes view ordering by name ascending. }
+when {
+  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+    => ok()
+}
+then {
+  SortSpec/create: [name: "circle-processes-sort"; keys: "[{\"field\":\"name\",\"direction\":\"asc\"}]"]
+}
+
+sync RegisterCircleProcessesPresentation [eager]
+  purpose { Register table presentation spec for the circle processes view. }
+when {
+  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+    => ok()
+}
+then {
+  PresentationSpec/create: [name: "circle-processes-presentation"; displayType: "table"; hints: "{\"refreshInterval\":10000}"]
+}
+
+sync RegisterCircleProcessesView [eager]
+  purpose { Register the Circle Processes ViewShell assembling all component specs. }
+when {
+  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+    => ok()
+}
+then {
+  ViewShell/create: [name: "circle-processes"; dataSource: "circle-processes-source"; filter: "circle-processes-filter"; sort: "circle-processes-sort"; group: ""; projection: ""; presentation: "circle-processes-presentation"; interaction: ""]
+}
+
+# === 5.2 Active Proposals View ===
+# Card grid of proposals across circles, filterable by status, circle, and proposer.
+
+sync RegisterActiveProposalsDataSource [eager]
+  purpose { Register data source for active proposals across all circles. }
+when {
+  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+    => ok()
+}
+then {
+  DataSourceSpec/create: [name: "active-proposals-source"; config: "{\"concept\":\"Proposal\",\"filter\":{\"status\":[\"Pending\",\"Sponsored\",\"Active\"]},\"joinSchema\":true}"]
+}
+
+sync RegisterActiveProposalsFilter [eager]
+  purpose { Register filter spec for the proposals view with status, circle, and proposer axes. }
+when {
+  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+    => ok()
+}
+then {
+  FilterSpec/create: [name: "active-proposals-filter"; filter: "{\"fields\":[{\"key\":\"status\",\"type\":\"select\",\"options\":[\"Draft\",\"Pending\",\"Sponsored\",\"Active\",\"Passed\",\"Failed\"]},{\"key\":\"proposer\",\"type\":\"text\"},{\"key\":\"circle\",\"type\":\"select\"}]}"]
+}
+
+sync RegisterActiveProposalsSort [eager]
+  purpose { Register sort spec for the proposals view ordering newest first. }
+when {
+  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+    => ok()
+}
+then {
+  SortSpec/create: [name: "active-proposals-sort"; keys: "[{\"field\":\"createdAt\",\"direction\":\"desc\"}]"]
+}
+
+sync RegisterActiveProposalsProjection [eager]
+  purpose { Register projection spec for the proposal cards showing key governance fields. }
+when {
+  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+    => ok()
+}
+then {
+  ProjectionSpec/create: [name: "active-proposals-projection"; fields: "[{\"key\":\"title\"},{\"key\":\"proposer\"},{\"key\":\"status\"},{\"key\":\"voting_method\"},{\"key\":\"deadline\"},{\"key\":\"quorumProgress\",\"computed\":true}]"]
+}
+
+sync RegisterActiveProposalsPresentation [eager]
+  purpose { Register card-grid presentation spec for the proposals view. }
+when {
+  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+    => ok()
+}
+then {
+  PresentationSpec/create: [name: "active-proposals-presentation"; displayType: "card-grid"; hints: "{\"cardWidget\":\"proposal-card\",\"columns\":3,\"gap\":\"md\"}"]
+}
+
+sync RegisterActiveProposalsView [eager]
+  purpose { Register the Active Proposals ViewShell assembling all component specs. }
+when {
+  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+    => ok()
+}
+then {
+  ViewShell/create: [name: "active-proposals"; dataSource: "active-proposals-source"; filter: "active-proposals-filter"; sort: "active-proposals-sort"; group: ""; projection: "active-proposals-projection"; presentation: "active-proposals-presentation"; interaction: ""]
+}
+
+# === 5.3 Reputation Leaderboard View ===
+# Table of members ranked by reputation score, with circle filter.
+
+sync RegisterReputationLeaderboardDataSource [eager]
+  purpose { Register data source for the reputation leaderboard across members. }
+when {
+  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+    => ok()
+}
+then {
+  DataSourceSpec/create: [name: "reputation-leaderboard-source"; config: "{\"concept\":\"Reputation\",\"joinSchema\":true}"]
+}
+
+sync RegisterReputationLeaderboardFilter [eager]
+  purpose { Register filter spec for the reputation leaderboard enabling circle-scoped views. }
+when {
+  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+    => ok()
+}
+then {
+  FilterSpec/create: [name: "reputation-leaderboard-filter"; filter: "{\"fields\":[{\"key\":\"circle\",\"type\":\"select\"}]}"]
+}
+
+sync RegisterReputationLeaderboardSort [eager]
+  purpose { Register sort spec for the reputation leaderboard ordering by score descending. }
+when {
+  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+    => ok()
+}
+then {
+  SortSpec/create: [name: "reputation-leaderboard-sort"; keys: "[{\"field\":\"score\",\"direction\":\"desc\"}]"]
+}
+
+sync RegisterReputationLeaderboardPresentation [eager]
+  purpose { Register table presentation spec for the reputation leaderboard with rank display. }
+when {
+  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+    => ok()
+}
+then {
+  PresentationSpec/create: [name: "reputation-leaderboard-presentation"; displayType: "table"; hints: "{\"rowWidget\":\"reputation-badge\",\"showRank\":true}"]
+}
+
+sync RegisterReputationLeaderboardView [eager]
+  purpose { Register the Reputation Leaderboard ViewShell assembling all component specs. }
+when {
+  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+    => ok()
+}
+then {
+  ViewShell/create: [name: "reputation-leaderboard"; dataSource: "reputation-leaderboard-source"; filter: "reputation-leaderboard-filter"; sort: "reputation-leaderboard-sort"; group: ""; projection: ""; presentation: "reputation-leaderboard-presentation"; interaction: ""]
+}
+
+# === 5.4 Governance Activity View ===
+# Timeline of all governance events (votes, role changes, policy updates, executions).
+
+sync RegisterGovernanceActivityDataSource [eager]
+  purpose { Register data source for the governance activity event stream. }
+when {
+  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+    => ok()
+}
+then {
+  DataSourceSpec/create: [name: "governance-activity-source"; config: "{\"concept\":\"AuditTrail\",\"filter\":{\"domain\":\"governance\"},\"joinSchema\":true}"]
+}
+
+sync RegisterGovernanceActivitySort [eager]
+  purpose { Register sort spec for the governance activity view ordering most recent first. }
+when {
+  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+    => ok()
+}
+then {
+  SortSpec/create: [name: "governance-activity-sort"; keys: "[{\"field\":\"timestamp\",\"direction\":\"desc\"}]"]
+}
+
+sync RegisterGovernanceActivityPresentation [eager]
+  purpose { Register timeline presentation spec for the governance activity view grouped by event type. }
+when {
+  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+    => ok()
+}
+then {
+  PresentationSpec/create: [name: "governance-activity-presentation"; displayType: "timeline"; hints: "{\"groupBy\":\"eventType\",\"showTimestamps\":true}"]
+}
+
+sync RegisterGovernanceActivityView [eager]
+  purpose { Register the Governance Activity ViewShell assembling all component specs. }
+when {
+  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+    => ok()
+}
+then {
+  ViewShell/create: [name: "governance-activity"; dataSource: "governance-activity-source"; filter: ""; sort: "governance-activity-sort"; group: ""; projection: ""; presentation: "governance-activity-presentation"; interaction: ""]
+}

@@ -4,7 +4,7 @@ widget vote-ballot {
   purpose {
     Interactive voting interface for casting votes in governance decisions.
     Presents the proposal title, a brief summary, available choices (for/against/abstain
-    or custom options), the voter's current weight and its source, a quorum progress bar,
+    or custom options), the voter current weight and its source, a quorum progress bar,
     a deadline countdown, and a submit button. After casting a vote the ballot transitions
     to a confirmation panel and displays live result updates via a vote-result-bar. Adapts
     the choice UI to the active counting method — radio buttons for majority/conviction,
@@ -33,7 +33,7 @@ widget vote-ballot {
     choiceOption:      container  { Single vote option — repeated for each choice }
     choiceLabel:       text       { Option label text }
     choiceRadio:       widget     { Radio or checkbox control for selecting an option }
-    weightDisplay:     container  { Voter's current voting weight }
+    weightDisplay:     container  { Voter current voting weight }
     weightValue:       text       { Numeric weight value }
     weightSource:      text       { How the weight was calculated — reputation, delegation, etc. }
     quorumBar:         widget     { Progress bar showing current quorum status }
