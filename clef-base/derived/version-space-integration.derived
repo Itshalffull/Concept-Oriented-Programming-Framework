@@ -1,0 +1,42 @@
+derived VersionSpaceIntegration [V] {
+
+  purpose {
+    Multi-tenant version-aware content access — intercepts content load/save
+    with version context resolution, stamps aliases with namespace/tenant/locale
+    dimensions, and layers search spaces on backlink and embedding indexes.
+    Composes multiverse concepts with automation dispatch.
+  }
+
+  composes {
+    VersioningSystem [V]
+    CollaborationSystem [V]
+    AutomationSystem [V]
+    VersionSpace [V]
+    VersionContext [V]
+    SearchSpace [V]
+  }
+
+  syncs {
+    required: [
+      version-aware-load,
+      version-aware-save,
+      version-space-write-invalidates-cache,
+      version-space-write-indexes
+    ]
+    recommended: [
+      automation-version-dispatch,
+      alias-namespace-stamp-tenant,
+      alias-namespace-stamp-locale,
+      alias-namespace-stamp-versionspace,
+      alias-namespace-stamp-group,
+      searchspace-layers-on-backlink,
+      searchspace-layers-on-semantic-embedding
+    ]
+  }
+
+  principle {
+    "Version-aware access": ContentStorage/load intercepted by VersionContext/resolve
+      then load from correct VersionSpace branch
+    "Namespace stamping": Alias creation stamps with tenant/locale/versionspace dimensions
+  }
+}

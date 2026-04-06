@@ -78,11 +78,8 @@ derived ContentFoundation [F] {
                          schema: "{\"fields\":[\"title\"]}")
     and  compileContent(pageId: derivedContext)
     then getCompiledOutput(compilation: derivedContext) returns compiled output
-  }
-
-  principle {
-    after resolveType(type: derivedContext) returns schema
-    and  setProperty(entity: derivedContext, key: "status", value: "active")
-    then getProperty(entity: derivedContext, key: "status") returns "active"
+    and  resolveType(type: derivedContext)
+    then setProperty(entity: derivedContext, key: "kind", value: "page")
+    then getProperty(entity: derivedContext, key: "kind") returns "page"
   }
 }

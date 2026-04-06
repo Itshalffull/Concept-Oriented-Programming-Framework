@@ -98,17 +98,13 @@ derived LLMPlatform [M] {
                                               prompt: prompt)
     }
 
-    query getAgentStatus(session: M)
-      -> AgentSession/getStatus(session: session)
+    query getAgentStatus(session: M) -> AgentSession/getStatus(session: session)
 
-    query listSessions(personaPageId: String, status: String)
-      -> AgentSession/list(personaPageId: personaPageId, status: status)
+    query listSessions(personaPageId: String, status: String) -> AgentSession/list(personaPageId: personaPageId, status: status)
 
-    query getTriggerHistory(trigger: M, limit: Int)
-      -> AgentTrigger/getHistory(trigger: trigger, limit: limit)
+    query getTriggerHistory(trigger: M, limit: Int) -> AgentTrigger/getHistory(trigger: trigger, limit: limit)
 
-    query searchMemory(query: String, memoryType: String)
-      -> AgentMemory/search(query: query, memory_type: memoryType)
+    query searchMemory(query: String, memoryType: String) -> AgentMemory/search(query: query, memory_type: memoryType)
   }
 
   principle {
@@ -128,7 +124,7 @@ derived LLMPlatform [M] {
 
   principle {
     after assemblePrompt(strategy: "rag", format: "chat", tokenizer: "cl100k",
-                         contextWindow: 8192)
+                         contextWindow: "8192")
     then searchMemory(query: "quantum entanglement", memoryType: "episodic")
          returns relevant chunks injected into assembled prompt
     and  invokeAgent(session: derivedContext, goal: "Answer with retrieved context")

@@ -44,14 +44,11 @@ derived IdentityAndAccess [D] {
                                             roles: permissions)
     }
 
-    query checkAccess(subject: String, resource: String, action: String)
-      -> AccessControl/check(resource: resource, action: action, context: subject)
+    query checkAccess(subject: String, resource: String, action: String) -> AccessControl/check(resource: resource, action: action, context: subject)
 
-    query getSession(sessionId: D)
-      -> Session/getContext(session: sessionId)
+    query getSession(sessionId: D) -> Session/getContext(session: sessionId)
 
-    query listPermissions()
-      -> AccessCatalog/listPermissions()
+    query listPermissions() -> AccessCatalog/listPermissions()
   }
 
   principle {

@@ -1,0 +1,23 @@
+derived HonoRoutingSystem [H] {
+
+  purpose {
+    HTTP routing layer — generates Hono router code from interface manifest
+    endpoint declarations. Maps concept actions to HTTP methods, paths,
+    and middleware.
+  }
+
+  composes {
+    HonoTarget [H]
+  }
+
+  syncs {
+    required: [
+      hono-registration
+    ]
+  }
+
+  principle {
+    "Route generation": interface manifest declares endpoints → HonoTarget
+      generates Hono router with method/path/middleware/concept+action bindings
+  }
+}

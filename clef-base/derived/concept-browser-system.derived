@@ -1,0 +1,36 @@
+derived ConceptBrowserSystem [B] {
+
+  purpose {
+    Package discovery and installation — browse remote concept packages via
+    HubProxy, install with dependency resolution, lockfile checking, download,
+    validation, migration, activation, provider registration, hook generation,
+    and search indexing. Supports rollback on failure.
+  }
+
+  composes {
+    ConceptBrowser [B]
+    HubProxy [B]
+  }
+
+  syncs {
+    required: [
+      concept-browser-install-resolves-deps,
+      concept-browser-install-checks-lockfile,
+      concept-browser-install-downloads,
+      concept-browser-install-validates,
+      concept-browser-install-migrates,
+      concept-browser-install-activates,
+      concept-browser-install-registers-providers,
+      concept-browser-install-hooks,
+      concept-browser-install-indexes,
+      concept-browser-rollback,
+      browse-via-hub
+    ]
+  }
+
+  principle {
+    "Install pipeline": search → resolve deps → check lockfile → download
+      → validate → migrate → activate → register providers → generate hooks
+      → index → rollback on any failure
+  }
+}

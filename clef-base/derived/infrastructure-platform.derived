@@ -1,0 +1,25 @@
+derived InfrastructurePlatform [I] {
+
+  purpose {
+    Platform infrastructure — plugin extensibility (InfrastructureCore),
+    full version control (VersioningSystem), real-time collaboration
+    (CollaborationSystem), multi-tenant versioning (MultiverseSystem via
+    VersionSpace, VersionContext, SearchSpace), identity and access control
+    (IdentityAndAccess), workflow automation (AutomationSystem), data
+    integration (DataIntegration), and notifications/media.
+  }
+
+  composes {
+    InfrastructureCore [I]
+    VersioningSystem [I]
+    CollaborationSystem [I]
+    IdentityAndAccess [I]
+    AutomationSystem [I]
+  }
+
+  principle {
+    "Infrastructure composition": plugins discovered via registry → versioned
+      with DAG history → collaborated on with replicas → access controlled
+      → automated with workflows
+  }
+}

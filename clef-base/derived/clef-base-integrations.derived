@@ -1,0 +1,31 @@
+derived ClefBaseIntegrations [B] {
+
+  purpose {
+    Clef-base specific integration layer — all the syncs and concepts that
+    wire the content, infrastructure, LLM, process, and surface platforms
+    together into a cohesive application runtime. Includes entity lifecycle
+    management, version-space aware content access, identity enforcement,
+    surface integration, component-to-schema mapping, view resolution,
+    storage adapters, offline-first support, HTTP routing, and package
+    management.
+  }
+
+  composes {
+    EntityLifecycle [B]
+    VersionSpaceIntegration [B]
+    IdentityIntegration [B]
+    ComponentMappingSystem [B]
+    ViewResolverSystem [B]
+    StorageAdapters [B]
+    OfflineFirstSystem [B]
+    HonoRoutingSystem [B]
+    ConceptBrowserSystem [B]
+  }
+
+  principle {
+    "Integration wiring": content operations → lifecycle syncs fire
+      → cache/search/alias/provenance updated → version-space aware
+      → access controlled → rendered via component mapping → resolved via
+      view resolver → persisted via storage adapters
+  }
+}

@@ -43,42 +43,40 @@ derived VersioningSystem [V] {
 
   surface {
     action createVersion(content: V) {
-      matches: ContentHash/store(content: content)
+      matches: ContentHash/store
     }
 
     action createBranch(name: String, base: String) {
-      matches: Branch/create(name: name, fromNode: base)
+      matches: Branch/create
     }
 
     action mergeBranches(source: V, target: V) {
-      matches: Merge/merge(base: target, ours: target, theirs: source, strategy: null)
+      matches: Merge/merge
     }
 
     action createPatch(before: V, after: V) {
-      entry: Diff/compute
+      entry: Diff/diff
       triggers: [
         Patch/create(base: before, target: after)
       ]
     }
 
-    query getHistory(entity: V)
-      -> DAGHistory/ancestors(nodeId: entity)
-
-    query diffVersions(v1: V, v2: V)
-      -> Diff/diff(contentA: v1, contentB: v2)
-
-    query getChangeStream(source: String)
-      -> ChangeStream/subscribe(fromOffset: null)
+    query getHistory(entity: V) -> DAGHistory/ancestors(nodeId: entity)
+    query diffVersions(v1: V, v2: V) -> Diff/diff(contentA: v1, contentB: v2)
+    query getChangeStream(source: String) -> ChangeStream/subscribe(fromOffset: source)
   }
 
   principle {
-    after createVersion(content: "initial content")
-    then getHistory(entity: $createVersion.hash) returns DAG node list
-    and  createBranch(name: "feature/new-section", base: $createVersion.hash) succeeds
-    and  createVersion(content: "revised content")
-    then diffVersions(v1: $createVersion.hash, v2: $createVersion.hash) returns edit script
-    and  createPatch(before: $createVersion.hash, after: $createVersion.hash) succeeds
-    and  getChangeStream(source: "content") returns active subscription
-    and  mergeBranches(source: $createBranch.branch, target: $createVersion.hash) reconciles diverged histories
+    after createVersion(content: c)
+    then getHistory(entity: h) returns the DAG node ancestry
+    and  createBranch(name: n, base: h) creates parallel development line
+    then createVersion(content: c2)
+    and  diffVersions(v1: h, v2: h2) returns the structural edit script
+    and  createPatch(before: h, after: h2) succeeds and stores invertible patch
+    and  mergeBranches(source: b, target: h2) reconciles diverged branch histories
+    and  getChangeStream(source: s) returns ordered resumable event stream
+
+    after createVersion(content: c3)
+    then mergeBranches(source: b2, target: h3) integrates branch into target history
   }
 }

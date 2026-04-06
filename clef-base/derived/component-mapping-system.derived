@@ -1,0 +1,45 @@
+derived ComponentMappingSystem [C] {
+
+  purpose {
+    Widget-to-schema binding layer — maps schemas and display modes to widget
+    components via ComponentMapping, with pluggable data sources via SlotSource
+    and its 8 provider concepts (StaticValue, EntityField, Formula, Menu,
+    EntityReferenceDisplay, WidgetEmbed, ViewEmbed, BlockEmbed). Provider
+    dispatch via PluginRegistry.
+  }
+
+  composes {
+    ComponentMapping [C]
+    SlotSource [C]
+    StaticValueSource [C]
+    EntityFieldSource [C]
+    FormulaSource [C]
+    MenuSource [C]
+    EntityReferenceDisplaySource [C]
+    WidgetEmbedSource [C]
+    ViewEmbedSource [C]
+    BlockEmbedSource [C]
+  }
+
+  syncs {
+    required: [
+      slot-source-dispatches-to-provider,
+      resolver-uses-component-mapping
+    ]
+    integration: [
+      entity-field-source-registration,
+      static-value-source-registration,
+      formula-source-registration,
+      menu-source-registration,
+      entity-reference-display-source-registration,
+      widget-embed-source-registration,
+      view-embed-source-registration,
+      block-embed-source-registration
+    ]
+  }
+
+  principle {
+    "Schema-to-widget resolution": lookup ComponentMapping by schema + display_mode
+      then resolve SlotSource providers for each slot via PluginRegistry
+  }
+}

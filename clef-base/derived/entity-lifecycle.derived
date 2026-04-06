@@ -1,0 +1,39 @@
+derived EntityLifecycle [E] {
+
+  purpose {
+    Content entity lifecycle coordination — automatic cache invalidation,
+    search indexing, URL alias generation, provenance tracking, backlink
+    reindexing on save, and cascade deletion. Wires ContentStorage save/delete
+    events to infrastructure services via syncs.
+  }
+
+  composes {
+    ContentFoundation [E]
+    ClassificationSystem [E]
+    LinkingSystem [E]
+    InfrastructureCore [E]
+    QueryAndRetrieval [E]
+  }
+
+  syncs {
+    required: [
+      save-invalidates-cache,
+      save-indexes-search,
+      save-generates-alias,
+      save-tracks-provenance,
+      save-reindexes-backlinks,
+      delete-cascades
+    ]
+    recommended: [
+      date-fields-reference-daily-notes
+    ]
+  }
+
+  principle {
+    "Save lifecycle": after ContentStorage/save
+      then Cache/invalidate and SearchIndex/index and Pathauto/generate
+      and Provenance/track and Backlink/reindex
+    "Delete cascade": after ContentStorage/delete
+      then cascade to dependent entities
+  }
+}
