@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { terraformProviderHandler } from '../../handlers/ts/deploy/terraform-provider.handler.js';
+import { terraformProviderHandler } from '../../handlers/ts/app/terraform-provider.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,
