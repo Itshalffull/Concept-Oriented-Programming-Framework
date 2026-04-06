@@ -26,10 +26,15 @@ concept PageMap [P] {
       conceptBinding: P -> option String
       affordanceServes: P -> option String
     }
+    view {
+      viewName: P -> option String
+      viewPurity: P -> option String
+      viewInvokedActions: P -> option list String
+    }
   }
 
   actions {
-    action register(entry: P, label: String, role: String, machineRef: String, widgetName: String, currentState: String, validEvents: String, conceptBinding: option String, affordanceServes: option String, hostRef: String) {
+    action register(entry: P, label: String, role: String, machineRef: String, widgetName: String, currentState: String, validEvents: String, conceptBinding: option String, affordanceServes: option String, hostRef: String, viewName: option String, viewPurity: option String, viewInvokedActions: option String) {
       -> ok(entry: P) {
         Add a new interactive element to the page map with its label,
         semantic role, machine reference, widget name, FSM state, and
