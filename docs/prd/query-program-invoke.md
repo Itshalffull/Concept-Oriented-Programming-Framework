@@ -743,8 +743,8 @@ Purity: `read-only`. No invoke instructions. Cached normally.
    (done: 7973b2eb)
 4. ~~Update QueryExecution handler to implement coroutine-style
    pause/resume~~ (done: 7ac9f581)
-5. Integration test: invoke dispatches through sync engine and
-   returns completion
+5. ~~Integration test: invoke dispatches through sync engine and
+   returns completion~~ (done: 021113fa)
 
 ### Phase 3: Static analysis providers
 
@@ -759,10 +759,10 @@ Purity: `read-only`. No invoke instructions. Cached normally.
 
 ### Phase 4: View integration
 
-1. Add optional `createProgram` / `actionProgram` fields to
-   InteractionSpec for invoke-bearing QueryPrograms
-2. Write CompileActionQuery sync (builds invoke-bearing programs
-   from InteractionSpec configs)
+1. ~~Add optional `createProgram` / `actionProgram` fields to
+   InteractionSpec for invoke-bearing QueryPrograms~~ (done: 021113fa)
+2. ~~Write CompileActionQuery sync (builds invoke-bearing programs
+   from InteractionSpec configs)~~ (done: 021113fa)
 3. Update Pilot/submit to dispatch through invoke-bearing
    QueryPrograms when available
 4. End-to-end test: view renders, user clicks action, invoke
