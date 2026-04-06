@@ -217,46 +217,150 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
 
   const isInlineMode = !!inlineData;
 
-  // Step 1a: Try ViewShell/resolve first (new dual-path resolution).
-  // ViewShell returns { view, config } where config is a JSON string containing
-  // the decomposed child spec reference names (dataSource, filter, sort, etc.).
-  // If ViewShell is not registered in the kernel or the view name is not found,
-  // this silently returns null — zero impact on the existing View/get path.
+  // Step 1a: Try ViewShell/resolveHydrated first (new dual-path resolution).
+  // resolveHydrated returns fully hydrated child spec data — filter trees, sort keys,
+  // projection fields, data source config, presentation, interaction — all as JSON
+  // strings. Each field on the result is a JSON-encoded spec object, not just a
+  // reference name. If ViewShell is not registered in the kernel or the view name is
+  // not found, this silently returns null — zero impact on the existing View/get path.
   const { data: shellResult, loading: shellLoading, error: shellError } =
-    useConceptQuery<{ view: string; config: string }>(
-      'ViewShell', 'resolve', { name: viewId ?? '__none__' },
+    useConceptQuery<{
+      view: string;
+      title: string;
+      description: string;
+      dataSource: string;
+      filter: string;
+      sort: string;
+      group: string;
+      projection: string;
+      presentation: string;
+      interaction: string;
+    }>(
+      'ViewShell', 'resolveHydrated', { name: viewId ?? '__none__' },
     );
 
-  // Parse ViewShell config into a ViewConfig shape when available.
-  // The resolve action returns a JSON string with the same field names as
-  // ViewConfig but holding child spec reference names rather than inline JSON.
-  // Fields that the current ViewRenderer parses as JSON (dataSource, filters,
-  // etc.) will gracefully fail parsing and fall through to empty defaults —
-  // the actual hydration of reference names into inline JSON is a downstream
-  // concern handled by the child spec concepts themselves.
-  const shellViewConfig: ViewConfig | null = useMemo(() => {
-    if (!shellResult?.config) return null;
+  // Parse hydrated ViewShell result into a ViewConfig shape and extract
+  // structured spec objects for data-fetching and filter evaluation.
+  //
+  // resolveHydrated returns each field as a JSON string containing a spec object:
+  //   dataSource:   { name, kind, config, parameters }   — config is itself a JSON string
+  //   filter:       { name, tree, sourceType, ... }      — tree is the FilterNode for residual eval
+  //   sort:         { name, keys }                        — keys is a JSON string of SortKey[]
+  //   projection:   { name, fields }                      — fields is a JSON string of FieldConfig[]
+  //   presentation: { name, displayType, hints, ... }
+  //   interaction:  { name, createForm, rowClick, rowActions, pickerMode }
+  //
+  // When kernel hydration succeeds we skip the legacy View/get path entirely.
+  // When it fails (notfound or kernel not wired) shellResult is null and we
+  // fall back to View/get as before.
+
+  // Hydrated spec objects extracted from the resolveHydrated response
+  interface HydratedDataSource { name: string; kind: string; config: string; parameters: string }
+  interface HydratedFilter { name: string; tree: string; sourceType: string; fieldRefs: string; parameters: string }
+  interface HydratedSort { name: string; keys: string }
+  interface HydratedProjection { name: string; fields: string }
+  interface HydratedPresentation { name: string; displayType: string; hints: string; displayModePolicy: string; defaultDisplayMode: string }
+  interface HydratedInteraction { name: string; createForm: string; rowClick: string; rowActions: string; pickerMode: string }
+
+  const hydratedSpecs = useMemo(() => {
+    if (!shellResult?.view) return null;
     try {
-      const parsed = JSON.parse(shellResult.config);
-      return {
-        view:              parsed.view         ?? '',
-        title:             parsed.title        ?? '',
-        description:       parsed.description  ?? '',
-        dataSource:        parsed.dataSource   ?? '',
-        layout:            parsed.layout       ?? '',
-        filters:           parsed.filter       ?? '',
-        sorts:             parsed.sort         ?? '',
-        groups:            parsed.group        ?? '',
-        visibleFields:     parsed.projection   ?? '',
-        formatting:        parsed.formatting   ?? '',
-        controls:          parsed.interaction  ?? '',
-        defaultDisplayMode: parsed.presentation ?? undefined,
-        useDisplayMode:    parsed.useDisplayMode ?? undefined,
-      } satisfies ViewConfig;
+      const dataSourceSpec: HydratedDataSource | null = shellResult.dataSource
+        ? JSON.parse(shellResult.dataSource) : null;
+      const filterSpec: HydratedFilter | null = shellResult.filter
+        ? JSON.parse(shellResult.filter) : null;
+      const sortSpec: HydratedSort | null = shellResult.sort
+        ? JSON.parse(shellResult.sort) : null;
+      const projectionSpec: HydratedProjection | null = shellResult.projection
+        ? JSON.parse(shellResult.projection) : null;
+      const presentationSpec: HydratedPresentation | null = shellResult.presentation
+        ? JSON.parse(shellResult.presentation) : null;
+      const interactionSpec: HydratedInteraction | null = shellResult.interaction
+        ? JSON.parse(shellResult.interaction) : null;
+      return { dataSourceSpec, filterSpec, sortSpec, projectionSpec, presentationSpec, interactionSpec };
     } catch {
       return null;
     }
   }, [shellResult]);
+
+  // Build a ViewConfig from the hydrated specs. Each spec field maps to the
+  // ViewConfig field that ViewRenderer already knows how to parse — we re-encode
+  // the hydrated objects back to the JSON strings ViewConfig expects.
+  const shellViewConfig: ViewConfig | null = useMemo(() => {
+    if (!hydratedSpecs || !shellResult?.view) return null;
+    const { dataSourceSpec, filterSpec, sortSpec, projectionSpec, presentationSpec, interactionSpec } = hydratedSpecs;
+
+    // DataSource: config is a JSON string like {"concept":"ContentNode","action":"list",...}
+    // Pass it through directly — ViewRenderer will JSON.parse it into DataSourceConfig.
+    const dataSourceJson = dataSourceSpec?.config ?? '';
+
+    // Filters: for interactive filters (sourceType=interactive), reconstruct
+    // FilterConfig[] from fieldRefs so the existing toggle UI renders correctly.
+    // fieldRefs is a JSON string like '["schemas"]' listing fields referenced in
+    // the filter tree. Each field becomes a toggle-group FilterConfig entry.
+    // Non-interactive filters (system/contextual) are backend-pushed and are
+    // NOT added to the client filter array — they don't appear in the toggle UI.
+    let filtersJson = '[]';
+    if (filterSpec && filterSpec.sourceType === 'interactive') {
+      try {
+        const fieldNames = JSON.parse(filterSpec.fieldRefs ?? '[]') as string[];
+        if (fieldNames.length > 0) {
+          const filterConfigs = fieldNames.map((field) => ({
+            field,
+            type: 'toggle-group' as const,
+          }));
+          filtersJson = JSON.stringify(filterConfigs);
+        }
+      } catch { /* leave as empty array */ }
+    }
+
+    // Sort: keys is a JSON array of SortKey objects
+    const sortsJson = sortSpec?.keys ?? '[]';
+
+    // Projection: fields is a JSON array of FieldConfig objects
+    const visibleFieldsJson = projectionSpec?.fields ?? '[]';
+
+    // Presentation: displayType maps to layout
+    const layout = presentationSpec?.displayType ?? 'table';
+
+    // Controls: map interaction spec fields to ControlsConfig shape
+    let controlsJson = '{}';
+    if (interactionSpec) {
+      const controlsObj: Record<string, unknown> = {};
+      if (interactionSpec.createForm) {
+        try { controlsObj.create = JSON.parse(interactionSpec.createForm); } catch { /* ignore */ }
+      }
+      if (interactionSpec.rowClick) {
+        try { controlsObj.rowClick = JSON.parse(interactionSpec.rowClick); } catch { /* ignore */ }
+      }
+      if (interactionSpec.rowActions) {
+        try { controlsObj.rowActions = JSON.parse(interactionSpec.rowActions); } catch { /* ignore */ }
+      }
+      controlsJson = JSON.stringify(controlsObj);
+    }
+
+    // Presentation: defaultDisplayMode and displayModePolicy
+    const defaultDisplayMode = presentationSpec?.defaultDisplayMode || undefined;
+    const useDisplayMode = presentationSpec?.displayModePolicy
+      ? (presentationSpec.displayModePolicy !== 'disabled' ? 'true' : 'false')
+      : undefined;
+
+    return {
+      view:              shellResult.view,
+      title:             shellResult.title         ?? '',
+      description:       shellResult.description   ?? '',
+      dataSource:        dataSourceJson,
+      layout,
+      filters:           filtersJson,
+      sorts:             sortsJson,
+      groups:            '',
+      visibleFields:     visibleFieldsJson,
+      formatting:        '{}',
+      controls:          controlsJson,
+      defaultDisplayMode,
+      useDisplayMode,
+    } satisfies ViewConfig;
+  }, [hydratedSpecs, shellResult]);
 
   // Step 1b: Load the legacy View config (skip if pure inline mode with no viewId).
   // When ViewShell resolved successfully we still run this query (it's a hook and
