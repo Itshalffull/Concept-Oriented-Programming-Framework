@@ -134,5 +134,21 @@ export const viewShellTools = [
     "name": "view_shell_list",
     "uriTemplate": "urn:clef://view-shells",
     "description": "List viewshell — Return all registered view shells as a JSON array , each entry containing \n the view s name , title , description , and all child spec reference names ."
+  },
+  {
+    "type": "tool",
+    "name": "view_shell_resolve_hydrated",
+    "description": "Resolve hydrated viewshell — Load the ViewShell entry by name , then fetch each non empty child spec \n by calling the corresponding concept s get action . Returns fully hydrated \n data actual FilterNode trees as JSON strings , SortKey arrays , ProjectionField \n arrays , DataSourceConfig objects , PresentationSpec fields , InteractionSpec \n fields , GroupSpec fields not just reference name strings . Child specs that \n are not registered ( empty ref or notfound ) are returned as empty strings .",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ]
+    }
   }
 ];

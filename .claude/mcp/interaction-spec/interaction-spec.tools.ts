@@ -24,6 +24,26 @@ export const interactionSpecTools = [
         },
         "pickerMode": {
           "type": "boolean"
+        },
+        "createProgram": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actionProgram": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -31,7 +51,9 @@ export const interactionSpecTools = [
         "createForm",
         "rowClick",
         "rowActions",
-        "pickerMode"
+        "pickerMode",
+        "createProgram",
+        "actionProgram"
       ]
     }
   },
@@ -39,7 +61,7 @@ export const interactionSpecTools = [
     "type": "resource",
     "name": "interaction_spec_get",
     "uri": "urn:clef://interaction-specs/{name}",
-    "description": "Get interactionspec — Return the interaction spec s create form config , row click rule , \n row action list , and picker mode flag exactly as registered ."
+    "description": "Get interactionspec — Return the interaction spec s create form config , row click rule , \n row action list , picker mode flag , and optional invoke bearing \n QueryProgram references exactly as registered ."
   },
   {
     "type": "resource-template",

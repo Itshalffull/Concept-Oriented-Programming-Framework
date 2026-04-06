@@ -246,5 +246,141 @@ export const queryProgramTools = [
         "bindAs"
       ]
     }
+  },
+  {
+    "type": "tool",
+    "name": "query_program_invoke",
+    "description": "Invoke queryprogram — Append an Invoke instruction that declares a concept action \n invocation . The concept and action identify the target ; input \n is a JSON serialized action input . The completion ( variant tag \n and output fields ) is bound to bindAs for use by subsequent \n instructions . The program s purity is promoted to read write .",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "program": {
+          "type": "string"
+        },
+        "concept": {
+          "type": "string"
+        },
+        "action": {
+          "type": "string"
+        },
+        "input": {
+          "type": "string"
+        },
+        "bindAs": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "program",
+        "concept",
+        "action",
+        "input",
+        "bindAs"
+      ]
+    }
+  },
+  {
+    "type": "tool",
+    "name": "query_program_match",
+    "description": "Match queryprogram — Append a Match instruction that inspects the variant tag bound \n at binding . cases is a JSON object mapping variant tags to \n sub program IDs . The * key is a wildcard default . The matched \n sub program s terminal output is bound to bindAs . All referenced \n sub programs must exist and be sealed .",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "program": {
+          "type": "string"
+        },
+        "binding": {
+          "type": "string"
+        },
+        "cases": {
+          "type": "string"
+        },
+        "bindAs": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "program",
+        "binding",
+        "cases",
+        "bindAs"
+      ]
+    }
+  },
+  {
+    "type": "tool",
+    "name": "query_program_traverse_invoke",
+    "description": "Traverse invoke queryprogram — Append a TraverseInvoke instruction that iterates over the \n record set bound at sourceBinding . For each record , binds \n the record to itemBinding , interpolates inputTemplate \n ( replacing $ < itemBinding > . field with actual values ) , and \n invokes concept action with the interpolated input . Each \n invocation dispatches through the sync engine sequentially . \n The list of completions ( variant and output per item ) is bound \n to bindAs . The program s purity is promoted to read write .",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "program": {
+          "type": "string"
+        },
+        "sourceBinding": {
+          "type": "string"
+        },
+        "itemBinding": {
+          "type": "string"
+        },
+        "concept": {
+          "type": "string"
+        },
+        "action": {
+          "type": "string"
+        },
+        "inputTemplate": {
+          "type": "string"
+        },
+        "bindAs": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "program",
+        "sourceBinding",
+        "itemBinding",
+        "concept",
+        "action",
+        "inputTemplate",
+        "bindAs"
+      ]
+    }
+  },
+  {
+    "type": "tool",
+    "name": "query_program_traverse",
+    "description": "Traverse queryprogram — Append a Traverse instruction that iterates over the record \n set bound at sourceBinding . For each record , binds the record \n to itemBinding , then executes bodyProgram in a nested scope . \n The bodyProgram must be sealed . Results are collected into a \n list bound to bindAs . declaredEffects is a JSON object with \n optional keys : readFields , invokedActions , completionVariants . \n If provided , static analysis uses declared effects instead of \n analyzing the body .",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "program": {
+          "type": "string"
+        },
+        "sourceBinding": {
+          "type": "string"
+        },
+        "itemBinding": {
+          "type": "string"
+        },
+        "bodyProgram": {
+          "type": "string"
+        },
+        "bindAs": {
+          "type": "string"
+        },
+        "declaredEffects": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "program",
+        "sourceBinding",
+        "itemBinding",
+        "bodyProgram",
+        "bindAs",
+        "declaredEffects"
+      ]
+    }
   }
 ];

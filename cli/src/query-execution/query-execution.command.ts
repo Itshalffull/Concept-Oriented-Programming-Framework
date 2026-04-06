@@ -71,6 +71,28 @@ queryExecutionCommand
   });
 
 queryExecutionCommand
+  .command('resume-after-invoke')
+  .description('The invoke completed and the remaining program executed successfully . Returns final result rows and execution metadata .')
+  .requiredOption('--continuation <continuation>', 'Continuation')
+  .requiredOption('--variant <variant>', 'Variant')
+  .requiredOption('--output <output>', 'Output')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/QueryExecution', 'resumeAfterInvoke', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
+  });
+
+queryExecutionCommand
   .command('plan-pushdown')
   .description('Decompose a query program into a pushdown portion that the named provider can execute natively and a residual portion that must run in the framework layer . Returns both as JSON strings .')
   .requiredOption('--program <program>', 'Program')
@@ -133,5 +155,5 @@ queryExecutionCommand
 export const queryExecutionCommandTree = {
   group: 'query-execution',
   description: 'Registry and dispatcher for query execution providers that run structured query programs against a named backend . Manages named provider registrations with kind based routing and capability declarations through sync wiring the coordination hub that lets kernel , in memory , remote , and federated backends all accept the same query program language without coupling to one another',
-  commands: [{ action: 'registerKind', command: 'register-kind' }, { action: 'register', command: 'register' }, { action: 'execute', command: 'execute' }, { action: 'planPushdown', command: 'plan-pushdown' }, { action: 'list', command: 'list' }, { action: 'get', command: 'get' }],
+  commands: [{ action: 'registerKind', command: 'register-kind' }, { action: 'register', command: 'register' }, { action: 'execute', command: 'execute' }, { action: 'resumeAfterInvoke', command: 'resume-after-invoke' }, { action: 'planPushdown', command: 'plan-pushdown' }, { action: 'list', command: 'list' }, { action: 'get', command: 'get' }],
 };

@@ -47,3 +47,13 @@ Hydrate all referenced child specs into a complete ViewConfig JSON string .
 ### list
 Return all registered view shells as a JSON array , each entry containing 
  the view s name , title , description , and all child spec reference names .
+
+### resolveHydrated
+Load the ViewShell entry by name , then fetch each non empty child spec 
+ by calling the corresponding concept s get action . Returns fully hydrated 
+ data actual FilterNode trees as JSON strings , SortKey arrays , ProjectionField 
+ arrays , DataSourceConfig objects , PresentationSpec fields , InteractionSpec 
+ fields , GroupSpec fields not just reference name strings . Child specs that 
+ are not registered ( empty ref or notfound ) are returned as empty strings .
+
+**Arguments:** `$0` **name** (string)

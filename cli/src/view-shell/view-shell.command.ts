@@ -124,8 +124,28 @@ viewShellCommand
     }
   });
 
+viewShellCommand
+  .command('resolve-hydrated')
+  .description('Load the ViewShell entry by name , then fetch each non empty child spec by calling the corresponding concept s get action . Returns fully hydrated data actual FilterNode trees as JSON strings , SortKey arrays , ProjectionField arrays , DataSourceConfig objects , PresentationSpec fields , InteractionSpec fields , GroupSpec fields not just reference name strings . Child specs that are not registered ( empty ref or notfound ) are returned as empty strings .')
+  .requiredOption('--name <name>', 'Name')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ViewShell', 'resolveHydrated', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
+  });
+
 export const viewShellCommandTree = {
   group: 'view-shell',
   description: 'Name and bind the user facing identity of a view by holding references to all subordinate configuration concepts filter , sort , group , projection , presentation , interaction , and data source . ViewShell owns no query or render logic itself ; it is a composition point that lets a view be addressed by a single stable name and resolved into a complete , hydrated ViewConfig at runtime . A nullable legacyConfig field supports migration from monolithic JSON based view records without breaking existing callers',
-  commands: [{ action: 'create', command: 'create' }, { action: 'get', command: 'get' }, { action: 'update', command: 'update' }, { action: 'resolve', command: 'resolve' }, { action: 'list', command: 'list' }],
+  commands: [{ action: 'create', command: 'create' }, { action: 'get', command: 'get' }, { action: 'update', command: 'update' }, { action: 'resolve', command: 'resolve' }, { action: 'list', command: 'list' }, { action: 'resolveHydrated', command: 'resolve-hydrated' }],
 };

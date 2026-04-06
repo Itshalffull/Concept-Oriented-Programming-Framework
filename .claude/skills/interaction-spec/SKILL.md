@@ -1,7 +1,7 @@
 ---
 name: interaction-spec
 description: Manage named interaction configurations that govern controls , row actions , navigation , and picker behaviors for a view . Each interaction spec captures whether a create form is available ( as a serialized CreateFormConfig JSON ) , a row click navigation rule ( as a serialized RowClickConfig JSON ) , a list of per row action buttons ( as a serialized RowActionConfig [ ] JSON ) , and whether the view operates in picker mode . Interaction specs are independent of data source , filter , sort , and presentation concerns they describe only what a user can do with the rows displayed
-argument-hint: [command] [name] [createForm] [rowClick] [rowActions] [pickerMode]
+argument-hint: [command] [name] [createForm] [rowClick] [rowActions] [pickerMode] [createProgram] [actionProgram]
 allowed-tools: Read, Grep, Glob, Bash
 ---
 
@@ -21,11 +21,12 @@ Register a new named interaction spec with the given create form config ,
  immediately available for retrieval and composition with view and layout 
  specs .
 
-**Arguments:** `$0` **name** (string), `$1` **createForm** (string), `$2` **rowClick** (string), `$3` **rowActions** (string), `$4` **pickerMode** (bool)
+**Arguments:** `$0` **name** (string), `$1` **createForm** (string), `$2` **rowClick** (string), `$3` **rowActions** (string), `$4` **pickerMode** (bool), `$5` **createProgram** (string?), `$6` **actionProgram** (string?)
 
 ### get
 Return the interaction spec s create form config , row click rule , 
- row action list , and picker mode flag exactly as registered .
+ row action list , picker mode flag , and optional invoke bearing 
+ QueryProgram references exactly as registered .
 
 **Arguments:** `$0` **name** (string)
 
