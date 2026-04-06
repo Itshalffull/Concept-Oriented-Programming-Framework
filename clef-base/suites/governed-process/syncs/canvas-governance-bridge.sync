@@ -1,0 +1,143 @@
+# Canvas-to-governance bridge syncs.
+# When nodes are added or connected on a canvas carrying the governance-org
+# notation, create and link actual governance concepts (Circle, Role).
+
+# When a circle node is added to a governance org canvas, create the Circle.
+
+sync CanvasCircleNodeCreatesCircle [eager]
+  purpose {
+    Create a Circle entity when a circle-typed node is placed on a
+    governance-org canvas, so the visual canvas element has a live
+    governance object backing it.
+  }
+when {
+  Canvas/addNode: [ canvas: ?canvas; node: ?node ]
+    => ok()
+}
+where {
+  Property: { ?canvas key: "notation"; value: "governance-org" }
+  Property: { ?node key: "nodeType"; value: "circle" }
+  Property: { ?node key: "name"; value: ?name }
+  Property: { ?node key: "domain"; value: ?domain }
+}
+then {
+  Circle/create: [ name: ?name; domain: ?domain; parent: none ]
+}
+
+# When a role node is added to a governance org canvas, create the Role.
+
+sync CanvasRoleNodeCreatesRole [eager]
+  purpose {
+    Create a Role entity when a role-typed node is placed on a
+    governance-org canvas, so every drawn role immediately has a
+    governed identity in the system.
+  }
+when {
+  Canvas/addNode: [ canvas: ?canvas; node: ?node ]
+    => ok()
+}
+where {
+  Property: { ?canvas key: "notation"; value: "governance-org" }
+  Property: { ?node key: "nodeType"; value: "role" }
+  Property: { ?node key: "name"; value: ?name }
+  Property: { ?node key: "polity"; value: ?polity }
+}
+then {
+  Role/create: [ name: ?name; permissions: ""; polity: ?polity ]
+}
+
+# When circles are connected with a parent_of connector, establish hierarchy.
+
+sync CanvasParentConnectorCreatesHierarchy [eager]
+  purpose {
+    Establish a parent-circle relation when a parent_of connector is drawn
+    between two nodes on a governance-org canvas, wiring the canvas visual
+    to the governed hierarchy.
+  }
+when {
+  SpatialConnector/draw: [ canvas: ?canvas; source: ?parent; target: ?child; type: "parent_of" ]
+    => ok(connector: ?conn)
+}
+where {
+  Property: { ?canvas key: "notation"; value: "governance-org" }
+}
+then {
+  Relation/link: [ relation: "parent_circle"; source: ?parent; target: ?child ]
+}
+
+# When a role node is connected to a circle with a contains_role connector, scope the role.
+
+sync CanvasRoleConnectorScopesToCircle [eager]
+  purpose {
+    Scope a role to a circle when a contains_role connector is drawn from
+    the circle node to the role node, establishing circle membership in the
+    governance model.
+  }
+when {
+  SpatialConnector/draw: [ canvas: ?canvas; source: ?circle; target: ?role; type: "contains_role" ]
+    => ok(connector: ?conn)
+}
+where {
+  Property: { ?canvas key: "notation"; value: "governance-org" }
+}
+then {
+  Relation/link: [ relation: "circle_role"; source: ?circle; target: ?role ]
+}
+
+# When a process node is connected to a circle with a bound_process connector, bind it.
+
+sync CanvasProcessConnectorBindsToCircle [eager]
+  purpose {
+    Bind a process spec to a circle when a bound_process connector is drawn
+    from the circle node to the process node, making the process executable
+    within that circle's governance scope.
+  }
+when {
+  SpatialConnector/draw: [ canvas: ?canvas; source: ?circle; target: ?process; type: "bound_process" ]
+    => ok(connector: ?conn)
+}
+where {
+  Property: { ?canvas key: "notation"; value: "governance-org" }
+}
+then {
+  Relation/link: [ relation: "circle_process"; source: ?circle; target: ?process ]
+}
+
+# When a delegation connector is drawn between role nodes, create the delegation.
+
+sync CanvasDelegationConnectorCreatesDelegation [eager]
+  purpose {
+    Create a Delegation edge when a delegates_to connector is drawn between
+    two role nodes on a governance-org canvas, so the visual arrow immediately
+    takes effect in the governance delegation graph.
+  }
+when {
+  SpatialConnector/draw: [ canvas: ?canvas; source: ?fromRole; target: ?toRole; type: "delegates_to" ]
+    => ok(connector: ?conn)
+}
+where {
+  Property: { ?canvas key: "notation"; value: "governance-org" }
+}
+then {
+  Delegation/delegate: [ from: ?fromRole; to: ?toRole; domain: none; transitive: false ]
+}
+
+# Apply the governance-org notation when a canvas is designated as an org designer canvas.
+
+sync OrgDesignerCanvasAppliesNotation [eager]
+  purpose {
+    Associate the governance-org DiagramNotation with a canvas the first time
+    a node is added to an org-designer canvas, so subsequent node and connector
+    events are validated and bridged against governance concepts.
+  }
+when {
+  Canvas/addNode: [ canvas: ?canvas; node: ?node ]
+    => ok()
+}
+where {
+  Property: { ?canvas key: "canvasType"; value: "org-designer" }
+  not(Property: { ?canvas key: "notation"; value: "governance-org" })
+}
+then {
+  DiagramNotation/applyToCanvas: [ canvas_id: ?canvas; notation: "governance-org" ]
+}
