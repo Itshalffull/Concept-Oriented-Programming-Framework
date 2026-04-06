@@ -1,0 +1,91 @@
+# Permission resolution chain syncs — when a direct permission check returns denied,
+# expand the lookup through the person's roles, their circles, active process context,
+# and proposal-type guards so that indirect grants are honoured.
+# See Architecture doc Sections 16.11, 16.12.
+
+sync RolePermissionExpansion [eager]
+  purpose {
+    When a direct permission check is denied for a person, look up every role
+    that person holds and re-check permission using the role identity so that
+    permissions granted to a role are inherited by all its members.
+  }
+when {
+  Permission/check: [ who: ?person; where: ?resource; what: ?action ]
+    => denied(who: ?person; where: ?resource; what: ?action)
+}
+where {
+  Role: { ?role holders: ?person }
+}
+then {
+  Permission/check: [
+    who: concat("role:", ?role);
+    where: ?resource;
+    what: ?action
+  ]
+}
+
+sync CirclePermissionExpansion [eager]
+  purpose {
+    When a direct permission check is denied for a person, check each circle
+    the person belongs to so that permissions granted at the circle level are
+    available to all circle members regardless of role assignments.
+  }
+when {
+  Permission/check: [ who: ?person; where: ?resource; what: ?action ]
+    => denied(who: ?person; where: ?resource; what: ?action)
+}
+where {
+  Circle: { ?circle members: ?person }
+}
+then {
+  Permission/check: [
+    who: concat("circle:", ?circle);
+    where: ?resource;
+    what: ?action
+  ]
+}
+
+sync ProcessContextPermission [eager]
+  purpose {
+    When a permission check is denied for a person acting inside an active
+    process run, look up the process spec bound to that run and check whether
+    the spec itself carries permission for the requested action, so that
+    process-scoped grants are honoured for actions taken within that run.
+  }
+when {
+  Permission/check: [ who: ?person; where: ?resource; what: ?action ]
+    => denied(who: ?person; where: ?resource; what: ?action)
+}
+where {
+  Property: { ?run key: "initiator"; value: ?person };
+  Property: { ?run key: "spec_ref"; value: ?specRef }
+}
+then {
+  Permission/check: [
+    who: concat("process:", ?specRef);
+    where: ?resource;
+    what: ?action
+  ]
+}
+
+sync ProposalTypeGuard [eager]
+  purpose {
+    When a governance execution action fires, verify that the proposal type
+    recorded on the run's proposal reference is permitted to trigger that
+    execution action so that only proposal types with the correct grants can
+    drive execution side effects.
+  }
+when {
+  Execution/schedule: [ sourceRef: ?proposalRef; actions: ?actions; executor: ?run ]
+    => ok(execution: ?execution)
+}
+where {
+  Property: { ?proposalRef key: "proposalType"; value: ?proposalType }
+}
+then {
+  Permission/check: [
+    who: concat("proposal-type:", ?proposalType);
+    where: ?proposalRef;
+    what: "execute"
+  ]
+}

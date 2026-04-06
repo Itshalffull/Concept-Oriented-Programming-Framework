@@ -1,0 +1,26 @@
+# Permission management destination entries.
+
+concept: DestinationCatalog
+action: register
+entries:
+  - destination: permissions-by-subject
+    name: permissions-by-subject
+    targetConcept: Permission
+    targetView: permissions-by-subject
+    href: /admin/governance/permissions
+    icon: "🔑"
+    group: Governance
+  - destination: permissions-by-resource
+    name: permissions-by-resource
+    targetConcept: Permission
+    targetView: permissions-by-resource
+    href: /admin/governance/permissions/by-resource
+    icon: "🔒"
+    group: Governance
+  - destination: effective-permissions
+    name: effective-permissions
+    targetConcept: Permission
+    targetView: effective-permissions
+    href: /admin/governance/permissions/effective
+    icon: "✓"
+    group: Governance

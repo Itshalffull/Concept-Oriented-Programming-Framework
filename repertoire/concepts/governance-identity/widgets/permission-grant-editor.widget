@@ -1,0 +1,359 @@
+@version(1)
+widget permission-grant-editor {
+
+  purpose {
+    Form for creating and editing permission grants with polymorphic subject selection.
+    The subject type selector (person, role, circle, process, or proposal-type) controls
+    which entity picker appears so the user can target the correct kind of principal.
+    Supports compound conditions via a visual AND/OR/NOT tree builder that can be toggled
+    on or off, and renders a resolution preview panel where an administrator can test
+    whether a given user would be permitted by this grant, showing the full chain explanation.
+    Used on the permissions admin page to author, update, and revoke individual grants.
+  }
+
+  requires @1 {
+    fields {
+      grantId: option String;
+      subjectType: String;
+      subjectId: String;
+      resource: String;
+      permission: String;
+      condition: String;
+      isWildcard: Bool;
+      grantedBy: String;
+      status: String;
+    }
+    actions {
+      save: { };
+      revoke: { };
+      testResolution: { };
+    }
+  }
+
+  anatomy {
+    root:                container  { Grant editor form wrapper }
+    subjectTypeSelector: widget     { Radio or select for subject type — Person, Role, Circle, Process, Proposal Type }
+    subjectPicker:       widget     { Entity picker whose options change based on the selected subject type }
+    wildcardToggle:      widget     { Toggle switch to grant permission to all subjects of the chosen type }
+    resourcePicker:      widget     { Entity or resource picker specifying where the permission applies }
+    permissionPicker:    widget     { Action picker specifying what permission is being granted }
+    conditionSection:    container  { Container grouping the optional compound condition builder }
+    conditionToggle:     widget     { Toggle switch to enable or disable the compound condition }
+    conditionBuilder:    widget     { Visual AND/OR/NOT tree editor for authoring compound conditions }
+    conditionPreview:    text       { Read-only text rendering of the current condition expression }
+    grantedByDisplay:    text       { Name or identifier of the principal granting this permission }
+    statusBadge:         container  { Active or Revoked status indicator }
+    saveButton:          action     { Save the permission grant }
+    revokeButton:        action     { Revoke the permission }
+    resolutionPreview:   container  { Panel for testing how this grant resolves for a specific user }
+    resolutionTestInput: widget     { User picker for selecting the subject to test resolution against }
+    resolutionResult:    text       { Pass or fail result with chain explanation }
+  }
+
+  states {
+    editing [initial] {
+      on CHANGE_SUBJECT_TYPE -> editing;
+      on TOGGLE_CONDITION -> editing;
+      on TOGGLE_WILDCARD -> editing;
+      on SAVE -> saving;
+      on REVOKE -> confirmRevoke;
+      on TEST_RESOLUTION -> testing;
+    }
+
+    saving {
+      on SAVE_COMPLETE -> editing;
+      on SAVE_ERROR -> editing;
+      entry [submitGrant];
+      exit [clearSaveError];
+    }
+
+    confirmRevoke {
+      on CONFIRM -> editing;
+      on CANCEL -> editing;
+      entry [showRevokePrompt];
+      exit [hideRevokePrompt];
+    }
+
+    testing {
+      on TEST_COMPLETE -> editing;
+      entry [runResolutionCheck];
+    }
+  }
+
+  accessibility {
+    role: form;
+    keyboard {
+      Tab -> FOCUS_NEXT;
+      Shift+Tab -> FOCUS_PREV;
+      Enter -> SAVE;
+      Escape -> CANCEL;
+    }
+    focus {
+      trap: false;
+      initial: subjectTypeSelector;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "form";
+        aria-label: "Permission grant editor";
+      };
+      subjectTypeSelector -> {
+        role: "radiogroup";
+        aria-label: "Subject type";
+      };
+      subjectPicker -> {
+        role: "combobox";
+        aria-label: concat("Select ", ?subjectType);
+        aria-disabled: if ?isWildcard then "true" else "false";
+      };
+      wildcardToggle -> {
+        role: "switch";
+        aria-checked: if ?isWildcard then "true" else "false";
+        aria-label: concat("Grant to all ", ?subjectType, " subjects");
+      };
+      resourcePicker -> {
+        role: "combobox";
+        aria-label: "Resource or scope";
+      };
+      permissionPicker -> {
+        role: "combobox";
+        aria-label: "Permission action";
+      };
+      conditionSection -> {
+        role: "group";
+        aria-label: "Compound condition";
+      };
+      conditionToggle -> {
+        role: "switch";
+        aria-checked: if ?condition != "" then "true" else "false";
+        aria-label: "Enable compound condition";
+      };
+      conditionBuilder -> {
+        aria-label: "Condition expression builder";
+        aria-describedby: "condition-preview";
+      };
+      conditionPreview -> {
+        aria-live: "polite";
+        aria-label: "Condition expression preview";
+      };
+      grantedByDisplay -> {
+        aria-label: concat("Granted by: ", ?grantedBy);
+      };
+      saveButton -> {
+        role: "button";
+        aria-label: "Save permission grant";
+        aria-disabled: if state == "saving" then "true" else "false";
+      };
+      revokeButton -> {
+        role: "button";
+        aria-label: "Revoke permission";
+        aria-disabled: if ?status == "revoked" then "true" else "false";
+      };
+      resolutionPreview -> {
+        role: "region";
+        aria-label: "Resolution test panel";
+        aria-live: "polite";
+      };
+      resolutionTestInput -> {
+        role: "combobox";
+        aria-label: "Test resolution for user";
+      };
+      resolutionResult -> {
+        aria-live: "assertive";
+        aria-label: "Resolution result";
+      };
+    }
+  }
+
+  props {
+    grantId: option String
+    subjectType: union "person" | "role" | "circle" | "process" | "proposal-type" = "person"
+    subjectId: String = ""
+    resource: String = ""
+    permission: String = ""
+    condition: String = ""
+    isWildcard: Bool = false
+    grantedBy: String = ""
+    status: union "active" | "revoked" = "active"
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-subject-type: ?subjectType;
+      data-status: ?status;
+    }
+    subjectTypeSelector -> {
+      data-part: "subject-type-selector";
+      data-value: ?subjectType;
+      onChange: send(CHANGE_SUBJECT_TYPE, { subjectType: self.value });
+    }
+    subjectPicker -> {
+      data-part: "subject-picker";
+      data-value: ?subjectId;
+      data-subject-type: ?subjectType;
+      data-disabled: if ?isWildcard then "true" else "false";
+      aria-disabled: if ?isWildcard then "true" else "false";
+      onChange: send(CHANGE_SUBJECT_TYPE, { field: "subjectId" });
+    }
+    wildcardToggle -> {
+      data-part: "wildcard-toggle";
+      data-checked: if ?isWildcard then "true" else "false";
+      onClick: send(TOGGLE_WILDCARD);
+    }
+    resourcePicker -> {
+      data-part: "resource-picker";
+      data-value: ?resource;
+      onChange: send(CHANGE_SUBJECT_TYPE, { field: "resource" });
+    }
+    permissionPicker -> {
+      data-part: "permission-picker";
+      data-value: ?permission;
+      onChange: send(CHANGE_SUBJECT_TYPE, { field: "permission" });
+    }
+    conditionSection -> {
+      data-part: "condition-section";
+      data-expanded: if ?condition != "" then "true" else "false";
+    }
+    conditionToggle -> {
+      data-part: "condition-toggle";
+      data-checked: if ?condition != "" then "true" else "false";
+      onClick: send(TOGGLE_CONDITION);
+    }
+    conditionBuilder -> {
+      data-part: "condition-builder";
+      data-visible: if ?condition != "" then "true" else "false";
+      aria-hidden: if ?condition != "" then "false" else "true";
+      data-value: ?condition;
+      onChange: send(CHANGE_SUBJECT_TYPE, { field: "condition" });
+    }
+    conditionPreview -> {
+      data-part: "condition-preview";
+      text: ?condition;
+    }
+    grantedByDisplay -> {
+      data-part: "granted-by-display";
+      text: ?grantedBy;
+    }
+    statusBadge -> {
+      data-part: "status-badge";
+      data-status: ?status;
+    }
+    saveButton -> {
+      data-part: "save-button";
+      data-state: if state == "saving" then "loading" else "idle";
+      onClick: send(SAVE);
+      disabled: if state == "saving" then true else false;
+      aria-disabled: if state == "saving" then "true" else "false";
+    }
+    revokeButton -> {
+      data-part: "revoke-button";
+      data-visible: if ?grantId then "true" else "false";
+      data-disabled: if ?status == "revoked" then "true" else "false";
+      onClick: send(REVOKE);
+      disabled: if ?status == "revoked" then true else false;
+    }
+    resolutionPreview -> {
+      data-part: "resolution-preview";
+      data-state: if state == "testing" then "loading" else "idle";
+    }
+    resolutionTestInput -> {
+      data-part: "resolution-test-input";
+      onChange: send(TEST_RESOLUTION, { field: "testSubjectId" });
+    }
+    resolutionResult -> {
+      data-part: "resolution-result";
+      data-visible: if state == "editing" then "true" else "false";
+    }
+  }
+
+  affordance {
+    serves: entity-detail;
+    specificity: 25;
+    when {
+      concept: "Permission";
+    }
+    bind {
+      grantId: grant;
+      subjectType: subjectType;
+      subjectId: subjectId;
+      permission: permission;
+      status: status;
+    }
+  }
+
+  compose {
+    subjectTypeSelector: widget("radio-group",   { options: ["person", "role", "circle", "process", "proposal-type"], label: "Subject type" });
+    subjectPicker:       widget("entity-picker",  { label: "Subject", placeholder: "Select subject..." });
+    wildcardToggle:      widget("toggle",         { label: "Wildcard — all subjects of this type" });
+    resourcePicker:      widget("entity-picker",  { label: "Resource", placeholder: "Select resource..." });
+    permissionPicker:    widget("select",         { label: "Permission", placeholder: "Select permission action..." });
+    conditionToggle:     widget("toggle",         { label: "Add compound condition" });
+    conditionBuilder:    widget("condition-tree", { label: "Condition builder", operators: ["and", "or", "not"] });
+    resolutionTestInput: widget("entity-picker",  { label: "Test for user", placeholder: "Select user..." });
+    statusBadge:         widget("badge",          { variant: "dot" });
+  }
+
+  invariant {
+    example "change subject type stays in editing": {
+      after transition(from: "editing", event: "CHANGE_SUBJECT_TYPE") -> ok
+      then state = "editing"
+    }
+    example "save transitions from editing to saving": {
+      after transition(from: "editing", event: "SAVE") -> ok
+      then state = "saving"
+    }
+    example "save_complete returns to editing": {
+      after transition(from: "saving", event: "SAVE_COMPLETE") -> ok
+      then state = "editing"
+    }
+    example "save_error returns to editing": {
+      after transition(from: "saving", event: "SAVE_ERROR") -> ok
+      then state = "editing"
+    }
+    example "revoke transitions to confirmRevoke": {
+      after transition(from: "editing", event: "REVOKE") -> ok
+      then state = "confirmRevoke"
+    }
+    example "confirm revoke returns to editing": {
+      after transition(from: "confirmRevoke", event: "CONFIRM") -> ok
+      then state = "editing"
+    }
+    example "cancel revoke returns to editing": {
+      after transition(from: "confirmRevoke", event: "CANCEL") -> ok
+      then state = "editing"
+    }
+    example "test resolution transitions to testing": {
+      after transition(from: "editing", event: "TEST_RESOLUTION") -> ok
+      then state = "testing"
+    }
+    example "test_complete returns to editing": {
+      after transition(from: "testing", event: "TEST_COMPLETE") -> ok
+      then state = "editing"
+    }
+    always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
+    never "unreachable state": { exists s in states: s.inbound_count = 0 }
+    always "subject picker disabled when wildcard": {
+      ?isWildcard = true implies subjectPicker.data-disabled = "true"
+    }
+    always "condition builder hidden when condition empty": {
+      ?condition = "" implies conditionBuilder.aria-hidden = "true"
+    }
+    never "save while saving": {
+      state == "saving" and saveButton.disabled = false
+    }
+    never "revoke active when already revoked": {
+      ?status == "revoked" and revokeButton.disabled = false
+    }
+    "Revoke button must only be visible when grantId is present";
+    "Subject picker must update its option list when subject type changes";
+    "Wildcard toggle must require a condition when turned on";
+    "Condition preview must reflect the current condition expression in real time";
+    "Resolution result must display the full permission chain explanation after testing";
+    "Status badge must reflect the current grant status — active or revoked";
+    "Save button must be disabled while the widget is in the saving state";
+  }
+
+}

@@ -1,0 +1,7 @@
+# Permission grant schema definition.
+
+concept: Schema
+action: defineSchema
+entries:
+  - schema: permission-grant
+    fields: 'who_type,who_id,what,where,condition,granted_by,status,expires_at,reason'
