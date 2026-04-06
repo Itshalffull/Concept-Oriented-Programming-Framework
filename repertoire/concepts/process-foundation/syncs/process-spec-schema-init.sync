@@ -1,0 +1,37 @@
+# Initialize the process-spec content-native schema.
+# Registers Schema fields and sets content-native Properties
+# so the general syncs in content-native-schema.sync auto-wire
+# page promotion, child schema application, and default blocks.
+# No compilation provider — the content IS the process spec.
+
+sync ProcessSpecSchemaInit [eager]
+  purpose { Register the process-spec schema with childSchema Property. }
+when {
+  Schema/defineSchema: [ schema: "process-spec"; fields: "name,description,version,status,owner,tags" ]
+    => ok()
+}
+then {
+  Property/set: [ entity: "process-spec"; key: "childSchema"; value: "process-step" ]
+}
+
+sync ProcessSpecDefaultTemplate [eager]
+  purpose { Set default template for process spec pages. }
+when {
+  Schema/defineSchema: [ schema: "process-spec"; fields: "name,description,version,status,owner,tags" ]
+    => ok()
+}
+then {
+  Property/set: [ entity: "process-spec"; key: "defaultTemplate"; value: "standard-process" ]
+}
+
+# Register the process-step child schema with isChildSchema marker
+
+sync ProcessStepSchemaInit [eager]
+  purpose { Register the process-step child schema. }
+when {
+  Schema/defineSchema: [ schema: "process-step"; fields: "step_type,step_key,timeout_ms,retry_count,required_role,on_success,on_failure,condition_expr" ]
+    => ok()
+}
+then {
+  Property/set: [ entity: "process-step"; key: "isChildSchema"; value: "true" ]
+}

@@ -1,0 +1,80 @@
+# ProcessSpec — Content-Native Schema Definition
+# A process spec is a page with step blocks. Each step is an Outline
+# child with the "process-step" child schema overlay. The content IS
+# the process — no compilation needed. ProcessRun reads steps directly
+# from Outline children with their Properties.
+# General syncs in content-native-schema.sync auto-wire everything.
+
+name: process-spec
+version: 1
+
+fields:
+  - name: name
+    type: string
+    required: true
+  - name: description
+    type: string
+  - name: version
+    type: number
+    default: 1
+  - name: status
+    type: string
+    default: "draft"
+    enum: [draft, active, deprecated]
+  - name: owner
+    type: string
+  - name: tags
+    type: string
+
+contentNative:
+  childSchema: process-step
+  defaultTemplate: standard-process
+  # No compilationProvider — the content IS the process spec.
+  # ProcessRun reads steps directly from Outline + Properties.
+
+childSchemaDefinition:
+  name: process-step
+  isChildSchema: true
+  fields:
+    - name: step_type
+      type: string
+      required: true
+      enum: [human, automation, llm, approval, manual, subprocess, webhook_wait]
+    - name: step_key
+      type: string
+      required: true
+    - name: timeout_ms
+      type: number
+    - name: retry_count
+      type: number
+      default: 0
+    - name: required_role
+      type: string
+    - name: on_success
+      type: string
+    - name: on_failure
+      type: string
+    - name: condition_expr
+      type: string
+
+defaultBlocks:
+  - sectionType: start
+    step_type: manual
+    step_key: start
+    description: "Process entry point — initial trigger or manual start"
+    defaultContent: "Process begins here."
+  - sectionType: main
+    step_type: human
+    step_key: main-task
+    description: "Primary task step"
+    defaultContent: "Describe what needs to be done in this step."
+  - sectionType: review
+    step_type: approval
+    step_key: review
+    description: "Review and approval gate"
+    defaultContent: "Approve or reject the work from the previous step."
+  - sectionType: complete
+    step_type: manual
+    step_key: complete
+    description: "Process completion — final output or notification"
+    defaultContent: "Process complete. Summary of results."
