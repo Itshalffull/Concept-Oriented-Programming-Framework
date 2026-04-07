@@ -1,0 +1,45 @@
+# ResearchSource — Content-Native Schema Definition
+# A captured external artifact (web page, PDF, API response, etc.).
+# No compilation provider needed — the content IS the source.
+# Metadata properties track retrieval origin and credibility.
+# Ingested via Capture/clip → general syncs promote to PageAsRecord →
+# schema overlay applied → DataQuality/validate runs "source-credibility" ruleset.
+# General syncs in content-native-schema.sync auto-wire everything.
+
+name: research-source
+version: 1
+
+fields:
+  - name: uri
+    type: string
+    required: true
+  - name: source_type
+    type: string
+    enum: [web_page, pdf, document, dataset, api_response, internal]
+  - name: fetch_method
+    type: string
+    enum: [web_search, direct_fetch, upload, connector, mcp]
+  - name: content_hash
+    type: string
+  - name: retrieved_by
+    type: string
+  - name: retrieved_at
+    type: string
+  - name: access_scope
+    type: string
+    default: "public"
+    enum: [public, team, private]
+  - name: license
+    type: string
+  - name: credibility_tier
+    type: string
+    enum: [authoritative, reliable, mixed, low_quality, quarantine]
+  - name: status
+    type: string
+    default: "active"
+    enum: [active, stale, unavailable, quarantined]
+
+contentNative:
+  displayWidget: schema-block-editor
+  # No childSchema — source content is flat cleaned text, not structured blocks
+  # No compilationProvider — the content IS the source

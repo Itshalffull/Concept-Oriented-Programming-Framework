@@ -1,0 +1,49 @@
+# ResearchPlan — Content-Native Schema Definition
+# A research plan with sub-questions as child blocks. The PlanAndExecuteStrategy
+# agent generates the plan; the content-native schema lets users view and edit
+# it in the block editor before approval. No compilation provider — the content
+# IS the plan. PlanAndExecuteStrategy reads the block tree directly.
+# General syncs in content-native-schema.sync auto-wire everything.
+
+name: research-plan
+version: 1
+
+fields:
+  - name: project_id
+    type: string
+    required: true
+  - name: estimated_complexity
+    type: string
+    enum: [simple, moderate, complex, expert]
+  - name: approval_status
+    type: string
+    default: "draft"
+    enum: [draft, proposed, approved, rejected, revised]
+  - name: approved_by
+    type: string
+  - name: approved_at
+    type: string
+
+contentNative:
+  childSchema: research-question
+  defaultTemplate: standard-research-plan
+  displayWidget: schema-block-editor
+  # No compilationProvider — PlanAndExecuteStrategy reads block tree directly
+
+childSchemaDefinition:
+  name: research-question
+  isChildSchema: true
+  fields:
+    - name: strategy
+      type: string
+      enum: [web_search, academic_search, direct_analysis, expert_consultation, data_extraction]
+    - name: priority
+      type: number
+      default: 50
+    - name: status
+      type: string
+      default: "pending"
+      enum: [pending, in_progress, completed, skipped]
+    - name: dependencies
+      type: string
+      description: "Comma-separated question block IDs this depends on"

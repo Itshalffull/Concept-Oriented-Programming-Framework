@@ -1,0 +1,61 @@
+# Research Citation Quality Profile seed.
+# Creates a QualityProfile named "research-citation" with citation coverage
+# and faithfulness threshold rules. Used by CitationVerification derived
+# concept: EvaluationRun checks citation support scores and hallucination
+# rates against these thresholds during the two-round verification pass.
+
+concept: QualityProfile
+action: create
+entries:
+  - id: research-citation
+    name: "research-citation"
+    description: "Ensures research report citations meet coverage and faithfulness thresholds before publication. Governs the CitationVerification derived concept's evaluation rounds."
+
+---
+
+concept: QualityProfile
+action: addRule
+entries:
+  - profile: research-citation
+    ruleId: citation-coverage-threshold
+    severityOverride: "error"
+    parameters:
+      - key: min_coverage_ratio
+        value: "0.80"
+      - key: description
+        value: "At least 80% of claims in the report must have a linked, verified citation."
+      - key: block_publish_on_fail
+        value: "true"
+
+  - profile: research-citation
+    ruleId: faithfulness-threshold
+    severityOverride: "error"
+    parameters:
+      - key: min_faithfulness_score
+        value: "0.75"
+      - key: description
+        value: "Claim text must faithfully represent the supporting snippet with score >= 0.75."
+      - key: block_publish_on_fail
+        value: "true"
+
+  - profile: research-citation
+    ruleId: hallucination-detection
+    severityOverride: "critical"
+    parameters:
+      - key: max_hallucination_rate
+        value: "0.05"
+      - key: description
+        value: "Intermediate hallucination rate across all claims must not exceed 5%."
+      - key: block_publish_on_fail
+        value: "true"
+
+  - profile: research-citation
+    ruleId: snippet-staleness-check
+    severityOverride: "warning"
+    parameters:
+      - key: fail_on_broken_snippet
+        value: "true"
+      - key: warn_on_stale_snippet
+        value: "true"
+      - key: description
+        value: "Citations pointing to broken or stale snippets must be flagged for human review."

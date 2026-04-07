@@ -1,0 +1,60 @@
+# Source Credibility Quality Profile seed.
+# Creates a QualityProfile named "source-credibility" with domain-match,
+# content-analysis, freshness, and cross-reference rules. Used by
+# DataQuality/validate when processing research-source pages.
+# Referenced in the content-native pipeline: Capture/clip →
+# source-triggers-quality-check sync → DataQuality/validate(rulesetId="source-credibility").
+
+concept: QualityProfile
+action: create
+entries:
+  - id: source-credibility
+    name: "source-credibility"
+    description: "Evaluates the trustworthiness of captured research sources across domain authority, content quality, freshness, and cross-reference signals."
+
+---
+
+concept: QualityProfile
+action: addRule
+entries:
+  - profile: source-credibility
+    ruleId: domain-authority-tier
+    severityOverride: "error"
+    parameters:
+      - key: authoritative_domains
+        value: "gov,edu,org,peer-reviewed"
+      - key: low_quality_patterns
+        value: "ad-farm,content-mill,seo-spam"
+      - key: quarantine_on_fail
+        value: "true"
+
+  - profile: source-credibility
+    ruleId: content-analysis-quality
+    severityOverride: "warning"
+    parameters:
+      - key: min_word_count
+        value: "150"
+      - key: check_author_attribution
+        value: "true"
+      - key: check_publication_date
+        value: "true"
+
+  - profile: source-credibility
+    ruleId: freshness-threshold
+    severityOverride: "warning"
+    parameters:
+      - key: max_age_days_authoritative
+        value: "1825"
+      - key: max_age_days_reliable
+        value: "730"
+      - key: max_age_days_mixed
+        value: "365"
+
+  - profile: source-credibility
+    ruleId: cross-reference-signal
+    severityOverride: "info"
+    parameters:
+      - key: min_corroborating_sources
+        value: "2"
+      - key: boost_on_corroboration
+        value: "true"

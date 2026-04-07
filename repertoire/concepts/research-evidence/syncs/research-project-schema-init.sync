@@ -1,0 +1,16 @@
+# Initialize the research-project content-native schema.
+# Registers Schema fields and sets the displayWidget Property
+# so the general syncs in content-native-schema.sync auto-wire
+# page promotion and schema overlay. No child schema — the project
+# page links to plan and report pages via Relations. No compilation
+# provider — the project body is the user's free-text query/brief.
+
+sync ResearchProjectSchemaInit [eager]
+  purpose { Register the research-project schema with displayWidget Property. }
+when {
+  Schema/defineSchema: [ schema: "research-project"; fields: "deliverable_type,output_format,max_tokens,max_search_calls,max_duration_minutes,tokens_used,search_calls_used,status,require_credibility_tier,process_run_id,report_page_id,plan_page_id" ]
+    => ok()
+}
+then {
+  Property/set: [ entity: "research-project"; key: "displayWidget"; value: "schema-block-editor" ]
+}

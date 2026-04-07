@@ -1,0 +1,58 @@
+# Initialize the research-report content-native schema.
+# Registers Schema fields and sets content-native Properties
+# so the general syncs in content-native-schema.sync auto-wire
+# page promotion, child schema application (report-section blocks),
+# default block scaffolding via Template, and ResearchReportCompiler
+# provider registration via PluginRegistry.
+
+sync ResearchReportSchemaInit [eager]
+  purpose { Register the research-report schema with childSchema Property. }
+when {
+  Schema/defineSchema: [ schema: "research-report"; fields: "project_id,report_status,citation_coverage,overall_faithfulness,perspective_count" ]
+    => ok()
+}
+then {
+  Property/set: [ entity: "research-report"; key: "childSchema"; value: "report-section" ]
+}
+
+sync ResearchReportDefaultTemplate [eager]
+  purpose { Set default template for research report pages. }
+when {
+  Schema/defineSchema: [ schema: "research-report"; fields: "project_id,report_status,citation_coverage,overall_faithfulness,perspective_count" ]
+    => ok()
+}
+then {
+  Property/set: [ entity: "research-report"; key: "defaultTemplate"; value: "standard-research-report" ]
+}
+
+sync ResearchReportCompilationProvider [eager]
+  purpose { Set compilation provider for research report pages. }
+when {
+  Schema/defineSchema: [ schema: "research-report"; fields: "project_id,report_status,citation_coverage,overall_faithfulness,perspective_count" ]
+    => ok()
+}
+then {
+  Property/set: [ entity: "research-report"; key: "compilationProvider"; value: "ResearchReportCompiler" ]
+}
+
+sync ResearchReportDisplayWidget [eager]
+  purpose { Set display widget for research report pages. }
+when {
+  Schema/defineSchema: [ schema: "research-report"; fields: "project_id,report_status,citation_coverage,overall_faithfulness,perspective_count" ]
+    => ok()
+}
+then {
+  Property/set: [ entity: "research-report"; key: "displayWidget"; value: "schema-block-editor" ]
+}
+
+# Register the report-section child schema with isChildSchema marker
+
+sync ReportSectionSchemaInit [eager]
+  purpose { Register the report-section child schema. }
+when {
+  Schema/defineSchema: [ schema: "report-section"; fields: "section_type,perspective,claim_count,citation_count,verification_status" ]
+    => ok()
+}
+then {
+  Property/set: [ entity: "report-section"; key: "isChildSchema"; value: "true" ]
+}
