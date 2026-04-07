@@ -1,0 +1,17 @@
+# When a research-mode capture produces content, index it in the search
+# system so subsequent agent steps can retrieve relevant passages via
+# semantic search rather than re-fetching from the original source.
+
+sync SourceIndexesForRetrieval [eventual] [recommended]
+  purpose: "Index captured research source content for semantic retrieval so agent steps can search accumulated evidence without re-fetching from external URLs."
+when {
+  Capture/clip: [url: ?url; mode: "research"; metadata: ?meta]
+    => ok(itemId: ?item; content: ?content)
+}
+then {
+  SearchIndex/index: [
+    entity_id: ?item;
+    content: ?content;
+    metadata: concat("{\"url\":\"", ?url, "\",\"source_type\":\"research_source\"}")
+  ]
+}

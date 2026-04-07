@@ -1,0 +1,25 @@
+# When a process step with step_type="llm" starts, spawn an AgentSession
+# from the persona page named in the step's required_role property so
+# each research step runs under the correct specialist agent identity,
+# strategy, and tool bindings — all configurable without code changes.
+
+sync StepDispatchesToPersona [eventual] [required]
+  purpose: "Spawn an AgentSession from the step's required_role persona page whenever an llm-typed process step activates, enabling per-step agent specialisation through the ProcessSpec configuration."
+when {
+  ProcessRun/start: [spec_ref: "deep-research-process"; spec_version: ?v; input: ?proj]
+    => ok(run: ?run; spec_ref: ?spec_ref)
+}
+where {
+  ResearchProject: { ?proj query: ?query }
+  Property: { ?run key: "step_type"; value: "llm" }
+  Property: { ?run key: "required_role"; value: ?persona }
+  Property: { ?run key: "strategy"; value: ?strategy }
+}
+then {
+  AgentSession/spawn: [
+    personaPageId: ?persona;
+    strategy: ?strategy;
+    tools: "[]";
+    context: ?query
+  ]
+}

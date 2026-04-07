@@ -1,0 +1,13 @@
+# When a Citation is linked between a claim and a snippet, create a
+# Reference from the claim entity to the snippet entity so the link
+# graph reflects the evidential dependency.
+
+sync CitationLinksCreateRelations [eager] [required]
+  purpose: "Record a forward reference from the claim to its supporting snippet whenever a Citation link is established, enabling graph traversal of the full evidence chain."
+when {
+  Citation/link: [claim_id: ?claim; snippet_id: ?snip; citation_key: ?key]
+    => ok(citation: ?citation)
+}
+then {
+  Reference/addRef: [source: ?claim; target: ?snip; origin: ?citation]
+}

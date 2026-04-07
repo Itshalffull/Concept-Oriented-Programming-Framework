@@ -1,0 +1,16 @@
+# When a citation_quality EvaluationRun fails, block the ResearchProject
+# transition to "completed" so reports with insufficient citation coverage
+# or faithfulness scores cannot be published until deficiencies are resolved.
+
+sync EvaluationGatesReportPublish [eager] [required]
+  purpose: "Block report publication when a citation quality evaluation fails its threshold, ensuring no research report reaches completed status without passing citation coverage and faithfulness checks."
+when {
+  EvaluationRun/fail: [eval: ?eval; score: ?score; feedback: ?feedback]
+    => ok(eval: ?eval; step_ref: ?step_ref; feedback: ?feedback)
+}
+where {
+  EvaluationRun: { ?eval evaluator_type: "citation_quality"; step_ref: ?step_ref }
+}
+then {
+  QualityGate/block: [entity: ?eval; reason: "citation quality gate failed"]
+}

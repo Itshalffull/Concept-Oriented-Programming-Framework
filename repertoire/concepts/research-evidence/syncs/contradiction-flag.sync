@@ -1,0 +1,22 @@
+# When a new Citation is linked to a claim that already has at least one
+# other citation pointing to a different snippet, create a Flag on that
+# claim so a human can verify the multiple evidence sources are consistent
+# rather than contradictory.
+
+sync ContradictionFlag [eventual] [recommended]
+  purpose: "Flag a claim for human review when it accumulates citations from multiple distinct snippets, since divergent evidence sources may represent contradictions that require resolution before the claim is published."
+when {
+  Citation/link: [claim_id: ?claim; snippet_id: ?snip; citation_key: ?key]
+    => ok(citation: ?citation)
+}
+where {
+  Citation: { ?existing claim_id: ?claim; snippet_id: ?other_snip }
+  filter(?other_snip != ?snip)
+}
+then {
+  Flag/create: [
+    entity: ?claim;
+    reason: "potential_contradiction";
+    metadata: "Multiple snippets support this claim — verify consistency"
+  ]
+}
