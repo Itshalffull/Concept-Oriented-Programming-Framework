@@ -1,0 +1,14 @@
+# When Retriever performs a rerank call and the reranker_config model matches
+# a registered CrossEncoderRerankerProvider, dispatch to that provider.
+# This routes second-stage reranking through the cross-encoder provider
+# rather than the default Retriever/rerank path.
+
+sync CrossEncoderRoutes [optional]
+when {
+  Retriever/rerank: [retriever: ?retriever, query: ?query, documents: ?docs]
+    where retriever.reranker_config.model = "cross_encoder"
+    => [reranked: ?reranked]
+}
+then {
+  CrossEncoderRerankerProvider/rerank: [query: ?query, documents: ?docs]
+}

@@ -1,0 +1,161 @@
+@version(1)
+@category("research")
+concept MMRDiversityProvider [P] {
+
+  purpose {
+    Apply Maximal Marginal Relevance (MMR) selection to a candidate document
+    set, balancing query relevance against inter-document redundancy to
+    produce an informationally diverse retrieval result. Registered with
+    PluginRegistry under provider_id "mmr_diversity" so Retriever can
+    dispatch diversity-selection to this provider.
+  }
+
+  state {
+    providers: set P
+    config {
+      provider_id: P -> String
+      lambda_param: P -> Float
+      top_n: P -> Int
+      embedding_model: P -> String
+    }
+    metrics {
+      call_count: P -> Int
+      total_latency_ms: P -> Int
+      error_count: P -> Int
+      documents_selected: P -> Int
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action configure(lambda_param: Float, top_n: Int, embedding_model: String) {
+      -> ok(provider: P) {
+        Register an MMR diversity provider. lambda_param in [0.0, 1.0]
+        controls the relevance/diversity trade-off: 1.0 is pure relevance
+        (equivalent to standard top-k), 0.0 is pure diversity (maximally
+        spread embeddings). top_n is the maximum number of documents returned.
+        embedding_model identifies the sentence-encoder model used to compute
+        pairwise document similarity (e.g. "sentence-transformers/all-MiniLM-L6-v2").
+      }
+      -> invalid(message: String) {
+        lambda_param is outside [0.0, 1.0], top_n is less than 1, or
+        embedding_model is an empty string.
+      }
+      -> duplicate(message: String) {
+        A provider with this embedding_model is already configured.
+      }
+      fixture balanced_config { lambda_param: 0.5, top_n: 8, embedding_model: "sentence-transformers/all-MiniLM-L6-v2" }
+      fixture diverse_config { lambda_param: 0.2, top_n: 5, embedding_model: "sentence-transformers/all-mpnet-base-v2" }
+      fixture relevance_only { lambda_param: 1.0, top_n: 10, embedding_model: "sentence-transformers/all-MiniLM-L6-v2" }
+      fixture invalid_lambda { lambda_param: 1.5, top_n: 5, embedding_model: "sentence-transformers/all-MiniLM-L6-v2" } -> invalid
+      fixture negative_lambda { lambda_param: -0.1, top_n: 5, embedding_model: "sentence-transformers/all-MiniLM-L6-v2" } -> invalid
+      fixture empty_model { lambda_param: 0.5, top_n: 5, embedding_model: "" } -> invalid
+    }
+
+    action select(provider: P, query: String,
+                  candidates: list {id: String, content: String, score: Float, metadata: option String},
+                  lambda_override: option Float) {
+      -> ok(selected: list {id: String, content: String, mmr_score: Float, rank: Int, metadata: option String}) {
+        Run the MMR selection loop over the candidate document set. At each
+        step the algorithm picks the document maximising
+        lambda * relevance_to_query - (1 - lambda) * max_similarity_to_selected.
+        Stops when top_n documents are selected or the candidate pool is
+        exhausted. lambda_override temporarily overrides the configured
+        lambda_param for this call without persisting the change.
+        The rank field is 1-indexed selection order.
+      }
+      -> notfound(message: String) {
+        No provider is registered with this identifier.
+      }
+      -> error(message: String) {
+        The candidate list was empty, the query string was empty, or embedding
+        inference failed.
+      }
+      fixture select_ok {
+        provider: $balanced_config.provider,
+        query: "deep learning training techniques",
+        candidates: [
+          { id: "d1", content: "Dropout regularization reduces overfitting in neural networks.", score: 0.85, metadata: none },
+          { id: "d2", content: "Batch normalization stabilizes deep network training.", score: 0.82, metadata: none },
+          { id: "d3", content: "L2 regularization adds weight penalty to the loss function.", score: 0.79, metadata: none },
+          { id: "d4", content: "Stochastic gradient descent with momentum accelerates convergence.", score: 0.77, metadata: none }
+        ],
+        lambda_override: none
+      } after balanced_config
+      fixture select_with_lambda {
+        provider: $diverse_config.provider,
+        query: "climate change mitigation strategies",
+        candidates: [
+          { id: "c1", content: "Renewable energy reduces carbon emissions.", score: 0.9, metadata: none },
+          { id: "c2", content: "Carbon capture technology absorbs CO2 from the atmosphere.", score: 0.87, metadata: none }
+        ],
+        lambda_override: 0.3
+      } after diverse_config
+      fixture select_empty_query {
+        provider: $balanced_config.provider,
+        query: "",
+        candidates: [{ id: "d1", content: "Some document.", score: 0.5, metadata: none }],
+        lambda_override: none
+      } after balanced_config -> error
+      fixture select_missing { provider: "no-such-provider", query: "test", candidates: [], lambda_override: none } -> notfound
+    }
+
+    action getMetrics(provider: P) {
+      -> ok(call_count: Int, total_latency_ms: Int, error_count: Int,
+            documents_selected: Int, avg_latency_ms: Float) {
+        Return accumulated call statistics. avg_latency_ms is
+        total_latency_ms / call_count when call_count > 0, otherwise 0.
+      }
+      -> notfound(message: String) {
+        No provider is registered with this identifier.
+      }
+      fixture metrics_ok { provider: $balanced_config.provider } after balanced_config
+      fixture metrics_missing { provider: "ghost-provider" } -> notfound
+    }
+  }
+
+  example "configure then select diverse documents": {
+    after configure(lambda_param: 0.5, top_n: 3,
+                    embedding_model: "sentence-transformers/all-MiniLM-L6-v2")
+          -> ok(provider: p)
+    then select(provider: p, query: "machine learning optimisation",
+                candidates: [
+                  { id: "a", content: "Adam optimiser adapts learning rates per parameter.", score: 0.9, metadata: none },
+                  { id: "b", content: "Stochastic gradient descent is the baseline optimiser.", score: 0.85, metadata: none },
+                  { id: "c", content: "Learning rate schedules improve convergence.", score: 0.8, metadata: none }
+                ],
+                lambda_override: none)
+          -> ok(selected: s)
+  }
+
+  example "lambda outside range is rejected": {
+    after configure(lambda_param: 2.0, top_n: 5,
+                    embedding_model: "sentence-transformers/all-MiniLM-L6-v2")
+          -> invalid(message: m)
+  }
+
+  always "lambda in valid range": {
+    forall p in providers: lambda_param(p) >= 0.0 and lambda_param(p) <= 1.0
+  }
+
+  always "metrics initialised on configure": {
+    forall p in providers: call_count(p) >= 0
+  }
+
+  never "unconfigured embedding model": {
+    exists p in providers: embedding_model(p) = none
+  }
+
+  action configure {
+    requires: embedding_model != ""
+    ensures ok: provider != none
+  }
+
+  action select {
+    requires: query != ""
+    ensures ok: selected != none
+  }
+}

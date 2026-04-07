@@ -1,0 +1,130 @@
+@version(1)
+@category("research")
+concept ScholarSearchProvider [P] {
+
+  purpose {
+    Route academic literature queries to scholarly databases (Semantic Scholar,
+    Crossref, or PubMed), returning peer-reviewed publications with structured
+    metadata — title, authors, abstract, DOI, citation count, and venue.
+    Registered with PluginRegistry under provider_id "scholar_search" so
+    SearchIndex can dispatch academic-domain queries to this provider.
+  }
+
+  state {
+    providers: set P
+    config {
+      provider_id: P -> String
+      backend: P -> "semantic_scholar" | "crossref" | "pubmed"
+      api_key_ref: P -> option String
+      max_results: P -> Int
+      min_citation_count: P -> option Int
+      fields_of_study: P -> option list String
+    }
+    metrics {
+      call_count: P -> Int
+      total_latency_ms: P -> Int
+      error_count: P -> Int
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action configure(backend: String, api_key_ref: option String, max_results: Int,
+                     min_citation_count: option Int,
+                     fields_of_study: option list String) {
+      -> ok(provider: P) {
+        Register a new scholarly search provider with the given backend.
+        api_key_ref is optional because some backends (Semantic Scholar basic,
+        Crossref) allow unauthenticated access at lower rate limits. When
+        provided it is treated as an opaque secrets-store reference.
+      }
+      -> invalid(message: String) {
+        The backend name is not one of the supported values
+        (semantic_scholar, crossref, pubmed), or max_results is less than 1.
+      }
+      -> duplicate(message: String) {
+        A provider for this backend is already configured.
+      }
+      fixture semantic_scholar_config { backend: "semantic_scholar", api_key_ref: none, max_results: 20, min_citation_count: 5, fields_of_study: ["Computer Science", "Medicine"] }
+      fixture crossref_config { backend: "crossref", api_key_ref: "secrets/crossref-key", max_results: 10, min_citation_count: none, fields_of_study: none }
+      fixture pubmed_config { backend: "pubmed", api_key_ref: "secrets/pubmed-key", max_results: 15, min_citation_count: none, fields_of_study: none }
+      fixture invalid_backend { backend: "scopus", api_key_ref: none, max_results: 10, min_citation_count: none, fields_of_study: none } -> invalid
+      fixture zero_results { backend: "semantic_scholar", api_key_ref: none, max_results: 0, min_citation_count: none, fields_of_study: none } -> invalid
+    }
+
+    action search(provider: P, query: String, max_results: option Int,
+                  year_from: option Int, year_to: option Int) {
+      -> ok(results: list {doi: option String, title: String, authors: list String,
+                           abstract: option String, venue: option String,
+                           year: option Int, citation_count: Int,
+                           url: String, score: Float}) {
+        Execute an academic keyword or phrase query against the configured
+        backend, applying any year range and citation count filters. Returns
+        results ordered by relevance score. Citation count and venue are
+        included when available from the backend.
+      }
+      -> notfound(message: String) {
+        No provider is registered with this identifier.
+      }
+      -> error(message: String) {
+        The backend API returned an error, was unreachable, or the request
+        was rejected (e.g. rate limit exceeded, malformed query).
+      }
+      fixture search_cs { provider: $semantic_scholar_config.provider, query: "retrieval augmented generation survey", max_results: none, year_from: 2022, year_to: none } after semantic_scholar_config
+      fixture search_bio { provider: $pubmed_config.provider, query: "CRISPR gene editing clinical trials", max_results: 5, year_from: none, year_to: none } after pubmed_config
+      fixture search_missing { provider: "ghost-provider", query: "test query", max_results: none, year_from: none, year_to: none } -> notfound
+      fixture empty_query { provider: $crossref_config.provider, query: "", max_results: none, year_from: none, year_to: none } -> error
+    }
+
+    action getMetrics(provider: P) {
+      -> ok(call_count: Int, total_latency_ms: Int, error_count: Int, avg_latency_ms: Float) {
+        Return accumulated call statistics for this provider. avg_latency_ms
+        is total_latency_ms / call_count when call_count > 0, otherwise 0.
+      }
+      -> notfound(message: String) {
+        No provider is registered with this identifier.
+      }
+      fixture metrics_ok { provider: $semantic_scholar_config.provider } after semantic_scholar_config
+      fixture metrics_missing { provider: "no-such-provider" } -> notfound
+    }
+  }
+
+  example "configure then search academic literature": {
+    after configure(backend: "semantic_scholar", api_key_ref: none, max_results: 10,
+                    min_citation_count: 10, fields_of_study: ["Computer Science"])
+          -> ok(provider: p)
+    then search(provider: p, query: "attention mechanisms in neural networks",
+                max_results: none, year_from: 2017, year_to: none)
+          -> ok(results: r)
+  }
+
+  example "duplicate backend rejected": {
+    after configure(backend: "pubmed", api_key_ref: none, max_results: 10,
+                    min_citation_count: none, fields_of_study: none)
+          -> ok(provider: p)
+    then configure(backend: "pubmed", api_key_ref: "secrets/key-2", max_results: 5,
+                   min_citation_count: none, fields_of_study: none)
+          -> duplicate(message: m)
+  }
+
+  always "metrics initialised on configure": {
+    forall p in providers: call_count(p) >= 0
+  }
+
+  never "unconfigured backend": {
+    exists p in providers: backend(p) = none
+  }
+
+  action configure {
+    requires: max_results >= 1
+    ensures ok: provider != none
+  }
+
+  action search {
+    requires: query != ""
+    ensures ok: results != none
+  }
+}

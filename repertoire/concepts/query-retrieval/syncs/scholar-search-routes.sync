@@ -1,0 +1,15 @@
+# When SearchIndex receives a query tagged for academic-literature retrieval,
+# dispatch it to the registered ScholarSearchProvider. The provider_id
+# "scholar_search" is the PluginRegistry key under which
+# ScholarSearchProvider registers itself.
+
+sync ScholarSearchRoutes [optional]
+when {
+  SearchIndex/search: [index: ?index, query: ?query]
+    where index.backend = "scholar_search"
+    => [results: ?results]
+}
+then {
+  ScholarSearchProvider/search: [query: ?query, max_results: none,
+                                  year_from: none, year_to: none]
+}
