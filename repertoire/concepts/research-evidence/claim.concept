@@ -1,0 +1,123 @@
+@version(1)
+@category("research")
+concept Claim [C] {
+
+  purpose {
+    Represent assertable units of report content that require evidential
+    grounding, enabling per-claim verification status tracking and
+    citation coverage measurement.
+  }
+
+  state {
+    claims: set C
+    content {
+      report_entity_id: C -> String
+      block_id: C -> String
+      claim_text: C -> String
+    }
+    verification {
+      status: C -> "unverified" | "supported" | "partial" | "unsupported" | "contested"
+      support_score: C -> option Float
+      verified_at: C -> option String
+      verified_by: C -> option String
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action extract(report_entity_id: String, block_id: String, claim_text: String) {
+      -> ok(claim: C) {
+        Extract a new claim from a report block, storing its location and
+        text for subsequent verification. Sets initial status to "unverified".
+      }
+      -> error(message: String) {
+        The claim_text is empty or the report_entity_id is missing.
+      }
+
+      fixture basic_claim { report_entity_id: "report-1", block_id: "block-3", claim_text: "LLMs achieve 95% accuracy on factual QA tasks." }
+      fixture minimal_claim { report_entity_id: "report-2", block_id: "block-1", claim_text: "Cloud GPU costs have declined 40% since 2022." }
+      fixture empty_claim_text { report_entity_id: "report-1", block_id: "block-1", claim_text: "" } -> error
+      fixture missing_report { report_entity_id: "", block_id: "block-1", claim_text: "Some assertion." } -> error
+    }
+
+    action updateVerification(claim: C, status: String, support_score: Float,
+                              verified_by: String) {
+      -> ok(claim: C) {
+        Update the verification status and support score after an evaluation
+        pass. Records the verifier identity and timestamp.
+      }
+      -> notfound(message: String) {
+        No claim exists with this identifier.
+      }
+      -> invalid(message: String) {
+        The provided status is not a valid verification status value, or
+        the support score is outside the 0.0–1.0 range.
+      }
+
+      fixture verify_ok { claim: $basic_claim.claim, status: "supported", support_score: 0.92, verified_by: "citation-evaluator" } after basic_claim
+      fixture partial_ok { claim: $minimal_claim.claim, status: "partial", support_score: 0.55, verified_by: "nli-cascade" } after minimal_claim
+      fixture verify_missing { claim: "nonexistent", status: "supported", support_score: 0.9, verified_by: "evaluator" } -> notfound
+      fixture invalid_status { claim: $basic_claim.claim, status: "unknown_status", support_score: 0.8, verified_by: "evaluator" } after basic_claim -> invalid
+      fixture score_out_of_range { claim: $basic_claim.claim, status: "supported", support_score: 1.5, verified_by: "evaluator" } after basic_claim -> invalid
+    }
+
+    action get(claim: C) {
+      -> ok(claim: C, claim_text: String, status: String,
+            support_score: Float, report_entity_id: String) {
+        Return the claim and its current verification state.
+      }
+      -> notfound(message: String) {
+        No claim exists with this identifier.
+      }
+
+      fixture get_ok { claim: $basic_claim.claim } after basic_claim
+      fixture get_missing { claim: "nonexistent" } -> notfound
+    }
+
+    action listByReport(report_entity_id: String) {
+      -> ok(claims: String) {
+        Return a JSON array of all claims extracted from the given report entity.
+      }
+
+      fixture list_ok { report_entity_id: "report-1" } after basic_claim
+      fixture list_empty { report_entity_id: "nonexistent-report" }
+    }
+
+    action listUnsupported(report_entity_id: String) {
+      -> ok(claims: String) {
+        Return a JSON array of claims that are unverified, partial,
+        unsupported, or contested for the given report entity.
+      }
+
+      fixture list_unsupported_ok { report_entity_id: "report-1" } after basic_claim
+    }
+  }
+
+  example "extract then verify": {
+    after extract(report_entity_id: "r1", block_id: "b1", claim_text: "X is true.")
+          -> ok(claim: c)
+    then get(claim: c) -> ok(status: "unverified")
+    and  updateVerification(claim: c, status: "supported", support_score: 0.95,
+                            verified_by: "evaluator") -> ok()
+    then get(claim: c) -> ok(status: "supported")
+  }
+
+  always "score range" {
+    forall c in claims:
+      support_score(c) = none or
+      (support_score(c) >= 0.0 and support_score(c) <= 1.0)
+  }
+
+  never "claim without location" {
+    exists c in claims:
+      report_entity_id(c) = none or block_id(c) = none
+  }
+
+  action extract {
+    requires: claim_text != "" and report_entity_id != ""
+    ensures ok: claims contains result.claim
+  }
+}

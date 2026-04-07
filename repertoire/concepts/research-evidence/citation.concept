@@ -1,0 +1,150 @@
+@version(1)
+@category("research")
+concept Citation [I] {
+
+  purpose {
+    Assess and track the evidentiary link between a claim and its
+    supporting snippet, with verification status, support scoring,
+    and verification method metadata enabling ALCE-style citation
+    quality measurement.
+  }
+
+  state {
+    citations: set I
+    link {
+      claim_id: I -> String
+      snippet_id: I -> String
+    }
+    assessment {
+      support_score: I -> Float
+      verification_status: I -> "pending" | "verified" | "weak" | "refuted" | "manual_override"
+      verification_method: I -> "nli_cascade" | "llm_judge" | "embedding_similarity" | "manual"
+      verified_at: I -> option String
+    }
+    rendering {
+      citation_key: I -> String
+      display_format: I -> option String
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action link(claim_id: String, snippet_id: String, citation_key: String) {
+      -> ok(citation: I) {
+        Create a citation linking a claim to a supporting snippet.
+        Sets initial verification_status to "pending" and support_score to 0.0.
+      }
+      -> duplicate(existing: I) {
+        A citation already exists between this claim and snippet pair.
+      }
+      -> error(message: String) {
+        The claim_id, snippet_id, or citation_key is empty.
+      }
+
+      fixture basic_link { claim_id: "claim-1", snippet_id: "snip-1", citation_key: "[1]" }
+      fixture second_link { claim_id: "claim-2", snippet_id: "snip-3", citation_key: "[2]" }
+      fixture missing_claim { claim_id: "", snippet_id: "snip-1", citation_key: "[1]" } -> error
+      fixture missing_snippet { claim_id: "claim-1", snippet_id: "", citation_key: "[1]" } -> error
+    }
+
+    action verify(citation: I, support_score: Float, verification_method: String) {
+      -> ok(citation: I) {
+        Record the verification assessment for this citation. Sets
+        verification_status to "verified" if support_score >= 0.8,
+        "weak" if 0.4 <= score < 0.8, or "refuted" if score < 0.4.
+      }
+      -> notfound(message: String) {
+        No citation exists with this identifier.
+      }
+      -> invalid(message: String) {
+        The support score is outside the 0.0–1.0 range, or the
+        verification_method is not a recognized value.
+      }
+
+      fixture verify_strong { citation: $basic_link.citation, support_score: 0.95, verification_method: "nli_cascade" } after basic_link
+      fixture verify_weak { citation: $second_link.citation, support_score: 0.55, verification_method: "llm_judge" } after second_link
+      fixture verify_missing { citation: "nonexistent", support_score: 0.9, verification_method: "nli_cascade" } -> notfound
+      fixture invalid_score { citation: $basic_link.citation, support_score: 1.5, verification_method: "nli_cascade" } after basic_link -> invalid
+      fixture invalid_method { citation: $basic_link.citation, support_score: 0.9, verification_method: "unknown_method" } after basic_link -> invalid
+    }
+
+    action override(citation: I, verification_status: String, reason: String) {
+      -> ok(citation: I) {
+        Manually override the verification status with justification.
+        Sets verification_method to "manual" and records the reason in
+        display_format.
+      }
+      -> notfound(message: String) {
+        No citation exists with this identifier.
+      }
+      -> invalid(message: String) {
+        The requested verification_status is not a valid value.
+      }
+
+      fixture override_ok { citation: $basic_link.citation, verification_status: "manual_override", reason: "Domain expert confirmed relevance" } after basic_link
+      fixture override_missing { citation: "nonexistent", verification_status: "manual_override", reason: "reason" } -> notfound
+      fixture override_invalid_status { citation: $basic_link.citation, verification_status: "unknown_status", reason: "reason" } after basic_link -> invalid
+    }
+
+    action get(citation: I) {
+      -> ok(citation: I, claim_id: String, snippet_id: String,
+            support_score: Float, verification_status: String) {
+        Return the citation and its assessment metadata.
+      }
+      -> notfound(message: String) {
+        No citation exists with this identifier.
+      }
+
+      fixture get_ok { citation: $basic_link.citation } after basic_link
+      fixture get_missing { citation: "nonexistent" } -> notfound
+    }
+
+    action listByClaim(claim_id: String) {
+      -> ok(citations: String) {
+        Return a JSON array of all citations supporting the given claim.
+      }
+
+      fixture list_by_claim_ok { claim_id: "claim-1" } after basic_link
+      fixture list_by_claim_empty { claim_id: "nonexistent-claim" }
+    }
+
+    action listBySnippet(snippet_id: String) {
+      -> ok(citations: String) {
+        Return a JSON array of all citations referencing the given snippet.
+      }
+
+      fixture list_by_snippet_ok { snippet_id: "snip-1" } after basic_link
+      fixture list_by_snippet_empty { snippet_id: "nonexistent-snip" }
+    }
+  }
+
+  example "link then verify": {
+    after link(claim_id: "c1", snippet_id: "s1", citation_key: "[1]") -> ok(citation: i)
+    then verify(citation: i, support_score: 0.88, verification_method: "nli_cascade") -> ok()
+    then get(citation: i) -> ok(verification_status: "verified")
+  }
+
+  example "link then override": {
+    after link(claim_id: "c1", snippet_id: "s2", citation_key: "[1]") -> ok(citation: i)
+    then override(citation: i, verification_status: "manual_override", reason: "Expert review") -> ok()
+    then get(citation: i) -> ok(verification_status: "manual_override")
+  }
+
+  never "citation without endpoints" {
+    exists i in citations:
+      claim_id(i) = none or snippet_id(i) = none
+  }
+
+  always "valid verification status" {
+    forall i in citations:
+      verification_status(i) in { "pending", "verified", "weak", "refuted", "manual_override" }
+  }
+
+  action link {
+    requires: claim_id != "" and snippet_id != "" and citation_key != ""
+    ensures ok: citations contains result.citation
+  }
+}

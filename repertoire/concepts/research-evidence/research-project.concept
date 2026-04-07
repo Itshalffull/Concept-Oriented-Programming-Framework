@@ -1,0 +1,182 @@
+@version(1)
+@gate
+@category("research")
+concept ResearchProject [P] {
+
+  purpose {
+    Define the scope, constraints, allowed sources, perspective requirements,
+    output format, and computational budget for a research investigation,
+    serving as the durable container that ties together plans, runs,
+    evidence, and reports.
+  }
+
+  state {
+    projects: set P
+    definition {
+      query: P -> String
+      deliverable_type: P -> "report" | "comparison" | "literature_review" | "fact_check" | "data_extraction"
+      constraints: P -> option String
+      output_format: P -> "markdown" | "structured_blocks" | "table"
+    }
+    perspectives {
+      required_perspectives: P -> String
+      perspective_count: P -> Int
+    }
+    budget {
+      max_tokens: P -> option Int
+      max_search_calls: P -> option Int
+      max_duration_minutes: P -> option Int
+      tokens_used: P -> Int
+      search_calls_used: P -> Int
+    }
+    source_policy {
+      allowed_source_types: P -> String
+      require_credibility_tier: P -> option String
+    }
+    lifecycle {
+      status: P -> "draft" | "planning" | "executing" | "reviewing" | "completed" | "cancelled"
+      created_at: P -> String
+      completed_at: P -> option String
+      process_run_id: P -> option String
+      report_entity_id: P -> option String
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(query: String, deliverable_type: String, constraints: String,
+                  perspectives: String, budget: String) {
+      -> ok(project: P) {
+        Create a new research project in draft status with the given query,
+        deliverable type, constraints, comma-separated perspectives, and
+        JSON-encoded budget limits.
+      }
+      -> error(message: String) {
+        The query is empty, deliverable_type is unrecognized, or the budget
+        JSON is malformed.
+      }
+
+      fixture market_analysis { query: "Compare cloud GPU pricing across AWS, GCP, and Azure for LLM fine-tuning workloads", deliverable_type: "comparison", constraints: "Focus on H100 and A100 instances, include spot pricing", perspectives: "cost analyst,ML engineer,infrastructure architect", budget: "{\"max_tokens\":500000,\"max_search_calls\":80,\"max_duration_minutes\":30}" }
+      fixture fact_check { query: "Does intermittent fasting improve metabolic health markers?", deliverable_type: "fact_check", constraints: "", perspectives: "nutritionist,endocrinologist", budget: "{\"max_tokens\":200000,\"max_search_calls\":40,\"max_duration_minutes\":15}" }
+      fixture empty_query { query: "", deliverable_type: "report", constraints: "", perspectives: "analyst", budget: "{}" } -> error
+      fixture invalid_deliverable { query: "Valid query", deliverable_type: "invalid_type", constraints: "", perspectives: "analyst", budget: "{}" } -> error
+      fixture bad_budget_json { query: "Valid query", deliverable_type: "report", constraints: "", perspectives: "analyst", budget: "not-json" } -> error
+    }
+
+    action updateBudgetUsage(project: P, tokens_delta: Int, search_calls_delta: Int) {
+      -> ok(project: P) {
+        Increment the token and search call usage counters by the given
+        deltas. Returns the updated project state.
+      }
+      -> budget_exceeded(resource: String, limit: Int, current: Int) {
+        A budget limit has been reached or exceeded. The resource field
+        names which limit was crossed (tokens or search_calls).
+      }
+      -> notfound(message: String) {
+        No project exists with this identifier.
+      }
+
+      fixture usage_ok { project: $market_analysis.project, tokens_delta: 5000, search_calls_delta: 2 } after market_analysis
+      fixture usage_missing { project: "nonexistent", tokens_delta: 100, search_calls_delta: 1 } -> notfound
+    }
+
+    action transition(project: P, new_status: String) {
+      -> ok(project: P) {
+        Advance the project lifecycle to the new status. Valid transitions:
+        draft → planning, planning → executing, executing → reviewing,
+        reviewing → completed. Any status → cancelled.
+      }
+      -> invalid_transition(current: String, requested: String) {
+        The requested status transition is not permitted from the current
+        status, for example jumping from draft directly to completed.
+      }
+      -> notfound(message: String) {
+        No project exists with this identifier.
+      }
+
+      fixture to_planning { project: $market_analysis.project, new_status: "planning" } after market_analysis
+      fixture to_cancelled { project: $fact_check.project, new_status: "cancelled" } after fact_check
+      fixture skip_transition { project: $market_analysis.project, new_status: "completed" } after market_analysis -> invalid_transition
+      fixture transition_missing { project: "nonexistent", new_status: "planning" } -> notfound
+    }
+
+    action linkReport(project: P, report_entity_id: String) {
+      -> ok(project: P) {
+        Associate the final report ContentNode with this project, enabling
+        report-level queries to find their parent project.
+      }
+      -> notfound(message: String) {
+        No project exists with this identifier.
+      }
+
+      fixture link_report_ok { project: $market_analysis.project, report_entity_id: "report-page-1" } after market_analysis
+      fixture link_report_missing { project: "nonexistent", report_entity_id: "report-page-1" } -> notfound
+    }
+
+    action get(project: P) {
+      -> ok(project: P, query: String, status: String, tokens_used: Int,
+            search_calls_used: Int) {
+        Return the project and its current lifecycle and usage state.
+      }
+      -> notfound(message: String) {
+        No project exists with this identifier.
+      }
+
+      fixture get_ok { project: $market_analysis.project } after market_analysis
+      fixture get_missing { project: "nonexistent" } -> notfound
+    }
+
+    action list(status_filter: String) {
+      -> ok(projects: String) {
+        Return a JSON array of projects. When status_filter is non-empty,
+        only projects in that lifecycle status are returned.
+      }
+
+      fixture list_all { status_filter: "" } after market_analysis
+      fixture list_draft { status_filter: "draft" } after market_analysis
+    }
+  }
+
+  example "full lifecycle": {
+    after create(query: "Compare X vs Y", deliverable_type: "comparison",
+                 constraints: "", perspectives: "analyst",
+                 budget: "{\"max_tokens\":100000,\"max_search_calls\":50,\"max_duration_minutes\":15}")
+          -> ok(project: p)
+    then transition(project: p, new_status: "planning") -> ok()
+    then transition(project: p, new_status: "executing") -> ok()
+    then transition(project: p, new_status: "reviewing") -> ok()
+    then transition(project: p, new_status: "completed") -> ok()
+  }
+
+  example "budget tracking": {
+    after create(query: "Test query", deliverable_type: "report",
+                 constraints: "", perspectives: "analyst",
+                 budget: "{\"max_tokens\":1000,\"max_search_calls\":5,\"max_duration_minutes\":5}")
+          -> ok(project: p)
+    then updateBudgetUsage(project: p, tokens_delta: 500, search_calls_delta: 2) -> ok()
+    then get(project: p) -> ok(tokens_used: 500, search_calls_used: 2)
+  }
+
+  always "valid status" {
+    forall p in projects:
+      status(p) in { "draft", "planning", "executing", "reviewing", "completed", "cancelled" }
+  }
+
+  always "usage non-negative" {
+    forall p in projects:
+      tokens_used(p) >= 0 and search_calls_used(p) >= 0
+  }
+
+  never "empty query" {
+    exists p in projects:
+      query(p) = none or query(p) = ""
+  }
+
+  action create {
+    requires: query != "" and deliverable_type != ""
+    ensures ok: projects contains result.project
+  }
+}
