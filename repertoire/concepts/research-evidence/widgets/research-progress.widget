@@ -1,0 +1,252 @@
+@version(1)
+widget research-progress {
+
+  purpose {
+    Progress-panel widget showing the overall state of a research project:
+    the current process step, time elapsed, token budget consumed, search
+    call budget consumed, and a scrolling reasoning log. Transitions
+    between idle, running, paused, and completed states to match the
+    lifecycle of the underlying ResearchProject. Used in the research
+    workspace sidebar and in the run-detail page.
+  }
+
+  anatomy {
+    root:              container  { Progress panel wrapper }
+    progressBar:       container  { Overall completion bar spanning planning through synthesis }
+    currentStepLabel:  text       { Name and description of the currently executing step }
+    timeElapsed:       text       { Wall-clock time since the project was started }
+    tokenGauge:        container  { Bar and label showing tokens used vs max_tokens budget }
+    searchGauge:       container  { Bar and label showing search calls used vs max_search_calls }
+    reasoningLog:      container  { Scrollable live log of agent reasoning steps }
+    pauseButton:       action     { Suspend the running project }
+    resumeButton:      action     { Resume a paused project }
+    cancelButton:      action     { Cancel the project }
+  }
+
+  states {
+    idle [initial] {
+      on START -> running;
+    }
+
+    running {
+      on PAUSE -> paused;
+      on COMPLETE -> completed;
+      on CANCEL -> idle;
+      on STEP_UPDATE -> running;
+      entry [startTimer; startLogStream];
+      exit [stopTimer; stopLogStream];
+    }
+
+    paused {
+      on RESUME -> running;
+      on CANCEL -> idle;
+    }
+
+    completed {
+      on RESET -> idle;
+      entry [stopTimer];
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      p -> PAUSE;
+      r -> RESUME;
+    }
+    focus {
+      trap: false;
+      initial: currentStepLabel;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Research progress";
+        aria-busy: if state == "running" then "true" else "false";
+        aria-live: "polite";
+      };
+      progressBar -> {
+        role: "progressbar";
+        aria-label: "Overall research progress";
+        aria-valuemin: "0";
+        aria-valuemax: "100";
+        aria-valuenow: self.progressPercent;
+        aria-valuetext: concat(self.progressPercent, "% complete");
+      };
+      currentStepLabel -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: "Current step";
+      };
+      tokenGauge -> {
+        role: "meter";
+        aria-label: "Token budget";
+        aria-valuemin: "0";
+        aria-valuemax: self.maxTokens;
+        aria-valuenow: self.tokensUsed;
+        aria-valuetext: concat(self.tokensUsed, " of ", self.maxTokens, " tokens");
+      };
+      searchGauge -> {
+        role: "meter";
+        aria-label: "Search call budget";
+        aria-valuemin: "0";
+        aria-valuemax: self.maxSearchCalls;
+        aria-valuenow: self.searchCallsUsed;
+        aria-valuetext: concat(self.searchCallsUsed, " of ", self.maxSearchCalls, " searches");
+      };
+      reasoningLog -> {
+        role: "log";
+        aria-label: "Reasoning log";
+        aria-live: "polite";
+        aria-relevant: "additions";
+      };
+      pauseButton -> {
+        role: "button";
+        aria-label: "Pause research";
+        aria-disabled: if state != "running" then "true" else "false";
+      };
+      resumeButton -> {
+        role: "button";
+        aria-label: "Resume research";
+        aria-disabled: if state != "paused" then "true" else "false";
+      };
+      cancelButton -> {
+        role: "button";
+        aria-label: "Cancel research";
+        aria-disabled: if state == "completed" or state == "idle" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    project_id: String
+    showReasoningLog: Bool = true
+    showBudgetGauges: Bool = true
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      aria-busy: if state == "running" then "true" else "false";
+    }
+    progressBar -> {
+      data-part: "progress-bar";
+      data-progress: self.progressPercent;
+    }
+    currentStepLabel -> {
+      data-part: "current-step-label";
+      text: self.currentStep;
+      data-active: if state == "running" then "true" else "false";
+    }
+    timeElapsed -> {
+      data-part: "time-elapsed";
+      text: self.elapsed;
+    }
+    tokenGauge -> {
+      data-part: "token-gauge";
+      data-visible: if ?showBudgetGauges then "true" else "false";
+      data-used: self.tokensUsed;
+      data-max: self.maxTokens;
+      data-warning: if self.tokensUsed > self.maxTokens * 0.8 then "true" else "false";
+    }
+    searchGauge -> {
+      data-part: "search-gauge";
+      data-visible: if ?showBudgetGauges then "true" else "false";
+      data-used: self.searchCallsUsed;
+      data-max: self.maxSearchCalls;
+      data-warning: if self.searchCallsUsed > self.maxSearchCalls * 0.8 then "true" else "false";
+    }
+    reasoningLog -> {
+      data-part: "reasoning-log";
+      data-visible: if ?showReasoningLog then "true" else "false";
+      role: "log";
+      aria-live: "polite";
+      aria-relevant: "additions";
+    }
+    pauseButton -> {
+      data-part: "pause-button";
+      disabled: if state != "running" then true else false;
+      data-visible: if state == "running" then "true" else "false";
+      onClick: send(PAUSE);
+    }
+    resumeButton -> {
+      data-part: "resume-button";
+      disabled: if state != "paused" then true else false;
+      data-visible: if state == "paused" then "true" else "false";
+      onClick: send(RESUME);
+    }
+    cancelButton -> {
+      data-part: "cancel-button";
+      disabled: if state == "completed" or state == "idle" then true else false;
+      onClick: send(CANCEL);
+    }
+  }
+
+  affordance {
+    serves: progress-panel;
+    specificity: 25;
+    when {
+      concept: "ResearchProject";
+    }
+    bind {
+      project_id: project_id;
+    }
+  }
+
+  invariant {
+    example "start transitions idle to running": {
+      after transition(from: "idle", event: "START") -> ok
+      then root -> { data-state: "running" }
+      and pauseButton -> { data-visible: "true" }
+    }
+
+    example "pause transitions running to paused": {
+      after transition(from: "running", event: "PAUSE") -> ok
+      then root -> { data-state: "paused" }
+      and resumeButton -> { data-visible: "true" }
+    }
+
+    example "resume transitions paused to running": {
+      after transition(from: "paused", event: "RESUME") -> ok
+      then root -> { data-state: "running" }
+    }
+
+    example "complete transitions running to completed": {
+      after transition(from: "running", event: "COMPLETE") -> ok
+      then root -> { data-state: "completed" }
+    }
+
+    example "cancel from running returns to idle": {
+      after transition(from: "running", event: "CANCEL") -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        root -> { data-state: s.name }
+    }
+
+    always "pause and resume buttons mutually exclusive": {
+      if state == "running" then pauseButton -> { data-visible: "true" }
+      and resumeButton -> { data-visible: "false" }
+    }
+
+    never "pause button enabled when not running": {
+      state != "running" and pauseButton -> { disabled: "false" }
+    }
+
+    never "resume button enabled when not paused": {
+      state != "paused" and resumeButton -> { disabled: "false" }
+    }
+
+    "Budget gauges must show warning styling when usage exceeds 80% of the limit";
+    "Reasoning log must append new entries without clearing previous entries during an active run";
+    "Time elapsed must pause when state transitions to paused and resume when state returns to running";
+  }
+
+}

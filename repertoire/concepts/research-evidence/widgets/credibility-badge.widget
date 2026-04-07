@@ -1,0 +1,144 @@
+@version(1)
+widget credibility-badge {
+
+  purpose {
+    Compact trust-tier indicator that maps a source credibility tier to a
+    corresponding icon and color. Renders inline within source cards,
+    citation inspector popovers, and evidence tables. The widget state
+    reflects the tier value directly — no interactive transitions occur.
+    Used wherever source quality needs to be communicated at a glance.
+  }
+
+  anatomy {
+    root:      container  { Badge wrapper that carries the tier data attribute }
+    icon:      container  { Tier-specific icon glyph (shield, checkmark, warning, etc.) }
+    tierLabel: text       { Human-readable tier name }
+  }
+
+  states {
+    authoritative [initial] {
+      on SET_RELIABLE -> reliable;
+      on SET_MIXED -> mixed;
+      on SET_LOW_QUALITY -> low_quality;
+      on SET_QUARANTINE -> quarantine;
+    }
+
+    reliable {
+      on SET_AUTHORITATIVE -> authoritative;
+      on SET_MIXED -> mixed;
+      on SET_LOW_QUALITY -> low_quality;
+      on SET_QUARANTINE -> quarantine;
+    }
+
+    mixed {
+      on SET_AUTHORITATIVE -> authoritative;
+      on SET_RELIABLE -> reliable;
+      on SET_LOW_QUALITY -> low_quality;
+      on SET_QUARANTINE -> quarantine;
+    }
+
+    low_quality {
+      on SET_AUTHORITATIVE -> authoritative;
+      on SET_RELIABLE -> reliable;
+      on SET_MIXED -> mixed;
+      on SET_QUARANTINE -> quarantine;
+    }
+
+    quarantine {
+      on SET_AUTHORITATIVE -> authoritative;
+      on SET_RELIABLE -> reliable;
+      on SET_MIXED -> mixed;
+      on SET_LOW_QUALITY -> low_quality;
+    }
+  }
+
+  accessibility {
+    role: status;
+    keyboard {}
+    focus {
+      trap: false;
+      initial: root;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "status";
+        aria-label: concat("Credibility: ", ?tier);
+      };
+      icon -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      tierLabel -> {
+        role: "none";
+      };
+    }
+  }
+
+  props {
+    source_id: String = ""
+    tier: union "authoritative" | "reliable" | "mixed" | "low_quality" | "quarantine" = "reliable"
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-tier: ?tier;
+      aria-label: concat("Credibility: ", ?tier);
+    }
+    icon -> {
+      data-part: "icon";
+      data-tier: ?tier;
+      aria-hidden: "true";
+    }
+    tierLabel -> {
+      data-part: "tier-label";
+      text: ?tier;
+    }
+  }
+
+  affordance {
+    serves: badge;
+    specificity: 15;
+    when {
+      concept: "DataQuality";
+      field: "credibility_tier";
+    }
+    bind {
+      tier: credibility_tier;
+    }
+  }
+
+  invariant {
+    example "authoritative tier sets data-tier": {
+      after transition(from: "reliable", event: "SET_AUTHORITATIVE") -> ok
+      then root -> { data-tier: "authoritative" }
+    }
+
+    example "quarantine tier sets data-tier": {
+      after transition(from: "authoritative", event: "SET_QUARANTINE") -> ok
+      then root -> { data-tier: "quarantine" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        root -> { data-state: s.name }
+    }
+
+    always "data-tier on root matches tier prop": {
+      root -> { data-tier: ?tier }
+    }
+
+    always "icon aria-hidden is always true": {
+      icon -> { aria-hidden: "true" }
+    }
+
+    "The icon and color variant must differ between each of the five tiers";
+    "The quarantine tier must be visually distinct from all other tiers";
+  }
+
+}

@@ -1,0 +1,235 @@
+@version(1)
+widget plan-approval {
+
+  purpose {
+    Approval-form widget for reviewing a research plan before execution.
+    Renders the decomposed sub-questions as an ordered, editable list;
+    supports drag-handle reordering and inline editing of individual
+    questions; and provides approve and reject actions with an optional
+    notes field. Connects to Approval/request for presenting the review
+    decision and Approval/approve or Approval/reject for submitting it.
+    Used as the human-in-the-loop gate between plan generation and
+    research execution.
+  }
+
+  anatomy {
+    root:           container  { Plan approval form wrapper }
+    questionList:   container  { Ordered list of sub-questions to review }
+    questionItem:   container  { Single question row with its controls }
+    reorderHandle:  action     { Drag handle for changing question order }
+    editButton:     action     { Switch a question item into inline edit mode }
+    approveButton:  action     { Submit an approve decision }
+    rejectButton:   action     { Submit a reject decision }
+    notesField:     interactive { Optional notes text area for the reviewer }
+    loadingOverlay: container  { Overlay shown while submitting the decision }
+  }
+
+  states {
+    loading [initial] {
+      on LOAD_COMPLETE -> reviewing;
+      on LOAD_ERROR -> reviewing;
+    }
+
+    reviewing {
+      on EDIT_ITEM -> editing;
+      on APPROVE -> approved;
+      on REJECT -> rejected;
+    }
+
+    editing {
+      on SAVE_EDIT -> reviewing;
+      on CANCEL_EDIT -> reviewing;
+      entry [focusEditField];
+      exit [blurEditField];
+    }
+
+    approved {
+      on RESET -> loading;
+      entry [disableAllControls; showApprovedBanner];
+    }
+
+    rejected {
+      on RESET -> loading;
+      entry [disableAllControls; showRejectedBanner];
+    }
+  }
+
+  accessibility {
+    role: form;
+    keyboard {
+      Enter -> APPROVE;
+      Escape -> CANCEL_EDIT;
+      ArrowDown -> FOCUS_NEXT_ITEM;
+      ArrowUp -> FOCUS_PREV_ITEM;
+    }
+    focus {
+      trap: false;
+      initial: questionList;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "form";
+        aria-label: "Review research plan";
+        aria-busy: if state == "loading" then "true" else "false";
+      };
+      questionList -> {
+        role: "list";
+        aria-label: "Research sub-questions";
+      };
+      questionItem -> {
+        role: "listitem";
+        aria-label: concat("Question ", self.index, ": ", self.text);
+        tabindex: if self.isFocused then "0" else "-1";
+      };
+      reorderHandle -> {
+        role: "button";
+        aria-label: concat("Reorder question ", self.index);
+        aria-roledescription: "drag handle";
+      };
+      editButton -> {
+        role: "button";
+        aria-label: concat("Edit question ", self.index);
+      };
+      approveButton -> {
+        role: "button";
+        aria-label: "Approve plan";
+        aria-disabled: if state != "reviewing" then "true" else "false";
+      };
+      rejectButton -> {
+        role: "button";
+        aria-label: "Reject plan";
+        aria-disabled: if state != "reviewing" then "true" else "false";
+      };
+      notesField -> {
+        role: "textbox";
+        aria-label: "Reviewer notes";
+        aria-multiline: "true";
+        aria-disabled: if state == "approved" or state == "rejected" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    plan_id: String
+    showNotes: Bool = true
+    allowReorder: Bool = true
+    allowEdit: Bool = true
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      aria-busy: if state == "loading" then "true" else "false";
+    }
+    questionList -> {
+      data-part: "question-list";
+      data-visible: if state != "loading" then "true" else "false";
+    }
+    questionItem -> {
+      data-part: "question-item";
+      data-index: self.index;
+      tabindex: if self.isFocused then "0" else "-1";
+    }
+    reorderHandle -> {
+      data-part: "reorder-handle";
+      data-visible: if ?allowReorder and (state == "reviewing" or state == "editing") then "true" else "false";
+      aria-roledescription: "drag handle";
+    }
+    editButton -> {
+      data-part: "edit-button";
+      data-visible: if ?allowEdit and state == "reviewing" then "true" else "false";
+      onClick: send(EDIT_ITEM, { id: self.id });
+    }
+    approveButton -> {
+      data-part: "approve-button";
+      disabled: if state != "reviewing" then true else false;
+      onClick: send(APPROVE);
+      aria-disabled: if state != "reviewing" then "true" else "false";
+    }
+    rejectButton -> {
+      data-part: "reject-button";
+      disabled: if state != "reviewing" then true else false;
+      onClick: send(REJECT);
+      aria-disabled: if state != "reviewing" then "true" else "false";
+    }
+    notesField -> {
+      data-part: "notes-field";
+      data-visible: if ?showNotes then "true" else "false";
+      disabled: if state == "approved" or state == "rejected" then true else false;
+    }
+    loadingOverlay -> {
+      data-part: "loading-overlay";
+      data-visible: if state == "loading" then "true" else "false";
+      aria-hidden: "true";
+    }
+  }
+
+  affordance {
+    serves: approval-form;
+    specificity: 25;
+    when {
+      concept: "Approval";
+      entity_type: "research-plan";
+    }
+    bind {
+      plan_id: entity_id;
+    }
+  }
+
+  compose {
+    notesField: widget("text-input", { multiline: true, placeholder: "Add reviewer notes..." });
+  }
+
+  invariant {
+    example "load_complete transitions to reviewing": {
+      after transition(from: "loading", event: "LOAD_COMPLETE") -> ok
+      then root -> { data-state: "reviewing" }
+      and approveButton -> { data-state: "reviewing" }
+    }
+
+    example "edit_item transitions reviewing to editing": {
+      after transition(from: "reviewing", event: "EDIT_ITEM") -> ok
+      then root -> { data-state: "editing" }
+    }
+
+    example "save_edit returns to reviewing": {
+      after transition(from: "editing", event: "SAVE_EDIT") -> ok
+      then root -> { data-state: "reviewing" }
+    }
+
+    example "approve transitions reviewing to approved": {
+      after transition(from: "reviewing", event: "APPROVE") -> ok
+      then root -> { data-state: "approved" }
+      and approveButton -> { disabled: "true" }
+      and rejectButton -> { disabled: "true" }
+    }
+
+    example "reject transitions reviewing to rejected": {
+      after transition(from: "reviewing", event: "REJECT") -> ok
+      then root -> { data-state: "rejected" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        root -> { data-state: s.name }
+    }
+
+    never "approve or reject active after terminal state": {
+      (state == "approved" or state == "rejected") and approveButton -> { disabled: "false" }
+    }
+
+    always "edit button hidden in terminal states": {
+      if state == "approved" or state == "rejected" then editButton -> { data-visible: "false" }
+    }
+
+    "Reordering questions must update the displayed order without triggering approve or reject";
+    "Inline edit must not dismiss the entire form — only the individual item enters edit mode";
+    "Reviewer notes must be submitted with the approval decision";
+  }
+
+}

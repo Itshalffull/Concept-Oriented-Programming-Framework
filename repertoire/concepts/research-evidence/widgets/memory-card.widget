@@ -1,0 +1,175 @@
+@version(1)
+widget memory-card {
+
+  purpose {
+    Compact card widget for a single agent memory entry from AgentMemory's
+    semantic tier. Displays a truncated text preview, a category badge,
+    a confidence meter, a provenance link to the originating source, and
+    a relative timestamp. Card state reflects the entry lifecycle:
+    active, expired, or superseded. Used in the research notebook view
+    and memory browser panel.
+  }
+
+  anatomy {
+    root:            container  { Card wrapper; click-to-detail target }
+    textPreview:     text       { Truncated preview of the memory content }
+    categoryBadge:   container  { Category label badge (fact, insight, source, methodology, etc.) }
+    confidenceMeter: container  { Visual confidence indicator bar }
+    provenanceLink:  action     { Link to the originating source or snippet }
+    timestampLabel:  text       { Relative timestamp (e.g. "2 hours ago") }
+  }
+
+  states {
+    active [initial] {
+      on EXPIRE -> expired;
+      on SUPERSEDE -> superseded;
+      on CLICK -> active;
+    }
+
+    expired {
+      on RESTORE -> active;
+    }
+
+    superseded {
+      on RESTORE -> active;
+    }
+  }
+
+  accessibility {
+    role: article;
+    keyboard {
+      Enter -> CLICK;
+      p -> OPEN_PROVENANCE;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "article";
+        aria-label: concat("Memory entry: ", self.preview);
+        tabindex: "0";
+        aria-disabled: if state == "expired" or state == "superseded" then "true" else "false";
+      };
+      categoryBadge -> {
+        role: "status";
+        aria-label: concat("Category: ", self.category);
+      };
+      confidenceMeter -> {
+        role: "meter";
+        aria-label: "Confidence";
+        aria-valuemin: "0";
+        aria-valuemax: "1";
+        aria-valuenow: self.confidence;
+        aria-valuetext: concat(self.confidencePercent, "% confidence");
+      };
+      provenanceLink -> {
+        role: "link";
+        aria-label: concat("View source: ", self.sourceTitle);
+      };
+    }
+  }
+
+  props {
+    entry_id: String
+    category: String = ""
+    confidence: Float = 1.0
+    showProvenance: Bool = true
+    showTimestamp: Bool = true
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      tabindex: "0";
+      data-expired: if state == "expired" then "true" else "false";
+      data-superseded: if state == "superseded" then "true" else "false";
+      onClick: send(CLICK);
+      onKeyDown: if key == "Enter" then send(CLICK) else noop;
+    }
+    textPreview -> {
+      data-part: "text-preview";
+      text: self.previewText;
+    }
+    categoryBadge -> {
+      data-part: "category-badge";
+      data-category: ?category;
+      text: ?category;
+    }
+    confidenceMeter -> {
+      data-part: "confidence-meter";
+      data-confidence: ?confidence;
+      data-level: if ?confidence >= 0.8 then "high" else if ?confidence >= 0.5 then "medium" else "low";
+    }
+    provenanceLink -> {
+      data-part: "provenance-link";
+      data-visible: if ?showProvenance and self.hasProvenance then "true" else "false";
+      onClick: send(OPEN_PROVENANCE);
+      onKeyDown: if key == "p" then send(OPEN_PROVENANCE) else noop;
+    }
+    timestampLabel -> {
+      data-part: "timestamp-label";
+      data-visible: if ?showTimestamp then "true" else "false";
+      text: self.relativeTime;
+    }
+  }
+
+  affordance {
+    serves: card;
+    specificity: 20;
+    when {
+      concept: "AgentMemory";
+      tier: "semantic";
+    }
+    bind {
+      entry_id: entry_id;
+      category: category;
+      confidence: confidence;
+    }
+  }
+
+  invariant {
+    example "expire transitions active to expired": {
+      after transition(from: "active", event: "EXPIRE") -> ok
+      then root -> { data-state: "expired"; data-expired: "true" }
+    }
+
+    example "supersede transitions active to superseded": {
+      after transition(from: "active", event: "SUPERSEDE") -> ok
+      then root -> { data-state: "superseded"; data-superseded: "true" }
+    }
+
+    example "restore from expired returns to active": {
+      after transition(from: "expired", event: "RESTORE") -> ok
+      then root -> { data-state: "active"; data-expired: "false" }
+    }
+
+    example "restore from superseded returns to active": {
+      after transition(from: "superseded", event: "RESTORE") -> ok
+      then root -> { data-state: "active"; data-superseded: "false" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        root -> { data-state: s.name }
+    }
+
+    always "confidence meter level reflects prop": {
+      if ?confidence >= 0.8 then confidenceMeter -> { data-level: "high" }
+    }
+
+    never "data-expired and data-superseded both true simultaneously": {
+      root -> { data-expired: "true" } and root -> { data-superseded: "true" }
+    }
+
+    "Expired and superseded cards must be visually de-emphasized without being removed from the list";
+    "Provenance link must navigate to the originating source page, not dismiss or navigate away from the notebook";
+  }
+
+}
