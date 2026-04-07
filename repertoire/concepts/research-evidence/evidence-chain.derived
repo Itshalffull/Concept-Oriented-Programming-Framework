@@ -1,0 +1,63 @@
+derived EvidenceChain [E] {
+
+  purpose {
+    Ground every published claim in a verifiable evidence trail — from the
+    original captured source, through a referenceable snippet anchored in
+    that source, through a scored citation, to the final assertable claim.
+    The emergent guarantee: no claim reaches a report without a traceable
+    path back to a real, captured artifact.
+  }
+
+  composes {
+    Capture [E]
+    Snippet [E]
+    Citation [E]
+    Claim [E]
+  }
+
+  syncs {
+    required: [
+      citation-links-create-relations,
+      citation-verified-updates-claim
+    ]
+    recommended: [
+      contradiction-flag
+    ]
+  }
+
+  surface {
+    action captureAndAnchor(url: String, mode: String) {
+      matches: Capture/clip(url: url, mode: mode)
+    }
+
+    action linkEvidence(report_entity_id: String, block_id: String, claim_text: String) {
+      matches: Claim/extract(report_entity_id: report_entity_id, block_id: block_id, claim_text: claim_text)
+    }
+
+    action verifyCitation(citation: E, support_score: Float, verification_method: String) {
+      matches: Citation/verify(citation: citation, support_score: support_score, verification_method: verification_method)
+    }
+
+    query traceClaimToSource(claim: E) -> Citation/listByClaim(claim_id: claim)
+
+    query coverageForReport(report_entity_id: String) -> Claim/listByReport(report_entity_id: report_entity_id)
+
+    query unsupportedClaims(report_entity_id: String) -> Claim/listUnsupported(report_entity_id: report_entity_id)
+  }
+
+  principle {
+    after captureAndAnchor(url: "https://example.com/paper", mode: "clip")
+    then linkEvidence(report_entity_id: "report-1", block_id: "block-1",
+                      claim_text: "LLMs achieve 95% accuracy on factual QA tasks")
+    then traceClaimToSource(claim: ctx) resolves through citation to captured source
+    and  coverageForReport(report_entity_id: "report-1") includes the new claim
+  }
+
+  principle {
+    after linkEvidence(report_entity_id: "report-1", block_id: "block-2",
+                       claim_text: "Cloud costs declined 40% since 2022")
+    then unsupportedClaims(report_entity_id: "report-1") includes the unverified claim
+    and  verifyCitation(citation: ctx, support_score: score, verification_method: "nli_cascade")
+    then unsupportedClaims(report_entity_id: "report-1") excludes the now-supported claim
+  }
+}

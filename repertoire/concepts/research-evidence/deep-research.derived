@@ -1,0 +1,112 @@
+derived DeepResearch [D] {
+
+  purpose {
+    Complete deep research capability composing the full pipeline: define a
+    scoped project, generate and human-approve a research plan, gather and
+    anchor evidence, verify citations through two quality rounds, synthesize
+    into a report, and promote approved findings into persistent semantic
+    memory. The emergent guarantee: every research artifact — plan, source,
+    snippet, claim, citation, and memory — participates in a coherent,
+    auditable chain from question to curated knowledge.
+  }
+
+  composes {
+    derived EvidenceChain [D]
+    derived PlanApproval [D]
+    derived CitationVerification [D]
+    derived ResearchNotebook [D]
+    ResearchProject [D]
+    AgentMemory [D]
+  }
+
+  syncs {
+    required: [
+      research-project-creates-process-run,
+      plan-approval-gates-execution,
+      evaluation-gates-report-publish,
+      memory-promotion-from-report,
+      budget-exceeded-halts-run
+    ]
+    recommended: [
+      citation-verified-updates-claim,
+      contradiction-flag,
+      credibility-evaluation-on-capture,
+      low-credibility-triggers-quarantine,
+      step-dispatches-to-persona,
+      report-compilation-provider,
+      source-indexes-for-retrieval,
+      agent-memory-recalls-entries,
+      research-agent-discovers-tools,
+      research-plan-schema-init,
+      research-project-schema-init,
+      research-report-schema-init,
+      research-source-schema-init
+    ]
+  }
+
+  surface {
+    action startResearch(query: String, deliverable_type: String, constraints: String, perspectives: String, budget: String) {
+      matches: ResearchProject/create(query: query, deliverable_type: deliverable_type, constraints: constraints, perspectives: perspectives, budget: budget)
+    }
+
+    action monitorProgress(project: D) {
+      matches: ResearchProject/get(project: project)
+    }
+
+    action approveResearchPlan(approval: D, approver: String, comment: String) {
+      matches: Approval/approve(approval: approval, approver: approver, comment: comment)
+    }
+
+    action verifyReportCitations(run: D, subject: String, evaluator_type: String) {
+      matches: EvaluationRun/run(run: run, subject: subject, evaluator_type: evaluator_type)
+    }
+
+    action promoteFindings(content: String, memory_type: String, metadata: String) {
+      matches: AgentMemory/remember(content: content, memory_type: memory_type, metadata: metadata)
+    }
+
+    query projectDashboard(project: D) -> ResearchProject/get(project: project)
+
+    query evidenceGraph(report_entity_id: String) -> Claim/listByReport(report_entity_id: report_entity_id)
+
+    query researchHistory(status_filter: String) -> ResearchProject/list(status_filter: status_filter)
+
+    query recallFindings(query: String, limit: Int) -> AgentMemory/recall(query: query, memory_type: "semantic", k: limit)
+  }
+
+  principle {
+    after startResearch(query: "Compare cloud GPU pricing across AWS, GCP, and Azure",
+                        deliverable_type: "comparison",
+                        constraints: "Focus on H100 instances",
+                        perspectives: "cost analyst,ML engineer",
+                        budget: "{\"max_tokens\":500000,\"max_search_calls\":80,\"max_duration_minutes\":30}")
+    then monitorProgress(project: ctx) shows project in planning status
+    and  approveResearchPlan(approval: ctx, approver: "researcher-1",
+                             comment: "Plan is comprehensive and well-scoped")
+    then monitorProgress(project: ctx) shows project in executing status
+  }
+
+  principle {
+    after startResearch(query: "Does intermittent fasting improve metabolic health?",
+                        deliverable_type: "fact_check",
+                        constraints: "",
+                        perspectives: "nutritionist,endocrinologist",
+                        budget: "{\"max_tokens\":200000,\"max_search_calls\":40,\"max_duration_minutes\":15}")
+    then evidenceGraph(report_entity_id: ctx) grows as claims are extracted
+    and  verifyReportCitations(run: ctx, subject: ctx, evaluator_type: "nli_cascade")
+    then promoteFindings(content: "Intermittent fasting reduces fasting insulin by 20-31% in RCT evidence",
+                         memory_type: "semantic",
+                         metadata: "{\"confidence\":0.91,\"tier\":\"semantic\"}")
+    then recallFindings(query: "intermittent fasting metabolic", limit: n) includes the promoted finding
+  }
+
+  principle {
+    after startResearch(query: "Adversarial robustness in large language models",
+                        deliverable_type: "literature_review",
+                        constraints: "",
+                        perspectives: "ML researcher,security analyst",
+                        budget: "{\"max_tokens\":300000,\"max_search_calls\":60,\"max_duration_minutes\":20}")
+    then researchHistory(status_filter: "executing") includes the new project
+    and  projectDashboard(project: ctx) shows query and budget usage
+  }
+}
