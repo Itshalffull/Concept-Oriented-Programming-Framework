@@ -1,0 +1,69 @@
+# Standard Research Report — Template seed.
+# Defines the default block tree for research-report content-native pages.
+# Referenced by research-report.schema.yaml via:
+#   contentNative.defaultTemplate: standard-research-report
+#
+# When a new ContentNode of type "research-report" is created, the
+# content-native-schema sync fires Template/instantiate which scaffolds
+# these Outline children into the new page. Each child block gets the
+# "report-section" child schema applied automatically.
+#
+# Block structure maps to the five standard research report sections.
+# The synthesis-writer persona writes into these sections during the
+# synthesize step of the deep-research-process.
+#
+# Section types correspond to the report-section childSchema enum:
+#   executive_summary, methodology, findings, analysis, conclusion
+# (appendix is available but not in the default template)
+#
+# Referenced by: MAG-533 (Research ProcessSpec Seed)
+# PRD sections: §2.4.2, §2.4.7
+
+concept: Template
+action: define
+entries:
+  - template: standard-research-report
+    body: |
+      [
+        {
+          "section_type": "executive_summary",
+          "perspective": "",
+          "claim_count": 0,
+          "citation_count": 0,
+          "verification_status": "unverified",
+          "content": "High-level summary of the research question, key findings, and confidence level. 2-4 sentences written after the full report is complete."
+        },
+        {
+          "section_type": "methodology",
+          "perspective": "",
+          "claim_count": 0,
+          "citation_count": 0,
+          "verification_status": "unverified",
+          "content": "Sources consulted, search strategy used, perspectives applied, and any limitations or gaps in coverage."
+        },
+        {
+          "section_type": "findings",
+          "perspective": "",
+          "claim_count": 0,
+          "citation_count": 0,
+          "verification_status": "unverified",
+          "content": "Key findings with inline citations. Each factual claim must be linked to at least one supporting snippet."
+        },
+        {
+          "section_type": "analysis",
+          "perspective": "",
+          "claim_count": 0,
+          "citation_count": 0,
+          "verification_status": "unverified",
+          "content": "Cross-perspective analysis: where sources agree, where they contradict, and how contradictions were resolved or flagged."
+        },
+        {
+          "section_type": "conclusion",
+          "perspective": "",
+          "claim_count": 0,
+          "citation_count": 0,
+          "verification_status": "unverified",
+          "content": "Conclusions drawn from the evidence, confidence assessment, open questions, and recommended next steps."
+        }
+      ]
+    variables: "page_id,project_id"

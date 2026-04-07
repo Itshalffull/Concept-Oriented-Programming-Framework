@@ -1,0 +1,60 @@
+# Standard Research Plan — Template seed.
+# Defines the default block tree for research-plan content-native pages.
+# Referenced by research-plan.schema.yaml via:
+#   contentNative.defaultTemplate: standard-research-plan
+#
+# When a new ContentNode of type "research-plan" is created (by the
+# deep-researcher persona during the "plan" step), the content-native-schema
+# sync fires Template/instantiate which scaffolds these Outline children.
+# Each child block gets the "research-question" child schema applied.
+#
+# The PlanAndExecuteStrategy agent replaces the placeholder questions
+# with actual decomposed sub-questions derived from the research query.
+# Users can then edit, reorder, add, or remove questions in the
+# schema-block-editor or PlanApprovalWidget before approving.
+#
+# Question fields correspond to the research-question childSchema:
+#   strategy   — search/analysis approach for this question
+#   priority   — 0-100 execution priority (100 = first)
+#   status     — pending | in_progress | completed | skipped
+#   dependencies — comma-separated question block IDs this question depends on
+#
+# Referenced by: MAG-533 (Research ProcessSpec Seed)
+# PRD sections: §2.4.3, §2.4.7
+
+concept: Template
+action: define
+entries:
+  - template: standard-research-plan
+    body: |
+      [
+        {
+          "strategy": "web_search",
+          "priority": 100,
+          "status": "pending",
+          "dependencies": "",
+          "content": "Primary research question — what is the core question this investigation must answer?"
+        },
+        {
+          "strategy": "web_search",
+          "priority": 80,
+          "status": "pending",
+          "dependencies": "",
+          "content": "Supporting question A — what background or context is needed to answer the primary question?"
+        },
+        {
+          "strategy": "academic_search",
+          "priority": 70,
+          "status": "pending",
+          "dependencies": "",
+          "content": "Supporting question B — what does academic or authoritative literature say about this topic?"
+        },
+        {
+          "strategy": "direct_analysis",
+          "priority": 50,
+          "status": "pending",
+          "dependencies": "",
+          "content": "Synthesis question — how do the evidence streams compare across perspectives, and where are the contradictions?"
+        }
+      ]
+    variables: "page_id,project_id"
