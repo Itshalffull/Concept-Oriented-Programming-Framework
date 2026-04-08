@@ -12,10 +12,10 @@
 
 | Card | PRD Sections | Blocked By | Blocks | Commit |
 |---|---|---|---|---|
-| **MAG-539** PaginationSpec Concept + Handler | §1, §2 | — | MAG-541, MAG-543 | |
-| **MAG-540** ViewShell Selective Features | §3 | — | MAG-541, MAG-543 | |
-| **MAG-541** Sync + QueryProgram Offset Updates | §4, §5, §6 | MAG-539, MAG-540 | MAG-542, MAG-543 | |
-| **MAG-542** .view File Features Block + Widget | §7, §9.3 | MAG-541 | MAG-543 | |
+| **MAG-539** PaginationSpec Concept + Handler | §1, §2 | — | MAG-541, MAG-543 | `214927dd` |
+| **MAG-540** ViewShell Selective Features | §3 | — | MAG-541, MAG-543 | `ac44f031` |
+| **MAG-541** Sync + QueryProgram Offset Updates | §4, §5, §6 | ~~MAG-539~~, ~~MAG-540~~ | MAG-542, MAG-543 | `ce9eb5bf` |
+| **MAG-542** .view File Features Block + Widget | §7, §9.3 | ~~MAG-541~~ | MAG-543 | `274033aa` |
 | **MAG-543** Integration Tests | §8, §9.2 | MAG-539–542 | — | |
 
 ---
