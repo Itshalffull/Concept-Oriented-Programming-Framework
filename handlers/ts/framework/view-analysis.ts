@@ -14,6 +14,7 @@
 
 import type { ConceptStorage } from '../../../runtime/types.js';
 import { createInMemoryStorage } from '../../../runtime/adapters/storage.js';
+import { VALID_VIEW_FEATURES } from './view-spec-parser.js';
 import { queryProgramHandler } from '../view/query-program.handler.js';
 import { queryPurityProviderHandler } from '../view/providers/query-purity-provider.handler.js';
 import { invokeEffectProviderHandler } from '../view/providers/invoke-effect-provider.handler.js';
@@ -48,6 +49,11 @@ export interface ViewAnalysis {
   sortFields: string[];
   groupFields: string[];
   projectedFields: string[];
+
+  // Feature availability — derived from the ViewShell `features` field.
+  // When the ViewShell has no features restriction, all valid features are enabled.
+  enabledFeatures: string[];
+  disabledFeatures: string[];
 }
 
 // ─── Field extraction helpers ─────────────────────────────────────────────────
@@ -281,19 +287,38 @@ export async function compileAndAnalyze(
   const projectionName = shellRecord.projection as string | undefined ?? '';
   const interactionName= shellRecord.interaction as string | undefined ?? '';
 
+  // Resolve features: a JSON array stored in the 'features' field.
+  // If absent or null, all valid features are considered enabled.
+  const featuresRaw = shellRecord.features as string | undefined;
+  const featuresSet: string[] | undefined = featuresRaw
+    ? safeParse<string[]>(featuresRaw, undefined)
+    : undefined;
+  const allFeatures = [...VALID_VIEW_FEATURES];
+  const enabledFeatures: string[] = featuresSet ?? allFeatures;
+  const disabledFeatures: string[] = allFeatures.filter(f => !enabledFeatures.includes(f));
+
   // ── 2. Load child spec records ────────────────────────────────────────────
   // Relation names match the storage keys used in each handler's put() calls:
   //   DataSourceSpec → 'source'      FilterSpec → 'filter'
   //   SortSpec       → 'sort'        GroupSpec  → 'group'
   //   ProjectionSpec → 'projection'  InteractionSpec → 'interaction'
+  //
+  // When features are restricted, skip fetching specs for disabled features.
+  // DataSourceSpec is always-on (not gated by the features set).
+  const filterEnabled     = enabledFeatures.includes('filter');
+  const sortEnabled       = enabledFeatures.includes('sort');
+  const groupEnabled      = enabledFeatures.includes('group');
+  const projectionEnabled = enabledFeatures.includes('projection');
+  const interactionEnabled = enabledFeatures.includes('interaction');
+
   const [dataSourceRec, filterRec, sortRec, groupRec, projectionRec, interactionRec] =
     await Promise.all([
       dataSourceName  ? storage.get('source',      dataSourceName)  : null,
-      filterName      ? storage.get('filter',      filterName)      : null,
-      sortName        ? storage.get('sort',        sortName)        : null,
-      groupName       ? storage.get('group',       groupName)       : null,
-      projectionName  ? storage.get('projection',  projectionName)  : null,
-      interactionName ? storage.get('interaction', interactionName) : null,
+      filterEnabled && filterName      ? storage.get('filter',      filterName)      : null,
+      sortEnabled   && sortName        ? storage.get('sort',        sortName)        : null,
+      groupEnabled  && groupName       ? storage.get('group',       groupName)       : null,
+      projectionEnabled && projectionName ? storage.get('projection', projectionName) : null,
+      interactionEnabled && interactionName ? storage.get('interaction', interactionName) : null,
     ]);
 
   const sourceConfig     = (dataSourceRec?.config   as string | undefined) ?? '{}';
@@ -419,11 +444,12 @@ export async function compileAndAnalyze(
   const coveredCount      = coveredVariants.length;
 
   // ── 6. Extract field sets from child specs ────────────────────────────────
+  // Skip extraction for features that are disabled — their field sets are empty.
   const sourceFields    = extractSourceFields(sourceConfig);
-  const filterFields    = extractFilterFields(filterTree);
-  const sortFieldsList  = extractSortFields(sortKeys);
-  const groupFieldsList = extractGroupFields(groupConfig || '[]');
-  const projectedFields = extractProjectedFields(projectionFields);
+  const filterFields    = filterEnabled    ? extractFilterFields(filterTree)          : [];
+  const sortFieldsList  = sortEnabled      ? extractSortFields(sortKeys)              : [];
+  const groupFieldsList = groupEnabled     ? extractGroupFields(groupConfig || '[]')  : [];
+  const projectedFields = projectionEnabled ? extractProjectedFields(projectionFields) : [];
 
   // ── 7. Extract QueryProgram state ─────────────────────────────────────────
   // storedInstructions is already extracted above for the provider input
@@ -454,5 +480,8 @@ export async function compileAndAnalyze(
     sortFields: sortFieldsList,
     groupFields: groupFieldsList,
     projectedFields,
+
+    enabledFeatures,
+    disabledFeatures,
   };
 }

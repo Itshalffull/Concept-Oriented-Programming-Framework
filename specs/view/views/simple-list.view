@@ -1,6 +1,10 @@
 view "simple-list" {
   shell: "simple-list"
 
+  features {
+    sort
+  }
+
   purpose {
     Minimal data listing with no filtering or actions.
   }

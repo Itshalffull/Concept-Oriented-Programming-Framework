@@ -1,6 +1,12 @@
 view "content-list" {
   shell: "content-list"
 
+  features {
+    filter
+    sort
+    projection
+  }
+
   purpose {
     Browse all content entities with schema-based filtering and
     alphabetical sorting. Read-only — no inline write actions.

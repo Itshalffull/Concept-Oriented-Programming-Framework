@@ -1,6 +1,13 @@
 view "content-list-actions" {
   shell: "content-list"
 
+  features {
+    filter
+    sort
+    projection
+    interaction
+  }
+
   purpose {
     Content listing with inline create form. Read-write view
     dispatching ContentNode/create through the sync engine.

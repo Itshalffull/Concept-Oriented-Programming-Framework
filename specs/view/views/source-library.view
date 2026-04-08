@@ -1,0 +1,29 @@
+view "source-library" {
+  shell: "source-library"
+
+  features {
+    filter
+    sort
+    pagination
+    projection
+  }
+
+  purpose {
+    Filterable, sortable, paginated table of all captured sources
+    with credibility indicators and snippet counts.
+  }
+
+  invariants {
+    always "purity is read-only": {
+      purity = "read-only"
+    }
+
+    always "has pagination": {
+      "pagination" in enabledFeatures
+    }
+
+    always "no invoke instructions": {
+      invokeCount = 0
+    }
+  }
+}

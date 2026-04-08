@@ -22,9 +22,25 @@ import type {
 export interface ViewSpec {
   name: string;
   shell: string;
+  /** Enabled features. undefined means all features are enabled (block omitted). */
+  features: string[] | undefined;
   purpose: string;
   invariants: InvariantDecl[];
 }
+
+/**
+ * Valid feature names for the `features {}` block.
+ * The two always-on features (dataSource, presentation) are intentionally
+ * excluded — they cannot be disabled.
+ */
+export const VALID_VIEW_FEATURES = new Set([
+  'filter',
+  'sort',
+  'group',
+  'projection',
+  'interaction',
+  'pagination',
+]);
 
 // --- Token Types ---
 
@@ -66,11 +82,14 @@ interface Token {
 
 // Keywords recognized in .view files
 const KEYWORDS = new Set([
-  'view', 'shell', 'purpose', 'invariants',
+  'view', 'shell', 'purpose', 'invariants', 'features',
   'always', 'never', 'example', 'forall', 'exists',
   'in', 'implies', 'and', 'then', 'after', 'action',
   'requires', 'ensures', 'compile', 'startsWith', 'subset',
   'given', 'where', 'none', 'eventually',
+  // Feature names are parsed as identifiers but listed here so they tokenize
+  // as KEYWORD tokens within the features block context.
+  'filter', 'sort', 'group', 'projection', 'interaction', 'pagination',
 ]);
 
 const PRIMITIVES = new Set([
@@ -311,6 +330,7 @@ class ViewParser {
     this.expect('LBRACE');
 
     let shell = '';
+    let features: string[] | undefined;
     let purpose = '';
     const invariants: InvariantDecl[] = [];
 
@@ -321,6 +341,8 @@ class ViewParser {
 
       if (tok.type === 'KEYWORD' && tok.value === 'shell') {
         shell = this.parseShell();
+      } else if (tok.type === 'KEYWORD' && tok.value === 'features') {
+        features = this.parseFeaturesBlock(name);
       } else if (tok.type === 'KEYWORD' && tok.value === 'purpose') {
         purpose = this.parsePurpose();
       } else if (tok.type === 'KEYWORD' && tok.value === 'invariants') {
@@ -341,7 +363,7 @@ class ViewParser {
       throw new Error(`View parse error: missing required 'shell' declaration in view "${name}"`);
     }
 
-    return { name, shell, purpose, invariants };
+    return { name, shell, features, purpose, invariants };
   }
 
   private parseShell(): string {
@@ -356,6 +378,56 @@ class ViewParser {
       );
     }
     return this.advance().value;
+  }
+
+  /**
+   * Parse a `features { filter sort pagination ... }` block.
+   * Feature names may appear one per line or space-separated.
+   * Commas between names are tolerated but not required.
+   * Returns the list of feature name strings.
+   * Throws on invalid feature names.
+   */
+  private parseFeaturesBlock(viewName: string): string[] {
+    this.expect('KEYWORD', 'features');
+    this.skipSeps();
+    this.expect('LBRACE');
+
+    const features: string[] = [];
+
+    this.skipSeps();
+    while (this.peek().type !== 'RBRACE' && this.peek().type !== 'EOF') {
+      this.skipSeps();
+      if (this.peek().type === 'RBRACE') break;
+
+      // Consume optional commas between feature names
+      if (this.peek().type === 'COMMA') {
+        this.advance();
+        this.skipSeps();
+        continue;
+      }
+
+      const tok = this.peek();
+      // Feature names tokenize as KEYWORD or IDENT depending on the keyword set
+      if (tok.type === 'KEYWORD' || tok.type === 'IDENT') {
+        const featureName = this.advance().value;
+        if (!VALID_VIEW_FEATURES.has(featureName)) {
+          throw new Error(
+            `View parse error at line ${tok.line}:${tok.col}: invalid feature name '${featureName}' in view "${viewName}". ` +
+            `Valid features: ${[...VALID_VIEW_FEATURES].join(', ')}`,
+          );
+        }
+        if (!features.includes(featureName)) {
+          features.push(featureName);
+        }
+      } else {
+        // Skip unrecognized tokens (e.g. stray SEPs not caught by skipSeps)
+        this.advance();
+      }
+      this.skipSeps();
+    }
+
+    this.expect('RBRACE');
+    return features;
   }
 
   private parsePurpose(): string {
