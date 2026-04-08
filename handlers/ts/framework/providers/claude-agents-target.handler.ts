@@ -24,6 +24,17 @@ import {
 
 // --- Agent Config Types ---
 
+interface AgentReference {
+  /** Relative path from agent dir, e.g. "references/guide.md". */
+  path: string;
+  /** Human-readable label. */
+  label: string;
+  /** Reference tier: "reference", "example", or "guide". */
+  tier?: string;
+  /** Inline content to write to the file. */
+  content: string;
+}
+
 interface AgentAnnotation {
   /** Agent system prompt body (markdown). */
   prompt?: string;
@@ -37,6 +48,8 @@ interface AgentAnnotation {
   rules?: string[];
   /** Workflow steps rendered in the system prompt. */
   workflow?: string[];
+  /** Reference docs generated alongside the agent .md file. */
+  references?: AgentReference[];
 }
 
 function getAgentAnnotation(
@@ -83,6 +96,16 @@ function generateAgentMd(
   lines.push(`skills:`);
   for (const s of skills) {
     lines.push(`  - ${s}`);
+  }
+
+  // References: list paths in frontmatter
+  if (agentAnnot?.references && agentAnnot.references.length > 0) {
+    lines.push(`references:`);
+    for (const ref of agentAnnot.references) {
+      if (ref.path) {
+        lines.push(`  - ${ref.path}`);
+      }
+    }
   }
 
   lines.push('---');
@@ -197,10 +220,22 @@ const _handler: FunctionalConceptHandler = {
 
     const agentMd = generateAgentMd(manifest, agentAnnot, kebab);
 
-    const files = [{
+    const files: Array<{ path: string; content: string }> = [{
       path: `${kebab}.md`,
       content: agentMd,
     }];
+
+    // Emit reference files alongside the agent .md
+    if (agentAnnot?.references) {
+      for (const ref of agentAnnot.references) {
+        if (ref.path && ref.content) {
+          files.push({
+            path: `${kebab}/${ref.path}`,
+            content: ref.content,
+          });
+        }
+      }
+    }
 
     let p = createProgram();
     p = complete(p, 'ok', { files });
