@@ -1,0 +1,80 @@
+# View definitions for deep research kit.
+# Covers research projects, source library, evidence graph, report builder,
+# memory notebook, research plan, and source detail views.
+
+concept: View
+action: create
+entries:
+  # --- Research Projects hub ---
+  - view: research-projects
+    dataSource: '{"concept":"ResearchProject","action":"list"}'
+    layout: card-grid
+    visibleFields: '[{"key":"project_name","label":"Name"},{"key":"project_status","label":"Status","formatter":"badge"},{"key":"deliverable_type","label":"Deliverable","formatter":"badge"},{"key":"progress","label":"Progress","formatter":"progress-bar"},{"key":"quality_score","label":"Quality","formatter":"score"},{"key":"updated_at","label":"Updated","formatter":"date"}]'
+    controls: '{"create":{"concept":"ResearchProject","action":"create","fields":[{"name":"name","label":"Project Name","required":true},{"name":"query","label":"Research Question","required":true,"type":"textarea"},{"name":"deliverable_type","label":"Deliverable Type","required":true,"type":"select","options":["report","briefing","literature_review","competitive_analysis"]}]},"rowClick":{"navigateTo":"/admin/research/{project}"}}'
+    title: Research Projects
+    description: All deep research projects with status, progress, quality score, and last updated time.
+    filters: '[{"field":"project_status","label":"Status","type":"toggle-group"},{"field":"deliverable_type","label":"Deliverable","type":"toggle-group"}]'
+    defaultDisplayMode: card
+
+  # --- Source Library ---
+  - view: source-library
+    dataSource: '{"concept":"ContentNode","action":"list","params":{"schema":"source"}}'
+    layout: table
+    visibleFields: '[{"key":"title","label":"Title"},{"key":"uri","label":"URI","formatter":"link"},{"key":"source_type","label":"Type","formatter":"badge"},{"key":"credibility_tier","label":"Credibility","formatter":"badge"},{"key":"snippet_count","label":"Snippets"},{"key":"captured_at","label":"Captured","formatter":"date"}]'
+    controls: '{"create":{"concept":"Capture","action":"clip","fields":[{"name":"uri","label":"URL","required":true},{"name":"selection_text","label":"Selection (optional)","type":"textarea"}]},"rowClick":{"navigateTo":"/admin/sources/{id}"}}'
+    title: Source Library
+    description: Filterable table of all captured sources with credibility indicators and snippet counts.
+    filters: '[{"field":"source_type","label":"Type","type":"toggle-group"},{"field":"credibility_tier","label":"Credibility","type":"toggle-group"}]'
+    sorts: '[{"field":"captured_at","order":"desc"}]'
+    defaultDisplayMode: table-row
+
+  # --- Evidence Graph ---
+  - view: evidence-graph
+    dataSource: '{"concept":"Claim","action":"evidenceGraph","params":{"report":"{{reportId}}"}}'
+    layout: graph
+    visibleFields: '[{"key":"label","label":"Label"},{"key":"entity_type","label":"Type","formatter":"badge"},{"key":"support_score","label":"Support","formatter":"score"}]'
+    controls: '{}'
+    title: Evidence Graph
+    description: Force-directed graph showing the full evidence chain — report to claims to citations to snippets to sources. Node colors by entity type, edge labels show support scores.
+    defaultDisplayMode: graph
+
+  # --- Report Builder (detail view) ---
+  - view: report-builder
+    dataSource: '{"concept":"ContentNode","action":"get","params":{"entity":"{{entityId}}","schema":"research-report"}}'
+    layout: two-column-sidebar
+    visibleFields: '[{"key":"title","label":"Title"},{"key":"project_status","label":"Status","formatter":"badge"},{"key":"coverage_pct","label":"Coverage","formatter":"progress-bar"},{"key":"body","label":"Body","formatter":"block-editor"}]'
+    controls: '{"rowActions":[{"key":"verify","concept":"Citation","action":"verifyAll","params":{"report":"{{entityId}}"},"label":"Verify Citations","variant":"primary"},{"key":"publish","concept":"ResearchProject","action":"transition","params":{"project":"{{projectId}}","target_status":"published"},"label":"Publish","variant":"primary","confirm":true}]}'
+    title: Report Builder
+    description: Triple-zone report editor — header with project title, status, and coverage meter; body with block editor and citation markers; sidebar with citation inspector, source list, and evidence table.
+    defaultDisplayMode: detail
+
+  # --- Memory Notebook ---
+  - view: memory-notebook
+    dataSource: '{"concept":"AgentMemory","action":"recall","params":{"scope":"semantic"}}'
+    layout: card-grid
+    visibleFields: '[{"key":"text","label":"Memory"},{"key":"category","label":"Category","formatter":"badge"},{"key":"confidence","label":"Confidence","formatter":"score"},{"key":"tags","label":"Tags","formatter":"tag-list"},{"key":"created_at","label":"Added","formatter":"date"}]'
+    controls: '{"rowActions":[{"key":"approve","concept":"AgentMemory","action":"approve","params":{"entry":"{{entry_id}}"},"label":"Approve","variant":"primary"},{"key":"retract","concept":"AgentMemory","action":"retract","params":{"entry":"{{entry_id}}"},"label":"Retract","variant":"destructive","confirm":true},{"key":"supersede","concept":"AgentMemory","action":"supersede","params":{"entry":"{{entry_id}}"},"label":"Supersede","variant":"outlined"}]}'
+    title: Memory Notebook
+    description: Curated research memory — approved semantic memories with category badges, confidence scores, and provenance links.
+    filters: '[{"field":"category","label":"Category","type":"toggle-group"},{"field":"tags","label":"Tags","type":"toggle-group"},{"field":"confidence","label":"Confidence","type":"range","min":0,"max":1,"step":0.1}]'
+    defaultDisplayMode: card
+
+  # --- Research Plan (detail view) ---
+  - view: research-plan
+    dataSource: '{"concept":"ContentNode","action":"get","params":{"entity":"{{entityId}}","schema":"research-plan"}}'
+    layout: triple-zone-default
+    visibleFields: '[{"key":"plan_name","label":"Plan"},{"key":"sub_questions","label":"Sub-Questions","formatter":"task-list"},{"key":"perspectives","label":"Perspectives","formatter":"tag-list"},{"key":"dependencies","label":"Dependencies","formatter":"graph-preview"},{"key":"approval_status","label":"Approval","formatter":"badge"}]'
+    controls: '{"rowActions":[{"key":"approve","concept":"Approval","action":"approve","params":{"approval":"{{approvalId}}"},"label":"Approve Plan","variant":"primary","confirm":true},{"key":"reject","concept":"Approval","action":"reject","params":{"approval":"{{approvalId}}"},"label":"Reject","variant":"destructive","confirm":true}]}'
+    title: Research Plan
+    description: Plan outline with sub-questions, dependency arrows, plan approval widget, and perspective assignments.
+    defaultDisplayMode: detail
+
+  # --- Source Detail (entity detail view) ---
+  - view: source-detail
+    dataSource: '{"concept":"ContentNode","action":"get","params":{"entity":"{{entityId}}","schema":"source"}}'
+    layout: two-column-sidebar
+    visibleFields: '[{"key":"title","label":"Title"},{"key":"uri","label":"URI","formatter":"link"},{"key":"source_type","label":"Type","formatter":"badge"},{"key":"credibility_tier","label":"Credibility","formatter":"badge"},{"key":"body","label":"Content","formatter":"highlighted-text"},{"key":"snippets","label":"Snippets","formatter":"snippet-list"},{"key":"credibility_history","label":"Credibility History","formatter":"evaluation-timeline"}]'
+    controls: '{"rowActions":[{"key":"recapture","concept":"Capture","action":"clip","params":{"uri":"{{uri}}"},"label":"Re-capture","variant":"outlined"},{"key":"evaluate","concept":"DataQuality","action":"evaluate","params":{"source":"{{entityId}}"},"label":"Re-evaluate","variant":"outlined"}]}'
+    title: Source Detail
+    description: Triple-zone source page — header with source metadata and credibility badge, body with cleaned content and highlighted snippets, sidebar with snippet list and credibility evaluation history.
+    defaultDisplayMode: detail
