@@ -81,6 +81,8 @@ export interface ConceptStorage {
   find(relation: string, criteria?: Record<string, unknown>, options?: FindOptions): Promise<Record<string, unknown>[]>;
   del(relation: string, key: string): Promise<void>;
   delMany(relation: string, criteria: Record<string, unknown>): Promise<number>;
+  /** Declare a secondary index on a relation field for faster find() lookups. */
+  ensureIndex?(relation: string, field: string): void;
   /** Retrieve write timestamp metadata for a stored entry. */
   getMeta?(relation: string, key: string): Promise<EntryMeta | null>;
   /** Conflict detection callback for concurrent writes. */
