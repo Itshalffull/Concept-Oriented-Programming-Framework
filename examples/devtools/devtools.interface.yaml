@@ -3971,6 +3971,146 @@ workflows:
             }
           }
 
+  # ─── RuntimeInfrastructure: runtime-infrastructure ─
+  runtime-infrastructure:
+    concept: RuntimeInfrastructure
+    steps:
+      - action: analyze
+        title: "Analyze Runtime Impact"
+        prose: "Determine which runtime layer is affected: storage adapter, interpreter, StorageProgram DSL, transport, effect system, or infrastructure primitives. Read the relevant files before modifying."
+      - action: modify
+        title: "Modify Runtime Infrastructure"
+        prose: "Implement the change following the appropriate pattern for the affected layer. Update the ConceptStorage interface if adding new storage capabilities, the interpreter if adding new instruction types, or adapter implementations for new backends."
+      - action: test
+        title: "Test Infrastructure Change"
+        prose: "Write tests covering the change. Storage adapter tests go in tests/storage*.test.ts. Interpreter tests use createInMemoryStorage + interpret. Run existing tests to verify no regressions."
+    checklists:
+      modify:
+        - "ConceptStorage interface backward-compatible (new methods are optional `?`)?"
+        - "In-memory adapter updated with the new capability?"
+        - "SQL adapters updated if applicable?"
+        - "Interpreter handles new instruction types if added?"
+        - "EffectSet tracking updated if new effects declared?"
+        - "Analysis providers updated if purity/commutativity affected?"
+        - "Existing tests still pass?"
+    design-principles:
+      - title: "Adapter Transparency"
+        rule: "Concept handlers use storage/transport through interfaces without knowing which backend is active. Swapping backends requires no handler changes."
+      - title: "Backward Compatibility"
+        rule: "New ConceptStorage/ConceptTransport methods MUST be optional (`?`). Existing adapters must not break when the interface grows."
+      - title: "Index as Configuration"
+        rule: "Secondary indexes are declared via ensureIndex(), not baked into handler logic. The adapter decides how to implement them."
+      - title: "Instructions are Data"
+        rule: "StorageProgram instructions describe intent, not execution. The interpreter executes them. New instructions must be added to both the DSL (builder function) and the interpreter (execution case)."
+    references:
+      - path: references/runtime-infrastructure-guide.md
+        label: "Complete runtime infrastructure reference"
+        tier: reference
+        content: |
+          # Runtime Infrastructure Reference Guide
+
+          ## Architecture Overview
+
+          The Clef runtime has three layers, bottom to top:
+
+          ```
+          ┌─────────────────────────────────────────────┐
+          │  Concept Handlers (.handler.ts)              │
+          │  Each action returns a StorageProgram        │
+          ├─────────────────────────────────────────────┤
+          │  Runtime Execution Layer                     │
+          │  StorageProgram DSL → Interpreter →          │
+          │  Storage/Transport Adapters → Effects        │
+          ├─────────────────────────────────────────────┤
+          │  Physical Backends                           │
+          │  PostgreSQL, SQLite, Redis, DynamoDB,        │
+          │  HTTP, WebSocket, SQS, Pub/Sub              │
+          └─────────────────────────────────────────────┘
+          ```
+
+          ## Key Files
+
+          | File | What It Does |
+          |---|---|
+          | `runtime/types.ts` | `ConceptStorage` interface, `FindOptions`, `EntryMeta`, `ConflictInfo` |
+          | `runtime/storage-program.ts` | StorageProgram DSL: `createProgram`, `get`, `find`, `put`, `merge`, `del`, `branch`, `complete`, `perform`, `traverse`, `mapBindings`, `completeFrom` |
+          | `runtime/interpreter.ts` | Executes StoragePrograms against a ConceptStorage backend |
+          | `runtime/functional-handler.ts` | `FunctionalConceptHandler` type definition |
+          | `runtime/functional-compat.ts` | `autoInterpret()` — dual-mode wrapper |
+          | `runtime/adapters/storage.ts` | In-memory adapter with secondary indexes |
+          | `runtime/adapters/storage-factory.ts` | Backend resolution from config/env |
+          | `runtime/adapters/transport.ts` | `ConceptTransport` base interface |
+
+          ## ConceptStorage Interface
+
+          ```typescript
+          interface ConceptStorage {
+            put(relation: string, key: string, value: Record<string, unknown>): Promise<void>;
+            get(relation: string, key: string): Promise<Record<string, unknown> | null>;
+            find(relation: string, criteria?: Record<string, unknown>, options?: FindOptions): Promise<Record<string, unknown>[]>;
+            del(relation: string, key: string): Promise<void>;
+            delMany(relation: string, criteria: Record<string, unknown>): Promise<number>;
+            ensureIndex?(relation: string, field: string): void;
+            getMeta?(relation: string, key: string): Promise<EntryMeta | null>;
+            onConflict?: (info: ConflictInfo) => ConflictResolution;
+          }
+          ```
+
+          ## Secondary Index System
+
+          The in-memory adapter supports optional secondary indexes:
+          ```typescript
+          storage.ensureIndex('membership', 'schema');
+          // find() now uses index for O(1) lookup
+          await storage.find('membership', { schema: 'Article' });
+          ```
+          Internal: `Map<relation, Map<field, Map<value, Set<key>>>>`
+
+          ## StorageProgram Instructions
+
+          | Instruction | Purpose |
+          |---|---|
+          | `createProgram()` | Start a new program |
+          | `get(p, relation, key, bindAs)` | Read single record |
+          | `find(p, relation, criteria, bindAs, options?)` | Query records |
+          | `put(p, relation, key, fields)` | Write record |
+          | `merge(p, relation, key, fields)` | Merge into existing |
+          | `del(p, relation, key)` | Delete record |
+          | `branch(p, bindAs, truePath, falsePath)` | Conditional |
+          | `complete(p, variant, output)` | Terminal with variant |
+          | `perform(p, protocol, operation, params, bindAs)` | Transport effect |
+          | `traverse(p, bindAs, itemBind, bodyFn, resultBind)` | Iterate find results |
+          | `mapBindings(p, fn, bindAs)` | Transform bindings |
+
+          ## Monadic Concepts
+
+          | Concept | Spec Path |
+          |---|---|
+          | StorageProgram | `specs/monadic/storage-program.concept` |
+          | ProgramInterpreter | `specs/monadic/program-interpreter.concept` |
+          | FunctionalHandler | `specs/monadic/functional-handler.concept` |
+          | EffectHandler | `specs/monadic/effect-handler.concept` |
+          | ProgramAnalysis | `specs/monadic/program-analysis.concept` |
+          | ProgramCache | `specs/monadic/program-cache.concept` |
+
+          ## Common Patterns
+
+          ### Adding a new storage adapter method
+          1. Add optional method to ConceptStorage in `runtime/types.ts`
+          2. Implement in `runtime/adapters/storage.ts` (in-memory)
+          3. Write tests in `tests/storage*.test.ts`
+
+          ### Adding a new StorageProgram instruction
+          1. Add instruction type + builder to `runtime/storage-program.ts`
+          2. Add execution case in `runtime/interpreter.ts`
+          3. Update EffectSet if the instruction has effects
+          4. Update analysis providers if purity affected
+
+          ### Adding a secondary index
+          1. Call `storage.ensureIndex(relation, field)` during init
+          2. Index maintained automatically on put/merge/del
+          3. `find()` uses index when criteria matches
+
   # ─── SurfaceComponentScaffoldGen: create-widget ─
   create-widget:
     concept: SurfaceComponentScaffoldGen
