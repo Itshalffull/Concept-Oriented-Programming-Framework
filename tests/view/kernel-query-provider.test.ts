@@ -38,24 +38,24 @@ describe('planPushdown', () => {
     );
     const plan = planPushdown(json);
     expect(plan).not.toBeNull();
-    expect(plan!.pushdown.instructions).toHaveLength(1);
-    expect(plan!.pushdown.instructions[0].type).toBe('scan');
-    expect(plan!.residual.instructions).toHaveLength(1);
-    expect(plan!.residual.instructions[0].type).toBe('filter');
+    expect(plan!.pushdown.instructions).toHaveLength(2);
+    expect(plan!.pushdown.instructions.map(i => i.type)).toEqual(['scan', 'filter']);
+    expect(plan!.residual.instructions).toHaveLength(0);
   });
 
-  it('splits scan from sort', () => {
+  it('pushes scan and sort to kernel', () => {
     const json = program(
       { type: 'scan', source: 'contentNodes', bindAs: 'nodes' },
       { type: 'sort', keys: [{ field: 'name', direction: 'asc' }], bindAs: 'sorted' },
     );
     const plan = planPushdown(json);
     expect(plan).not.toBeNull();
-    expect(plan!.pushdown.instructions[0].type).toBe('scan');
-    expect(plan!.residual.instructions[0].type).toBe('sort');
+    expect(plan!.pushdown.instructions).toHaveLength(2);
+    expect(plan!.pushdown.instructions.map(i => i.type)).toEqual(['scan', 'sort']);
+    expect(plan!.residual.instructions).toHaveLength(0);
   });
 
-  it('splits scan from filter and sort combined', () => {
+  it('pushes scan, filter, and sort to kernel', () => {
     const json = program(
       { type: 'scan', source: 'contentNodes', bindAs: 'nodes' },
       { type: 'filter', node: { type: 'true' }, bindAs: 'filtered' },
@@ -63,19 +63,19 @@ describe('planPushdown', () => {
     );
     const plan = planPushdown(json);
     expect(plan).not.toBeNull();
-    expect(plan!.pushdown.instructions).toHaveLength(1);
-    expect(plan!.residual.instructions).toHaveLength(2);
-    expect(plan!.residual.instructions.map(i => i.type)).toEqual(['filter', 'sort']);
+    expect(plan!.pushdown.instructions).toHaveLength(3);
+    expect(plan!.pushdown.instructions.map(i => i.type)).toEqual(['scan', 'filter', 'sort']);
+    expect(plan!.residual.instructions).toHaveLength(0);
   });
 
-  it('puts limit in residual', () => {
+  it('pushes limit to kernel', () => {
     const json = program(
       { type: 'scan', source: 'contentNodes', bindAs: 'nodes' },
       { type: 'limit', count: 10, output: 'page' },
     );
     const plan = planPushdown(json);
-    expect(plan!.pushdown.instructions).toHaveLength(1);
-    expect(plan!.residual.instructions[0].type).toBe('limit');
+    expect(plan!.pushdown.instructions).toHaveLength(2);
+    expect(plan!.pushdown.instructions.map(i => i.type)).toEqual(['scan', 'limit']);
   });
 
   it('puts group in residual', () => {
@@ -96,15 +96,15 @@ describe('planPushdown', () => {
     expect(plan!.residual.instructions[0].type).toBe('project');
   });
 
-  it('multiple scans all go into pushdown', () => {
+  it('multiple scans and filter all go into pushdown', () => {
     const json = program(
       { type: 'scan', source: 'contentNodes', bindAs: 'nodes' },
       { type: 'scan', source: 'schemas', bindAs: 'schemas' },
       { type: 'filter', node: { type: 'true' }, bindAs: 'filtered' },
     );
     const plan = planPushdown(json);
-    expect(plan!.pushdown.instructions).toHaveLength(2);
-    expect(plan!.residual.instructions).toHaveLength(1);
+    expect(plan!.pushdown.instructions).toHaveLength(3);
+    expect(plan!.residual.instructions).toHaveLength(0);
   });
 
   it('empty program → both partitions empty', () => {
@@ -115,14 +115,14 @@ describe('planPushdown', () => {
     expect(plan!.residual.instructions).toHaveLength(0);
   });
 
-  it('program with no scan → everything goes to residual', () => {
+  it('program with no scan → filter and sort pushed to kernel', () => {
     const json = program(
       { type: 'filter', node: { type: 'eq', field: 'kind', value: 'concept' }, bindAs: 'filtered' },
       { type: 'sort', keys: [{ field: 'name', direction: 'asc' }], bindAs: 'sorted' },
     );
     const plan = planPushdown(json);
-    expect(plan!.pushdown.instructions).toHaveLength(0);
-    expect(plan!.residual.instructions).toHaveLength(2);
+    expect(plan!.pushdown.instructions).toHaveLength(2);
+    expect(plan!.residual.instructions).toHaveLength(0);
   });
 
   it('returns null on invalid JSON', () => {
