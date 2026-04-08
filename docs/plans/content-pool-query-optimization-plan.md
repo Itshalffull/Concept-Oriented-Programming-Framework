@@ -12,10 +12,10 @@
 
 | Card | PRD Sections | Blocked By | Blocks | Commit |
 |---|---|---|---|---|
-| **MAG-544** Storage Adapter Secondary Indexes | §1 | — | MAG-546, MAG-547, MAG-548 | |
-| **MAG-545** Per-Schema Denormalized Relations | §2 | — | MAG-546, MAG-547, MAG-548 | |
-| **MAG-546** listBySchema Handler Optimization | §3 | MAG-544, MAG-545 | MAG-548 | |
-| **MAG-547** Cache Integration via Syncs | §4 | MAG-544, MAG-545 | MAG-548 | |
+| **MAG-544** Storage Adapter Secondary Indexes | §1 | — | MAG-546, MAG-547, MAG-548 | `c56ff313` |
+| **MAG-545** Per-Schema Denormalized Relations | §2 | — | MAG-546, MAG-547, MAG-548 | `361c3c77` |
+| **MAG-546** listBySchema Handler Optimization | §3 | ~~MAG-544~~, ~~MAG-545~~ | MAG-548 | `3f7b6cfb` |
+| **MAG-547** Cache Integration via Syncs | §4 | ~~MAG-544~~, ~~MAG-545~~ | MAG-548 | `a0d079df` |
 | **MAG-548** Integration Tests | §5 | MAG-544–547 | — | |
 
 ---
