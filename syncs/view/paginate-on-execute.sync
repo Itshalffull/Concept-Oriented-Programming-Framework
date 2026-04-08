@@ -1,0 +1,23 @@
+# Pagination state update — after query execution completes, update the PaginationSpec
+# with the total count and hasMore flag so the pagination control reflects reality.
+
+sync PaginateOnExecute [eager]
+  purpose: "Update the PaginationSpec with the result set size after a QueryExecution dispatch succeeds, keeping the pagination control consistent with the data available from the backend."
+when {
+  QueryExecution/execute: [ program: ?program; kind: ?kind ]
+    => ok(rows: _; totalCount: ?totalCount; hasMore: ?hasMore; metadata: _)
+}
+where {
+  // Resolve the pagination spec name from the view that owns this program.
+  // Only fire when a pagination spec is associated with this execution.
+  ViewShell: { pagination: ?pagination; features: ?features }
+  guard(?features contains "pagination")
+  guard(?pagination != "")
+}
+then {
+  PaginationSpec/updateCount: [
+    name: ?pagination;
+    totalCount: ?totalCount;
+    hasMore: ?hasMore
+  ]
+}

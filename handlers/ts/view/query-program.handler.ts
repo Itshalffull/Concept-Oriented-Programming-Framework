@@ -282,6 +282,39 @@ const _handler: FunctionalConceptHandler = {
     ) as StorageProgram<Result>;
   },
 
+  offset(input: Record<string, unknown>) {
+    const program = input.program as string;
+    const count = input.count as number;
+    const output = input.output as string;
+
+    let p = createProgram();
+    p = get(p, 'queryProgram', program, 'existing');
+    p = mapBindings(p, (b) => {
+      if (b.existing == null) return 'notfound';
+      const rec = b.existing as ProgramRecord;
+      if (rec.terminated) return 'sealed';
+      return 'ok';
+    }, '_state');
+
+    return branch(p,
+      (b) => b._state === 'notfound',
+      (b) => complete(b, 'notfound', {}),
+      (b) => branch(b,
+        (bb) => bb._state === 'sealed',
+        (bb) => complete(bb, 'sealed', {}),
+        (bb) => {
+          const instruction = { type: 'offset', count, bindAs: output };
+          let b2 = putFrom(bb, 'queryProgram', program, (bindings) => {
+            const rec = bindings.existing as ProgramRecord;
+            const updated = appendInstruction(rec, instruction);
+            return { ...updated, purity: promotePurity(updated.purity ?? 'pure', 'read-only') } as unknown as Record<string, unknown>;
+          });
+          return complete(b2, 'ok', { program }) as StorageProgram<Result>;
+        },
+      ),
+    ) as StorageProgram<Result>;
+  },
+
   pure(input: Record<string, unknown>) {
     const program = input.program as string;
     const variant = input.variant as string;

@@ -79,6 +79,53 @@ then {
   QueryProgram/pure: [ program: ?program; variant: "ok"; output: "projected" ]
 }
 
+sync CompileQueryWithPagination [eager]
+  purpose: "Compile a QueryProgram that includes offset and limit instructions when the resolved ViewShell has pagination enabled, injecting the window from PaginationSpec/evaluate between sort and pure."
+when {
+  ViewShell/resolve: [ name: ?name ]
+    => ok(view: ?view)
+}
+where {
+  ViewShell: { ?view dataSource: ?dataSource; filter: ?filter; sort: ?sort; projection: ?projection; pagination: ?pagination; features: ?features }
+  guard(?features contains "pagination")
+  guard(?pagination != "")
+  DataSourceSpec/get: [ name: ?dataSource ]
+    => ok(source: _; kind: _; config: ?sourceConfig; parameters: _)
+  FilterSpec/get: [ name: ?filter ]
+    => ok(filter: _; tree: ?filterTree; sourceType: _; fieldRefs: _)
+  SortSpec/get: [ name: ?sort ]
+    => ok(sort: _; keys: ?sortKeys)
+  ProjectionSpec/get: [ name: ?projection ]
+    => ok(projection: _; fields: ?projectionFields)
+  PaginationSpec/evaluate: [ name: ?pagination; offset: 0; cursor: "" ]
+    => ok(limit: ?paginationLimit; offset: ?paginationOffset; cursor: _)
+  bind(uuid() as ?program)
+}
+then {
+  QueryProgram/create: [ program: ?program ]
+}
+then {
+  QueryProgram/scan: [ program: ?program; source: ?sourceConfig; bindAs: "records" ]
+}
+then {
+  QueryProgram/filter: [ program: ?program; node: ?filterTree; bindAs: "filtered" ]
+}
+then {
+  QueryProgram/sort: [ program: ?program; keys: ?sortKeys; bindAs: "sorted" ]
+}
+then {
+  QueryProgram/project: [ program: ?program; fields: ?projectionFields; bindAs: "projected" ]
+}
+then {
+  QueryProgram/offset: [ program: ?program; count: ?paginationOffset; output: "paged_from" ]
+}
+then {
+  QueryProgram/limit: [ program: ?program; count: ?paginationLimit; output: "page" ]
+}
+then {
+  QueryProgram/pure: [ program: ?program; variant: "ok"; output: "page" ]
+}
+
 sync CompileQueryWithGroup [eager]
   purpose: "Compile a QueryProgram that includes a group step when the resolved ViewShell has a non-empty group spec, inserting the group instruction between the filter and sort stages."
 when {

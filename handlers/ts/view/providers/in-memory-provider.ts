@@ -106,13 +106,20 @@ export type LimitInstruction = {
   offset?: number;
 };
 
+export type OffsetInstruction = {
+  type: 'offset';
+  count: number;
+  bindAs?: string;
+};
+
 export type QueryInstruction =
   | ScanInstruction
   | FilterInstruction
   | SortInstruction
   | GroupInstruction
   | ProjectInstruction
-  | LimitInstruction;
+  | LimitInstruction
+  | OffsetInstruction;
 
 /** A QueryProgram is an ordered list of instructions describing a data retrieval plan. */
 export interface QueryProgram {
@@ -121,7 +128,7 @@ export interface QueryProgram {
 
 // ─── Provider capability type ─────────────────────────────────────────────────
 
-export type ProviderCapability = 'filter' | 'sort' | 'group' | 'project' | 'limit';
+export type ProviderCapability = 'filter' | 'sort' | 'group' | 'project' | 'limit' | 'offset';
 
 export interface PushdownPlan {
   /** Instructions absorbed by this provider — no further evaluation needed. */
@@ -360,6 +367,16 @@ export function execute(
         }
         break;
       }
+
+      case 'offset': {
+        const count = instruction.count ?? 0;
+        if (grouped !== null) {
+          grouped = grouped.slice(count);
+        } else {
+          rows = rows.slice(count);
+        }
+        break;
+      }
     }
   }
 
@@ -388,7 +405,7 @@ export function planPushdown(program: QueryProgram): PushdownPlan {
 
 export const name = 'in-memory' as const;
 export const kind = 'in-memory' as const;
-export const capabilities: ProviderCapability[] = ['filter', 'sort', 'group', 'project', 'limit'];
+export const capabilities: ProviderCapability[] = ['filter', 'sort', 'group', 'project', 'limit', 'offset'];
 
 export const inMemoryProvider = {
   name,
