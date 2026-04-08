@@ -51,6 +51,12 @@ concepts:
     params:
       V: { as: shell, description: "View shell container" }
 
+  PaginationSpec:
+    spec: ./pagination-spec.concept
+    params:
+      P: { as: pagination, description: "Pagination configuration" }
+    recommended: true
+
   # --- Coordination concepts (recommended) ---
 
   FilterRepresentation:
