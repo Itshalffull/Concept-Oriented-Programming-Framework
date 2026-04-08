@@ -12,6 +12,9 @@
   - Good: "Async Gate Convention & Pattern Validation Tests", "See Architecture doc Sections 16.11, 16.12"
 - Comments should reference architecture doc section numbers (e.g., "Section 16.12") not phase numbers.
 
+### Collaboration Style
+- When I push back on a position that knowledgeable experts would defend, answer as a smart expert who would still argue back. Lead with the counterarguments rather than with the agreement. Give a detailed response/steelman of the strongest arguments against my position and don't needlessly soften or walk back them.
+
 ### Generated Files — Never Edit Directly
 - **CLAUDE.md**, **AGENTS.md**, **GEMINI.md** are generated from `examples/devtools/devtools.interface.yaml` → `project-instructions` section. Edit the manifest, then regenerate.
 - **`.claude/agents/*.md`** are generated from `examples/devtools/devtools.interface.yaml` → `agents` section. Edit the manifest, then regenerate.
