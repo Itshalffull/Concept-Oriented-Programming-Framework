@@ -1,7 +1,7 @@
 [
   {
     "name": "clef_base_create_content",
-    "briefDescription": "Execute createContent.",
+    "briefDescription": "createContent succeeded.",
     "category": "ClefBase",
     "concept": "ClefBase",
     "action": "createContent",
@@ -9,7 +9,7 @@
   },
   {
     "name": "clef_base_compile_content",
-    "briefDescription": "Execute compileContent.",
+    "briefDescription": "compileContent succeeded.",
     "category": "ClefBase",
     "concept": "ClefBase",
     "action": "compileContent",
@@ -17,7 +17,7 @@
   },
   {
     "name": "clef_base_define_schema",
-    "briefDescription": "Execute defineSchema.",
+    "briefDescription": "defineSchema succeeded.",
     "category": "ClefBase",
     "concept": "ClefBase",
     "action": "defineSchema",
@@ -25,7 +25,7 @@
   },
   {
     "name": "clef_base_apply_schema",
-    "briefDescription": "Execute applySchema.",
+    "briefDescription": "applySchema succeeded.",
     "category": "ClefBase",
     "concept": "ClefBase",
     "action": "applySchema",
@@ -33,7 +33,7 @@
   },
   {
     "name": "clef_base_spawn_agent",
-    "briefDescription": "Execute spawnAgent.",
+    "briefDescription": "spawnAgent succeeded.",
     "category": "ClefBase",
     "concept": "ClefBase",
     "action": "spawnAgent",
@@ -41,7 +41,7 @@
   },
   {
     "name": "clef_base_invoke_agent",
-    "briefDescription": "Execute invokeAgent.",
+    "briefDescription": "invokeAgent succeeded.",
     "category": "ClefBase",
     "concept": "ClefBase",
     "action": "invokeAgent",
@@ -49,7 +49,7 @@
   },
   {
     "name": "clef_base_create_trigger",
-    "briefDescription": "Execute createTrigger.",
+    "briefDescription": "createTrigger succeeded.",
     "category": "ClefBase",
     "concept": "ClefBase",
     "action": "createTrigger",
@@ -57,7 +57,7 @@
   },
   {
     "name": "clef_base_start_process",
-    "briefDescription": "Execute startProcess.",
+    "briefDescription": "startProcess succeeded.",
     "category": "ClefBase",
     "concept": "ClefBase",
     "action": "startProcess",
@@ -65,7 +65,7 @@
   },
   {
     "name": "clef_base_approve_step",
-    "briefDescription": "Execute approveStep.",
+    "briefDescription": "approveStep succeeded.",
     "category": "ClefBase",
     "concept": "ClefBase",
     "action": "approveStep",
@@ -73,7 +73,7 @@
   },
   {
     "name": "clef_base_create_view",
-    "briefDescription": "Execute createView.",
+    "briefDescription": "createView succeeded.",
     "category": "ClefBase",
     "concept": "ClefBase",
     "action": "createView",
@@ -81,7 +81,7 @@
   },
   {
     "name": "clef_base_resolve_view",
-    "briefDescription": "Execute resolveView.",
+    "briefDescription": "resolveView succeeded.",
     "category": "ClefBase",
     "concept": "ClefBase",
     "action": "resolveView",
@@ -89,7 +89,7 @@
   },
   {
     "name": "clef_base_install_package",
-    "briefDescription": "Execute installPackage.",
+    "briefDescription": "installPackage succeeded.",
     "category": "ClefBase",
     "concept": "ClefBase",
     "action": "installPackage",
@@ -97,7 +97,7 @@
   },
   {
     "name": "clef_base_browse_packages",
-    "briefDescription": "Execute browsePackages.",
+    "briefDescription": "browsePackages succeeded.",
     "category": "ClefBase",
     "concept": "ClefBase",
     "action": "browsePackages",
@@ -105,7 +105,7 @@
   },
   {
     "name": "clef_base_create_diagram",
-    "briefDescription": "Execute createDiagram.",
+    "briefDescription": "createDiagram succeeded.",
     "category": "ClefBase",
     "concept": "ClefBase",
     "action": "createDiagram",
@@ -113,7 +113,7 @@
   },
   {
     "name": "clef_base_export_diagram",
-    "briefDescription": "Execute exportDiagram.",
+    "briefDescription": "exportDiagram succeeded.",
     "category": "ClefBase",
     "concept": "ClefBase",
     "action": "exportDiagram",
@@ -121,7 +121,7 @@
   },
   {
     "name": "clef_base_analyze_graph",
-    "briefDescription": "Execute analyzeGraph.",
+    "briefDescription": "analyzeGraph succeeded.",
     "category": "ClefBase",
     "concept": "ClefBase",
     "action": "analyzeGraph",

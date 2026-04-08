@@ -40,104 +40,104 @@ The complete Clef Base application platform a hierarchical composition
 ### createContent
 Surface action: createContent
 
-**Arguments:** `$0` **type** (unknown), `$1` **content** (unknown), `$2` **createdBy** (unknown)
+**Arguments:** `$0` **type** (string), `$1` **content** (string), `$2` **createdBy** (string)
 
 ### compileContent
 Surface action: compileContent
 
-**Arguments:** `$0` **pageId** (unknown)
+**Arguments:** `$0` **pageId** (string)
 
 ### defineSchema
 Surface action: defineSchema
 
-**Arguments:** `$0` **schema** (unknown), `$1` **fields** (unknown)
+**Arguments:** `$0` **schema** (string), `$1` **fields** (string)
 
 ### applySchema
 Surface action: applySchema
 
-**Arguments:** `$0` **entity_id** (unknown), `$1` **schema** (unknown)
+**Arguments:** `$0` **entity_id** (string), `$1` **schema** (string)
 
 ### spawnAgent
 Surface action: spawnAgent
 
-**Arguments:** `$0` **personaPageId** (unknown), `$1` **strategy** (unknown), `$2` **tools** (unknown), `$3` **context** (unknown)
+**Arguments:** `$0` **personaPageId** (string), `$1` **strategy** (string), `$2` **tools** (string), `$3` **context** (string)
 
 ### invokeAgent
 Surface action: invokeAgent
 
-**Arguments:** `$0` **session** (unknown), `$1` **goal** (unknown)
+**Arguments:** `$0` **session** (X), `$1` **goal** (string)
 
 ### createTrigger
 Surface action: createTrigger
 
-**Arguments:** `$0` **personaPageId** (unknown), `$1` **triggerType** (unknown), `$2` **config** (unknown), `$3` **strategy** (unknown), `$4` **tools** (unknown), `$5` **cooldownMs** (unknown)
+**Arguments:** `$0` **personaPageId** (string), `$1` **triggerType** (string), `$2` **config** (string), `$3` **strategy** (string), `$4` **tools** (string), `$5` **cooldownMs** (string)
 
 ### startProcess
 Surface action: startProcess
 
-**Arguments:** `$0` **spec** (unknown), `$1` **input** (unknown)
+**Arguments:** `$0` **spec** (string), `$1` **input** (string)
 
 ### approveStep
 Surface action: approveStep
 
-**Arguments:** `$0` **workItem** (unknown)
+**Arguments:** `$0` **workItem** (X)
 
 ### createView
 Surface action: createView
 
-**Arguments:** `$0` **name** (unknown), `$1` **dataSource** (unknown), `$2` **filter** (unknown), `$3` **sort** (unknown), `$4` **projection** (unknown), `$5` **presentation** (unknown)
+**Arguments:** `$0` **name** (string), `$1` **dataSource** (string), `$2` **filter** (string), `$3` **sort** (string), `$4` **projection** (string), `$5` **presentation** (string)
 
 ### resolveView
 Surface action: resolveView
 
-**Arguments:** `$0` **name** (unknown)
+**Arguments:** `$0` **name** (string)
 
 ### installPackage
 Surface action: installPackage
 
-**Arguments:** `$0` **packageName** (unknown), `$1` **version** (unknown)
+**Arguments:** `$0` **packageName** (string), `$1` **version** (string)
 
 ### browsePackages
 Surface action: browsePackages
 
-**Arguments:** `$0` **query** (unknown)
+**Arguments:** `$0` **query** (string)
 
 ### createDiagram
 Surface action: createDiagram
 
-**Arguments:** `$0` **name** (unknown), `$1` **notation** (unknown)
+**Arguments:** `$0` **name** (string), `$1` **notation** (string)
 
 ### exportDiagram
 Surface action: exportDiagram
 
-**Arguments:** `$0` **canvas** (unknown), `$1` **format** (unknown)
+**Arguments:** `$0` **canvas** (X), `$1` **format** (string)
 
 ### analyzeGraph
 Surface action: analyzeGraph
 
-**Arguments:** `$0` **graph** (unknown), `$1` **algorithm** (unknown)
+**Arguments:** `$0` **graph** (X), `$1` **algorithm** (string)
 
 ### getContent
 Surface query: getContent
 
-**Arguments:** `$0` **node** (unknown)
+**Arguments:** `$0` **node** (X)
 
 ### getAgentStatus
 Surface query: getAgentStatus
 
-**Arguments:** `$0` **session** (unknown)
+**Arguments:** `$0` **session** (X)
 
 ### listSessions
 Surface query: listSessions
 
-**Arguments:** `$0` **personaPageId** (unknown), `$1` **status** (unknown)
+**Arguments:** `$0` **personaPageId** (string), `$1` **status** (string)
 
 ### getProcessStatus
 Surface query: getProcessStatus
 
-**Arguments:** `$0` **processRun** (unknown)
+**Arguments:** `$0` **processRun** (X)
 
 ### getView
 Surface query: getView
 
-**Arguments:** `$0` **name** (unknown)
+**Arguments:** `$0` **name** (string)

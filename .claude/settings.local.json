@@ -53,7 +53,10 @@
       "Skill(decompose-feature:*)",
       "Bash(git diff:*)",
       "Bash(grep:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(rm -f .claude/agents/references/runtime-infrastructure-guide.md)",
+      "Bash(rmdir .claude/agents/references)",
+      "mcp__vibe_kanban__create_issue"
     ]
   }
 }

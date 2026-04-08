@@ -58,6 +58,8 @@ targets:
       - SurfaceWidgetHandlerGen
       - ContentTypeScaffoldGen
       - ClefBase
+      - InfrastructureCore
+      - RuntimeInfrastructure
 
   openapi:
     name: clef-devtools
@@ -249,6 +251,8 @@ concepts:
 derived-concepts:
   - specs/surface/pilot.derived
   - clef-base/derived/clef-base.derived
+  - clef-base/derived/infrastructure-core.derived
+  - clef-base/derived/runtime-infrastructure.derived
 
 # ─── OUTPUT CONFIGURATION ────────────────────────────
 output:
@@ -3971,145 +3975,482 @@ workflows:
             }
           }
 
-  # ─── RuntimeInfrastructure: runtime-infrastructure ─
-  runtime-infrastructure:
-    concept: RuntimeInfrastructure
+  # ─── InterfaceScaffoldGen: bind-manifest-outbound ──
+  bind-manifest-outbound:
+    concept: InterfaceScaffoldGen
     steps:
       - action: analyze
-        title: "Analyze Runtime Impact"
-        prose: "Determine which runtime layer is affected: storage adapter, interpreter, StorageProgram DSL, transport, effect system, or infrastructure primitives. Read the relevant files before modifying."
-      - action: modify
-        title: "Modify Runtime Infrastructure"
-        prose: "Implement the change following the appropriate pattern for the affected layer. Update the ConceptStorage interface if adding new storage capabilities, the interpreter if adding new instruction types, or adapter implementations for new backends."
-      - action: test
-        title: "Test Infrastructure Change"
-        prose: "Write tests covering the change. Storage adapter tests go in tests/storage*.test.ts. Interpreter tests use createInMemoryStorage + interpret. Run existing tests to verify no regressions."
+        title: "Analyze Interface Manifest"
+        prose: "Read the interface manifest and understand current targets, skills, agents, concept projections, and include lists."
+      - action: add-target
+        title: "Add or Modify a Target"
+        prose: "Add or modify a target section (REST, GraphQL, gRPC, CLI, MCP, skills, agents). Configure output directory, include list, copies, and target-specific options."
+      - action: add-skill
+        title: "Add or Modify a Skill"
+        prose: "Add or modify a skill definition with concept mapping, steps (action, title, prose), checklists, design-principles, and references (path, label, tier, inline content)."
+      - action: add-agent
+        title: "Add or Modify an Agent"
+        prose: "Add or modify an agent annotation with model, skills, tools, prompt, workflow, rules, and references."
+      - action: add-concept
+        title: "Add a Concept to the Manifest"
+        prose: "Add a concept or derived concept path to the concepts list. For derived concepts, add the .derived file path."
+      - action: regenerate
+        title: "Regenerate Output Files"
+        prose: "Run `npx tsx --tsconfig tsconfig.json scripts/regen-interface.ts` to produce updated output files from the manifest."
     checklists:
-      modify:
-        - "ConceptStorage interface backward-compatible (new methods are optional `?`)?"
-        - "In-memory adapter updated with the new capability?"
-        - "SQL adapters updated if applicable?"
-        - "Interpreter handles new instruction types if added?"
-        - "EffectSet tracking updated if new effects declared?"
-        - "Analysis providers updated if purity/commutativity affected?"
-        - "Existing tests still pass?"
+      add-skill:
+        - "Concept mapping exists?"
+        - "Steps have action + title + prose?"
+        - "Checklists reference step actions?"
+        - "References have path + label + content?"
+        - "Design principles have title + rule?"
+      add-agent:
+        - "Agent name matches a concept in the concepts list?"
+        - "Skills list includes the agent's primary skill?"
+        - "Tools include Read, Grep, Glob, Edit, Write, Bash?"
+        - "Prompt describes the agent's domain?"
+        - "Workflow has ordered steps?"
+        - "Rules are actionable constraints?"
     design-principles:
-      - title: "Adapter Transparency"
-        rule: "Concept handlers use storage/transport through interfaces without knowing which backend is active. Swapping backends requires no handler changes."
-      - title: "Backward Compatibility"
-        rule: "New ConceptStorage/ConceptTransport methods MUST be optional (`?`). Existing adapters must not break when the interface grows."
-      - title: "Index as Configuration"
-        rule: "Secondary indexes are declared via ensureIndex(), not baked into handler logic. The adapter decides how to implement them."
-      - title: "Instructions are Data"
-        rule: "StorageProgram instructions describe intent, not execution. The interpreter executes them. New instructions must be added to both the DSL (builder function) and the interpreter (execution case)."
+      - title: "Manifest is the single source of truth"
+        rule: "All generated files derive from the manifest. Never edit generated files directly."
+      - title: "Skills map to concepts"
+        rule: "Every skill has a `concept:` field linking it to a concept spec. The concept defines the domain; the skill defines the workflow."
+      - title: "Agents compose skills"
+        rule: "An agent's expertise comes from its skills list. An agent without skills is just a prompt."
+      - title: "References are inline"
+        rule: "Reference content lives in the manifest as inline YAML. The regen pipeline writes it to files."
     references:
-      - path: references/runtime-infrastructure-guide.md
-        label: "Complete runtime infrastructure reference"
+      - path: references/interface-manifest-guide.md
+        label: "Interface manifest format reference"
         tier: reference
         content: |
-          # Runtime Infrastructure Reference Guide
+          # Interface Manifest Format Reference
 
-          ## Architecture Overview
+          Complete reference for authoring and editing Clef interface manifests
+          (`*.interface.yaml`). An interface manifest is the single source of
+          truth for all generated interfaces — skills, CLI commands, MCP tools,
+          REST APIs, GraphQL schemas, agent definitions, and project instructions.
 
-          The Clef runtime has three layers, bottom to top:
+          ## Top-Level Structure
 
+          ```yaml
+          # Header
+          interface:
+            name: my-app          # Interface name (kebab-case)
+            version: 0.1.0        # Semver
+
+          # Generation targets
+          targets:
+            rest: { ... }
+            graphql: { ... }
+            cli: { ... }
+            mcp: { ... }
+            claude-skills: { ... }
+            claude-agents: { ... }
+            openapi: { ... }
+            asyncapi: { ... }
+            project-instructions: { ... }
+
+          # Concept specs to include
+          concepts:
+            - specs/my-concept.concept
+            - clef-base/derived/my-derived.derived
+
+          # Derived concepts (surface actions become tools/commands)
+          derived-concepts:
+            - specs/surface/pilot.derived
+
+          # Output configuration
+          output:
+            dir: ./generated/devtools
+            formatting:
+              typescript: prettier
+            clean: true
+
+          # Workflows (skill definitions)
+          workflows:
+            my-skill:
+              concept: MyConcept
+              steps: [...]
+
+          # Annotations (agent definitions, tool permissions)
+          annotations:
+            MyConcept:
+              concept:
+                tool-permissions: [...]
+
+          # Agent annotations (model, skills, tools, prompt, workflow, rules)
+          agent-annotations:
+            MyAgent:
+              model: sonnet
+              skills: [...]
+
+          # Project instructions (generated CLAUDE.md, AGENTS.md, GEMINI.md)
+          project-instructions:
+            content: |
+              # Project instructions content...
           ```
-          ┌─────────────────────────────────────────────┐
-          │  Concept Handlers (.handler.ts)              │
-          │  Each action returns a StorageProgram        │
-          ├─────────────────────────────────────────────┤
-          │  Runtime Execution Layer                     │
-          │  StorageProgram DSL → Interpreter →          │
-          │  Storage/Transport Adapters → Effects        │
-          ├─────────────────────────────────────────────┤
-          │  Physical Backends                           │
-          │  PostgreSQL, SQLite, Redis, DynamoDB,        │
-          │  HTTP, WebSocket, SQS, Pub/Sub              │
-          └─────────────────────────────────────────────┘
+
+          ## Targets Section
+
+          Each target configures a generation output. All targets are optional.
+
+          ### claude-skills
+
+          ```yaml
+          claude-skills:
+            name: my-skills          # Skills collection name
+            grouping: per-concept    # One skill file per concept
+            outputDir: ./.claude/skills
+            copies:                  # Mirror output to other AI assistants
+              - ./.codex/skills
+              - ./.gemini/skills
           ```
 
-          ## Key Files
+          ### cli
 
-          | File | What It Does |
-          |---|---|
-          | `runtime/types.ts` | `ConceptStorage` interface, `FindOptions`, `EntryMeta`, `ConflictInfo` |
-          | `runtime/storage-program.ts` | StorageProgram DSL: `createProgram`, `get`, `find`, `put`, `merge`, `del`, `branch`, `complete`, `perform`, `traverse`, `mapBindings`, `completeFrom` |
-          | `runtime/interpreter.ts` | Executes StoragePrograms against a ConceptStorage backend |
-          | `runtime/functional-handler.ts` | `FunctionalConceptHandler` type definition |
-          | `runtime/functional-compat.ts` | `autoInterpret()` — dual-mode wrapper |
-          | `runtime/adapters/storage.ts` | In-memory adapter with secondary indexes |
-          | `runtime/adapters/storage-factory.ts` | Backend resolution from config/env |
-          | `runtime/adapters/transport.ts` | `ConceptTransport` base interface |
-
-          ## ConceptStorage Interface
-
-          ```typescript
-          interface ConceptStorage {
-            put(relation: string, key: string, value: Record<string, unknown>): Promise<void>;
-            get(relation: string, key: string): Promise<Record<string, unknown> | null>;
-            find(relation: string, criteria?: Record<string, unknown>, options?: FindOptions): Promise<Record<string, unknown>[]>;
-            del(relation: string, key: string): Promise<void>;
-            delMany(relation: string, criteria: Record<string, unknown>): Promise<number>;
-            ensureIndex?(relation: string, field: string): void;
-            getMeta?(relation: string, key: string): Promise<EntryMeta | null>;
-            onConflict?: (info: ConflictInfo) => ConflictResolution;
-          }
+          ```yaml
+          cli:
+            name: my-cli             # CLI binary name
+            outputDir: ./cli/src     # Command files written here
           ```
 
-          ## Secondary Index System
+          ### mcp
 
-          The in-memory adapter supports optional secondary indexes:
-          ```typescript
-          storage.ensureIndex('membership', 'schema');
-          // find() now uses index for O(1) lookup
-          await storage.find('membership', { schema: 'Article' });
+          ```yaml
+          mcp:
+            name: my-mcp-server      # MCP server name
+            transport: stdio         # Transport type (stdio, http)
+            outputDir: ./.claude/mcp
+            description: >           # Shown in MCP client discovery
+              Description of the MCP server.
+            configOutputs:           # MCP client config files
+              - path: ./.mcp.json
+                format: claude-mcp-config
+              - path: ./.codex/config.toml
+                format: codex-mcp-config
+              - path: ./.gemini/settings.json
+                format: gemini-mcp-config
+              - path: ./.claude/settings.json
+                format: claude-settings-config
           ```
-          Internal: `Map<relation, Map<field, Map<value, Set<key>>>>`
 
-          ## StorageProgram Instructions
+          ### claude-agents
 
-          | Instruction | Purpose |
-          |---|---|
-          | `createProgram()` | Start a new program |
-          | `get(p, relation, key, bindAs)` | Read single record |
-          | `find(p, relation, criteria, bindAs, options?)` | Query records |
-          | `put(p, relation, key, fields)` | Write record |
-          | `merge(p, relation, key, fields)` | Merge into existing |
-          | `del(p, relation, key)` | Delete record |
-          | `branch(p, bindAs, truePath, falsePath)` | Conditional |
-          | `complete(p, variant, output)` | Terminal with variant |
-          | `perform(p, protocol, operation, params, bindAs)` | Transport effect |
-          | `traverse(p, bindAs, itemBind, bodyFn, resultBind)` | Iterate find results |
-          | `mapBindings(p, fn, bindAs)` | Transform bindings |
+          ```yaml
+          claude-agents:
+            name: my-agents          # Agent collection name
+            outputDir: ./.claude/agents
+            copies:                  # Mirror output
+              - ./.codex/agents
+              - ./.gemini/agents
+            include:                 # Only generate agents for these concepts
+              - ConceptScaffoldGen
+              - SyncScaffoldGen
+          ```
 
-          ## Monadic Concepts
+          ### rest
 
-          | Concept | Spec Path |
-          |---|---|
-          | StorageProgram | `specs/monadic/storage-program.concept` |
-          | ProgramInterpreter | `specs/monadic/program-interpreter.concept` |
-          | FunctionalHandler | `specs/monadic/functional-handler.concept` |
-          | EffectHandler | `specs/monadic/effect-handler.concept` |
-          | ProgramAnalysis | `specs/monadic/program-analysis.concept` |
-          | ProgramCache | `specs/monadic/program-cache.concept` |
+          ```yaml
+          rest:
+            basePath: /api
+            framework: hono
+            versioning: url          # url | header | query
+          ```
 
-          ## Common Patterns
+          ### graphql
 
-          ### Adding a new storage adapter method
-          1. Add optional method to ConceptStorage in `runtime/types.ts`
-          2. Implement in `runtime/adapters/storage.ts` (in-memory)
-          3. Write tests in `tests/storage*.test.ts`
+          ```yaml
+          graphql:
+            path: /graphql
+            relay: true              # Relay-style connections
+            subscriptions: true      # WebSocket subscriptions
+          ```
 
-          ### Adding a new StorageProgram instruction
-          1. Add instruction type + builder to `runtime/storage-program.ts`
-          2. Add execution case in `runtime/interpreter.ts`
-          3. Update EffectSet if the instruction has effects
-          4. Update analysis providers if purity affected
+          ### openapi
 
-          ### Adding a secondary index
-          1. Call `storage.ensureIndex(relation, field)` during init
-          2. Index maintained automatically on put/merge/del
-          3. `find()` uses index when criteria matches
+          ```yaml
+          openapi:
+            name: my-api
+            outputDir: ./generated/specs
+            version: 0.2.0
+            description: >
+              OpenAPI 3.1 specification for my API.
+          ```
+
+          ### asyncapi
+
+          ```yaml
+          asyncapi:
+            name: my-events
+            outputDir: ./generated/specs
+            version: 0.2.0
+            description: >
+              AsyncAPI 3.0 specification for my events.
+          ```
+
+          ### project-instructions
+
+          ```yaml
+          project-instructions:
+            description: >
+              Generate project instruction files for AI coding assistants.
+            outputDir: ./
+            outputs:
+              - path: ./CLAUDE.md
+                format: markdown
+              - path: ./AGENTS.md
+                format: markdown
+              - path: ./GEMINI.md
+                format: markdown
+          ```
+
+          ## Concepts Section
+
+          Lists `.concept` and `.derived` file paths. Every concept listed here
+          becomes available for generation across all targets.
+
+          ```yaml
+          concepts:
+            # Framework concepts
+            - specs/framework/spec-parser.concept
+            - specs/framework/schema-gen.concept
+
+            # Repertoire concepts
+            - repertoire/concepts/identity/authentication.concept
+
+            # Derived concepts
+            - clef-base/derived/clef-base.derived
+
+            # Score entities
+            - score/semantic/concept-entity.concept
+
+            # View suite
+            - specs/view/query-program.concept
+          ```
+
+          Derived concepts are listed separately for surface action generation:
+
+          ```yaml
+          derived-concepts:
+            - specs/surface/pilot.derived
+            - clef-base/derived/clef-base.derived
+          ```
+
+          ## Workflows Section (Skills)
+
+          Each workflow defines a skill — a step-by-step guide for using a concept.
+          The key is the skill name (kebab-case), used as the slash command name.
+
+          ```yaml
+          workflows:
+            my-skill-name:
+              concept: ConceptName           # Links to a concept spec
+              steps:
+                - action: step-action-name   # Step identifier
+                  title: "Human-Readable Title"
+                  prose: "Detailed explanation of what to do in this step."
+                - action: next-step
+                  title: "Next Step"
+                  prose: "More instructions..."
+
+              checklists:                    # Keyed by step action names
+                step-action-name:
+                  - "First check item?"
+                  - "Second check item?"
+                next-step:
+                  - "Check for this step?"
+
+              design-principles:             # Named rules for the skill
+                - title: "Principle Name"
+                  rule: "Explanation of the principle."
+                - title: "Another Principle"
+                  rule: "Another rule."
+
+              references:                    # Inline reference documents
+                - path: references/my-guide.md
+                  label: "Guide title"
+                  tier: reference            # reference | tutorial | example
+                  content: |
+                    # Guide Content
+
+                    Full markdown content written inline.
+                    The regen pipeline writes this to the path.
+
+              validation-commands:           # Optional: commands to verify
+                - label: "Run tests"
+                  command: "npx vitest run tests/my.test.ts"
+
+              quick-reference:               # Optional: summary table
+                heading: "Quick Reference"
+                body: |
+                  | Input | Type | Purpose |
+                  |-------|------|---------|
+                  | name | String | The name |
+
+              related-workflows:             # Optional: cross-references
+                - name: other-skill
+                  description: "Related skill description"
+
+              anti-patterns:                 # Optional: what NOT to do
+                - title: "Bad Pattern"
+                  description: "Why it's bad."
+                  bad: |
+                    example of bad code
+                  good: |
+                    example of good code
+          ```
+
+          ## Annotations Section
+
+          Per-concept metadata for tool permissions, argument templates,
+          trigger descriptions, and companion documentation.
+
+          ```yaml
+          annotations:
+            ConceptName:
+              concept:
+                tool-permissions: [Read, Grep, Glob, Edit, Write, Bash]
+                argument-template: "$ARGUMENTS"
+                trigger-description: >
+                  When to invoke this skill.
+                intro-template: >
+                  What the skill does with $ARGUMENTS.
+                companion-docs:
+                  - path: examples/my-example.md
+                    label: "Example walkthrough"
+                    content: |
+                      # Example Content
+                      Inline markdown...
+                code-examples:
+                  - description: "Example usage"
+                    language: typescript
+                    code: |
+                      const result = await handler.doSomething();
+          ```
+
+          ## Agent Annotations Section
+
+          Configures agent definitions generated into `.claude/agents/`.
+
+          ```yaml
+          agent-annotations:
+            MyAgent:
+              model: sonnet                  # Model: sonnet | opus | haiku
+              skills:                        # Skills the agent can use
+                - create-concept
+                - create-sync
+              tools:                         # Tool permissions
+                - Read
+                - Grep
+                - Glob
+                - Edit
+                - Write
+                - Bash
+              prompt: >                      # Agent system prompt
+                You are an expert at designing concepts
+                following Jackson's methodology.
+              workflow:                       # Ordered workflow steps
+                - "Analyze the requirements"
+                - "Decompose into concepts"
+                - "Generate specs"
+                - "Validate with tests"
+              rules:                         # Constraints
+                - "Always check the repertoire first"
+                - "Never create concepts without purpose blocks"
+              references:                    # Optional agent-specific docs
+                - path: references/agent-guide.md
+                  label: "Agent guide"
+                  content: |
+                    # Agent-Specific Guide
+                    ...
+          ```
+
+          ## Regeneration
+
+          After editing the manifest, regenerate all output files:
+
+          ```bash
+          npx tsx --tsconfig tsconfig.json scripts/regen-interface.ts
+          ```
+
+          This reads the manifest and produces:
+          - `.claude/skills/*/SKILL.md` — skill files
+          - `.claude/agents/*.md` — agent files
+          - `.claude/mcp/*/` — MCP tool definitions
+          - `cli/src/*/` — CLI command files
+          - `CLAUDE.md`, `AGENTS.md`, `GEMINI.md` — project instructions
+          - `generated/specs/` — OpenAPI, AsyncAPI specs
+
+          Generated files have an `<!-- Auto-generated -->` header.
+          Never edit them directly — edit the manifest instead.
+    validation-commands:
+      - label: "Regenerate all interface output"
+        command: "npx tsx --tsconfig tsconfig.json scripts/regen-interface.ts"
+      - label: "Validate manifest YAML syntax"
+        command: "npx tsx cli/src/main.ts interface validate --manifest examples/devtools/devtools.interface.yaml"
+    quick-reference:
+      heading: "Quick Reference"
+      body: |
+        | Section | Key | Purpose |
+        |---------|-----|---------|
+        | interface | name, version | Manifest identity |
+        | targets | rest, graphql, cli, mcp, claude-skills, claude-agents, openapi, asyncapi, project-instructions | Generation outputs |
+        | concepts | list of .concept paths | Concepts to expose |
+        | derived-concepts | list of .derived paths | Derived concepts with surface actions |
+        | workflows | skill-name → steps, checklists, design-principles, references | Skill definitions |
+        | annotations | ConceptName → tool-permissions, trigger-description, companion-docs | Per-concept metadata |
+        | agent-annotations | AgentName → model, skills, tools, prompt, workflow, rules | Agent definitions |
+        | output | dir, formatting, clean | Output configuration |
+    related-workflows:
+      - name: create-interface
+        description: "Scaffold a new interface manifest from scratch"
+      - name: create-concept
+        description: "Create concept specs that the manifest exposes"
+      - name: create-sync
+        description: "Wire concepts together with sync rules"
+    anti-patterns:
+      - title: "Editing generated files directly"
+        description: "Changes are overwritten on next regen. Edit the manifest instead."
+        bad: |
+          # Editing .claude/skills/my-skill/SKILL.md directly
+          vim .claude/skills/my-skill/SKILL.md
+        good: |
+          # Edit the manifest, then regenerate
+          vim examples/devtools/devtools.interface.yaml
+          npx tsx --tsconfig tsconfig.json scripts/regen-interface.ts
+      - title: "Skills without concept mappings"
+        description: "A skill with no concept: field has no domain grounding."
+        bad: |
+          workflows:
+            my-skill:
+              steps:
+                - action: do-thing
+                  title: "Do Thing"
+                  prose: "Just do the thing."
+        good: |
+          workflows:
+            my-skill:
+              concept: MyConcept
+              steps:
+                - action: do-thing
+                  title: "Do Thing"
+                  prose: "Invoke MyConcept/doThing with..."
+      - title: "Agents without skills"
+        description: "An agent with no skills list is just a prompt — it has no structured expertise."
+        bad: |
+          agent-annotations:
+            MyAgent:
+              model: sonnet
+              prompt: "You are an expert."
+        good: |
+          agent-annotations:
+            MyAgent:
+              model: sonnet
+              skills: [create-concept, create-sync]
+              prompt: "You are an expert at concept design."
+
 
   # ─── SurfaceComponentScaffoldGen: create-widget ─
   create-widget:
@@ -7812,9 +8153,6 @@ project-instructions:
       - Good: "Async Gate Convention & Pattern Validation Tests", "See Architecture doc Sections 16.11, 16.12"
     - Comments should reference architecture doc section numbers (e.g., "Section 16.12") not phase numbers.
 
-    ### Collaboration Style
-    - When I push back on a position that knowledgeable experts would defend, answer as a smart expert who would still argue back. Lead with the counterarguments rather than with the agreement. Give a detailed response/steelman of the strongest arguments against my position and don't needlessly soften or walk back them.
-
     ### Generated Files — Never Edit Directly
     - **CLAUDE.md**, **AGENTS.md**, **GEMINI.md** are generated from `examples/devtools/devtools.interface.yaml` → `project-instructions` section. Edit the manifest, then regenerate.
     - **`.claude/agents/*.md`** are generated from `examples/devtools/devtools.interface.yaml` → `agents` section. Edit the manifest, then regenerate.
@@ -8996,89 +9334,34 @@ agent-annotations:
       - "**Entity lifecycle is free** — ContentStorage/save automatically triggers cache/search/alias/provenance via syncs"
       - "**Derived concept parser constraints** — surface queries MUST be single-line (no newline before ->). Principle blocks MUST use after/then/and syntax, NOT prose-style quoted strings"
 
-  RuntimeInfrastructure:
+  InfrastructureCore:
     model: sonnet
     skills:
-      - runtime-infrastructure
-      - create-storage-adapter
-      - create-transport-adapter
+      - create-concept
+      - create-sync
       - create-implementation
-      - effect-handler
-      - storage-program
-      - program-interpreter
-      - program-analysis
+      - spec-parser
       - score-api
     tools: Read, Grep, Glob, Edit, Write, Bash, mcp__vibe_kanban
     prompt: |
-      You are a Clef runtime infrastructure specialist. You work on the
-      execution layer between concept handlers and physical backends.
+      You are a Clef InfrastructureCore agent managing platform infrastructure
+      primitives: PluginRegistry, Cache, ConfigSync, Pathauto, EventBus,
+      Validator, EntityReflector, and FileCatalog.
 
-      Your domain covers:
-      - **Storage adapters** — ConceptStorage implementations (in-memory,
-        file, PostgreSQL, SQLite, DynamoDB, Redis, Firestore, Upstash)
-      - **Transport adapters** — ConceptTransport implementations (HTTP,
-        WebSocket, pub/sub, SQS, serverless)
-      - **StorageProgram DSL** — instruction types, builder functions,
-        effect tracking, purity classification
-      - **Interpreter** — program execution, transaction boundaries,
-        completion production, trace recording
-      - **Effect system** — perform instructions, effect handler
-        registration, protocol-operation dispatch
-      - **Secondary indexes** — ensureIndex, index maintenance, indexed find
-      - **Infrastructure primitives** — Cache, PluginRegistry, EventBus
-        wiring for runtime features
-      - **Sync engine** — per-request evaluation, serverless evaluation
-      - **Serverless** — Lambda/GCF handlers, cold start, connection pooling
-
-      Key derived concepts you work with:
-      - RuntimeInfrastructure (root) — your primary domain
-      - MonadicExecution — StorageProgram + Interpreter + Effects
-      - AdapterInfrastructure — Storage + Transport adapters
-      - InfrastructureCore — Cache, PluginRegistry, EventBus, Validator
+      These concepts underpin every Clef Base feature. PluginRegistry handles
+      extension discovery and registration. Cache provides tag-based caching.
+      ConfigSync synchronizes configuration across runtimes. EventBus provides
+      pub/sub messaging. Validator runs declarative input validation rules.
+      EntityReflector bridges entities to the content system. FileCatalog
+      discovers file-system artifacts.
     workflow:
-      - "**Identify the layer** — is this a storage adapter, interpreter, DSL, transport, or infrastructure change?"
-      - "**Read current code** — understand the existing implementation before modifying"
-      - "**Check interface compatibility** — new ConceptStorage/ConceptTransport methods must be optional"
-      - "**Implement the change** — follow the pattern for the affected layer"
-      - "**Update all adapters** — if the interface changed, update in-memory adapter at minimum"
-      - "**Update analysis providers** — if new instructions or effects, update purity/commutativity/etc."
-      - "**Write tests** — storage adapter tests, interpreter tests, or integration tests"
-      - "**Verify backward compat** — run existing tests to ensure no regressions"
+      - "**Understand the infrastructure need** — which infrastructure primitive is involved?"
+      - "**Check existing plugins** — use ScoreApi to find related concepts and syncs"
+      - "**Use infrastructure concepts** — leverage PluginRegistry for extensibility, Cache for performance, EventBus for messaging"
+      - "**Wire via syncs** — all cross-concept coordination goes through syncs"
+      - "**Test** — run conformance tests"
     rules:
-      - "**Interface methods are optional** — add `?` to new ConceptStorage/ConceptTransport methods. Existing adapters must not break"
-      - "**In-memory adapter is primary** — always implement in the in-memory adapter first. It's used by all tests, the dev server, and the kernel"
-      - "**Never modify concept specs for adapter concerns** — indexes, caching, connection pooling are adapter-level, not concept-level"
-      - "**StorageProgram instructions are data** — they describe intent, not execution. The interpreter executes them"
-      - "**Effect handlers bridge perform() to protocols** — handlers declare transport effects via perform(); EffectHandler resolves them to concrete implementations"
-      - "**Secondary indexes are declarative** — call ensureIndex() during init, not inside handler actions"
-      - "**Test the adapter, not the concept** — adapter tests verify storage behavior. Concept conformance tests verify handler logic. Don't conflate them"
-      - "**Backward compat for find()** — find() without indexed criteria must still work (linear scan fallback)"
-    references:
-      - path: references/runtime-infrastructure-guide.md
-        label: "Runtime infrastructure reference"
-        tier: reference
-        content: |
-          # Runtime Infrastructure Reference Guide
-
-          See the runtime-infrastructure skill reference for the full guide.
-          This agent reference provides a quick lookup for the most common tasks.
-
-          ## Key Files
-
-          | Layer | Files |
-          |---|---|
-          | Types | `runtime/types.ts` — ConceptStorage, FindOptions, EntryMeta |
-          | DSL | `runtime/storage-program.ts` — instruction builders |
-          | Interpreter | `runtime/interpreter.ts` — program execution |
-          | Handlers | `runtime/functional-handler.ts`, `runtime/functional-compat.ts` |
-          | Storage | `runtime/adapters/storage.ts` (in-memory), `storage-factory.ts` |
-          | Transport | `runtime/adapters/transport.ts`, `http-transport.ts`, `ws-transport.ts` |
-          | Sync Engine | `runtime/sync-engine/per-request-engine.ts` |
-          | Serverless | `runtime/adapters/serverless/lambda-handler.ts`, `gcf-handler.ts` |
-
-          ## Derived Concepts
-
-          - RuntimeInfrastructure = MonadicExecution + AdapterInfrastructure + InfrastructureCore
-          - MonadicExecution = StorageProgram + ProgramInterpreter + FunctionalHandler + EffectHandler + ProgramAnalysis + ProgramCache
-          - AdapterInfrastructure = StorageAdapterScaffoldGen + TransportAdapterScaffoldGen + StorageProvider
-          - InfrastructureCore = PluginRegistry + Cache + EventBus + Validator + ConfigSync + ...
+      - "**PluginRegistry is the extension point** — all provider/plugin patterns must use PluginRegistry"
+      - "**Cache invalidation via syncs** — wire cache invalidation to entity lifecycle syncs"
+      - "**EventBus for pub/sub** — use EventBus for loose coupling between infrastructure services"
+      - "**Validator for declarative rules** — use Validator concept for complex validation, simple checks stay in handlers"

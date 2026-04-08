@@ -14,6 +14,7 @@ import type {
   DerivedPrincipleStep,
   ParamDecl,
   TypeExpr,
+  ConceptManifest,
 } from '../../../runtime/types.js';
 
 // --- Token Types ---
@@ -871,6 +872,83 @@ class DerivedParser {
     }
 
     throw new Error(`Derived parse error at line ${tok.line}: expected type expression, got ${tok.type}(${tok.value})`);
+  }
+}
+
+/**
+ * Convert a parsed DerivedAST into a ConceptManifest-compatible shape.
+ * Surface actions become actions with ok/error variants; surface queries
+ * become actions with an ok variant. Fields that are not applicable to
+ * derived concepts (relations, graphqlSchema, jsonSchemas) are set to
+ * sensible empty defaults.
+ */
+export function derivedToManifest(derived: DerivedAST): ConceptManifest {
+  const actions: ConceptManifest['actions'] = [];
+
+  for (const sa of derived.surface.actions) {
+    actions.push({
+      name: sa.name,
+      description: `Surface action: ${sa.name}`,
+      params: sa.params.map(p => ({
+        name: p.name,
+        type: resolveParamType(p.type),
+      })),
+      variants: [
+        { tag: 'ok', fields: [], prose: `${sa.name} succeeded` },
+        { tag: 'error', fields: [], prose: `${sa.name} failed` },
+      ],
+      fixtures: [],
+    });
+  }
+
+  for (const sq of derived.surface.queries) {
+    actions.push({
+      name: sq.name,
+      description: `Surface query: ${sq.name}`,
+      params: sq.params.map(p => ({
+        name: p.name,
+        type: resolveParamType(p.type),
+      })),
+      variants: [
+        { tag: 'ok', fields: [], prose: `${sq.name} query result` },
+      ],
+      fixtures: [],
+    });
+  }
+
+  return {
+    uri: `derived://${derived.name}`,
+    name: derived.name,
+    typeParams: (derived.typeParams || []).map(tp => ({
+      name: tp,
+      wireType: 'string' as const,
+    })),
+    relations: [],
+    actions,
+    invariants: [],
+    graphqlSchema: '',
+    jsonSchemas: { invocations: {}, completions: {} },
+    capabilities: [],
+    purpose: derived.purpose || '',
+  };
+}
+
+/** Map a parsed TypeExpr to a ResolvedType for the manifest. */
+function resolveParamType(typeExpr: TypeExpr): ConceptManifest['actions'][0]['params'][0]['type'] {
+  if (!typeExpr) return { kind: 'primitive', primitive: 'String' };
+  switch (typeExpr.kind) {
+    case 'primitive':
+      return { kind: 'primitive', primitive: typeExpr.name };
+    case 'param':
+      return { kind: 'param', paramRef: typeExpr.name };
+    case 'set':
+      return { kind: 'set', inner: resolveParamType(typeExpr.inner!) };
+    case 'list':
+      return { kind: 'list', inner: resolveParamType(typeExpr.inner!) };
+    case 'option':
+      return { kind: 'option', inner: resolveParamType(typeExpr.inner!) };
+    default:
+      return { kind: 'primitive', primitive: 'String' };
   }
 }
 

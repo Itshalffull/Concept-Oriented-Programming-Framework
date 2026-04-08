@@ -1170,6 +1170,16 @@ channels:
     messages:
       scoreIndexUpsertInterfaceCompleted:
         $ref: '#/components/messages/ScoreIndexUpsertInterfaceCompleted'
+  score-index/upsertViewCompleted:
+    description: Fires when ScoreIndex/upsertView completes with ok
+    messages:
+      scoreIndexUpsertViewCompleted:
+        $ref: '#/components/messages/ScoreIndexUpsertViewCompleted'
+  score-index/deleted:
+    description: Fires when ScoreIndex/removeView completes with ok
+    messages:
+      scoreIndexDeleted:
+        $ref: '#/components/messages/ScoreIndexDeleted'
   score-index/deleted:
     description: Fires when ScoreIndex/removeByFile completes with ok
     messages:
@@ -1895,6 +1905,371 @@ channels:
     messages:
       transformExtractionProviderAnalyzeCompleted:
         $ref: '#/components/messages/TransformExtractionProviderAnalyzeCompleted'
+  query-program/created:
+    description: Fires when QueryProgram/create completes with ok
+    messages:
+      queryProgramCreated:
+        $ref: '#/components/messages/QueryProgramCreated'
+  query-program/scanCompleted:
+    description: Fires when QueryProgram/scan completes with ok
+    messages:
+      queryProgramScanCompleted:
+        $ref: '#/components/messages/QueryProgramScanCompleted'
+  query-program/filterCompleted:
+    description: Fires when QueryProgram/filter completes with ok
+    messages:
+      queryProgramFilterCompleted:
+        $ref: '#/components/messages/QueryProgramFilterCompleted'
+  query-program/sortCompleted:
+    description: Fires when QueryProgram/sort completes with ok
+    messages:
+      queryProgramSortCompleted:
+        $ref: '#/components/messages/QueryProgramSortCompleted'
+  query-program/groupCompleted:
+    description: Fires when QueryProgram/group completes with ok
+    messages:
+      queryProgramGroupCompleted:
+        $ref: '#/components/messages/QueryProgramGroupCompleted'
+  query-program/projectCompleted:
+    description: Fires when QueryProgram/project completes with ok
+    messages:
+      queryProgramProjectCompleted:
+        $ref: '#/components/messages/QueryProgramProjectCompleted'
+  query-program/limitCompleted:
+    description: Fires when QueryProgram/limit completes with ok
+    messages:
+      queryProgramLimitCompleted:
+        $ref: '#/components/messages/QueryProgramLimitCompleted'
+  query-program/offsetCompleted:
+    description: Fires when QueryProgram/offset completes with ok
+    messages:
+      queryProgramOffsetCompleted:
+        $ref: '#/components/messages/QueryProgramOffsetCompleted'
+  query-program/pureCompleted:
+    description: Fires when QueryProgram/pure completes with ok
+    messages:
+      queryProgramPureCompleted:
+        $ref: '#/components/messages/QueryProgramPureCompleted'
+  query-program/joinCompleted:
+    description: Fires when QueryProgram/join completes with ok
+    messages:
+      queryProgramJoinCompleted:
+        $ref: '#/components/messages/QueryProgramJoinCompleted'
+  query-program/composeCompleted:
+    description: Fires when QueryProgram/compose completes with ok
+    messages:
+      queryProgramComposeCompleted:
+        $ref: '#/components/messages/QueryProgramComposeCompleted'
+  query-program/invokeCompleted:
+    description: Fires when QueryProgram/invoke completes with ok
+    messages:
+      queryProgramInvokeCompleted:
+        $ref: '#/components/messages/QueryProgramInvokeCompleted'
+  query-program/matchCompleted:
+    description: Fires when QueryProgram/match completes with ok
+    messages:
+      queryProgramMatchCompleted:
+        $ref: '#/components/messages/QueryProgramMatchCompleted'
+  query-program/traverseInvokeCompleted:
+    description: Fires when QueryProgram/traverseInvoke completes with ok
+    messages:
+      queryProgramTraverseInvokeCompleted:
+        $ref: '#/components/messages/QueryProgramTraverseInvokeCompleted'
+  query-program/traverseCompleted:
+    description: Fires when QueryProgram/traverse completes with ok
+    messages:
+      queryProgramTraverseCompleted:
+        $ref: '#/components/messages/QueryProgramTraverseCompleted'
+  query-execution/registerKindCompleted:
+    description: Fires when QueryExecution/registerKind completes with ok
+    messages:
+      queryExecutionRegisterKindCompleted:
+        $ref: '#/components/messages/QueryExecutionRegisterKindCompleted'
+  query-execution/registerCompleted:
+    description: Fires when QueryExecution/register completes with ok
+    messages:
+      queryExecutionRegisterCompleted:
+        $ref: '#/components/messages/QueryExecutionRegisterCompleted'
+  query-execution/executeCompleted:
+    description: Fires when QueryExecution/execute completes with ok
+    messages:
+      queryExecutionExecuteCompleted:
+        $ref: '#/components/messages/QueryExecutionExecuteCompleted'
+  query-execution/resumeAfterInvokeCompleted:
+    description: Fires when QueryExecution/resumeAfterInvoke completes with ok
+    messages:
+      queryExecutionResumeAfterInvokeCompleted:
+        $ref: '#/components/messages/QueryExecutionResumeAfterInvokeCompleted'
+  query-execution/planPushdownCompleted:
+    description: Fires when QueryExecution/planPushdown completes with ok
+    messages:
+      queryExecutionPlanPushdownCompleted:
+        $ref: '#/components/messages/QueryExecutionPlanPushdownCompleted'
+  sort-spec/created:
+    description: Fires when SortSpec/create completes with ok
+    messages:
+      sortSpecCreated:
+        $ref: '#/components/messages/SortSpecCreated'
+  sort-spec/composeCompleted:
+    description: Fires when SortSpec/compose completes with ok
+    messages:
+      sortSpecComposeCompleted:
+        $ref: '#/components/messages/SortSpecComposeCompleted'
+  sort-spec/evaluateCompleted:
+    description: Fires when SortSpec/evaluate completes with ok
+    messages:
+      sortSpecEvaluateCompleted:
+        $ref: '#/components/messages/SortSpecEvaluateCompleted'
+  group-spec/created:
+    description: Fires when GroupSpec/create completes with ok
+    messages:
+      groupSpecCreated:
+        $ref: '#/components/messages/GroupSpecCreated'
+  group-spec/evaluateCompleted:
+    description: Fires when GroupSpec/evaluate completes with ok
+    messages:
+      groupSpecEvaluateCompleted:
+        $ref: '#/components/messages/GroupSpecEvaluateCompleted'
+  projection-spec/created:
+    description: Fires when ProjectionSpec/create completes with ok
+    messages:
+      projectionSpecCreated:
+        $ref: '#/components/messages/ProjectionSpecCreated'
+  projection-spec/mergeCompleted:
+    description: Fires when ProjectionSpec/merge completes with ok
+    messages:
+      projectionSpecMergeCompleted:
+        $ref: '#/components/messages/ProjectionSpecMergeCompleted'
+  projection-spec/evaluateCompleted:
+    description: Fires when ProjectionSpec/evaluate completes with ok
+    messages:
+      projectionSpecEvaluateCompleted:
+        $ref: '#/components/messages/ProjectionSpecEvaluateCompleted'
+  presentation-spec/created:
+    description: Fires when PresentationSpec/create completes with ok
+    messages:
+      presentationSpecCreated:
+        $ref: '#/components/messages/PresentationSpecCreated'
+  interaction-spec/created:
+    description: Fires when InteractionSpec/create completes with ok
+    messages:
+      interactionSpecCreated:
+        $ref: '#/components/messages/InteractionSpecCreated'
+  view-shell/created:
+    description: Fires when ViewShell/create completes with ok
+    messages:
+      viewShellCreated:
+        $ref: '#/components/messages/ViewShellCreated'
+  view-shell/updated:
+    description: Fires when ViewShell/update completes with ok
+    messages:
+      viewShellUpdated:
+        $ref: '#/components/messages/ViewShellUpdated'
+  view-shell/resolveCompleted:
+    description: Fires when ViewShell/resolve completes with ok
+    messages:
+      viewShellResolveCompleted:
+        $ref: '#/components/messages/ViewShellResolveCompleted'
+  view-shell/resolveHydratedCompleted:
+    description: Fires when ViewShell/resolveHydrated completes with ok
+    messages:
+      viewShellResolveHydratedCompleted:
+        $ref: '#/components/messages/ViewShellResolveHydratedCompleted'
+  filter-representation/registerKindCompleted:
+    description: Fires when FilterRepresentation/registerKind completes with ok
+    messages:
+      filterRepresentationRegisterKindCompleted:
+        $ref: '#/components/messages/FilterRepresentationRegisterKindCompleted'
+  filter-representation/registerCompleted:
+    description: Fires when FilterRepresentation/register completes with ok
+    messages:
+      filterRepresentationRegisterCompleted:
+        $ref: '#/components/messages/FilterRepresentationRegisterCompleted'
+  filter-representation/parseCompleted:
+    description: Fires when FilterRepresentation/parse completes with ok
+    messages:
+      filterRepresentationParseCompleted:
+        $ref: '#/components/messages/FilterRepresentationParseCompleted'
+  filter-representation/printCompleted:
+    description: Fires when FilterRepresentation/print completes with ok
+    messages:
+      filterRepresentationPrintCompleted:
+        $ref: '#/components/messages/FilterRepresentationPrintCompleted'
+  filter-representation/canPrintCompleted:
+    description: Fires when FilterRepresentation/canPrint completes with ok
+    messages:
+      filterRepresentationCanPrintCompleted:
+        $ref: '#/components/messages/FilterRepresentationCanPrintCompleted'
+  remote-query-provider/registerCompleted:
+    description: Fires when RemoteQueryProvider/register completes with ok
+    messages:
+      remoteQueryProviderRegisterCompleted:
+        $ref: '#/components/messages/RemoteQueryProviderRegisterCompleted'
+  remote-query-provider/executeCompleted:
+    description: Fires when RemoteQueryProvider/execute completes with ok
+    messages:
+      remoteQueryProviderExecuteCompleted:
+        $ref: '#/components/messages/RemoteQueryProviderExecuteCompleted'
+  remote-query-provider/planPushdownCompleted:
+    description: Fires when RemoteQueryProvider/planPushdown completes with ok
+    messages:
+      remoteQueryProviderPlanPushdownCompleted:
+        $ref: '#/components/messages/RemoteQueryProviderPlanPushdownCompleted'
+  connection/connectCompleted:
+    description: Fires when Connection/connect completes with ok
+    messages:
+      connectionConnectCompleted:
+        $ref: '#/components/messages/ConnectionConnectCompleted'
+  connection/discoverCompleted:
+    description: Fires when Connection/discover completes with ok
+    messages:
+      connectionDiscoverCompleted:
+        $ref: '#/components/messages/ConnectionDiscoverCompleted'
+  connection/invokeCompleted:
+    description: Fires when Connection/invoke completes with ok
+    messages:
+      connectionInvokeCompleted:
+        $ref: '#/components/messages/ConnectionInvokeCompleted'
+  connection/observeCompleted:
+    description: Fires when Connection/observe completes with ok
+    messages:
+      connectionObserveCompleted:
+        $ref: '#/components/messages/ConnectionObserveCompleted'
+  connection/disconnectCompleted:
+    description: Fires when Connection/disconnect completes with ok
+    messages:
+      connectionDisconnectCompleted:
+        $ref: '#/components/messages/ConnectionDisconnectCompleted'
+  page-map/registerCompleted:
+    description: Fires when PageMap/register completes with ok
+    messages:
+      pageMapRegisterCompleted:
+        $ref: '#/components/messages/PageMapRegisterCompleted'
+  page-map/updated:
+    description: Fires when PageMap/update completes with ok
+    messages:
+      pageMapUpdated:
+        $ref: '#/components/messages/PageMapUpdated'
+  page-map/clearCompleted:
+    description: Fires when PageMap/clear completes with ok
+    messages:
+      pageMapClearCompleted:
+        $ref: '#/components/messages/PageMapClearCompleted'
+  clef-base/created:
+    description: Fires when ClefBase/createContent completes with ok
+    messages:
+      clefBaseCreated:
+        $ref: '#/components/messages/ClefBaseCreated'
+  clef-base/compileContentCompleted:
+    description: Fires when ClefBase/compileContent completes with ok
+    messages:
+      clefBaseCompileContentCompleted:
+        $ref: '#/components/messages/ClefBaseCompileContentCompleted'
+  clef-base/defineSchemaCompleted:
+    description: Fires when ClefBase/defineSchema completes with ok
+    messages:
+      clefBaseDefineSchemaCompleted:
+        $ref: '#/components/messages/ClefBaseDefineSchemaCompleted'
+  clef-base/applySchemaCompleted:
+    description: Fires when ClefBase/applySchema completes with ok
+    messages:
+      clefBaseApplySchemaCompleted:
+        $ref: '#/components/messages/ClefBaseApplySchemaCompleted'
+  clef-base/spawnAgentCompleted:
+    description: Fires when ClefBase/spawnAgent completes with ok
+    messages:
+      clefBaseSpawnAgentCompleted:
+        $ref: '#/components/messages/ClefBaseSpawnAgentCompleted'
+  clef-base/invokeAgentCompleted:
+    description: Fires when ClefBase/invokeAgent completes with ok
+    messages:
+      clefBaseInvokeAgentCompleted:
+        $ref: '#/components/messages/ClefBaseInvokeAgentCompleted'
+  clef-base/created:
+    description: Fires when ClefBase/createTrigger completes with ok
+    messages:
+      clefBaseCreated:
+        $ref: '#/components/messages/ClefBaseCreated'
+  clef-base/startProcessCompleted:
+    description: Fires when ClefBase/startProcess completes with ok
+    messages:
+      clefBaseStartProcessCompleted:
+        $ref: '#/components/messages/ClefBaseStartProcessCompleted'
+  clef-base/approveStepCompleted:
+    description: Fires when ClefBase/approveStep completes with ok
+    messages:
+      clefBaseApproveStepCompleted:
+        $ref: '#/components/messages/ClefBaseApproveStepCompleted'
+  clef-base/created:
+    description: Fires when ClefBase/createView completes with ok
+    messages:
+      clefBaseCreated:
+        $ref: '#/components/messages/ClefBaseCreated'
+  clef-base/resolveViewCompleted:
+    description: Fires when ClefBase/resolveView completes with ok
+    messages:
+      clefBaseResolveViewCompleted:
+        $ref: '#/components/messages/ClefBaseResolveViewCompleted'
+  clef-base/installPackageCompleted:
+    description: Fires when ClefBase/installPackage completes with ok
+    messages:
+      clefBaseInstallPackageCompleted:
+        $ref: '#/components/messages/ClefBaseInstallPackageCompleted'
+  clef-base/browsePackagesCompleted:
+    description: Fires when ClefBase/browsePackages completes with ok
+    messages:
+      clefBaseBrowsePackagesCompleted:
+        $ref: '#/components/messages/ClefBaseBrowsePackagesCompleted'
+  clef-base/created:
+    description: Fires when ClefBase/createDiagram completes with ok
+    messages:
+      clefBaseCreated:
+        $ref: '#/components/messages/ClefBaseCreated'
+  clef-base/exportDiagramCompleted:
+    description: Fires when ClefBase/exportDiagram completes with ok
+    messages:
+      clefBaseExportDiagramCompleted:
+        $ref: '#/components/messages/ClefBaseExportDiagramCompleted'
+  clef-base/analyzeGraphCompleted:
+    description: Fires when ClefBase/analyzeGraph completes with ok
+    messages:
+      clefBaseAnalyzeGraphCompleted:
+        $ref: '#/components/messages/ClefBaseAnalyzeGraphCompleted'
+  infrastructure-core/registerPluginCompleted:
+    description: Fires when InfrastructureCore/registerPlugin completes with ok
+    messages:
+      infrastructureCoreRegisterPluginCompleted:
+        $ref: '#/components/messages/InfrastructureCoreRegisterPluginCompleted'
+  infrastructure-core/discoverPluginsCompleted:
+    description: Fires when InfrastructureCore/discoverPlugins completes with ok
+    messages:
+      infrastructureCoreDiscoverPluginsCompleted:
+        $ref: '#/components/messages/InfrastructureCoreDiscoverPluginsCompleted'
+  infrastructure-core/invalidateCacheCompleted:
+    description: Fires when InfrastructureCore/invalidateCache completes with ok
+    messages:
+      infrastructureCoreInvalidateCacheCompleted:
+        $ref: '#/components/messages/InfrastructureCoreInvalidateCacheCompleted'
+  infrastructure-core/publishEventCompleted:
+    description: Fires when InfrastructureCore/publishEvent completes with ok
+    messages:
+      infrastructureCorePublishEventCompleted:
+        $ref: '#/components/messages/InfrastructureCorePublishEventCompleted'
+  infrastructure-core/validateCompleted:
+    description: Fires when InfrastructureCore/validate completes with ok
+    messages:
+      infrastructureCoreValidateCompleted:
+        $ref: '#/components/messages/InfrastructureCoreValidateCompleted'
+  runtime-infrastructure/created:
+    description: Fires when RuntimeInfrastructure/createProgram completes with ok
+    messages:
+      runtimeInfrastructureCreated:
+        $ref: '#/components/messages/RuntimeInfrastructureCreated'
+  runtime-infrastructure/ensureIndexCompleted:
+    description: Fires when RuntimeInfrastructure/ensureIndex completes with ok
+    messages:
+      runtimeInfrastructureEnsureIndexCompleted:
+        $ref: '#/components/messages/RuntimeInfrastructureEnsureIndexCompleted'
 
 operations:
   publishSpecParserParseCompleted:
@@ -3521,6 +3896,20 @@ operations:
     summary: Publish event when ScoreIndex/upsertInterface completes
     messages:
       - $ref: '#/channels/score-index/upsertInterfaceCompleted/messages/scoreIndexUpsertInterfaceCompleted'
+  publishScoreIndexUpsertViewCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/score-index/upsertViewCompleted'
+    summary: Publish event when ScoreIndex/upsertView completes
+    messages:
+      - $ref: '#/channels/score-index/upsertViewCompleted/messages/scoreIndexUpsertViewCompleted'
+  publishScoreIndexDeleted:
+    action: send
+    channel:
+      $ref: '#/channels/score-index/deleted'
+    summary: Publish event when ScoreIndex/removeView completes
+    messages:
+      - $ref: '#/channels/score-index/deleted/messages/scoreIndexDeleted'
   publishScoreIndexDeleted:
     action: send
     channel:
@@ -4536,6 +4925,517 @@ operations:
     summary: Publish event when TransformExtractionProvider/analyze completes
     messages:
       - $ref: '#/channels/transform-extraction-provider/analyzeCompleted/messages/transformExtractionProviderAnalyzeCompleted'
+  publishQueryProgramCreated:
+    action: send
+    channel:
+      $ref: '#/channels/query-program/created'
+    summary: Publish event when QueryProgram/create completes
+    messages:
+      - $ref: '#/channels/query-program/created/messages/queryProgramCreated'
+  publishQueryProgramScanCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/query-program/scanCompleted'
+    summary: Publish event when QueryProgram/scan completes
+    messages:
+      - $ref: '#/channels/query-program/scanCompleted/messages/queryProgramScanCompleted'
+  publishQueryProgramFilterCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/query-program/filterCompleted'
+    summary: Publish event when QueryProgram/filter completes
+    messages:
+      - $ref: '#/channels/query-program/filterCompleted/messages/queryProgramFilterCompleted'
+  publishQueryProgramSortCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/query-program/sortCompleted'
+    summary: Publish event when QueryProgram/sort completes
+    messages:
+      - $ref: '#/channels/query-program/sortCompleted/messages/queryProgramSortCompleted'
+  publishQueryProgramGroupCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/query-program/groupCompleted'
+    summary: Publish event when QueryProgram/group completes
+    messages:
+      - $ref: '#/channels/query-program/groupCompleted/messages/queryProgramGroupCompleted'
+  publishQueryProgramProjectCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/query-program/projectCompleted'
+    summary: Publish event when QueryProgram/project completes
+    messages:
+      - $ref: '#/channels/query-program/projectCompleted/messages/queryProgramProjectCompleted'
+  publishQueryProgramLimitCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/query-program/limitCompleted'
+    summary: Publish event when QueryProgram/limit completes
+    messages:
+      - $ref: '#/channels/query-program/limitCompleted/messages/queryProgramLimitCompleted'
+  publishQueryProgramOffsetCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/query-program/offsetCompleted'
+    summary: Publish event when QueryProgram/offset completes
+    messages:
+      - $ref: '#/channels/query-program/offsetCompleted/messages/queryProgramOffsetCompleted'
+  publishQueryProgramPureCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/query-program/pureCompleted'
+    summary: Publish event when QueryProgram/pure completes
+    messages:
+      - $ref: '#/channels/query-program/pureCompleted/messages/queryProgramPureCompleted'
+  publishQueryProgramJoinCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/query-program/joinCompleted'
+    summary: Publish event when QueryProgram/join completes
+    messages:
+      - $ref: '#/channels/query-program/joinCompleted/messages/queryProgramJoinCompleted'
+  publishQueryProgramComposeCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/query-program/composeCompleted'
+    summary: Publish event when QueryProgram/compose completes
+    messages:
+      - $ref: '#/channels/query-program/composeCompleted/messages/queryProgramComposeCompleted'
+  publishQueryProgramInvokeCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/query-program/invokeCompleted'
+    summary: Publish event when QueryProgram/invoke completes
+    messages:
+      - $ref: '#/channels/query-program/invokeCompleted/messages/queryProgramInvokeCompleted'
+  publishQueryProgramMatchCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/query-program/matchCompleted'
+    summary: Publish event when QueryProgram/match completes
+    messages:
+      - $ref: '#/channels/query-program/matchCompleted/messages/queryProgramMatchCompleted'
+  publishQueryProgramTraverseInvokeCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/query-program/traverseInvokeCompleted'
+    summary: Publish event when QueryProgram/traverseInvoke completes
+    messages:
+      - $ref: '#/channels/query-program/traverseInvokeCompleted/messages/queryProgramTraverseInvokeCompleted'
+  publishQueryProgramTraverseCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/query-program/traverseCompleted'
+    summary: Publish event when QueryProgram/traverse completes
+    messages:
+      - $ref: '#/channels/query-program/traverseCompleted/messages/queryProgramTraverseCompleted'
+  publishQueryExecutionRegisterKindCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/query-execution/registerKindCompleted'
+    summary: Publish event when QueryExecution/registerKind completes
+    messages:
+      - $ref: '#/channels/query-execution/registerKindCompleted/messages/queryExecutionRegisterKindCompleted'
+  publishQueryExecutionRegisterCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/query-execution/registerCompleted'
+    summary: Publish event when QueryExecution/register completes
+    messages:
+      - $ref: '#/channels/query-execution/registerCompleted/messages/queryExecutionRegisterCompleted'
+  publishQueryExecutionExecuteCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/query-execution/executeCompleted'
+    summary: Publish event when QueryExecution/execute completes
+    messages:
+      - $ref: '#/channels/query-execution/executeCompleted/messages/queryExecutionExecuteCompleted'
+  publishQueryExecutionResumeAfterInvokeCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/query-execution/resumeAfterInvokeCompleted'
+    summary: Publish event when QueryExecution/resumeAfterInvoke completes
+    messages:
+      - $ref: '#/channels/query-execution/resumeAfterInvokeCompleted/messages/queryExecutionResumeAfterInvokeCompleted'
+  publishQueryExecutionPlanPushdownCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/query-execution/planPushdownCompleted'
+    summary: Publish event when QueryExecution/planPushdown completes
+    messages:
+      - $ref: '#/channels/query-execution/planPushdownCompleted/messages/queryExecutionPlanPushdownCompleted'
+  publishSortSpecCreated:
+    action: send
+    channel:
+      $ref: '#/channels/sort-spec/created'
+    summary: Publish event when SortSpec/create completes
+    messages:
+      - $ref: '#/channels/sort-spec/created/messages/sortSpecCreated'
+  publishSortSpecComposeCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/sort-spec/composeCompleted'
+    summary: Publish event when SortSpec/compose completes
+    messages:
+      - $ref: '#/channels/sort-spec/composeCompleted/messages/sortSpecComposeCompleted'
+  publishSortSpecEvaluateCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/sort-spec/evaluateCompleted'
+    summary: Publish event when SortSpec/evaluate completes
+    messages:
+      - $ref: '#/channels/sort-spec/evaluateCompleted/messages/sortSpecEvaluateCompleted'
+  publishGroupSpecCreated:
+    action: send
+    channel:
+      $ref: '#/channels/group-spec/created'
+    summary: Publish event when GroupSpec/create completes
+    messages:
+      - $ref: '#/channels/group-spec/created/messages/groupSpecCreated'
+  publishGroupSpecEvaluateCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/group-spec/evaluateCompleted'
+    summary: Publish event when GroupSpec/evaluate completes
+    messages:
+      - $ref: '#/channels/group-spec/evaluateCompleted/messages/groupSpecEvaluateCompleted'
+  publishProjectionSpecCreated:
+    action: send
+    channel:
+      $ref: '#/channels/projection-spec/created'
+    summary: Publish event when ProjectionSpec/create completes
+    messages:
+      - $ref: '#/channels/projection-spec/created/messages/projectionSpecCreated'
+  publishProjectionSpecMergeCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/projection-spec/mergeCompleted'
+    summary: Publish event when ProjectionSpec/merge completes
+    messages:
+      - $ref: '#/channels/projection-spec/mergeCompleted/messages/projectionSpecMergeCompleted'
+  publishProjectionSpecEvaluateCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/projection-spec/evaluateCompleted'
+    summary: Publish event when ProjectionSpec/evaluate completes
+    messages:
+      - $ref: '#/channels/projection-spec/evaluateCompleted/messages/projectionSpecEvaluateCompleted'
+  publishPresentationSpecCreated:
+    action: send
+    channel:
+      $ref: '#/channels/presentation-spec/created'
+    summary: Publish event when PresentationSpec/create completes
+    messages:
+      - $ref: '#/channels/presentation-spec/created/messages/presentationSpecCreated'
+  publishInteractionSpecCreated:
+    action: send
+    channel:
+      $ref: '#/channels/interaction-spec/created'
+    summary: Publish event when InteractionSpec/create completes
+    messages:
+      - $ref: '#/channels/interaction-spec/created/messages/interactionSpecCreated'
+  publishViewShellCreated:
+    action: send
+    channel:
+      $ref: '#/channels/view-shell/created'
+    summary: Publish event when ViewShell/create completes
+    messages:
+      - $ref: '#/channels/view-shell/created/messages/viewShellCreated'
+  publishViewShellUpdated:
+    action: send
+    channel:
+      $ref: '#/channels/view-shell/updated'
+    summary: Publish event when ViewShell/update completes
+    messages:
+      - $ref: '#/channels/view-shell/updated/messages/viewShellUpdated'
+  publishViewShellResolveCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/view-shell/resolveCompleted'
+    summary: Publish event when ViewShell/resolve completes
+    messages:
+      - $ref: '#/channels/view-shell/resolveCompleted/messages/viewShellResolveCompleted'
+  publishViewShellResolveHydratedCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/view-shell/resolveHydratedCompleted'
+    summary: Publish event when ViewShell/resolveHydrated completes
+    messages:
+      - $ref: '#/channels/view-shell/resolveHydratedCompleted/messages/viewShellResolveHydratedCompleted'
+  publishFilterRepresentationRegisterKindCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/filter-representation/registerKindCompleted'
+    summary: Publish event when FilterRepresentation/registerKind completes
+    messages:
+      - $ref: '#/channels/filter-representation/registerKindCompleted/messages/filterRepresentationRegisterKindCompleted'
+  publishFilterRepresentationRegisterCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/filter-representation/registerCompleted'
+    summary: Publish event when FilterRepresentation/register completes
+    messages:
+      - $ref: '#/channels/filter-representation/registerCompleted/messages/filterRepresentationRegisterCompleted'
+  publishFilterRepresentationParseCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/filter-representation/parseCompleted'
+    summary: Publish event when FilterRepresentation/parse completes
+    messages:
+      - $ref: '#/channels/filter-representation/parseCompleted/messages/filterRepresentationParseCompleted'
+  publishFilterRepresentationPrintCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/filter-representation/printCompleted'
+    summary: Publish event when FilterRepresentation/print completes
+    messages:
+      - $ref: '#/channels/filter-representation/printCompleted/messages/filterRepresentationPrintCompleted'
+  publishFilterRepresentationCanPrintCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/filter-representation/canPrintCompleted'
+    summary: Publish event when FilterRepresentation/canPrint completes
+    messages:
+      - $ref: '#/channels/filter-representation/canPrintCompleted/messages/filterRepresentationCanPrintCompleted'
+  publishRemoteQueryProviderRegisterCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/remote-query-provider/registerCompleted'
+    summary: Publish event when RemoteQueryProvider/register completes
+    messages:
+      - $ref: '#/channels/remote-query-provider/registerCompleted/messages/remoteQueryProviderRegisterCompleted'
+  publishRemoteQueryProviderExecuteCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/remote-query-provider/executeCompleted'
+    summary: Publish event when RemoteQueryProvider/execute completes
+    messages:
+      - $ref: '#/channels/remote-query-provider/executeCompleted/messages/remoteQueryProviderExecuteCompleted'
+  publishRemoteQueryProviderPlanPushdownCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/remote-query-provider/planPushdownCompleted'
+    summary: Publish event when RemoteQueryProvider/planPushdown completes
+    messages:
+      - $ref: '#/channels/remote-query-provider/planPushdownCompleted/messages/remoteQueryProviderPlanPushdownCompleted'
+  publishConnectionConnectCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/connection/connectCompleted'
+    summary: Publish event when Connection/connect completes
+    messages:
+      - $ref: '#/channels/connection/connectCompleted/messages/connectionConnectCompleted'
+  publishConnectionDiscoverCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/connection/discoverCompleted'
+    summary: Publish event when Connection/discover completes
+    messages:
+      - $ref: '#/channels/connection/discoverCompleted/messages/connectionDiscoverCompleted'
+  publishConnectionInvokeCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/connection/invokeCompleted'
+    summary: Publish event when Connection/invoke completes
+    messages:
+      - $ref: '#/channels/connection/invokeCompleted/messages/connectionInvokeCompleted'
+  publishConnectionObserveCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/connection/observeCompleted'
+    summary: Publish event when Connection/observe completes
+    messages:
+      - $ref: '#/channels/connection/observeCompleted/messages/connectionObserveCompleted'
+  publishConnectionDisconnectCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/connection/disconnectCompleted'
+    summary: Publish event when Connection/disconnect completes
+    messages:
+      - $ref: '#/channels/connection/disconnectCompleted/messages/connectionDisconnectCompleted'
+  publishPageMapRegisterCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/page-map/registerCompleted'
+    summary: Publish event when PageMap/register completes
+    messages:
+      - $ref: '#/channels/page-map/registerCompleted/messages/pageMapRegisterCompleted'
+  publishPageMapUpdated:
+    action: send
+    channel:
+      $ref: '#/channels/page-map/updated'
+    summary: Publish event when PageMap/update completes
+    messages:
+      - $ref: '#/channels/page-map/updated/messages/pageMapUpdated'
+  publishPageMapClearCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/page-map/clearCompleted'
+    summary: Publish event when PageMap/clear completes
+    messages:
+      - $ref: '#/channels/page-map/clearCompleted/messages/pageMapClearCompleted'
+  publishClefBaseCreated:
+    action: send
+    channel:
+      $ref: '#/channels/clef-base/created'
+    summary: Publish event when ClefBase/createContent completes
+    messages:
+      - $ref: '#/channels/clef-base/created/messages/clefBaseCreated'
+  publishClefBaseCompileContentCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/clef-base/compileContentCompleted'
+    summary: Publish event when ClefBase/compileContent completes
+    messages:
+      - $ref: '#/channels/clef-base/compileContentCompleted/messages/clefBaseCompileContentCompleted'
+  publishClefBaseDefineSchemaCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/clef-base/defineSchemaCompleted'
+    summary: Publish event when ClefBase/defineSchema completes
+    messages:
+      - $ref: '#/channels/clef-base/defineSchemaCompleted/messages/clefBaseDefineSchemaCompleted'
+  publishClefBaseApplySchemaCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/clef-base/applySchemaCompleted'
+    summary: Publish event when ClefBase/applySchema completes
+    messages:
+      - $ref: '#/channels/clef-base/applySchemaCompleted/messages/clefBaseApplySchemaCompleted'
+  publishClefBaseSpawnAgentCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/clef-base/spawnAgentCompleted'
+    summary: Publish event when ClefBase/spawnAgent completes
+    messages:
+      - $ref: '#/channels/clef-base/spawnAgentCompleted/messages/clefBaseSpawnAgentCompleted'
+  publishClefBaseInvokeAgentCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/clef-base/invokeAgentCompleted'
+    summary: Publish event when ClefBase/invokeAgent completes
+    messages:
+      - $ref: '#/channels/clef-base/invokeAgentCompleted/messages/clefBaseInvokeAgentCompleted'
+  publishClefBaseCreated:
+    action: send
+    channel:
+      $ref: '#/channels/clef-base/created'
+    summary: Publish event when ClefBase/createTrigger completes
+    messages:
+      - $ref: '#/channels/clef-base/created/messages/clefBaseCreated'
+  publishClefBaseStartProcessCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/clef-base/startProcessCompleted'
+    summary: Publish event when ClefBase/startProcess completes
+    messages:
+      - $ref: '#/channels/clef-base/startProcessCompleted/messages/clefBaseStartProcessCompleted'
+  publishClefBaseApproveStepCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/clef-base/approveStepCompleted'
+    summary: Publish event when ClefBase/approveStep completes
+    messages:
+      - $ref: '#/channels/clef-base/approveStepCompleted/messages/clefBaseApproveStepCompleted'
+  publishClefBaseCreated:
+    action: send
+    channel:
+      $ref: '#/channels/clef-base/created'
+    summary: Publish event when ClefBase/createView completes
+    messages:
+      - $ref: '#/channels/clef-base/created/messages/clefBaseCreated'
+  publishClefBaseResolveViewCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/clef-base/resolveViewCompleted'
+    summary: Publish event when ClefBase/resolveView completes
+    messages:
+      - $ref: '#/channels/clef-base/resolveViewCompleted/messages/clefBaseResolveViewCompleted'
+  publishClefBaseInstallPackageCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/clef-base/installPackageCompleted'
+    summary: Publish event when ClefBase/installPackage completes
+    messages:
+      - $ref: '#/channels/clef-base/installPackageCompleted/messages/clefBaseInstallPackageCompleted'
+  publishClefBaseBrowsePackagesCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/clef-base/browsePackagesCompleted'
+    summary: Publish event when ClefBase/browsePackages completes
+    messages:
+      - $ref: '#/channels/clef-base/browsePackagesCompleted/messages/clefBaseBrowsePackagesCompleted'
+  publishClefBaseCreated:
+    action: send
+    channel:
+      $ref: '#/channels/clef-base/created'
+    summary: Publish event when ClefBase/createDiagram completes
+    messages:
+      - $ref: '#/channels/clef-base/created/messages/clefBaseCreated'
+  publishClefBaseExportDiagramCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/clef-base/exportDiagramCompleted'
+    summary: Publish event when ClefBase/exportDiagram completes
+    messages:
+      - $ref: '#/channels/clef-base/exportDiagramCompleted/messages/clefBaseExportDiagramCompleted'
+  publishClefBaseAnalyzeGraphCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/clef-base/analyzeGraphCompleted'
+    summary: Publish event when ClefBase/analyzeGraph completes
+    messages:
+      - $ref: '#/channels/clef-base/analyzeGraphCompleted/messages/clefBaseAnalyzeGraphCompleted'
+  publishInfrastructureCoreRegisterPluginCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/infrastructure-core/registerPluginCompleted'
+    summary: Publish event when InfrastructureCore/registerPlugin completes
+    messages:
+      - $ref: '#/channels/infrastructure-core/registerPluginCompleted/messages/infrastructureCoreRegisterPluginCompleted'
+  publishInfrastructureCoreDiscoverPluginsCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/infrastructure-core/discoverPluginsCompleted'
+    summary: Publish event when InfrastructureCore/discoverPlugins completes
+    messages:
+      - $ref: '#/channels/infrastructure-core/discoverPluginsCompleted/messages/infrastructureCoreDiscoverPluginsCompleted'
+  publishInfrastructureCoreInvalidateCacheCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/infrastructure-core/invalidateCacheCompleted'
+    summary: Publish event when InfrastructureCore/invalidateCache completes
+    messages:
+      - $ref: '#/channels/infrastructure-core/invalidateCacheCompleted/messages/infrastructureCoreInvalidateCacheCompleted'
+  publishInfrastructureCorePublishEventCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/infrastructure-core/publishEventCompleted'
+    summary: Publish event when InfrastructureCore/publishEvent completes
+    messages:
+      - $ref: '#/channels/infrastructure-core/publishEventCompleted/messages/infrastructureCorePublishEventCompleted'
+  publishInfrastructureCoreValidateCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/infrastructure-core/validateCompleted'
+    summary: Publish event when InfrastructureCore/validate completes
+    messages:
+      - $ref: '#/channels/infrastructure-core/validateCompleted/messages/infrastructureCoreValidateCompleted'
+  publishRuntimeInfrastructureCreated:
+    action: send
+    channel:
+      $ref: '#/channels/runtime-infrastructure/created'
+    summary: Publish event when RuntimeInfrastructure/createProgram completes
+    messages:
+      - $ref: '#/channels/runtime-infrastructure/created/messages/runtimeInfrastructureCreated'
+  publishRuntimeInfrastructureEnsureIndexCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/runtime-infrastructure/ensureIndexCompleted'
+    summary: Publish event when RuntimeInfrastructure/ensureIndex completes
+    messages:
+      - $ref: '#/channels/runtime-infrastructure/ensureIndexCompleted/messages/runtimeInfrastructureEnsureIndexCompleted'
 
 components:
   messages:
@@ -5931,6 +6831,18 @@ components:
       contentType: application/json
       payload:
         $ref: '#/components/schemas/ScoreIndexUpsertInterfaceCompletedPayload'
+    ScoreIndexUpsertViewCompleted:
+      name: ScoreIndexUpsertViewCompleted
+      title: ScoreIndex UpsertViewCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ScoreIndexUpsertViewCompletedPayload'
+    ScoreIndexDeleted:
+      name: ScoreIndexDeleted
+      title: ScoreIndex Deleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ScoreIndexDeletedPayload'
     ScoreIndexDeleted:
       name: ScoreIndexDeleted
       title: ScoreIndex Deleted Event
@@ -6801,6 +7713,444 @@ components:
       contentType: application/json
       payload:
         $ref: '#/components/schemas/TransformExtractionProviderAnalyzeCompletedPayload'
+    QueryProgramCreated:
+      name: QueryProgramCreated
+      title: QueryProgram Created Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/QueryProgramCreatedPayload'
+    QueryProgramScanCompleted:
+      name: QueryProgramScanCompleted
+      title: QueryProgram ScanCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/QueryProgramScanCompletedPayload'
+    QueryProgramFilterCompleted:
+      name: QueryProgramFilterCompleted
+      title: QueryProgram FilterCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/QueryProgramFilterCompletedPayload'
+    QueryProgramSortCompleted:
+      name: QueryProgramSortCompleted
+      title: QueryProgram SortCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/QueryProgramSortCompletedPayload'
+    QueryProgramGroupCompleted:
+      name: QueryProgramGroupCompleted
+      title: QueryProgram GroupCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/QueryProgramGroupCompletedPayload'
+    QueryProgramProjectCompleted:
+      name: QueryProgramProjectCompleted
+      title: QueryProgram ProjectCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/QueryProgramProjectCompletedPayload'
+    QueryProgramLimitCompleted:
+      name: QueryProgramLimitCompleted
+      title: QueryProgram LimitCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/QueryProgramLimitCompletedPayload'
+    QueryProgramOffsetCompleted:
+      name: QueryProgramOffsetCompleted
+      title: QueryProgram OffsetCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/QueryProgramOffsetCompletedPayload'
+    QueryProgramPureCompleted:
+      name: QueryProgramPureCompleted
+      title: QueryProgram PureCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/QueryProgramPureCompletedPayload'
+    QueryProgramJoinCompleted:
+      name: QueryProgramJoinCompleted
+      title: QueryProgram JoinCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/QueryProgramJoinCompletedPayload'
+    QueryProgramComposeCompleted:
+      name: QueryProgramComposeCompleted
+      title: QueryProgram ComposeCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/QueryProgramComposeCompletedPayload'
+    QueryProgramInvokeCompleted:
+      name: QueryProgramInvokeCompleted
+      title: QueryProgram InvokeCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/QueryProgramInvokeCompletedPayload'
+    QueryProgramMatchCompleted:
+      name: QueryProgramMatchCompleted
+      title: QueryProgram MatchCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/QueryProgramMatchCompletedPayload'
+    QueryProgramTraverseInvokeCompleted:
+      name: QueryProgramTraverseInvokeCompleted
+      title: QueryProgram TraverseInvokeCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/QueryProgramTraverseInvokeCompletedPayload'
+    QueryProgramTraverseCompleted:
+      name: QueryProgramTraverseCompleted
+      title: QueryProgram TraverseCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/QueryProgramTraverseCompletedPayload'
+    QueryExecutionRegisterKindCompleted:
+      name: QueryExecutionRegisterKindCompleted
+      title: QueryExecution RegisterKindCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/QueryExecutionRegisterKindCompletedPayload'
+    QueryExecutionRegisterCompleted:
+      name: QueryExecutionRegisterCompleted
+      title: QueryExecution RegisterCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/QueryExecutionRegisterCompletedPayload'
+    QueryExecutionExecuteCompleted:
+      name: QueryExecutionExecuteCompleted
+      title: QueryExecution ExecuteCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/QueryExecutionExecuteCompletedPayload'
+    QueryExecutionResumeAfterInvokeCompleted:
+      name: QueryExecutionResumeAfterInvokeCompleted
+      title: QueryExecution ResumeAfterInvokeCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/QueryExecutionResumeAfterInvokeCompletedPayload'
+    QueryExecutionPlanPushdownCompleted:
+      name: QueryExecutionPlanPushdownCompleted
+      title: QueryExecution PlanPushdownCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/QueryExecutionPlanPushdownCompletedPayload'
+    SortSpecCreated:
+      name: SortSpecCreated
+      title: SortSpec Created Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/SortSpecCreatedPayload'
+    SortSpecComposeCompleted:
+      name: SortSpecComposeCompleted
+      title: SortSpec ComposeCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/SortSpecComposeCompletedPayload'
+    SortSpecEvaluateCompleted:
+      name: SortSpecEvaluateCompleted
+      title: SortSpec EvaluateCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/SortSpecEvaluateCompletedPayload'
+    GroupSpecCreated:
+      name: GroupSpecCreated
+      title: GroupSpec Created Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/GroupSpecCreatedPayload'
+    GroupSpecEvaluateCompleted:
+      name: GroupSpecEvaluateCompleted
+      title: GroupSpec EvaluateCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/GroupSpecEvaluateCompletedPayload'
+    ProjectionSpecCreated:
+      name: ProjectionSpecCreated
+      title: ProjectionSpec Created Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ProjectionSpecCreatedPayload'
+    ProjectionSpecMergeCompleted:
+      name: ProjectionSpecMergeCompleted
+      title: ProjectionSpec MergeCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ProjectionSpecMergeCompletedPayload'
+    ProjectionSpecEvaluateCompleted:
+      name: ProjectionSpecEvaluateCompleted
+      title: ProjectionSpec EvaluateCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ProjectionSpecEvaluateCompletedPayload'
+    PresentationSpecCreated:
+      name: PresentationSpecCreated
+      title: PresentationSpec Created Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/PresentationSpecCreatedPayload'
+    InteractionSpecCreated:
+      name: InteractionSpecCreated
+      title: InteractionSpec Created Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/InteractionSpecCreatedPayload'
+    ViewShellCreated:
+      name: ViewShellCreated
+      title: ViewShell Created Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ViewShellCreatedPayload'
+    ViewShellUpdated:
+      name: ViewShellUpdated
+      title: ViewShell Updated Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ViewShellUpdatedPayload'
+    ViewShellResolveCompleted:
+      name: ViewShellResolveCompleted
+      title: ViewShell ResolveCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ViewShellResolveCompletedPayload'
+    ViewShellResolveHydratedCompleted:
+      name: ViewShellResolveHydratedCompleted
+      title: ViewShell ResolveHydratedCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ViewShellResolveHydratedCompletedPayload'
+    FilterRepresentationRegisterKindCompleted:
+      name: FilterRepresentationRegisterKindCompleted
+      title: FilterRepresentation RegisterKindCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/FilterRepresentationRegisterKindCompletedPayload'
+    FilterRepresentationRegisterCompleted:
+      name: FilterRepresentationRegisterCompleted
+      title: FilterRepresentation RegisterCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/FilterRepresentationRegisterCompletedPayload'
+    FilterRepresentationParseCompleted:
+      name: FilterRepresentationParseCompleted
+      title: FilterRepresentation ParseCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/FilterRepresentationParseCompletedPayload'
+    FilterRepresentationPrintCompleted:
+      name: FilterRepresentationPrintCompleted
+      title: FilterRepresentation PrintCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/FilterRepresentationPrintCompletedPayload'
+    FilterRepresentationCanPrintCompleted:
+      name: FilterRepresentationCanPrintCompleted
+      title: FilterRepresentation CanPrintCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/FilterRepresentationCanPrintCompletedPayload'
+    RemoteQueryProviderRegisterCompleted:
+      name: RemoteQueryProviderRegisterCompleted
+      title: RemoteQueryProvider RegisterCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/RemoteQueryProviderRegisterCompletedPayload'
+    RemoteQueryProviderExecuteCompleted:
+      name: RemoteQueryProviderExecuteCompleted
+      title: RemoteQueryProvider ExecuteCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/RemoteQueryProviderExecuteCompletedPayload'
+    RemoteQueryProviderPlanPushdownCompleted:
+      name: RemoteQueryProviderPlanPushdownCompleted
+      title: RemoteQueryProvider PlanPushdownCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/RemoteQueryProviderPlanPushdownCompletedPayload'
+    ConnectionConnectCompleted:
+      name: ConnectionConnectCompleted
+      title: Connection ConnectCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ConnectionConnectCompletedPayload'
+    ConnectionDiscoverCompleted:
+      name: ConnectionDiscoverCompleted
+      title: Connection DiscoverCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ConnectionDiscoverCompletedPayload'
+    ConnectionInvokeCompleted:
+      name: ConnectionInvokeCompleted
+      title: Connection InvokeCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ConnectionInvokeCompletedPayload'
+    ConnectionObserveCompleted:
+      name: ConnectionObserveCompleted
+      title: Connection ObserveCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ConnectionObserveCompletedPayload'
+    ConnectionDisconnectCompleted:
+      name: ConnectionDisconnectCompleted
+      title: Connection DisconnectCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ConnectionDisconnectCompletedPayload'
+    PageMapRegisterCompleted:
+      name: PageMapRegisterCompleted
+      title: PageMap RegisterCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/PageMapRegisterCompletedPayload'
+    PageMapUpdated:
+      name: PageMapUpdated
+      title: PageMap Updated Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/PageMapUpdatedPayload'
+    PageMapClearCompleted:
+      name: PageMapClearCompleted
+      title: PageMap ClearCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/PageMapClearCompletedPayload'
+    ClefBaseCreated:
+      name: ClefBaseCreated
+      title: ClefBase Created Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ClefBaseCreatedPayload'
+    ClefBaseCompileContentCompleted:
+      name: ClefBaseCompileContentCompleted
+      title: ClefBase CompileContentCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ClefBaseCompileContentCompletedPayload'
+    ClefBaseDefineSchemaCompleted:
+      name: ClefBaseDefineSchemaCompleted
+      title: ClefBase DefineSchemaCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ClefBaseDefineSchemaCompletedPayload'
+    ClefBaseApplySchemaCompleted:
+      name: ClefBaseApplySchemaCompleted
+      title: ClefBase ApplySchemaCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ClefBaseApplySchemaCompletedPayload'
+    ClefBaseSpawnAgentCompleted:
+      name: ClefBaseSpawnAgentCompleted
+      title: ClefBase SpawnAgentCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ClefBaseSpawnAgentCompletedPayload'
+    ClefBaseInvokeAgentCompleted:
+      name: ClefBaseInvokeAgentCompleted
+      title: ClefBase InvokeAgentCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ClefBaseInvokeAgentCompletedPayload'
+    ClefBaseCreated:
+      name: ClefBaseCreated
+      title: ClefBase Created Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ClefBaseCreatedPayload'
+    ClefBaseStartProcessCompleted:
+      name: ClefBaseStartProcessCompleted
+      title: ClefBase StartProcessCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ClefBaseStartProcessCompletedPayload'
+    ClefBaseApproveStepCompleted:
+      name: ClefBaseApproveStepCompleted
+      title: ClefBase ApproveStepCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ClefBaseApproveStepCompletedPayload'
+    ClefBaseCreated:
+      name: ClefBaseCreated
+      title: ClefBase Created Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ClefBaseCreatedPayload'
+    ClefBaseResolveViewCompleted:
+      name: ClefBaseResolveViewCompleted
+      title: ClefBase ResolveViewCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ClefBaseResolveViewCompletedPayload'
+    ClefBaseInstallPackageCompleted:
+      name: ClefBaseInstallPackageCompleted
+      title: ClefBase InstallPackageCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ClefBaseInstallPackageCompletedPayload'
+    ClefBaseBrowsePackagesCompleted:
+      name: ClefBaseBrowsePackagesCompleted
+      title: ClefBase BrowsePackagesCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ClefBaseBrowsePackagesCompletedPayload'
+    ClefBaseCreated:
+      name: ClefBaseCreated
+      title: ClefBase Created Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ClefBaseCreatedPayload'
+    ClefBaseExportDiagramCompleted:
+      name: ClefBaseExportDiagramCompleted
+      title: ClefBase ExportDiagramCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ClefBaseExportDiagramCompletedPayload'
+    ClefBaseAnalyzeGraphCompleted:
+      name: ClefBaseAnalyzeGraphCompleted
+      title: ClefBase AnalyzeGraphCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ClefBaseAnalyzeGraphCompletedPayload'
+    InfrastructureCoreRegisterPluginCompleted:
+      name: InfrastructureCoreRegisterPluginCompleted
+      title: InfrastructureCore RegisterPluginCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/InfrastructureCoreRegisterPluginCompletedPayload'
+    InfrastructureCoreDiscoverPluginsCompleted:
+      name: InfrastructureCoreDiscoverPluginsCompleted
+      title: InfrastructureCore DiscoverPluginsCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/InfrastructureCoreDiscoverPluginsCompletedPayload'
+    InfrastructureCoreInvalidateCacheCompleted:
+      name: InfrastructureCoreInvalidateCacheCompleted
+      title: InfrastructureCore InvalidateCacheCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/InfrastructureCoreInvalidateCacheCompletedPayload'
+    InfrastructureCorePublishEventCompleted:
+      name: InfrastructureCorePublishEventCompleted
+      title: InfrastructureCore PublishEventCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/InfrastructureCorePublishEventCompletedPayload'
+    InfrastructureCoreValidateCompleted:
+      name: InfrastructureCoreValidateCompleted
+      title: InfrastructureCore ValidateCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/InfrastructureCoreValidateCompletedPayload'
+    RuntimeInfrastructureCreated:
+      name: RuntimeInfrastructureCreated
+      title: RuntimeInfrastructure Created Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/RuntimeInfrastructureCreatedPayload'
+    RuntimeInfrastructureEnsureIndexCompleted:
+      name: RuntimeInfrastructureEnsureIndexCompleted
+      title: RuntimeInfrastructure EnsureIndexCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/RuntimeInfrastructureEnsureIndexCompletedPayload'
 
   schemas:
     SpecParser:
@@ -8189,7 +9539,7 @@ components:
           type: string
         value:
           type: string
-      required: [kind, entityCount, lastUpdated, conceptName, purpose, actions, stateFields, file, syncName, annotation, triggers, effects, file, symbolName, symbolKind, file, line, scope, filePath, language, role, definitions, handlerConcept, handlerLanguage, handlerFile, handlerActions, handlerLineCount, widgetImplWidget, widgetImplFramework, widgetImplFile, widgetImplComponent, themeImplTheme, themeImplPlatform, themeImplFile, themeImplTokenCount, deploymentName, deploymentApp, deploymentRuntimes, deploymentFile, suiteName, suiteVersion, suiteConcepts, suiteSyncs, suiteFile, interfaceName, interfaceTargets, interfaceEndpointCount, interfaceFile, value]
+      required: [kind, entityCount, lastUpdated, conceptName, purpose, actions, stateFields, file, syncName, annotation, triggers, effects, file, symbolName, symbolKind, file, line, scope, filePath, language, role, definitions, handlerConcept, handlerLanguage, handlerFile, handlerActions, handlerLineCount, widgetImplWidget, widgetImplFramework, widgetImplFile, widgetImplComponent, themeImplTheme, themeImplPlatform, themeImplFile, themeImplTokenCount, deploymentName, deploymentApp, deploymentRuntimes, deploymentFile, suiteName, suiteVersion, suiteConcepts, suiteSyncs, suiteFile, interfaceName, interfaceTargets, interfaceEndpointCount, interfaceFile, value, value]
     Branch:
       type: object
       properties:
@@ -9015,6 +10365,275 @@ components:
         value:
           type: string
       required: [appliedTransforms, transformCount, value]
+    QueryProgram:
+      type: object
+      properties:
+        instructions:
+          type: array
+          items:
+            type: string
+        bindings:
+          type: array
+          items:
+            type: string
+        terminated:
+          type: boolean
+        readFields:
+          type: array
+          items:
+            type: string
+        invokedActions:
+          type: array
+          items:
+            type: string
+        purity:
+          type: string
+        value:
+          type: string
+      required: [instructions, bindings, terminated, readFields, invokedActions, purity, value]
+    QueryExecution:
+      type: object
+      properties:
+        name:
+          type: string
+        kind:
+          type: string
+        capabilities:
+          type: array
+          items:
+            type: string
+        value:
+          type: string
+      required: [name, kind, capabilities, value, value]
+    SortSpec:
+      type: object
+      properties:
+        name:
+          type: string
+        keys:
+          type: string
+        value:
+          type: string
+      required: [name, keys, value]
+    GroupSpec:
+      type: object
+      properties:
+        name:
+          type: string
+        grouping:
+          type: string
+        aggregations:
+          type: string
+        having:
+          type: string
+        value:
+          type: string
+      required: [name, grouping, aggregations, having, value]
+    ProjectionSpec:
+      type: object
+      properties:
+        name:
+          type: string
+        fields:
+          type: string
+        value:
+          type: string
+      required: [name, fields, value]
+    PresentationSpec:
+      type: object
+      properties:
+        name:
+          type: string
+        displayType:
+          type: string
+        hints:
+          type: string
+        displayModePolicy:
+          type: string
+        defaultDisplayMode:
+          type: string
+        value:
+          type: string
+      required: [name, displayType, hints, displayModePolicy, defaultDisplayMode, value]
+    InteractionSpec:
+      type: object
+      properties:
+        name:
+          type: string
+        createForm:
+          type: string
+        rowClick:
+          type: string
+        rowActions:
+          type: array
+          items:
+            type: string
+        pickerMode:
+          type: boolean
+        createProgram:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        actionProgram:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        value:
+          type: string
+      required: [name, createForm, rowClick, rowActions, pickerMode, createProgram, actionProgram, value]
+    ViewShell:
+      type: object
+      properties:
+        name:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        dataSource:
+          type: string
+        filter:
+          type: string
+        sort:
+          type: string
+        group:
+          type: string
+        projection:
+          type: string
+        presentation:
+          type: string
+        interaction:
+          type: string
+        pagination:
+          type: string
+        features:
+          type: string
+        legacyConfig:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        value:
+          type: string
+      required: [name, title, description, dataSource, filter, sort, group, projection, presentation, interaction, pagination, features, legacyConfig, value]
+    FilterRepresentation:
+      type: object
+      properties:
+        name:
+          type: string
+        kind:
+          type: string
+        value:
+          type: string
+      required: [name, kind, value, value]
+    RemoteQueryProvider:
+      type: object
+      properties:
+        name:
+          type: string
+        source:
+          type: string
+        manifestRef:
+          type: string
+        projectionRef:
+          type: string
+        pushdownOps:
+          type: array
+          items:
+            type: string
+        value:
+          type: string
+      required: [name, source, manifestRef, projectionRef, pushdownOps, value]
+    Connection:
+      type: object
+      properties:
+        endpoint:
+          type: string
+        status:
+          type: string
+        session:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        registeredConcepts:
+          type: array
+          items:
+            type: string
+        transportAdapter:
+          type: string
+        errorInfo:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        value:
+          type: string
+      required: [endpoint, status, session, registeredConcepts, transportAdapter, errorInfo, value]
+    PageMap:
+      type: object
+      properties:
+        label:
+          type: string
+        role:
+          type: string
+        machineRef:
+          type: string
+        widgetName:
+          type: string
+        hostRef:
+          type: string
+        currentState:
+          type: string
+        validEvents:
+          type: array
+          items:
+            type: string
+        conceptBinding:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        affordanceServes:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        viewName:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        viewPurpose:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        viewPurity:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        viewInvokedActions:
+          oneOf:
+
+            - type: array
+              items:           type: string
+            - type: 'null'
+        value:
+          type: string
+      required: [label, role, machineRef, widgetName, hostRef, currentState, validEvents, conceptBinding, affordanceServes, viewName, viewPurpose, viewPurity, viewInvokedActions, value]
+    ClefBase:
+      type: object
+      properties: {}
+    InfrastructureCore:
+      type: object
+      properties: {}
+    RuntimeInfrastructure:
+      type: object
+      properties: {}
     SpecParserParseCompletedPayload:
       type: object
       properties:
@@ -11512,10 +13131,12 @@ components:
           type: integer
         interfaceCount:
           type: integer
+        viewCount:
+          type: integer
         lastIndexed:
           type: string
           format: date-time
-      required: [variant, indexed, conceptCount, symbolCount, fileCount, syncCount, handlerCount, widgetImplCount, themeImplCount, suiteCount, deploymentCount, interfaceCount, lastIndexed]
+      required: [variant, indexed, conceptCount, symbolCount, fileCount, syncCount, handlerCount, widgetImplCount, themeImplCount, suiteCount, deploymentCount, interfaceCount, viewCount, lastIndexed]
     ScoreApiReindexCompletedPayload:
       type: object
       properties:
@@ -11542,9 +13163,11 @@ components:
           type: integer
         interfaceCount:
           type: integer
+        viewCount:
+          type: integer
         duration:
           type: integer
-      required: [variant, conceptCount, symbolCount, fileCount, syncCount, handlerCount, widgetImplCount, themeImplCount, suiteCount, deploymentCount, interfaceCount, duration]
+      required: [variant, conceptCount, symbolCount, fileCount, syncCount, handlerCount, widgetImplCount, themeImplCount, suiteCount, deploymentCount, interfaceCount, viewCount, duration]
     ScoreIndexUpsertConceptCompletedPayload:
       type: object
       properties:
@@ -11635,6 +13258,20 @@ components:
         index:
           type: string
       required: [variant, index]
+    ScoreIndexUpsertViewCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ScoreIndexDeletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
     ScoreIndexDeletedPayload:
       type: object
       properties:
@@ -11679,10 +13316,12 @@ components:
           type: integer
         interfaceCount:
           type: integer
+        viewCount:
+          type: integer
         lastUpdated:
           type: string
           format: date-time
-      required: [variant, conceptCount, syncCount, symbolCount, fileCount, handlerCount, widgetImplCount, themeImplCount, suiteCount, deploymentCount, interfaceCount, lastUpdated]
+      required: [variant, conceptCount, syncCount, symbolCount, fileCount, handlerCount, widgetImplCount, themeImplCount, suiteCount, deploymentCount, interfaceCount, viewCount, lastUpdated]
     BranchCreatedPayload:
       type: object
       properties:
@@ -13109,6 +14748,660 @@ components:
         transformCount:
           type: integer
       required: [variant, result, appliedTransforms, transformCount]
+    QueryProgramCreatedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    QueryProgramScanCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        program:
+          type: string
+      required: [variant, program]
+    QueryProgramFilterCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        program:
+          type: string
+      required: [variant, program]
+    QueryProgramSortCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        program:
+          type: string
+      required: [variant, program]
+    QueryProgramGroupCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        program:
+          type: string
+      required: [variant, program]
+    QueryProgramProjectCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        program:
+          type: string
+      required: [variant, program]
+    QueryProgramLimitCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        program:
+          type: string
+      required: [variant, program]
+    QueryProgramOffsetCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        program:
+          type: string
+      required: [variant, program]
+    QueryProgramPureCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        program:
+          type: string
+      required: [variant, program]
+    QueryProgramJoinCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        program:
+          type: string
+      required: [variant, program]
+    QueryProgramComposeCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        program:
+          type: string
+      required: [variant, program]
+    QueryProgramInvokeCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        program:
+          type: string
+      required: [variant, program]
+    QueryProgramMatchCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        program:
+          type: string
+      required: [variant, program]
+    QueryProgramTraverseInvokeCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        program:
+          type: string
+      required: [variant, program]
+    QueryProgramTraverseCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        program:
+          type: string
+      required: [variant, program]
+    QueryExecutionRegisterKindCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        kind:
+          type: string
+      required: [variant, kind]
+    QueryExecutionRegisterCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        provider:
+          type: string
+      required: [variant, provider]
+    QueryExecutionExecuteCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        rows:
+          type: string
+        metadata:
+          type: string
+      required: [variant, rows, metadata]
+    QueryExecutionResumeAfterInvokeCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        rows:
+          type: string
+        metadata:
+          type: string
+      required: [variant, rows, metadata]
+    QueryExecutionPlanPushdownCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        pushdown:
+          type: string
+        residual:
+          type: string
+      required: [variant, pushdown, residual]
+    SortSpecCreatedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        sort:
+          type: string
+      required: [variant, sort]
+    SortSpecComposeCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        sort:
+          type: string
+        keys:
+          type: string
+      required: [variant, sort, keys]
+    SortSpecEvaluateCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        rows:
+          type: string
+      required: [variant, rows]
+    GroupSpecCreatedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        group:
+          type: string
+      required: [variant, group]
+    GroupSpecEvaluateCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        groups:
+          type: string
+      required: [variant, groups]
+    ProjectionSpecCreatedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        projection:
+          type: string
+      required: [variant, projection]
+    ProjectionSpecMergeCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        projection:
+          type: string
+        fields:
+          type: string
+      required: [variant, projection, fields]
+    ProjectionSpecEvaluateCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        rows:
+          type: string
+      required: [variant, rows]
+    PresentationSpecCreatedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        presentation:
+          type: string
+      required: [variant, presentation]
+    InteractionSpecCreatedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        interaction:
+          type: string
+      required: [variant, interaction]
+    ViewShellCreatedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        view:
+          type: string
+      required: [variant, view]
+    ViewShellUpdatedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        view:
+          type: string
+      required: [variant, view]
+    ViewShellResolveCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        view:
+          type: string
+        config:
+          type: string
+      required: [variant, view, config]
+    ViewShellResolveHydratedCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        view:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        dataSource:
+          type: string
+        filter:
+          type: string
+        sort:
+          type: string
+        group:
+          type: string
+        projection:
+          type: string
+        presentation:
+          type: string
+        interaction:
+          type: string
+        pagination:
+          type: string
+        features:
+          type: string
+      required: [variant, view, title, description, dataSource, filter, sort, group, projection, presentation, interaction, pagination, features]
+    FilterRepresentationRegisterKindCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        kind:
+          type: string
+      required: [variant, kind]
+    FilterRepresentationRegisterCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        representation:
+          type: string
+      required: [variant, representation]
+    FilterRepresentationParseCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        tree:
+          type: string
+      required: [variant, tree]
+    FilterRepresentationPrintCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        repr:
+          type: string
+      required: [variant, repr]
+    FilterRepresentationCanPrintCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        supported:
+          type: boolean
+      required: [variant, supported]
+    RemoteQueryProviderRegisterCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        provider:
+          type: string
+      required: [variant, provider]
+    RemoteQueryProviderExecuteCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        rows:
+          type: string
+        metadata:
+          type: string
+      required: [variant, rows, metadata]
+    RemoteQueryProviderPlanPushdownCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        pushdown:
+          type: string
+        residual:
+          type: string
+        apiParams:
+          type: string
+      required: [variant, pushdown, residual, apiParams]
+    ConnectionConnectCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        connection:
+          type: string
+      required: [variant, connection]
+    ConnectionDiscoverCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        connection:
+          type: string
+        result:
+          type: string
+      required: [variant, connection, result]
+    ConnectionInvokeCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+        connection:
+          type: string
+        output:
+          type: string
+      required: [variant, connection, variant, output]
+    ConnectionObserveCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        connection:
+          type: string
+        streamId:
+          type: string
+      required: [variant, connection, streamId]
+    ConnectionDisconnectCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        connection:
+          type: string
+      required: [variant, connection]
+    PageMapRegisterCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        entry:
+          type: string
+      required: [variant, entry]
+    PageMapUpdatedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        entry:
+          type: string
+      required: [variant, entry]
+    PageMapClearCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        hostRef:
+          type: string
+      required: [variant, hostRef]
+    ClefBaseCreatedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ClefBaseCompileContentCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ClefBaseDefineSchemaCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ClefBaseApplySchemaCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ClefBaseSpawnAgentCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ClefBaseInvokeAgentCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ClefBaseCreatedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ClefBaseStartProcessCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ClefBaseApproveStepCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ClefBaseCreatedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ClefBaseResolveViewCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ClefBaseInstallPackageCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ClefBaseBrowsePackagesCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ClefBaseCreatedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ClefBaseExportDiagramCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ClefBaseAnalyzeGraphCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    InfrastructureCoreRegisterPluginCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    InfrastructureCoreDiscoverPluginsCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    InfrastructureCoreInvalidateCacheCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    InfrastructureCorePublishEventCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    InfrastructureCoreValidateCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    RuntimeInfrastructureCreatedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    RuntimeInfrastructureEnsureIndexCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
     SpecParserParseInput:
       type: object
       properties:
@@ -22358,6 +24651,84 @@ components:
         symbol:
           type: string
       required: [variant, symbol]
+    ScoreApiListViewsOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        views:
+          type: string
+      required: [variant, views]
+    ScoreApiGetViewInput:
+      type: object
+      properties:
+        name:
+          type: string
+      required: [name]
+    ScoreApiGetViewOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        view:
+          type: string
+      required: [variant, view]
+    ScoreApiGetViewNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    ScoreApiFindViewsByShellInput:
+      type: object
+      properties:
+        shellRef:
+          type: string
+      required: [shellRef]
+    ScoreApiFindViewsByShellOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        views:
+          type: string
+      required: [variant, views]
+    ScoreApiFindViewsByPurityInput:
+      type: object
+      properties:
+        purity:
+          type: string
+      required: [purity]
+    ScoreApiFindViewsByPurityOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        views:
+          type: string
+      required: [variant, views]
+    ScoreApiFindViewsByInvokedActionInput:
+      type: object
+      properties:
+        action:
+          type: string
+      required: [action]
+    ScoreApiFindViewsByInvokedActionOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        views:
+          type: string
+      required: [variant, views]
     ScoreApiStatusOkResponse:
       type: object
       properties:
@@ -22386,10 +24757,12 @@ components:
           type: integer
         interfaceCount:
           type: integer
+        viewCount:
+          type: integer
         lastIndexed:
           type: string
           format: date-time
-      required: [variant, indexed, conceptCount, symbolCount, fileCount, syncCount, handlerCount, widgetImplCount, themeImplCount, suiteCount, deploymentCount, interfaceCount, lastIndexed]
+      required: [variant, indexed, conceptCount, symbolCount, fileCount, syncCount, handlerCount, widgetImplCount, themeImplCount, suiteCount, deploymentCount, interfaceCount, viewCount, lastIndexed]
     ScoreApiReindexOkResponse:
       type: object
       properties:
@@ -22416,9 +24789,11 @@ components:
           type: integer
         interfaceCount:
           type: integer
+        viewCount:
+          type: integer
         duration:
           type: integer
-      required: [variant, conceptCount, symbolCount, fileCount, syncCount, handlerCount, widgetImplCount, themeImplCount, suiteCount, deploymentCount, interfaceCount, duration]
+      required: [variant, conceptCount, symbolCount, fileCount, syncCount, handlerCount, widgetImplCount, themeImplCount, suiteCount, deploymentCount, interfaceCount, viewCount, duration]
     ScoreApiReindexOkResponse:
       type: object
       properties:
@@ -22759,6 +25134,74 @@ components:
         message:
           type: string
       required: [variant, message]
+    ScoreIndexUpsertViewInput:
+      type: object
+      properties:
+        name:
+          type: string
+        sourceFile:
+          type: string
+        shellRef:
+          type: string
+        purposeText:
+          type: string
+        purity:
+          type: string
+        invokedActions:
+          type: string
+        projectedFields:
+          type: string
+        filterFields:
+          type: string
+        sortFields:
+          type: string
+        groupFields:
+          type: string
+        invariantCount:
+          type: integer
+        invariantNames:
+          type: string
+        invariantsSerialized:
+          type: string
+      required: [name, sourceFile, shellRef, purposeText, purity, invokedActions, projectedFields, filterFields, sortFields, groupFields, invariantCount, invariantNames, invariantsSerialized]
+    ScoreIndexUpsertViewOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ScoreIndexUpsertViewErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    ScoreIndexRemoveViewInput:
+      type: object
+      properties:
+        name:
+          type: string
+      required: [name]
+    ScoreIndexRemoveViewOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ScoreIndexRemoveViewNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
     ScoreIndexRemoveByFileInput:
       type: object
       properties:
@@ -22809,10 +25252,12 @@ components:
           type: integer
         interfaceCount:
           type: integer
+        viewCount:
+          type: integer
         lastUpdated:
           type: string
           format: date-time
-      required: [variant, conceptCount, syncCount, symbolCount, fileCount, handlerCount, widgetImplCount, themeImplCount, suiteCount, deploymentCount, interfaceCount, lastUpdated]
+      required: [variant, conceptCount, syncCount, symbolCount, fileCount, handlerCount, widgetImplCount, themeImplCount, suiteCount, deploymentCount, interfaceCount, viewCount, lastUpdated]
     BranchCreateInput:
       type: object
       properties:
@@ -27427,3 +29872,2934 @@ components:
         message:
           type: string
       required: [variant, message]
+    QueryProgramCreateInput:
+      type: object
+      properties:
+        program:
+          type: string
+      required: [program]
+    QueryProgramCreateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    QueryProgramCreateExistsResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [exists]
+      required: [variant]
+    QueryProgramScanInput:
+      type: object
+      properties:
+        program:
+          type: string
+        source:
+          type: string
+        bindAs:
+          type: string
+      required: [program, source, bindAs]
+    QueryProgramScanOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        program:
+          type: string
+      required: [variant, program]
+    QueryProgramScanNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+      required: [variant]
+    QueryProgramScanSealedResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [sealed]
+      required: [variant]
+    QueryProgramFilterInput:
+      type: object
+      properties:
+        program:
+          type: string
+        node:
+          type: string
+        bindAs:
+          type: string
+      required: [program, node, bindAs]
+    QueryProgramFilterOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        program:
+          type: string
+      required: [variant, program]
+    QueryProgramFilterNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+      required: [variant]
+    QueryProgramFilterSealedResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [sealed]
+      required: [variant]
+    QueryProgramSortInput:
+      type: object
+      properties:
+        program:
+          type: string
+        keys:
+          type: string
+        bindAs:
+          type: string
+      required: [program, keys, bindAs]
+    QueryProgramSortOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        program:
+          type: string
+      required: [variant, program]
+    QueryProgramSortNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+      required: [variant]
+    QueryProgramSortSealedResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [sealed]
+      required: [variant]
+    QueryProgramGroupInput:
+      type: object
+      properties:
+        program:
+          type: string
+        keys:
+          type: string
+        config:
+          type: string
+        bindAs:
+          type: string
+      required: [program, keys, config, bindAs]
+    QueryProgramGroupOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        program:
+          type: string
+      required: [variant, program]
+    QueryProgramGroupNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+      required: [variant]
+    QueryProgramGroupSealedResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [sealed]
+      required: [variant]
+    QueryProgramProjectInput:
+      type: object
+      properties:
+        program:
+          type: string
+        fields:
+          type: string
+        bindAs:
+          type: string
+      required: [program, fields, bindAs]
+    QueryProgramProjectOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        program:
+          type: string
+      required: [variant, program]
+    QueryProgramProjectNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+      required: [variant]
+    QueryProgramProjectSealedResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [sealed]
+      required: [variant]
+    QueryProgramLimitInput:
+      type: object
+      properties:
+        program:
+          type: string
+        count:
+          type: integer
+        output:
+          type: string
+      required: [program, count, output]
+    QueryProgramLimitOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        program:
+          type: string
+      required: [variant, program]
+    QueryProgramLimitNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+      required: [variant]
+    QueryProgramLimitSealedResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [sealed]
+      required: [variant]
+    QueryProgramOffsetInput:
+      type: object
+      properties:
+        program:
+          type: string
+        count:
+          type: integer
+        output:
+          type: string
+      required: [program, count, output]
+    QueryProgramOffsetOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        program:
+          type: string
+      required: [variant, program]
+    QueryProgramOffsetNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+      required: [variant]
+    QueryProgramOffsetSealedResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [sealed]
+      required: [variant]
+    QueryProgramPureInput:
+      type: object
+      properties:
+        program:
+          type: string
+        variant:
+          type: string
+        output:
+          type: string
+      required: [program, variant, output]
+    QueryProgramPureOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        program:
+          type: string
+      required: [variant, program]
+    QueryProgramPureNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+      required: [variant]
+    QueryProgramPureSealedResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [sealed]
+      required: [variant]
+    QueryProgramJoinInput:
+      type: object
+      properties:
+        program:
+          type: string
+        source:
+          type: string
+        localField:
+          type: string
+        foreignField:
+          type: string
+        bindAs:
+          type: string
+      required: [program, source, localField, foreignField, bindAs]
+    QueryProgramJoinOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        program:
+          type: string
+      required: [variant, program]
+    QueryProgramJoinNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+      required: [variant]
+    QueryProgramJoinSealedResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [sealed]
+      required: [variant]
+    QueryProgramComposeInput:
+      type: object
+      properties:
+        first:
+          type: string
+        second:
+          type: string
+        bindAs:
+          type: string
+      required: [first, second, bindAs]
+    QueryProgramComposeOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        program:
+          type: string
+      required: [variant, program]
+    QueryProgramComposeNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+      required: [variant]
+    QueryProgramInvokeInput:
+      type: object
+      properties:
+        program:
+          type: string
+        concept:
+          type: string
+        action:
+          type: string
+        input:
+          type: string
+        bindAs:
+          type: string
+      required: [program, concept, action, input, bindAs]
+    QueryProgramInvokeOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        program:
+          type: string
+      required: [variant, program]
+    QueryProgramInvokeNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+      required: [variant]
+    QueryProgramInvokeSealedResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [sealed]
+      required: [variant]
+    QueryProgramMatchInput:
+      type: object
+      properties:
+        program:
+          type: string
+        binding:
+          type: string
+        cases:
+          type: string
+        bindAs:
+          type: string
+      required: [program, binding, cases, bindAs]
+    QueryProgramMatchOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        program:
+          type: string
+      required: [variant, program]
+    QueryProgramMatchNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+      required: [variant]
+    QueryProgramMatchSealedResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [sealed]
+      required: [variant]
+    QueryProgramMatchInvalidCasesResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [invalid_cases]
+      required: [variant]
+    QueryProgramTraverseInvokeInput:
+      type: object
+      properties:
+        program:
+          type: string
+        sourceBinding:
+          type: string
+        itemBinding:
+          type: string
+        concept:
+          type: string
+        action:
+          type: string
+        inputTemplate:
+          type: string
+        bindAs:
+          type: string
+      required: [program, sourceBinding, itemBinding, concept, action, inputTemplate, bindAs]
+    QueryProgramTraverseInvokeOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        program:
+          type: string
+      required: [variant, program]
+    QueryProgramTraverseInvokeNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+      required: [variant]
+    QueryProgramTraverseInvokeSealedResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [sealed]
+      required: [variant]
+    QueryProgramTraverseInput:
+      type: object
+      properties:
+        program:
+          type: string
+        sourceBinding:
+          type: string
+        itemBinding:
+          type: string
+        bodyProgram:
+          type: string
+        bindAs:
+          type: string
+        declaredEffects:
+          type: string
+      required: [program, sourceBinding, itemBinding, bodyProgram, bindAs, declaredEffects]
+    QueryProgramTraverseOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        program:
+          type: string
+      required: [variant, program]
+    QueryProgramTraverseNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+      required: [variant]
+    QueryProgramTraverseSealedResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [sealed]
+      required: [variant]
+    QueryProgramTraverseNotSealedResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [not_sealed]
+      required: [variant]
+    QueryExecutionRegisterKindInput:
+      type: object
+      properties:
+        kind:
+          type: string
+      required: [kind]
+    QueryExecutionRegisterKindOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        kind:
+          type: string
+      required: [variant, kind]
+    QueryExecutionRegisterKindDuplicateResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [duplicate]
+        kind:
+          type: string
+      required: [variant, kind]
+    QueryExecutionRegisterKindErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    QueryExecutionRegisterInput:
+      type: object
+      properties:
+        name:
+          type: string
+        kind:
+          type: string
+        capabilities:
+          type: string
+      required: [name, kind, capabilities]
+    QueryExecutionRegisterOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        provider:
+          type: string
+      required: [variant, provider]
+    QueryExecutionRegisterDuplicateResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [duplicate]
+        provider:
+          type: string
+      required: [variant, provider]
+    QueryExecutionRegisterErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    QueryExecutionExecuteInput:
+      type: object
+      properties:
+        program:
+          type: string
+        kind:
+          type: string
+      required: [program, kind]
+    QueryExecutionExecuteOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        rows:
+          type: string
+        metadata:
+          type: string
+      required: [variant, rows, metadata]
+    QueryExecutionExecuteInvokePendingResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [invoke_pending]
+        concept:
+          type: string
+        action:
+          type: string
+        input:
+          type: string
+        continuation:
+          type: string
+      required: [variant, concept, action, input, continuation]
+    QueryExecutionExecuteErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    QueryExecutionResumeAfterInvokeInput:
+      type: object
+      properties:
+        continuation:
+          type: string
+        variant:
+          type: string
+        output:
+          type: string
+      required: [continuation, variant, output]
+    QueryExecutionResumeAfterInvokeOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        rows:
+          type: string
+        metadata:
+          type: string
+      required: [variant, rows, metadata]
+    QueryExecutionResumeAfterInvokeInvokePendingResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [invoke_pending]
+        concept:
+          type: string
+        action:
+          type: string
+        input:
+          type: string
+        continuation:
+          type: string
+      required: [variant, concept, action, input, continuation]
+    QueryExecutionResumeAfterInvokeErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    QueryExecutionPlanPushdownInput:
+      type: object
+      properties:
+        program:
+          type: string
+        provider:
+          type: string
+      required: [program, provider]
+    QueryExecutionPlanPushdownOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        pushdown:
+          type: string
+        residual:
+          type: string
+      required: [variant, pushdown, residual]
+    QueryExecutionPlanPushdownErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    QueryExecutionListOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        providers:
+          type: string
+      required: [variant, providers]
+    QueryExecutionGetInput:
+      type: object
+      properties:
+        name:
+          type: string
+      required: [name]
+    QueryExecutionGetOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        provider:
+          type: string
+        kind:
+          type: string
+        capabilities:
+          type: string
+      required: [variant, provider, kind, capabilities]
+    QueryExecutionGetNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    SortSpecCreateInput:
+      type: object
+      properties:
+        name:
+          type: string
+        keys:
+          type: string
+      required: [name, keys]
+    SortSpecCreateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        sort:
+          type: string
+      required: [variant, sort]
+    SortSpecCreateDuplicateResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [duplicate]
+        sort:
+          type: string
+      required: [variant, sort]
+    SortSpecGetInput:
+      type: object
+      properties:
+        name:
+          type: string
+      required: [name]
+    SortSpecGetOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        sort:
+          type: string
+        keys:
+          type: string
+      required: [variant, sort, keys]
+    SortSpecGetNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    SortSpecComposeInput:
+      type: object
+      properties:
+        primary:
+          type: string
+        secondary:
+          type: string
+      required: [primary, secondary]
+    SortSpecComposeOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        sort:
+          type: string
+        keys:
+          type: string
+      required: [variant, sort, keys]
+    SortSpecComposeNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    SortSpecEvaluateInput:
+      type: object
+      properties:
+        name:
+          type: string
+        rows:
+          type: string
+      required: [name, rows]
+    SortSpecEvaluateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        rows:
+          type: string
+      required: [variant, rows]
+    SortSpecEvaluateNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    SortSpecEvaluateErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    SortSpecListOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        sorts:
+          type: string
+      required: [variant, sorts]
+    GroupSpecCreateInput:
+      type: object
+      properties:
+        name:
+          type: string
+        grouping:
+          type: string
+        aggregations:
+          type: string
+      required: [name, grouping, aggregations]
+    GroupSpecCreateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        group:
+          type: string
+      required: [variant, group]
+    GroupSpecCreateDuplicateResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [duplicate]
+        group:
+          type: string
+      required: [variant, group]
+    GroupSpecCreateErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    GroupSpecGetInput:
+      type: object
+      properties:
+        name:
+          type: string
+      required: [name]
+    GroupSpecGetOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        group:
+          type: string
+        grouping:
+          type: string
+        aggregations:
+          type: string
+        having:
+          type: string
+      required: [variant, group, grouping, aggregations, having]
+    GroupSpecGetNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    GroupSpecEvaluateInput:
+      type: object
+      properties:
+        name:
+          type: string
+        rows:
+          type: string
+      required: [name, rows]
+    GroupSpecEvaluateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        groups:
+          type: string
+      required: [variant, groups]
+    GroupSpecEvaluateNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    GroupSpecEvaluateErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    GroupSpecListOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        groups:
+          type: string
+      required: [variant, groups]
+    ProjectionSpecCreateInput:
+      type: object
+      properties:
+        name:
+          type: string
+        fields:
+          type: string
+      required: [name, fields]
+    ProjectionSpecCreateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        projection:
+          type: string
+      required: [variant, projection]
+    ProjectionSpecCreateDuplicateResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [duplicate]
+        projection:
+          type: string
+      required: [variant, projection]
+    ProjectionSpecCreateErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    ProjectionSpecGetInput:
+      type: object
+      properties:
+        name:
+          type: string
+      required: [name]
+    ProjectionSpecGetOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        projection:
+          type: string
+        fields:
+          type: string
+      required: [variant, projection, fields]
+    ProjectionSpecGetNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    ProjectionSpecMergeInput:
+      type: object
+      properties:
+        base:
+          type: string
+        overlay:
+          type: string
+      required: [base, overlay]
+    ProjectionSpecMergeOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        projection:
+          type: string
+        fields:
+          type: string
+      required: [variant, projection, fields]
+    ProjectionSpecMergeNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    ProjectionSpecEvaluateInput:
+      type: object
+      properties:
+        name:
+          type: string
+        rows:
+          type: string
+      required: [name, rows]
+    ProjectionSpecEvaluateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        rows:
+          type: string
+      required: [variant, rows]
+    ProjectionSpecEvaluateNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    ProjectionSpecEvaluateErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    ProjectionSpecListOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        projections:
+          type: string
+      required: [variant, projections]
+    PresentationSpecCreateInput:
+      type: object
+      properties:
+        name:
+          type: string
+        displayType:
+          type: string
+        hints:
+          type: string
+        displayModePolicy:
+          type: string
+        defaultDisplayMode:
+          type: string
+      required: [name, displayType, hints, displayModePolicy, defaultDisplayMode]
+    PresentationSpecCreateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        presentation:
+          type: string
+      required: [variant, presentation]
+    PresentationSpecCreateDuplicateResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [duplicate]
+        presentation:
+          type: string
+      required: [variant, presentation]
+    PresentationSpecCreateErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    PresentationSpecGetInput:
+      type: object
+      properties:
+        name:
+          type: string
+      required: [name]
+    PresentationSpecGetOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        presentation:
+          type: string
+        displayType:
+          type: string
+        hints:
+          type: string
+        displayModePolicy:
+          type: string
+        defaultDisplayMode:
+          type: string
+      required: [variant, presentation, displayType, hints, displayModePolicy, defaultDisplayMode]
+    PresentationSpecGetNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    PresentationSpecListOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        presentations:
+          type: string
+      required: [variant, presentations]
+    InteractionSpecCreateInput:
+      type: object
+      properties:
+        name:
+          type: string
+        createForm:
+          type: string
+        rowClick:
+          type: string
+        rowActions:
+          type: string
+        pickerMode:
+          type: boolean
+        createProgram:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        actionProgram:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+      required: [name, createForm, rowClick, rowActions, pickerMode, createProgram, actionProgram]
+    InteractionSpecCreateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        interaction:
+          type: string
+      required: [variant, interaction]
+    InteractionSpecCreateDuplicateResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [duplicate]
+        interaction:
+          type: string
+      required: [variant, interaction]
+    InteractionSpecCreateErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    InteractionSpecGetInput:
+      type: object
+      properties:
+        name:
+          type: string
+      required: [name]
+    InteractionSpecGetOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        interaction:
+          type: string
+        createForm:
+          type: string
+        rowClick:
+          type: string
+        rowActions:
+          type: string
+        pickerMode:
+          type: boolean
+        createProgram:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        actionProgram:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+      required: [variant, interaction, createForm, rowClick, rowActions, pickerMode, createProgram, actionProgram]
+    InteractionSpecGetNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    InteractionSpecListOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        interactions:
+          type: string
+      required: [variant, interactions]
+    ViewShellCreateInput:
+      type: object
+      properties:
+        name:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        dataSource:
+          type: string
+        filter:
+          type: string
+        sort:
+          type: string
+        group:
+          type: string
+        projection:
+          type: string
+        presentation:
+          type: string
+        interaction:
+          type: string
+        features:
+          type: string
+        pagination:
+          type: string
+      required: [name, title, description, dataSource, filter, sort, group, projection, presentation, interaction, features, pagination]
+    ViewShellCreateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        view:
+          type: string
+      required: [variant, view]
+    ViewShellCreateDuplicateResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [duplicate]
+        view:
+          type: string
+      required: [variant, view]
+    ViewShellCreateErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    ViewShellCreateFeatureDisabledResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [feature_disabled]
+        message:
+          type: string
+      required: [variant, message]
+    ViewShellGetInput:
+      type: object
+      properties:
+        name:
+          type: string
+      required: [name]
+    ViewShellGetOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        view:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        dataSource:
+          type: string
+        filter:
+          type: string
+        sort:
+          type: string
+        group:
+          type: string
+        projection:
+          type: string
+        presentation:
+          type: string
+        interaction:
+          type: string
+      required: [variant, view, title, description, dataSource, filter, sort, group, projection, presentation, interaction]
+    ViewShellGetNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    ViewShellUpdateInput:
+      type: object
+      properties:
+        name:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        dataSource:
+          type: string
+        filter:
+          type: string
+        sort:
+          type: string
+        group:
+          type: string
+        projection:
+          type: string
+        presentation:
+          type: string
+        interaction:
+          type: string
+        features:
+          type: string
+        pagination:
+          type: string
+      required: [name, title, description, dataSource, filter, sort, group, projection, presentation, interaction, features, pagination]
+    ViewShellUpdateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        view:
+          type: string
+      required: [variant, view]
+    ViewShellUpdateNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    ViewShellUpdateErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    ViewShellUpdateFeatureDisabledResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [feature_disabled]
+        message:
+          type: string
+      required: [variant, message]
+    ViewShellResolveInput:
+      type: object
+      properties:
+        name:
+          type: string
+      required: [name]
+    ViewShellResolveOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        view:
+          type: string
+        config:
+          type: string
+      required: [variant, view, config]
+    ViewShellResolveNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    ViewShellListOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        views:
+          type: string
+      required: [variant, views]
+    ViewShellResolveHydratedInput:
+      type: object
+      properties:
+        name:
+          type: string
+      required: [name]
+    ViewShellResolveHydratedOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        view:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        dataSource:
+          type: string
+        filter:
+          type: string
+        sort:
+          type: string
+        group:
+          type: string
+        projection:
+          type: string
+        presentation:
+          type: string
+        interaction:
+          type: string
+        pagination:
+          type: string
+        features:
+          type: string
+      required: [variant, view, title, description, dataSource, filter, sort, group, projection, presentation, interaction, pagination, features]
+    ViewShellResolveHydratedNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    FilterRepresentationRegisterKindInput:
+      type: object
+      properties:
+        kind:
+          type: string
+      required: [kind]
+    FilterRepresentationRegisterKindOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        kind:
+          type: string
+      required: [variant, kind]
+    FilterRepresentationRegisterKindDuplicateResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [duplicate]
+        kind:
+          type: string
+      required: [variant, kind]
+    FilterRepresentationRegisterKindErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    FilterRepresentationRegisterInput:
+      type: object
+      properties:
+        name:
+          type: string
+        kind:
+          type: string
+      required: [name, kind]
+    FilterRepresentationRegisterOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        representation:
+          type: string
+      required: [variant, representation]
+    FilterRepresentationRegisterDuplicateResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [duplicate]
+        representation:
+          type: string
+      required: [variant, representation]
+    FilterRepresentationRegisterErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    FilterRepresentationParseInput:
+      type: object
+      properties:
+        repr:
+          type: string
+        kind:
+          type: string
+      required: [repr, kind]
+    FilterRepresentationParseOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        tree:
+          type: string
+      required: [variant, tree]
+    FilterRepresentationParseErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    FilterRepresentationPrintInput:
+      type: object
+      properties:
+        tree:
+          type: string
+        kind:
+          type: string
+      required: [tree, kind]
+    FilterRepresentationPrintOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        repr:
+          type: string
+      required: [variant, repr]
+    FilterRepresentationPrintErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    FilterRepresentationCanPrintInput:
+      type: object
+      properties:
+        tree:
+          type: string
+        kind:
+          type: string
+      required: [tree, kind]
+    FilterRepresentationCanPrintOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        supported:
+          type: boolean
+      required: [variant, supported]
+    FilterRepresentationCanPrintErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    FilterRepresentationListOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        representations:
+          type: string
+      required: [variant, representations]
+    RemoteQueryProviderRegisterInput:
+      type: object
+      properties:
+        name:
+          type: string
+        source:
+          type: string
+        manifestRef:
+          type: string
+        projectionRef:
+          type: string
+        pushdownOps:
+          type: string
+      required: [name, source, manifestRef, projectionRef, pushdownOps]
+    RemoteQueryProviderRegisterOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        provider:
+          type: string
+      required: [variant, provider]
+    RemoteQueryProviderRegisterDuplicateResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [duplicate]
+        message:
+          type: string
+      required: [variant, message]
+    RemoteQueryProviderRegisterInvalidResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [invalid]
+        message:
+          type: string
+      required: [variant, message]
+    RemoteQueryProviderExecuteInput:
+      type: object
+      properties:
+        provider:
+          type: string
+        program:
+          type: string
+      required: [provider, program]
+    RemoteQueryProviderExecuteOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        rows:
+          type: string
+        metadata:
+          type: string
+      required: [variant, rows, metadata]
+    RemoteQueryProviderExecuteNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    RemoteQueryProviderExecuteErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    RemoteQueryProviderPlanPushdownInput:
+      type: object
+      properties:
+        provider:
+          type: string
+        program:
+          type: string
+      required: [provider, program]
+    RemoteQueryProviderPlanPushdownOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        pushdown:
+          type: string
+        residual:
+          type: string
+        apiParams:
+          type: string
+      required: [variant, pushdown, residual, apiParams]
+    RemoteQueryProviderPlanPushdownNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    RemoteQueryProviderPlanPushdownErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    RemoteQueryProviderGetInput:
+      type: object
+      properties:
+        provider:
+          type: string
+      required: [provider]
+    RemoteQueryProviderGetOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        provider:
+          type: string
+        name:
+          type: string
+        source:
+          type: string
+        manifestRef:
+          type: string
+        projectionRef:
+          type: string
+        pushdownOps:
+          type: string
+      required: [variant, provider, name, source, manifestRef, projectionRef, pushdownOps]
+    RemoteQueryProviderGetNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    RemoteQueryProviderListOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        providers:
+          type: array
+          items:
+            type: object
+            properties:
+              provider:
+                type: string
+              name:
+                type: string
+              source:
+                type: string
+            required: [provider, name, source]
+      required: [variant, providers]
+    ConnectionConnectInput:
+      type: object
+      properties:
+        connection:
+          type: string
+        endpoint:
+          type: string
+        transportAdapter:
+          type: string
+        credentials:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+      required: [connection, endpoint, transportAdapter, credentials]
+    ConnectionConnectOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        connection:
+          type: string
+      required: [variant, connection]
+    ConnectionConnectUnreachableResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [unreachable]
+        message:
+          type: string
+      required: [variant, message]
+    ConnectionConnectUnauthorizedResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [unauthorized]
+        message:
+          type: string
+      required: [variant, message]
+    ConnectionDiscoverInput:
+      type: object
+      properties:
+        connection:
+          type: string
+        concept:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        depth:
+          type: string
+      required: [connection, concept, depth]
+    ConnectionDiscoverOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        connection:
+          type: string
+        result:
+          type: string
+      required: [variant, connection, result]
+    ConnectionDiscoverDisconnectedResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [disconnected]
+        message:
+          type: string
+      required: [variant, message]
+    ConnectionInvokeInput:
+      type: object
+      properties:
+        connection:
+          type: string
+        concept:
+          type: string
+        action:
+          type: string
+        input:
+          type: string
+      required: [connection, concept, action, input]
+    ConnectionInvokeOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+        connection:
+          type: string
+        output:
+          type: string
+      required: [variant, connection, variant, output]
+    ConnectionInvokeNotFoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [not_found]
+        message:
+          type: string
+      required: [variant, message]
+    ConnectionInvokeUnauthorizedResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [unauthorized]
+        message:
+          type: string
+      required: [variant, message]
+    ConnectionInvokeErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    ConnectionObserveInput:
+      type: object
+      properties:
+        connection:
+          type: string
+        concept:
+          type: string
+        action:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+      required: [connection, concept, action]
+    ConnectionObserveOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        connection:
+          type: string
+        streamId:
+          type: string
+      required: [variant, connection, streamId]
+    ConnectionObserveNotSupportedResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [not_supported]
+        message:
+          type: string
+      required: [variant, message]
+    ConnectionObserveDisconnectedResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [disconnected]
+        message:
+          type: string
+      required: [variant, message]
+    ConnectionDisconnectInput:
+      type: object
+      properties:
+        connection:
+          type: string
+      required: [connection]
+    ConnectionDisconnectOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        connection:
+          type: string
+      required: [variant, connection]
+    PageMapRegisterInput:
+      type: object
+      properties:
+        entry:
+          type: string
+        label:
+          type: string
+        role:
+          type: string
+        machineRef:
+          type: string
+        widgetName:
+          type: string
+        currentState:
+          type: string
+        validEvents:
+          type: string
+        conceptBinding:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        affordanceServes:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        hostRef:
+          type: string
+        viewName:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        viewPurpose:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        viewPurity:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        viewInvokedActions:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+      required: [entry, label, role, machineRef, widgetName, currentState, validEvents, conceptBinding, affordanceServes, hostRef, viewName, viewPurpose, viewPurity, viewInvokedActions]
+    PageMapRegisterOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        entry:
+          type: string
+      required: [variant, entry]
+    PageMapRegisterDuplicateResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [duplicate]
+        message:
+          type: string
+      required: [variant, message]
+    PageMapUpdateInput:
+      type: object
+      properties:
+        entry:
+          type: string
+        currentState:
+          type: string
+        validEvents:
+          type: string
+      required: [entry, currentState, validEvents]
+    PageMapUpdateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        entry:
+          type: string
+      required: [variant, entry]
+    PageMapUpdateNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    PageMapFindInput:
+      type: object
+      properties:
+        entry:
+          type: string
+        label:
+          type: string
+      required: [entry, label]
+    PageMapFindOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        entry:
+          type: string
+        machineRef:
+          type: string
+        viewName:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        viewPurpose:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        viewPurity:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        viewInvokedActions:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+      required: [variant, entry, machineRef, viewName, viewPurpose, viewPurity, viewInvokedActions]
+    PageMapFindNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    PageMapFindByRoleInput:
+      type: object
+      properties:
+        role:
+          type: string
+      required: [role]
+    PageMapFindByRoleOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        entries:
+          type: string
+      required: [variant, entries]
+    PageMapFindByConceptInput:
+      type: object
+      properties:
+        concept:
+          type: string
+      required: [concept]
+    PageMapFindByConceptOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        entries:
+          type: string
+      required: [variant, entries]
+    PageMapFindByWidgetInput:
+      type: object
+      properties:
+        widgetName:
+          type: string
+      required: [widgetName]
+    PageMapFindByWidgetOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        entries:
+          type: string
+      required: [variant, entries]
+    PageMapFindByViewInput:
+      type: object
+      properties:
+        viewName:
+          type: string
+      required: [viewName]
+    PageMapFindByViewOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        entries:
+          type: string
+      required: [variant, entries]
+    PageMapFindByViewNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    PageMapListInput:
+      type: object
+      properties:
+        hostRef:
+          type: string
+      required: [hostRef]
+    PageMapListOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        entries:
+          type: string
+      required: [variant, entries]
+    PageMapClearInput:
+      type: object
+      properties:
+        hostRef:
+          type: string
+      required: [hostRef]
+    PageMapClearOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        hostRef:
+          type: string
+      required: [variant, hostRef]
+    ClefBaseCreateContentInput:
+      type: object
+      properties:
+        type:
+          type: string
+        content:
+          type: string
+        createdBy:
+          type: string
+      required: [type, content, createdBy]
+    ClefBaseCreateContentOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ClefBaseCreateContentErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+      required: [variant]
+    ClefBaseCompileContentInput:
+      type: object
+      properties:
+        pageId:
+          type: string
+      required: [pageId]
+    ClefBaseCompileContentOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ClefBaseCompileContentErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+      required: [variant]
+    ClefBaseDefineSchemaInput:
+      type: object
+      properties:
+        schema:
+          type: string
+        fields:
+          type: string
+      required: [schema, fields]
+    ClefBaseDefineSchemaOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ClefBaseDefineSchemaErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+      required: [variant]
+    ClefBaseApplySchemaInput:
+      type: object
+      properties:
+        entity_id:
+          type: string
+        schema:
+          type: string
+      required: [entity_id, schema]
+    ClefBaseApplySchemaOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ClefBaseApplySchemaErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+      required: [variant]
+    ClefBaseSpawnAgentInput:
+      type: object
+      properties:
+        personaPageId:
+          type: string
+        strategy:
+          type: string
+        tools:
+          type: string
+        context:
+          type: string
+      required: [personaPageId, strategy, tools, context]
+    ClefBaseSpawnAgentOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ClefBaseSpawnAgentErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+      required: [variant]
+    ClefBaseInvokeAgentInput:
+      type: object
+      properties:
+        session:
+          type: string
+        goal:
+          type: string
+      required: [session, goal]
+    ClefBaseInvokeAgentOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ClefBaseInvokeAgentErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+      required: [variant]
+    ClefBaseCreateTriggerInput:
+      type: object
+      properties:
+        personaPageId:
+          type: string
+        triggerType:
+          type: string
+        config:
+          type: string
+        strategy:
+          type: string
+        tools:
+          type: string
+        cooldownMs:
+          type: string
+      required: [personaPageId, triggerType, config, strategy, tools, cooldownMs]
+    ClefBaseCreateTriggerOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ClefBaseCreateTriggerErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+      required: [variant]
+    ClefBaseStartProcessInput:
+      type: object
+      properties:
+        spec:
+          type: string
+        input:
+          type: string
+      required: [spec, input]
+    ClefBaseStartProcessOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ClefBaseStartProcessErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+      required: [variant]
+    ClefBaseApproveStepInput:
+      type: object
+      properties:
+        workItem:
+          type: string
+      required: [workItem]
+    ClefBaseApproveStepOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ClefBaseApproveStepErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+      required: [variant]
+    ClefBaseCreateViewInput:
+      type: object
+      properties:
+        name:
+          type: string
+        dataSource:
+          type: string
+        filter:
+          type: string
+        sort:
+          type: string
+        projection:
+          type: string
+        presentation:
+          type: string
+      required: [name, dataSource, filter, sort, projection, presentation]
+    ClefBaseCreateViewOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ClefBaseCreateViewErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+      required: [variant]
+    ClefBaseResolveViewInput:
+      type: object
+      properties:
+        name:
+          type: string
+      required: [name]
+    ClefBaseResolveViewOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ClefBaseResolveViewErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+      required: [variant]
+    ClefBaseInstallPackageInput:
+      type: object
+      properties:
+        packageName:
+          type: string
+        version:
+          type: string
+      required: [packageName, version]
+    ClefBaseInstallPackageOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ClefBaseInstallPackageErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+      required: [variant]
+    ClefBaseBrowsePackagesInput:
+      type: object
+      properties:
+        query:
+          type: string
+      required: [query]
+    ClefBaseBrowsePackagesOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ClefBaseBrowsePackagesErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+      required: [variant]
+    ClefBaseCreateDiagramInput:
+      type: object
+      properties:
+        name:
+          type: string
+        notation:
+          type: string
+      required: [name, notation]
+    ClefBaseCreateDiagramOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ClefBaseCreateDiagramErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+      required: [variant]
+    ClefBaseExportDiagramInput:
+      type: object
+      properties:
+        canvas:
+          type: string
+        format:
+          type: string
+      required: [canvas, format]
+    ClefBaseExportDiagramOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ClefBaseExportDiagramErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+      required: [variant]
+    ClefBaseAnalyzeGraphInput:
+      type: object
+      properties:
+        graph:
+          type: string
+        algorithm:
+          type: string
+      required: [graph, algorithm]
+    ClefBaseAnalyzeGraphOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ClefBaseAnalyzeGraphErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+      required: [variant]
+    ClefBaseGetContentInput:
+      type: object
+      properties:
+        node:
+          type: string
+      required: [node]
+    ClefBaseGetContentOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ClefBaseGetAgentStatusInput:
+      type: object
+      properties:
+        session:
+          type: string
+      required: [session]
+    ClefBaseGetAgentStatusOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ClefBaseListSessionsInput:
+      type: object
+      properties:
+        personaPageId:
+          type: string
+        status:
+          type: string
+      required: [personaPageId, status]
+    ClefBaseListSessionsOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ClefBaseGetProcessStatusInput:
+      type: object
+      properties:
+        processRun:
+          type: string
+      required: [processRun]
+    ClefBaseGetProcessStatusOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    ClefBaseGetViewInput:
+      type: object
+      properties:
+        name:
+          type: string
+      required: [name]
+    ClefBaseGetViewOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    InfrastructureCoreRegisterPluginInput:
+      type: object
+      properties:
+        type:
+          type: string
+        name:
+          type: string
+        metadata:
+          type: string
+      required: [type, name, metadata]
+    InfrastructureCoreRegisterPluginOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    InfrastructureCoreRegisterPluginErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+      required: [variant]
+    InfrastructureCoreDiscoverPluginsInput:
+      type: object
+      properties:
+        type:
+          type: string
+      required: [type]
+    InfrastructureCoreDiscoverPluginsOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    InfrastructureCoreDiscoverPluginsErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+      required: [variant]
+    InfrastructureCoreInvalidateCacheInput:
+      type: object
+      properties:
+        bin:
+          type: string
+        key:
+          type: string
+      required: [bin, key]
+    InfrastructureCoreInvalidateCacheOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    InfrastructureCoreInvalidateCacheErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+      required: [variant]
+    InfrastructureCorePublishEventInput:
+      type: object
+      properties:
+        event:
+          type: string
+        payload:
+          type: string
+      required: [event, payload]
+    InfrastructureCorePublishEventOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    InfrastructureCorePublishEventErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+      required: [variant]
+    InfrastructureCoreValidateInput:
+      type: object
+      properties:
+        validator:
+          type: string
+        data:
+          type: string
+      required: [validator, data]
+    InfrastructureCoreValidateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    InfrastructureCoreValidateErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+      required: [variant]
+    InfrastructureCoreGetCachedInput:
+      type: object
+      properties:
+        bin:
+          type: string
+        key:
+          type: string
+      required: [bin, key]
+    InfrastructureCoreGetCachedOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    InfrastructureCoreGetPluginDefinitionsInput:
+      type: object
+      properties:
+        type:
+          type: string
+      required: [type]
+    InfrastructureCoreGetPluginDefinitionsOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    RuntimeInfrastructureCreateProgramInput:
+      type: object
+      properties:
+        concept:
+          type: string
+        action:
+          type: string
+      required: [concept, action]
+    RuntimeInfrastructureCreateProgramOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    RuntimeInfrastructureCreateProgramErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+      required: [variant]
+    RuntimeInfrastructureEnsureIndexInput:
+      type: object
+      properties:
+        relation:
+          type: string
+        field:
+          type: string
+      required: [relation, field]
+    RuntimeInfrastructureEnsureIndexOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    RuntimeInfrastructureEnsureIndexErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+      required: [variant]
+    RuntimeInfrastructureGetEffectHandlersInput:
+      type: object
+      properties:
+        protocol:
+          type: string
+      required: [protocol]
+    RuntimeInfrastructureGetEffectHandlersOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    RuntimeInfrastructureGetCachedInput:
+      type: object
+      properties:
+        program:
+          type: string
+      required: [program]
+    RuntimeInfrastructureGetCachedOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]

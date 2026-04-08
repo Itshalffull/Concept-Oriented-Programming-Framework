@@ -1,0 +1,42 @@
+[
+  {
+    "name": "infrastructure_core_register_plugin",
+    "briefDescription": "registerPlugin succeeded.",
+    "category": "InfrastructureCore",
+    "concept": "InfrastructureCore",
+    "action": "registerPlugin",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "infrastructure_core_discover_plugins",
+    "briefDescription": "discoverPlugins succeeded.",
+    "category": "InfrastructureCore",
+    "concept": "InfrastructureCore",
+    "action": "discoverPlugins",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "infrastructure_core_invalidate_cache",
+    "briefDescription": "invalidateCache succeeded.",
+    "category": "InfrastructureCore",
+    "concept": "InfrastructureCore",
+    "action": "invalidateCache",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "infrastructure_core_publish_event",
+    "briefDescription": "publishEvent succeeded.",
+    "category": "InfrastructureCore",
+    "concept": "InfrastructureCore",
+    "action": "publishEvent",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "infrastructure_core_validate",
+    "briefDescription": "validate succeeded.",
+    "category": "InfrastructureCore",
+    "concept": "InfrastructureCore",
+    "action": "validate",
+    "alwaysLoaded": false
+  }
+]

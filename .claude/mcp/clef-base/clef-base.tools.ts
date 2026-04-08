@@ -6,10 +6,20 @@ export const clefBaseTools = [
   {
     "type": "tool",
     "name": "clef_base_create_content",
-    "description": "Create content clefbase — Execute createContent",
+    "description": "Create content clefbase — createContent succeeded",
     "inputSchema": {
       "type": "object",
-      "properties": {},
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        },
+        "createdBy": {
+          "type": "string"
+        }
+      },
       "required": [
         "type",
         "content",
@@ -20,10 +30,14 @@ export const clefBaseTools = [
   {
     "type": "tool",
     "name": "clef_base_compile_content",
-    "description": "Compile content clefbase — Execute compileContent",
+    "description": "Compile content clefbase — compileContent succeeded",
     "inputSchema": {
       "type": "object",
-      "properties": {},
+      "properties": {
+        "pageId": {
+          "type": "string"
+        }
+      },
       "required": [
         "pageId"
       ]
@@ -32,10 +46,17 @@ export const clefBaseTools = [
   {
     "type": "tool",
     "name": "clef_base_define_schema",
-    "description": "Define schema clefbase — Execute defineSchema",
+    "description": "Define schema clefbase — defineSchema succeeded",
     "inputSchema": {
       "type": "object",
-      "properties": {},
+      "properties": {
+        "schema": {
+          "type": "string"
+        },
+        "fields": {
+          "type": "string"
+        }
+      },
       "required": [
         "schema",
         "fields"
@@ -45,10 +66,17 @@ export const clefBaseTools = [
   {
     "type": "tool",
     "name": "clef_base_apply_schema",
-    "description": "Apply schema clefbase — Execute applySchema",
+    "description": "Apply schema clefbase — applySchema succeeded",
     "inputSchema": {
       "type": "object",
-      "properties": {},
+      "properties": {
+        "entity_id": {
+          "type": "string"
+        },
+        "schema": {
+          "type": "string"
+        }
+      },
       "required": [
         "entity_id",
         "schema"
@@ -58,10 +86,23 @@ export const clefBaseTools = [
   {
     "type": "tool",
     "name": "clef_base_spawn_agent",
-    "description": "Spawn agent clefbase — Execute spawnAgent",
+    "description": "Spawn agent clefbase — spawnAgent succeeded",
     "inputSchema": {
       "type": "object",
-      "properties": {},
+      "properties": {
+        "personaPageId": {
+          "type": "string"
+        },
+        "strategy": {
+          "type": "string"
+        },
+        "tools": {
+          "type": "string"
+        },
+        "context": {
+          "type": "string"
+        }
+      },
       "required": [
         "personaPageId",
         "strategy",
@@ -73,10 +114,17 @@ export const clefBaseTools = [
   {
     "type": "tool",
     "name": "clef_base_invoke_agent",
-    "description": "Invoke agent clefbase — Execute invokeAgent",
+    "description": "Invoke agent clefbase — invokeAgent succeeded",
     "inputSchema": {
       "type": "object",
-      "properties": {},
+      "properties": {
+        "session": {
+          "type": "string"
+        },
+        "goal": {
+          "type": "string"
+        }
+      },
       "required": [
         "session",
         "goal"
@@ -86,10 +134,29 @@ export const clefBaseTools = [
   {
     "type": "tool",
     "name": "clef_base_create_trigger",
-    "description": "Create trigger clefbase — Execute createTrigger",
+    "description": "Create trigger clefbase — createTrigger succeeded",
     "inputSchema": {
       "type": "object",
-      "properties": {},
+      "properties": {
+        "personaPageId": {
+          "type": "string"
+        },
+        "triggerType": {
+          "type": "string"
+        },
+        "config": {
+          "type": "string"
+        },
+        "strategy": {
+          "type": "string"
+        },
+        "tools": {
+          "type": "string"
+        },
+        "cooldownMs": {
+          "type": "string"
+        }
+      },
       "required": [
         "personaPageId",
         "triggerType",
@@ -103,10 +170,17 @@ export const clefBaseTools = [
   {
     "type": "tool",
     "name": "clef_base_start_process",
-    "description": "Start process clefbase — Execute startProcess",
+    "description": "Start process clefbase — startProcess succeeded",
     "inputSchema": {
       "type": "object",
-      "properties": {},
+      "properties": {
+        "spec": {
+          "type": "string"
+        },
+        "input": {
+          "type": "string"
+        }
+      },
       "required": [
         "spec",
         "input"
@@ -116,10 +190,14 @@ export const clefBaseTools = [
   {
     "type": "tool",
     "name": "clef_base_approve_step",
-    "description": "Approve step clefbase — Execute approveStep",
+    "description": "Approve step clefbase — approveStep succeeded",
     "inputSchema": {
       "type": "object",
-      "properties": {},
+      "properties": {
+        "workItem": {
+          "type": "string"
+        }
+      },
       "required": [
         "workItem"
       ]
@@ -128,10 +206,29 @@ export const clefBaseTools = [
   {
     "type": "tool",
     "name": "clef_base_create_view",
-    "description": "Create view clefbase — Execute createView",
+    "description": "Create view clefbase — createView succeeded",
     "inputSchema": {
       "type": "object",
-      "properties": {},
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "dataSource": {
+          "type": "string"
+        },
+        "filter": {
+          "type": "string"
+        },
+        "sort": {
+          "type": "string"
+        },
+        "projection": {
+          "type": "string"
+        },
+        "presentation": {
+          "type": "string"
+        }
+      },
       "required": [
         "name",
         "dataSource",
@@ -145,10 +242,14 @@ export const clefBaseTools = [
   {
     "type": "tool",
     "name": "clef_base_resolve_view",
-    "description": "Resolve view clefbase — Execute resolveView",
+    "description": "Resolve view clefbase — resolveView succeeded",
     "inputSchema": {
       "type": "object",
-      "properties": {},
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      },
       "required": [
         "name"
       ]
@@ -157,10 +258,17 @@ export const clefBaseTools = [
   {
     "type": "tool",
     "name": "clef_base_install_package",
-    "description": "Install package clefbase — Execute installPackage",
+    "description": "Install package clefbase — installPackage succeeded",
     "inputSchema": {
       "type": "object",
-      "properties": {},
+      "properties": {
+        "packageName": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
       "required": [
         "packageName",
         "version"
@@ -170,10 +278,14 @@ export const clefBaseTools = [
   {
     "type": "tool",
     "name": "clef_base_browse_packages",
-    "description": "Browse packages clefbase — Execute browsePackages",
+    "description": "Browse packages clefbase — browsePackages succeeded",
     "inputSchema": {
       "type": "object",
-      "properties": {},
+      "properties": {
+        "query": {
+          "type": "string"
+        }
+      },
       "required": [
         "query"
       ]
@@ -182,10 +294,17 @@ export const clefBaseTools = [
   {
     "type": "tool",
     "name": "clef_base_create_diagram",
-    "description": "Create diagram clefbase — Execute createDiagram",
+    "description": "Create diagram clefbase — createDiagram succeeded",
     "inputSchema": {
       "type": "object",
-      "properties": {},
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "notation": {
+          "type": "string"
+        }
+      },
       "required": [
         "name",
         "notation"
@@ -195,10 +314,17 @@ export const clefBaseTools = [
   {
     "type": "tool",
     "name": "clef_base_export_diagram",
-    "description": "Export diagram clefbase — Execute exportDiagram",
+    "description": "Export diagram clefbase — exportDiagram succeeded",
     "inputSchema": {
       "type": "object",
-      "properties": {},
+      "properties": {
+        "canvas": {
+          "type": "string"
+        },
+        "format": {
+          "type": "string"
+        }
+      },
       "required": [
         "canvas",
         "format"
@@ -208,10 +334,17 @@ export const clefBaseTools = [
   {
     "type": "tool",
     "name": "clef_base_analyze_graph",
-    "description": "Analyze graph clefbase — Execute analyzeGraph",
+    "description": "Analyze graph clefbase — analyzeGraph succeeded",
     "inputSchema": {
       "type": "object",
-      "properties": {},
+      "properties": {
+        "graph": {
+          "type": "string"
+        },
+        "algorithm": {
+          "type": "string"
+        }
+      },
       "required": [
         "graph",
         "algorithm"
@@ -221,31 +354,31 @@ export const clefBaseTools = [
   {
     "type": "resource",
     "name": "clef_base_get_content",
-    "uri": "clef-base://clef-bases/{node}",
-    "description": "Get content clefbase — Execute getContent"
+    "uri": "derived:://clef-bases/{node}",
+    "description": "Get content clefbase — getContent query result"
   },
   {
     "type": "resource",
     "name": "clef_base_get_agent_status",
-    "uri": "clef-base://clef-bases/{session}",
-    "description": "Get agent status clefbase — Execute getAgentStatus"
+    "uri": "derived:://clef-bases/{session}",
+    "description": "Get agent status clefbase — getAgentStatus query result"
   },
   {
     "type": "resource-template",
     "name": "clef_base_list_sessions",
-    "uriTemplate": "clef-base://clef-bases",
-    "description": "List sessions clefbase — Execute listSessions"
+    "uriTemplate": "derived:://clef-bases",
+    "description": "List sessions clefbase — listSessions query result"
   },
   {
     "type": "resource",
     "name": "clef_base_get_process_status",
-    "uri": "clef-base://clef-bases/{processRun}",
-    "description": "Get process status clefbase — Execute getProcessStatus"
+    "uri": "derived:://clef-bases/{processRun}",
+    "description": "Get process status clefbase — getProcessStatus query result"
   },
   {
     "type": "resource",
     "name": "clef_base_get_view",
-    "uri": "clef-base://clef-bases/{name}",
-    "description": "Get view clefbase — Execute getView"
+    "uri": "derived:://clef-bases/{name}",
+    "description": "Get view clefbase — getView query result"
   }
 ];
