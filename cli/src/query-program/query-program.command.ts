@@ -228,8 +228,106 @@ queryProgramCommand
     }
   });
 
+queryProgramCommand
+  .command('invoke')
+  .description('Append an Invoke instruction that declares a concept action invocation . The concept and action identify the target ; input is a JSON serialized action input . The completion ( variant tag and output fields ) is bound to bindAs for use by subsequent instructions . The program s purity is promoted to read write .')
+  .requiredOption('--program <program>', 'Program')
+  .requiredOption('--concept <concept>', 'Concept')
+  .requiredOption('--action <action>', 'Action')
+  .requiredOption('--input <input>', 'Input')
+  .requiredOption('--bind-as <bindAs>', 'Bind As')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/QueryProgram', 'invoke', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
+  });
+
+queryProgramCommand
+  .command('match')
+  .description('Append a Match instruction that inspects the variant tag bound at binding . cases is a JSON object mapping variant tags to sub program IDs . The * key is a wildcard default . The matched sub program s terminal output is bound to bindAs . All referenced sub programs must exist and be sealed .')
+  .requiredOption('--program <program>', 'Program')
+  .requiredOption('--binding <binding>', 'Binding')
+  .requiredOption('--cases <cases>', 'Cases')
+  .requiredOption('--bind-as <bindAs>', 'Bind As')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/QueryProgram', 'match', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
+  });
+
+queryProgramCommand
+  .command('traverse-invoke')
+  .description('Append a TraverseInvoke instruction that iterates over the record set bound at sourceBinding . For each record , binds the record to itemBinding , interpolates inputTemplate ( replacing $ < itemBinding > . field with actual values ) , and invokes concept action with the interpolated input . Each invocation dispatches through the sync engine sequentially . The list of completions ( variant and output per item ) is bound to bindAs . The program s purity is promoted to read write .')
+  .requiredOption('--program <program>', 'Program')
+  .requiredOption('--source-binding <sourceBinding>', 'Source Binding')
+  .requiredOption('--item-binding <itemBinding>', 'Item Binding')
+  .requiredOption('--concept <concept>', 'Concept')
+  .requiredOption('--action <action>', 'Action')
+  .requiredOption('--input-template <inputTemplate>', 'Input Template')
+  .requiredOption('--bind-as <bindAs>', 'Bind As')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/QueryProgram', 'traverseInvoke', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
+  });
+
+queryProgramCommand
+  .command('traverse')
+  .description('Append a Traverse instruction that iterates over the record set bound at sourceBinding . For each record , binds the record to itemBinding , then executes bodyProgram in a nested scope . The bodyProgram must be sealed . Results are collected into a list bound to bindAs . declaredEffects is a JSON object with optional keys : readFields , invokedActions , completionVariants . If provided , static analysis uses declared effects instead of analyzing the body .')
+  .requiredOption('--program <program>', 'Program')
+  .requiredOption('--source-binding <sourceBinding>', 'Source Binding')
+  .requiredOption('--item-binding <itemBinding>', 'Item Binding')
+  .requiredOption('--body-program <bodyProgram>', 'Body Program')
+  .requiredOption('--bind-as <bindAs>', 'Bind As')
+  .requiredOption('--declared-effects <declaredEffects>', 'Declared Effects')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/QueryProgram', 'traverse', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
+  });
+
 export const queryProgramCommandTree = {
   group: 'query-program',
   description: 'Build sequences of query instructions as inspectable , composable data . A QueryProgram describes what a view intends to fetch and transform without executing side effects . Programs capture scan , filter , sort , group , project , limit , and pure termination steps as an ordered instruction list . Programs can be analyzed for the fields they read , composed via monadic bind , and handed to an interpreter or optimizer',
-  commands: [{ action: 'create', command: 'create' }, { action: 'scan', command: 'scan' }, { action: 'filter', command: 'filter' }, { action: 'sort', command: 'sort' }, { action: 'group', command: 'group' }, { action: 'project', command: 'project' }, { action: 'limit', command: 'limit' }, { action: 'pure', command: 'pure' }, { action: 'join', command: 'join' }, { action: 'compose', command: 'compose' }],
+  commands: [{ action: 'create', command: 'create' }, { action: 'scan', command: 'scan' }, { action: 'filter', command: 'filter' }, { action: 'sort', command: 'sort' }, { action: 'group', command: 'group' }, { action: 'project', command: 'project' }, { action: 'limit', command: 'limit' }, { action: 'pure', command: 'pure' }, { action: 'join', command: 'join' }, { action: 'compose', command: 'compose' }, { action: 'invoke', command: 'invoke' }, { action: 'match', command: 'match' }, { action: 'traverseInvoke', command: 'traverse-invoke' }, { action: 'traverse', command: 'traverse' }],
 };

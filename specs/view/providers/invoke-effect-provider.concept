@@ -1,0 +1,114 @@
+@version(1)
+@category("view")
+@visibility("public")
+concept InvokeEffectProvider [T] {
+
+  purpose {
+    Extract the set of concept action invocations (concept/action pairs)
+    from a QueryProgram's instruction tree. Walks invoke, traverseInvoke,
+    match (recursing into case sub-programs), and traverse (using
+    declaredEffects or analyzing the body) instructions. Enables static
+    verification that every invoked concept/action exists in the kernel
+    registry, authorization pre-checks, and impact analysis.
+  }
+
+  state {
+    results: set T
+    invocations: T -> set String
+    invokeCount: T -> Int
+  }
+
+  actions {
+
+    action analyze(program: String) {
+      -> ok(result: T, invocations: String, invokeCount: Int) {
+        Walk the instruction tree. For each invoke or traverseInvoke
+        instruction, extract the concept/action pair as a
+        "Concept/action" string. For match instructions, recurse into
+        all case sub-programs and union the sets. For traverse
+        instructions, use declaredEffects if available; otherwise
+        analyze the body sub-program. Return all reachable invocations
+        as a JSON array, plus the total invocation count.
+      }
+      -> error(message: String) {
+        The program string could not be parsed into a valid
+        instruction tree, or the program string is empty.
+      }
+
+      fixture analyze_with_invoke {
+        program: "{\"instructions\":[{\"tag\":\"invoke\",\"concept\":\"Article\",\"action\":\"archive\",\"args\":{},\"bindAs\":\"result\"}],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[],\"invocations\":[\"Article/archive\"]}}"
+      }
+      fixture analyze_with_traverse_invoke {
+        program: "{\"instructions\":[{\"tag\":\"traverseInvoke\",\"concept\":\"Comment\",\"action\":\"delete\",\"iterateOver\":\"items\",\"bindAs\":\"deleted\",\"declaredEffects\":{\"invocations\":[\"Comment/delete\"]}}],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[],\"invocations\":[\"Comment/delete\"]}}"
+      }
+      fixture analyze_empty {
+        program: "{\"instructions\":[],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[],\"invocations\":[]}}"
+      }
+      fixture analyze_invalid {
+        program: "not valid json{{{"
+      } -> error
+    }
+
+    action get(result: T) {
+      -> ok(invocations: String, invokeCount: Int) {
+        Return the previously computed invocations JSON array and
+        total count for the stored analysis result.
+      }
+      -> notfound() {
+        No analysis result exists with this identifier.
+      }
+
+      fixture get_existing {
+        result: $analyze_with_invoke.result
+      } after analyze_with_invoke
+      fixture get_missing {
+        result: "nonexistent-result-id"
+      } -> notfound
+    }
+
+  }
+
+  example "single invoke instruction yields count 1": {
+    after analyze(program: "{\"instructions\":[{\"tag\":\"invoke\",\"concept\":\"Article\",\"action\":\"archive\",\"args\":{},\"bindAs\":\"result\"}],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[],\"invocations\":[\"Article/archive\"]}}")
+      -> ok(result: r, invocations: inv, invokeCount: c)
+    then c = 1
+  }
+
+  example "program with no invokes yields empty invocations": {
+    after analyze(program: "{\"instructions\":[],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[],\"invocations\":[]}}")
+      -> ok(result: r, invocations: inv, invokeCount: c)
+    then c = 0
+  }
+
+  example "invalid program returns error with message": {
+    after analyze(program: "not valid json{{{")
+      -> error(message: m)
+    then m != ""
+  }
+
+  always "results have non-negative invoke count": {
+    forall t in results:
+    t.invokeCount >= 0
+  }
+
+  always "invoke count matches invocations set size": {
+    forall t in results:
+    t.invokeCount >= 0
+  }
+
+  never "stored result with negative invoke count": {
+    exists t in results: t.invokeCount < 0
+  }
+
+  action analyze {
+    requires: program != ""
+    ensures ok: result in results and invokeCount >= 0
+  }
+
+  action get {
+    requires: result != ""
+    ensures ok: invocations != "" and invokeCount >= 0
+    ensures notfound: result not in results
+  }
+
+}

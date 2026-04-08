@@ -82,6 +82,9 @@ concept ScoreIndex [X] {
       interfaceEndpointCount: X -> Int
       interfaceFile: X -> String
     }
+    views {
+      viewEntries: set String
+    }
   }
 
   actions {
@@ -195,6 +198,33 @@ concept ScoreIndex [X] {
       fixture upsert_iface_empty { name: "" } -> error
     }
 
+    action upsertView(name: String, sourceFile: String, shellRef: String,
+                      purposeText: String, purity: String,
+                      invokedActions: String, projectedFields: String,
+                      filterFields: String, sortFields: String,
+                      groupFields: String, invariantCount: Int,
+                      invariantNames: String, invariantsSerialized: String) {
+      -> ok() {
+        Insert or update the view entry in the index.
+      }
+      -> error(message: String) {
+        Name is empty or the view data is invalid.
+      }
+      fixture upsert_view { name: "content-list", sourceFile: "specs/view/views/content-list.view", shellRef: "content-list", purposeText: "Browse all content.", purity: "read-only", invokedActions: "[]", projectedFields: "[\"id\",\"name\"]", filterFields: "[\"kind\"]", sortFields: "[\"name\"]", groupFields: "[]", invariantCount: 1, invariantNames: "[\"purity is read-only\"]", invariantsSerialized: "[]" } after upsert_user
+      fixture upsert_view_empty { name: "" } -> error
+    }
+
+    action removeView(name: String) {
+      -> ok() {
+        Remove the view entry from the index.
+      }
+      -> notfound(message: String) {
+        No view with this name is present in the index.
+      }
+      fixture remove_view { name: "content-list" } after upsert_view
+      fixture remove_view_missing { name: "nonexistent-view" } -> notfound
+    }
+
     action removeByFile(path: String) {
       -> ok(removed: Int) {
         Remove all index entries associated with a file.
@@ -211,7 +241,7 @@ concept ScoreIndex [X] {
     }
 
     action stats() {
-      -> ok(conceptCount: Int, syncCount: Int, symbolCount: Int, fileCount: Int, handlerCount: Int, widgetImplCount: Int, themeImplCount: Int, suiteCount: Int, deploymentCount: Int, interfaceCount: Int, lastUpdated: DateTime) {
+      -> ok(conceptCount: Int, syncCount: Int, symbolCount: Int, fileCount: Int, handlerCount: Int, widgetImplCount: Int, themeImplCount: Int, suiteCount: Int, deploymentCount: Int, interfaceCount: Int, viewCount: Int, lastUpdated: DateTime) {
         Return current index statistics.
       }
       fixture valid_2 {} after upsert_user

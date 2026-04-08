@@ -28,7 +28,16 @@ type ProgramRecord = {
   bindings: string[];
   terminated: boolean;
   readFields: string[];
+  invokedActions: string[];  // concept/action pairs
+  purity: string;            // "pure" | "read-only" | "read-write"
 };
+
+// ─── Purity helpers ──────────────────────────────────────────────────────────
+
+function promotePurity(current: string, to: string): string {
+  const levels: Record<string, number> = { 'pure': 0, 'read-only': 1, 'read-write': 2 };
+  return (levels[to] ?? 0) > (levels[current] ?? 0) ? to : current;
+}
 
 function appendInstruction(rec: ProgramRecord, instruction: Record<string, unknown>): ProgramRecord {
   return {
@@ -66,6 +75,8 @@ const _handler: FunctionalConceptHandler = {
           bindings: [],
           terminated: false,
           readFields: [],
+          invokedActions: [],
+          purity: 'pure',
         });
         return complete(b2, 'ok', {});
       },
@@ -96,7 +107,8 @@ const _handler: FunctionalConceptHandler = {
           const instruction = { type: 'scan', source, bindAs };
           let b2 = putFrom(bb, 'queryProgram', program, (bindings) => {
             const rec = bindings.existing as ProgramRecord;
-            return withReadField(appendInstruction(rec, instruction), source) as unknown as Record<string, unknown>;
+            const updated = withReadField(appendInstruction(rec, instruction), source);
+            return { ...updated, purity: promotePurity(updated.purity ?? 'pure', 'read-only') } as unknown as Record<string, unknown>;
           });
           return complete(b2, 'ok', { program }) as StorageProgram<Result>;
         },
@@ -128,7 +140,8 @@ const _handler: FunctionalConceptHandler = {
           const instruction = { type: 'filter', node, bindAs };
           let b2 = putFrom(bb, 'queryProgram', program, (bindings) => {
             const rec = bindings.existing as ProgramRecord;
-            return appendInstruction(rec, instruction) as unknown as Record<string, unknown>;
+            const updated = appendInstruction(rec, instruction);
+            return { ...updated, purity: promotePurity(updated.purity ?? 'pure', 'read-only') } as unknown as Record<string, unknown>;
           });
           return complete(b2, 'ok', { program }) as StorageProgram<Result>;
         },
@@ -160,7 +173,8 @@ const _handler: FunctionalConceptHandler = {
           const instruction = { type: 'sort', keys, bindAs };
           let b2 = putFrom(bb, 'queryProgram', program, (bindings) => {
             const rec = bindings.existing as ProgramRecord;
-            return appendInstruction(rec, instruction) as unknown as Record<string, unknown>;
+            const updated = appendInstruction(rec, instruction);
+            return { ...updated, purity: promotePurity(updated.purity ?? 'pure', 'read-only') } as unknown as Record<string, unknown>;
           });
           return complete(b2, 'ok', { program }) as StorageProgram<Result>;
         },
@@ -193,7 +207,8 @@ const _handler: FunctionalConceptHandler = {
           const instruction = { type: 'group', keys, config, bindAs };
           let b2 = putFrom(bb, 'queryProgram', program, (bindings) => {
             const rec = bindings.existing as ProgramRecord;
-            return appendInstruction(rec, instruction) as unknown as Record<string, unknown>;
+            const updated = appendInstruction(rec, instruction);
+            return { ...updated, purity: promotePurity(updated.purity ?? 'pure', 'read-only') } as unknown as Record<string, unknown>;
           });
           return complete(b2, 'ok', { program }) as StorageProgram<Result>;
         },
@@ -225,7 +240,8 @@ const _handler: FunctionalConceptHandler = {
           const instruction = { type: 'project', fields, bindAs };
           let b2 = putFrom(bb, 'queryProgram', program, (bindings) => {
             const rec = bindings.existing as ProgramRecord;
-            return appendInstruction(rec, instruction) as unknown as Record<string, unknown>;
+            const updated = appendInstruction(rec, instruction);
+            return { ...updated, purity: promotePurity(updated.purity ?? 'pure', 'read-only') } as unknown as Record<string, unknown>;
           });
           return complete(b2, 'ok', { program }) as StorageProgram<Result>;
         },
@@ -257,7 +273,8 @@ const _handler: FunctionalConceptHandler = {
           const instruction = { type: 'limit', count, output };
           let b2 = putFrom(bb, 'queryProgram', program, (bindings) => {
             const rec = bindings.existing as ProgramRecord;
-            return appendInstruction(rec, instruction) as unknown as Record<string, unknown>;
+            const updated = appendInstruction(rec, instruction);
+            return { ...updated, purity: promotePurity(updated.purity ?? 'pure', 'read-only') } as unknown as Record<string, unknown>;
           });
           return complete(b2, 'ok', { program }) as StorageProgram<Result>;
         },
@@ -306,26 +323,38 @@ const _handler: FunctionalConceptHandler = {
     const bindAs = input.bindAs as string;
 
     let p = createProgram();
-    p = spGet(p, 'queryProgram', programId, 'existing');
+    p = get(p, 'queryProgram', programId, 'existing');
+    p = mapBindings(p, (b) => {
+      if (b.existing == null) return 'notfound';
+      const rec = b.existing as ProgramRecord;
+      if (rec.terminated) return 'sealed';
+      return 'ok';
+    }, '_state');
+
     return branch(p,
-      (b) => {
-        const record = b.existing as ProgramRecord | null;
-        if (!record) return complete(createProgram(), 'notfound', {}) as StorageProgram<Result>;
-        if (record.terminated) return complete(createProgram(), 'sealed', {}) as StorageProgram<Result>;
-
-        const instruction = { type: 'join', source, localField, foreignField, bindAs };
-        const updated = appendInstruction(record, instruction);
-        const withFields = withReadField(updated, localField);
-
-        let p2 = put(createProgram(), 'queryProgram', programId, {
-          instructions: JSON.stringify(withFields.instructions),
-          bindings: JSON.stringify([...withFields.bindings, bindAs]),
-          terminated: false,
-          readFields: JSON.stringify([...withFields.readFields]),
-        });
-        return complete(p2, 'ok', { program: programId }) as StorageProgram<Result>;
-      },
-      () => complete(createProgram(), 'notfound', {}) as StorageProgram<Result>,
+      (b) => b._state === 'notfound',
+      (b) => complete(b, 'notfound', {}),
+      (b) => branch(b,
+        (bb) => bb._state === 'sealed',
+        (bb) => complete(bb, 'sealed', {}),
+        (bb) => {
+          const instruction = { type: 'join', source, localField, foreignField, bindAs };
+          let b2 = putFrom(bb, 'queryProgram', programId, (bindings) => {
+            const rec = bindings.existing as ProgramRecord;
+            const updated = withReadField(appendInstruction(rec, instruction), localField);
+            const existingBindings = updated.bindings ?? [];
+            const newBindings = existingBindings.includes(bindAs)
+              ? existingBindings
+              : [...existingBindings, bindAs];
+            return {
+              ...updated,
+              bindings: newBindings,
+              purity: promotePurity(updated.purity ?? 'pure', 'read-only'),
+            } as unknown as Record<string, unknown>;
+          });
+          return complete(b2, 'ok', { program: programId }) as StorageProgram<Result>;
+        },
+      ),
     ) as StorageProgram<Result>;
   },
 
@@ -355,17 +384,274 @@ const _handler: FunctionalConceptHandler = {
             ...r2.instructions,
           ];
           const readFieldSet = new Set<string>([...r1.readFields, ...r2.readFields]);
+          const invokedActionSet = new Set<string>([
+            ...(r1.invokedActions ?? []),
+            ...(r2.invokedActions ?? []),
+          ]);
+          const composedPurity = promotePurity(r1.purity ?? 'pure', r2.purity ?? 'pure');
           const composed: ProgramRecord = {
             program: composedId,
             instructions: combinedInstructions,
             bindings: [],
             terminated: r2.terminated,
             readFields: Array.from(readFieldSet),
+            invokedActions: Array.from(invokedActionSet),
+            purity: composedPurity,
           };
           return composed as unknown as Record<string, unknown>;
         });
         return complete(b2, 'ok', { program: composedId }) as StorageProgram<Result>;
       },
+    ) as StorageProgram<Result>;
+  },
+
+  invoke(input: Record<string, unknown>) {
+    const program = input.program as string;
+    const concept = input.concept as string;
+    const action = input.action as string;
+    const invokeInput = input.input as string;
+    const bindAs = input.bindAs as string;
+
+    let p = createProgram();
+    p = get(p, 'queryProgram', program, 'existing');
+    p = mapBindings(p, (b) => {
+      if (b.existing == null) return 'notfound';
+      const rec = b.existing as ProgramRecord;
+      if (rec.terminated) return 'sealed';
+      return 'ok';
+    }, '_state');
+
+    return branch(p,
+      (b) => b._state === 'notfound',
+      (b) => complete(b, 'notfound', {}),
+      (b) => branch(b,
+        (bb) => bb._state === 'sealed',
+        (bb) => complete(bb, 'sealed', {}),
+        (bb) => {
+          const instruction = { type: 'invoke', concept, action, input: invokeInput, bindAs };
+          const conceptActionPair = `${concept}/${action}`;
+          let b2 = putFrom(bb, 'queryProgram', program, (bindings) => {
+            const rec = bindings.existing as ProgramRecord;
+            const updated = appendInstruction(rec, instruction);
+            const existingBindings = updated.bindings ?? [];
+            const newBindings = existingBindings.includes(bindAs)
+              ? existingBindings
+              : [...existingBindings, bindAs];
+            const existingInvokedActions = updated.invokedActions ?? [];
+            const newInvokedActions = existingInvokedActions.includes(conceptActionPair)
+              ? existingInvokedActions
+              : [...existingInvokedActions, conceptActionPair];
+            return {
+              ...updated,
+              bindings: newBindings,
+              invokedActions: newInvokedActions,
+              purity: promotePurity(updated.purity ?? 'pure', 'read-write'),
+            } as unknown as Record<string, unknown>;
+          });
+          return complete(b2, 'ok', { program }) as StorageProgram<Result>;
+        },
+      ),
+    ) as StorageProgram<Result>;
+  },
+
+  match(input: Record<string, unknown>) {
+    const program = input.program as string;
+    const binding = input.binding as string;
+    const casesStr = input.cases as string;
+    const bindAs = input.bindAs as string;
+
+    // Validate cases JSON before any storage operations
+    let parsedCases: Record<string, unknown>;
+    try {
+      parsedCases = JSON.parse(casesStr);
+    } catch {
+      // Must check program exists first, then return invalid_cases
+      // But per spec, invalid JSON cases → invalid_cases regardless
+      let p = createProgram();
+      p = get(p, 'queryProgram', program, 'existing');
+      p = mapBindings(p, (b) => b.existing == null ? 'notfound' : 'ok', '_state');
+      return branch(p,
+        (b) => b._state === 'notfound',
+        (b) => complete(b, 'notfound', {}),
+        (b) => complete(b, 'invalid_cases', {}),
+      ) as StorageProgram<Result>;
+    }
+
+    // Validate cases is non-empty
+    if (Object.keys(parsedCases).length === 0) {
+      let p = createProgram();
+      p = get(p, 'queryProgram', program, 'existing');
+      p = mapBindings(p, (b) => b.existing == null ? 'notfound' : 'ok', '_state');
+      return branch(p,
+        (b) => b._state === 'notfound',
+        (b) => complete(b, 'notfound', {}),
+        (b) => complete(b, 'invalid_cases', {}),
+      ) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = get(p, 'queryProgram', program, 'existing');
+    p = mapBindings(p, (b) => {
+      if (b.existing == null) return 'notfound';
+      const rec = b.existing as ProgramRecord;
+      if (rec.terminated) return 'sealed';
+      return 'ok';
+    }, '_state');
+
+    return branch(p,
+      (b) => b._state === 'notfound',
+      (b) => complete(b, 'notfound', {}),
+      (b) => branch(b,
+        (bb) => bb._state === 'sealed',
+        (bb) => complete(bb, 'sealed', {}),
+        (bb) => {
+          const instruction = { type: 'match', binding, cases: casesStr, bindAs };
+          let b2 = putFrom(bb, 'queryProgram', program, (bindings) => {
+            const rec = bindings.existing as ProgramRecord;
+            const updated = appendInstruction(rec, instruction);
+            const existingBindings = updated.bindings ?? [];
+            const newBindings = existingBindings.includes(bindAs)
+              ? existingBindings
+              : [...existingBindings, bindAs];
+            return {
+              ...updated,
+              bindings: newBindings,
+            } as unknown as Record<string, unknown>;
+          });
+          return complete(b2, 'ok', { program }) as StorageProgram<Result>;
+        },
+      ),
+    ) as StorageProgram<Result>;
+  },
+
+  traverseInvoke(input: Record<string, unknown>) {
+    const program = input.program as string;
+    const sourceBinding = input.sourceBinding as string;
+    const itemBinding = input.itemBinding as string;
+    const concept = input.concept as string;
+    const action = input.action as string;
+    const inputTemplate = input.inputTemplate as string;
+    const bindAs = input.bindAs as string;
+
+    let p = createProgram();
+    p = get(p, 'queryProgram', program, 'existing');
+    p = mapBindings(p, (b) => {
+      if (b.existing == null) return 'notfound';
+      const rec = b.existing as ProgramRecord;
+      if (rec.terminated) return 'sealed';
+      return 'ok';
+    }, '_state');
+
+    return branch(p,
+      (b) => b._state === 'notfound',
+      (b) => complete(b, 'notfound', {}),
+      (b) => branch(b,
+        (bb) => bb._state === 'sealed',
+        (bb) => complete(bb, 'sealed', {}),
+        (bb) => {
+          const instruction = { type: 'traverseInvoke', sourceBinding, itemBinding, concept, action, inputTemplate, bindAs };
+          const conceptActionPair = `${concept}/${action}`;
+          let b2 = putFrom(bb, 'queryProgram', program, (bindings) => {
+            const rec = bindings.existing as ProgramRecord;
+            const updated = appendInstruction(rec, instruction);
+            const existingBindings = updated.bindings ?? [];
+            const newBindings = existingBindings.includes(bindAs)
+              ? existingBindings
+              : [...existingBindings, bindAs];
+            const existingInvokedActions = updated.invokedActions ?? [];
+            const newInvokedActions = existingInvokedActions.includes(conceptActionPair)
+              ? existingInvokedActions
+              : [...existingInvokedActions, conceptActionPair];
+            return {
+              ...updated,
+              bindings: newBindings,
+              invokedActions: newInvokedActions,
+              purity: promotePurity(updated.purity ?? 'pure', 'read-write'),
+            } as unknown as Record<string, unknown>;
+          });
+          return complete(b2, 'ok', { program }) as StorageProgram<Result>;
+        },
+      ),
+    ) as StorageProgram<Result>;
+  },
+
+  traverse(input: Record<string, unknown>) {
+    const program = input.program as string;
+    const sourceBinding = input.sourceBinding as string;
+    const itemBinding = input.itemBinding as string;
+    const bodyProgram = input.bodyProgram as string;
+    const bindAs = input.bindAs as string;
+    const declaredEffectsStr = input.declaredEffects as string;
+
+    let p = createProgram();
+    p = get(p, 'queryProgram', program, 'existing');
+    p = get(p, 'queryProgram', bodyProgram, 'bodyExisting');
+    p = mapBindings(p, (b) => {
+      if (b.existing == null) return 'notfound';
+      if (b.bodyExisting == null) return 'body_notfound';
+      const rec = b.existing as ProgramRecord;
+      if (rec.terminated) return 'sealed';
+      const bodyRec = b.bodyExisting as ProgramRecord;
+      if (!bodyRec.terminated) return 'not_sealed';
+      return 'ok';
+    }, '_state');
+
+    return branch(p,
+      (b) => b._state === 'notfound' || b._state === 'body_notfound',
+      (b) => complete(b, 'notfound', {}),
+      (b) => branch(b,
+        (bb) => bb._state === 'sealed',
+        (bb) => complete(bb, 'sealed', {}),
+        (bb) => branch(bb,
+          (bbb) => bbb._state === 'not_sealed',
+          (bbb) => complete(bbb, 'not_sealed', {}),
+          (bbb) => {
+            const instruction = { type: 'traverse', sourceBinding, itemBinding, bodyProgram, bindAs, declaredEffects: declaredEffectsStr };
+            let b2 = putFrom(bbb, 'queryProgram', program, (bindings) => {
+              const rec = bindings.existing as ProgramRecord;
+              const bodyRec = bindings.bodyExisting as ProgramRecord;
+              const updated = appendInstruction(rec, instruction);
+              const existingBindings = updated.bindings ?? [];
+              const newBindings = existingBindings.includes(bindAs)
+                ? existingBindings
+                : [...existingBindings, bindAs];
+
+              // Parse declared effects to extract invokedActions and purity hints
+              let newInvokedActions = [...(updated.invokedActions ?? [])];
+              let newPurity = updated.purity ?? 'pure';
+
+              let declaredEffects: Record<string, unknown> = {};
+              try {
+                declaredEffects = JSON.parse(declaredEffectsStr ?? '{}');
+              } catch {
+                // ignore parse errors on declaredEffects — treat as empty
+              }
+
+              if (Array.isArray(declaredEffects.invokedActions)) {
+                for (const ia of declaredEffects.invokedActions as string[]) {
+                  if (!newInvokedActions.includes(ia)) {
+                    newInvokedActions = [...newInvokedActions, ia];
+                  }
+                  newPurity = promotePurity(newPurity, 'read-write');
+                }
+              }
+
+              // Inherit purity from body program
+              if (bodyRec.purity === 'read-write') {
+                newPurity = promotePurity(newPurity, 'read-write');
+              }
+
+              return {
+                ...updated,
+                bindings: newBindings,
+                invokedActions: newInvokedActions,
+                purity: newPurity,
+              } as unknown as Record<string, unknown>;
+            });
+            return complete(b2, 'ok', { program }) as StorageProgram<Result>;
+          },
+        ),
+      ),
     ) as StorageProgram<Result>;
   },
 

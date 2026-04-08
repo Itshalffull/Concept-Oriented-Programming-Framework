@@ -1,0 +1,22 @@
+// Pilot → QueryProgram wiring: dispatch submit through invoke-bearing QueryPrograms
+// when the bound InteractionSpec declares an actionProgram reference.
+
+sync SubmitViaQueryProgram [eager]
+  purpose: "When Pilot/submit fires and the bound InteractionSpec has an actionProgram reference, dispatch through QueryExecution/execute instead of Binding/invoke, enabling the full invoke coroutine pipeline with sync observability."
+when {
+  Pilot/submit: [ label: ?label ]
+    => []
+}
+where {
+  PageMap/find: [ label: ?label ]
+    => ok(binding: ?binding)
+  Binding: { ?binding interaction: ?interaction }
+  InteractionSpec/get: [ name: ?interaction ]
+    => ok(interaction: _; createForm: _; rowClick: _; rowActions: _; pickerMode: _; createProgram: _; actionProgram: ?actionProgram)
+  guard(?actionProgram != none)
+}
+then {
+  QueryExecution/execute: [
+    program: ?actionProgram;
+    kind: "kernel" ]
+}

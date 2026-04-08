@@ -12,4 +12,4 @@ export async function handleQueryExecutionSkill(
   return JSON.stringify(result.body, null, 2);
 }
 
-export const queryExecutionSkillCommands = ['registerKind', 'register', 'execute', 'planPushdown', 'list', 'get'];
+export const queryExecutionSkillCommands = ['registerKind', 'register', 'execute', 'resumeAfterInvoke', 'planPushdown', 'list', 'get'];

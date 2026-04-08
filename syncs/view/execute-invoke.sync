@@ -1,0 +1,31 @@
+# QueryExecution → Connection wiring: dispatch invoke instructions through the kernel sync engine
+
+sync ExecuteInvoke [eager]
+  purpose: "When QueryExecution encounters an invoke instruction during program execution, dispatch it through Connection/invoke to the kernel so the concept action is executed via the sync engine with full observability."
+when {
+  QueryExecution/execute: [ program: ?program ]
+    => invoke_pending(concept: ?concept; action: ?action;
+                      input: ?input; continuation: ?continuation)
+}
+then {
+  Connection/invoke: [
+    connection: ?activeConnection;
+    concept: ?concept;
+    action: ?action;
+    input: ?input ]
+}
+
+sync ExecuteInvokeFromResume [eager]
+  purpose: "When QueryExecution resumes after an invoke and encounters another invoke instruction, dispatch it through Connection/invoke so chained invocations in the same query program are fully executed."
+when {
+  QueryExecution/resumeAfterInvoke: [ continuation: ?continuation ]
+    => invoke_pending(concept: ?concept; action: ?action;
+                      input: ?input; continuation: ?nextContinuation)
+}
+then {
+  Connection/invoke: [
+    connection: ?activeConnection;
+    concept: ?concept;
+    action: ?action;
+    input: ?input ]
+}

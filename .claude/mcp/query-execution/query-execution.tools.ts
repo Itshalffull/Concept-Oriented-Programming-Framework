@@ -65,6 +65,30 @@ export const queryExecutionTools = [
   },
   {
     "type": "tool",
+    "name": "query_execution_resume_after_invoke",
+    "description": "Resume after invoke queryexecution — The invoke completed and the remaining program executed successfully . \n Returns final result rows and execution metadata .",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "continuation": {
+          "type": "string"
+        },
+        "variant": {
+          "type": "string"
+        },
+        "output": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "continuation",
+        "variant",
+        "output"
+      ]
+    }
+  },
+  {
+    "type": "tool",
     "name": "query_execution_plan_pushdown",
     "description": "Plan pushdown queryexecution — Decompose a query program into a pushdown portion that the named \n provider can execute natively and a residual portion that must run \n in the framework layer . Returns both as JSON strings .",
     "inputSchema": {

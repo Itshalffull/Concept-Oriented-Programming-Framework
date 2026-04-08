@@ -1,0 +1,15 @@
+# Connection → QueryExecution wiring: feed invoke results back into the query program pipeline
+
+sync InvokeComplete [eager]
+  purpose: "When Connection/invoke completes with any variant, feed the result back to QueryExecution/resumeAfterInvoke so the query program can continue execution with the invoke result bound."
+when {
+  Connection/invoke: [ concept: ?concept; action: ?action ]
+    => ok(variant: ?variant; output: ?output)
+}
+then {
+  QueryExecution/resumeAfterInvoke: [
+    concept: ?concept;
+    action: ?action;
+    variant: ?variant;
+    output: ?output ]
+}

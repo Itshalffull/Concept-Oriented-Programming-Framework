@@ -20,6 +20,8 @@ concept QueryProgram [Q] {
     bindings: Q -> list String
     terminated: Q -> Bool
     readFields: Q -> set String
+    invokedActions: Q -> set String
+    purity: Q -> String
   }
 
   actions {
@@ -220,6 +222,11 @@ concept QueryProgram [Q] {
         variant: "ok",
         output: "nodes"
       }
+      fixture pure_prog_a {
+        program: "qprog-a",
+        variant: "ok",
+        output: "nodes"
+      } after create_prog_a
       fixture pure_missing_program {
         program: "nonexistent",
         variant: "ok",
@@ -282,6 +289,176 @@ concept QueryProgram [Q] {
       } -> notfound
     }
 
+    action invoke(program: Q, concept: String, action: String,
+                  input: String, bindAs: String) {
+      -> ok(program: Q) {
+        Append an Invoke instruction that declares a concept action
+        invocation. The concept and action identify the target; input
+        is a JSON-serialized action input. The completion (variant tag
+        and output fields) is bound to bindAs for use by subsequent
+        instructions. The program's purity is promoted to read-write.
+      }
+      -> notfound() {
+        No program exists with this identifier.
+      }
+      -> sealed() {
+        The program has already been terminated with pure and cannot
+        accept new instructions.
+      }
+      fixture invoke_ok {
+        program: "qprog-1",
+        concept: "ContentNode",
+        action: "create",
+        input: "{\"node\":\"new-article\",\"kind\":\"concept\"}",
+        bindAs: "createResult"
+      } after create_new
+      fixture invoke_missing_program {
+        program: "nonexistent",
+        concept: "ContentNode",
+        action: "create",
+        input: "{}",
+        bindAs: "createResult"
+      } -> notfound
+      fixture invoke_sealed_program {
+        program: "qprog-1",
+        concept: "ContentNode",
+        action: "create",
+        input: "{}",
+        bindAs: "createResult"
+      } after pure_ok -> sealed
+    }
+
+    action match(program: Q, binding: String, cases: String,
+                 bindAs: String) {
+      -> ok(program: Q) {
+        Append a Match instruction that inspects the variant tag bound
+        at binding. cases is a JSON object mapping variant tags to
+        sub-program IDs. The "*" key is a wildcard default. The matched
+        sub-program's terminal output is bound to bindAs. All referenced
+        sub-programs must exist and be sealed.
+      }
+      -> notfound() {
+        No program exists with this identifier, or one or more
+        sub-programs referenced in cases do not exist.
+      }
+      -> sealed() {
+        The program has already been terminated.
+      }
+      -> invalid_cases() {
+        The cases string is not valid JSON, is empty, or references
+        sub-programs that are not sealed.
+      }
+      fixture match_ok {
+        program: "qprog-1",
+        binding: "createResult",
+        cases: "{\"ok\":\"qprog-a\",\"*\":\"qprog-b\"}",
+        bindAs: "final"
+      } after create_new
+      fixture match_missing_program {
+        program: "nonexistent",
+        binding: "createResult",
+        cases: "{\"ok\":\"qprog-a\",\"*\":\"qprog-b\"}",
+        bindAs: "final"
+      } -> notfound
+      fixture match_invalid_cases {
+        program: "qprog-1",
+        binding: "createResult",
+        cases: "not-valid-json",
+        bindAs: "final"
+      } after create_new -> invalid_cases
+    }
+
+    action traverseInvoke(program: Q, sourceBinding: String,
+                          itemBinding: String, concept: String,
+                          action: String, inputTemplate: String,
+                          bindAs: String) {
+      -> ok(program: Q) {
+        Append a TraverseInvoke instruction that iterates over the
+        record set bound at sourceBinding. For each record, binds
+        the record to itemBinding, interpolates inputTemplate
+        (replacing $<itemBinding>.field with actual values), and
+        invokes concept/action with the interpolated input. Each
+        invocation dispatches through the sync engine sequentially.
+        The list of completions (variant and output per item) is bound
+        to bindAs. The program's purity is promoted to read-write.
+      }
+      -> notfound() {
+        No program exists with this identifier.
+      }
+      -> sealed() {
+        The program has already been terminated with pure and cannot
+        accept new instructions.
+      }
+      fixture traverse_invoke_ok {
+        program: "qprog-1",
+        sourceBinding: "overdue",
+        itemBinding: "_task",
+        concept: "Task",
+        action: "escalate",
+        inputTemplate: "{\"taskId\":\"$_task.id\"}",
+        bindAs: "results"
+      } after create_new
+      fixture traverse_invoke_missing_program {
+        program: "nonexistent",
+        sourceBinding: "overdue",
+        itemBinding: "_task",
+        concept: "Task",
+        action: "escalate",
+        inputTemplate: "{\"taskId\":\"$_task.id\"}",
+        bindAs: "results"
+      } -> notfound
+    }
+
+    action traverse(program: Q, sourceBinding: String,
+                    itemBinding: String, bodyProgram: Q,
+                    bindAs: String, declaredEffects: String) {
+      -> ok(program: Q) {
+        Append a Traverse instruction that iterates over the record
+        set bound at sourceBinding. For each record, binds the record
+        to itemBinding, then executes bodyProgram in a nested scope.
+        The bodyProgram must be sealed. Results are collected into a
+        list bound to bindAs. declaredEffects is a JSON object with
+        optional keys: readFields, invokedActions, completionVariants.
+        If provided, static analysis uses declared effects instead of
+        analyzing the body.
+      }
+      -> notfound() {
+        No program or bodyProgram exists with this identifier.
+      }
+      -> sealed() {
+        The program has already been terminated with pure and cannot
+        accept new instructions.
+      }
+      -> not_sealed() {
+        The bodyProgram has not been terminated with pure. Sub-programs
+        used as traverse bodies must be sealed before attachment.
+      }
+      fixture traverse_ok {
+        program: "qprog-1",
+        sourceBinding: "completed",
+        itemBinding: "_task",
+        bodyProgram: "qprog-a",
+        bindAs: "outcomes",
+        declaredEffects: "{\"invokedActions\":[\"Task/archive\"],\"completionVariants\":[\"ok\",\"error\"]}"
+      } after create_new, create_prog_a, pure_prog_a
+      fixture traverse_missing_program {
+        program: "nonexistent",
+        sourceBinding: "completed",
+        itemBinding: "_task",
+        bodyProgram: "qprog-a",
+        bindAs: "outcomes",
+        declaredEffects: "{}"
+      } -> notfound
+      fixture traverse_unsealed_body {
+        program: "qprog-1",
+        sourceBinding: "completed",
+        itemBinding: "_task",
+        bodyProgram: "qprog-a",
+        bindAs: "outcomes",
+        declaredEffects: "{}"
+      } after create_new, create_prog_a -> not_sealed
+    }
+
   }
 
   example "create, scan, filter, pure terminates program": {
@@ -332,6 +509,81 @@ concept QueryProgram [Q] {
   action pure {
     requires: program in programs and program.terminated = false
     ensures ok: program.terminated = true
+  }
+
+  always "invoke instructions track their target": {
+    forall q in programs:
+    forall instr in q.instructions:
+    instr.type = "invoke" implies
+      (instr.concept + "/" + instr.action) in q.invokedActions
+  }
+
+  always "traverseInvoke instructions track their target": {
+    forall q in programs:
+    forall instr in q.instructions:
+    instr.type = "traverseInvoke" implies
+      (instr.concept + "/" + instr.action) in q.invokedActions
+  }
+
+  always "programs with invokes are read-write": {
+    forall q in programs:
+    q.invokedActions != {} implies q.purity = "read-write"
+  }
+
+  never "read-only program contains invoke": {
+    exists q in programs:
+    q.purity = "read-only" and q.invokedActions != {}
+  }
+
+  always "invoke bindings are available downstream": {
+    forall q in programs:
+    forall instr in q.instructions:
+    (instr.type = "invoke" or instr.type = "traverseInvoke"
+     or instr.type = "traverse")
+    implies instr.bindAs in q.bindings
+  }
+
+  always "match case sub-programs are sealed": {
+    forall q in programs:
+    forall instr in q.instructions:
+    instr.type = "match" implies
+      forall ref in instr.cases.values:
+      ref in programs and ref.terminated = true
+  }
+
+  always "traverse body sub-programs are sealed": {
+    forall q in programs:
+    forall instr in q.instructions:
+    instr.type = "traverse" implies
+      instr.bodyProgram in programs and
+      instr.bodyProgram.terminated = true
+  }
+
+  always "traverse inherits body purity": {
+    forall q in programs:
+    forall instr in q.instructions:
+    instr.type = "traverse" and instr.bodyProgram.purity = "read-write"
+    implies q.purity = "read-write"
+  }
+
+  action invoke {
+    requires: program in programs and program.terminated = false
+    ensures ok: program.purity = "read-write" and bindAs in program.bindings
+  }
+
+  action match {
+    requires: program in programs and program.terminated = false
+    ensures ok: bindAs in program.bindings
+  }
+
+  action traverseInvoke {
+    requires: program in programs and program.terminated = false
+    ensures ok: program.purity = "read-write" and bindAs in program.bindings
+  }
+
+  action traverse {
+    requires: program in programs and program.terminated = false and bodyProgram in programs
+    ensures ok: bindAs in program.bindings
   }
 
 }
