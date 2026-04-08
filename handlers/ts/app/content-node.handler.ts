@@ -6,7 +6,7 @@
 // concept), not from a "type" field. ContentNode is a universal entity pool.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, del, branch, complete, completeFrom, mapBindings,
+  createProgram, get as spGet, find, put, del, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -161,53 +161,18 @@ const _contentNodeHandler: FunctionalConceptHandler = {
     const limit = typeof input.limit === 'number' ? input.limit : undefined;
     const offset = typeof input.offset === 'number' ? input.offset : undefined;
 
+    // Read from the per-schema denormalized relation populated by SchemaIndexOnApply.
+    // This avoids a full membership scan and in-memory join (see §3 of the optimization plan).
+    const schemaRelation = `schema:${schema}`;
+    const findOptions = (limit != null || offset != null)
+      ? { limit, offset }
+      : undefined;
+
     let p = createProgram();
-    // Fetch all memberships and all nodes server-side
-    p = find(p, 'membership', {}, 'allMemberships');
-    p = find(p, 'node', {}, 'allNodes');
-    // Join: filter memberships by schema, then match to nodes
-    p = mapBindings(p, (bindings) => {
-      const memberships = (bindings.allMemberships as Array<Record<string, unknown>>) || [];
-      const nodes = (bindings.allNodes as Array<Record<string, unknown>>) || [];
-
-      // Build entity→schemas map from all memberships
-      const schemasByEntity = new Map<string, string[]>();
-      for (const m of memberships) {
-        const eid = m.entity_id as string;
-        const s = m.schema as string;
-        if (!eid || !s) continue;
-        const existing = schemasByEntity.get(eid) ?? [];
-        existing.push(s);
-        schemasByEntity.set(eid, existing);
-      }
-
-      // Collect entity IDs that have the target schema
-      const matchingIds = new Set<string>();
-      for (const m of memberships) {
-        if (m.schema === schema) {
-          matchingIds.add(m.entity_id as string);
-        }
-      }
-
-      // Filter nodes and enrich with schemas
-      let results = nodes
-        .filter(n => matchingIds.has(n.node as string))
-        .map(n => ({
-          ...n,
-          schemas: schemasByEntity.get(n.node as string) ?? [],
-        }));
-
-      // Apply pagination
-      const start = offset ?? 0;
-      if (limit != null) {
-        results = results.slice(start, start + limit);
-      } else if (start > 0) {
-        results = results.slice(start);
-      }
-
-      return JSON.stringify(results);
-    }, 'enrichedItems');
-    return completeFrom(p, 'ok', (bindings) => ({ items: bindings.enrichedItems as string })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = find(p, schemaRelation, {}, 'items', findOptions);
+    return completeFrom(p, 'ok', (bindings) => ({
+      items: JSON.stringify((bindings.items as Array<Record<string, unknown>>) || []),
+    })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   changeType(input: Record<string, unknown>) {
