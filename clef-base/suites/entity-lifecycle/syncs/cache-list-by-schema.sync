@@ -1,0 +1,18 @@
+# Cache population after listBySchema query.
+# Stores successful query results under the schema name as both key and tag,
+# enabling fast repeated reads without re-scanning the denormalized relation.
+
+sync CacheListBySchema [eventual]
+  purpose: "Cache listBySchema results tagged by schema so repeated reads are served from cache without re-scanning the denormalized relation"
+when {
+  ContentNode/listBySchema: [ schema: ?schema ] => [ ok: ?items ]
+}
+then {
+  Cache/set: [
+    bin: "listBySchema";
+    key: ?schema;
+    data: ?items;
+    tags: ?schema;
+    maxAge: 300
+  ]
+}

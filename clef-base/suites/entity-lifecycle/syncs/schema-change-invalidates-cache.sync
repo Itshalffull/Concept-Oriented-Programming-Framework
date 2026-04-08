@@ -1,0 +1,12 @@
+# Cache invalidation on schema application.
+# When a schema is applied to a node its membership changes, making any cached
+# listBySchema result for that schema stale. Invalidates by schema tag.
+
+sync SchemaApplyInvalidatesListCache [eventual]
+  purpose: "Invalidate listBySchema cache entries for a schema when a node is added to that schema's membership"
+when {
+  Schema/applyTo: [ schema: ?schema ] => [ ok: _ ]
+}
+then {
+  Cache/invalidateByTags: [ tags: ?schema ]
+}

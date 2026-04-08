@@ -1,0 +1,12 @@
+# Cache invalidation on schema removal.
+# When a schema is removed from a node its membership changes, making any cached
+# listBySchema result for that schema stale. Invalidates by schema tag.
+
+sync SchemaRemoveInvalidatesListCache [eventual]
+  purpose: "Invalidate listBySchema cache entries for a schema when a node is removed from that schema's membership"
+when {
+  Schema/removeFrom: [ schema: ?schema ] => [ ok: _ ]
+}
+then {
+  Cache/invalidateByTags: [ tags: ?schema ]
+}
