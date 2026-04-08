@@ -24,7 +24,7 @@
 | **MAG-535** Views, Layouts, Pages | §7.3–7.6, §2.5.5 | ~~MAG-531~~, ~~MAG-534~~ | MAG-538 | `aaaebe4a` |
 | **MAG-536** Derived Concepts | §2.3 | ~~MAG-530~~, ~~MAG-531~~ | MAG-538 | `2dc82e20` |
 | **MAG-537** Search + RAG Providers | §9 | — | — | `b256bddc` |
-| **MAG-538** Integration Tests | §10 | MAG-531–536 | — | |
+| **MAG-538** Integration Tests | §10 | ~~MAG-531–536~~ | — | `880289de` |
 
 ---
 
