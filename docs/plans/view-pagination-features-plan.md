@@ -110,13 +110,24 @@ Two features are **always-on** (not listed in `features`):
 - `dataSource` — every view needs a data source
 - `presentation` — every view needs a display mode
 
-### 3.2 Behavior Change
+### 3.2 Multiple Authoring Surfaces
+
+The `features` field is ViewShell state — it can be set from any surface that invokes `ViewShell/create` or `ViewShell/update`:
+
+- **`.view` files** — `features {}` block parsed into the create/update input
+- **View seed YAML** — `features: '["filter","sort","pagination"]'`
+- **View editor UI** — multi-select control bound to `ViewShell/update`
+- **CLI / MCP / API** — direct action invocation with features param
+
+All paths converge on the same concept action. The `.view` file is the declarative spec; the UI editor is the interactive equivalent.
+
+### 3.3 Behavior Change
 
 - `ViewShell/create` and `ViewShell/update` accept an optional `features` set. If omitted, defaults to all 6 features (backward-compatible).
 - Child spec refs for disabled features are stored as empty strings and **not fetched** during `resolveHydrated()`.
 - `ViewShell/create` validates: if a child spec ref is non-empty but its feature is disabled, return `feature_disabled` variant.
 
-### 3.3 New ViewShell State
+### 3.4 New ViewShell State
 
 ```
 state {
@@ -126,7 +137,7 @@ state {
 }
 ```
 
-### 3.4 ViewShell Actions Updated
+### 3.5 ViewShell Actions Updated
 
 | Action | Change |
 |---|---|
@@ -134,7 +145,7 @@ state {
 | `update` | Add `features` and `pagination` params |
 | `resolveHydrated` | Only fetch child specs whose feature is enabled; add PaginationSpec fetch if "pagination" enabled |
 
-### 3.5 New Variant
+### 3.6 New Variant
 
 `feature_disabled` — returned when a non-empty child spec ref is provided for a feature not in the `features` set.
 
