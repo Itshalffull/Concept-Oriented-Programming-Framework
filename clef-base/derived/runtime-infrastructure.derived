@@ -1,0 +1,97 @@
+derived RuntimeInfrastructure [R] {
+
+  purpose {
+    Runtime execution and adapter infrastructure — the layer between concept
+    handlers and the physical world. Composes the monadic execution pipeline
+    (StorageProgram DSL, interpreter, effect handlers, functional handler
+    registration), storage adapter infrastructure (in-memory, file, SQL,
+    cloud backends with secondary indexes and conflict resolution), transport
+    adapter infrastructure (HTTP, WebSocket, pub/sub, serverless), and the
+    application-level infrastructure primitives (cache, plugin registry,
+    event bus) that runtime features depend on.
+  }
+
+  composes {
+    StorageProgram [R]
+    ProgramInterpreter [R]
+    FunctionalHandler [R]
+    EffectHandler [R]
+    ProgramAnalysis [R]
+    ProgramCache [R]
+    InfrastructureCore [R]
+  }
+
+  syncs {
+    required: [
+      event-validation
+    ]
+    recommended: [
+      save-invalidates-cache
+      schema-index-on-apply
+      schema-index-on-remove
+      schema-index-on-save
+    ]
+  }
+
+  surface {
+    action createProgram(concept: String, action: String) {
+      entry {
+        trigger StorageProgram/create
+      }
+    }
+
+    action interpretProgram(program: R, backend: String) {
+      entry {
+        trigger ProgramInterpreter/execute
+      }
+    }
+
+    action registerHandler(concept: String, handler: String) {
+      entry {
+        trigger FunctionalHandler/register
+      }
+    }
+
+    action registerEffect(protocol: String, operation: String) {
+      entry {
+        trigger EffectHandler/register
+      }
+    }
+
+    action analyzeProgram(program: R, analysis: String) {
+      entry {
+        trigger ProgramAnalysis/dispatch
+      }
+    }
+
+    action ensureIndex(relation: String, field: String) {
+      entry {
+        trigger InfrastructureCore/registerPlugin
+      }
+    }
+
+    query getProgramPurity(program: R) -> ProgramAnalysis/dispatch(program: program, analysis: "purity")
+
+    query getCachedResult(program: R) -> ProgramCache/get(program: program)
+
+    query getEffectHandlers(protocol: String) -> EffectHandler/resolve(protocol: protocol)
+  }
+
+  principle {
+    after createProgram(concept: "ContentNode", action: "listBySchema")
+    then interpretProgram returns a completion with variant and output
+    and  analyzeProgram with "purity" classifies as "pure" or "read-only" or "read-write"
+  }
+
+  principle {
+    after registerHandler(concept: "ContentNode", handler: "content-node.handler.ts")
+    then registerEffect for each declared perform instruction
+    and  getEffectHandlers for each protocol returns a registered handler
+  }
+
+  principle {
+    after ensureIndex(relation: "membership", field: "schema")
+    then getCachedResult reflects indexed storage queries
+    and  getProgramPurity classifies programs using indexed storage as read-only
+  }
+}
