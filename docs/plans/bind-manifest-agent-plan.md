@@ -14,7 +14,7 @@
 |---|---|---|---|---|
 | **MAG-553** Derived Concept Projection | §1 | — | MAG-555 | `4e9e28d7` |
 | **MAG-554** Bind Manifest Outbound Skill | §2 | — | MAG-555 | `4e9e28d7` |
-| **MAG-555** Bind Manifest Agent + Inbound Skill | §3 | MAG-553, MAG-554 | — | |
+| **MAG-555** Bind Manifest Agent + Inbound Skill | §3 | ~~MAG-553~~, ~~MAG-554~~ | — | `24ac321e` |
 
 ---
 
