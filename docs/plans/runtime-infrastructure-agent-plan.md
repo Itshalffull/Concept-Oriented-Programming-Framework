@@ -12,10 +12,10 @@
 
 | Card | PRD Sections | Blocked By | Blocks | Commit |
 |---|---|---|---|---|
-| **MAG-549** Sub-Derived Concepts | §1 | — | MAG-551, MAG-552 | |
-| **MAG-550** Agent Target: References Support | §2 | — | MAG-552 | |
-| **MAG-551** Runtime Infrastructure Skill + References | §3 | MAG-549 | MAG-552 | |
-| **MAG-552** Agent Definition + Regen | §4 | MAG-549–551 | — | |
+| **MAG-549** Sub-Derived Concepts | §1 | — | MAG-551, MAG-552 | `e3f7a2c0` |
+| **MAG-550** Agent Target: References Support | §2 | — | MAG-552 | `f3f3f57e` |
+| **MAG-551** Runtime Infrastructure Skill + References | §3 | ~~MAG-549~~ | MAG-552 | `1171ee7c` |
+| **MAG-552** Agent Definition + Regen | §4 | ~~MAG-549–551~~ | — | `7d8c4923` |
 
 ---
 
