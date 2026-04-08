@@ -243,6 +243,58 @@ scoreIndexCommand
   });
 
 scoreIndexCommand
+  .command('upsert-view')
+  .description('Insert or update the view entry in the index .')
+  .requiredOption('--name <name>', 'Name')
+  .requiredOption('--source-file <sourceFile>', 'Source File')
+  .requiredOption('--shell-ref <shellRef>', 'Shell Ref')
+  .requiredOption('--purpose-text <purposeText>', 'Purpose Text')
+  .requiredOption('--purity <purity>', 'Purity')
+  .requiredOption('--invoked-actions <invokedActions>', 'Invoked Actions')
+  .requiredOption('--projected-fields <projectedFields>', 'Projected Fields')
+  .requiredOption('--filter-fields <filterFields>', 'Filter Fields')
+  .requiredOption('--sort-fields <sortFields>', 'Sort Fields')
+  .requiredOption('--group-fields <groupFields>', 'Group Fields')
+  .requiredOption('--invariant-count <invariantCount>', 'Invariant Count')
+  .requiredOption('--invariant-names <invariantNames>', 'Invariant Names')
+  .requiredOption('--invariants-serialized <invariantsSerialized>', 'Invariants Serialized')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ScoreIndex', 'upsertView', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
+  });
+
+scoreIndexCommand
+  .command('remove-view')
+  .description('Remove the view entry from the index .')
+  .requiredOption('--name <name>', 'Name')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ScoreIndex', 'removeView', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
+  });
+
+scoreIndexCommand
   .command('remove-by-file')
   .description('Remove all index entries associated with a file .')
   .requiredOption('--path <path>', 'Path')
@@ -303,5 +355,5 @@ scoreIndexCommand
 export const scoreIndexCommandTree = {
   group: 'score-index',
   description: 'Materialized index backing ScoreApi queries . Maintains denormalized views of the five Score layers ( parse , symbol , semantic , analysis , discovery ) optimized for fast LLM friendly lookups . Rebuilt incrementally as project files change . Auto registered as a built in concept in every Clef runtime',
-  commands: [{ action: 'upsertConcept', command: 'upsert-concept' }, { action: 'upsertSync', command: 'upsert-sync' }, { action: 'upsertSymbol', command: 'upsert-symbol' }, { action: 'upsertFile', command: 'upsert-file' }, { action: 'upsertHandler', command: 'upsert-handler' }, { action: 'upsertWidgetImpl', command: 'upsert-widget-impl' }, { action: 'upsertThemeImpl', command: 'upsert-theme-impl' }, { action: 'upsertDeployment', command: 'upsert-deployment' }, { action: 'upsertSuiteManifest', command: 'upsert-suite-manifest' }, { action: 'upsertInterface', command: 'upsert-interface' }, { action: 'removeByFile', command: 'remove-by-file' }, { action: 'clear', command: 'clear' }, { action: 'stats', command: 'stats' }],
+  commands: [{ action: 'upsertConcept', command: 'upsert-concept' }, { action: 'upsertSync', command: 'upsert-sync' }, { action: 'upsertSymbol', command: 'upsert-symbol' }, { action: 'upsertFile', command: 'upsert-file' }, { action: 'upsertHandler', command: 'upsert-handler' }, { action: 'upsertWidgetImpl', command: 'upsert-widget-impl' }, { action: 'upsertThemeImpl', command: 'upsert-theme-impl' }, { action: 'upsertDeployment', command: 'upsert-deployment' }, { action: 'upsertSuiteManifest', command: 'upsert-suite-manifest' }, { action: 'upsertInterface', command: 'upsert-interface' }, { action: 'upsertView', command: 'upsert-view' }, { action: 'removeView', command: 'remove-view' }, { action: 'removeByFile', command: 'remove-by-file' }, { action: 'clear', command: 'clear' }, { action: 'stats', command: 'stats' }],
 };

@@ -1,7 +1,7 @@
 ---
 name: page-map
 description: Maintain a labeled inventory of interactive elements within a hosted view , addressable by semantic label , role , or concept binding . Independently useful for accessibility auditing , integration testing , dev tools , and agent driven UI navigation
-argument-hint: [command] [entry] [label] [role] [machineRef] [widgetName] [currentState] [validEvents] [conceptBinding] [affordanceServes] [hostRef]
+argument-hint: [command] [entry] [label] [role] [machineRef] [widgetName] [currentState] [validEvents] [conceptBinding] [affordanceServes] [hostRef] [viewName] [viewPurpose] [viewPurity] [viewInvokedActions]
 allowed-tools: Read, Grep, Glob, Bash
 ---
 
@@ -21,7 +21,7 @@ Add a new interactive element to the page map with its label ,
  host membership . The element is now addressable by label within 
  its host .
 
-**Arguments:** `$0` **entry** (P), `$1` **label** (string), `$2` **role** (string), `$3` **machineRef** (string), `$4` **widgetName** (string), `$5` **currentState** (string), `$6` **validEvents** (string), `$7` **conceptBinding** (string?), `$8` **affordanceServes** (string?), `$9` **hostRef** (string)
+**Arguments:** `$0` **entry** (P), `$1` **label** (string), `$2` **role** (string), `$3` **machineRef** (string), `$4` **widgetName** (string), `$5` **currentState** (string), `$6` **validEvents** (string), `$7` **conceptBinding** (string?), `$8` **affordanceServes** (string?), `$9` **hostRef** (string), `$10` **viewName** (string?), `$11` **viewPurpose** (string?), `$12` **viewPurity** (string?), `$13` **viewInvokedActions** (string?)
 
 ### update
 Overwrite the FSM state and valid event list for an existing 
@@ -32,8 +32,8 @@ Overwrite the FSM state and valid event list for an existing
 
 ### find
 Locate an element by label using fuzzy matching within the 
- current inventory and return its identifier and machine reference 
- for direct interaction .
+ current inventory and return its identifier , machine reference 
+ for direct interaction , and any associated view metadata .
 
 **Arguments:** `$0` **entry** (P), `$1` **label** (string)
 
@@ -55,8 +55,17 @@ Return a JSON array of all entries whose widgetName matches the
 
 **Arguments:** `$0` **widgetName** (string)
 
+### findByView
+Return all PageMap entries whose viewName matches , as a 
+ JSON array . Enables Pilot to discover all interactive 
+ elements associated with a specific view .
+
+**Arguments:** `$0` **viewName** (string)
+
 ### list
-Return a JSON array of all entries belonging to the given host . 
+Return a JSON array of all entries belonging to the given host , 
+ including any view metadata fields ( viewName , viewPurpose , viewPurity , 
+ viewInvokedActions ) attached at registration time . 
  Returns an empty array if the host has no registered entries .
 
 **Arguments:** `$0` **hostRef** (string)

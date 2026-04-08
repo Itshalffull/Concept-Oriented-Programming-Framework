@@ -41,7 +41,7 @@ export const connectionTools = [
   {
     "type": "tool",
     "name": "connection_discover",
-    "description": "Discover connection — Returns a JSON encoded discovery result at the requested depth : \n list yields concept names only , manifest adds actions , inputs , \n and variants for each concept , full adds syncs , affordances , and \n widgets ( requires Score to be available on the kernel ) .",
+    "description": "Discover connection — Returns a JSON encoded discovery result at the requested depth : \n list yields concept names only , manifest adds actions , inputs , \n and variants for each concept , full adds syncs , affordances , \n widgets , and views with their purpose , purity , invoked actions , \n and invariant summaries ( requires Score to be available on the \n kernel ) .",
     "inputSchema": {
       "type": "object",
       "properties": {

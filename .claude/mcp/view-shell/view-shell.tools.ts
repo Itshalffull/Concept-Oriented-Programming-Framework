@@ -39,6 +39,12 @@ export const viewShellTools = [
         },
         "interaction": {
           "type": "string"
+        },
+        "features": {
+          "type": "string"
+        },
+        "pagination": {
+          "type": "string"
         }
       },
       "required": [
@@ -51,7 +57,9 @@ export const viewShellTools = [
         "group",
         "projection",
         "presentation",
-        "interaction"
+        "interaction",
+        "features",
+        "pagination"
       ]
     }
   },
@@ -97,6 +105,12 @@ export const viewShellTools = [
         },
         "interaction": {
           "type": "string"
+        },
+        "features": {
+          "type": "string"
+        },
+        "pagination": {
+          "type": "string"
         }
       },
       "required": [
@@ -109,7 +123,9 @@ export const viewShellTools = [
         "group",
         "projection",
         "presentation",
-        "interaction"
+        "interaction",
+        "features",
+        "pagination"
       ]
     }
   },
@@ -138,7 +154,7 @@ export const viewShellTools = [
   {
     "type": "tool",
     "name": "view_shell_resolve_hydrated",
-    "description": "Resolve hydrated viewshell — Load the ViewShell entry by name , then fetch each non empty child spec \n by calling the corresponding concept s get action . Returns fully hydrated \n data actual FilterNode trees as JSON strings , SortKey arrays , ProjectionField \n arrays , DataSourceConfig objects , PresentationSpec fields , InteractionSpec \n fields , GroupSpec fields not just reference name strings . Child specs that \n are not registered ( empty ref or notfound ) are returned as empty strings .",
+    "description": "Resolve hydrated viewshell — Load the ViewShell entry by name , then fetch each non empty child spec \n by calling the corresponding concept s get action . Only fetches child specs \n whose feature is listed in the features set ; disabled features are returned \n as empty strings . Returns fully hydrated data actual FilterNode trees as \n JSON strings , SortKey arrays , ProjectionField arrays , DataSourceConfig \n objects , PresentationSpec fields , InteractionSpec fields , GroupSpec fields , \n and PaginationSpec fields not just reference name strings . Child specs \n that are not registered ( empty ref or notfound ) are returned as empty strings .",
     "inputSchema": {
       "type": "object",
       "properties": {

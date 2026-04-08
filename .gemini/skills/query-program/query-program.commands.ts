@@ -12,4 +12,4 @@ export async function handleQueryProgramSkill(
   return JSON.stringify(result.body, null, 2);
 }
 
-export const queryProgramSkillCommands = ['create', 'scan', 'filter', 'sort', 'group', 'project', 'limit', 'pure', 'join', 'compose', 'invoke', 'match', 'traverseInvoke', 'traverse'];
+export const queryProgramSkillCommands = ['create', 'scan', 'filter', 'sort', 'group', 'project', 'limit', 'offset', 'pure', 'join', 'compose', 'invoke', 'match', 'traverseInvoke', 'traverse'];

@@ -8,6 +8,11 @@ The `.view` file format is parsed by a recursive descent parser at `handlers/ts/
 view "<name>" {
   shell: "<view-shell-name>"
 
+  features {
+    <feature-name>
+    ...
+  }
+
   purpose {
     <free-text description>
   }
@@ -18,7 +23,7 @@ view "<name>" {
 }
 ```
 
-A `.view` file is an assertion manifest over a compiled QueryProgram. It references a ViewShell by name and declares invariants that the compiled query must satisfy. No actions, no state, no fixtures.
+A `.view` file is an assertion manifest over a compiled QueryProgram. It references a ViewShell by name, optionally restricts which features are active, and declares invariants that the compiled query must satisfy. No actions, no state, no fixtures.
 
 ## View Header
 
@@ -35,6 +40,53 @@ shell: "<view-shell-name>"
 ```
 
 - Required. References a ViewShell by name. The ViewShell is compiled into a QueryProgram at test time.
+
+## Features Section
+
+```
+features {
+  filter
+  sort
+  pagination
+  projection
+}
+```
+
+- Optional. Declares which ViewShell features are active for this view.
+- When omitted, all features are enabled (backward-compatible default).
+- When present, only the listed features are enabled; the ViewShell's child spec slots for disabled features are ignored during query compilation.
+- Feature names may appear one per line or space/comma separated.
+- **Valid feature names:** `filter`, `sort`, `group`, `projection`, `interaction`, `pagination`
+- Two features are always-on and cannot appear in this block: `dataSource` and `presentation`.
+- Invalid feature names produce a parse error with the line and column.
+
+### Features and ViewAnalysis
+
+The `features` block affects the `ViewAnalysis` record available to invariants:
+
+| Target | Type | Description |
+|---|---|---|
+| `enabledFeatures` | set String | Features listed in the block (or all features if block omitted) |
+| `disabledFeatures` | set String | Features absent from the block |
+
+Invariants can assert presence or absence of features:
+
+```
+always "has pagination": {
+  "pagination" in enabledFeatures
+}
+
+always "no grouping": {
+  "group" in disabledFeatures
+}
+```
+
+When a feature is disabled, its corresponding field set in `ViewAnalysis` is always empty:
+- `filter` disabled → `filterFields = []`
+- `sort` disabled → `sortFields = []`
+- `group` disabled → `groupFields = []`
+- `projection` disabled → `projectedFields = []`
+- `interaction` disabled → `invokedActions = []`, `invokeCount = 0`
 
 ## Purpose Section
 
@@ -114,10 +166,12 @@ View invariants operate on a `ViewAnalysis` record computed by running analysis 
 | `totalVariants` | Int | QueryCompletionCoverage |
 | `coveredCount` | Int | QueryCompletionCoverage |
 | `sourceFields` | set String | DataSourceSpec |
-| `filterFields` | set String | FilterSpec |
-| `sortFields` | set String | SortSpec |
-| `groupFields` | set String | GroupSpec |
-| `projectedFields` | set String | ProjectionSpec |
+| `filterFields` | set String | FilterSpec (empty when filter disabled) |
+| `sortFields` | set String | SortSpec (empty when sort disabled) |
+| `groupFields` | set String | GroupSpec (empty when group disabled) |
+| `projectedFields` | set String | ProjectionSpec (empty when projection disabled) |
+| `enabledFeatures` | set String | Features active for this view (from `features {}` block) |
+| `disabledFeatures` | set String | Features absent from the `features {}` block |
 
 ## Predicate Operators
 
@@ -167,6 +221,12 @@ Both `#` and `//` styles are supported, matching the concept parser.
 ```
 view "task-board-actions" {
   shell: "task-board"
+
+  features {
+    filter
+    sort
+    interaction
+  }
 
   purpose {
     Task board with bulk escalate and archive actions. Read-write

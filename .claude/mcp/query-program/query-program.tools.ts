@@ -169,6 +169,30 @@ export const queryProgramTools = [
   },
   {
     "type": "tool",
+    "name": "query_program_offset",
+    "description": "Offset queryprogram — Append an Offset instruction that skips the first count records \n in the current record set . A count of zero skips nothing . The \n remaining set is bound to output .",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "program": {
+          "type": "string"
+        },
+        "count": {
+          "type": "integer"
+        },
+        "output": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "program",
+        "count",
+        "output"
+      ]
+    }
+  },
+  {
+    "type": "tool",
     "name": "query_program_pure",
     "description": "Pure queryprogram — Terminate the program with a return value consisting of a \n variant tag and output binding . No further instructions may \n be appended after pure . The program s terminated flag is set \n to true .",
     "inputSchema": {

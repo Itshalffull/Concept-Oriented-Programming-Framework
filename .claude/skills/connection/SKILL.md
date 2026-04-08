@@ -25,8 +25,10 @@ Kernel reached , handshake completed , session token issued , and the
 ### discover
 Returns a JSON encoded discovery result at the requested depth : 
  list yields concept names only , manifest adds actions , inputs , 
- and variants for each concept , full adds syncs , affordances , and 
- widgets ( requires Score to be available on the kernel ) .
+ and variants for each concept , full adds syncs , affordances , 
+ widgets , and views with their purpose , purity , invoked actions , 
+ and invariant summaries ( requires Score to be available on the 
+ kernel ) .
 
 **Arguments:** `$0` **connection** (K), `$1` **concept** (string?), `$2` **depth** (string)
 

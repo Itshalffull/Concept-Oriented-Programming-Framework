@@ -56,6 +56,14 @@
     "alwaysLoaded": false
   },
   {
+    "name": "query_program_offset",
+    "briefDescription": "Append an Offset instruction that skips the first count records \n in the curr...",
+    "category": "QueryProgram",
+    "concept": "QueryProgram",
+    "action": "offset",
+    "alwaysLoaded": false
+  },
+  {
     "name": "query_program_pure",
     "briefDescription": "Terminate the program with a return value consisting of a \n variant tag and o...",
     "category": "QueryProgram",
