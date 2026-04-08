@@ -1,0 +1,15 @@
+# Per-schema denormalized relation population on schema application.
+# When a schema is applied to a node, copies the node's data into the
+# schema:{name} relation so listBySchema can read without a join.
+
+sync SchemaIndexOnApply [eventual]
+  purpose: "Populate the per-schema denormalized relation when a schema is applied to a node, eliminating join overhead for listBySchema reads"
+when {
+  Schema/applyTo: [ entity_id: ?id; schema: ?schema ] => [ ok: _ ]
+}
+where {
+  ContentNode/get: [ node: ?id ] => [ ok: ?nodeData ]
+}
+then {
+  ContentStorage/save: [ relation: "schema:?schema"; key: ?id; data: ?nodeData ]
+}
