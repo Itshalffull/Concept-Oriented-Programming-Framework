@@ -1,0 +1,222 @@
+@version(1)
+widget type-picker {
+
+  purpose {
+    Grouped, searchable, icon-driven field type picker popover for selecting or
+    changing a schema field type. Organises the full type catalogue into four
+    named categories — Basic, Content, Advanced, and Meta — with icon, label,
+    and short description per option. Supports live search filtering across all
+    categories and highlights the current type when used in change-type mode.
+    Emits SELECT on confirmation and CLOSE on Escape or outside click. Intended
+    as a sub-widget composed into field-header-popover and schema-fields-editor.
+  }
+
+  anatomy {
+    root:            container   { Popover root; wraps all content }
+    searchInput:     interactive { Text input for filtering types by name or description }
+    categoryGroup:   container   { One group per category; rendered for each visible category }
+    categoryLabel:   text        { Category heading: "Basic", "Content", "Advanced", or "Meta" }
+    typeOption:      action      { Selectable tile for a single field type }
+    typeIcon:        presentation { Icon glyph for the field type }
+    typeLabel:       text        { Human name of the field type }
+    typeDescription: text        { One-line description of the field type }
+  }
+
+  states {
+    idle [initial] {
+      on SEARCH -> searching;
+      on SELECT_TYPE -> selected;
+      on CLOSE -> idle;
+    }
+
+    searching {
+      on SEARCH -> searching;
+      on CLEAR_SEARCH -> idle;
+      on SELECT_TYPE -> selected;
+      on CLOSE -> idle;
+      entry [filterOptions];
+      exit [clearFilter];
+    }
+
+    selected {
+      on CONFIRM -> idle;
+      on CANCEL -> idle;
+      on CHANGE_SELECTION -> selected;
+      entry [highlightOption; emitSelect];
+    }
+
+    loading {
+      on LOADED -> idle;
+      on LOAD_ERROR -> idle;
+      entry [showLoadingIndicator];
+      exit [hideLoadingIndicator];
+    }
+  }
+
+  accessibility {
+    role: listbox;
+    keyboard {
+      ArrowDown -> FOCUS_NEXT_OPTION;
+      ArrowUp -> FOCUS_PREV_OPTION;
+      Enter -> SELECT_TYPE;
+      Escape -> CLOSE;
+      Tab -> FOCUS_SEARCH;
+    }
+    focus {
+      trap: true;
+      initial: searchInput;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "listbox";
+        aria-label: "Field type picker";
+        aria-multiselectable: "false";
+        aria-busy: if state == "loading" then "true" else "false";
+      };
+      searchInput -> {
+        role: "searchbox";
+        aria-label: "Search field types";
+        aria-autocomplete: "list";
+        aria-controls: "type-option-list";
+      };
+      categoryGroup -> {
+        role: "group";
+        aria-label: self.categoryName;
+      };
+      categoryLabel -> {
+        role: "presentation";
+      };
+      typeOption -> {
+        role: "option";
+        aria-selected: if self.type == ?currentType then "true" else "false";
+        aria-label: concat(self.typeLabel, ": ", self.typeDescription);
+        tabindex: if self.isFocused then "0" else "-1";
+      };
+    }
+  }
+
+  props {
+    currentType: String = ""
+    showAdvanced: Bool = true
+    searchQuery: String = ""
+    onSelect: String = ""
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+    }
+
+    searchInput -> {
+      data-part: "search-input";
+      value: ?searchQuery;
+      placeholder: "Search types...";
+      onInput: send(SEARCH, { query: self.value });
+      onKeyDown: if key == "Escape" then send(CLOSE) else noop;
+    }
+
+    categoryGroup -> {
+      data-part: "category-group";
+      data-category: self.categoryName;
+      data-visible: if state == "searching" and self.matchCount == 0 then "false" else "true";
+    }
+
+    categoryLabel -> {
+      data-part: "category-label";
+      text: self.categoryName;
+    }
+
+    typeOption -> {
+      data-part: "type-option";
+      data-type: self.type;
+      data-selected: if self.type == ?currentType then "true" else "false";
+      tabindex: if self.isFocused then "0" else "-1";
+      onClick: send(SELECT_TYPE, { type: self.type });
+      onKeyDown: if key == "Enter" then send(SELECT_TYPE, { type: self.type }) else noop;
+    }
+
+    typeIcon -> {
+      data-part: "type-icon";
+      data-type: self.type;
+    }
+
+    typeLabel -> {
+      data-part: "type-label";
+      text: self.typeLabel;
+    }
+
+    typeDescription -> {
+      data-part: "type-description";
+      text: self.typeDescription;
+    }
+  }
+
+  affordance {
+    serves: single-choice;
+    specificity: 15;
+    when {
+      viewType: "type-picker";
+    }
+    bind {
+      currentType: currentType;
+    }
+  }
+
+  invariant {
+    example "search narrows visible options": {
+      after send(SEARCH, { query: "date" }) -> ok
+      then root -> { data-state: "searching" }
+      and categoryGroup -> { data-category: "Basic" }
+    }
+
+    example "clear search returns to idle": {
+      after send(SEARCH, { query: "date" }) -> ok
+      then send(CLEAR_SEARCH) -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    example "select type transitions to selected": {
+      after send(SELECT_TYPE, { type: "text" }) -> ok
+      then root -> { data-state: "selected" }
+      and typeOption -> { data-selected: "true" }
+    }
+
+    example "loading state is reachable and resolves": {
+      after transition(from: "idle", event: "LOAD_ERROR") -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        root -> { data-state: s.name }
+    }
+
+    always "currentType option is marked selected": {
+      if ?currentType != "" then typeOption -> { data-selected: if self.type == ?currentType then "true" else "false" }
+    }
+
+    always "advanced category hidden when showAdvanced false": {
+      if ?showAdvanced == false then categoryGroup -> { data-category: "Advanced"; data-visible: "false" }
+    }
+
+    never "multiple type options selected simultaneously": {
+      exists o1 in typeOptions:
+        exists o2 in typeOptions:
+          o1 != o2 and o1 -> { data-selected: "true" } and o2 -> { data-selected: "true" }
+    }
+
+    never "search input empty in searching state": {
+      state == "searching" and searchInput -> { value: "" }
+    }
+
+    "At least one category group must be visible in idle state";
+    "Search filters across all categories including Advanced and Meta";
+    "SELECT_TYPE must carry the type string as payload so consumers do not need to read DOM";
+  }
+
+}

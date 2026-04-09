@@ -1,0 +1,165 @@
+@version(1)
+widget inline-cell-editor {
+
+  purpose {
+    Inline editor that activates when a user clicks or presses Enter on a table
+    cell in a schema-aware table view. Renders the type-appropriate input widget
+    for the cell field type: text-input for text fields, number-input for
+    number fields, select for select and multi-select, date-picker for date
+    fields, checkbox for boolean, reference-picker for relation fields, and
+    media-picker for media fields. Saves automatically on blur or Tab, and
+    cancels on Escape. A save indicator confirms persistence; an error message
+    surfaces validation failures. Connects to FieldDefinition for type dispatch
+    and to the entity storage concept for reading and writing the cell value.
+  }
+
+  anatomy {
+    root:           container   { Cell editor root; overlays or replaces the cell display value }
+    inputContainer: container   { Wraps the type-specific composed input widget }
+    saveIndicator:  presentation { Visual indicator shown briefly after a successful save }
+    errorMessage:   text        { Validation or storage error text displayed below the input }
+  }
+
+  states {
+    viewing [initial] {
+      on ACTIVATE -> editing;
+    }
+
+    editing {
+      on SAVE -> saving;
+      on CANCEL -> viewing;
+      entry [mountInputWidget; focusInput];
+      exit [unmountInputWidget];
+    }
+
+    saving {
+      on SAVE_OK -> saved;
+      on SAVE_ERROR -> error;
+      entry [disableInput; showSavingIndicator];
+      exit [enableInput; hideSavingIndicator];
+    }
+
+    saved {
+      on DISMISS -> viewing;
+      entry [showSavedIndicator; scheduleAutoDismiss];
+      exit [hideSavedIndicator];
+    }
+
+    error {
+      on RETRY -> saving;
+      on CANCEL -> viewing;
+      entry [showErrorMessage];
+      exit [clearErrorMessage];
+    }
+  }
+
+  accessibility {
+    role: gridcell;
+    keyboard {
+      Enter -> ACTIVATE;
+      Escape -> CANCEL;
+      Tab -> SAVE;
+    }
+    focus {
+      trap: false;
+      initial: inputContainer;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "gridcell";
+        aria-label: concat("Edit ", ?fieldId);
+        aria-readonly: if state == "viewing" or state == "saving" or state == "saved" then "true" else "false";
+        aria-invalid: if state == "error" then "true" else "false";
+        aria-busy: if state == "saving" then "true" else "false";
+      };
+      inputContainer -> {
+        role: "group";
+        aria-label: concat(?fieldId, " input");
+        aria-hidden: if state == "viewing" then "true" else "false";
+      };
+      saveIndicator -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: "Saved";
+        aria-hidden: if state != "saved" then "true" else "false";
+      };
+      errorMessage -> {
+        role: "alert";
+        aria-live: "assertive";
+        aria-hidden: if state != "error" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    schema: String
+    fieldId: String
+    fieldType: union "text" | "number" | "select" | "multi-select" | "date" | "checkbox" | "boolean" | "relation" | "media" | "rich-text" | "url" | "email" | "person" | "file" = "text"
+    entityId: String
+    currentValue: String = ""
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-field-type: ?fieldType;
+      aria-readonly: if state == "viewing" or state == "saving" or state == "saved" then "true" else "false";
+      aria-invalid: if state == "error" then "true" else "false";
+      aria-busy: if state == "saving" then "true" else "false";
+      onClick: if state == "viewing" then send(ACTIVATE) else noop;
+      onKeyDown: if key == "Enter" and state == "viewing" then send(ACTIVATE) else if key == "Escape" then send(CANCEL) else if key == "Tab" and state == "editing" then send(SAVE) else noop;
+    }
+
+    inputContainer -> {
+      data-part: "input-container";
+      data-field-type: ?fieldType;
+      data-visible: if state == "editing" or state == "saving" or state == "error" then "true" else "false";
+    }
+
+    saveIndicator -> {
+      data-part: "save-indicator";
+      data-visible: if state == "saved" then "true" else "false";
+      aria-hidden: if state != "saved" then "true" else "false";
+    }
+
+    errorMessage -> {
+      data-part: "error-message";
+      data-visible: if state == "error" then "true" else "false";
+      aria-hidden: if state != "error" then "true" else "false";
+    }
+  }
+
+  compose {
+    _textInput:      widget("text-input",       { value: ?currentValue })
+    _numberInput:    widget("number-input",      { value: ?currentValue })
+    _select:         widget("select",            { value: ?currentValue, schema: ?schema, fieldId: ?fieldId })
+    _datePicker:     widget("date-picker",       { value: ?currentValue })
+    _checkbox:       widget("checkbox",          { checked: ?currentValue })
+    _referencePicker: widget("reference-picker", { value: ?currentValue, schema: ?schema, fieldId: ?fieldId })
+    _mediaPicker:    widget("media-picker",      { value: ?currentValue })
+  }
+
+  invariant {
+    "ACTIVATE event from viewing state transitions root to editing and makes inputContainer visible";
+    "CANCEL event from editing state transitions root to viewing and hides inputContainer";
+    "SAVE event from editing state transitions root to saving and sets aria-busy to true";
+    "SAVE_OK event transitions root from saving to saved and shows saveIndicator";
+    "SAVE_ERROR event transitions root from saving to error and shows errorMessage";
+    "RETRY event from error state re-enters saving state";
+    "DISMISS event transitions root from saved to viewing";
+    "inputContainer is hidden in viewing state";
+    "errorMessage is hidden in all states except error";
+    "saveIndicator is hidden in all states except saved";
+    "saveIndicator and errorMessage are never both visible simultaneously";
+    "root aria-readonly is true in viewing, saving, and saved states";
+    "data-state on root always reflects the current FSM state name";
+    "All five states (viewing, editing, saving, saved, error) are reachable from the initial viewing state";
+    "The composed input widget selected must match the fieldType prop: text uses text-input, number uses number-input, select and multi-select use select, date uses date-picker, checkbox and boolean use checkbox, relation uses reference-picker, media uses media-picker";
+    "Tab key in editing state must save and move focus to the next cell; the parent table grid handles focus movement after the SAVE event";
+    "Auto-dismiss from saved state fires DISMISS after a brief delay so the user perceives confirmation before the indicator disappears";
+    "Error state displays the server-returned validation message, not a generic string";
+  }
+
+}
