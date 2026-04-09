@@ -16,6 +16,7 @@ what a view fetches and transforms, without executing side effects.
 | Group | `group` | keys, config (aggregation), bindAs | Partition and aggregate |
 | Project | `project` | fields (field[] JSON), bindAs | Select subset of fields |
 | Limit | `limit` | count, output | Truncate to N records |
+| Offset | `offset` | count, output | Skip first N records (for pagination) |
 | Join | `join` | source, localField, foreignField, bindAs | Enrich via relation join |
 | Pure | `pure` | variant, output | Seal program (terminal) |
 | Compose | `compose` | first, second, bindAs | Monadic bind (chain) |

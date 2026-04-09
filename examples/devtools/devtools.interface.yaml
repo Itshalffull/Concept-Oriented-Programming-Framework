@@ -3743,6 +3743,10 @@ workflows:
         rule: "Concept handlers use storage through the interface without knowing which backend is active. Swapping backends requires no handler changes."
       - title: "Relation-Key Namespace"
         rule: "Storage is organized by relation name and key. Each concept uses its own relation names, preventing cross-concept conflicts."
+      - title: "Secondary Indexes via ensureIndex"
+        rule: "Adapters may implement the optional ensureIndex(relation, field) method. When declared, the adapter maintains an inverted index (field value → key set) for O(1) lookup on find(). The in-memory adapter supports this natively. SQL adapters translate to CREATE INDEX. ensureIndex is called during kernel boot, not inside handlers."
+      - title: "FindOptions for Pagination"
+        rule: "find() accepts optional FindOptions: { limit?, offset?, sort? }. These are applied AFTER criteria filtering. With secondary indexes, the combined cost is O(log N + K) where K is the result set size, not O(N) full scan."
     references:
       - path: references/storage-adapter-guide.md
         label: "Storage adapter implementation guide"
@@ -3758,11 +3762,26 @@ workflows:
           interface ConceptStorage {
             put(relation: string, key: string, value: Record<string, unknown>): Promise<void>;
             get(relation: string, key: string): Promise<Record<string, unknown> | null>;
-            find(relation: string, criteria?: Record<string, unknown>): Promise<Record<string, unknown>[]>;
+            find(relation: string, criteria?: Record<string, unknown>, options?: FindOptions): Promise<Record<string, unknown>[]>;
             del(relation: string, key: string): Promise<void>;
             delMany(relation: string, criteria: Record<string, unknown>): Promise<number>;
+            ensureIndex?(relation: string, field: string): void;  // Optional secondary index
+          }
+
+          interface FindOptions {
+            limit?: number;
+            offset?: number;
+            sort?: { field: string; order: 'asc' | 'desc' };
           }
           ```
+
+          ## Secondary Indexes
+
+          Adapters may implement `ensureIndex(relation, field)` for fast lookups:
+          - In-memory: maintains `Map<value, Set<key>>` per indexed field
+          - SQL: translates to `CREATE INDEX IF NOT EXISTS`
+          - Called during kernel boot, not inside handlers
+          - `find()` uses index when criteria matches indexed field (O(1) vs O(N))
 
           ## Backend Comparison
 
@@ -4568,6 +4587,8 @@ workflows:
         rule: "The anatomy defines named parts (root, trigger, content, etc.) that both the machine and renderer reference. This is the only coupling point."
       - title: "Props API via connect()"
         rule: "The machine's connect() action transforms internal state into framework-neutral props objects — one per anatomy part."
+      - title: "Pagination Control Pattern"
+        rule: "For paginated views, use the pagination-control.widget pattern: parts (root, prevButton, nextButton, pageIndicator, pageSizeSelector, totalCount), states (idle, loading, firstPage, lastPage, disabled), connect to PaginationSpec/advance and PaginationSpec/retreat. See surface/pagination-control.widget for the reference implementation."
     references:
       - path: references/surface-component-guide.md
         label: "Clef Surface headless component architecture"
@@ -5418,6 +5439,9 @@ workflows:
       - action: limit
         title: "Limit Records"
         prose: "Append a Limit instruction truncating to at most N records."
+      - action: offset
+        title: "Offset (Skip) Records"
+        prose: "Append an Offset instruction skipping the first N records. Used with Limit for pagination: offset(20) + limit(10) returns records 20-29. Both offset and limit are kernel capabilities — pushed to backend (SQL OFFSET/LIMIT, API query params)."
       - action: pure
         title: "Terminate Program"
         prose: "Seal the program with a terminal variant and output binding. No further instructions may be appended. The program's terminated flag becomes true."
@@ -5450,6 +5474,12 @@ workflows:
         rule: "Sort composition is NOT commutative. compose(byName, byDate) means sort by name then break ties by date. This matches user mental models."
       - title: "Schema-Scoped Data Sources"
         rule: "When a view shows data from a single schema, ALWAYS use listBySchema in the DataSourceSpec instead of list + client-side schema filter. listBySchema does a server-side join returning pre-filtered, schema-enriched results in one query. Use list only when the view genuinely shows all content types with interactive schema toggles."
+      - title: "PaginationSpec for Paginated Views"
+        rule: "When a view needs pagination, include 'pagination' in the ViewShell features set and provide a PaginationSpec ref. The PaginationSpec manages mode (offset, cursor, keyset), page size, and position. compile-query injects offset+limit from PaginationSpec/evaluate. paginate-on-execute updates the spec's totalCount after query execution."
+      - title: "ViewShell Selective Features"
+        rule: "Views declare which specs they need via the features field: a JSON array of enabled feature names (filter, sort, group, projection, interaction, pagination). Always-on: dataSource, presentation. view-resolve.sync only fetches child specs for enabled features. .view files declare features in a features {} block."
+      - title: "Per-Schema Denormalized Relations"
+        rule: "schema-index-on-apply.sync maintains denormalized schema:{name} relations. listBySchema reads from these directly instead of joining membership + node tables. This eliminates the O(M+N) full-table join — a single find('schema:Article', {}, { limit: 50 }) suffices."
       - title: "Split Execution by sourceType"
         rule: "Filters are partitioned by sourceType for split execution: system + contextual push to backend, interactive + search run locally in-memory. This lets views fetch pre-filtered data from the kernel while keeping toggle filters responsive without round-trips. For E2EE (encrypted-local kind), ALL processing runs locally after client-side decrypt."
       - title: "Pushdown for Remote Sources"
@@ -5474,6 +5504,7 @@ workflows:
           | Group | `group` | keys, config (aggregation), bindAs | Partition and aggregate |
           | Project | `project` | fields (field[] JSON), bindAs | Select subset of fields |
           | Limit | `limit` | count, output | Truncate to N records |
+          | Offset | `offset` | count, output | Skip first N records (for pagination) |
           | Join | `join` | source, localField, foreignField, bindAs | Enrich via relation join |
           | Pure | `pure` | variant, output | Seal program (terminal) |
           | Compose | `compose` | first, second, bindAs | Monadic bind (chain) |
