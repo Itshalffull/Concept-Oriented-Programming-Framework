@@ -1,0 +1,17 @@
+# Propagate field sort-order changes into FieldPlacement records.
+# Ensures drag-reorder in the schema editor is reflected in the
+# FieldPlacement state that controls form and display layout.
+# See §2.6 of the schema-editor-plan.md.
+
+sync FieldReorderUpdatesPlacements [eventual]
+  purpose: "Update FieldPlacement sort orders to match whenever a FieldDefinition is reordered, keeping form layout in sync with the schema field list"
+when {
+  FieldDefinition/reorder: [ schema: ?schema;
+                              fieldId: ?field_id;
+                              newSortOrder: ?new_sort_order ] => [ ok: _ ]
+}
+then {
+  FieldPlacement/configure: [ schema: ?schema;
+                               fieldId: ?field_id;
+                               sortOrder: ?new_sort_order ]
+}

@@ -1,0 +1,21 @@
+# Guard field removal by scanning active usages first.
+# Blocks the remove action and surfaces the in_use variant when any
+# view, filter, sort, or component mapping still references the field.
+# See §2.3 of the schema-editor-plan.md.
+
+sync FieldRemovalChecksUsage [eager]
+  purpose: "Scan SchemaUsage before allowing a field to be deleted and surface an in_use result when live references exist, preventing silent schema breakage"
+when {
+  FieldDefinition/remove: [ schema: ?schema;
+                             fieldId: ?field_id ] => [ ok: _ ]
+}
+where {
+  bind(?schema + ":" + ?field_id as ?field_key)
+  SchemaUsage/scan: [ field: ?field_key ] => [ ok: ?usages ]
+  guard(?usages != "")
+}
+then {
+  FieldDefinition/remove: [ schema: ?schema;
+                             fieldId: ?field_id;
+                             usages: ?usages ]
+}

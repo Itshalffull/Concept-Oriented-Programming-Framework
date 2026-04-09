@@ -1,0 +1,29 @@
+# Materialise all FieldDefinitions and content-native Properties when a template is applied.
+# Translates the template's embedded field list and property map into
+# first-class concept state in one atomic step.
+# See §2.4 of the schema-editor-plan.md.
+
+sync SchemaTemplateCreatesFields [eventual]
+  purpose: "Create FieldDefinition records and set content-native Properties for each entry declared in the template, completing the one-click schema bootstrap"
+when {
+  SchemaTemplate/apply: [ name: ?template_name;
+                           targetSchemaName: ?schema ] => [ ok: ?template ]
+}
+where {
+  bind(?template.fields as ?fields)
+  bind(?template.properties as ?properties)
+}
+then {
+  FieldDefinition/create: [ schema: ?schema;
+                             fieldId: ?fields.fieldId;
+                             label: ?fields.label;
+                             fieldType: ?fields.fieldType;
+                             cardinality: ?fields.cardinality;
+                             required: ?fields.required;
+                             sortOrder: ?fields.sortOrder ]
+}
+then {
+  Property/set: [ schema: ?schema;
+                  key: ?properties.key;
+                  value: ?properties.value ]
+}

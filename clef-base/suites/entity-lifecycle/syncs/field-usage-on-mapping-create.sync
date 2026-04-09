@@ -1,0 +1,22 @@
+# Register SchemaUsage when a ComponentMapping binds a slot to an entity field.
+# Ensures field-removal safety checks cover component mapping references.
+# See §2.2 of the schema-editor-plan.md.
+
+sync FieldUsageOnMappingCreate [eventual]
+  purpose: "Track component mapping references to schema fields so field removal can warn when a field is bound to a UI slot"
+when {
+  ComponentMapping/bindSlot: [ mapping_id: ?mapping_id;
+                               slot: ?slot;
+                               source: ?source;
+                               field: ?field;
+                               label: ?label ] => [ ok: _ ]
+}
+where {
+  filter(?source = "entity_field")
+}
+then {
+  SchemaUsage/register: [ field: ?field;
+                          usageType: "component_mapping";
+                          usageRef: ?mapping_id;
+                          usageLabel: ?label ]
+}
