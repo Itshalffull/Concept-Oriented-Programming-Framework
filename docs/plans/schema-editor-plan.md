@@ -803,13 +803,13 @@ Update `clef-base/derived/content-platform.derived` or create `clef-base/derived
 
 | Card | PRD Sections | Blocked By | Blocks | Priority | Commit |
 |---|---|---|---|---|---|
-| **MAG-556** FieldDefinition Concept + Handler | §1.1, §9.4, §9.5 | — | MAG-558–564 | urgent | |
-| **MAG-557** SchemaTemplate + SchemaUsage Concepts + Handlers | §1.2, §1.3, §9.4, §9.5 | — | MAG-560, MAG-563 | high | |
-| **MAG-558** Field Lifecycle Syncs | §2, §9.6 | MAG-556 | MAG-561–564 | high | |
-| **MAG-559** Level 1 Widgets: type-picker, field-header-popover, inline-cell-editor | §3.2–3.4, §9.7 | — | MAG-560, MAG-561 | high | |
-| **MAG-560** Level 1 View: schema-table + InteractionSpec + Seeds | §3.1, §9.1, §9.2, §9.8 | MAG-556, MAG-559 | MAG-564 | high | |
-| **MAG-561** Level 2 Widgets: field-config-drawer, validation-rule-builder, widget-gallery | §4, §9.7 | MAG-556, MAG-559 | MAG-564 | medium | |
-| **MAG-562** Level 3 Widgets: schema-fields-editor, form-layout-editor, display-mode-editor | §5.2–5.4, §9.7 | MAG-556 | MAG-563 | medium | |
+| **MAG-556** FieldDefinition Concept + Handler | §1.1, §9.4, §9.5 | — | MAG-558–564 | urgent | `1ffdff2f` |
+| **MAG-557** SchemaTemplate + SchemaUsage Concepts + Handlers | §1.2, §1.3, §9.4, §9.5 | — | MAG-560, MAG-563 | high | `21b63c14` |
+| **MAG-558** Field Lifecycle Syncs | §2, §9.6 | ~~MAG-556~~ | MAG-561–564 | high | `0188ba96` |
+| **MAG-559** Level 1 Widgets: type-picker, field-header-popover, inline-cell-editor | §3.2–3.4, §9.7 | — | MAG-560, MAG-561 | high | `f357218a` |
+| **MAG-560** Level 1 View: schema-table + InteractionSpec + Seeds | §3.1, §9.1, §9.2, §9.8 | ~~MAG-556~~, ~~MAG-559~~ | MAG-564 | high | `873fd2e9` |
+| **MAG-561** Level 2 Widgets: field-config-drawer, validation-rule-builder, widget-gallery | §4, §9.7 | ~~MAG-556~~, ~~MAG-559~~ | MAG-564 | medium | `75339b49` |
+| **MAG-562** Level 3 Widgets: schema-fields-editor, form-layout-editor, display-mode-editor | §5.2–5.4, §9.7 | ~~MAG-556~~ | MAG-563 | medium | `f25a0ada` |
 | **MAG-563** Level 3 Views + Layouts + Destinations + Templates + Seeds | §5.1, §5.5, §6, §7, §9.1–9.3, §9.8 | MAG-557, MAG-562 | MAG-564 | medium | |
 | **MAG-564** Integration Tests + Derived Concept + Suite Update | §9.9–9.11 | MAG-556–563 | — | medium | |
 
