@@ -1,0 +1,304 @@
+@version(1)
+widget display-mode-editor {
+
+  purpose {
+    Per-display-mode configuration of field formatters and visibility. The Display
+    tab of the Level 3 full schema editor. The mode selector across the top lets the
+    user switch between available display modes (card, table-row, detail, teaser, and
+    any custom modes). For each mode, the field formatter list shows every field in the
+    schema with a formatter picker and a visibility toggle. The preview panel shows a
+    live render of how entities will appear in that mode. Connects to DisplayMode/list
+    for available modes, FieldPlacement/configure for formatter assignment, and
+    FieldPlacement/set_visibility for show/hide per field per mode.
+  }
+
+  anatomy {
+    root:              container   { Top-level editor wrapper }
+    modeSelector:      container   { Tab-strip or segmented control listing available display modes }
+    modeTab:           action      { Individual tab for one display mode }
+    addModeButton:     action      { Opens a dialog to create a custom display mode }
+    fieldFormatterList: container  { Scrollable list of all fields with their mode-specific configuration }
+    fieldRow:          container   { One field in the list: label, formatter picker, visibility toggle }
+    fieldRowLabel:     text        { The field's display label }
+    fieldTypeBadge:    presentation { Badge showing the field type }
+    formatterPicker:   action      { Button/select that opens the formatter selection for this field }
+    formatterLabel:    text        { Name of the currently selected formatter }
+    visibilityToggle:  interactive { Toggle to show or hide this field in the current mode }
+    previewPanel:      container   { Live preview of entities rendered in the current display mode }
+    previewToggle:     action      { Shows or hides the preview panel }
+  }
+
+  states {
+    idle [initial] {
+      on SELECT_MODE -> selecting-mode;
+      on OPEN_FORMATTER_PICKER -> editing-formatter;
+      on TOGGLE_PREVIEW -> previewing;
+    }
+
+    selecting-mode {
+      on MODE_SELECTED -> idle;
+      on CANCEL_SELECT -> idle;
+      entry [loadModeFieldPlacements];
+    }
+
+    editing-formatter {
+      on FORMATTER_SELECTED -> idle;
+      on CANCEL_FORMATTER -> idle;
+      on SELECT_MODE -> selecting-mode;
+      entry [openFormatterList];
+      exit [closeFormatterList];
+    }
+
+    previewing {
+      on TOGGLE_PREVIEW -> idle;
+      on SELECT_MODE -> selecting-mode;
+      on OPEN_FORMATTER_PICKER -> editing-formatter;
+      entry [renderModePreview];
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      Tab -> FOCUS_NEXT;
+      ArrowLeft -> SELECT_PREV_MODE;
+      ArrowRight -> SELECT_NEXT_MODE;
+      Space -> TOGGLE_VISIBILITY;
+      Enter -> OPEN_FORMATTER_PICKER;
+      Escape -> CANCEL_FORMATTER;
+    }
+    focus {
+      trap: false;
+      initial: modeSelector;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: concat("Display mode editor for schema: ", ?schema);
+        data-state: state;
+      };
+      modeSelector -> {
+        role: "tablist";
+        aria-label: "Display modes";
+        aria-orientation: "horizontal";
+      };
+      modeTab -> {
+        role: "tab";
+        aria-selected: if self.mode == ?currentMode then "true" else "false";
+        aria-controls: "field-formatter-list";
+        aria-label: concat(self.label, " display mode");
+      };
+      addModeButton -> {
+        role: "button";
+        aria-label: "Add custom display mode";
+        aria-haspopup: "dialog";
+      };
+      fieldFormatterList -> {
+        role: "tabpanel";
+        aria-label: concat("Fields for ", ?currentMode, " mode");
+        aria-live: "polite";
+      };
+      fieldRow -> {
+        role: "row";
+        aria-label: concat(self.label, " field configuration");
+      };
+      formatterPicker -> {
+        role: "button";
+        aria-label: concat("Formatter for ", self.label, ": ", self.currentFormatter, ". Click to change.");
+        aria-haspopup: "listbox";
+        aria-expanded: if state == "editing-formatter" and self.isActive then "true" else "false";
+      };
+      visibilityToggle -> {
+        role: "switch";
+        aria-label: concat("Show ", self.label, " in ", ?currentMode, " mode");
+        aria-checked: if self.visible then "true" else "false";
+      };
+      previewPanel -> {
+        role: "region";
+        aria-label: concat("Preview of ", ?currentMode, " mode");
+        aria-live: "polite";
+        aria-hidden: if state != "previewing" then "true" else "false";
+      };
+      previewToggle -> {
+        role: "button";
+        aria-label: if state == "previewing" then "Hide preview" else "Show preview";
+        aria-pressed: if state == "previewing" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    schema: String
+    currentMode: String = "detail"
+    modes: list { mode: String, label: String } = []
+    fields: list { fieldId: String, label: String, fieldType: String } = []
+    placements: list { fieldId: String, mode: String, formatter: String, visible: Bool } = []
+    readOnly: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-schema: ?schema;
+      data-current-mode: ?currentMode;
+      data-readonly: if ?readOnly then "true" else "false";
+    }
+
+    modeSelector -> {
+      data-part: "mode-selector";
+    }
+
+    modeTab -> {
+      data-part: "mode-tab";
+      data-mode: self.mode;
+      data-selected: if self.mode == ?currentMode then "true" else "false";
+      onClick: send(SELECT_MODE, { mode: self.mode });
+      onKeyDown: if key == "ArrowLeft" then send(SELECT_PREV_MODE) else if key == "ArrowRight" then send(SELECT_NEXT_MODE) else noop;
+      tabIndex: if self.mode == ?currentMode then "0" else "-1";
+    }
+
+    addModeButton -> {
+      data-part: "add-mode-button";
+      onClick: send(ADD_MODE);
+      disabled: if ?readOnly then true else false;
+    }
+
+    fieldFormatterList -> {
+      data-part: "field-formatter-list";
+    }
+
+    fieldRow -> {
+      data-part: "field-row";
+      data-field-id: self.fieldId;
+      data-mode: ?currentMode;
+      data-visible: if self.visible then "true" else "false";
+    }
+
+    fieldRowLabel -> {
+      data-part: "field-row-label";
+    }
+
+    fieldTypeBadge -> {
+      data-part: "field-type-badge";
+      data-type: self.fieldType;
+    }
+
+    formatterPicker -> {
+      data-part: "formatter-picker";
+      data-field-id: self.fieldId;
+      data-current-formatter: self.currentFormatter;
+      onClick: send(OPEN_FORMATTER_PICKER, { fieldId: self.fieldId });
+      disabled: if ?readOnly or not self.visible then true else false;
+    }
+
+    formatterLabel -> {
+      data-part: "formatter-label";
+    }
+
+    visibilityToggle -> {
+      data-part: "visibility-toggle";
+      data-field-id: self.fieldId;
+      data-checked: if self.visible then "true" else "false";
+      onClick: send(TOGGLE_VISIBILITY, { fieldId: self.fieldId, mode: ?currentMode });
+      onKeyDown: if key == "Space" then send(TOGGLE_VISIBILITY, { fieldId: self.fieldId, mode: ?currentMode }) else noop;
+      disabled: if ?readOnly then true else false;
+    }
+
+    previewPanel -> {
+      data-part: "preview-panel";
+      data-visible: if state == "previewing" then "true" else "false";
+      data-mode: ?currentMode;
+    }
+
+    previewToggle -> {
+      data-part: "preview-toggle";
+      onClick: send(TOGGLE_PREVIEW);
+      data-active: if state == "previewing" then "true" else "false";
+    }
+  }
+
+  invariant {
+    example "switch display mode": {
+      after modeTab.click({ mode: "card" }) -> ok
+      then root -> { data-current-mode: "card" }
+      and root -> { data-state: "idle" }
+    }
+
+    example "toggle field visibility": {
+      after visibilityToggle.click -> ok
+      then fieldRow -> { data-visible: "false" }
+      and formatterPicker -> { disabled: true }
+    }
+
+    example "open formatter picker": {
+      after formatterPicker.click -> ok
+      then root -> { data-state: "editing-formatter" }
+      and formatterPicker -> { aria-expanded: "true" }
+      then send(FORMATTER_SELECTED, { formatter: "date-relative" }) -> ok
+      then root -> { data-state: "idle" }
+      and formatterPicker -> { aria-expanded: "false" }
+    }
+
+    example "toggle preview on and off": {
+      after previewToggle.click -> ok
+      then root -> { data-state: "previewing" }
+      and previewPanel -> { data-visible: "true" }
+      then previewToggle.click -> ok
+      then root -> { data-state: "idle" }
+      and previewPanel -> { data-visible: "false" }
+    }
+
+    example "change mode while previewing stays coherent": {
+      after previewToggle.click -> ok
+      then root -> { data-state: "previewing" }
+      then modeTab.click({ mode: "teaser" }) -> ok
+      then root -> { data-current-mode: "teaser" }
+    }
+
+    always "data-state on root reflects FSM": {
+      root -> { data-state: state }
+    }
+
+    always "modeTab selected attribute matches currentMode": {
+      forall tab in modeTab:
+        tab -> { data-selected: if tab.mode == ?currentMode then "true" else "false" }
+    }
+
+    always "preview panel visible only while previewing": {
+      previewPanel -> { data-visible: if state == "previewing" then "true" else "false" }
+    }
+
+    never "formatterPicker enabled for invisible field": {
+      exists row in fieldRow:
+        row.visible == false and row.formatterPicker.disabled == false
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    action modeTab.click {
+      requires: state == "idle" or state == "previewing"
+      ensures ok: ?currentMode == self.mode
+    }
+
+    action visibilityToggle.click {
+      requires: state == "idle" or state == "previewing" or state == "editing-formatter"
+      ensures ok: FieldPlacement/set_visibility called with { fieldId: self.fieldId, mode: ?currentMode, visible: not self.visible }
+    }
+
+    action formatterPicker.click {
+      requires: state == "idle" or state == "previewing"
+      ensures ok: state == "editing-formatter"
+    }
+
+    "FORMATTER_SELECTED calls FieldPlacement/configure with the chosen formatter, fieldId, and currentMode";
+    "TOGGLE_VISIBILITY calls FieldPlacement/set_visibility with the new visibility state";
+    "SELECT_MODE loads placements for the selected mode via DisplayMode/list";
+    "ADD_MODE is disabled when readOnly is true";
+    "Keyboard ArrowLeft/ArrowRight on modeSelector navigates between mode tabs with roving tabindex";
+    "All modes from DisplayMode/list are represented as modeTab parts";
+  }
+
+}

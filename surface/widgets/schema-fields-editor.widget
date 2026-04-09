@@ -1,0 +1,383 @@
+@version(1)
+widget schema-fields-editor {
+
+  purpose {
+    Reorderable list of all fields in a schema with drag handles, type badges,
+    required and unique indicators, and inline edit and delete actions. The
+    primary Level 3 editing surface for the Fields tab of the full schema editor
+    at /admin/schemas/:id. Supports full CRUD: add a new field (via type-picker),
+    reuse a shared field, import or export field definitions as JSON, and delete
+    a field with a usage-check confirmation step. Connects to FieldDefinition/list,
+    FieldDefinition/create, FieldDefinition/reorder, FieldDefinition/remove, and
+    SchemaUsage/scan.
+  }
+
+  anatomy {
+    root:              container   { Top-level editor wrapper, contains all sub-panels }
+    fieldList:         container   { Ordered list of all field rows, role=list }
+    fieldRow:          container   { Single field row: drag handle, label, type badge, indicators, actions }
+    dragHandle:        action      { Grab point for keyboard and pointer drag-to-reorder }
+    fieldLabel:        text        { Human-readable field label }
+    fieldTypeBadge:    presentation { Colored badge showing the field type (e.g., "Text", "Date") }
+    requiredIndicator: presentation { Asterisk or "Required" chip shown when field.required is true }
+    uniqueIndicator:   presentation { Lock icon or "Unique" chip shown when field.unique is true }
+    editButton:        action      { Opens the field-config-drawer for the row's field }
+    removeButton:      action      { Initiates deletion of the row's field }
+    addFieldButton:    action      { Opens the type-picker to create a new field }
+    reuseFieldButton:  action      { Opens a shared-field picker for adding an existing reusable field }
+    importJsonButton:  action      { Opens the import panel to paste or upload a JSON field definition }
+    exportJsonButton:  action      { Downloads the full field list as a JSON file }
+    emptyState:        container   { Shown when the schema has no fields yet }
+    confirmRemovePanel: container  { Inline confirmation panel for delete, shows usage warnings }
+    usageList:         container   { List of places the to-be-deleted field is used }
+    confirmRemoveButton: action    { Confirms the destructive delete after user reads warnings }
+    cancelRemoveButton: action     { Cancels the deletion and returns to idle }
+    importPanel:       container   { Input area for pasting or uploading JSON field definitions }
+    importInput:       interactive { Textarea for pasting JSON field definitions }
+    importConfirmButton: action    { Applies the pasted JSON and creates the fields }
+    importCancelButton: action     { Dismisses the import panel without changes }
+  }
+
+  states {
+    idle [initial] {
+      on START_DRAG -> dragging;
+      on ADD_FIELD -> adding-field;
+      on REMOVE_FIELD -> confirming-remove;
+      on IMPORT -> importing;
+      on EXPORT -> exporting;
+    }
+
+    dragging {
+      on DROP -> idle;
+      on CANCEL_DRAG -> idle;
+      entry [setGrabbedField; announceGrab];
+      exit [clearGrabbedField; announceReorder];
+    }
+
+    adding-field {
+      on FIELD_TYPE_SELECTED -> idle;
+      on CANCEL_ADD -> idle;
+      entry [openTypePicker];
+      exit [closeTypePicker];
+    }
+
+    confirming-remove {
+      on CONFIRM_REMOVE -> idle;
+      on CANCEL_REMOVE -> idle;
+      entry [loadFieldUsage; showConfirmPanel];
+      exit [hideConfirmPanel];
+    }
+
+    importing {
+      on IMPORT_CONFIRMED -> idle;
+      on CANCEL_IMPORT -> idle;
+      entry [showImportPanel];
+      exit [hideImportPanel];
+    }
+
+    exporting {
+      on EXPORT_DONE -> idle;
+      entry [triggerJsonDownload];
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      Space -> START_DRAG;
+      ArrowUp -> MOVE_FIELD_UP;
+      ArrowDown -> MOVE_FIELD_DOWN;
+      Escape -> CANCEL_DRAG;
+      Delete -> REMOVE_FIELD;
+    }
+    focus {
+      trap: false;
+      initial: fieldList;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: concat("Fields for schema: ", ?schema);
+        data-state: state;
+      };
+      fieldList -> {
+        role: "list";
+        aria-label: "Schema fields";
+        aria-live: "polite";
+      };
+      fieldRow -> {
+        role: "listitem";
+        aria-label: concat(self.label, ", ", self.fieldType, if self.required then ", required" else "");
+      };
+      dragHandle -> {
+        role: "button";
+        aria-label: concat("Drag to reorder field ", self.label);
+        aria-roledescription: "drag handle";
+        aria-pressed: if state == "dragging" and self.isGrabbed then "true" else "false";
+      };
+      removeButton -> {
+        role: "button";
+        aria-label: concat("Delete field ", self.label);
+      };
+      editButton -> {
+        role: "button";
+        aria-label: concat("Configure field ", self.label);
+      };
+      addFieldButton -> {
+        role: "button";
+        aria-label: "Add new field";
+        aria-haspopup: "dialog";
+      };
+      reuseFieldButton -> {
+        role: "button";
+        aria-label: "Reuse an existing shared field";
+        aria-haspopup: "dialog";
+      };
+      importJsonButton -> {
+        role: "button";
+        aria-label: "Import field definitions from JSON";
+      };
+      exportJsonButton -> {
+        role: "button";
+        aria-label: "Export all field definitions as JSON";
+      };
+      confirmRemovePanel -> {
+        role: "alertdialog";
+        aria-label: "Confirm field deletion";
+        aria-modal: "false";
+        aria-hidden: if state != "confirming-remove" then "true" else "false";
+      };
+      usageList -> {
+        role: "list";
+        aria-label: "Places where this field is used";
+      };
+      emptyState -> {
+        aria-live: "polite";
+        aria-label: "No fields defined yet";
+      };
+      importPanel -> {
+        role: "region";
+        aria-label: "Import field definitions";
+        aria-hidden: if state != "importing" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    schema: String
+    fields: list { fieldId: String, label: String, fieldType: String, required: Bool, unique: Bool, sortOrder: Int } = []
+    readOnly: Bool = false
+    showImportExport: Bool = true
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-schema: ?schema;
+      data-readonly: if ?readOnly then "true" else "false";
+    }
+
+    fieldList -> {
+      data-part: "field-list";
+      data-empty: if ?fields.length == 0 then "true" else "false";
+    }
+
+    fieldRow -> {
+      data-part: "field-row";
+      data-field-id: self.fieldId;
+      data-field-type: self.fieldType;
+      data-required: if self.required then "true" else "false";
+      data-unique: if self.unique then "true" else "false";
+      data-grabbing: if state == "dragging" and self.isGrabbed then "true" else "false";
+    }
+
+    dragHandle -> {
+      data-part: "drag-handle";
+      onPointerDown: send(START_DRAG, { fieldId: self.fieldId });
+      onKeyDown: if key == "Space" then send(START_DRAG, { fieldId: self.fieldId }) else if key == "ArrowUp" then send(MOVE_FIELD_UP, { fieldId: self.fieldId }) else if key == "ArrowDown" then send(MOVE_FIELD_DOWN, { fieldId: self.fieldId }) else if key == "Escape" then send(CANCEL_DRAG) else noop;
+      tabIndex: "0";
+    }
+
+    fieldLabel -> {
+      data-part: "field-label";
+    }
+
+    fieldTypeBadge -> {
+      data-part: "field-type-badge";
+      data-type: self.fieldType;
+    }
+
+    requiredIndicator -> {
+      data-part: "required-indicator";
+      data-visible: if self.required then "true" else "false";
+      aria-hidden: if self.required then "false" else "true";
+    }
+
+    uniqueIndicator -> {
+      data-part: "unique-indicator";
+      data-visible: if self.unique then "true" else "false";
+      aria-hidden: if self.unique then "false" else "true";
+    }
+
+    editButton -> {
+      data-part: "edit-button";
+      onClick: send(OPEN_DRAWER, { fieldId: self.fieldId });
+      disabled: if ?readOnly then true else false;
+    }
+
+    removeButton -> {
+      data-part: "remove-button";
+      onClick: send(REMOVE_FIELD, { fieldId: self.fieldId });
+      disabled: if ?readOnly then true else false;
+    }
+
+    addFieldButton -> {
+      data-part: "add-field-button";
+      onClick: send(ADD_FIELD);
+      disabled: if ?readOnly then true else false;
+    }
+
+    reuseFieldButton -> {
+      data-part: "reuse-field-button";
+      onClick: send(REUSE_FIELD);
+      disabled: if ?readOnly then true else false;
+    }
+
+    importJsonButton -> {
+      data-part: "import-json-button";
+      onClick: send(IMPORT);
+      data-visible: if ?showImportExport then "true" else "false";
+      disabled: if ?readOnly then true else false;
+    }
+
+    exportJsonButton -> {
+      data-part: "export-json-button";
+      onClick: send(EXPORT);
+      data-visible: if ?showImportExport then "true" else "false";
+    }
+
+    emptyState -> {
+      data-part: "empty-state";
+      data-visible: if ?fields.length == 0 then "true" else "false";
+    }
+
+    confirmRemovePanel -> {
+      data-part: "confirm-remove-panel";
+      data-visible: if state == "confirming-remove" then "true" else "false";
+    }
+
+    usageList -> {
+      data-part: "usage-list";
+    }
+
+    confirmRemoveButton -> {
+      data-part: "confirm-remove-button";
+      onClick: send(CONFIRM_REMOVE);
+    }
+
+    cancelRemoveButton -> {
+      data-part: "cancel-remove-button";
+      onClick: send(CANCEL_REMOVE);
+    }
+
+    importPanel -> {
+      data-part: "import-panel";
+      data-visible: if state == "importing" then "true" else "false";
+    }
+
+    importInput -> {
+      data-part: "import-input";
+      aria-label: "Paste JSON field definitions";
+      onKeyDown: if key == "Escape" then send(CANCEL_IMPORT) else noop;
+    }
+
+    importConfirmButton -> {
+      data-part: "import-confirm-button";
+      onClick: send(IMPORT_CONFIRMED);
+    }
+
+    importCancelButton -> {
+      data-part: "import-cancel-button";
+      onClick: send(CANCEL_IMPORT);
+    }
+  }
+
+  compose {
+    _typePicker:       widget("type-picker", { currentType: "", showAdvanced: true })
+    _fieldConfigDrawer: widget("field-config-drawer", { schema: ?schema })
+  }
+
+  invariant {
+    example "add field flow": {
+      after addFieldButton.click -> ok
+      then root -> { data-state: "adding-field" }
+      then send(FIELD_TYPE_SELECTED, { fieldType: "text" }) -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    example "drag-reorder via keyboard": {
+      after dragHandle.keyDown(Space) -> ok
+      then root -> { data-state: "dragging" }
+      then dragHandle.keyDown(ArrowDown) -> ok
+      then dragHandle.keyDown(Space) -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    example "delete with usage check": {
+      after removeButton.click -> ok
+      then root -> { data-state: "confirming-remove" }
+      and confirmRemovePanel -> { data-visible: "true" }
+      then cancelRemoveButton.click -> ok
+      then root -> { data-state: "idle" }
+      and confirmRemovePanel -> { data-visible: "false" }
+    }
+
+    example "import flow": {
+      after importJsonButton.click -> ok
+      then root -> { data-state: "importing" }
+      and importPanel -> { data-visible: "true" }
+      then importCancelButton.click -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    always "data-state on root reflects FSM": {
+      root -> { data-state: state }
+    }
+
+    always "empty state visibility": {
+      emptyState -> { data-visible: if ?fields.length == 0 then "true" else "false" }
+    }
+
+    never "drag active while readonly": {
+      state == "dragging" and ?readOnly == true
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    action removeButton.click {
+      requires: state == "idle"
+      ensures ok: state == "confirming-remove"
+    }
+
+    action confirmRemoveButton.click {
+      requires: state == "confirming-remove"
+      ensures ok: state == "idle"
+    }
+
+    "confirmRemovePanel is visible only in confirming-remove state";
+    "importPanel is visible only in importing state";
+    "removeButton and editButton are disabled when readOnly prop is true";
+    "REMOVE_FIELD calls SchemaUsage/scan before transitioning to confirming-remove";
+    "CONFIRM_REMOVE calls FieldDefinition/remove; CANCEL_REMOVE leaves the field unchanged";
+    "DROP calls FieldDefinition/reorder with the new sortOrder for the dragged field";
+    "EXPORT triggers FieldDefinition/list then downloads a JSON file";
+    "IMPORT_CONFIRMED parses importInput JSON and calls FieldDefinition/create for each valid entry";
+    "Escape from dragging cancels the drag without reordering";
+    "requiredIndicator is visible only when the field row's required property is true";
+    "uniqueIndicator is visible only when the field row's unique property is true";
+  }
+
+}
