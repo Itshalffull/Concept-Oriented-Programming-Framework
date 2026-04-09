@@ -4880,6 +4880,9 @@ workflows:
       - action: compose
         title: "Compose Programs"
         prose: "Monadic bind: chain two programs — run first, bind its output to bindAs, then continue with second. Inherits the union of both readFields."
+      - action: fixture
+        title: "Add .view Fixtures"
+        prose: "Add fixture blocks to the .view file declaring ViewShell + child spec data for testing invariants. Each fixture names a specType (dataSource, filter, sort, group, projection, presentation, interaction, pagination) with key-value fields. The test generator seeds mock storage from fixtures, then runs compileAndAnalyze to assert invariants."
     checklists:
       create:
         - "Does the view have a DataSourceSpec defining where data comes from?"
