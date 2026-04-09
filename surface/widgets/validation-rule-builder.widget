@@ -1,0 +1,246 @@
+@version(1)
+widget validation-rule-builder {
+
+  purpose {
+    Visual composer for per-field validation rules. Presents a structured list
+    of rule rows where each row configures one constraint: the rule type
+    (required, min-length, max-length, min-value, max-value, regex,
+    allowed-values, unique, custom-expression), an optional operator, the
+    constraint value, and a custom error message. Rows can be added, removed,
+    and reordered. The widget is embedded inside the field-config-drawer
+    Validations tab and writes rule changes back through FieldDefinition/update.
+  }
+
+  anatomy {
+    root:             container   { Top-level validation rule builder wrapper }
+    ruleList:         container   { Ordered list of configured rule rows }
+    ruleRow:          container   { A single validation rule: type + operator + value + message }
+    ruleTypeSelect:   interactive { Dropdown selecting the rule type for this row }
+    ruleOperator:     interactive { Optional operator selector (e.g. >=, <=, matches) }
+    ruleValueInput:   interactive { Input for the constraint value (number, string, regex, list) }
+    ruleErrorMessage: interactive { Optional custom error message shown when rule fails }
+    addRuleButton:    action      { Appends a new blank rule row }
+    removeRuleButton: action      { Removes the corresponding rule row }
+  }
+
+  states {
+    empty [initial] {
+      on ADD_RULE -> adding;
+    }
+
+    has-rules {
+      on ADD_RULE -> adding;
+      on EDIT_RULE -> editing;
+      on REMOVE_RULE -> has-rules;
+      on REMOVE_LAST_RULE -> empty;
+    }
+
+    adding {
+      on COMMIT_RULE -> has-rules;
+      on CANCEL_ADD -> empty;
+      on CANCEL_ADD_WITH_EXISTING -> has-rules;
+      entry [focusRuleTypeSelect];
+    }
+
+    editing {
+      on COMMIT_RULE -> has-rules;
+      on CANCEL_EDIT -> has-rules;
+      entry [focusActiveRuleRow];
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      Enter -> COMMIT_RULE;
+      Escape -> CANCEL_EDIT;
+      Tab -> FOCUS_NEXT;
+    }
+    focus {
+      trap: false;
+      initial: addRuleButton;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Validation rules";
+        aria-live: "polite";
+      };
+      ruleList -> {
+        role: "list";
+        aria-label: concat("Validation rules: ", ruleCount, " configured");
+      };
+      ruleRow -> {
+        role: "listitem";
+        aria-label: concat("Rule: ", self.ruleType);
+      };
+      ruleTypeSelect -> {
+        role: "combobox";
+        aria-label: "Rule type";
+        aria-required: "true";
+      };
+      ruleOperator -> {
+        role: "combobox";
+        aria-label: "Operator";
+      };
+      ruleValueInput -> {
+        role: "textbox";
+        aria-label: concat("Value for ", self.ruleType, " rule");
+      };
+      ruleErrorMessage -> {
+        role: "textbox";
+        aria-label: "Custom error message";
+        aria-multiline: "false";
+      };
+      addRuleButton -> {
+        role: "button";
+        aria-label: "Add validation rule";
+      };
+      removeRuleButton -> {
+        role: "button";
+        aria-label: concat("Remove ", self.ruleType, " rule");
+      };
+    }
+  }
+
+  props {
+    schema: String
+    fieldId: String
+    fieldType: String = "text"
+    rules: list { ruleType: String, operator: option String, value: option String, errorMessage: option String } = []
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-field-type: ?fieldType;
+      data-rule-count: ruleCount;
+    }
+
+    ruleList -> {
+      data-part: "rule-list";
+    }
+
+    ruleRow -> {
+      data-part: "rule-row";
+      data-rule-type: self.ruleType;
+      data-editing: if state == "editing" and self.active then "true" else "false";
+    }
+
+    ruleTypeSelect -> {
+      data-part: "rule-type-select";
+      data-value: self.ruleType;
+      onChange: send(EDIT_RULE, { ruleIndex: self.index, field: "ruleType", value: event.value });
+    }
+
+    ruleOperator -> {
+      data-part: "rule-operator";
+      data-value: self.operator;
+      data-visible: if self.ruleType == "regex" or self.ruleType == "custom-expression" then "false" else "true";
+      onChange: send(EDIT_RULE, { ruleIndex: self.index, field: "operator", value: event.value });
+    }
+
+    ruleValueInput -> {
+      data-part: "rule-value-input";
+      value: self.value;
+      data-input-type: if self.ruleType == "min-length" or self.ruleType == "max-length" or self.ruleType == "min-value" or self.ruleType == "max-value" then "number" else "text";
+      onInput: send(EDIT_RULE, { ruleIndex: self.index, field: "value", value: event.value });
+      onBlur: send(COMMIT_RULE);
+    }
+
+    ruleErrorMessage -> {
+      data-part: "rule-error-message";
+      value: self.errorMessage;
+      placeholder: "Custom error message (optional)";
+      onInput: send(EDIT_RULE, { ruleIndex: self.index, field: "errorMessage", value: event.value });
+    }
+
+    addRuleButton -> {
+      data-part: "add-rule-button";
+      onClick: send(ADD_RULE);
+    }
+
+    removeRuleButton -> {
+      data-part: "remove-rule-button";
+      onClick: send(REMOVE_RULE, { ruleIndex: self.index });
+    }
+  }
+
+  invariant {
+    example "starts empty": {
+      then root -> { data-state: "empty" }
+      and root -> { data-rule-count: "0" }
+    }
+
+    example "add first rule transitions to adding then has-rules": {
+      after addRuleButton.click -> ok
+      then root -> { data-state: "adding" }
+      then send(COMMIT_RULE) -> ok
+      then root -> { data-state: "has-rules" }
+      and root -> { data-rule-count: "1" }
+    }
+
+    example "cancel add with no existing rules returns to empty": {
+      after addRuleButton.click -> ok
+      then root -> { data-state: "adding" }
+      then send(CANCEL_ADD) -> ok
+      then root -> { data-state: "empty" }
+    }
+
+    example "cancel add with existing rules returns to has-rules": {
+      after addRuleButton.click -> ok
+      then send(COMMIT_RULE) -> ok
+      then addRuleButton.click -> ok
+      then root -> { data-state: "adding" }
+      then send(CANCEL_ADD_WITH_EXISTING) -> ok
+      then root -> { data-state: "has-rules" }
+    }
+
+    example "remove last rule transitions to empty": {
+      after addRuleButton.click -> ok
+      then send(COMMIT_RULE) -> ok
+      then send(REMOVE_LAST_RULE) -> ok
+      then root -> { data-state: "empty" }
+      and root -> { data-rule-count: "0" }
+    }
+
+    example "Escape cancels editing": {
+      after addRuleButton.click -> ok
+      then send(COMMIT_RULE) -> ok
+      then send(EDIT_RULE) -> ok
+      then root -> { data-state: "editing" }
+      then key(Escape) -> ok
+      then root -> { data-state: "has-rules" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        root -> { data-state: s.name }
+    }
+
+    always "addRuleButton present in all states": {
+      addRuleButton -> { data-part: "add-rule-button" }
+    }
+
+    always "ruleValueInput input-type matches rule type": {
+      if self.ruleType == "min-length" or self.ruleType == "max-length"
+      then ruleValueInput -> { data-input-type: "number" }
+    }
+
+    never "ruleOperator visible for regex rules": {
+      self.ruleType == "regex" and ruleOperator -> { data-visible: "true" }
+    }
+
+    "COMMIT_RULE must call FieldDefinition/update with the updated rules JSON array";
+    "ruleTypeSelect options must be filtered to types applicable for the fieldType prop";
+    "allowed rule types for text fieldType: required, min-length, max-length, regex, allowed-values, unique, custom-expression";
+    "allowed rule types for number fieldType: required, min-value, max-value, unique, custom-expression";
+    "ruleRow focus returns to addRuleButton after REMOVE_RULE";
+  }
+
+}
