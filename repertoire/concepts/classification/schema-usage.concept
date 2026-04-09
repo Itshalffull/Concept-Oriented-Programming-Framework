@@ -1,0 +1,114 @@
+@version(1)
+@category("domain")
+concept SchemaUsage [U] {
+
+  purpose {
+    Track where each schema field is referenced across the system — views,
+    filters, syncs, component mappings, API endpoints, and formulas. Queried
+    before destructive field operations to warn users and prevent silent
+    breakage of downstream consumers.
+  }
+
+  state {
+    usages: set U
+    identity {
+      field:      U -> String
+      usageRef:   U -> String
+    }
+    detail {
+      usageType:  U -> String
+      usageLabel: U -> String
+    }
+  }
+
+  actions {
+
+    action register(field: String, usageType: String, usageRef: String, usageLabel: String) {
+      -> ok(id: U) {
+        A new usage record linking the field to the given consumer is stored
+        and will be returned on future scan calls.
+      }
+      -> duplicate(field: String, usageRef: String) {
+        A usage record for this exact field and usageRef combination already
+        exists; a second registration is rejected.
+      }
+      fixture register_ok { field: "article:title", usageType: "view", usageRef: "content-list-view", usageLabel: "Content list — column 1" }
+      fixture register_sort { field: "article:title", usageType: "sort", usageRef: "content-sort-spec", usageLabel: "Sort by title" }
+      fixture register_duplicate { field: "article:title", usageType: "view", usageRef: "content-list-view", usageLabel: "Duplicate registration" } -> duplicate
+    }
+
+    action unregister(field: String, usageRef: String) {
+      -> ok() {
+        The usage record linking this field to the given consumer is removed;
+        the consumer will no longer appear in scan results for this field.
+      }
+      -> not_found(message: String) {
+        No usage record exists for this field and usageRef combination;
+        nothing is removed.
+      }
+      fixture unregister_ok { field: "article:title", usageRef: "content-list-view" } after register_ok
+      fixture unregister_missing { field: "article:title", usageRef: "nonexistent-ref" } -> not_found
+    }
+
+    action scan(field: String) {
+      -> ok(usages: String) {
+        Return all registered usage records for the given field as a JSON
+        array; an empty array indicates the field has no downstream consumers.
+      }
+      fixture scan_ok { field: "article:title" } after register_ok
+      fixture scan_empty { field: "article:body" }
+    }
+
+    action scanSchema(schema: String) {
+      -> ok(usages: String) {
+        Return all registered usage records for every field belonging to the
+        given schema as a JSON array, grouped by field identifier.
+      }
+      fixture scan_schema_ok { schema: "article" } after register_ok
+      fixture scan_schema_empty { schema: "nonexistent-schema" }
+    }
+
+    action remove(field: String, usageRef: String) {
+      -> ok() {
+        The usage record linking this field to the given consumer is
+        permanently deleted; equivalent to unregister but semantically
+        reserved for hard-delete cleanup paths.
+      }
+      -> not_found(message: String) {
+        No usage record exists for this field and usageRef combination;
+        nothing is deleted.
+      }
+      fixture remove_ok { field: "article:title", usageRef: "content-list-view" } after register_ok
+      fixture remove_missing { field: "article:title", usageRef: "nonexistent-ref" } -> not_found
+    }
+
+  }
+
+  example "register then scan returns usage": {
+    after register(field: "tasks:status", usageType: "filter", usageRef: "task-filter-spec", usageLabel: "Task board filter by status") -> ok(id: u)
+    then scan(field: "tasks:status") -> ok(usages: usages)
+  }
+
+  example "register then unregister clears scan": {
+    after register(field: "tasks:priority", usageType: "sort", usageRef: "task-sort-spec", usageLabel: "Sort tasks by priority") -> ok(id: u)
+    then unregister(field: "tasks:priority", usageRef: "task-sort-spec") -> ok()
+  }
+
+  example "duplicate registration rejected": {
+    after register(field: "events:startDate", usageType: "view", usageRef: "events-view", usageLabel: "Events list — start date column") -> ok(id: u)
+    then register(field: "events:startDate", usageType: "view", usageRef: "events-view", usageLabel: "Duplicate") -> duplicate(field: "events:startDate", usageRef: "events-view")
+  }
+
+  always "field key is non-empty": {
+    forall u in usages: field(u) != ""
+  }
+
+  always "usageRef is non-empty": {
+    forall u in usages: usageRef(u) != ""
+  }
+
+  never "usage without type": {
+    exists u in usages: usageType(u) = none
+  }
+
+}

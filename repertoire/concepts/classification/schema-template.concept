@@ -1,0 +1,114 @@
+@version(1)
+@category("domain")
+concept SchemaTemplate [T] {
+
+  purpose {
+    Pre-built schema definitions that create a complete content model in one
+    action — fields, properties, display modes, and sample content. Reduces
+    time-to-value for first-time schema creators by encoding common content
+    patterns as reusable starting points.
+  }
+
+  state {
+    templates: set T
+    identity {
+      name:        T -> String
+      label:       T -> String
+      description: T -> String
+      category:    T -> String
+      icon:        T -> String
+    }
+    definition {
+      fields:     T -> String
+      properties: T -> String
+      sampleData: T -> option String
+    }
+  }
+
+  actions {
+
+    action register(name: String, label: String, description: String, category: String, icon: String, fields: String, properties: String, sampleData: String) {
+      -> ok(id: T) {
+        A new template with the given name is registered and available for
+        one-click schema creation.
+      }
+      -> duplicate(name: String) {
+        A template with this name already exists; registration is rejected to
+        prevent silent overwrite.
+      }
+      fixture register_ok { name: "article", label: "Article", description: "Blog article with title, body, and author.", category: "content", icon: "📝", fields: "[{\"fieldId\":\"title\",\"fieldType\":\"text\",\"label\":\"Title\",\"required\":true}]", properties: "{}", sampleData: "[]" }
+      fixture register_minimal { name: "tasks", label: "Tasks", description: "Simple task list.", category: "project", icon: "☑", fields: "[{\"fieldId\":\"title\",\"fieldType\":\"text\",\"label\":\"Title\",\"required\":true}]", properties: "{}", sampleData: "" }
+      fixture register_duplicate { name: "article", label: "Article", description: "Duplicate.", category: "content", icon: "📝", fields: "[]", properties: "{}", sampleData: "" } -> duplicate
+    }
+
+    action apply(name: String, targetSchemaName: String) {
+      -> ok(schema: String) {
+        The template's fields and properties were applied to the target schema
+        name, creating a complete content model ready for use.
+      }
+      -> not_found(message: String) {
+        No template with this name is registered; apply is rejected.
+      }
+      fixture apply_ok { name: "article", targetSchemaName: "my-blog" } after register_ok
+      fixture apply_missing { name: "nonexistent-template", targetSchemaName: "my-blog" } -> not_found
+    }
+
+    action list(category: String) {
+      -> ok(items: String) {
+        Return all registered templates as a JSON array, optionally filtered
+        to a single category when category is non-empty.
+      }
+      fixture list_all { category: "" } after register_ok
+      fixture list_by_category { category: "content" } after register_ok
+    }
+
+    action preview(name: String) {
+      -> ok(label: String, description: String, category: String, icon: String, fields: String, sampleData: String) {
+        Return the template's metadata, field list, and sample data without
+        creating any schema — suitable for a preview pane.
+      }
+      -> not_found(message: String) {
+        No template with this name is registered; preview is rejected.
+      }
+      fixture preview_ok { name: "article" } after register_ok
+      fixture preview_missing { name: "nonexistent-template" } -> not_found
+    }
+
+    action remove(name: String) {
+      -> ok() {
+        The template with this name is removed from the registry; it can no
+        longer be listed, previewed, or applied.
+      }
+      -> not_found(message: String) {
+        No template with this name is registered; nothing is removed.
+      }
+      fixture remove_ok { name: "article" } after register_ok
+      fixture remove_missing { name: "nonexistent-template" } -> not_found
+    }
+
+  }
+
+  example "register then preview": {
+    after register(name: "events", label: "Events", description: "Event calendar.", category: "content", icon: "📅", fields: "[{\"fieldId\":\"title\",\"fieldType\":\"text\",\"label\":\"Title\",\"required\":true}]", properties: "{}", sampleData: "[]") -> ok(id: t)
+    then preview(name: "events") -> ok(label: "Events")
+  }
+
+  example "register then list": {
+    after register(name: "contacts", label: "Contacts", description: "CRM contacts.", category: "crm", icon: "👤", fields: "[{\"fieldId\":\"firstName\",\"fieldType\":\"text\",\"label\":\"First Name\",\"required\":true}]", properties: "{}", sampleData: "[]") -> ok(id: t)
+    then list(category: "crm") -> ok(items: items)
+  }
+
+  example "duplicate registration rejected": {
+    after register(name: "tasks", label: "Tasks", description: "Task board.", category: "project", icon: "☑", fields: "[]", properties: "{}", sampleData: "") -> ok(id: t)
+    then register(name: "tasks", label: "Tasks", description: "Duplicate.", category: "project", icon: "☑", fields: "[]", properties: "{}", sampleData: "") -> duplicate(name: "tasks")
+  }
+
+  always "name is stable after registration": {
+    forall t in templates: name(t) != ""
+  }
+
+  never "template without fields definition": {
+    exists t in templates: fields(t) = none
+  }
+
+}
