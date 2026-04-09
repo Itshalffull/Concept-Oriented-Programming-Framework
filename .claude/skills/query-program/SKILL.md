@@ -105,6 +105,7 @@ Monadic bind: chain two programs — run first, bind its output to bindAs, then 
 ## References
 
 - [QueryProgram instruction grammar and pipeline reference](references/query-program-grammar.md)
+- [.view file grammar reference](references/view-grammar.md)
 ## Anti-Patterns
 
 ### Using list + client-side schema filter instead of listBySchema
