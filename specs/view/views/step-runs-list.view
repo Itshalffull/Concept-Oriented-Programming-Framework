@@ -1,0 +1,34 @@
+view "step-runs-list" {
+  shell: "step-runs-list"
+
+  features {
+    filter
+    sort
+    projection
+    pagination
+  }
+
+  purpose {
+    Per-step execution state for a process run. Read-only with
+    pagination for large step histories.
+  }
+
+  invariants {
+    always "purity is read-only": {
+      purity = "read-only"
+    }
+
+    always "no invoke instructions": {
+      invokeCount = 0
+    }
+
+    always "has pagination": {
+      "pagination" in enabledFeatures
+    }
+
+    always "filter fields exist in source": {
+      forall f in filterFields:
+      f in sourceFields
+    }
+  }
+}

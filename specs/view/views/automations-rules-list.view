@@ -1,0 +1,31 @@
+view "automations-rules-list" {
+  shell: "automations-rules-list"
+
+  features {
+    filter
+    sort
+    projection
+    interaction
+  }
+
+  purpose {
+    All automation rules configured in the system as a sortable
+    table. Read-write — supports create action.
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+
+    always "invokes only AutomationRule actions": {
+      forall ia in invokedActions:
+      ia startsWith "AutomationRule/"
+    }
+
+    always "filter fields exist in source": {
+      forall f in filterFields:
+      f in sourceFields
+    }
+  }
+}

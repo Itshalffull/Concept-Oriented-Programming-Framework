@@ -1,0 +1,22 @@
+view "clips-list" {
+  shell: "clips-list"
+
+  features {
+    filter
+    sort
+    projection
+    interaction
+  }
+
+  purpose {
+    Browse temporal segments extracted from audio and video.
+    Card grid with kind badges, start/end times, and status indicators.
+    Read-write.
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+  }
+}

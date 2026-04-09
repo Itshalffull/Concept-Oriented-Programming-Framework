@@ -1,0 +1,18 @@
+view "mappings-list" {
+  shell: "mappings-list"
+
+  features {
+    filter
+    sort
+    projection
+  }
+
+  purpose {
+    Browse widget-to-data bindings. Each mapping pairs a widget with entity fields mapped to its slots and props.
+  }
+
+  invariants {
+    always "purity is read-only": { purity = "read-only" }
+    always "no invoke instructions": { invokeCount = 0 }
+  }
+}

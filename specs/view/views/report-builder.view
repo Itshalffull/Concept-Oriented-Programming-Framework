@@ -1,0 +1,21 @@
+view "report-builder" {
+  shell: "report-builder"
+
+  features {
+    projection
+    interaction
+  }
+
+  purpose {
+    Triple-zone report editor — header with project title, status, and
+    coverage meter; body with block editor and citation markers; sidebar
+    with citation inspector, source list, and evidence table.
+    Read-write (verify citations, publish).
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+  }
+}

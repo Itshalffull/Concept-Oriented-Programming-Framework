@@ -1,0 +1,31 @@
+view "my-work-items" {
+  shell: "my-work-items"
+
+  features {
+    filter
+    sort
+    projection
+    interaction
+  }
+
+  purpose {
+    Tasks assigned to the current user from active process runs.
+    Read-write — supports claim, complete, and reassign actions.
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+
+    always "invokes only WorkItem actions": {
+      forall ia in invokedActions:
+      ia startsWith "WorkItem/"
+    }
+
+    always "filter fields exist in source": {
+      forall f in filterFields:
+      f in sourceFields
+    }
+  }
+}

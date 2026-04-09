@@ -1,0 +1,30 @@
+view "permissions-by-subject" {
+  shell: "permissions-by-subject"
+
+  features {
+    filter
+    sort
+    projection
+  }
+
+  purpose {
+    Display permissions grouped by subject (user or role).
+    Filterable by subject type and permission level.
+    Read-only — permission grants are managed elsewhere.
+  }
+
+  invariants {
+    always "purity is read-only": {
+      purity = "read-only"
+    }
+
+    always "no invoke instructions": {
+      invokeCount = 0
+    }
+
+    always "filter fields exist in source": {
+      forall f in filterFields:
+      f in sourceFields
+    }
+  }
+}

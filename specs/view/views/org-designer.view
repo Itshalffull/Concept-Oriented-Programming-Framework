@@ -1,0 +1,24 @@
+view "org-designer" {
+  shell: "org-designer"
+
+  features {
+    projection
+    interaction
+  }
+
+  purpose {
+    Canvas-based organizational structure designer for circles,
+    roles, and reporting relationships. Read-write — supports
+    creating and repositioning org nodes inline.
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+
+    always "all invoke variants covered": {
+      uncoveredVariants = []
+    }
+  }
+}

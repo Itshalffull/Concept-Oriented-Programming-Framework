@@ -1,0 +1,29 @@
+view "check-failures" {
+  shell: "check-failures"
+
+  features {
+    filter
+    sort
+    projection
+  }
+
+  purpose {
+    All check verifications currently in a failing state — drill
+    into evidence and scores to diagnose quality gate issues.
+  }
+
+  invariants {
+    always "purity is read-only": {
+      purity = "read-only"
+    }
+
+    always "no invoke instructions": {
+      invokeCount = 0
+    }
+
+    always "filter fields exist in source": {
+      forall f in filterFields:
+      f in sourceFields
+    }
+  }
+}

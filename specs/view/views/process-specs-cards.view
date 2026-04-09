@@ -1,0 +1,32 @@
+view "process-specs-cards" {
+  shell: "process-specs-cards"
+
+  features {
+    filter
+    sort
+    projection
+    interaction
+  }
+
+  purpose {
+    Process specs displayed as cards with status badges and step
+    counts. Read-write — supports inline create and row-click
+    navigation.
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+
+    always "invokes only ProcessSpec actions": {
+      forall ia in invokedActions:
+      ia startsWith "ProcessSpec/"
+    }
+
+    always "filter fields exist in source": {
+      forall f in filterFields:
+      f in sourceFields
+    }
+  }
+}

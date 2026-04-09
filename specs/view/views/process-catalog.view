@@ -1,0 +1,29 @@
+view "process-catalog" {
+  shell: "process-catalog"
+
+  features {
+    filter
+    sort
+    projection
+  }
+
+  purpose {
+    Browse automation processes as cards — event-condition-action
+    rules that drive system behavior.
+  }
+
+  invariants {
+    always "purity is read-only": {
+      purity = "read-only"
+    }
+
+    always "no invoke instructions": {
+      invokeCount = 0
+    }
+
+    always "filter fields exist in source": {
+      forall f in filterFields:
+      f in sourceFields
+    }
+  }
+}

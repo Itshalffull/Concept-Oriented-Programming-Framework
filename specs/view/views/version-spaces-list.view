@@ -1,0 +1,26 @@
+view "version-spaces-list" {
+  shell: "version-spaces-list"
+
+  features {
+    filter
+    sort
+    projection
+    interaction
+  }
+
+  purpose {
+    Named content variations — like git branches for content.
+    Read-write — supports create and management actions.
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+
+    always "filter fields exist in source": {
+      forall f in filterFields:
+      f in sourceFields
+    }
+  }
+}

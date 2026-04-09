@@ -1,0 +1,18 @@
+view "automations-list" {
+  shell: "automations-list"
+
+  features {
+    filter
+    sort
+    projection
+    interaction
+  }
+
+  purpose {
+    Browse and manage event-condition-action rules that fire automatically.
+  }
+
+  invariants {
+    always "purity is read-write": { purity = "read-write" }
+  }
+}

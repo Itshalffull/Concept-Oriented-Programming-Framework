@@ -1,0 +1,20 @@
+view "research-plan" {
+  shell: "research-plan"
+
+  features {
+    projection
+    interaction
+  }
+
+  purpose {
+    Plan outline with sub-questions, dependency arrows, plan approval
+    widget, and perspective assignments. Supports approve and reject
+    actions. Read-write.
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+  }
+}

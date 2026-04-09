@@ -1,0 +1,19 @@
+view "concept-graph" {
+  shell: "concept-graph"
+
+  features {
+    projection
+  }
+
+  purpose {
+    Force-directed concept dependency graph showing system topology
+    with concepts, schemas, syncs, suites, and their relationships.
+    Read-only graph visualization.
+  }
+
+  invariants {
+    always "purity is read-only": {
+      purity = "read-only"
+    }
+  }
+}

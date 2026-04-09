@@ -1,0 +1,21 @@
+view "source-detail" {
+  shell: "source-detail"
+
+  features {
+    projection
+    interaction
+  }
+
+  purpose {
+    Triple-zone source page — header with source metadata and credibility
+    badge, body with cleaned content and highlighted snippets, sidebar
+    with snippet list and credibility evaluation history.
+    Read-write (re-capture/evaluate).
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+  }
+}

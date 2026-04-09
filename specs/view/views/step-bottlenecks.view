@@ -1,0 +1,34 @@
+view "step-bottlenecks" {
+  shell: "step-bottlenecks"
+
+  features {
+    filter
+    sort
+    group
+    projection
+  }
+
+  purpose {
+    Step execution grouped by step key — identifies slow or
+    repeatedly-failing steps across all runs.
+  }
+
+  invariants {
+    always "purity is read-only": {
+      purity = "read-only"
+    }
+
+    always "no invoke instructions": {
+      invokeCount = 0
+    }
+
+    always "uses grouping": {
+      "group" in enabledFeatures
+    }
+
+    always "filter fields exist in source": {
+      forall f in filterFields:
+      f in sourceFields
+    }
+  }
+}

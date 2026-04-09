@@ -1,0 +1,22 @@
+view "media-library" {
+  shell: "media-library"
+
+  features {
+    filter
+    sort
+    projection
+    interaction
+  }
+
+  purpose {
+    Browse uploaded media assets — images, audio, video, PDFs.
+    Card grid with type badges, file-size formatting, and upload action.
+    Read-write (upload new media).
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+  }
+}

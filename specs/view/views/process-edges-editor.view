@@ -1,0 +1,26 @@
+view "process-edges-editor" {
+  shell: "process-edges-editor"
+
+  features {
+    sort
+    projection
+    interaction
+  }
+
+  purpose {
+    Routing edges between steps in a ProcessSpec. Each edge defines
+    a directed transition with an optional condition expression.
+    Read-write with create and delete actions.
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+
+    always "invokes only ProcessSpec actions": {
+      forall ia in invokedActions:
+      ia startsWith "ProcessSpec/"
+    }
+  }
+}

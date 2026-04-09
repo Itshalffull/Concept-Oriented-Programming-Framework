@@ -1,0 +1,23 @@
+view "snippet-backlinks" {
+  shell: "snippet-backlinks"
+
+  features {
+    sort
+    projection
+  }
+
+  purpose {
+    Entities that embed a span from this entity as a snippet-embed
+    or inline reference.
+  }
+
+  invariants {
+    always "purity is read-only": {
+      purity = "read-only"
+    }
+
+    always "no invoke instructions": {
+      invokeCount = 0
+    }
+  }
+}

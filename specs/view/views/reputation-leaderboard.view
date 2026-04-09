@@ -1,0 +1,29 @@
+view "reputation-leaderboard" {
+  shell: "reputation-leaderboard"
+
+  features {
+    sort
+    projection
+  }
+
+  purpose {
+    Ranked display of reputation scores sorted by total score
+    descending. Read-only leaderboard with projected rank,
+    participant, and score fields.
+  }
+
+  invariants {
+    always "purity is read-only": {
+      purity = "read-only"
+    }
+
+    always "no invoke instructions": {
+      invokeCount = 0
+    }
+
+    always "projects only known fields": {
+      forall f in projectedFields:
+      f in ["id", "participant", "score", "rank", "level"]
+    }
+  }
+}

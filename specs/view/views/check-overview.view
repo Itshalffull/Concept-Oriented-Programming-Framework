@@ -1,0 +1,26 @@
+view "check-overview" {
+  shell: "check-overview"
+
+  features {
+    filter
+    sort
+    projection
+    interaction
+  }
+
+  purpose {
+    Global view of all check verifications across all process runs.
+    Read-write — supports row-click navigation to check detail.
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+
+    always "filter fields exist in source": {
+      forall f in filterFields:
+      f in sourceFields
+    }
+  }
+}

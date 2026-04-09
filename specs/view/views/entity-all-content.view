@@ -1,0 +1,29 @@
+view "entity-all-content" {
+  shell: "entity-all-content"
+
+  features {
+    filter
+    sort
+    projection
+    pagination
+  }
+
+  purpose {
+    Browse all content nodes in the system. Paginated, filterable
+    table with schema-based toggle filters. Read-only.
+  }
+
+  invariants {
+    always "purity is read-only": {
+      purity = "read-only"
+    }
+
+    always "has pagination": {
+      "pagination" in enabledFeatures
+    }
+
+    always "no invoke instructions": {
+      invokeCount = 0
+    }
+  }
+}

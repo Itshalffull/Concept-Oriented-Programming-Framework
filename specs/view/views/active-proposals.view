@@ -1,0 +1,36 @@
+view "active-proposals" {
+  shell: "active-proposals"
+
+  features {
+    filter
+    sort
+    projection
+    interaction
+  }
+
+  purpose {
+    Browse and act on governance proposals with filtering by
+    status, circle, and proposer. Read-write — supports voting
+    and status transitions inline.
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+
+    always "invokes only ContentNode actions": {
+      forall ia in invokedActions:
+      ia startsWith "ContentNode/"
+    }
+
+    always "all invoke variants covered": {
+      uncoveredVariants = []
+    }
+
+    always "filter fields exist in source": {
+      forall f in filterFields:
+      f in sourceFields
+    }
+  }
+}

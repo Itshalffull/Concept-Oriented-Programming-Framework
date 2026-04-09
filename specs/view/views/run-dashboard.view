@@ -1,0 +1,22 @@
+view "run-dashboard" {
+  shell: "run-dashboard"
+
+  features {
+    projection
+  }
+
+  purpose {
+    Live overview of process run activity — active, suspended,
+    failed, and completed counts with recent run history.
+  }
+
+  invariants {
+    always "purity is read-only": {
+      purity = "read-only"
+    }
+
+    always "no invoke instructions": {
+      invokeCount = 0
+    }
+  }
+}

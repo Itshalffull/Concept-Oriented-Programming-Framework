@@ -1,0 +1,30 @@
+view "process-chat" {
+  shell: "process-chat"
+
+  features {
+    interaction
+    sort
+    pagination
+  }
+
+  purpose {
+    Conversational interface for process execution — human and AI
+    participants collaborate through messages. Read-write with send
+    action and paginated message history.
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+
+    always "has pagination": {
+      "pagination" in enabledFeatures
+    }
+
+    always "invokes only ProcessConversation actions": {
+      forall ia in invokedActions:
+      ia startsWith "ProcessConversation/"
+    }
+  }
+}

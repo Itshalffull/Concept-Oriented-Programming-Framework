@@ -1,0 +1,26 @@
+view "process-runs-list" {
+  shell: "process-runs-list"
+
+  features {
+    filter
+    sort
+    projection
+    interaction
+  }
+
+  purpose {
+    Live and historical process execution instances. Read-write —
+    supports row-click navigation to run detail.
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+
+    always "filter fields exist in source": {
+      forall f in filterFields:
+      f in sourceFields
+    }
+  }
+}

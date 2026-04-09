@@ -1,0 +1,29 @@
+view "step-checks" {
+  shell: "step-checks"
+
+  features {
+    filter
+    sort
+    projection
+  }
+
+  purpose {
+    Check verification results for a process step — automated,
+    human, and LLM judgments with pass/fail status and evidence.
+  }
+
+  invariants {
+    always "purity is read-only": {
+      purity = "read-only"
+    }
+
+    always "no invoke instructions": {
+      invokeCount = 0
+    }
+
+    always "filter fields exist in source": {
+      forall f in filterFields:
+      f in sourceFields
+    }
+  }
+}

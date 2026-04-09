@@ -1,0 +1,18 @@
+view "views-list" {
+  shell: "views-list"
+
+  features {
+    filter
+    sort
+    projection
+  }
+
+  purpose {
+    Browse saved queries with display configuration. Each view renders items through a display mode.
+  }
+
+  invariants {
+    always "purity is read-only": { purity = "read-only" }
+    always "no invoke instructions": { invokeCount = 0 }
+  }
+}

@@ -1,0 +1,18 @@
+view "themes-list" {
+  shell: "themes-list"
+
+  features {
+    filter
+    sort
+    projection
+  }
+
+  purpose {
+    Browse design system themes with token inheritance.
+  }
+
+  invariants {
+    always "purity is read-only": { purity = "read-only" }
+    always "no invoke instructions": { invokeCount = 0 }
+  }
+}

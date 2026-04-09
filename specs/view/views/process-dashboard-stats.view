@@ -1,0 +1,22 @@
+view "process-dashboard-stats" {
+  shell: "process-dashboard-stats"
+
+  features {
+    projection
+  }
+
+  purpose {
+    Process stats cards showing active, suspended, failed, and
+    completed run counts.
+  }
+
+  invariants {
+    always "purity is read-only": {
+      purity = "read-only"
+    }
+
+    always "no invoke instructions": {
+      invokeCount = 0
+    }
+  }
+}

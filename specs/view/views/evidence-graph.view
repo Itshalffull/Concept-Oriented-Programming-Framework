@@ -1,0 +1,19 @@
+view "evidence-graph" {
+  shell: "evidence-graph"
+
+  features {
+    projection
+  }
+
+  purpose {
+    Force-directed graph showing the full evidence chain — report to
+    claims to citations to snippets to sources. Node colors by entity
+    type, edge labels show support scores. Read-only graph visualization.
+  }
+
+  invariants {
+    always "purity is read-only": {
+      purity = "read-only"
+    }
+  }
+}

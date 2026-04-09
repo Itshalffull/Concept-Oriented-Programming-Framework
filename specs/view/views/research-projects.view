@@ -1,0 +1,22 @@
+view "research-projects" {
+  shell: "research-projects"
+
+  features {
+    filter
+    sort
+    projection
+    interaction
+  }
+
+  purpose {
+    Research project cards with status, progress bars, quality scores,
+    and deliverable type badges. Create new projects inline.
+    Read-write (create project).
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+  }
+}

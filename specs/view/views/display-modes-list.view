@@ -1,0 +1,17 @@
+view "display-modes-list" {
+  shell: "display-modes-list"
+
+  features {
+    sort
+    projection
+  }
+
+  purpose {
+    Browse named rendering configurations per Schema and mode pair. Strategy is Layout, ComponentMapping, or flat field list.
+  }
+
+  invariants {
+    always "purity is read-only": { purity = "read-only" }
+    always "no invoke instructions": { invokeCount = 0 }
+  }
+}

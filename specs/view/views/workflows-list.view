@@ -1,0 +1,18 @@
+view "workflows-list" {
+  shell: "workflows-list"
+
+  features {
+    filter
+    sort
+    projection
+    interaction
+  }
+
+  purpose {
+    Manage content moderation state machines with states and transitions.
+  }
+
+  invariants {
+    always "purity is read-write": { purity = "read-write" }
+  }
+}

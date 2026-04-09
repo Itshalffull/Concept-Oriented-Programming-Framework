@@ -1,0 +1,22 @@
+view "process-completion-trend" {
+  shell: "process-completion-trend"
+
+  features {
+    projection
+  }
+
+  purpose {
+    Aggregated completion metrics for process runs — success rates,
+    throughput, and error trends.
+  }
+
+  invariants {
+    always "purity is read-only": {
+      purity = "read-only"
+    }
+
+    always "no invoke instructions": {
+      invokeCount = 0
+    }
+  }
+}
