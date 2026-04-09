@@ -8,6 +8,26 @@ view "process-specs-cards" {
     interaction
   }
 
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ProcessSpec\",\"action\":\"list\"}"
+    }
+    filter: {
+      node: "{\"type\":\"true\"}"
+    }
+    sort: {
+      keys: "[]"
+    }
+    projection: {
+      fields: "[]"
+    }
+    presentation: {
+      displayType: "card-grid",
+      hints: "{}"
+    }
+  }
+
   purpose {
     Process specs displayed as cards with status badges and step
     counts. Read-write — supports inline create and row-click

@@ -8,6 +8,26 @@ view "process-specs-list" {
     interaction
   }
 
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ProcessSpec\",\"action\":\"list\"}"
+    }
+    filter: {
+      node: "{\"type\":\"true\"}"
+    }
+    sort: {
+      keys: "[]"
+    }
+    projection: {
+      fields: "[]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+  }
+
   purpose {
     Versioned process template definitions with step graphs and
     routing edges. Read-write — supports inline create action.

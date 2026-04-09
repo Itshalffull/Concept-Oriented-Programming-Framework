@@ -7,6 +7,20 @@ view "process-chat" {
     pagination
   }
 
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ProcessConversation\",\"action\":\"list\",\"params\":{\"run_ref\":\"{{runId}}\"}}"
+    }
+    sort: {
+      keys: "[]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+  }
+
   purpose {
     Conversational interface for process execution — human and AI
     participants collaborate through messages. Read-write with send

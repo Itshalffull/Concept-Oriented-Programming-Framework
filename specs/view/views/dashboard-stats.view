@@ -5,6 +5,13 @@ view "dashboard-stats" {
     projection
   }
 
+  fixture default {
+    presentation: {
+      displayType: "stat-cards",
+      hints: "{\"columns\":4}"
+    }
+  }
+
   purpose {
     System statistics displayed as summary cards on the dashboard.
   }

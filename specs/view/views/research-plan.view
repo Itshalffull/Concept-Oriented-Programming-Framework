@@ -6,6 +6,20 @@ view "research-plan" {
     interaction
   }
 
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ContentNode\",\"action\":\"list\"}"
+    }
+    projection: {
+      fields: "[]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+  }
+
   purpose {
     Plan outline with sub-questions, dependency arrows, plan approval
     widget, and perspective assignments. Supports approve and reject

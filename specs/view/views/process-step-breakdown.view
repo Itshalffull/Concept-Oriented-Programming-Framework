@@ -8,6 +8,29 @@ view "process-step-breakdown" {
     projection
   }
 
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"StepRun\",\"action\":\"list\"}"
+    }
+    filter: {
+      node: "{\"type\":\"true\"}"
+    }
+    sort: {
+      keys: "[]"
+    }
+    group: {
+      config: "{\"type\":\"field\",\"fields\":[\"step_key\"]}"
+    }
+    projection: {
+      fields: "[]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+  }
+
   purpose {
     All step runs grouped by step key — shows execution distribution
     across step types and statuses.

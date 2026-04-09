@@ -7,6 +7,23 @@ view "process-edges-editor" {
     interaction
   }
 
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ProcessSpec\",\"action\":\"get\",\"params\":{\"spec\":\"{{specId}}\"}}"
+    }
+    sort: {
+      keys: "[]"
+    }
+    projection: {
+      fields: "[]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+  }
+
   purpose {
     Routing edges between steps in a ProcessSpec. Each edge defines
     a directed transition with an optional condition expression.

@@ -7,6 +7,26 @@ view "taxonomy-list" {
     projection
   }
 
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"Taxonomy\",\"action\":\"list\"}"
+    }
+    filter: {
+      node: "{\"type\":\"true\"}"
+    }
+    sort: {
+      keys: "[{\"field\":\"name\",\"direction\":\"asc\"}]"
+    }
+    projection: {
+      fields: "[]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+  }
+
   purpose {
     Browse hierarchical classification using Vocabularies and Terms.
   }

@@ -5,6 +5,20 @@ view "process-completion-trend" {
     projection
   }
 
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ProcessRun\",\"action\":\"stats\"}"
+    }
+    projection: {
+      fields: "[]"
+    }
+    presentation: {
+      displayType: "stat-cards",
+      hints: "{}"
+    }
+  }
+
   purpose {
     Aggregated completion metrics for process runs — success rates,
     throughput, and error trends.

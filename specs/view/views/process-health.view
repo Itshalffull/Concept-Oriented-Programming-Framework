@@ -5,6 +5,20 @@ view "process-health" {
     projection
   }
 
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ProcessRun\",\"action\":\"stats\"}"
+    }
+    projection: {
+      fields: "[]"
+    }
+    presentation: {
+      displayType: "stat-cards",
+      hints: "{}"
+    }
+  }
+
   purpose {
     Live health snapshot of all process runs — active, suspended,
     failed, and completed counts.

@@ -5,6 +5,20 @@ view "run-dashboard" {
     projection
   }
 
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ProcessRun\",\"action\":\"stats\"}"
+    }
+    projection: {
+      fields: "[]"
+    }
+    presentation: {
+      displayType: "stat-cards",
+      hints: "{}"
+    }
+  }
+
   purpose {
     Live overview of process run activity — active, suspended,
     failed, and completed counts with recent run history.

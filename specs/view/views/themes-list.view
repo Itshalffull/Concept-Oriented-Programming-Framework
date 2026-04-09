@@ -7,6 +7,26 @@ view "themes-list" {
     projection
   }
 
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"Theme\",\"action\":\"list\"}"
+    }
+    filter: {
+      node: "{\"type\":\"true\"}"
+    }
+    sort: {
+      keys: "[{\"field\":\"name\",\"direction\":\"asc\"}]"
+    }
+    projection: {
+      fields: "[]"
+    }
+    presentation: {
+      displayType: "card-grid",
+      hints: "{}"
+    }
+  }
+
   purpose {
     Browse design system themes with token inheritance.
   }

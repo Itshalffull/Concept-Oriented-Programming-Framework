@@ -6,6 +6,23 @@ view "similar-entities" {
     projection
   }
 
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ContentNode\",\"action\":\"list\"}"
+    }
+    sort: {
+      keys: "[]"
+    }
+    projection: {
+      fields: "[]"
+    }
+    presentation: {
+      displayType: "card-grid",
+      hints: "{}"
+    }
+  }
+
   purpose {
     Semantically similar entities based on content similarity
     scoring. Sorted by similarity rank. Read-only.

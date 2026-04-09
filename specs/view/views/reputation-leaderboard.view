@@ -6,6 +6,23 @@ view "reputation-leaderboard" {
     projection
   }
 
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ContentNode\",\"action\":\"list\"}"
+    }
+    sort: {
+      keys: "[{\"field\":\"score\",\"direction\":\"desc\"}]"
+    }
+    projection: {
+      fields: "[]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+  }
+
   purpose {
     Ranked display of reputation scores sorted by total score
     descending. Read-only leaderboard with projected rank,

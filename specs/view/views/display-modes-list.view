@@ -6,6 +6,16 @@ view "display-modes-list" {
     projection
   }
 
+  fixture default {
+    sort: {
+      keys: "[{\"field\":\"name\",\"direction\":\"asc\"}]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+  }
+
   purpose {
     Browse named rendering configurations per Schema and mode pair. Strategy is Layout, ComponentMapping, or flat field list.
   }

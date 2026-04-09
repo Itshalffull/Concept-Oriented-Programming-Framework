@@ -5,6 +5,20 @@ view "process-dashboard-stats" {
     projection
   }
 
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ProcessRun\",\"action\":\"stats\"}"
+    }
+    projection: {
+      fields: "[]"
+    }
+    presentation: {
+      displayType: "stat-cards",
+      hints: "{}"
+    }
+  }
+
   purpose {
     Process stats cards showing active, suspended, failed, and
     completed run counts.

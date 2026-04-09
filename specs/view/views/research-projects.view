@@ -8,6 +8,26 @@ view "research-projects" {
     interaction
   }
 
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ContentNode\",\"action\":\"list\"}"
+    }
+    filter: {
+      node: "{\"type\":\"true\"}"
+    }
+    sort: {
+      keys: "[]"
+    }
+    projection: {
+      fields: "[]"
+    }
+    presentation: {
+      displayType: "card-grid",
+      hints: "{}"
+    }
+  }
+
   purpose {
     Research project cards with status, progress bars, quality scores,
     and deliverable type badges. Create new projects inline.

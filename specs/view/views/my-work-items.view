@@ -8,6 +8,26 @@ view "my-work-items" {
     interaction
   }
 
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"WorkItem\",\"action\":\"list\",\"params\":{\"assignee\":\"{{currentUser}}\"}}"
+    }
+    filter: {
+      node: "{\"type\":\"true\"}"
+    }
+    sort: {
+      keys: "[]"
+    }
+    projection: {
+      fields: "[]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+  }
+
   purpose {
     Tasks assigned to the current user from active process runs.
     Read-write — supports claim, complete, and reassign actions.

@@ -8,6 +8,26 @@ view "version-spaces-list" {
     interaction
   }
 
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ContentNode\",\"action\":\"listBySchema\",\"params\":{\"schema\":\"VersionSpace\"}}"
+    }
+    filter: {
+      node: "{\"type\":\"true\"}"
+    }
+    sort: {
+      keys: "[]"
+    }
+    projection: {
+      fields: "[]"
+    }
+    presentation: {
+      displayType: "card-grid",
+      hints: "{}"
+    }
+  }
+
   purpose {
     Named content variations — like git branches for content.
     Read-write — supports create and management actions.

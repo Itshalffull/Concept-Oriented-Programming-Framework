@@ -5,6 +5,13 @@ view "deployment-overview" {
     projection
   }
 
+  fixture default {
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+  }
+
   purpose {
     Version spaces acting as deployment environments — deploy
     (promote) or rollback (archive) spaces.

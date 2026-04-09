@@ -6,6 +6,20 @@ view "report-builder" {
     interaction
   }
 
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ContentNode\",\"action\":\"list\"}"
+    }
+    projection: {
+      fields: "[]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+  }
+
   purpose {
     Triple-zone report editor — header with project title, status, and
     coverage meter; body with block editor and citation markers; sidebar

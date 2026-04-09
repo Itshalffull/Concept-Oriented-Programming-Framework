@@ -5,6 +5,20 @@ view "simple-list" {
     sort
   }
 
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ContentNode\",\"action\":\"list\"}"
+    }
+    sort: {
+      keys: "[]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+  }
+
   purpose {
     Minimal data listing with no filtering or actions.
   }

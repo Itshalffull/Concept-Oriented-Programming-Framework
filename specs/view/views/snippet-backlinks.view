@@ -6,6 +6,23 @@ view "snippet-backlinks" {
     projection
   }
 
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"Reference\",\"action\":\"getRefs\",\"params\":{\"source\":\"{{entityId}}\"}}"
+    }
+    sort: {
+      keys: "[]"
+    }
+    projection: {
+      fields: "[]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+  }
+
   purpose {
     Entities that embed a span from this entity as a snippet-embed
     or inline reference.

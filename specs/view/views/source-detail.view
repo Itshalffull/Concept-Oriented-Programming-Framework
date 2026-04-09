@@ -6,6 +6,20 @@ view "source-detail" {
     interaction
   }
 
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ContentNode\",\"action\":\"list\"}"
+    }
+    projection: {
+      fields: "[]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+  }
+
   purpose {
     Triple-zone source page — header with source metadata and credibility
     badge, body with cleaned content and highlighted snippets, sidebar
