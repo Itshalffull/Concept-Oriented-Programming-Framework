@@ -8,6 +8,31 @@ view "active-proposals" {
     interaction
   }
 
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ContentNode\",\"action\":\"listBySchema\",\"params\":{\"schema\":\"Proposal\"}}"
+    }
+    filter: {
+      node: "{\"type\":\"eq\",\"field\":\"status\",\"value\":\"active\"}"
+    }
+    sort: {
+      keys: "[{\"field\":\"createdAt\",\"direction\":\"desc\"}]"
+    }
+    projection: {
+      fields: "[{\"key\":\"node\",\"label\":\"Proposal\"},{\"key\":\"status\",\"label\":\"Status\"},{\"key\":\"circle\",\"label\":\"Circle\"},{\"key\":\"proposer\",\"label\":\"Proposer\"},{\"key\":\"votes\",\"label\":\"Votes\"}]"
+    }
+    interaction: {
+      createForm: "{}",
+      rowClick: "{\"navigateTo\":\"/content/{node}\"}",
+      rowActions: "[{\"key\":\"vote\",\"concept\":\"ContentNode\",\"action\":\"update\",\"label\":\"Vote\"}]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+  }
+
   purpose {
     Browse and act on governance proposals with filtering by
     status, circle, and proposer. Read-write — supports voting

@@ -8,6 +8,31 @@ view "agent-library" {
     interaction
   }
 
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ContentNode\",\"action\":\"listBySchema\",\"params\":{\"schema\":\"AgentPersona\"}}"
+    }
+    filter: {
+      node: "{\"type\":\"eq\",\"field\":\"capability\",\"value\":\"all\"}"
+    }
+    sort: {
+      keys: "[{\"field\":\"name\",\"direction\":\"asc\"}]"
+    }
+    projection: {
+      fields: "[{\"key\":\"node\",\"label\":\"Agent\"},{\"key\":\"name\",\"label\":\"Name\"},{\"key\":\"capability\",\"label\":\"Capability\"},{\"key\":\"status\",\"label\":\"Status\"}]"
+    }
+    interaction: {
+      createForm: "{\"concept\":\"ContentNode\",\"action\":\"create\",\"fields\":[{\"name\":\"node\",\"label\":\"Agent ID\",\"required\":true},{\"name\":\"content\",\"label\":\"Persona Content\",\"type\":\"textarea\"}]}",
+      rowClick: "{\"navigateTo\":\"/content/{node}\"}",
+      rowActions: "[]"
+    }
+    presentation: {
+      displayType: "card-grid",
+      hints: "{}"
+    }
+  }
+
   purpose {
     Browse and manage agent persona cards with filtering by
     capability and status. Read-write — supports creating and

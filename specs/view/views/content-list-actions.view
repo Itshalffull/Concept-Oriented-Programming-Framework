@@ -8,6 +8,31 @@ view "content-list-actions" {
     interaction
   }
 
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ContentNode\",\"action\":\"listBySchema\",\"params\":{\"schema\":\"Concept\"}}"
+    }
+    filter: {
+      node: "{\"type\":\"eq\",\"field\":\"kind\",\"value\":\"concept\"}"
+    }
+    sort: {
+      keys: "[{\"field\":\"name\",\"direction\":\"asc\"}]"
+    }
+    projection: {
+      fields: "[{\"key\":\"node\",\"label\":\"Name\"},{\"key\":\"schemas\",\"label\":\"Schemas\"},{\"key\":\"createdBy\",\"label\":\"Created By\"},{\"key\":\"createdAt\",\"label\":\"Created\"}]"
+    }
+    interaction: {
+      createForm: "{\"concept\":\"ContentNode\",\"action\":\"create\",\"fields\":[{\"name\":\"node\",\"label\":\"Node ID\",\"required\":true},{\"name\":\"content\",\"label\":\"Content\",\"type\":\"textarea\"},{\"name\":\"createdBy\",\"label\":\"Created By\"}]}",
+      rowClick: "{\"navigateTo\":\"/content/{node}\"}",
+      rowActions: "[]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+  }
+
   purpose {
     Content listing with inline create form. Read-write view
     dispatching ContentNode/create through the sync engine.

@@ -5,6 +5,20 @@ view "entity-content" {
     projection
   }
 
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ContentNode\",\"action\":\"get\",\"params\":{\"node\":\"{{entityId}}\"}}"
+    }
+    projection: {
+      fields: "[{\"key\":\"content\",\"label\":\"Content\"}]"
+    }
+    presentation: {
+      displayType: "content-body",
+      hints: "{}"
+    }
+  }
+
   purpose {
     Unstructured content zone of the entity detail page showing
     the content body. Read-only.

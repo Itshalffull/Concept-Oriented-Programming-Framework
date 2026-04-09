@@ -7,6 +7,26 @@ view "effective-permissions" {
     projection
   }
 
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"Authorization\",\"action\":\"listEffective\",\"params\":{\"subject\":\"{{subjectId}}\"}}"
+    }
+    filter: {
+      node: "{\"type\":\"eq\",\"field\":\"resource\",\"value\":\"all\"}"
+    }
+    sort: {
+      keys: "[{\"field\":\"resource\",\"direction\":\"asc\"}]"
+    }
+    projection: {
+      fields: "[{\"key\":\"subject\",\"label\":\"Subject\"},{\"key\":\"resource\",\"label\":\"Resource\"},{\"key\":\"permission\",\"label\":\"Permission\"},{\"key\":\"source\",\"label\":\"Source\"},{\"key\":\"inherited\",\"label\":\"Inherited\"}]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+  }
+
   purpose {
     Computed effective permissions for a subject across all
     resources, resolving role inheritance and policy overrides.

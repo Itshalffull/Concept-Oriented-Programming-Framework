@@ -5,6 +5,20 @@ view "entity-properties" {
     projection
   }
 
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ContentNode\",\"action\":\"get\",\"params\":{\"node\":\"{{entityId}}\"}}"
+    }
+    projection: {
+      fields: "[{\"key\":\"node\",\"label\":\"ID\"},{\"key\":\"schemas\",\"label\":\"Schemas\"},{\"key\":\"createdBy\",\"label\":\"Source\"},{\"key\":\"metadata\",\"label\":\"Metadata\"}]"
+    }
+    presentation: {
+      displayType: "detail",
+      hints: "{}"
+    }
+  }
+
   purpose {
     Structured fields zone of the entity detail page showing
     typed schema properties. Read-only.

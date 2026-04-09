@@ -5,6 +5,20 @@ view "evidence-graph" {
     projection
   }
 
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ContentNode\",\"action\":\"list\",\"params\":{\"type\":\"evidence\"}}"
+    }
+    projection: {
+      fields: "[{\"key\":\"node\",\"label\":\"Node\"},{\"key\":\"type\",\"label\":\"Type\"},{\"key\":\"score\",\"label\":\"Score\"}]"
+    }
+    presentation: {
+      displayType: "graph",
+      hints: "{}"
+    }
+  }
+
   purpose {
     Force-directed graph showing the full evidence chain — report to
     claims to citations to snippets to sources. Node colors by entity

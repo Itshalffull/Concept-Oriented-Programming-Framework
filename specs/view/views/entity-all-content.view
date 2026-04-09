@@ -8,6 +8,26 @@ view "entity-all-content" {
     pagination
   }
 
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ContentNode\",\"action\":\"list\"}"
+    }
+    filter: {
+      node: "{\"type\":\"true\"}"
+    }
+    sort: {
+      keys: "[]"
+    }
+    projection: {
+      fields: "[{\"key\":\"node\",\"label\":\"Entity\"},{\"key\":\"schemas\",\"label\":\"Schemas\"}]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+  }
+
   purpose {
     Browse all content nodes in the system. Paginated, filterable
     table with schema-based toggle filters. Read-only.
