@@ -1,0 +1,67 @@
+view "schema-template-gallery" {
+  shell: "schema-template-gallery"
+
+  features {
+    filter
+    sort
+    projection
+    interaction
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"SchemaTemplate\",\"action\":\"list\"}"
+    }
+    filter: {
+      node: "{\"type\":\"true\"}"
+    }
+    sort: {
+      keys: "[{\"field\":\"label\",\"direction\":\"asc\"}]"
+    }
+    projection: {
+      fields: "[{\"key\":\"name\",\"label\":\"Name\",\"visibility\":\"hidden\"},{\"key\":\"label\",\"label\":\"Template\"},{\"key\":\"description\",\"label\":\"Description\"},{\"key\":\"category\",\"label\":\"Category\",\"formatter\":\"badge\"},{\"key\":\"icon\",\"label\":\"Icon\",\"formatter\":\"emoji\"},{\"key\":\"fieldCount\",\"label\":\"Fields\",\"formatter\":\"number\"}]"
+    }
+    interaction: {
+      createForm: "{}",
+      rowClick: "{\"action\":\"preview\"}",
+      rowActions: "[{\"key\":\"apply\",\"concept\":\"SchemaTemplate\",\"action\":\"apply\",\"label\":\"Use Template\"},{\"key\":\"preview\",\"concept\":\"SchemaTemplate\",\"action\":\"preview\",\"label\":\"Preview\"}]"
+    }
+    presentation: {
+      displayType: "card-grid",
+      hints: "{\"columns\":3,\"showSearch\":true,\"categoryFilter\":true}"
+    }
+  }
+
+  purpose {
+    Gallery of pre-built schema templates browsable by category (content, project,
+    crm, knowledge) with search. Each template card shows an icon, name, description,
+    and field count. Clicking a card previews the field list; "Use Template" applies
+    the template to create a complete content model. Shown when creating a new schema.
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+
+    always "invokes only SchemaTemplate actions": {
+      forall ia in invokedActions:
+      ia startsWith "SchemaTemplate/"
+    }
+
+    always "all invoke variants covered": {
+      uncoveredVariants = []
+    }
+
+    always "projects only known fields": {
+      forall f in projectedFields:
+      f in ["name", "label", "description", "category", "icon", "fieldCount"]
+    }
+
+    always "filter fields exist in source": {
+      forall f in filterFields:
+      f in sourceFields
+    }
+  }
+}

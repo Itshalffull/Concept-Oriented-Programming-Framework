@@ -1,0 +1,55 @@
+view "schema-detail" {
+  shell: "schema-detail"
+
+  features {
+    projection
+    interaction
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"FieldDefinition\",\"action\":\"list\",\"params\":{\"schema\":\"{{schemaId}}\"}}"
+    }
+    projection: {
+      fields: "[{\"key\":\"fieldId\",\"label\":\"Field ID\",\"visibility\":\"hidden\"},{\"key\":\"label\",\"label\":\"Label\"},{\"key\":\"fieldType\",\"label\":\"Type\",\"formatter\":\"badge\"},{\"key\":\"required\",\"label\":\"Required\",\"formatter\":\"boolean-badge\"},{\"key\":\"unique\",\"label\":\"Unique\",\"formatter\":\"boolean-badge\"},{\"key\":\"defaultValue\",\"label\":\"Default\"},{\"key\":\"sortOrder\",\"label\":\"Order\",\"visibility\":\"hidden\"}]"
+    }
+    interaction: {
+      createForm: "{\"concept\":\"FieldDefinition\",\"action\":\"create\"}",
+      rowClick: "{}",
+      rowActions: "[{\"key\":\"configure\",\"label\":\"Configure\",\"openDrawer\":true},{\"key\":\"remove\",\"concept\":\"FieldDefinition\",\"action\":\"remove\",\"label\":\"Remove\",\"destructive\":true}]"
+    }
+    presentation: {
+      displayType: "detail",
+      hints: "{\"tabs\":[\"Fields\",\"Form Layout\",\"Display\"],\"defaultTab\":\"Fields\"}"
+    }
+  }
+
+  purpose {
+    Full schema editor at /admin/schemas/:id with three tabs: Fields (reorderable
+    list with type badges, required and unique indicators, and add/configure/delete
+    actions), Form Layout (drag-drop arrangement of fields into groups and tabs),
+    and Display Layout (per-display-mode formatter assignment with live preview).
+    The definitive Level 3 surface for content model management.
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+
+    always "invokes FieldDefinition or Schema actions": {
+      forall ia in invokedActions:
+      ia startsWith "FieldDefinition/" or ia startsWith "Schema/"
+    }
+
+    always "all invoke variants covered": {
+      uncoveredVariants = []
+    }
+
+    always "projects only known fields": {
+      forall f in projectedFields:
+      f in ["fieldId", "label", "fieldType", "required", "unique", "defaultValue", "sortOrder"]
+    }
+  }
+}

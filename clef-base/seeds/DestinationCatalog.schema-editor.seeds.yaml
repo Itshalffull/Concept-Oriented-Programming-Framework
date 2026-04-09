@@ -1,0 +1,21 @@
+# Schema editor destination entries for the shell navigation.
+
+concept: DestinationCatalog
+action: register
+entries:
+  # === Structure ===
+  - destination: schemas
+    name: schemas
+    targetConcept: Schema
+    targetView: schema-admin-list
+    href: /admin/schemas
+    icon: "⬡"
+    group: Structure
+
+  - destination: schema-templates
+    name: schema-templates
+    targetConcept: SchemaTemplate
+    targetView: schema-template-gallery
+    href: /admin/schemas/templates
+    icon: "⬡"
+    group: Structure

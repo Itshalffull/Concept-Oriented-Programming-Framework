@@ -1,0 +1,68 @@
+view "schema-admin-list" {
+  shell: "schema-admin-list"
+
+  features {
+    filter
+    sort
+    projection
+    interaction
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"Schema\",\"action\":\"list\"}"
+    }
+    filter: {
+      node: "{\"type\":\"true\"}"
+    }
+    sort: {
+      keys: "[{\"field\":\"name\",\"direction\":\"asc\"}]"
+    }
+    projection: {
+      fields: "[{\"key\":\"name\",\"label\":\"Name\"},{\"key\":\"fieldCount\",\"label\":\"Fields\",\"formatter\":\"number\"},{\"key\":\"entityCount\",\"label\":\"Entities\",\"formatter\":\"number\"},{\"key\":\"updatedAt\",\"label\":\"Last Modified\",\"formatter\":\"relative-date\"}]"
+    }
+    interaction: {
+      createForm: "{\"concept\":\"Schema\",\"action\":\"defineSchema\"}",
+      rowClick: "{\"navigateTo\":\"/admin/schemas/{name}\"}",
+      rowActions: "[{\"key\":\"delete\",\"concept\":\"Schema\",\"action\":\"remove\",\"label\":\"Delete\",\"destructive\":true}]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+  }
+
+  purpose {
+    List all schemas registered in the system with field count, entity count,
+    and last-modified timestamp. Row click navigates to the full schema editor
+    at /admin/schemas/:id. Supports creating a new schema (opens the template
+    picker) and deleting schemas. This is the primary entry point for schema
+    management (Level 3, Archetype D).
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+
+    always "invokes only Schema actions": {
+      forall ia in invokedActions:
+      ia startsWith "Schema/"
+    }
+
+    always "all invoke variants covered": {
+      uncoveredVariants = []
+    }
+
+    always "projects only known fields": {
+      forall f in projectedFields:
+      f in ["name", "fieldCount", "entityCount", "updatedAt"]
+    }
+
+    always "filter fields exist in source": {
+      forall f in filterFields:
+      f in sourceFields
+    }
+  }
+}

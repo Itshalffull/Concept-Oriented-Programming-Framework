@@ -1,0 +1,369 @@
+@version(1)
+widget schema-template-picker {
+
+  purpose {
+    Gallery of pre-built schema templates shown when creating a new schema. Templates
+    are browsable by category tab (All, Content, Project, CRM, Knowledge) and
+    searchable by name or description. Each template card shows an icon, name,
+    description, and a field count badge. Clicking a card transitions to a preview
+    state showing the full field list. "Use Template" applies the template via
+    SchemaTemplate/apply to create a complete content model with fields, properties,
+    and display modes. "Start Blank" dismisses the picker and creates an empty schema.
+  }
+
+  anatomy {
+    root:                container    { Top-level picker wrapper, contains search, tabs, and grid }
+    searchInput:         interactive  { Text input for filtering templates by name or description }
+    categoryTabs:        container    { Horizontal tab bar listing template categories }
+    categoryTab:         action       { Individual category tab — "All", "Content", "Project", "CRM", "Knowledge" }
+    templateGrid:        container    { Responsive card grid displaying filtered templates }
+    templateCard:        action       { Selectable card representing a single template }
+    templateIcon:        presentation { Emoji or SVG icon representing the template's domain }
+    templateName:        text         { Human-readable template name (e.g., "Article", "Tasks") }
+    templateDescription: text         { One-line description of what the template is for }
+    fieldCountBadge:     presentation { Badge showing the number of fields in the template }
+    templatePreview:     container    { Expanded preview panel showing the full field list }
+    previewFieldList:    container    { Ordered list of field rows shown in the preview }
+    previewFieldRow:     container    { Single field row: label, type badge, required indicator }
+    previewFieldLabel:   text         { Field label in the preview list }
+    previewTypeBadge:    presentation { Field type badge (e.g., "Text", "Date", "Rich Text") }
+    previewRequiredDot:  presentation { Small dot or asterisk shown when field.required is true }
+    useTemplateButton:   action       { Applies the selected template and creates the schema }
+    startBlankButton:    action       { Skips template selection and creates an empty schema }
+    backButton:          action       { Returns from preview to the gallery browser }
+    emptyState:          container    { Shown when no templates match the current search or filter }
+    loadingState:        container    { Shown while template list is being fetched }
+    applyingState:       container    { Shown while the template is being applied }
+  }
+
+  states {
+    browsing [initial] {
+      on SEARCH -> searching;
+      on SELECT_TEMPLATE -> previewing;
+      on SELECT_CATEGORY -> browsing;
+      on START_BLANK -> idle;
+    }
+
+    searching {
+      on CLEAR_SEARCH -> browsing;
+      on SELECT_TEMPLATE -> previewing;
+      on SELECT_CATEGORY -> searching;
+      entry [filterTemplates];
+      exit [clearFilter];
+    }
+
+    previewing {
+      on BACK -> browsing;
+      on USE_TEMPLATE -> applying;
+      on START_BLANK -> idle;
+      entry [loadTemplatePreview];
+    }
+
+    applying {
+      on APPLY_SUCCESS -> idle;
+      on APPLY_ERROR -> previewing;
+      entry [applyTemplate];
+    }
+
+    idle {
+      on OPEN -> browsing;
+    }
+  }
+
+  accessibility {
+    role: dialog;
+    keyboard {
+      Escape -> BACK;
+      Enter -> USE_TEMPLATE;
+      Tab -> FOCUS_NEXT;
+      ArrowLeft -> SELECT_CATEGORY;
+      ArrowRight -> SELECT_CATEGORY;
+    }
+    focus {
+      trap: true;
+      initial: searchInput;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "dialog";
+        aria-label: "Choose a schema template";
+        aria-modal: "true";
+        data-state: state;
+      };
+      searchInput -> {
+        role: "searchbox";
+        aria-label: "Search templates";
+        aria-controls: "templateGrid";
+      };
+      categoryTabs -> {
+        role: "tablist";
+        aria-label: "Template categories";
+      };
+      categoryTab -> {
+        role: "tab";
+        aria-selected: if self.isActive then "true" else "false";
+      };
+      templateGrid -> {
+        role: "grid";
+        aria-label: "Schema templates";
+        aria-live: "polite";
+      };
+      templateCard -> {
+        role: "gridcell";
+        aria-label: concat(self.label, ", ", self.description, ", ", self.fieldCount, " fields");
+        aria-pressed: if self.isSelected then "true" else "false";
+      };
+      fieldCountBadge -> {
+        aria-label: concat(self.fieldCount, " fields");
+      };
+      templatePreview -> {
+        role: "region";
+        aria-label: concat("Preview: ", ?selectedTemplate);
+        aria-hidden: if state != "previewing" then "true" else "false";
+      };
+      useTemplateButton -> {
+        role: "button";
+        aria-label: concat("Use template: ", ?selectedTemplate);
+        aria-busy: if state == "applying" then "true" else "false";
+      };
+      startBlankButton -> {
+        role: "button";
+        aria-label: "Start with a blank schema";
+      };
+      backButton -> {
+        role: "button";
+        aria-label: "Back to template gallery";
+      };
+      emptyState -> {
+        aria-live: "polite";
+        aria-label: "No templates match your search";
+      };
+      applyingState -> {
+        aria-live: "polite";
+        aria-label: "Applying template, please wait";
+        aria-busy: "true";
+      };
+    }
+  }
+
+  props {
+    templates: list { name: String, label: String, description: String, category: String, icon: String, fieldCount: Int } = []
+    selectedTemplate: option String
+    activeCategory: String = "all"
+    searchQuery: String = ""
+    onApply: option String
+    onBlank: option String
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+    }
+
+    searchInput -> {
+      data-part: "search-input";
+      value: ?searchQuery;
+      placeholder: "Search templates...";
+      onInput: send(SEARCH, { query: self.value });
+      onKeyDown: if key == "Escape" then send(CLEAR_SEARCH) else noop;
+    }
+
+    categoryTabs -> {
+      data-part: "category-tabs";
+    }
+
+    categoryTab -> {
+      data-part: "category-tab";
+      data-category: self.category;
+      data-active: if self.category == ?activeCategory then "true" else "false";
+      onClick: send(SELECT_CATEGORY, { category: self.category });
+    }
+
+    templateGrid -> {
+      data-part: "template-grid";
+      data-empty: if ?templates.length == 0 then "true" else "false";
+    }
+
+    templateCard -> {
+      data-part: "template-card";
+      data-name: self.name;
+      data-category: self.category;
+      data-selected: if self.name == ?selectedTemplate then "true" else "false";
+      onClick: send(SELECT_TEMPLATE, { template: self.name });
+      tabIndex: "0";
+    }
+
+    templateIcon -> {
+      data-part: "template-icon";
+      data-icon: self.icon;
+    }
+
+    templateName -> {
+      data-part: "template-name";
+    }
+
+    templateDescription -> {
+      data-part: "template-description";
+    }
+
+    fieldCountBadge -> {
+      data-part: "field-count-badge";
+      data-count: self.fieldCount;
+    }
+
+    templatePreview -> {
+      data-part: "template-preview";
+      data-visible: if state == "previewing" then "true" else "false";
+    }
+
+    previewFieldList -> {
+      data-part: "preview-field-list";
+    }
+
+    previewFieldRow -> {
+      data-part: "preview-field-row";
+      data-type: self.fieldType;
+    }
+
+    previewFieldLabel -> {
+      data-part: "preview-field-label";
+    }
+
+    previewTypeBadge -> {
+      data-part: "preview-type-badge";
+      data-type: self.fieldType;
+    }
+
+    previewRequiredDot -> {
+      data-part: "preview-required-dot";
+      data-visible: if self.required then "true" else "false";
+      aria-hidden: if self.required then "false" else "true";
+    }
+
+    useTemplateButton -> {
+      data-part: "use-template-button";
+      onClick: send(USE_TEMPLATE);
+      disabled: if state == "applying" then true else false;
+      data-loading: if state == "applying" then "true" else "false";
+    }
+
+    startBlankButton -> {
+      data-part: "start-blank-button";
+      onClick: send(START_BLANK);
+    }
+
+    backButton -> {
+      data-part: "back-button";
+      onClick: send(BACK);
+      data-visible: if state == "previewing" then "true" else "false";
+    }
+
+    emptyState -> {
+      data-part: "empty-state";
+      data-visible: if ?templates.length == 0 then "true" else "false";
+    }
+
+    loadingState -> {
+      data-part: "loading-state";
+    }
+
+    applyingState -> {
+      data-part: "applying-state";
+      data-visible: if state == "applying" then "true" else "false";
+    }
+  }
+
+  affordance {
+    serves: overlay;
+    specificity: 7;
+    when { targetConcept: "SchemaTemplate" }
+    bind {
+      templates: availableTemplates;
+      selectedTemplate: currentTemplate;
+    }
+  }
+
+  invariant {
+    example "browse to preview and apply": {
+      after templateCard.click -> ok
+      then root -> { data-state: "previewing" }
+      and templatePreview -> { data-visible: "true" }
+      and backButton -> { data-visible: "true" }
+      then useTemplateButton.click -> ok
+      then root -> { data-state: "applying" }
+    }
+
+    example "search filters templates": {
+      after searchInput.input({ query: "article" }) -> ok
+      then root -> { data-state: "searching" }
+      and templateGrid -> { data-empty: "false" }
+    }
+
+    example "category tab switching": {
+      after categoryTab.click({ category: "project" }) -> ok
+      then categoryTab -> { data-active: if self.category == "project" then "true" else "false" }
+    }
+
+    example "start blank skips gallery": {
+      after startBlankButton.click -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    example "back from preview returns to browsing": {
+      after templateCard.click -> ok
+      then root -> { data-state: "previewing" }
+      then backButton.click -> ok
+      then root -> { data-state: "browsing" }
+      and templatePreview -> { data-visible: "false" }
+    }
+
+    always "data-state on root reflects FSM": {
+      root -> { data-state: state }
+    }
+
+    always "template preview visible only in previewing state": {
+      templatePreview -> { data-visible: if state == "previewing" then "true" else "false" }
+    }
+
+    always "back button visible only in previewing state": {
+      backButton -> { data-visible: if state == "previewing" then "true" else "false" }
+    }
+
+    always "use template button disabled while applying": {
+      useTemplateButton -> { disabled: if state == "applying" then true else false }
+    }
+
+    never "applying without a selected template": {
+      state == "applying" and ?selectedTemplate == none
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    action templateCard.click {
+      requires: state == "browsing" or state == "searching"
+      ensures ok: state == "previewing"
+    }
+
+    action useTemplateButton.click {
+      requires: state == "previewing"
+      ensures ok: state == "applying"
+    }
+
+    action backButton.click {
+      requires: state == "previewing"
+      ensures ok: state == "browsing"
+    }
+
+    "USE_TEMPLATE dispatches SchemaTemplate/apply with the selectedTemplate name";
+    "START_BLANK is callable from both browsing and previewing states";
+    "SEARCH filters the templateGrid by name and description substring match";
+    "SELECT_CATEGORY sets the activeCategory prop and filters the templateGrid";
+    "APPLY_ERROR returns the user to previewing state with an error message available";
+    "Focus is trapped inside the dialog while the picker is open";
+    "Escape from previewing calls BACK; Escape from browsing/searching closes the dialog";
+  }
+
+}
