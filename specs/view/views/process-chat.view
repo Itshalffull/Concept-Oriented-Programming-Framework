@@ -19,6 +19,9 @@ view "process-chat" {
       displayType: "table",
       hints: "{}"
     }
+    interaction: {
+      rowActions: "[{\"key\":\"send\",\"concept\":\"ProcessConversation\",\"action\":\"send\",\"label\":\"Send\"}]"
+    }
   }
 
   purpose {

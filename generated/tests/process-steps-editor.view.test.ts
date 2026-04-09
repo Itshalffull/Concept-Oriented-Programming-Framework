@@ -9,8 +9,12 @@ describe('View: process-steps-editor', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "process-steps-editor-dataSource", {"name":"process-steps-editor-dataSource","kind":"concept-action","config":"{\"concept\":\"ProcessSpec\",\"action\":\"get\",\"params\":{\"spec\":\"{{specId}}\"}}"});
+    await storage.put("presentation", "process-steps-editor-presentation", {"name":"process-steps-editor-presentation","displayType":"table","hints":"{}"});
+    await storage.put("sort", "process-steps-editor-sort", {"name":"process-steps-editor-sort","keys":"[]"});
+    await storage.put("projection", "process-steps-editor-projection", {"name":"process-steps-editor-projection","fields":"[]"});
+    await storage.put("interaction", "process-steps-editor-interaction", {"name":"process-steps-editor-interaction","rowActions":"[{\"key\":\"edit\",\"concept\":\"ProcessSpec\",\"action\":\"update\",\"label\":\"Edit\"}]"});
+    await storage.put('view', "process-steps-editor", {"name":"process-steps-editor","title":"process-steps-editor","description":"","dataSource":"process-steps-editor-dataSource","filter":"","sort":"process-steps-editor-sort","group":"","projection":"process-steps-editor-projection","presentation":"process-steps-editor-presentation","interaction":"process-steps-editor-interaction","features":"[\"sort\",\"projection\",\"interaction\"]","pagination":""});
     analysis = await compileAndAnalyze("process-steps-editor", storage);
   });
 

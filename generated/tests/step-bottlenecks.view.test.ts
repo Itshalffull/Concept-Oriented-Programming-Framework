@@ -9,8 +9,13 @@ describe('View: step-bottlenecks', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "step-bottlenecks-dataSource", {"name":"step-bottlenecks-dataSource","kind":"concept-action","config":"{\"concept\":\"StepRun\",\"action\":\"list\"}"});
+    await storage.put("presentation", "step-bottlenecks-presentation", {"name":"step-bottlenecks-presentation","displayType":"table","hints":"{}"});
+    await storage.put("filter", "step-bottlenecks-filter", {"name":"step-bottlenecks-filter","node":"{\"type\":\"true\"}"});
+    await storage.put("sort", "step-bottlenecks-sort", {"name":"step-bottlenecks-sort","keys":"[]"});
+    await storage.put("group", "step-bottlenecks-group", {"name":"step-bottlenecks-group","config":"{\"type\":\"field\",\"fields\":[\"step_key\"]}"});
+    await storage.put("projection", "step-bottlenecks-projection", {"name":"step-bottlenecks-projection","fields":"[]"});
+    await storage.put('view', "step-bottlenecks", {"name":"step-bottlenecks","title":"step-bottlenecks","description":"","dataSource":"step-bottlenecks-dataSource","filter":"step-bottlenecks-filter","sort":"step-bottlenecks-sort","group":"step-bottlenecks-group","projection":"step-bottlenecks-projection","presentation":"step-bottlenecks-presentation","interaction":"","features":"[\"filter\",\"sort\",\"group\",\"projection\"]","pagination":""});
     analysis = await compileAndAnalyze("step-bottlenecks", storage);
   });
 

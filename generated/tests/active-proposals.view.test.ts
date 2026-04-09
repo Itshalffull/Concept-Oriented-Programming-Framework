@@ -9,8 +9,13 @@ describe('View: active-proposals', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "active-proposals-dataSource", {"name":"active-proposals-dataSource","kind":"concept-action","config":"{\"concept\":\"ContentNode\",\"action\":\"listBySchema\",\"params\":{\"schema\":\"Proposal\"}}"});
+    await storage.put("presentation", "active-proposals-presentation", {"name":"active-proposals-presentation","displayType":"table","hints":"{}"});
+    await storage.put("filter", "active-proposals-filter", {"name":"active-proposals-filter","node":"{\"type\":\"eq\",\"field\":\"status\",\"value\":\"active\"}"});
+    await storage.put("sort", "active-proposals-sort", {"name":"active-proposals-sort","keys":"[{\"field\":\"createdAt\",\"direction\":\"desc\"}]"});
+    await storage.put("projection", "active-proposals-projection", {"name":"active-proposals-projection","fields":"[{\"key\":\"node\",\"label\":\"Proposal\"},{\"key\":\"status\",\"label\":\"Status\"},{\"key\":\"circle\",\"label\":\"Circle\"},{\"key\":\"proposer\",\"label\":\"Proposer\"},{\"key\":\"votes\",\"label\":\"Votes\"}]"});
+    await storage.put("interaction", "active-proposals-interaction", {"name":"active-proposals-interaction","createForm":"{}","rowClick":"{\"navigateTo\":\"/content/{node}\"}","rowActions":"[{\"key\":\"vote\",\"concept\":\"ContentNode\",\"action\":\"update\",\"label\":\"Vote\"}]"});
+    await storage.put('view', "active-proposals", {"name":"active-proposals","title":"active-proposals","description":"","dataSource":"active-proposals-dataSource","filter":"active-proposals-filter","sort":"active-proposals-sort","group":"","projection":"active-proposals-projection","presentation":"active-proposals-presentation","interaction":"active-proposals-interaction","features":"[\"filter\",\"sort\",\"projection\",\"interaction\"]","pagination":""});
     analysis = await compileAndAnalyze("active-proposals", storage);
   });
 

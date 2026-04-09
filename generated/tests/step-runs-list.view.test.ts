@@ -9,8 +9,13 @@ describe('View: step-runs-list', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "step-runs-list-dataSource", {"name":"step-runs-list-dataSource","kind":"concept-action","config":"{\"concept\":\"StepRun\",\"action\":\"list\",\"params\":{\"run_ref\":\"{{runId}}\"}}"});
+    await storage.put("presentation", "step-runs-list-presentation", {"name":"step-runs-list-presentation","displayType":"table","hints":"{}"});
+    await storage.put("filter", "step-runs-list-filter", {"name":"step-runs-list-filter","node":"{\"type\":\"true\"}"});
+    await storage.put("sort", "step-runs-list-sort", {"name":"step-runs-list-sort","keys":"[]"});
+    await storage.put("projection", "step-runs-list-projection", {"name":"step-runs-list-projection","fields":"[]"});
+    await storage.put("pagination", "step-runs-list-pagination", {"name":"step-runs-list-pagination","mode":"offset","pageSize":"25"});
+    await storage.put('view', "step-runs-list", {"name":"step-runs-list","title":"step-runs-list","description":"","dataSource":"step-runs-list-dataSource","filter":"step-runs-list-filter","sort":"step-runs-list-sort","group":"","projection":"step-runs-list-projection","presentation":"step-runs-list-presentation","interaction":"","features":"[\"filter\",\"sort\",\"projection\",\"pagination\"]","pagination":"step-runs-list-pagination"});
     analysis = await compileAndAnalyze("step-runs-list", storage);
   });
 

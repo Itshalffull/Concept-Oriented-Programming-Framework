@@ -9,8 +9,13 @@ describe('View: workflows-list', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "workflows-list-dataSource", {"name":"workflows-list-dataSource","kind":"concept-action","config":"{\"concept\":\"Workflow\",\"action\":\"list\"}"});
+    await storage.put("presentation", "workflows-list-presentation", {"name":"workflows-list-presentation","displayType":"table","hints":"{}"});
+    await storage.put("filter", "workflows-list-filter", {"name":"workflows-list-filter","node":"{\"type\":\"true\"}"});
+    await storage.put("sort", "workflows-list-sort", {"name":"workflows-list-sort","keys":"[]"});
+    await storage.put("projection", "workflows-list-projection", {"name":"workflows-list-projection","fields":"[]"});
+    await storage.put("interaction", "workflows-list-interaction", {"name":"workflows-list-interaction","rowActions":"[{\"key\":\"edit\",\"concept\":\"Workflow\",\"action\":\"update\",\"label\":\"Edit\"}]"});
+    await storage.put('view', "workflows-list", {"name":"workflows-list","title":"workflows-list","description":"","dataSource":"workflows-list-dataSource","filter":"workflows-list-filter","sort":"workflows-list-sort","group":"","projection":"workflows-list-projection","presentation":"workflows-list-presentation","interaction":"workflows-list-interaction","features":"[\"filter\",\"sort\",\"projection\",\"interaction\"]","pagination":""});
     analysis = await compileAndAnalyze("workflows-list", storage);
   });
 

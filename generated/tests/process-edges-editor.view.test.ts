@@ -9,8 +9,12 @@ describe('View: process-edges-editor', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "process-edges-editor-dataSource", {"name":"process-edges-editor-dataSource","kind":"concept-action","config":"{\"concept\":\"ProcessSpec\",\"action\":\"get\",\"params\":{\"spec\":\"{{specId}}\"}}"});
+    await storage.put("presentation", "process-edges-editor-presentation", {"name":"process-edges-editor-presentation","displayType":"table","hints":"{}"});
+    await storage.put("sort", "process-edges-editor-sort", {"name":"process-edges-editor-sort","keys":"[]"});
+    await storage.put("projection", "process-edges-editor-projection", {"name":"process-edges-editor-projection","fields":"[]"});
+    await storage.put("interaction", "process-edges-editor-interaction", {"name":"process-edges-editor-interaction","rowActions":"[{\"key\":\"edit\",\"concept\":\"ProcessSpec\",\"action\":\"update\",\"label\":\"Edit\"}]"});
+    await storage.put('view', "process-edges-editor", {"name":"process-edges-editor","title":"process-edges-editor","description":"","dataSource":"process-edges-editor-dataSource","filter":"","sort":"process-edges-editor-sort","group":"","projection":"process-edges-editor-projection","presentation":"process-edges-editor-presentation","interaction":"process-edges-editor-interaction","features":"[\"sort\",\"projection\",\"interaction\"]","pagination":""});
     analysis = await compileAndAnalyze("process-edges-editor", storage);
   });
 

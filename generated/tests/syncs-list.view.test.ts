@@ -9,8 +9,12 @@ describe('View: syncs-list', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "syncs-list-dataSource", {"name":"syncs-list-dataSource","kind":"concept-action","config":"{\"concept\":\"ContentNode\",\"action\":\"listBySchema\",\"params\":{\"schema\":\"Sync\"}}"});
+    await storage.put("presentation", "syncs-list-presentation", {"name":"syncs-list-presentation","displayType":"table","hints":"{}"});
+    await storage.put("filter", "syncs-list-filter", {"name":"syncs-list-filter","node":"{\"type\":\"true\"}"});
+    await storage.put("sort", "syncs-list-sort", {"name":"syncs-list-sort","keys":"[{\"field\":\"name\",\"direction\":\"asc\"}]"});
+    await storage.put("projection", "syncs-list-projection", {"name":"syncs-list-projection","fields":"[]"});
+    await storage.put('view', "syncs-list", {"name":"syncs-list","title":"syncs-list","description":"","dataSource":"syncs-list-dataSource","filter":"syncs-list-filter","sort":"syncs-list-sort","group":"","projection":"syncs-list-projection","presentation":"syncs-list-presentation","interaction":"","features":"[\"filter\",\"sort\",\"projection\"]","pagination":""});
     analysis = await compileAndAnalyze("syncs-list", storage);
   });
 

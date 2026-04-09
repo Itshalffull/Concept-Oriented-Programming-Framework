@@ -9,8 +9,13 @@ describe('View: process-step-breakdown', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "process-step-breakdown-dataSource", {"name":"process-step-breakdown-dataSource","kind":"concept-action","config":"{\"concept\":\"StepRun\",\"action\":\"list\"}"});
+    await storage.put("presentation", "process-step-breakdown-presentation", {"name":"process-step-breakdown-presentation","displayType":"table","hints":"{}"});
+    await storage.put("filter", "process-step-breakdown-filter", {"name":"process-step-breakdown-filter","node":"{\"type\":\"true\"}"});
+    await storage.put("sort", "process-step-breakdown-sort", {"name":"process-step-breakdown-sort","keys":"[]"});
+    await storage.put("group", "process-step-breakdown-group", {"name":"process-step-breakdown-group","config":"{\"type\":\"field\",\"fields\":[\"step_key\"]}"});
+    await storage.put("projection", "process-step-breakdown-projection", {"name":"process-step-breakdown-projection","fields":"[]"});
+    await storage.put('view', "process-step-breakdown", {"name":"process-step-breakdown","title":"process-step-breakdown","description":"","dataSource":"process-step-breakdown-dataSource","filter":"process-step-breakdown-filter","sort":"process-step-breakdown-sort","group":"process-step-breakdown-group","projection":"process-step-breakdown-projection","presentation":"process-step-breakdown-presentation","interaction":"","features":"[\"filter\",\"sort\",\"group\",\"projection\"]","pagination":""});
     analysis = await compileAndAnalyze("process-step-breakdown", storage);
   });
 

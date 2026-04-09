@@ -9,8 +9,13 @@ describe('View: check-overview', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "check-overview-dataSource", {"name":"check-overview-dataSource","kind":"concept-action","config":"{\"concept\":\"CheckVerification\",\"action\":\"list\"}"});
+    await storage.put("presentation", "check-overview-presentation", {"name":"check-overview-presentation","displayType":"table","hints":"{}"});
+    await storage.put("filter", "check-overview-filter", {"name":"check-overview-filter","node":"{\"type\":\"true\"}"});
+    await storage.put("sort", "check-overview-sort", {"name":"check-overview-sort","keys":"[]"});
+    await storage.put("projection", "check-overview-projection", {"name":"check-overview-projection","fields":"[{\"key\":\"check_ref\",\"label\":\"Check\"},{\"key\":\"step_ref\",\"label\":\"Step\"},{\"key\":\"status\",\"label\":\"Status\"},{\"key\":\"result_score\",\"label\":\"Score\"},{\"key\":\"mode\",\"label\":\"Mode\"},{\"key\":\"evaluated_at\",\"label\":\"Evaluated\"}]"});
+    await storage.put("interaction", "check-overview-interaction", {"name":"check-overview-interaction","rowActions":"[{\"key\":\"edit\",\"concept\":\"ContentNode\",\"action\":\"update\",\"label\":\"Edit\"}]"});
+    await storage.put('view', "check-overview", {"name":"check-overview","title":"check-overview","description":"","dataSource":"check-overview-dataSource","filter":"check-overview-filter","sort":"check-overview-sort","group":"","projection":"check-overview-projection","presentation":"check-overview-presentation","interaction":"check-overview-interaction","features":"[\"filter\",\"sort\",\"projection\",\"interaction\"]","pagination":""});
     analysis = await compileAndAnalyze("check-overview", storage);
   });
 

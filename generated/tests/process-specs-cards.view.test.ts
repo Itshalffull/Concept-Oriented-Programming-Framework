@@ -9,8 +9,13 @@ describe('View: process-specs-cards', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "process-specs-cards-dataSource", {"name":"process-specs-cards-dataSource","kind":"concept-action","config":"{\"concept\":\"ProcessSpec\",\"action\":\"list\"}"});
+    await storage.put("presentation", "process-specs-cards-presentation", {"name":"process-specs-cards-presentation","displayType":"card-grid","hints":"{}"});
+    await storage.put("filter", "process-specs-cards-filter", {"name":"process-specs-cards-filter","node":"{\"type\":\"true\"}"});
+    await storage.put("sort", "process-specs-cards-sort", {"name":"process-specs-cards-sort","keys":"[]"});
+    await storage.put("projection", "process-specs-cards-projection", {"name":"process-specs-cards-projection","fields":"[]"});
+    await storage.put("interaction", "process-specs-cards-interaction", {"name":"process-specs-cards-interaction","rowActions":"[{\"key\":\"edit\",\"concept\":\"ProcessSpec\",\"action\":\"update\",\"label\":\"Edit\"}]"});
+    await storage.put('view', "process-specs-cards", {"name":"process-specs-cards","title":"process-specs-cards","description":"","dataSource":"process-specs-cards-dataSource","filter":"process-specs-cards-filter","sort":"process-specs-cards-sort","group":"","projection":"process-specs-cards-projection","presentation":"process-specs-cards-presentation","interaction":"process-specs-cards-interaction","features":"[\"filter\",\"sort\",\"projection\",\"interaction\"]","pagination":""});
     analysis = await compileAndAnalyze("process-specs-cards", storage);
   });
 

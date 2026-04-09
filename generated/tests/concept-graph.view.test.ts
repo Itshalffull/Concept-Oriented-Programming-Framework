@@ -9,8 +9,10 @@ describe('View: concept-graph', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "concept-graph-dataSource", {"name":"concept-graph-dataSource","kind":"concept-action","config":"{\"concept\":\"ContentNode\",\"action\":\"list\"}"});
+    await storage.put("presentation", "concept-graph-presentation", {"name":"concept-graph-presentation","displayType":"canvas","hints":"{}"});
+    await storage.put("projection", "concept-graph-projection", {"name":"concept-graph-projection","fields":"[{\"key\":\"node\",\"label\":\"Node\"},{\"key\":\"schemas\",\"label\":\"Schemas\"},{\"key\":\"content\",\"label\":\"Content\"}]"});
+    await storage.put('view', "concept-graph", {"name":"concept-graph","title":"concept-graph","description":"","dataSource":"concept-graph-dataSource","filter":"","sort":"","group":"","projection":"concept-graph-projection","presentation":"concept-graph-presentation","interaction":"","features":"[\"projection\"]","pagination":""});
     analysis = await compileAndAnalyze("concept-graph", storage);
   });
 

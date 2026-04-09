@@ -9,8 +9,12 @@ describe('View: themes-list', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "themes-list-dataSource", {"name":"themes-list-dataSource","kind":"concept-action","config":"{\"concept\":\"Theme\",\"action\":\"list\"}"});
+    await storage.put("presentation", "themes-list-presentation", {"name":"themes-list-presentation","displayType":"card-grid","hints":"{}"});
+    await storage.put("filter", "themes-list-filter", {"name":"themes-list-filter","node":"{\"type\":\"true\"}"});
+    await storage.put("sort", "themes-list-sort", {"name":"themes-list-sort","keys":"[{\"field\":\"name\",\"direction\":\"asc\"}]"});
+    await storage.put("projection", "themes-list-projection", {"name":"themes-list-projection","fields":"[]"});
+    await storage.put('view', "themes-list", {"name":"themes-list","title":"themes-list","description":"","dataSource":"themes-list-dataSource","filter":"themes-list-filter","sort":"themes-list-sort","group":"","projection":"themes-list-projection","presentation":"themes-list-presentation","interaction":"","features":"[\"filter\",\"sort\",\"projection\"]","pagination":""});
     analysis = await compileAndAnalyze("themes-list", storage);
   });
 

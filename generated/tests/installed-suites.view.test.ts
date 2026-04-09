@@ -9,8 +9,12 @@ describe('View: installed-suites', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "installed-suites-dataSource", {"name":"installed-suites-dataSource","kind":"concept-action","config":"{\"concept\":\"AppInstallation\",\"action\":\"list\",\"params\":{\"status\":\"installed\"}}"});
+    await storage.put("presentation", "installed-suites-presentation", {"name":"installed-suites-presentation","displayType":"table","hints":"{}"});
+    await storage.put("filter", "installed-suites-filter", {"name":"installed-suites-filter","node":"{\"type\":\"true\"}"});
+    await storage.put("sort", "installed-suites-sort", {"name":"installed-suites-sort","keys":"[{\"field\":\"name\",\"direction\":\"asc\"}]"});
+    await storage.put("projection", "installed-suites-projection", {"name":"installed-suites-projection","fields":"[]"});
+    await storage.put('view', "installed-suites", {"name":"installed-suites","title":"installed-suites","description":"","dataSource":"installed-suites-dataSource","filter":"installed-suites-filter","sort":"installed-suites-sort","group":"","projection":"installed-suites-projection","presentation":"installed-suites-presentation","interaction":"","features":"[\"filter\",\"sort\",\"projection\"]","pagination":""});
     analysis = await compileAndAnalyze("installed-suites", storage);
   });
 

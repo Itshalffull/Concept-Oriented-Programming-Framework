@@ -9,8 +9,11 @@ describe('View: research-plan', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "research-plan-dataSource", {"name":"research-plan-dataSource","kind":"concept-action","config":"{\"concept\":\"ContentNode\",\"action\":\"list\"}"});
+    await storage.put("presentation", "research-plan-presentation", {"name":"research-plan-presentation","displayType":"table","hints":"{}"});
+    await storage.put("projection", "research-plan-projection", {"name":"research-plan-projection","fields":"[]"});
+    await storage.put("interaction", "research-plan-interaction", {"name":"research-plan-interaction","rowActions":"[{\"key\":\"edit\",\"concept\":\"ContentNode\",\"action\":\"update\",\"label\":\"Edit\"}]"});
+    await storage.put('view', "research-plan", {"name":"research-plan","title":"research-plan","description":"","dataSource":"research-plan-dataSource","filter":"","sort":"","group":"","projection":"research-plan-projection","presentation":"research-plan-presentation","interaction":"research-plan-interaction","features":"[\"projection\",\"interaction\"]","pagination":""});
     analysis = await compileAndAnalyze("research-plan", storage);
   });
 

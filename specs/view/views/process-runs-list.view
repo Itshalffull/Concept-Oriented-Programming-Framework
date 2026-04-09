@@ -26,6 +26,9 @@ view "process-runs-list" {
       displayType: "table",
       hints: "{}"
     }
+    interaction: {
+      rowActions: "[{\"key\":\"view\",\"concept\":\"ProcessRun\",\"action\":\"get\",\"label\":\"View\"}]"
+    }
   }
 
   purpose {

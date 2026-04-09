@@ -9,8 +9,11 @@ describe('View: reputation-leaderboard', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "reputation-leaderboard-dataSource", {"name":"reputation-leaderboard-dataSource","kind":"concept-action","config":"{\"concept\":\"ContentNode\",\"action\":\"list\"}"});
+    await storage.put("presentation", "reputation-leaderboard-presentation", {"name":"reputation-leaderboard-presentation","displayType":"table","hints":"{}"});
+    await storage.put("sort", "reputation-leaderboard-sort", {"name":"reputation-leaderboard-sort","keys":"[{\"field\":\"score\",\"direction\":\"desc\"}]"});
+    await storage.put("projection", "reputation-leaderboard-projection", {"name":"reputation-leaderboard-projection","fields":"[]"});
+    await storage.put('view', "reputation-leaderboard", {"name":"reputation-leaderboard","title":"reputation-leaderboard","description":"","dataSource":"reputation-leaderboard-dataSource","filter":"","sort":"reputation-leaderboard-sort","group":"","projection":"reputation-leaderboard-projection","presentation":"reputation-leaderboard-presentation","interaction":"","features":"[\"sort\",\"projection\"]","pagination":""});
     analysis = await compileAndAnalyze("reputation-leaderboard", storage);
   });
 

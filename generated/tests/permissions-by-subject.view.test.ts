@@ -9,8 +9,12 @@ describe('View: permissions-by-subject', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "permissions-by-subject-dataSource", {"name":"permissions-by-subject-dataSource","kind":"concept-action","config":"{\"concept\":\"ContentNode\",\"action\":\"list\"}"});
+    await storage.put("presentation", "permissions-by-subject-presentation", {"name":"permissions-by-subject-presentation","displayType":"table","hints":"{}"});
+    await storage.put("filter", "permissions-by-subject-filter", {"name":"permissions-by-subject-filter","node":"{\"type\":\"true\"}"});
+    await storage.put("sort", "permissions-by-subject-sort", {"name":"permissions-by-subject-sort","keys":"[]"});
+    await storage.put("projection", "permissions-by-subject-projection", {"name":"permissions-by-subject-projection","fields":"[]"});
+    await storage.put('view', "permissions-by-subject", {"name":"permissions-by-subject","title":"permissions-by-subject","description":"","dataSource":"permissions-by-subject-dataSource","filter":"permissions-by-subject-filter","sort":"permissions-by-subject-sort","group":"","projection":"permissions-by-subject-projection","presentation":"permissions-by-subject-presentation","interaction":"","features":"[\"filter\",\"sort\",\"projection\"]","pagination":""});
     analysis = await compileAndAnalyze("permissions-by-subject", storage);
   });
 

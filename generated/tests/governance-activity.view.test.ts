@@ -9,8 +9,12 @@ describe('View: governance-activity', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "governance-activity-dataSource", {"name":"governance-activity-dataSource","kind":"concept-action","config":"{\"concept\":\"ContentNode\",\"action\":\"listBySchema\",\"params\":{\"schema\":\"GovernanceEvent\"}}"});
+    await storage.put("presentation", "governance-activity-presentation", {"name":"governance-activity-presentation","displayType":"table","hints":"{}"});
+    await storage.put("filter", "governance-activity-filter", {"name":"governance-activity-filter","node":"{\"type\":\"eq\",\"field\":\"eventType\",\"value\":\"all\"}"});
+    await storage.put("sort", "governance-activity-sort", {"name":"governance-activity-sort","keys":"[{\"field\":\"timestamp\",\"direction\":\"desc\"}]"});
+    await storage.put("projection", "governance-activity-projection", {"name":"governance-activity-projection","fields":"[{\"key\":\"node\",\"label\":\"Event\"},{\"key\":\"eventType\",\"label\":\"Type\"},{\"key\":\"actor\",\"label\":\"Actor\"},{\"key\":\"target\",\"label\":\"Target\"},{\"key\":\"timestamp\",\"label\":\"Time\"}]"});
+    await storage.put('view', "governance-activity", {"name":"governance-activity","title":"governance-activity","description":"","dataSource":"governance-activity-dataSource","filter":"governance-activity-filter","sort":"governance-activity-sort","group":"","projection":"governance-activity-projection","presentation":"governance-activity-presentation","interaction":"","features":"[\"filter\",\"sort\",\"projection\"]","pagination":""});
     analysis = await compileAndAnalyze("governance-activity", storage);
   });
 

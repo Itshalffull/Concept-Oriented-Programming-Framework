@@ -26,6 +26,9 @@ view "automations-list" {
       displayType: "table",
       hints: "{}"
     }
+    interaction: {
+      rowActions: "[{\"key\":\"edit\",\"concept\":\"AutomationRule\",\"action\":\"update\",\"label\":\"Edit\"}]"
+    }
   }
 
   purpose {

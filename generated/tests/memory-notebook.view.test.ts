@@ -9,8 +9,13 @@ describe('View: memory-notebook', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "memory-notebook-dataSource", {"name":"memory-notebook-dataSource","kind":"concept-action","config":"{\"concept\":\"ContentNode\",\"action\":\"list\"}"});
+    await storage.put("presentation", "memory-notebook-presentation", {"name":"memory-notebook-presentation","displayType":"table","hints":"{}"});
+    await storage.put("filter", "memory-notebook-filter", {"name":"memory-notebook-filter","node":"{\"type\":\"true\"}"});
+    await storage.put("sort", "memory-notebook-sort", {"name":"memory-notebook-sort","keys":"[]"});
+    await storage.put("projection", "memory-notebook-projection", {"name":"memory-notebook-projection","fields":"[]"});
+    await storage.put("interaction", "memory-notebook-interaction", {"name":"memory-notebook-interaction","rowActions":"[{\"key\":\"edit\",\"concept\":\"ContentNode\",\"action\":\"update\",\"label\":\"Edit\"}]"});
+    await storage.put('view', "memory-notebook", {"name":"memory-notebook","title":"memory-notebook","description":"","dataSource":"memory-notebook-dataSource","filter":"memory-notebook-filter","sort":"memory-notebook-sort","group":"","projection":"memory-notebook-projection","presentation":"memory-notebook-presentation","interaction":"memory-notebook-interaction","features":"[\"filter\",\"sort\",\"projection\",\"interaction\"]","pagination":""});
     analysis = await compileAndAnalyze("memory-notebook", storage);
   });
 

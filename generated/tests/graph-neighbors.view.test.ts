@@ -9,8 +9,10 @@ describe('View: graph-neighbors', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "graph-neighbors-dataSource", {"name":"graph-neighbors-dataSource","kind":"concept-action","config":"{\"concept\":\"ContentNode\",\"action\":\"list\"}"});
+    await storage.put("presentation", "graph-neighbors-presentation", {"name":"graph-neighbors-presentation","displayType":"graph","hints":"{}"});
+    await storage.put("projection", "graph-neighbors-projection", {"name":"graph-neighbors-projection","fields":"[{\"key\":\"node\",\"label\":\"Node\"},{\"key\":\"type\",\"label\":\"Type\"}]"});
+    await storage.put('view', "graph-neighbors", {"name":"graph-neighbors","title":"graph-neighbors","description":"","dataSource":"graph-neighbors-dataSource","filter":"","sort":"","group":"","projection":"graph-neighbors-projection","presentation":"graph-neighbors-presentation","interaction":"","features":"[\"projection\"]","pagination":""});
     analysis = await compileAndAnalyze("graph-neighbors", storage);
   });
 

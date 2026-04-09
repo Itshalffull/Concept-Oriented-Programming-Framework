@@ -22,11 +22,7 @@ view "agent-library" {
     projection: {
       fields: "[{\"key\":\"node\",\"label\":\"Agent\"},{\"key\":\"name\",\"label\":\"Name\"},{\"key\":\"capability\",\"label\":\"Capability\"},{\"key\":\"status\",\"label\":\"Status\"}]"
     }
-    interaction: {
-      createForm: "{\"concept\":\"ContentNode\",\"action\":\"create\",\"fields\":[{\"name\":\"node\",\"label\":\"Agent ID\",\"required\":true},{\"name\":\"content\",\"label\":\"Persona Content\",\"type\":\"textarea\"}]}",
-      rowClick: "{\"navigateTo\":\"/content/{node}\"}",
-      rowActions: "[]"
-    }
+
     presentation: {
       displayType: "card-grid",
       hints: "{}"

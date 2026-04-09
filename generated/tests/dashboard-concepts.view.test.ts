@@ -9,8 +9,11 @@ describe('View: dashboard-concepts', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "dashboard-concepts-dataSource", {"name":"dashboard-concepts-dataSource","kind":"concept-action","config":"{\"concept\":\"ContentNode\",\"action\":\"listBySchema\",\"params\":{\"schema\":\"Concept\"}}"});
+    await storage.put("presentation", "dashboard-concepts-presentation", {"name":"dashboard-concepts-presentation","displayType":"table","hints":"{}"});
+    await storage.put("sort", "dashboard-concepts-sort", {"name":"dashboard-concepts-sort","keys":"[]"});
+    await storage.put("projection", "dashboard-concepts-projection", {"name":"dashboard-concepts-projection","fields":"[{\"key\":\"node\",\"label\":\"Concept\"},{\"key\":\"schemas\",\"label\":\"Schemas\"},{\"key\":\"createdBy\",\"label\":\"Source\"}]"});
+    await storage.put('view', "dashboard-concepts", {"name":"dashboard-concepts","title":"dashboard-concepts","description":"","dataSource":"dashboard-concepts-dataSource","filter":"","sort":"dashboard-concepts-sort","group":"","projection":"dashboard-concepts-projection","presentation":"dashboard-concepts-presentation","interaction":"","features":"[\"sort\",\"projection\"]","pagination":""});
     analysis = await compileAndAnalyze("dashboard-concepts", storage);
   });
 

@@ -26,6 +26,9 @@ view "my-work-items" {
       displayType: "table",
       hints: "{}"
     }
+    interaction: {
+      rowActions: "[{\"key\":\"complete\",\"concept\":\"WorkItem\",\"action\":\"complete\",\"label\":\"Complete\"}]"
+    }
   }
 
   purpose {

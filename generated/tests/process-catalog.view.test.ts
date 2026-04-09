@@ -9,8 +9,12 @@ describe('View: process-catalog', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "process-catalog-dataSource", {"name":"process-catalog-dataSource","kind":"concept-action","config":"{\"concept\":\"AutomationRule\",\"action\":\"list\"}"});
+    await storage.put("presentation", "process-catalog-presentation", {"name":"process-catalog-presentation","displayType":"card-grid","hints":"{}"});
+    await storage.put("filter", "process-catalog-filter", {"name":"process-catalog-filter","node":"{\"type\":\"true\"}"});
+    await storage.put("sort", "process-catalog-sort", {"name":"process-catalog-sort","keys":"[]"});
+    await storage.put("projection", "process-catalog-projection", {"name":"process-catalog-projection","fields":"[]"});
+    await storage.put('view', "process-catalog", {"name":"process-catalog","title":"process-catalog","description":"","dataSource":"process-catalog-dataSource","filter":"process-catalog-filter","sort":"process-catalog-sort","group":"","projection":"process-catalog-projection","presentation":"process-catalog-presentation","interaction":"","features":"[\"filter\",\"sort\",\"projection\"]","pagination":""});
     analysis = await compileAndAnalyze("process-catalog", storage);
   });
 

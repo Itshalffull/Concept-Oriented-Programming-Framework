@@ -9,8 +9,11 @@ describe('View: org-designer', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "org-designer-dataSource", {"name":"org-designer-dataSource","kind":"concept-action","config":"{\"concept\":\"ContentNode\",\"action\":\"list\"}"});
+    await storage.put("presentation", "org-designer-presentation", {"name":"org-designer-presentation","displayType":"graph","hints":"{}"});
+    await storage.put("projection", "org-designer-projection", {"name":"org-designer-projection","fields":"[]"});
+    await storage.put("interaction", "org-designer-interaction", {"name":"org-designer-interaction","rowActions":"[{\"key\":\"edit\",\"concept\":\"ContentNode\",\"action\":\"update\",\"label\":\"Edit\"}]"});
+    await storage.put('view', "org-designer", {"name":"org-designer","title":"org-designer","description":"","dataSource":"org-designer-dataSource","filter":"","sort":"","group":"","projection":"org-designer-projection","presentation":"org-designer-presentation","interaction":"org-designer-interaction","features":"[\"projection\",\"interaction\"]","pagination":""});
     analysis = await compileAndAnalyze("org-designer", storage);
   });
 

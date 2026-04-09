@@ -26,6 +26,9 @@ view "media-library" {
       displayType: "card-grid",
       hints: "{}"
     }
+    interaction: {
+      rowActions: "[{\"key\":\"upload\",\"concept\":\"ContentNode\",\"action\":\"create\",\"label\":\"Upload\"}]"
+    }
   }
 
   purpose {

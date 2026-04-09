@@ -9,8 +9,11 @@ describe('View: report-builder', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "report-builder-dataSource", {"name":"report-builder-dataSource","kind":"concept-action","config":"{\"concept\":\"ContentNode\",\"action\":\"list\"}"});
+    await storage.put("presentation", "report-builder-presentation", {"name":"report-builder-presentation","displayType":"table","hints":"{}"});
+    await storage.put("projection", "report-builder-projection", {"name":"report-builder-projection","fields":"[]"});
+    await storage.put("interaction", "report-builder-interaction", {"name":"report-builder-interaction","rowActions":"[{\"key\":\"edit\",\"concept\":\"ContentNode\",\"action\":\"update\",\"label\":\"Edit\"}]"});
+    await storage.put('view', "report-builder", {"name":"report-builder","title":"report-builder","description":"","dataSource":"report-builder-dataSource","filter":"","sort":"","group":"","projection":"report-builder-projection","presentation":"report-builder-presentation","interaction":"report-builder-interaction","features":"[\"projection\",\"interaction\"]","pagination":""});
     analysis = await compileAndAnalyze("report-builder", storage);
   });
 

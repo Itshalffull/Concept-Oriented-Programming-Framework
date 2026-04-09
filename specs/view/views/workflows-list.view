@@ -26,6 +26,9 @@ view "workflows-list" {
       displayType: "table",
       hints: "{}"
     }
+    interaction: {
+      rowActions: "[{\"key\":\"edit\",\"concept\":\"Workflow\",\"action\":\"update\",\"label\":\"Edit\"}]"
+    }
   }
 
   purpose {

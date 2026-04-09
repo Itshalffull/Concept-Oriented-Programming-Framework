@@ -9,8 +9,13 @@ describe('View: my-work-items', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "my-work-items-dataSource", {"name":"my-work-items-dataSource","kind":"concept-action","config":"{\"concept\":\"WorkItem\",\"action\":\"list\",\"params\":{\"assignee\":\"{{currentUser}}\"}}"});
+    await storage.put("presentation", "my-work-items-presentation", {"name":"my-work-items-presentation","displayType":"table","hints":"{}"});
+    await storage.put("filter", "my-work-items-filter", {"name":"my-work-items-filter","node":"{\"type\":\"true\"}"});
+    await storage.put("sort", "my-work-items-sort", {"name":"my-work-items-sort","keys":"[]"});
+    await storage.put("projection", "my-work-items-projection", {"name":"my-work-items-projection","fields":"[]"});
+    await storage.put("interaction", "my-work-items-interaction", {"name":"my-work-items-interaction","rowActions":"[{\"key\":\"complete\",\"concept\":\"WorkItem\",\"action\":\"complete\",\"label\":\"Complete\"}]"});
+    await storage.put('view', "my-work-items", {"name":"my-work-items","title":"my-work-items","description":"","dataSource":"my-work-items-dataSource","filter":"my-work-items-filter","sort":"my-work-items-sort","group":"","projection":"my-work-items-projection","presentation":"my-work-items-presentation","interaction":"my-work-items-interaction","features":"[\"filter\",\"sort\",\"projection\",\"interaction\"]","pagination":""});
     analysis = await compileAndAnalyze("my-work-items", storage);
   });
 

@@ -9,8 +9,11 @@ describe('View: unlinked-references', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "unlinked-references-dataSource", {"name":"unlinked-references-dataSource","kind":"concept-action","config":"{\"concept\":\"ContentNode\",\"action\":\"list\"}"});
+    await storage.put("presentation", "unlinked-references-presentation", {"name":"unlinked-references-presentation","displayType":"table","hints":"{}"});
+    await storage.put("sort", "unlinked-references-sort", {"name":"unlinked-references-sort","keys":"[]"});
+    await storage.put("projection", "unlinked-references-projection", {"name":"unlinked-references-projection","fields":"[]"});
+    await storage.put('view', "unlinked-references", {"name":"unlinked-references","title":"unlinked-references","description":"","dataSource":"unlinked-references-dataSource","filter":"","sort":"unlinked-references-sort","group":"","projection":"unlinked-references-projection","presentation":"unlinked-references-presentation","interaction":"","features":"[\"sort\",\"projection\"]","pagination":""});
     analysis = await compileAndAnalyze("unlinked-references", storage);
   });
 

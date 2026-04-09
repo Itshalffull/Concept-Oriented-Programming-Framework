@@ -26,6 +26,9 @@ view "process-specs-list" {
       displayType: "table",
       hints: "{}"
     }
+    interaction: {
+      rowActions: "[{\"key\":\"edit\",\"concept\":\"ProcessSpec\",\"action\":\"update\",\"label\":\"Edit\"}]"
+    }
   }
 
   purpose {

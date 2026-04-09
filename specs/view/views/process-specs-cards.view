@@ -26,6 +26,9 @@ view "process-specs-cards" {
       displayType: "card-grid",
       hints: "{}"
     }
+    interaction: {
+      rowActions: "[{\"key\":\"edit\",\"concept\":\"ProcessSpec\",\"action\":\"update\",\"label\":\"Edit\"}]"
+    }
   }
 
   purpose {

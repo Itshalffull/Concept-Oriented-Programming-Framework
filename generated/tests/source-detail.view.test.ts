@@ -9,8 +9,11 @@ describe('View: source-detail', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "source-detail-dataSource", {"name":"source-detail-dataSource","kind":"concept-action","config":"{\"concept\":\"ContentNode\",\"action\":\"list\"}"});
+    await storage.put("presentation", "source-detail-presentation", {"name":"source-detail-presentation","displayType":"table","hints":"{}"});
+    await storage.put("projection", "source-detail-projection", {"name":"source-detail-projection","fields":"[]"});
+    await storage.put("interaction", "source-detail-interaction", {"name":"source-detail-interaction","rowActions":"[{\"key\":\"edit\",\"concept\":\"ContentNode\",\"action\":\"update\",\"label\":\"Edit\"}]"});
+    await storage.put('view', "source-detail", {"name":"source-detail","title":"source-detail","description":"","dataSource":"source-detail-dataSource","filter":"","sort":"","group":"","projection":"source-detail-projection","presentation":"source-detail-presentation","interaction":"source-detail-interaction","features":"[\"projection\",\"interaction\"]","pagination":""});
     analysis = await compileAndAnalyze("source-detail", storage);
   });
 

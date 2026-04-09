@@ -26,6 +26,9 @@ view "research-projects" {
       displayType: "card-grid",
       hints: "{}"
     }
+    interaction: {
+      rowActions: "[{\"key\":\"open\",\"concept\":\"ContentNode\",\"action\":\"get\",\"label\":\"Open\"}]"
+    }
   }
 
   purpose {

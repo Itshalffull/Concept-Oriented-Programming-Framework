@@ -9,8 +9,12 @@ describe('View: step-checks', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "step-checks-dataSource", {"name":"step-checks-dataSource","kind":"concept-action","config":"{\"concept\":\"CheckVerification\",\"action\":\"list\",\"params\":{\"step_ref\":\"{{stepRef}}\"}}"});
+    await storage.put("presentation", "step-checks-presentation", {"name":"step-checks-presentation","displayType":"table","hints":"{}"});
+    await storage.put("filter", "step-checks-filter", {"name":"step-checks-filter","node":"{\"type\":\"true\"}"});
+    await storage.put("sort", "step-checks-sort", {"name":"step-checks-sort","keys":"[]"});
+    await storage.put("projection", "step-checks-projection", {"name":"step-checks-projection","fields":"[]"});
+    await storage.put('view', "step-checks", {"name":"step-checks","title":"step-checks","description":"","dataSource":"step-checks-dataSource","filter":"step-checks-filter","sort":"step-checks-sort","group":"","projection":"step-checks-projection","presentation":"step-checks-presentation","interaction":"","features":"[\"filter\",\"sort\",\"projection\"]","pagination":""});
     analysis = await compileAndAnalyze("step-checks", storage);
   });
 

@@ -9,8 +9,12 @@ describe('View: schemas-list', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "schemas-list-dataSource", {"name":"schemas-list-dataSource","kind":"concept-action","config":"{\"concept\":\"Schema\",\"action\":\"list\"}"});
+    await storage.put("presentation", "schemas-list-presentation", {"name":"schemas-list-presentation","displayType":"table","hints":"{}"});
+    await storage.put("filter", "schemas-list-filter", {"name":"schemas-list-filter","node":"{\"type\":\"true\"}"});
+    await storage.put("sort", "schemas-list-sort", {"name":"schemas-list-sort","keys":"[{\"field\":\"name\",\"direction\":\"asc\"}]"});
+    await storage.put("projection", "schemas-list-projection", {"name":"schemas-list-projection","fields":"[]"});
+    await storage.put('view', "schemas-list", {"name":"schemas-list","title":"schemas-list","description":"","dataSource":"schemas-list-dataSource","filter":"schemas-list-filter","sort":"schemas-list-sort","group":"","projection":"schemas-list-projection","presentation":"schemas-list-presentation","interaction":"","features":"[\"filter\",\"sort\",\"projection\"]","pagination":""});
     analysis = await compileAndAnalyze("schemas-list", storage);
   });
 

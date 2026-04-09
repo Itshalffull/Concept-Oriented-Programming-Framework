@@ -9,8 +9,12 @@ describe('View: check-failures', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "check-failures-dataSource", {"name":"check-failures-dataSource","kind":"concept-action","config":"{\"concept\":\"CheckVerification\",\"action\":\"list\",\"params\":{\"status\":\"failing\"}}"});
+    await storage.put("presentation", "check-failures-presentation", {"name":"check-failures-presentation","displayType":"table","hints":"{}"});
+    await storage.put("filter", "check-failures-filter", {"name":"check-failures-filter","node":"{\"type\":\"true\"}"});
+    await storage.put("sort", "check-failures-sort", {"name":"check-failures-sort","keys":"[]"});
+    await storage.put("projection", "check-failures-projection", {"name":"check-failures-projection","fields":"[{\"key\":\"check_ref\",\"label\":\"Check\"},{\"key\":\"step_ref\",\"label\":\"Step\"},{\"key\":\"status\",\"label\":\"Status\"},{\"key\":\"result_score\",\"label\":\"Score\"},{\"key\":\"result_evidence\",\"label\":\"Evidence\"}]"});
+    await storage.put('view', "check-failures", {"name":"check-failures","title":"check-failures","description":"","dataSource":"check-failures-dataSource","filter":"check-failures-filter","sort":"check-failures-sort","group":"","projection":"check-failures-projection","presentation":"check-failures-presentation","interaction":"","features":"[\"filter\",\"sort\",\"projection\"]","pagination":""});
     analysis = await compileAndAnalyze("check-failures", storage);
   });
 

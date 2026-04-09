@@ -9,8 +9,10 @@ describe('View: simple-list', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "simple-list-dataSource", {"name":"simple-list-dataSource","kind":"concept-action","config":"{\"concept\":\"ContentNode\",\"action\":\"list\"}"});
+    await storage.put("presentation", "simple-list-presentation", {"name":"simple-list-presentation","displayType":"table","hints":"{}"});
+    await storage.put("sort", "simple-list-sort", {"name":"simple-list-sort","keys":"[]"});
+    await storage.put('view', "simple-list", {"name":"simple-list","title":"simple-list","description":"","dataSource":"simple-list-dataSource","filter":"","sort":"simple-list-sort","group":"","projection":"","presentation":"simple-list-presentation","interaction":"","features":"[\"sort\"]","pagination":""});
     analysis = await compileAndAnalyze("simple-list", storage);
   });
 

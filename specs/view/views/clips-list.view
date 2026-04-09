@@ -22,11 +22,7 @@ view "clips-list" {
     projection: {
       fields: "[{\"key\":\"node\",\"label\":\"Clip\"},{\"key\":\"kind\",\"label\":\"Kind\"},{\"key\":\"startTime\",\"label\":\"Start\"},{\"key\":\"endTime\",\"label\":\"End\"},{\"key\":\"status\",\"label\":\"Status\"}]"
     }
-    interaction: {
-      createForm: "{\"concept\":\"ContentNode\",\"action\":\"create\",\"fields\":[{\"name\":\"node\",\"label\":\"Clip ID\",\"required\":true},{\"name\":\"content\",\"label\":\"Content\",\"type\":\"textarea\"}]}",
-      rowClick: "{\"navigateTo\":\"/content/{node}\"}",
-      rowActions: "[]"
-    }
+
     presentation: {
       displayType: "card-grid",
       hints: "{}"

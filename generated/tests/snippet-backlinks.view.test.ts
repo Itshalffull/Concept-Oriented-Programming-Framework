@@ -9,8 +9,11 @@ describe('View: snippet-backlinks', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "snippet-backlinks-dataSource", {"name":"snippet-backlinks-dataSource","kind":"concept-action","config":"{\"concept\":\"Reference\",\"action\":\"getRefs\",\"params\":{\"source\":\"{{entityId}}\"}}"});
+    await storage.put("presentation", "snippet-backlinks-presentation", {"name":"snippet-backlinks-presentation","displayType":"table","hints":"{}"});
+    await storage.put("sort", "snippet-backlinks-sort", {"name":"snippet-backlinks-sort","keys":"[]"});
+    await storage.put("projection", "snippet-backlinks-projection", {"name":"snippet-backlinks-projection","fields":"[]"});
+    await storage.put('view', "snippet-backlinks", {"name":"snippet-backlinks","title":"snippet-backlinks","description":"","dataSource":"snippet-backlinks-dataSource","filter":"","sort":"snippet-backlinks-sort","group":"","projection":"snippet-backlinks-projection","presentation":"snippet-backlinks-presentation","interaction":"","features":"[\"sort\",\"projection\"]","pagination":""});
     analysis = await compileAndAnalyze("snippet-backlinks", storage);
   });
 

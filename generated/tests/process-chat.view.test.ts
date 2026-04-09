@@ -9,8 +9,12 @@ describe('View: process-chat', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "process-chat-dataSource", {"name":"process-chat-dataSource","kind":"concept-action","config":"{\"concept\":\"ProcessConversation\",\"action\":\"list\",\"params\":{\"run_ref\":\"{{runId}}\"}}"});
+    await storage.put("presentation", "process-chat-presentation", {"name":"process-chat-presentation","displayType":"table","hints":"{}"});
+    await storage.put("interaction", "process-chat-interaction", {"name":"process-chat-interaction","rowActions":"[{\"key\":\"send\",\"concept\":\"ProcessConversation\",\"action\":\"send\",\"label\":\"Send\"}]"});
+    await storage.put("sort", "process-chat-sort", {"name":"process-chat-sort","keys":"[]"});
+    await storage.put("pagination", "process-chat-pagination", {"name":"process-chat-pagination","mode":"offset","pageSize":"25"});
+    await storage.put('view', "process-chat", {"name":"process-chat","title":"process-chat","description":"","dataSource":"process-chat-dataSource","filter":"","sort":"process-chat-sort","group":"","projection":"","presentation":"process-chat-presentation","interaction":"process-chat-interaction","features":"[\"interaction\",\"sort\",\"pagination\"]","pagination":"process-chat-pagination"});
     analysis = await compileAndAnalyze("process-chat", storage);
   });
 

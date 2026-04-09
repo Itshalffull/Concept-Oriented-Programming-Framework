@@ -9,8 +9,12 @@ describe('View: views-list', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "views-list-dataSource", {"name":"views-list-dataSource","kind":"concept-action","config":"{\"concept\":\"View\",\"action\":\"list\"}"});
+    await storage.put("presentation", "views-list-presentation", {"name":"views-list-presentation","displayType":"table","hints":"{}"});
+    await storage.put("filter", "views-list-filter", {"name":"views-list-filter","node":"{\"type\":\"true\"}"});
+    await storage.put("sort", "views-list-sort", {"name":"views-list-sort","keys":"[{\"field\":\"name\",\"direction\":\"asc\"}]"});
+    await storage.put("projection", "views-list-projection", {"name":"views-list-projection","fields":"[]"});
+    await storage.put('view', "views-list", {"name":"views-list","title":"views-list","description":"","dataSource":"views-list-dataSource","filter":"views-list-filter","sort":"views-list-sort","group":"","projection":"views-list-projection","presentation":"views-list-presentation","interaction":"","features":"[\"filter\",\"sort\",\"projection\"]","pagination":""});
     analysis = await compileAndAnalyze("views-list", storage);
   });
 

@@ -9,8 +9,10 @@ describe('View: entity-content', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "entity-content-dataSource", {"name":"entity-content-dataSource","kind":"concept-action","config":"{\"concept\":\"ContentNode\",\"action\":\"get\",\"params\":{\"node\":\"{{entityId}}\"}}"});
+    await storage.put("presentation", "entity-content-presentation", {"name":"entity-content-presentation","displayType":"content-body","hints":"{}"});
+    await storage.put("projection", "entity-content-projection", {"name":"entity-content-projection","fields":"[{\"key\":\"content\",\"label\":\"Content\"}]"});
+    await storage.put('view', "entity-content", {"name":"entity-content","title":"entity-content","description":"","dataSource":"entity-content-dataSource","filter":"","sort":"","group":"","projection":"entity-content-projection","presentation":"entity-content-presentation","interaction":"","features":"[\"projection\"]","pagination":""});
     analysis = await compileAndAnalyze("entity-content", storage);
   });
 

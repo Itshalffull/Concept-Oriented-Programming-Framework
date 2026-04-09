@@ -9,8 +9,13 @@ describe('View: source-library', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "source-library-dataSource", {"name":"source-library-dataSource","kind":"concept-action","config":"{\"concept\":\"ContentNode\",\"action\":\"list\"}"});
+    await storage.put("presentation", "source-library-presentation", {"name":"source-library-presentation","displayType":"table","hints":"{}"});
+    await storage.put("filter", "source-library-filter", {"name":"source-library-filter","node":"{\"type\":\"true\"}"});
+    await storage.put("sort", "source-library-sort", {"name":"source-library-sort","keys":"[]"});
+    await storage.put("pagination", "source-library-pagination", {"name":"source-library-pagination","mode":"offset","pageSize":"25"});
+    await storage.put("projection", "source-library-projection", {"name":"source-library-projection","fields":"[]"});
+    await storage.put('view', "source-library", {"name":"source-library","title":"source-library","description":"","dataSource":"source-library-dataSource","filter":"source-library-filter","sort":"source-library-sort","group":"","projection":"source-library-projection","presentation":"source-library-presentation","interaction":"","features":"[\"filter\",\"sort\",\"pagination\",\"projection\"]","pagination":"source-library-pagination"});
     analysis = await compileAndAnalyze("source-library", storage);
   });
 

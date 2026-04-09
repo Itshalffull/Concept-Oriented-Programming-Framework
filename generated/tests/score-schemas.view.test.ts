@@ -9,8 +9,12 @@ describe('View: score-schemas', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "score-schemas-dataSource", {"name":"score-schemas-dataSource","kind":"concept-action","config":"{\"concept\":\"Schema\",\"action\":\"list\"}"});
+    await storage.put("presentation", "score-schemas-presentation", {"name":"score-schemas-presentation","displayType":"card-grid","hints":"{}"});
+    await storage.put("filter", "score-schemas-filter", {"name":"score-schemas-filter","node":"{\"type\":\"true\"}"});
+    await storage.put("sort", "score-schemas-sort", {"name":"score-schemas-sort","keys":"[{\"field\":\"name\",\"direction\":\"asc\"}]"});
+    await storage.put("projection", "score-schemas-projection", {"name":"score-schemas-projection","fields":"[]"});
+    await storage.put('view', "score-schemas", {"name":"score-schemas","title":"score-schemas","description":"","dataSource":"score-schemas-dataSource","filter":"score-schemas-filter","sort":"score-schemas-sort","group":"","projection":"score-schemas-projection","presentation":"score-schemas-presentation","interaction":"","features":"[\"filter\",\"sort\",\"projection\"]","pagination":""});
     analysis = await compileAndAnalyze("score-schemas", storage);
   });
 

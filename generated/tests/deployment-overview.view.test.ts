@@ -9,8 +9,10 @@ describe('View: deployment-overview', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "deployment-overview-dataSource", {"name":"deployment-overview-dataSource","kind":"concept-action","config":"{\"concept\":\"ContentNode\",\"action\":\"list\"}"});
+    await storage.put("presentation", "deployment-overview-presentation", {"name":"deployment-overview-presentation","displayType":"table","hints":"{}"});
+    await storage.put("projection", "deployment-overview-projection", {"name":"deployment-overview-projection","fields":"[]"});
+    await storage.put('view', "deployment-overview", {"name":"deployment-overview","title":"deployment-overview","description":"","dataSource":"deployment-overview-dataSource","filter":"","sort":"","group":"","projection":"deployment-overview-projection","presentation":"deployment-overview-presentation","interaction":"","features":"[\"projection\"]","pagination":""});
     analysis = await compileAndAnalyze("deployment-overview", storage);
   });
 

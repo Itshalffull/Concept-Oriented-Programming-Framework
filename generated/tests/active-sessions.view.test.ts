@@ -9,8 +9,12 @@ describe('View: active-sessions', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "active-sessions-dataSource", {"name":"active-sessions-dataSource","kind":"concept-action","config":"{\"concept\":\"AgentSession\",\"action\":\"list\",\"params\":{\"status\":\"active\"}}"});
+    await storage.put("presentation", "active-sessions-presentation", {"name":"active-sessions-presentation","displayType":"table","hints":"{}"});
+    await storage.put("filter", "active-sessions-filter", {"name":"active-sessions-filter","node":"{\"type\":\"eq\",\"field\":\"status\",\"value\":\"active\"}"});
+    await storage.put("sort", "active-sessions-sort", {"name":"active-sessions-sort","keys":"[{\"field\":\"startedAt\",\"direction\":\"desc\"}]"});
+    await storage.put("projection", "active-sessions-projection", {"name":"active-sessions-projection","fields":"[{\"key\":\"session\",\"label\":\"Session\"},{\"key\":\"agent\",\"label\":\"Agent\"},{\"key\":\"status\",\"label\":\"Status\"},{\"key\":\"startedAt\",\"label\":\"Started\"},{\"key\":\"duration\",\"label\":\"Duration\"}]"});
+    await storage.put('view', "active-sessions", {"name":"active-sessions","title":"active-sessions","description":"","dataSource":"active-sessions-dataSource","filter":"active-sessions-filter","sort":"active-sessions-sort","group":"","projection":"active-sessions-projection","presentation":"active-sessions-presentation","interaction":"","features":"[\"filter\",\"sort\",\"projection\"]","pagination":""});
     analysis = await compileAndAnalyze("active-sessions", storage);
   });
 

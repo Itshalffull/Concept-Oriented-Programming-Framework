@@ -9,8 +9,11 @@ describe('View: similar-entities', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "similar-entities-dataSource", {"name":"similar-entities-dataSource","kind":"concept-action","config":"{\"concept\":\"ContentNode\",\"action\":\"list\"}"});
+    await storage.put("presentation", "similar-entities-presentation", {"name":"similar-entities-presentation","displayType":"card-grid","hints":"{}"});
+    await storage.put("sort", "similar-entities-sort", {"name":"similar-entities-sort","keys":"[]"});
+    await storage.put("projection", "similar-entities-projection", {"name":"similar-entities-projection","fields":"[]"});
+    await storage.put('view', "similar-entities", {"name":"similar-entities","title":"similar-entities","description":"","dataSource":"similar-entities-dataSource","filter":"","sort":"similar-entities-sort","group":"","projection":"similar-entities-projection","presentation":"similar-entities-presentation","interaction":"","features":"[\"sort\",\"projection\"]","pagination":""});
     analysis = await compileAndAnalyze("similar-entities", storage);
   });
 

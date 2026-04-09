@@ -9,8 +9,10 @@ describe('View: process-completion-trend', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "process-completion-trend-dataSource", {"name":"process-completion-trend-dataSource","kind":"concept-action","config":"{\"concept\":\"ProcessRun\",\"action\":\"stats\"}"});
+    await storage.put("presentation", "process-completion-trend-presentation", {"name":"process-completion-trend-presentation","displayType":"stat-cards","hints":"{}"});
+    await storage.put("projection", "process-completion-trend-projection", {"name":"process-completion-trend-projection","fields":"[]"});
+    await storage.put('view', "process-completion-trend", {"name":"process-completion-trend","title":"process-completion-trend","description":"","dataSource":"process-completion-trend-dataSource","filter":"","sort":"","group":"","projection":"process-completion-trend-projection","presentation":"process-completion-trend-presentation","interaction":"","features":"[\"projection\"]","pagination":""});
     analysis = await compileAndAnalyze("process-completion-trend", storage);
   });
 

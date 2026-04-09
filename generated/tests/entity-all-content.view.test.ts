@@ -9,8 +9,13 @@ describe('View: entity-all-content', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "entity-all-content-dataSource", {"name":"entity-all-content-dataSource","kind":"concept-action","config":"{\"concept\":\"ContentNode\",\"action\":\"list\"}"});
+    await storage.put("presentation", "entity-all-content-presentation", {"name":"entity-all-content-presentation","displayType":"table","hints":"{}"});
+    await storage.put("filter", "entity-all-content-filter", {"name":"entity-all-content-filter","node":"{\"type\":\"true\"}"});
+    await storage.put("sort", "entity-all-content-sort", {"name":"entity-all-content-sort","keys":"[]"});
+    await storage.put("projection", "entity-all-content-projection", {"name":"entity-all-content-projection","fields":"[{\"key\":\"node\",\"label\":\"Entity\"},{\"key\":\"schemas\",\"label\":\"Schemas\"}]"});
+    await storage.put("pagination", "entity-all-content-pagination", {"name":"entity-all-content-pagination","mode":"offset","pageSize":"25"});
+    await storage.put('view', "entity-all-content", {"name":"entity-all-content","title":"entity-all-content","description":"","dataSource":"entity-all-content-dataSource","filter":"entity-all-content-filter","sort":"entity-all-content-sort","group":"","projection":"entity-all-content-projection","presentation":"entity-all-content-presentation","interaction":"","features":"[\"filter\",\"sort\",\"projection\",\"pagination\"]","pagination":"entity-all-content-pagination"});
     analysis = await compileAndAnalyze("entity-all-content", storage);
   });
 

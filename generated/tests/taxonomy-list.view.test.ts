@@ -9,8 +9,12 @@ describe('View: taxonomy-list', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "taxonomy-list-dataSource", {"name":"taxonomy-list-dataSource","kind":"concept-action","config":"{\"concept\":\"Taxonomy\",\"action\":\"list\"}"});
+    await storage.put("presentation", "taxonomy-list-presentation", {"name":"taxonomy-list-presentation","displayType":"table","hints":"{}"});
+    await storage.put("filter", "taxonomy-list-filter", {"name":"taxonomy-list-filter","node":"{\"type\":\"true\"}"});
+    await storage.put("sort", "taxonomy-list-sort", {"name":"taxonomy-list-sort","keys":"[{\"field\":\"name\",\"direction\":\"asc\"}]"});
+    await storage.put("projection", "taxonomy-list-projection", {"name":"taxonomy-list-projection","fields":"[]"});
+    await storage.put('view', "taxonomy-list", {"name":"taxonomy-list","title":"taxonomy-list","description":"","dataSource":"taxonomy-list-dataSource","filter":"taxonomy-list-filter","sort":"taxonomy-list-sort","group":"","projection":"taxonomy-list-projection","presentation":"taxonomy-list-presentation","interaction":"","features":"[\"filter\",\"sort\",\"projection\"]","pagination":""});
     analysis = await compileAndAnalyze("taxonomy-list", storage);
   });
 

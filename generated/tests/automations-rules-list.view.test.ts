@@ -9,8 +9,13 @@ describe('View: automations-rules-list', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "automations-rules-list-dataSource", {"name":"automations-rules-list-dataSource","kind":"concept-action","config":"{\"concept\":\"AutomationRule\",\"action\":\"list\"}"});
+    await storage.put("presentation", "automations-rules-list-presentation", {"name":"automations-rules-list-presentation","displayType":"table","hints":"{}"});
+    await storage.put("filter", "automations-rules-list-filter", {"name":"automations-rules-list-filter","node":"{\"type\":\"true\"}"});
+    await storage.put("sort", "automations-rules-list-sort", {"name":"automations-rules-list-sort","keys":"[]"});
+    await storage.put("projection", "automations-rules-list-projection", {"name":"automations-rules-list-projection","fields":"[{\"key\":\"rule\",\"label\":\"Rule\"},{\"key\":\"trigger\",\"label\":\"Trigger\"},{\"key\":\"conditions\",\"label\":\"Conditions\"},{\"key\":\"enabled\",\"label\":\"Enabled\",\"formatter\":\"boolean-badge\"}]"});
+    await storage.put("interaction", "automations-rules-list-interaction", {"name":"automations-rules-list-interaction","rowActions":"[{\"key\":\"edit\",\"concept\":\"AutomationRule\",\"action\":\"update\",\"label\":\"Edit\"}]"});
+    await storage.put('view', "automations-rules-list", {"name":"automations-rules-list","title":"automations-rules-list","description":"","dataSource":"automations-rules-list-dataSource","filter":"automations-rules-list-filter","sort":"automations-rules-list-sort","group":"","projection":"automations-rules-list-projection","presentation":"automations-rules-list-presentation","interaction":"automations-rules-list-interaction","features":"[\"filter\",\"sort\",\"projection\",\"interaction\"]","pagination":""});
     analysis = await compileAndAnalyze("automations-rules-list", storage);
   });
 

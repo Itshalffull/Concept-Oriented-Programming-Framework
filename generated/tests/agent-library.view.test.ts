@@ -9,8 +9,13 @@ describe('View: agent-library', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "agent-library-dataSource", {"name":"agent-library-dataSource","kind":"concept-action","config":"{\"concept\":\"ContentNode\",\"action\":\"listBySchema\",\"params\":{\"schema\":\"AgentPersona\"}}"});
+    await storage.put("presentation", "agent-library-presentation", {"name":"agent-library-presentation","displayType":"card-grid","hints":"{}"});
+    await storage.put("filter", "agent-library-filter", {"name":"agent-library-filter","node":"{\"type\":\"eq\",\"field\":\"capability\",\"value\":\"all\"}"});
+    await storage.put("sort", "agent-library-sort", {"name":"agent-library-sort","keys":"[{\"field\":\"name\",\"direction\":\"asc\"}]"});
+    await storage.put("projection", "agent-library-projection", {"name":"agent-library-projection","fields":"[{\"key\":\"node\",\"label\":\"Agent\"},{\"key\":\"name\",\"label\":\"Name\"},{\"key\":\"capability\",\"label\":\"Capability\"},{\"key\":\"status\",\"label\":\"Status\"}]"});
+    await storage.put("interaction", "agent-library-interaction", {"name":"agent-library-interaction","rowActions":"[{\"key\":\"edit\",\"concept\":\"ContentNode\",\"action\":\"update\",\"label\":\"Edit\"}]"});
+    await storage.put('view', "agent-library", {"name":"agent-library","title":"agent-library","description":"","dataSource":"agent-library-dataSource","filter":"agent-library-filter","sort":"agent-library-sort","group":"","projection":"agent-library-projection","presentation":"agent-library-presentation","interaction":"agent-library-interaction","features":"[\"filter\",\"sort\",\"projection\",\"interaction\"]","pagination":""});
     analysis = await compileAndAnalyze("agent-library", storage);
   });
 

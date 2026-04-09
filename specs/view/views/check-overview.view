@@ -22,11 +22,7 @@ view "check-overview" {
     projection: {
       fields: "[{\"key\":\"check_ref\",\"label\":\"Check\"},{\"key\":\"step_ref\",\"label\":\"Step\"},{\"key\":\"status\",\"label\":\"Status\"},{\"key\":\"result_score\",\"label\":\"Score\"},{\"key\":\"mode\",\"label\":\"Mode\"},{\"key\":\"evaluated_at\",\"label\":\"Evaluated\"}]"
     }
-    interaction: {
-      createForm: "{}",
-      rowClick: "{\"navigateTo\":\"/content/{cv}\"}",
-      rowActions: "[]"
-    }
+
     presentation: {
       displayType: "table",
       hints: "{}"

@@ -9,8 +9,13 @@ describe('View: clips-list', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "clips-list-dataSource", {"name":"clips-list-dataSource","kind":"concept-action","config":"{\"concept\":\"ContentNode\",\"action\":\"listBySchema\",\"params\":{\"schema\":\"Clip\"}}"});
+    await storage.put("presentation", "clips-list-presentation", {"name":"clips-list-presentation","displayType":"card-grid","hints":"{}"});
+    await storage.put("filter", "clips-list-filter", {"name":"clips-list-filter","node":"{\"type\":\"eq\",\"field\":\"kind\",\"value\":\"clip\"}"});
+    await storage.put("sort", "clips-list-sort", {"name":"clips-list-sort","keys":"[{\"field\":\"startTime\",\"direction\":\"asc\"}]"});
+    await storage.put("projection", "clips-list-projection", {"name":"clips-list-projection","fields":"[{\"key\":\"node\",\"label\":\"Clip\"},{\"key\":\"kind\",\"label\":\"Kind\"},{\"key\":\"startTime\",\"label\":\"Start\"},{\"key\":\"endTime\",\"label\":\"End\"},{\"key\":\"status\",\"label\":\"Status\"}]"});
+    await storage.put("interaction", "clips-list-interaction", {"name":"clips-list-interaction","rowActions":"[{\"key\":\"edit\",\"concept\":\"ContentNode\",\"action\":\"update\",\"label\":\"Edit\"}]"});
+    await storage.put('view', "clips-list", {"name":"clips-list","title":"clips-list","description":"","dataSource":"clips-list-dataSource","filter":"clips-list-filter","sort":"clips-list-sort","group":"","projection":"clips-list-projection","presentation":"clips-list-presentation","interaction":"clips-list-interaction","features":"[\"filter\",\"sort\",\"projection\",\"interaction\"]","pagination":""});
     analysis = await compileAndAnalyze("clips-list", storage);
   });
 

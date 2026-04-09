@@ -9,8 +9,10 @@ describe('View: dashboard-stats', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "dashboard-stats-dataSource", {"name":"dashboard-stats-dataSource","kind":"concept-action","config":"{\"concept\":\"ContentNode\",\"action\":\"list\"}"});
+    await storage.put("presentation", "dashboard-stats-presentation", {"name":"dashboard-stats-presentation","displayType":"stat-cards","hints":"{\"columns\":4}"});
+    await storage.put("projection", "dashboard-stats-projection", {"name":"dashboard-stats-projection","fields":"[]"});
+    await storage.put('view', "dashboard-stats", {"name":"dashboard-stats","title":"dashboard-stats","description":"","dataSource":"dashboard-stats-dataSource","filter":"","sort":"","group":"","projection":"dashboard-stats-projection","presentation":"dashboard-stats-presentation","interaction":"","features":"[\"projection\"]","pagination":""});
     analysis = await compileAndAnalyze("dashboard-stats", storage);
   });
 
