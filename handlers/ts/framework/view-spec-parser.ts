@@ -19,11 +19,34 @@ import type {
 
 // --- ViewSpec AST ---
 
+/** A child spec record within a view fixture (e.g., dataSource, filter, sort). */
+export interface ViewFixtureChildSpec {
+  [key: string]: string;
+}
+
+/** A named fixture declaring the ViewShell + child spec data for testing. */
+export interface ViewFixture {
+  name: string;
+  /** Child spec records keyed by spec type. */
+  specs: {
+    dataSource?: ViewFixtureChildSpec;
+    filter?: ViewFixtureChildSpec;
+    sort?: ViewFixtureChildSpec;
+    group?: ViewFixtureChildSpec;
+    projection?: ViewFixtureChildSpec;
+    presentation?: ViewFixtureChildSpec;
+    interaction?: ViewFixtureChildSpec;
+    pagination?: ViewFixtureChildSpec;
+  };
+}
+
 export interface ViewSpec {
   name: string;
   shell: string;
   /** Enabled features. undefined means all features are enabled (block omitted). */
   features: string[] | undefined;
+  /** Fixtures declaring ViewShell + child spec data for testing invariants. */
+  fixtures: ViewFixture[];
   purpose: string;
   invariants: InvariantDecl[];
 }
@@ -82,14 +105,21 @@ interface Token {
 
 // Keywords recognized in .view files
 const KEYWORDS = new Set([
-  'view', 'shell', 'purpose', 'invariants', 'features',
+  'view', 'shell', 'purpose', 'invariants', 'features', 'fixture',
   'always', 'never', 'example', 'forall', 'exists',
   'in', 'implies', 'and', 'then', 'after', 'action',
   'requires', 'ensures', 'compile', 'startsWith', 'subset',
   'given', 'where', 'none', 'eventually',
-  // Feature names are parsed as identifiers but listed here so they tokenize
-  // as KEYWORD tokens within the features block context.
+  // Feature names and child spec types are parsed as identifiers but listed
+  // here so they tokenize as KEYWORD tokens within context.
   'filter', 'sort', 'group', 'projection', 'interaction', 'pagination',
+  'dataSource', 'presentation',
+]);
+
+/** Valid child spec type names within a fixture block. */
+const VALID_FIXTURE_SPEC_TYPES = new Set([
+  'dataSource', 'filter', 'sort', 'group', 'projection',
+  'presentation', 'interaction', 'pagination',
 ]);
 
 const PRIMITIVES = new Set([
@@ -331,6 +361,7 @@ class ViewParser {
 
     let shell = '';
     let features: string[] | undefined;
+    const fixtures: ViewFixture[] = [];
     let purpose = '';
     const invariants: InvariantDecl[] = [];
 
@@ -343,6 +374,8 @@ class ViewParser {
         shell = this.parseShell();
       } else if (tok.type === 'KEYWORD' && tok.value === 'features') {
         features = this.parseFeaturesBlock(name);
+      } else if (tok.type === 'KEYWORD' && tok.value === 'fixture') {
+        fixtures.push(this.parseFixture(name));
       } else if (tok.type === 'KEYWORD' && tok.value === 'purpose') {
         purpose = this.parsePurpose();
       } else if (tok.type === 'KEYWORD' && tok.value === 'invariants') {
@@ -363,7 +396,7 @@ class ViewParser {
       throw new Error(`View parse error: missing required 'shell' declaration in view "${name}"`);
     }
 
-    return { name, shell, features, purpose, invariants };
+    return { name, shell, features, fixtures, purpose, invariants };
   }
 
   private parseShell(): string {
@@ -428,6 +461,92 @@ class ViewParser {
 
     this.expect('RBRACE');
     return features;
+  }
+
+  /**
+   * Parse a single fixture declaration:
+   *   fixture <name> { <child-spec-blocks> }
+   *
+   * Each child spec block: <specType>: { key: "value", ... }
+   * Valid specTypes: dataSource, filter, sort, group, projection,
+   *                  presentation, interaction, pagination
+   */
+  private parseFixture(viewName: string): ViewFixture {
+    this.expect('KEYWORD', 'fixture');
+    this.skipSeps();
+
+    // Fixture name — IDENT or KEYWORD token
+    const nameTok = this.peek();
+    if (nameTok.type !== 'IDENT' && nameTok.type !== 'KEYWORD') {
+      throw new Error(
+        `View parse error at line ${nameTok.line}:${nameTok.col}: expected fixture name, got ${nameTok.type}(${nameTok.value}) in view "${viewName}"`,
+      );
+    }
+    const name = this.advance().value;
+    this.skipSeps();
+
+    this.expect('LBRACE');
+    this.skipSeps();
+
+    const specs: ViewFixture['specs'] = {};
+
+    while (this.peek().type !== 'RBRACE' && this.peek().type !== 'EOF') {
+      this.skipSeps();
+      if (this.peek().type === 'RBRACE') break;
+
+      const specTok = this.peek();
+      const specType = specTok.value;
+
+      if ((specTok.type === 'KEYWORD' || specTok.type === 'IDENT') && VALID_FIXTURE_SPEC_TYPES.has(specType)) {
+        this.advance(); // consume spec type name
+        this.skipSeps();
+        this.expect('COLON');
+        this.skipSeps();
+        this.expect('LBRACE');
+        this.skipSeps();
+
+        // Parse key: "value" pairs within the child spec block
+        const fields: ViewFixtureChildSpec = {};
+        while (this.peek().type !== 'RBRACE' && this.peek().type !== 'EOF') {
+          this.skipSeps();
+          if (this.peek().type === 'RBRACE') break;
+          if (this.peek().type === 'COMMA') { this.advance(); this.skipSeps(); continue; }
+
+          const keyTok = this.peek();
+          if (keyTok.type !== 'IDENT' && keyTok.type !== 'KEYWORD') {
+            this.advance(); // skip unexpected
+            continue;
+          }
+          const key = this.advance().value;
+          this.skipSeps();
+          this.expect('COLON');
+          this.skipSeps();
+
+          const valTok = this.peek();
+          if (valTok.type === 'STRING_LIT') {
+            fields[key] = this.advance().value;
+          } else if (valTok.type === 'INT_LIT' || valTok.type === 'FLOAT_LIT') {
+            fields[key] = this.advance().value;
+          } else if (valTok.type === 'BOOL_LIT') {
+            fields[key] = this.advance().value;
+          } else {
+            // Collect as raw text until comma or closing brace
+            fields[key] = this.advance().value;
+          }
+          this.skipSeps();
+        }
+        this.expect('RBRACE');
+
+        (specs as Record<string, ViewFixtureChildSpec>)[specType] = fields;
+      } else {
+        // Skip unrecognized tokens
+        this.advance();
+      }
+      this.skipSeps();
+    }
+
+    this.expect('RBRACE');
+    return { name, specs };
   }
 
   private parsePurpose(): string {

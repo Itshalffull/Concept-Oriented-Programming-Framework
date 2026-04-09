@@ -7,6 +7,26 @@ view "content-list" {
     projection
   }
 
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ContentNode\",\"action\":\"listBySchema\",\"params\":{\"schema\":\"Concept\"}}"
+    }
+    filter: {
+      node: "{\"type\":\"eq\",\"field\":\"kind\",\"value\":\"concept\"}"
+    }
+    sort: {
+      keys: "[{\"field\":\"name\",\"direction\":\"asc\"}]"
+    }
+    projection: {
+      fields: "[{\"key\":\"id\",\"label\":\"ID\"},{\"key\":\"node\",\"label\":\"Node\"},{\"key\":\"kind\",\"label\":\"Kind\"},{\"key\":\"name\",\"label\":\"Name\"}]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+  }
+
   purpose {
     Browse all content entities with schema-based filtering and
     alphabetical sorting. Read-only — no inline write actions.

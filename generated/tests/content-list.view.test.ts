@@ -9,8 +9,12 @@ describe('View: content-list', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+    await storage.put("source", "content-list-dataSource", {"name":"content-list-dataSource","kind":"concept-action","config":"{\"concept\":\"ContentNode\",\"action\":\"listBySchema\",\"params\":{\"schema\":\"Concept\"}}"});
+    await storage.put("filter", "content-list-filter", {"name":"content-list-filter","node":"{\"type\":\"eq\",\"field\":\"kind\",\"value\":\"concept\"}"});
+    await storage.put("sort", "content-list-sort", {"name":"content-list-sort","keys":"[{\"field\":\"name\",\"direction\":\"asc\"}]"});
+    await storage.put("projection", "content-list-projection", {"name":"content-list-projection","fields":"[{\"key\":\"id\",\"label\":\"ID\"},{\"key\":\"node\",\"label\":\"Node\"},{\"key\":\"kind\",\"label\":\"Kind\"},{\"key\":\"name\",\"label\":\"Name\"}]"});
+    await storage.put("presentation", "content-list-presentation", {"name":"content-list-presentation","displayType":"table","hints":"{}"});
+    await storage.put('view', "content-list", {"name":"content-list","title":"content-list","description":"","dataSource":"content-list-dataSource","filter":"content-list-filter","sort":"content-list-sort","group":"","projection":"content-list-projection","presentation":"content-list-presentation","interaction":"","features":"[\"filter\",\"sort\",\"projection\"]","pagination":""});
     analysis = await compileAndAnalyze("content-list", storage);
   });
 
