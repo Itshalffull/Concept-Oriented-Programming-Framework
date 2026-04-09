@@ -111,6 +111,10 @@ Monadic bind: chain two programs — run first, bind its output to bindAs, then 
 
 **Arguments:** `$0` **first** (Q), `$1` **second** (Q), `$2` **bindAs** (string)
 
+### Step 12: Add .view Fixtures
+
+Add fixture blocks to the .view file declaring ViewShell + child spec data for testing invariants. Each fixture names a specType (dataSource, filter, sort, group, projection, presentation, interaction, pagination) with key-value fields. The test generator seeds mock storage from fixtures, then runs compileAndAnalyze to assert invariants.
+
 ## References
 
 - [QueryProgram instruction grammar and pipeline reference](references/query-program-grammar.md)
