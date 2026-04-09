@@ -1,0 +1,50 @@
+# ViewShell seeds for the schema editor views.
+# References decomposed child specs by name.
+# These complement the main ViewShell.seeds.yaml and cover all 4 schema editor views.
+
+concept: ViewShell
+action: create
+entries:
+  - name: schema-admin-list
+    title: Schemas
+    description: All schemas defined in the system. Each schema overlays typed fields on ContentNodes.
+    dataSource: schema-list-source
+    filter: identity-filter
+    sort: schema-name-sort
+    group: ''
+    projection: schema-admin-fields
+    presentation: table-default
+    interaction: schema-admin-controls
+
+  - name: schema-detail
+    title: Schema Detail
+    description: Full schema editor with Fields, Form layout, and Display mode tabs.
+    dataSource: schema-get-source
+    filter: identity-filter
+    sort: field-order-sort
+    group: ''
+    projection: schema-detail-fields
+    presentation: detail-default
+    interaction: schema-detail-controls
+
+  - name: schema-table
+    title: Schema Fields
+    description: Inline-editable table of all fields in this schema. Click cells to edit values; click column headers to rename, change type, or reorder.
+    dataSource: field-definition-list-source
+    filter: identity-filter
+    sort: field-order-sort
+    group: ''
+    projection: schema-table-fields
+    presentation: schema-table-presentation
+    interaction: schema-table-interaction
+
+  - name: schema-template-gallery
+    title: Schema Templates
+    description: Pre-built schema starting points for common content models.
+    dataSource: schema-template-list-source
+    filter: schema-category-filter
+    sort: natural-order
+    group: ''
+    projection: schema-template-fields
+    presentation: schema-card-presentation
+    interaction: schema-template-controls
