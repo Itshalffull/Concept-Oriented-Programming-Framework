@@ -1,0 +1,128 @@
+@version(1)
+@category("domain")
+concept RelationResolver [R] {
+
+  purpose {
+    Resolve relation fields at write time by fetching target entity fields
+    and writing them as dot-notation keys on the source entity record in the
+    per-schema relation. Maintains a reverse index for efficient propagation
+    when referenced entities change. The view layer never knows whether data
+    is denormalized or not — it just projects dot-notation field names.
+  }
+
+  state {
+    refs: set R
+    identity {
+      referrer: R -> String
+      target:   R -> String
+      schema:   R -> String
+      field:    R -> String
+    }
+    detail {
+      depth: R -> Int
+    }
+  }
+
+  actions {
+
+    action resolve(entity: String) {
+      -> ok(resolvedFields: String) {
+        The entity's schemas were read, relation FieldDefinitions with
+        denormalization enabled were found, target records were fetched,
+        and dot-notation keys were written on the source entity. A JSON
+        array of the written dot-notation field keys is returned.
+      }
+      -> no_relations() {
+        The entity has no schemas with relation FieldDefinitions that have
+        denormalization enabled; no writes were made.
+      }
+      fixture resolve_ok { entity: "article-1" }
+      fixture resolve_no_relations { entity: "bare-node-1" } -> no_relations
+    }
+
+    action propagate(changedEntity: String) {
+      -> ok(updatedCount: Int) {
+        All entities referencing changedEntity via the reverse index were
+        re-resolved; updatedCount is the number of source entities whose
+        denormalized fields were refreshed.
+      }
+      -> no_references() {
+        No reverse index entries exist for this entity; it is not referenced
+        by any denormalized relation field, so no propagation was needed.
+      }
+      fixture propagate_ok { changedEntity: "person-42" }
+      fixture propagate_no_refs { changedEntity: "isolated-node-99" } -> no_references
+    }
+
+    action backfill(schema: String, field: String) {
+      -> ok(processedCount: Int) {
+        All entities carrying the given schema were resolved for the specified
+        relation field; processedCount is the number of entities processed.
+        Use after newly enabling denormalization on a field.
+      }
+      -> not_found(message: String) {
+        No FieldDefinition exists for this schema and field combination, or the
+        field is not a relation field with denormalization config.
+      }
+      fixture backfill_ok { schema: "Article", field: "author" }
+      fixture backfill_missing_field { schema: "Article", field: "nonexistent-field" } -> not_found
+      fixture backfill_missing_schema { schema: "NonexistentSchema", field: "author" } -> not_found
+    }
+
+    action getReferences(entity: String) {
+      -> ok(references: String) {
+        Return all reverse index entries for the given entity as a JSON array.
+        Each entry describes which source entity references this entity via
+        which schema field.
+      }
+      fixture get_refs_ok { entity: "person-42" } after propagate_ok
+      fixture get_refs_empty { entity: "isolated-entity-1" }
+    }
+
+    action clearDenormalized(schema: String, field: String) {
+      -> ok(clearedCount: Int) {
+        All denormalized dot-notation values and reverse index entries for
+        this schema and field were removed; clearedCount is the number of
+        source entity records that were updated.
+      }
+      -> not_found(message: String) {
+        No FieldDefinition exists for this schema and field combination, or no
+        denormalized data was present to clear.
+      }
+      fixture clear_ok { schema: "Article", field: "author" } after backfill_ok
+      fixture clear_missing { schema: "Article", field: "nonexistent-field" } -> not_found
+    }
+
+  }
+
+  example "resolve then get references": {
+    after resolve(entity: "article-1") -> ok(resolvedFields: fields)
+    then getReferences(entity: "person-42") -> ok(references: refs)
+  }
+
+  example "backfill then clear removes denormalized data": {
+    after backfill(schema: "Article", field: "author") -> ok(processedCount: n)
+    then clearDenormalized(schema: "Article", field: "author") -> ok(clearedCount: m)
+  }
+
+  example "propagate with no references returns no_references": {
+    after propagate(changedEntity: "isolated-node-99") -> no_references()
+  }
+
+  always "depth is positive": {
+    forall r in refs: depth(r) >= 1
+  }
+
+  always "referrer and target are non-empty": {
+    forall r in refs: referrer(r) != "" and target(r) != ""
+  }
+
+  never "orphan reverse index entry": {
+    exists r in refs: field(r) = none
+  }
+
+  never "zero-depth entry": {
+    exists r in refs: depth(r) = 0
+  }
+
+}
