@@ -1,0 +1,18 @@
+# SyncedContent transclusion resolution through namespace and qualifier chain.
+# When a transclusion source ref contains a namespace prefix or @qualifier
+# (e.g. {{transclude draft-v2://article-1@v3}}), resolution routes through
+# Namespace/resolve and then Version or TemporalVersion as appropriate.
+
+sync SyncedContentResolvesQualified [eager]
+  purpose: "Route SyncedContent transclusion through the namespace and qualifier resolution chain when the source ref contains branch or revision addressing"
+when {
+  SyncedContent/resolve: [ sourceRef: ?sourceRef ] => [ ok: _ ]
+}
+where {
+  any(?sourceRef contains "@"; ?sourceRef contains "://")
+  Namespace/parse: [ ref: ?sourceRef ]
+    => [ ok(namespace: ?namespace, qualifier: ?qualifier, entityId: ?entityId) ]
+}
+then {
+  Namespace/resolve: [ path: ?namespace; entityId: ?entityId; qualifier: ?qualifier ]
+}

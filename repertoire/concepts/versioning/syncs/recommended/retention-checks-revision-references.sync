@@ -1,0 +1,22 @@
+# Retention disposal blocked by @qualifier pins in Reference and SyncedContent.
+# Before a record is disposed, scan for any Reference or SyncedContent entries
+# that pin this specific revision via @qualifier syntax (e.g. [[contract@v3]]).
+# A pinned revision must be preserved even after the retention window closes.
+
+sync RetentionChecksRevisionReferences [eager]
+  purpose: "Block disposal of a revision that is pinned by an active @qualifier reference or transclusion, preserving content that callers have explicitly locked to a specific point in time"
+when {
+  RetentionPolicy/dispose: [ record: ?record; disposedBy: ?disposedBy ]
+    => [ ok() ]
+}
+where {
+  any(
+    Reference: { ?ref origin: ?pin }
+      filter(?pin contains ?record);
+    SyncedContent: { ?sc sourceRef: ?pin }
+      filter(?pin contains ?record)
+  )
+}
+then {
+  RetentionPolicy/checkDisposition: [ record: ?record ]
+}

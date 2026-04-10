@@ -1,0 +1,18 @@
+# Alias resolution scoped to the active version-space namespace.
+# When an alias lookup fires inside an active version space, resolution
+# is scoped to that namespace first before falling back to the global
+# alias table, so branch-local URL aliases are preferred.
+
+sync AliasResolvesInNamespace [eager]
+  purpose: "Scope alias resolution to the active version-space namespace so branch-local aliases take precedence over global ones"
+when {
+  Alias/resolve: [ alias: ?alias ] => [ ok: _ ]
+}
+where {
+  VersionContext: { ?ctx context_stack: ?stack }
+  filter(?stack.length > 0)
+  bind(?stack[0] as ?activeNamespace)
+}
+then {
+  Alias/resolve: [ alias: ?alias; scope: ?activeNamespace ]
+}

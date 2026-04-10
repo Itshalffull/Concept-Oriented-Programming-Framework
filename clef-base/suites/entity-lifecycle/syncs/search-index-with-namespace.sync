@@ -1,0 +1,18 @@
+# Search indexing with namespace scoping from active VersionContext.
+# When an entity is saved inside an active version space, the search
+# index entry carries the active namespace so search results can be
+# filtered or scoped per branch.
+
+sync SearchIndexWithNamespace [eventual]
+  purpose: "Tag search index entries with the active version-space namespace so branch-scoped search returns only content visible in that branch"
+when {
+  ContentStorage/save: [ id: ?id ] => [ ok: _ ]
+}
+where {
+  VersionContext: { ?ctx context_stack: ?stack }
+  filter(?stack.length > 0)
+  bind(?stack[0] as ?activeNamespace)
+}
+then {
+  SearchIndex/index: [ entity_id: ?id; namespace: ?activeNamespace ]
+}
