@@ -1103,7 +1103,7 @@ A boot-time process that reads `clef-base/schemas/*.schema.yaml` and creates Fie
    ```
    The client renders immediately (showing "—" or spinner for lazy fields), then resolves each `_lazy` entry asynchronously via `ContentNode/get`. The compile-query sync populates `_lazy` for paths where `lazy: true` AND not denormalized. Long-term, a batch `/resolve-lazy` endpoint would reduce round trips.
 
-### 15.1 VersionSpace / Multiverse Resolution (RESOLVED — yes, branch-aware)
+### 15.1 VersionSpace / Multiverse Resolution (RESOLVED — via Namespace)
 
 Denormalized fields, reverseJoin, and forward joins MUST resolve against the active VersionSpace branch. If Person-42 has `name: "Alice"` on main but `name: "Alicia"` on the `draft-v2` branch, and the current viewer is on `draft-v2`, then:
 
@@ -1113,8 +1113,34 @@ Denormalized fields, reverseJoin, and forward joins MUST resolve against the act
 
 **Implementation:** RelationResolver's `resolve()` and `propagate()` actions accept an optional `versionContext` parameter. When present, all storage reads go through the VersionSpace-aware load path (`version-aware-load` sync) instead of raw `ContentStorage/load`.
 
-For denormalized data, each branch gets its own denormalized values — the per-schema relation key includes the branch: `schema:Article:draft-v2/article-1` vs `schema:Article:main/article-1`. This multiplies storage but ensures branch isolation.
+**VersionSpace as a Namespace provider:** VersionSpaces are registered as Namespace nodes. The VersionSpace hierarchy (parent/children) maps directly to the Namespace hierarchy (parent/path). Sub-spaces nest naturally:
 
-For reverseJoin at query time, the `sourceRelation` parameter is branch-qualified: `reverseJoin("schema:Article:draft-v2", "author", entityId, bindAs)`.
+```
+draft-v2                          ← Namespace path, VersionSpace
+draft-v2/alice-experiment         ← child Namespace, sub-VersionSpace
+draft-v2/alice-experiment/hotfix  ← grandchild
+```
 
-The ViewRenderer already passes VersionContext through to query execution. RelationResolver and compile-query just need to thread it through.
+A sync creates the Namespace node on fork:
+```
+sync VersionSpaceCreatesNamespace [eager]
+when VersionSpace/fork completes ok
+then Namespace/createNamespacedPage(node: space, path: parentPath/name)
+```
+
+**Storage keys use Namespace paths**, not custom formats:
+- `schema:Article:draft-v2/alice-experiment/article-1` (Namespace-qualified)
+- Resolution walks up the Namespace chain checking overrides at each level — which is exactly what VersionSpace/resolve already does
+
+**For denormalized data**, each Namespace scope gets its own denormalized values. This ensures branch isolation — `author.name` can be "Alice" on main and "Alicia" on `draft-v2`.
+
+**For reverseJoin**, the `sourceRelation` is Namespace-qualified: `reverseJoin("schema:Article:draft-v2", "author", entityId, bindAs)`.
+
+**For references and transclusion**, the Namespace path enables natural linking:
+- `[[draft-v2://article-1]]` — reference to an entity in a specific VersionSpace
+- `{{transclude draft-v2://article-1}}` — transclude from a branch
+- The reference picker shows Namespace scope as a filter
+
+The ViewRenderer already passes VersionContext through to query execution. RelationResolver and compile-query thread the active Namespace path through all storage operations.
+
+**Note:** The full VersionSpace-as-Namespace-provider integration (Reference, SyncedContent, Backlink, search) is a broader architectural change tracked separately. The relation resolver just needs to thread the Namespace path through resolve/propagate/reverseJoin, which is compatible with the full integration.
