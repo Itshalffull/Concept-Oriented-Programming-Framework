@@ -952,12 +952,76 @@ This ensures schema YAMLs are the source of truth for content-native schemas, an
 
 ---
 
-## 11. Open Questions
+## 14. Additional Syncs Required (from end-to-end audit)
 
-1. **Auto-denormalization heuristic** — Should RelationResolver automatically denormalize fields that are accessed by 3+ views? This would make the system self-optimizing. The data is there (SchemaUsage + RelationSpec tracking). Risk: unexpected write amplification.
+Five gaps found tracing every scenario through clef-base:
 
-2. **Max fan-out safety** — When propagating, if a Company is referenced by 50,000 Articles, the propagate action could be very expensive. Should there be a circuit breaker? Options: async queue with rate limiting, skip propagation above threshold and mark records as stale.
+### 14.1 Backfill on denormalization enable
 
-3. **Lazy resolution protocol** — How does the client know a field is lazy? Options: projection metadata (`{ resolve: "lazy", targetConcept: "Company", targetField: "name" }`), or a separate `lazyFields` array in the query result.
+When denormalization is first enabled on a field (auto-decision or manual), existing entities need backfilling.
 
-4. **Denormalization and VersionSpace** — If an entity is in a VersionSpace branch, should denormalized fields resolve against the branch's version of the target? Probably yes, but adds complexity to the resolve handler.
+```
+sync DenormEnableTriggersBackfill [eventual]
+when FieldDefinition/update completes ok
+  where typeConfig.denormalize changed from disabled to enabled
+then RelationResolver/backfill(schema, field)
+```
+
+### 14.2 Cleanup on relation field deletion
+
+When a relation FieldDefinition is deleted, orphaned data needs cleanup:
+
+```
+sync RelationFieldDeletionCleanup [eventual]
+when FieldDefinition/remove completes ok
+  where fieldType = "relation"
+then
+  // Remove Relation records of this type from linking graph
+  Relation/removeByType(type: fieldId, sourceSchema: schema)
+  // Remove denormalized dot-notation fields from per-schema relation
+  RelationResolver/clearDenormalized(schema, field)
+  // Remove reverse index entries for this field
+  // (handled by clearDenormalized internally)
+```
+
+### 14.3 Reverse join-at-read instruction
+
+Current `QueryProgram/join` only does forward joins. Reverse resolution (non-denormalized) needs either:
+
+**Option A:** New `QueryProgram/reverseJoin` instruction:
+```
+reverseJoin(sourceRelation, sourceField, thisEntityId, bindAs, maxCount?)
+```
+Finds all records in sourceRelation where sourceField = thisEntityId.
+
+**Option B:** Always require denormalization or lazy for reverse paths. No join-at-read for reverse. Simpler — reverse paths default to lazy anyway.
+
+**Recommendation:** Option B for MVP. Reverse defaults to lazy, denormalize when performance matters. Add reverseJoin later if join-at-read is needed.
+
+### 14.4 Create-on-miss for reference/tag widgets
+
+reference-picker, tag-chips, and taxonomy-picker widgets need inline entity creation:
+- User types "javascript" → no matching Tag exists → widget shows "Create 'javascript'" option
+- On confirm: creates a ContentNode with Tag schema + the typed name
+- Immediately selects the new entity as the field value
+
+This is a widget concern — the reference-picker.widget spec needs a `createOnMiss` affordance with `targetSchema` and `createAction` config.
+
+### 14.5 Schema YAML boot sync
+
+A boot-time process that reads `clef-base/schemas/*.schema.yaml` and creates FieldDefinitions for `type: Reference` fields. Could be:
+- Part of `applyDeclarativeSeeds()` (check if FieldDefinition exists before creating)
+- A dedicated `SchemaYAMLSync` that runs at kernel boot after seeds
+- Handled by ContentTypeScaffoldGen when processing schema YAMLs
+
+---
+
+## 15. Open Questions
+
+1. **Max fan-out safety** — When propagating, if a Company is referenced by 50,000 Articles, the propagate action could be very expensive. Should there be a circuit breaker? Options: async queue with rate limiting, skip propagation above threshold and mark records as stale.
+
+2. **Lazy resolution protocol** — How does the client know a field is lazy? Options: projection metadata (`{ resolve: "lazy", targetConcept: "Company", targetField: "name" }`), or a separate `lazyFields` array in the query result.
+
+3. **Denormalization and VersionSpace** — If an entity is in a VersionSpace branch, should denormalized fields resolve against the branch's version of the target? Probably yes, but adds complexity to the resolve handler.
+
+4. **Reverse join-at-read** — Should we add a `reverseJoin` QueryProgram instruction, or is lazy + denormalize sufficient for all reverse use cases?
