@@ -1,0 +1,10 @@
+# Register a tenant as a Namespace node when created.
+# Enables tenant-scoped resolution for all downstream concepts.
+
+sync TenantRegistersNamespace [eager]
+when {
+  Schema/applyTo: [ entity_id: ?tenantId; schema: "Tenant" ] => [ ok: _ ]
+}
+then {
+  Namespace/register: [ node: ?tenantId; path: ?tenantId; provider: "tenant" ]
+}
