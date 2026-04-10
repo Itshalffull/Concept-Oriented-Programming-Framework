@@ -3,19 +3,23 @@ widget type-picker {
 
   purpose {
     Grouped, searchable, icon-driven field type picker popover for selecting or
-    changing a schema field type. Organises the full type catalogue into four
-    named categories — Basic, Content, Advanced, and Meta — with icon, label,
-    and short description per option. Supports live search filtering across all
-    categories and highlights the current type when used in change-type mode.
-    Emits SELECT on confirmation and CLOSE on Escape or outside click. Intended
-    as a sub-widget composed into field-header-popover and schema-fields-editor.
+    changing a schema field type. Organises the full type catalogue into five
+    named categories — Basic, Content, Relations, Advanced, and Meta — with
+    icon, label, and short description per option. The Relations category
+    exposes four presentational presets (Tags, Category, Person, Link to record)
+    that each resolve to fieldType "relation" with preset target, widget, and
+    formatter values. Supports live search filtering across all categories and
+    highlights the current type when used in change-type mode. Emits SELECT on
+    confirmation (carrying both type and optional preset config) and CLOSE on
+    Escape or outside click. Intended as a sub-widget composed into
+    field-header-popover and schema-fields-editor.
   }
 
   anatomy {
     root:            container   { Popover root; wraps all content }
     searchInput:     interactive { Text input for filtering types by name or description }
     categoryGroup:   container   { One group per category; rendered for each visible category }
-    categoryLabel:   text        { Category heading: "Basic", "Content", "Advanced", or "Meta" }
+    categoryLabel:   text        { Category heading: "Basic", "Content", "Relations", "Advanced", or "Meta" }
     typeOption:      action      { Selectable tile for a single field type }
     typeIcon:        presentation { Icon glyph for the field type }
     typeLabel:       text        { Human name of the field type }
@@ -99,9 +103,24 @@ widget type-picker {
   props {
     currentType: String = ""
     showAdvanced: Bool = true
+    showRelations: Bool = true
     searchQuery: String = ""
     onSelect: String = ""
   }
+
+  // Relation presets — each maps to fieldType "relation" with fixed target, widget, formatter.
+  // Rendered in the Relations category group. SELECT_TYPE carries both type and preset payload
+  // so consumers can create the FieldDefinition with the correct defaults without additional config.
+  //
+  // | Picker label     | Icon | fieldType | target       | widget           | formatter      |
+  // |------------------|------|-----------|--------------|------------------|----------------|
+  // | Tags             | 🏷   | relation  | Tag          | tag-chips        | colored-chips  |
+  // | Category         | 📂   | relation  | TaxonomyTerm | taxonomy-picker  | badge          |
+  // | Person           | 👤   | relation  | Person       | reference-picker | avatar-name    |
+  // | Link to record   | →    | relation  | (user picks) | reference-picker | linked-title   |
+  //
+  // The "Link to record" preset opens targetSchemaSelect in the relation-config-panel immediately
+  // after creation because its target is not fixed.
 
   connect {
     root -> {
@@ -120,7 +139,9 @@ widget type-picker {
     categoryGroup -> {
       data-part: "category-group";
       data-category: self.categoryName;
-      data-visible: if state == "searching" and self.matchCount == 0 then "false" else "true";
+      data-visible: if state == "searching" and self.matchCount == 0 then "false"
+                    else if self.categoryName == "Relations" and not ?showRelations then "false"
+                    else "true";
     }
 
     categoryLabel -> {
@@ -131,10 +152,12 @@ widget type-picker {
     typeOption -> {
       data-part: "type-option";
       data-type: self.type;
+      data-preset: self.preset;
+      data-category: self.categoryName;
       data-selected: if self.type == ?currentType then "true" else "false";
       tabindex: if self.isFocused then "0" else "-1";
-      onClick: send(SELECT_TYPE, { type: self.type });
-      onKeyDown: if key == "Enter" then send(SELECT_TYPE, { type: self.type }) else noop;
+      onClick: send(SELECT_TYPE, { type: self.type, preset: self.preset });
+      onKeyDown: if key == "Enter" then send(SELECT_TYPE, { type: self.type, preset: self.preset }) else noop;
     }
 
     typeIcon -> {
@@ -204,6 +227,15 @@ widget type-picker {
       if ?showAdvanced == false then categoryGroup -> { data-category: "Advanced"; data-visible: "false" }
     }
 
+    always "relations category hidden when showRelations false": {
+      if ?showRelations == false then categoryGroup -> { data-category: "Relations"; data-visible: "false" }
+    }
+
+    always "relation preset options carry preset payload": {
+      forall o in typeOptions:
+        if o -> { data-category: "Relations" } then o -> { data-preset: self.preset }
+    }
+
     never "multiple type options selected simultaneously": {
       exists o1 in typeOptions:
         exists o2 in typeOptions:
@@ -215,8 +247,11 @@ widget type-picker {
     }
 
     "At least one category group must be visible in idle state";
-    "Search filters across all categories including Advanced and Meta";
-    "SELECT_TYPE must carry the type string as payload so consumers do not need to read DOM";
+    "Search filters across all categories including Advanced, Relations, and Meta";
+    "SELECT_TYPE must carry both the type string and preset object as payload so consumers do not need to read DOM";
+    "Relations category contains exactly four presets: Tags (target:Tag, widget:tag-chips, formatter:colored-chips), Category (target:TaxonomyTerm, widget:taxonomy-picker, formatter:badge), Person (target:Person, widget:reference-picker, formatter:avatar-name), Link to record (target:null, widget:reference-picker, formatter:linked-title)";
+    "Link to record preset carries target:null so the consumer opens targetSchemaSelect in relation-config-panel immediately after FieldDefinition creation";
+    "All four relation presets map to fieldType relation in the SELECT_TYPE payload — no separate fieldType per preset";
   }
 
 }

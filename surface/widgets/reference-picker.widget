@@ -1,0 +1,316 @@
+@version(1)
+widget reference-picker {
+
+  purpose {
+    Searchable entity picker for relation fields. Presents a combobox-style
+    input that queries the target schema in real time and displays matching
+    entities as a listbox of results. Each result shows an avatar, primary
+    title, and optional subtitle. Supports "create on miss" — typing a name
+    that yields no results offers an inline option to create the entity.
+    Supports branch selection (for versioned targets) and qualifier input
+    (for typed or dated relations). After selection the picker collapses to
+    a compact selected display with a clear affordance. Intended for use
+    inside inline-cell-editor and field-header-popover for single-entity
+    or multi-entity relation fields.
+  }
+
+  anatomy {
+    root:               container     { Picker root; wraps trigger area and floating listbox }
+    searchInput:        interactive   { Text input — drives live search against target schema }
+    resultList:         container     { Floating listbox of search results }
+    resultItem:         action        { Selectable row for a single entity result }
+    resultAvatar:       presentation  { Avatar image or initials badge for the entity }
+    resultTitle:        text          { Primary display field value of the entity }
+    resultSubtitle:     text          { Secondary info (schema badge, path) shown under title }
+    createOnMissOption: action        { Inline option rendered when search has no results }
+    branchSelector:     interactive   { Branch dropdown shown when showBranchSelector is true }
+    qualifierSelector:  interactive   { Qualifier input shown when showQualifier is true }
+    selectedDisplay:    container     { Compact display of the current value(s) when picker is closed }
+    clearButton:        action        { Removes the current selection }
+  }
+
+  states {
+    closed [initial] {
+      on OPEN -> open;
+      on CLEAR -> closed;
+    }
+
+    open {
+      on CLOSE -> closed;
+      on TYPE -> searching;
+      on SELECT -> selected;
+      entry [queryRecentTargets; positionResultList];
+      exit [clearSearchInput];
+    }
+
+    searching {
+      on TYPE -> searching;
+      on CLEAR_SEARCH -> open;
+      on SELECT -> selected;
+      on CREATE -> creating;
+      on CLOSE -> closed;
+      entry [debounceQuery];
+      exit [cancelPendingQuery];
+    }
+
+    selected {
+      on OPEN -> open;
+      on CLEAR -> closed;
+      entry [emitValueChange];
+    }
+
+    creating {
+      on CREATE_COMPLETE -> selected;
+      on CREATE_ERROR -> searching;
+      on CANCEL_CREATE -> searching;
+      entry [openCreateForm];
+    }
+  }
+
+  accessibility {
+    role: combobox;
+    keyboard {
+      ArrowDown -> FOCUS_NEXT_RESULT;
+      ArrowUp -> FOCUS_PREV_RESULT;
+      Enter -> SELECT;
+      Escape -> CLOSE;
+      Tab -> CLOSE;
+    }
+    focus {
+      trap: false;
+      initial: searchInput;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "combobox";
+        aria-expanded: if state == "open" or state == "searching" then "true" else "false";
+        aria-haspopup: "listbox";
+        aria-owns: "reference-picker-result-list";
+        data-state: state;
+      };
+      searchInput -> {
+        role: "searchbox";
+        aria-label: concat("Search ", ?targetSchema, " records");
+        aria-autocomplete: "list";
+        aria-controls: "reference-picker-result-list";
+        aria-busy: if state == "searching" then "true" else "false";
+      };
+      resultList -> {
+        role: "listbox";
+        aria-label: concat(?targetSchema, " search results");
+        aria-multiselectable: if ?cardinality == "multiple" then "true" else "false";
+      };
+      resultItem -> {
+        role: "option";
+        aria-selected: if self.isSelected then "true" else "false";
+        aria-label: self.title;
+        tabindex: if self.isFocused then "0" else "-1";
+      };
+      createOnMissOption -> {
+        role: "option";
+        aria-label: concat("Create new ", ?targetSchema, ": ", self.searchText);
+        tabindex: if self.isFocused then "0" else "-1";
+      };
+      branchSelector -> {
+        role: "combobox";
+        aria-label: "Branch";
+      };
+      qualifierSelector -> {
+        role: "textbox";
+        aria-label: "Qualifier";
+      };
+      selectedDisplay -> {
+        role: "group";
+        aria-label: if ?cardinality == "multiple" then concat("Selected ", ?targetSchema, " records") else concat("Selected ", ?targetSchema);
+        aria-live: "polite";
+      };
+      clearButton -> {
+        role: "button";
+        aria-label: "Clear selection";
+      };
+    }
+  }
+
+  props {
+    targetSchema: String
+    cardinality: String = "single"
+    displayField: String = "name"
+    currentValue: option String
+    allowCreate: Bool = false
+    showBranchSelector: Bool = false
+    showQualifier: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-cardinality: ?cardinality;
+      data-target-schema: ?targetSchema;
+    }
+
+    searchInput -> {
+      data-part: "search-input";
+      placeholder: concat("Search ", ?targetSchema, "…");
+      hidden: if state == "selected" and ?cardinality == "single" then true else false;
+      onInput: send(TYPE, { query: self.value });
+      onFocus: if state == "closed" then send(OPEN) else noop;
+      onKeyDown: if key == "Escape" then send(CLOSE) else noop;
+    }
+
+    resultList -> {
+      data-part: "result-list";
+      hidden: if state == "closed" or state == "selected" or state == "creating" then true else false;
+    }
+
+    resultItem -> {
+      data-part: "result-item";
+      data-entity-id: self.entityId;
+      data-selected: if self.isSelected then "true" else "false";
+      tabindex: if self.isFocused then "0" else "-1";
+      onClick: send(SELECT, { entityId: self.entityId });
+      onKeyDown: if key == "Enter" then send(SELECT, { entityId: self.entityId }) else noop;
+    }
+
+    resultAvatar -> {
+      data-part: "result-avatar";
+      data-entity-id: self.entityId;
+    }
+
+    resultTitle -> {
+      data-part: "result-title";
+      text: self.title;
+    }
+
+    resultSubtitle -> {
+      data-part: "result-subtitle";
+      text: self.subtitle;
+    }
+
+    createOnMissOption -> {
+      data-part: "create-on-miss-option";
+      hidden: if state != "searching" or not ?allowCreate or self.hasResults then true else false;
+      onClick: send(CREATE, { name: self.searchText });
+      onKeyDown: if key == "Enter" then send(CREATE, { name: self.searchText }) else noop;
+    }
+
+    branchSelector -> {
+      data-part: "branch-selector";
+      hidden: if not ?showBranchSelector or state == "closed" then true else false;
+      onChange: send(SELECT_BRANCH, { branch: self.value });
+    }
+
+    qualifierSelector -> {
+      data-part: "qualifier-selector";
+      hidden: if not ?showQualifier or state == "closed" then true else false;
+      onInput: send(SET_QUALIFIER, { qualifier: self.value });
+    }
+
+    selectedDisplay -> {
+      data-part: "selected-display";
+      hidden: if state != "selected" then true else false;
+      onClick: send(OPEN);
+    }
+
+    clearButton -> {
+      data-part: "clear-button";
+      hidden: if state != "selected" then true else false;
+      onClick: send(CLEAR);
+    }
+  }
+
+  affordance {
+    serves: single-choice;
+    specificity: 8;
+    when { viewType: "reference-picker" }
+    bind {
+      currentValue: currentValue;
+      targetSchema: targetSchema;
+    }
+  }
+
+  invariant {
+    example "open shows recent results": {
+      after searchInput.focus -> ok
+      then root -> { data-state: "open" }
+      and resultList -> { hidden: false }
+    }
+
+    example "typing transitions to searching": {
+      after searchInput.focus -> ok
+      then send(TYPE, { query: "alice" }) -> ok
+      then root -> { data-state: "searching" }
+      and searchInput -> { aria-busy: "true" }
+    }
+
+    example "select transitions to selected and hides list": {
+      after searchInput.focus -> ok
+      then send(TYPE, { query: "alice" }) -> ok
+      then send(SELECT, { entityId: "person-1" }) -> ok
+      then root -> { data-state: "selected" }
+      and resultList -> { hidden: true }
+      and selectedDisplay -> { hidden: false }
+    }
+
+    example "clear from selected resets to closed": {
+      after send(SELECT, { entityId: "person-1" }) -> ok
+      then clearButton.click -> ok
+      then root -> { data-state: "closed" }
+      and selectedDisplay -> { hidden: true }
+    }
+
+    example "create-on-miss option visible only when searching with no results and allowCreate": {
+      after send(TYPE, { query: "nonexistent" }) -> ok
+      then createOnMissOption -> { hidden: false }
+    }
+
+    example "Escape closes from open": {
+      after searchInput.focus -> ok
+      then key(Escape) -> ok
+      then root -> { data-state: "closed" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        root -> { data-state: s.name }
+    }
+
+    always "result list hidden when not open or searching": {
+      if state == "closed" then resultList -> { hidden: true }
+      and if state == "selected" then resultList -> { hidden: true }
+      and if state == "creating" then resultList -> { hidden: true }
+    }
+
+    always "selected display visible only in selected state": {
+      if state == "selected" then selectedDisplay -> { hidden: false }
+      and if state != "selected" then selectedDisplay -> { hidden: true }
+    }
+
+    always "combobox aria-expanded true when list is visible": {
+      if state == "open" then root -> { aria-expanded: "true" }
+      and if state == "searching" then root -> { aria-expanded: "true" }
+    }
+
+    never "create-on-miss shown when allowCreate is false": {
+      not ?allowCreate and createOnMissOption -> { hidden: false }
+    }
+
+    never "multiple result items selected when cardinality is single": {
+      ?cardinality == "single" and
+      exists i1 in resultItems:
+        exists i2 in resultItems:
+          i1 != i2 and i1 -> { data-selected: "true" } and i2 -> { data-selected: "true" }
+    }
+
+    "SELECT must emit a value-change event carrying entityId so parent can call FieldDefinition/update";
+    "CREATE flow must invoke ContentNode/create on the targetSchema before transitioning to selected";
+    "branchSelector is only mounted when showBranchSelector is true";
+    "qualifierSelector is only mounted when showQualifier is true";
+    "search debounce is 200ms to avoid excessive queries during fast typing";
+  }
+
+}

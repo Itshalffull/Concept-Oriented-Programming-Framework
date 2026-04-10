@@ -1,0 +1,298 @@
+@version(1)
+widget tag-chips {
+
+  purpose {
+    Multi-select chip input for Tag relation fields. Displays the current
+    set of selected tags as colored, removable chips followed by an inline
+    text field that triggers auto-complete suggestions from the tag schema.
+    Supports keyboard-driven chip navigation and removal, create-on-miss
+    for tags that do not yet exist, and configurable chip color derived from
+    the Tag entity's color property. Designed for use in inline-cell-editor
+    and form field slots wherever a field has fieldType "relation" with
+    target "Tag" and cardinality "multiple".
+  }
+
+  anatomy {
+    root:             container     { Widget root; contains chip list and input field }
+    chipList:         container     { Horizontal wrapping list of selected tag chips }
+    chip:             container     { Individual chip for one selected tag }
+    chipLabel:        text          { Tag name displayed inside the chip }
+    chipColor:        presentation  { Color swatch or tinted chip background }
+    chipRemove:       action        { Remove button (×) inside the chip }
+    inputField:       interactive   { Text field placed after the last chip for typing new tags }
+    suggestionList:   container     { Floating suggestion dropdown below the input field }
+    suggestionItem:   action        { One suggestion row for an existing tag }
+    createSuggestion: action        { Special suggestion row for creating a new tag }
+  }
+
+  states {
+    idle [initial] {
+      on FOCUS -> focused;
+    }
+
+    focused {
+      on BLUR -> idle;
+      on TYPE -> typing;
+      on REMOVE_CHIP -> focused;
+      on ADD_TAG -> focused;
+      on BACKSPACE_EMPTY -> focused;
+      entry [focusInputField];
+    }
+
+    typing {
+      on TYPE -> typing;
+      on CLEAR_INPUT -> focused;
+      on SHOW_SUGGESTIONS -> suggesting;
+      on BLUR -> idle;
+      entry [debounceQuery];
+    }
+
+    suggesting {
+      on SELECT_SUGGESTION -> focused;
+      on CREATE_TAG -> creating;
+      on CLEAR_INPUT -> focused;
+      on BLUR -> idle;
+      on ESCAPE -> focused;
+      entry [positionSuggestionList];
+      exit [hideSuggestionList];
+    }
+
+    creating {
+      on CREATE_COMPLETE -> focused;
+      on CREATE_ERROR -> suggesting;
+      on CANCEL_CREATE -> suggesting;
+      entry [invokeTagCreate];
+    }
+  }
+
+  accessibility {
+    role: group;
+    keyboard {
+      ArrowDown -> FOCUS_NEXT_SUGGESTION;
+      ArrowUp -> FOCUS_PREV_SUGGESTION;
+      Enter -> SELECT_SUGGESTION;
+      Escape -> ESCAPE;
+      Backspace -> BACKSPACE_EMPTY;
+      Tab -> BLUR;
+    }
+    focus {
+      trap: false;
+      initial: inputField;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: concat(?fieldId, " tag chips");
+        data-state: state;
+      };
+      chipList -> {
+        role: "list";
+        aria-label: "Selected tags";
+      };
+      chip -> {
+        role: "listitem";
+        aria-label: concat(self.tagName, " tag");
+      };
+      chipRemove -> {
+        role: "button";
+        aria-label: concat("Remove ", self.tagName);
+        tabindex: "0";
+      };
+      inputField -> {
+        role: "combobox";
+        aria-label: "Add tag";
+        aria-autocomplete: "list";
+        aria-expanded: if state == "suggesting" then "true" else "false";
+        aria-controls: "tag-chips-suggestion-list";
+        aria-busy: if state == "typing" then "true" else "false";
+      };
+      suggestionList -> {
+        role: "listbox";
+        aria-label: "Tag suggestions";
+        aria-multiselectable: "false";
+      };
+      suggestionItem -> {
+        role: "option";
+        aria-selected: "false";
+        aria-label: self.tagName;
+        tabindex: if self.isFocused then "0" else "-1";
+      };
+      createSuggestion -> {
+        role: "option";
+        aria-label: concat("Create new tag: ", self.inputText);
+        tabindex: if self.isFocused then "0" else "-1";
+      };
+    }
+  }
+
+  props {
+    schema: String
+    fieldId: String
+    targetSchema: String = "Tag"
+    currentValues: list String = []
+    allowCreate: Bool = true
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-field-id: ?fieldId;
+      data-schema: ?schema;
+      onClick: if state == "idle" then send(FOCUS) else noop;
+    }
+
+    chipList -> {
+      data-part: "chip-list";
+    }
+
+    chip -> {
+      data-part: "chip";
+      data-tag-id: self.tagId;
+      data-color: self.color;
+      style-background-color: self.color;
+    }
+
+    chipLabel -> {
+      data-part: "chip-label";
+      text: self.tagName;
+    }
+
+    chipColor -> {
+      data-part: "chip-color";
+      data-color: self.color;
+    }
+
+    chipRemove -> {
+      data-part: "chip-remove";
+      data-tag-id: self.tagId;
+      onClick: send(REMOVE_CHIP, { tagId: self.tagId });
+      onKeyDown: if key == "Enter" or key == "Backspace" then send(REMOVE_CHIP, { tagId: self.tagId }) else noop;
+    }
+
+    inputField -> {
+      data-part: "input-field";
+      placeholder: if ?currentValues.length == 0 then "Add tags…" else "";
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+      onInput: send(TYPE, { query: self.value });
+      onKeyDown: if key == "Backspace" and self.value == "" then send(BACKSPACE_EMPTY) else noop;
+    }
+
+    suggestionList -> {
+      data-part: "suggestion-list";
+      hidden: if state != "suggesting" then true else false;
+    }
+
+    suggestionItem -> {
+      data-part: "suggestion-item";
+      data-tag-id: self.tagId;
+      tabindex: if self.isFocused then "0" else "-1";
+      onClick: send(SELECT_SUGGESTION, { tagId: self.tagId });
+      onKeyDown: if key == "Enter" then send(SELECT_SUGGESTION, { tagId: self.tagId }) else noop;
+    }
+
+    createSuggestion -> {
+      data-part: "create-suggestion";
+      hidden: if not ?allowCreate or state != "suggesting" then true else false;
+      onClick: send(CREATE_TAG, { name: self.inputText });
+      onKeyDown: if key == "Enter" then send(CREATE_TAG, { name: self.inputText }) else noop;
+    }
+  }
+
+  affordance {
+    serves: single-choice;
+    specificity: 12;
+    when { viewType: "tag-chips"; fieldType: "relation"; target: "Tag" }
+    bind {
+      currentValues: currentValues;
+      targetSchema: targetSchema;
+    }
+  }
+
+  invariant {
+    example "focus activates input": {
+      after root.click -> ok
+      then root -> { data-state: "focused" }
+    }
+
+    example "typing opens suggestions": {
+      after root.click -> ok
+      then send(TYPE, { query: "des" }) -> ok
+      then send(SHOW_SUGGESTIONS) -> ok
+      then root -> { data-state: "suggesting" }
+      and suggestionList -> { hidden: false }
+    }
+
+    example "selecting suggestion returns to focused": {
+      after root.click -> ok
+      then send(TYPE, { query: "des" }) -> ok
+      then send(SHOW_SUGGESTIONS) -> ok
+      then send(SELECT_SUGGESTION, { tagId: "tag-1" }) -> ok
+      then root -> { data-state: "focused" }
+      and suggestionList -> { hidden: true }
+    }
+
+    example "Escape from suggesting returns to focused": {
+      after root.click -> ok
+      then send(TYPE, { query: "des" }) -> ok
+      then send(SHOW_SUGGESTIONS) -> ok
+      then key(Escape) -> ok
+      then root -> { data-state: "focused" }
+      and suggestionList -> { hidden: true }
+    }
+
+    example "chip remove stays focused": {
+      after root.click -> ok
+      then send(REMOVE_CHIP, { tagId: "tag-1" }) -> ok
+      then root -> { data-state: "focused" }
+    }
+
+    example "blur transitions to idle": {
+      after root.click -> ok
+      then inputField.blur -> ok
+      then root -> { data-state: "idle" }
+      and suggestionList -> { hidden: true }
+    }
+
+    example "create-suggestion hidden when allowCreate false": {
+      after send(TYPE, { query: "xyz" }) -> ok
+      then createSuggestion -> { hidden: true }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        root -> { data-state: s.name }
+    }
+
+    always "suggestion list hidden outside suggesting state": {
+      if state != "suggesting" then suggestionList -> { hidden: true }
+    }
+
+    always "combobox aria-expanded only in suggesting state": {
+      if state == "suggesting" then inputField -> { aria-expanded: "true" }
+      and if state != "suggesting" then inputField -> { aria-expanded: "false" }
+    }
+
+    never "create-suggestion shown when allowCreate is false": {
+      not ?allowCreate and createSuggestion -> { hidden: false }
+    }
+
+    never "duplicate tag in chip list": {
+      exists c1 in chips:
+        exists c2 in chips:
+          c1 != c2 and c1 -> { data-tag-id: self.tagId } and c2 -> { data-tag-id: self.tagId }
+    }
+
+    "SELECT_SUGGESTION must call FieldDefinition/update adding the tagId to the relation field value set";
+    "REMOVE_CHIP must call FieldDefinition/update removing the tagId from the relation field value set";
+    "CREATE_TAG must call ContentNode/create on targetSchema before adding to value set";
+    "chip color must be derived from the Tag entity's color property, not hardcoded";
+    "Backspace on empty input removes the last chip (BACKSPACE_EMPTY event)";
+  }
+
+}
