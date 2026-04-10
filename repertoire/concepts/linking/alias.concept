@@ -38,7 +38,7 @@ concept Alias [A] {
       fixture missing_alias { entity: "page-999", name: "nonexistent" } -> notfound
     }
 
-    action resolve(name: String) {
+    action resolve(name: String, scope: option String) {
       -> ok(entity: A) {
         The alias name resolves to its associated entity, enabling
         name polymorphism across the system.
