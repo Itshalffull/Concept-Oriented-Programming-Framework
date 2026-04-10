@@ -112,7 +112,15 @@ concept RelationResolver [R] {
 
 **Nobody configures denormalization manually by default.** When a relation field is created with `include` fields, the system automatically decides whether to denormalize based on measurable properties:
 
-#### Decision logic (runs on FieldDefinition/create and FieldDefinition/update):
+#### When does denormalization trigger?
+
+**Not at schema time.** Creating a relation field with `include: ["name", "avatar"]` just declares availability — it doesn't denormalize anything. No view has asked for those fields yet.
+
+**At view time.** When a RelationSpec is created or updated (i.e., a view says "I want author.name"), the system evaluates whether to denormalize. The trigger is `RelationSpec/create` or `RelationSpec/addPath`, not `FieldDefinition/create`.
+
+This means: zero write cost until a view actually needs the data. If you define 10 include fields but only 2 views use 3 of them, only those 3 get denormalized.
+
+#### Decision logic (runs on RelationSpec/create and RelationSpec/addPath):
 
 ```
 1. Count referencing entities:
@@ -170,6 +178,43 @@ Property/set(schema, "denormalize.{fieldId}", '{
 ```
 
 The Level 2 drawer shows "Pre-resolution disabled (manual override)" with an "Auto-detect" button to revert to system decision.
+
+#### Growth handling (what happens when 50 records becomes 50,000)
+
+The auto-decision at time T is based on conditions at time T. But entity counts grow. A denormalization that was cheap at 50 entities may become expensive at 50,000.
+
+**Re-evaluation on every propagate:**
+
+After each `RelationResolver/propagate` call, the handler records the propagation stats:
+
+```
+Property/set(schema, "denormalize.{fieldId}.stats", '{
+  "lastPropagateCount": 847,
+  "lastPropagateMs": 230,
+  "totalPropagations": 1542,
+  "avgPropagateMs": 45,
+  "peakPropagateCount": 2100,
+  "evaluatedAt": "2026-04-09T..."
+}')
+```
+
+**Degradation thresholds:**
+
+| Metric | Warning | Auto-Downgrade |
+|---|---|---|
+| Propagation count per change | > 1,000 | > 10,000 |
+| Propagation latency | > 500ms | > 5,000ms |
+| Daily propagation writes | > 100,000 | > 1,000,000 |
+
+When a threshold is crossed:
+
+1. **Warning tier:** Set `"degraded": true` on the Property. Level 2 drawer shows: "⚠ author.name was auto-denormalized at 50 Articles. There are now 52,000. Propagation takes 2.3s per Person update. [Keep] [Switch to join-at-read]"
+
+2. **Auto-downgrade tier:** Set `"enabled": false, "autoDowngraded": true`. Level 2 drawer shows: "⛔ Denormalization auto-disabled — propagation exceeded 10,000 writes. Views now use join-at-read. [Re-enable] [Keep disabled]"
+
+On auto-downgrade, existing denormalized fields are NOT immediately removed (that would be another expensive operation). They become stale but harmless — the compile-query sync falls back to join-at-read, ignoring the stale denormalized values. A background cleanup can remove them later.
+
+**Recovery:** If entity count drops (e.g., old records archived), the next propagate re-evaluates and can auto-re-enable if conditions are met again.
 
 #### Configuration storage:
 
