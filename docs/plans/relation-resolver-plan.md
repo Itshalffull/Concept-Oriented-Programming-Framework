@@ -1083,11 +1083,11 @@ A boot-time process that reads `clef-base/schemas/*.schema.yaml` and creates Fie
 
 ## 15. Open Questions
 
-1. **Max fan-out safety (RESOLVED — cost threshold in handler, not CircuitBreaker)** — CircuitBreaker is designed for external service failures, not expensive-but-successful operations. Instead, RelationResolver/propagate checks reverse ref count BEFORE executing:
-   - Count < 1,000 → propagate inline (immediate)
-   - Count 1,000–10,000 → enqueue for background processing (eventual, via Queue if available)
-   - Count > 10,000 → skip, mark denormalized records as `_stale: true`
-   A background sweep re-resolves stale records periodically. Views can show a subtle "data may be outdated" indicator on stale fields.
+1. **Max fan-out safety (RESOLVED — cost threshold + Queue concept)** — RelationResolver/propagate checks reverse ref count BEFORE executing, using the existing `Queue` concept (`repertoire/concepts/automation/queue.concept`) for deferred processing:
+   - Count < 1,000 → propagate inline (immediate, synchronous)
+   - Count 1,000–10,000 → `Queue/enqueue("relation-propagate", task, priority)` — deferred to a background worker that calls `Queue/claim` → executes propagation → `Queue/process`. Returns immediately with `queued: true`.
+   - Count > 10,000 → skip, mark denormalized records as `_stale: true`. Background sweep re-resolves periodically.
+   Queue's `priority` field can weight by entity read frequency — changes to frequently-viewed entities propagate first. Views show a subtle indicator on stale fields.
 
 2. **Lazy resolution protocol** — How does the client know a field is lazy? Options: projection metadata (`{ resolve: "lazy", targetConcept: "Company", targetField: "name" }`), or a separate `lazyFields` array in the query result.
 
