@@ -1,0 +1,283 @@
+@version(1)
+widget view-editor-toolbar {
+
+  purpose {
+    Horizontal control bar displayed above every data view. Hosts per-concern
+    toolbar buttons (Filter, Sort, Group, Fields, Layout, Source) that each open
+    a dedicated popover, an inline filter pill bar showing active filters at a
+    glance, a save button with an unsaved-changes indicator, and an optional slot
+    for a view tab bar. Badge counts on Filter, Sort, and Group buttons reflect
+    how many rules are currently active. Dispatches typed FSM events so parent
+    components can mount the appropriate popover without coupling to toolbar
+    internals. After the user invokes save, transitions to a brief saved-flash
+    state before returning to idle.
+  }
+
+  anatomy {
+    root:               container    { Top-level wrapper spanning the full view width }
+    viewTabBarSlot:     container    { Slot region where a view-tab-bar widget is composed }
+    toolbarRow:         container    { Horizontal row containing all control buttons }
+    filterButton:       action       { Opens the filter configuration popover }
+    filterButtonBadge:  text         { Active filter count badge displayed on filterButton }
+    sortButton:         action       { Opens the sort configuration popover }
+    sortButtonBadge:    text         { Active sort-rule count badge displayed on sortButton }
+    groupButton:        action       { Opens the group configuration popover }
+    groupButtonBadge:   text         { Active grouping indicator badge displayed on groupButton }
+    fieldsButton:       action       { Opens the field visibility and ordering popover }
+    layoutButton:       action       { Opens the layout / display-mode switcher popover }
+    sourceButton:       action       { Opens the data source selector popover }
+    saveButton:         action       { Persists the current view configuration }
+    unsavedIndicator:   presentation { Dot or label shown when hasUnsavedChanges is true }
+    filterPillBar:      container    { Horizontal strip of active filter-pill chips }
+    addFilterPillButton: action      { Inline shortcut to add a new filter without opening the popover }
+  }
+
+  states {
+    idle [initial] {
+      on OPEN_FILTER  -> idle;
+      on OPEN_SORT    -> idle;
+      on OPEN_GROUP   -> idle;
+      on OPEN_FIELDS  -> idle;
+      on OPEN_LAYOUT  -> idle;
+      on OPEN_SOURCE  -> idle;
+      on SAVE         -> saving;
+      on ADD_FILTER   -> idle;
+    }
+
+    saving {
+      on SAVE_SUCCESS -> saved-flash;
+      on SAVE_ERROR   -> idle;
+    }
+
+    saved-flash {
+      on FLASH_DONE -> idle;
+      entry [startFlashTimer];
+    }
+  }
+
+  accessibility {
+    role: toolbar;
+    keyboard {
+      Tab           -> FOCUS_NEXT_CONTROL;
+      ArrowRight    -> FOCUS_NEXT_CONTROL;
+      ArrowLeft     -> FOCUS_PREV_CONTROL;
+      Home          -> FOCUS_FIRST_CONTROL;
+      End           -> FOCUS_LAST_CONTROL;
+      Enter         -> ACTIVATE_CONTROL;
+      Space         -> ACTIVATE_CONTROL;
+    }
+    focus {
+      trap: false;
+      initial: filterButton;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "toolbar";
+        aria-label: "View editor controls";
+        data-state: state;
+      };
+      filterButton -> {
+        role: "button";
+        aria-label: if ?filterCount > 0 then concat("Filter, ", ?filterCount, " active") else "Filter";
+        aria-haspopup: "dialog";
+        aria-pressed: "false";
+      };
+      filterButtonBadge -> {
+        role: "presentation";
+        aria-hidden: if ?filterCount == 0 then "true" else "false";
+      };
+      sortButton -> {
+        role: "button";
+        aria-label: if ?sortCount > 0 then concat("Sort, ", ?sortCount, " active") else "Sort";
+        aria-haspopup: "dialog";
+      };
+      sortButtonBadge -> {
+        role: "presentation";
+        aria-hidden: if ?sortCount == 0 then "true" else "false";
+      };
+      groupButton -> {
+        role: "button";
+        aria-label: if ?groupActive then "Group, active" else "Group";
+        aria-haspopup: "dialog";
+        aria-pressed: if ?groupActive then "true" else "false";
+      };
+      groupButtonBadge -> {
+        role: "presentation";
+        aria-hidden: if ?groupActive then "false" else "true";
+      };
+      fieldsButton -> {
+        role: "button";
+        aria-label: "Fields";
+        aria-haspopup: "dialog";
+      };
+      layoutButton -> {
+        role: "button";
+        aria-label: "Layout";
+        aria-haspopup: "dialog";
+      };
+      sourceButton -> {
+        role: "button";
+        aria-label: "Source";
+        aria-haspopup: "dialog";
+      };
+      saveButton -> {
+        role: "button";
+        aria-label: if state == "saving" then "Saving…" else if state == "saved-flash" then "Saved" else "Save view";
+        aria-disabled: if state == "saving" then "true" else "false";
+        aria-busy: if state == "saving" then "true" else "false";
+      };
+      unsavedIndicator -> {
+        role: "status";
+        aria-label: "Unsaved changes";
+        aria-live: "polite";
+        aria-hidden: if ?hasUnsavedChanges then "false" else "true";
+      };
+      filterPillBar -> {
+        role: "group";
+        aria-label: "Active filters";
+      };
+      addFilterPillButton -> {
+        role: "button";
+        aria-label: "Add filter";
+      };
+    }
+  }
+
+  props {
+    activeView:          option String = ""
+    filterCount:         Int    = 0
+    sortCount:           Int    = 0
+    groupActive:         Bool   = false
+    hasUnsavedChanges:   Bool   = false
+    onSave:              String = ""
+  }
+
+  connect {
+    root -> {
+      data-part:  "root";
+      data-state: state;
+      data-has-unsaved: if ?hasUnsavedChanges then "true" else "false";
+    }
+
+    viewTabBarSlot -> {
+      data-part: "view-tab-bar-slot";
+    }
+
+    toolbarRow -> {
+      data-part: "toolbar-row";
+    }
+
+    filterButton -> {
+      data-part:        "filter-button";
+      data-active:      if ?filterCount > 0 then "true" else "false";
+      tabindex:         "0";
+      onClick:          send(OPEN_FILTER);
+      onKeyDown:        if key == "Enter" or key == " " then send(OPEN_FILTER) else noop;
+    }
+
+    filterButtonBadge -> {
+      data-part:   "filter-button-badge";
+      text:        ?filterCount;
+      hidden:      if ?filterCount == 0 then true else false;
+    }
+
+    sortButton -> {
+      data-part:   "sort-button";
+      data-active: if ?sortCount > 0 then "true" else "false";
+      tabindex:    "-1";
+      onClick:     send(OPEN_SORT);
+      onKeyDown:   if key == "Enter" or key == " " then send(OPEN_SORT) else noop;
+    }
+
+    sortButtonBadge -> {
+      data-part: "sort-button-badge";
+      text:      ?sortCount;
+      hidden:    if ?sortCount == 0 then true else false;
+    }
+
+    groupButton -> {
+      data-part:    "group-button";
+      data-active:  if ?groupActive then "true" else "false";
+      tabindex:     "-1";
+      onClick:      send(OPEN_GROUP);
+      onKeyDown:    if key == "Enter" or key == " " then send(OPEN_GROUP) else noop;
+    }
+
+    groupButtonBadge -> {
+      data-part: "group-button-badge";
+      hidden:    if ?groupActive then false else true;
+    }
+
+    fieldsButton -> {
+      data-part:  "fields-button";
+      tabindex:   "-1";
+      onClick:    send(OPEN_FIELDS);
+      onKeyDown:  if key == "Enter" or key == " " then send(OPEN_FIELDS) else noop;
+    }
+
+    layoutButton -> {
+      data-part:  "layout-button";
+      tabindex:   "-1";
+      onClick:    send(OPEN_LAYOUT);
+      onKeyDown:  if key == "Enter" or key == " " then send(OPEN_LAYOUT) else noop;
+    }
+
+    sourceButton -> {
+      data-part:  "source-button";
+      tabindex:   "-1";
+      onClick:    send(OPEN_SOURCE);
+      onKeyDown:  if key == "Enter" or key == " " then send(OPEN_SOURCE) else noop;
+    }
+
+    saveButton -> {
+      data-part:    "save-button";
+      data-state:   state;
+      disabled:     if state == "saving" then true else false;
+      tabindex:     "-1";
+      onClick:      if state == "idle" and ?hasUnsavedChanges then send(SAVE) else noop;
+      onKeyDown:    if key == "Enter" or key == " " then send(SAVE) else noop;
+    }
+
+    unsavedIndicator -> {
+      data-part:  "unsaved-indicator";
+      hidden:     if ?hasUnsavedChanges then false else true;
+    }
+
+    filterPillBar -> {
+      data-part: "filter-pill-bar";
+    }
+
+    addFilterPillButton -> {
+      data-part:  "add-filter-pill-button";
+      onClick:    send(ADD_FILTER);
+      onKeyDown:  if key == "Enter" or key == " " then send(ADD_FILTER) else noop;
+    }
+  }
+
+  compose {
+    _viewTabBar:  widget("view-tab-bar",  { activeView: ?activeView })
+    _filterPills: widget("filter-pill",   {})
+  }
+
+  invariant {
+    "filterButton data-active must be 'true' when filterCount > 0, and filterButtonBadge must show the count and be visible";
+    "filterButtonBadge must be hidden (hidden: true) when filterCount == 0";
+    "sortButtonBadge must be hidden when sortCount == 0; visible with sortCount text when sortCount > 0";
+    "groupButton data-active must be 'true' and groupButtonBadge visible when groupActive is true";
+    "clicking saveButton while in idle state sends SAVE and transitions to saving";
+    "saveButton must be disabled (disabled: true) while state == 'saving'; aria-busy must be 'true'";
+    "SAVE_SUCCESS event from saving state transitions to saved-flash; FLASH_DONE from saved-flash transitions back to idle";
+    "startFlashTimer entry action fires on saved-flash; the timer sends FLASH_DONE after ~1500ms";
+    "saveButton aria-label must be 'Save view' in idle, 'Saving…' in saving, and 'Saved' in saved-flash";
+    "unsavedIndicator is hidden when hasUnsavedChanges is false; visible when hasUnsavedChanges is true";
+    "root data-state must always equal the current FSM state name";
+    "root data-has-unsaved must be 'true' when hasUnsavedChanges is true, 'false' otherwise";
+    "clicking filterButton sends OPEN_FILTER; clicking sortButton sends OPEN_SORT; clicking groupButton sends OPEN_GROUP; clicking fieldsButton sends OPEN_FIELDS; clicking layoutButton sends OPEN_LAYOUT; clicking sourceButton sends OPEN_SOURCE";
+    "OPEN_FILTER, OPEN_SORT, OPEN_GROUP, OPEN_FIELDS, OPEN_LAYOUT, OPEN_SOURCE are intent signals — this widget does not mount popovers itself; the parent component listens for these events and mounts the appropriate popover";
+    "addFilterPillButton sends ADD_FILTER when clicked; parent handles this by adding a new empty filter condition";
+    "toolbar buttons use roving tabindex: initially filterButton has tabindex 0, all others have tabindex -1; Arrow keys move focus between buttons";
+    "all three FSM states (idle, saving, saved-flash) are reachable: idle is initial; SAVE reaches saving from idle; SAVE_SUCCESS reaches saved-flash from saving; FLASH_DONE reaches idle from saved-flash";
+  }
+
+}

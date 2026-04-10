@@ -1,0 +1,187 @@
+@version(1)
+widget filter-pill {
+
+  purpose {
+    Compact inline chip representing a single active filter condition as three
+    independently clickable segments — field, operator, and value — following
+    the Linear filter-pill pattern. Clicking the field segment opens a
+    field-picker-dropdown anchored to the pill; clicking the operator segment
+    opens an operator-dropdown; clicking the value segment opens a
+    typed-value-input appropriate for the current fieldType. A remove button (×)
+    at the trailing edge of the chip deletes the filter entirely. Keyboard users
+    can Tab between segments and press Enter to open the corresponding inline
+    editor or Delete/Backspace to remove. The pill returns to idle when any
+    inline editor is closed via selection or Escape.
+  }
+
+  anatomy {
+    root:             container    { Outer chip wrapper encompassing all segments and remove button }
+    fieldSegment:     action       { Clickable label showing the field name; opens field-picker-dropdown }
+    operatorSegment:  action       { Clickable label showing the operator; opens operator-dropdown }
+    valueSegment:     action       { Clickable label showing the value; opens typed-value-input }
+    removeButton:     action       { × button that removes this filter from the active set }
+  }
+
+  states {
+    idle [initial] {
+      on EDIT_FIELD    -> editing-field;
+      on EDIT_OPERATOR -> editing-operator;
+      on EDIT_VALUE    -> editing-value;
+      on REMOVE        -> idle;
+    }
+
+    editing-field {
+      on FIELD_SELECTED -> idle;
+      on ESCAPE         -> idle;
+      on CLOSE          -> idle;
+      entry [openFieldPicker];
+      exit  [closeFieldPicker];
+    }
+
+    editing-operator {
+      on OPERATOR_SELECTED -> idle;
+      on ESCAPE            -> idle;
+      on CLOSE             -> idle;
+      entry [openOperatorDropdown];
+      exit  [closeOperatorDropdown];
+    }
+
+    editing-value {
+      on VALUE_COMMITTED -> idle;
+      on ESCAPE          -> idle;
+      on CLOSE           -> idle;
+      entry [openValueInput];
+      exit  [closeValueInput];
+    }
+  }
+
+  accessibility {
+    role: group;
+    keyboard {
+      Tab         -> FOCUS_NEXT_SEGMENT;
+      ShiftTab    -> FOCUS_PREV_SEGMENT;
+      Enter       -> ACTIVATE_SEGMENT;
+      Space       -> ACTIVATE_SEGMENT;
+      Escape      -> ESCAPE;
+      Delete      -> REMOVE;
+      Backspace   -> REMOVE;
+    }
+    focus {
+      trap: false;
+      initial: fieldSegment;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: concat(?field, " ", ?operator, " ", ?value);
+        data-state: state;
+      };
+      fieldSegment -> {
+        role: "button";
+        aria-label: concat("Field: ", ?field);
+        aria-haspopup: "listbox";
+        aria-expanded: if state == "editing-field" then "true" else "false";
+        tabindex: "0";
+      };
+      operatorSegment -> {
+        role: "button";
+        aria-label: concat("Operator: ", ?operator);
+        aria-haspopup: "listbox";
+        aria-expanded: if state == "editing-operator" then "true" else "false";
+        tabindex: "0";
+      };
+      valueSegment -> {
+        role: "button";
+        aria-label: concat("Value: ", ?value);
+        aria-haspopup: "dialog";
+        aria-expanded: if state == "editing-value" then "true" else "false";
+        tabindex: "0";
+      };
+      removeButton -> {
+        role: "button";
+        aria-label: concat("Remove filter: ", ?field, " ", ?operator, " ", ?value);
+        tabindex: "0";
+      };
+    }
+  }
+
+  props {
+    field:     String = ""
+    operator:  String = "is"
+    value:     String = ""
+    fieldType: String = "text"
+    onEdit:    String = ""
+    onRemove:  String = ""
+  }
+
+  connect {
+    root -> {
+      data-part:       "root";
+      data-state:      state;
+      data-field-type: ?fieldType;
+    }
+
+    fieldSegment -> {
+      data-part:      "field-segment";
+      data-editing:   if state == "editing-field" then "true" else "false";
+      text:           ?field;
+      onClick:        send(EDIT_FIELD);
+      onKeyDown:      if key == "Enter" or key == " " then send(EDIT_FIELD) else if key == "Delete" or key == "Backspace" then send(REMOVE) else noop;
+    }
+
+    operatorSegment -> {
+      data-part:      "operator-segment";
+      data-editing:   if state == "editing-operator" then "true" else "false";
+      text:           ?operator;
+      onClick:        send(EDIT_OPERATOR);
+      onKeyDown:      if key == "Enter" or key == " " then send(EDIT_OPERATOR) else if key == "Delete" or key == "Backspace" then send(REMOVE) else noop;
+    }
+
+    valueSegment -> {
+      data-part:      "value-segment";
+      data-editing:   if state == "editing-value" then "true" else "false";
+      text:           if ?value == "" then "…" else ?value;
+      hidden:         if ?operator == "is-empty" or ?operator == "is-not-empty" then true else false;
+      onClick:        send(EDIT_VALUE);
+      onKeyDown:      if key == "Enter" or key == " " then send(EDIT_VALUE) else if key == "Delete" or key == "Backspace" then send(REMOVE) else noop;
+    }
+
+    removeButton -> {
+      data-part:  "remove-button";
+      onClick:    send(REMOVE);
+      onKeyDown:  if key == "Enter" or key == " " or key == "Delete" or key == "Backspace" then send(REMOVE) else noop;
+    }
+  }
+
+  compose {
+    _fieldPicker:    widget("field-picker-dropdown", { currentField: ?field })
+    _operatorPicker: widget("operator-dropdown",     { currentOperator: ?operator, fieldType: ?fieldType })
+  }
+
+  invariant {
+    "clicking fieldSegment sends EDIT_FIELD and transitions FSM to editing-field; fieldSegment data-editing must become 'true'; all other segments data-editing must be 'false'";
+    "clicking operatorSegment sends EDIT_OPERATOR and transitions FSM to editing-operator; operatorSegment data-editing must become 'true'";
+    "clicking valueSegment sends EDIT_VALUE and transitions FSM to editing-value; valueSegment data-editing must become 'true'";
+    "pressing Escape while in editing-field, editing-operator, or editing-value sends ESCAPE and returns FSM to idle; data-editing on all segments must be 'false'";
+    "FIELD_SELECTED event transitions from editing-field to idle";
+    "OPERATOR_SELECTED event transitions from editing-operator to idle";
+    "VALUE_COMMITTED event transitions from editing-value to idle";
+    "clicking removeButton sends REMOVE; pressing Delete or Backspace on any focused segment also sends REMOVE";
+    "all four FSM states (idle, editing-field, editing-operator, editing-value) are reachable: idle is initial; EDIT_FIELD reaches editing-field; EDIT_OPERATOR reaches editing-operator; EDIT_VALUE reaches editing-value; all editing states return to idle via ESCAPE or their completion event";
+    "at most one segment is in editing mode at any time — the FSM guarantees this since only one state is active";
+    "root data-state must always equal the current FSM state name (idle | editing-field | editing-operator | editing-value)";
+    "fieldSegment aria-expanded must be 'true' when state == 'editing-field', 'false' otherwise";
+    "operatorSegment aria-expanded must be 'true' when state == 'editing-operator', 'false' otherwise";
+    "valueSegment aria-expanded must be 'true' when state == 'editing-value', 'false' otherwise";
+    "valueSegment must be hidden (hidden: true) when operator prop is 'is-empty' or 'is-not-empty' (unary operators require no value)";
+    "valueSegment must show placeholder text '…' when value prop is empty string, so the chip communicates an incomplete filter state";
+    "root aria-label must read as a natural-language sentence concatenating field, operator, and value labels — e.g. 'status is active', 'due date is before next week' — using human-readable labels not internal keys";
+    "FIELD_SELECTED event payload must carry { field: String } so the parent can update the FilterSpec field key without reading DOM";
+    "OPERATOR_SELECTED event payload must carry { operator: String } so the parent can update the FilterSpec operator without reading DOM";
+    "VALUE_COMMITTED event payload must carry { value: String } so the parent can update the FilterSpec value without reading DOM";
+    "REMOVE event carries no payload — the parent identifies which FilterSpec condition to remove by the pill's position or key prop";
+    "when fieldType changes (because field changed) the parent is responsible for resetting operator to the first valid operator for the new type and clearing value — the pill faithfully displays whatever field/operator/value props it receives";
+  }
+
+}
