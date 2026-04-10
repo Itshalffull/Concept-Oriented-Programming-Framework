@@ -310,28 +310,84 @@ concept RelationSpec [R] {
 
 ### Path structure
 
-Two path types — `field` (schema-bound) and `link` (graph-based):
+Three path shapes — forward, reverse, and link — all resolved by the same infrastructure:
 
 ```json
 [
   { "field": "author", "include": ["name", "avatar"] },
   { "field": "author.company", "include": ["name", "logo"], "lazy": true },
-  { "link": "backlinks", "include": ["title", "schema"], "lazy": true }
+  { "reverse": "author", "sourceSchema": "Article", "include": ["title", "publishedAt"], "lazy": true },
+  { "link": "mentions", "include": ["title"], "lazy": true }
 ]
 ```
 
-**Field paths:**
+#### Forward field paths — follow a relation field on THIS entity
+
 - `field` — relation field path from FieldDefinition (dot-notation for multi-hop)
 - `include` — which target fields to project
-- `lazy` — optional. When true AND not denormalized, client resolves
+- `lazy` — optional, default false. When true AND not denormalized, client resolves
 
-**Link paths:**
-- `link` — relation/reference type from the linking graph
-- `include` — which target fields to project
-- `lazy` — optional (default true for link paths, since they're often unbounded)
-- `maxCount` — optional, max entities to resolve (default 10 for link paths)
+Example: "Show me my author's name" → `{ "field": "author", "include": ["name"] }`
 
-RelationSpec does NOT control denormalization strategy. For field paths, denorm config lives on FieldDefinition.typeConfig. For link paths, denorm config lives on a Property. RelationSpec only declares what the view wants.
+Deep: "Show me my author's company's name" → `{ "field": "author.company", "include": ["name"] }`
+
+#### Reverse field paths — find entities whose field points at THIS entity
+
+- `reverse` — the field name on the SOURCE entity
+- `sourceSchema` — which schema has this field
+- `include` — which source entity fields to project
+- `lazy` — optional, default true (reverse paths are often unbounded)
+- `maxCount` — optional, max entities to resolve (default 10)
+
+Example: On a Person page, "Show me all Articles where I'm the author" →
+`{ "reverse": "author", "sourceSchema": "Article", "include": ["title", "publishedAt"] }`
+
+**Reverse and deep linking are the same problem** — resolve data from a different entity via a graph edge. The only difference is direction. Resolution strategies are identical:
+
+| Strategy | Forward (single) | Forward (deep) | Reverse |
+|---|---|---|---|
+| Denormalize | `author.name` on Article | `author.company.name` on Article | `articles_as_author` on Person |
+| Join at read | Single join | Chained joins | Join through reverse index |
+| Lazy | Client fetches | Client fetches | Client fetches |
+
+The reverse index (`relation-refs`) supports both directions. `resolve()` follows forward edges. Reverse paths read the same index backward.
+
+**Denormalization config for reverse** lives on the same FieldDefinition.typeConfig:
+
+```json
+{
+  "target": "Person",
+  "cardinality": "single",
+  "denormalize": {
+    "name": { "enabled": true, "source": "auto" },
+    "avatar": { "enabled": true, "source": "auto" }
+  },
+  "denormalizeReverse": {
+    "enabled": true,
+    "include": ["title", "publishedAt"],
+    "maxCount": 5,
+    "source": "auto"
+  }
+}
+```
+
+No auto-created reverse FieldDefinition needed. Reverse is a path direction in RelationSpec, not a separate field. The denormalization system writes reverse data when configured.
+
+#### Link paths — untyped reverse lookups (not field-based)
+
+- `link` — "backlinks" or "mentions"
+- `include` — which source entity fields to project
+- `lazy` — optional, default true
+- `maxCount` — optional, default 10
+
+```json
+{ "link": "backlinks", "include": ["title", "schema"], "lazy": true }
+{ "link": "mentions", "include": ["title"], "lazy": true }
+```
+
+These are for references that don't come from schema fields — `[[mentions]]` in rich text bodies, manual Reference links. Everything else (tags, categories, author, taxonomy terms) is a relation field in the content-native model — accessed via forward or reverse field paths.
+
+RelationSpec does NOT control denormalization strategy. For field paths (forward and reverse), denorm config lives on FieldDefinition.typeConfig. For link paths, denorm config lives on a Property. RelationSpec only declares what the view wants.
 
 ### Resolution rules (in compile-query sync)
 
@@ -842,15 +898,57 @@ If `reference-picker.widget` doesn't exist yet, it needs to be created as part o
 
 ---
 
-## 11. Kanban Cards
+## 11. Type-Picker Presets for Relation Fields
+
+The type-picker (Level 1) shows **presentational types** that map to `fieldType: "relation"` with preset widget/formatter combinations. Users see familiar names; storage is unified.
+
+| Picker label | Icon | fieldType | target | widget | formatter |
+|---|---|---|---|---|---|
+| Tags | 🏷 | relation | Tag | tag-chips | colored-chips |
+| Category | 📂 | relation | TaxonomyTerm | taxonomy-picker | badge |
+| Person | 👤 | relation | Person | person-picker | avatar-name |
+| Link to record | → | relation | (user picks) | reference-picker | linked-title |
+
+All four create `FieldDefinition` with `fieldType: "relation"`. The difference is the preset `target`, `widget`, and `formatter` values. Power users can change any of these in the Level 2 drawer.
+
+"Tags" in the picker → under the hood:
+```json
+{
+  "fieldType": "relation",
+  "typeConfig": { "target": "Tag", "cardinality": "multiple" },
+  "widget": "tag-chips",
+  "formatter": "colored-chips"
+}
+```
+
+Tag and TaxonomyTerm entities are ContentNodes with their respective schemas. Assigning a tag to an Article is setting a relation field value — same as setting an author. The Tag/addTag and Taxonomy/tagEntity actions are bridged via the field↔linking sync.
+
+---
+
+## 12. Schema YAML → FieldDefinition Pipeline
+
+Schema YAMLs in `clef-base/schemas/` already declare `type: Reference` fields (e.g., `author: Reference` on Article). These need to create FieldDefinitions when processed.
+
+The ContentTypeScaffoldGen (or a boot-time sync) should:
+
+1. Read schema YAML `type: Reference` fields
+2. Create `FieldDefinition` with `fieldType: "relation"` and `target` from the YAML
+3. Set `widget` and `formatter` from the YAML's `display` hints (if any)
+4. Wire the field↔linking bridge sync
+
+This ensures schema YAMLs are the source of truth for content-native schemas, and FieldDefinitions are created automatically — no manual setup needed.
+
+---
+
+## 13. Kanban Cards
 
 | Card | PRD Sections | Blocked By | Blocks | Priority | Commit |
 |---|---|---|---|---|---|
-| **MAG-565** RelationResolver Concept + Handler | §2, §5 | — | MAG-567, MAG-569 | high | |
-| **MAG-566** RelationSpec Concept + Handler + ViewShell Integration | §3, §9, §10 | — | MAG-567, MAG-569 | high | |
-| **MAG-567** Syncs: resolve, propagate, field↔linking bridge, compile-query | §4, §10 | MAG-565, MAG-566 | MAG-569 | high | |
-| **MAG-568** Widgets: relation-config-panel, reference-picker + Schema Editor Updates | §6, §8, §10 | — | MAG-569 | medium | |
-| **MAG-569** Integration Tests + Parser Update + Seeds + .view Examples | §7, §10 | MAG-565–568 | — | medium | |
+| **MAG-565** RelationResolver Concept + Handler (forward, reverse, propagate) | §2, §5 | — | MAG-567, MAG-569 | high | |
+| **MAG-566** RelationSpec Concept + Handler + ViewShell Integration | §3, §10 | — | MAG-567, MAG-569 | high | |
+| **MAG-567** Syncs: resolve, propagate, field↔linking bridge (bidir), compile-query | §4, §10 | MAG-565, MAG-566 | MAG-569 | high | |
+| **MAG-568** Widgets: relation-config-panel, reference-picker, tag-chips, taxonomy-picker + Type-Picker Presets | §6, §8, §11 | — | MAG-569 | medium | |
+| **MAG-569** Integration Tests + Parser Update + Schema YAML Pipeline + Seeds | §7, §10, §12 | MAG-565–568 | — | medium | |
 
 ---
 
