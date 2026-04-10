@@ -81,3 +81,11 @@ entries:
   - name: reference-get-refs-source
     kind: concept-action
     config: '{"concept":"Reference","action":"getRefs","params":{"source":"{{entityId}}"}}'
+
+  - name: version-space-diff-source
+    kind: concept-action
+    config: '{"concept":"VersionSpace","action":"diff","params":{"source":"{{branchA}}","target":"{{branchB}}"}}'
+
+  - name: version-list-entity-source
+    kind: concept-action
+    config: '{"concept":"Version","action":"list","params":{"entity":"{{entityId}}"}}'

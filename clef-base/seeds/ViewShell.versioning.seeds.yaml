@@ -1,0 +1,36 @@
+# ViewShell seeds: namespace / version-aware views (MAG-574).
+#
+# These views use the {{namespace}} and {{qualifier}} DataSourceSpec template
+# variables introduced in MAG-574.  Resolution happens at the storage layer via
+# the version-aware-load sync — the ViewShell records are passive config only.
+
+concept: ViewShell
+action: create
+entries:
+  # Side-by-side branch comparison — two panels rendering this shell with
+  # different `namespace` bindings supplied by the host page (e.g. branchA /
+  # branchB URL params).  The {{schema}} variable comes from the surrounding
+  # context (entity detail page or view config).
+  - name: branch-compare
+    title: Branch Compare
+    description: Compare content across two branches. Bind {{schema}}, {{branchA}}, and {{branchB}} from the host page context.
+    dataSource: content-node-list-branch-source
+    filter: identity-filter
+    sort: natural-order
+    group: ''
+    projection: content-list-fields
+    presentation: table-default
+    interaction: content-list-controls
+
+  # Historical snapshot — shows a single entity as it existed at {{qualifier}}.
+  # URL pattern: /content/:id?asOf=2026-04-01 sets {{qualifier}} and {{entityId}}.
+  - name: entity-historical-detail
+    title: Historical View
+    description: View an entity at a specific point in time. Bind {{entityId}} and {{qualifier}} (e.g. "@2026-04-01") from the URL.
+    dataSource: content-node-historical-source
+    filter: identity-filter
+    sort: natural-order
+    group: ''
+    projection: content-list-fields
+    presentation: table-default
+    interaction: content-list-controls
