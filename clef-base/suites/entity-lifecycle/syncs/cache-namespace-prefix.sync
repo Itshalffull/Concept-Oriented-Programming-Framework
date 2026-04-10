@@ -1,0 +1,31 @@
+# Cache key namespacing from active VersionContext.
+# When Cache/set is called while a version space is active, the key is
+# re-written with a namespace prefix and the namespace is added as a tag
+# so that Cache/invalidateByTags can scope invalidation to a single tenant.
+# See §12.8 of the namespace-versioning-plan.
+
+sync CacheNamespacePrefix [eventual]
+  purpose: "Prefix cache keys and tags with the active tenant namespace so that per-branch invalidation never bleeds across version spaces"
+when {
+  Cache/set: [
+    bin: ?bin;
+    key: ?key;
+    data: ?data;
+    tags: ?tags;
+    maxAge: ?maxAge
+  ] => [ ok: _ ]
+}
+where {
+  VersionContext: { ?ctx context_stack: ?stack }
+  filter(?stack.length > 0)
+  bind(?stack[0] as ?namespace)
+}
+then {
+  Cache/set: [
+    bin: ?bin;
+    key: ?namespace + ":" + ?key;
+    data: ?data;
+    tags: ?tags + "," + ?namespace;
+    maxAge: ?maxAge
+  ]
+}
