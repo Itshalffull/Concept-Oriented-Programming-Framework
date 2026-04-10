@@ -1,0 +1,13 @@
+# When a version space is forked, register it as a Namespace node so that
+# branches are addressable through hierarchical path resolution
+# (e.g., draft-v2/alice-experiment://entity-id).
+
+sync VersionSpaceRegistersNamespace [eager]
+  purpose: "Create a Namespace node for every new VersionSpace so branches are addressable via hierarchical URIs"
+when {
+  VersionSpace/fork: [ name: ?name; parent: ?parent ]
+    => [ ok(space: ?space) ]
+}
+then {
+  Namespace/createNamespacedPage: [ node: ?space; path: ?parent/?name ]
+}

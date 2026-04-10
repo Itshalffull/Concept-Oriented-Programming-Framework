@@ -1,0 +1,16 @@
+# When a version space is merged, move its Namespace node to the _merged
+# subtree so merged branches disappear from active navigation. The node
+# is preserved under _merged/ for audit and historical reference resolution.
+
+sync VersionSpaceMergeCleansNamespace [eventual]
+  purpose: "Move the Namespace node to _merged/ after a successful merge so the branch no longer appears in navigation while audit trails remain intact"
+when {
+  VersionSpace/merge: [ space: ?space ]
+    => [ ok(merged_count: ?merged_count; conflict_count: ?conflict_count) ]
+}
+where {
+  Namespace: { ?space path: ?currentPath }
+}
+then {
+  Namespace/move: [ node: ?space; newPath: _merged/?currentPath ]
+}

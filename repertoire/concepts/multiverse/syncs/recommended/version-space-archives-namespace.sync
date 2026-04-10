@@ -1,0 +1,16 @@
+# When a version space is archived, move its Namespace node to the _archived
+# subtree so it is hidden from active navigation while remaining resolvable
+# for historical references.
+
+sync VersionSpaceArchivesNamespace [eventual]
+  purpose: "Move the Namespace node to _archived/ when a VersionSpace is archived, hiding it from branch navigation without destroying historical addressability"
+when {
+  VersionSpace/archive: [ space: ?space ]
+    => [ ok() ]
+}
+where {
+  Namespace: { ?space path: ?currentPath }
+}
+then {
+  Namespace/move: [ node: ?space; newPath: _archived/?currentPath ]
+}
