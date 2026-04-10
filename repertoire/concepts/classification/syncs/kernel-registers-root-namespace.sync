@@ -1,0 +1,10 @@
+# Register the kernel instance as the root Namespace node at boot.
+# The kernel ID becomes the globally unique root for all namespace paths.
+
+sync KernelRegistersRootNamespace [eager]
+when {
+  KernelBoot/boot: [ kernel: ?kernelId ] => [ ok: _ ]
+}
+then {
+  Namespace/register: [ node: ?kernelId; path: "/"; provider: "kernel" ]
+}
