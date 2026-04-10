@@ -1,0 +1,231 @@
+@version(1)
+widget historical-mode-banner {
+
+  purpose {
+    Read-only notification banner displayed at the top of an entity detail page
+    when the entity is being viewed at a historical revision or temporal qualifier
+    (e.g., `@v3` or `@2026-04-01`). The banner shows the revision identifier,
+    its authorship date, the author name, and the number of field changes relative
+    to the previous revision. Two action buttons allow the user to jump to the
+    current version (View current) or open a diff view comparing this revision
+    to another. When the requested revision was compacted by the retention policy,
+    an additional warning indicates which nearest available revision is being shown
+    instead. The banner can be dismissed to a compacted state while keeping the
+    historical context active.
+  }
+
+  anatomy {
+    root:              container    { Top-level banner wrapper, visible only in showing and compacted-revision states }
+    revisionLabel:     text         { Displays the revision identifier and date, e.g. "Viewing revision v3 from March 15, 2026" }
+    authorLabel:       text         { Author of this revision }
+    changeCount:       text         { Number of changes from the previous revision, e.g. "3 changes from v2" }
+    viewCurrentButton: action       { Button that navigates to the @latest version of the entity }
+    diffButton:        action       { Button that opens the diff view between this revision and current }
+    compactedWarning:  container    { Warning sub-section shown when the exact revision was compacted and a nearest available is substituted }
+  }
+
+  states {
+    hidden [initial] {
+      on SHOW -> showing;
+    }
+
+    showing {
+      on HIDE -> hidden;
+      on COMPACTION_DETECTED -> compacted-revision;
+      on VIEW_CURRENT -> hidden;
+    }
+
+    compacted-revision {
+      on HIDE -> hidden;
+      on VIEW_CURRENT -> hidden;
+      entry [showCompactedWarning];
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      Escape -> HIDE;
+      Tab -> FOCUS_NEXT;
+    }
+    focus {
+      trap: false;
+      initial: viewCurrentButton;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Historical revision banner";
+        aria-live: "polite";
+        data-state: state;
+      };
+      revisionLabel -> {
+        role: "status";
+        aria-label: concat("Viewing ", ?revisionId, " from ", ?revisionDate);
+      };
+      authorLabel -> {
+        role: "note";
+        aria-label: concat("Authored by ", ?author);
+      };
+      changeCount -> {
+        role: "note";
+        aria-label: concat(?changeCount, " changes");
+      };
+      viewCurrentButton -> {
+        role: "button";
+        aria-label: "View current version of this entity";
+      };
+      diffButton -> {
+        role: "button";
+        aria-label: concat("Compare ", ?revisionId, " with current version");
+        aria-haspopup: "dialog";
+      };
+      compactedWarning -> {
+        role: "alert";
+        aria-label: concat("Original revision was compacted. Showing nearest available: ", ?nearestAvailable);
+        aria-hidden: if state != "compacted-revision" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    revisionId: String = ""
+    revisionDate: String = ""
+    author: String = ""
+    changeCount: Int = 0
+    isCompacted: Bool = false
+    nearestAvailable: String = ""
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-revision: ?revisionId;
+      data-compacted: if ?isCompacted then "true" else "false";
+      hidden: if state == "hidden" then true else false;
+    }
+
+    revisionLabel -> {
+      data-part: "revision-label";
+      text: concat("Viewing ", ?revisionId, " from ", ?revisionDate);
+    }
+
+    authorLabel -> {
+      data-part: "author-label";
+      text: concat("by ", ?author);
+    }
+
+    changeCount -> {
+      data-part: "change-count";
+      text: concat(?changeCount, " changes");
+    }
+
+    viewCurrentButton -> {
+      data-part: "view-current-button";
+      onClick: send(VIEW_CURRENT);
+      onKeyDown: if key == "Enter" or key == "Space" then send(VIEW_CURRENT) else noop;
+    }
+
+    diffButton -> {
+      data-part: "diff-button";
+      onClick: send(OPEN_DIFF, { revisionId: ?revisionId });
+      onKeyDown: if key == "Enter" or key == "Space" then send(OPEN_DIFF, { revisionId: ?revisionId }) else noop;
+    }
+
+    compactedWarning -> {
+      data-part: "compacted-warning";
+      data-visible: if state == "compacted-revision" then "true" else "false";
+      hidden: if state != "compacted-revision" then true else false;
+      text: concat("Showing nearest available (", ?nearestAvailable, ") — original ", ?revisionId, " was compacted");
+    }
+  }
+
+  affordance {
+    serves: overlay;
+    specificity: 6;
+    when {
+      viewType: "historical-banner";
+    }
+    bind {
+      revisionId: revisionId;
+      revisionDate: revisionDate;
+      author: author;
+      changeCount: changeCount;
+    }
+  }
+
+  invariant {
+    example "show banner for a revision": {
+      after send(SHOW) -> ok
+      then root -> { data-state: "showing" }
+      and root -> { hidden: false }
+      and revisionLabel -> { text: concat("Viewing ", ?revisionId, " from ", ?revisionDate) }
+    }
+
+    example "show banner then view current hides it": {
+      after send(SHOW) -> ok
+      then root -> { data-state: "showing" }
+      then viewCurrentButton.click -> ok
+      then root -> { data-state: "hidden" }
+      and root -> { hidden: true }
+    }
+
+    example "compaction detected shows warning": {
+      after send(SHOW) -> ok
+      then send(COMPACTION_DETECTED) -> ok
+      then root -> { data-state: "compacted-revision" }
+      and compactedWarning -> { data-visible: "true" }
+      and compactedWarning -> { hidden: false }
+    }
+
+    example "compacted revision can navigate to current": {
+      after send(SHOW) -> ok
+      then send(COMPACTION_DETECTED) -> ok
+      then root -> { data-state: "compacted-revision" }
+      then viewCurrentButton.click -> ok
+      then root -> { data-state: "hidden" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      root -> { data-state: state }
+    }
+
+    always "root hidden when in hidden state": {
+      if state == "hidden" then root -> { hidden: true }
+    }
+
+    always "compactedWarning visible only in compacted-revision state": {
+      compactedWarning -> { data-visible: if state == "compacted-revision" then "true" else "false" }
+    }
+
+    always "banner visible in showing and compacted-revision": {
+      if state == "showing" or state == "compacted-revision" then root -> { hidden: false }
+    }
+
+    never "compactedWarning visible in showing state": {
+      state == "showing" and compactedWarning -> { data-visible: "true" }
+    }
+
+    action viewCurrentButton.click {
+      requires: state == "showing" or state == "compacted-revision"
+      ensures ok: state == "hidden"
+    }
+
+    action diffButton.click {
+      requires: state == "showing" or state == "compacted-revision"
+      ensures ok: state == "showing" or state == "compacted-revision"
+    }
+
+    "VIEW_CURRENT navigates the host page to the @latest qualifier, calling Version/rollback with no qualifier";
+    "OPEN_DIFF connects to Version/diff with the current revisionId as the left side and @latest as the right side";
+    "isCompacted prop triggers automatic COMPACTION_DETECTED event on banner mount";
+    "All entity fields in the host detail page are rendered read-only while banner is showing or compacted-revision";
+    "Author and changeCount are populated from Version metadata returned by Version/rollback";
+  }
+
+}

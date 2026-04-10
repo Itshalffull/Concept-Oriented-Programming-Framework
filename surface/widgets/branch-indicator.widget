@@ -1,0 +1,237 @@
+@version(1)
+widget branch-indicator {
+
+  purpose {
+    Global branch dropdown in the app shell header showing the active VersionSpace
+    and the full Namespace tree of branches. Always visible so users know which branch
+    they are currently working in. Clicking the indicator opens a tree-structured
+    dropdown listing all VersionSpaces with their status badges. Selecting a branch
+    invokes VersionSpace/enter and refreshes the page. A "New branch" action at the
+    bottom of the dropdown invokes VersionSpace/fork. Badge colors convey branch
+    status: green for active, gray for archived, blue for proposed.
+  }
+
+  anatomy {
+    root:               container    { Top-level wrapper in the app shell header }
+    currentBranchLabel: text         { Name of the currently active branch }
+    currentBranchBadge: presentation { Status badge for the active branch showing color-coded status }
+    dropdown:           container    { Popover panel listing the full branch tree }
+    branchTree:         container    { Scrollable tree of all VersionSpace branches }
+    branchNode:         action       { Single branch row in the tree, selectable }
+    branchName:         text         { Display name of a branch node }
+    branchStatus:       presentation { Status badge on an individual branch node }
+    createBranchButton: action       { "New branch" button at the bottom of the dropdown }
+  }
+
+  states {
+    collapsed [initial] {
+      on OPEN -> expanded;
+    }
+
+    expanded {
+      on CLOSE -> collapsed;
+      on SELECT_BRANCH -> switching;
+      on ESCAPE -> collapsed;
+      entry [positionDropdown; loadBranchTree];
+      exit [releaseDropdown];
+    }
+
+    switching {
+      on SWITCH_COMPLETE -> collapsed;
+      on SWITCH_ERROR -> expanded;
+      entry [enterVersionSpace; refreshPage];
+    }
+  }
+
+  accessibility {
+    role: navigation;
+    keyboard {
+      Enter -> OPEN;
+      Space -> OPEN;
+      Escape -> CLOSE;
+      ArrowDown -> FOCUS_NEXT_BRANCH;
+      ArrowUp -> FOCUS_PREV_BRANCH;
+    }
+    focus {
+      trap: false;
+      initial: branchNode;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "navigation";
+        aria-label: "Branch selector";
+        data-state: state;
+      };
+      currentBranchLabel -> {
+        role: "button";
+        aria-haspopup: "tree";
+        aria-expanded: if state == "expanded" then "true" else "false";
+        aria-label: concat("Current branch: ", ?activeBranch, ". Click to switch branches.");
+      };
+      dropdown -> {
+        role: "tree";
+        aria-label: "Branch tree";
+        aria-hidden: if state == "collapsed" or state == "switching" then "true" else "false";
+      };
+      branchNode -> {
+        role: "treeitem";
+        aria-selected: if self.name == ?activeBranch then "true" else "false";
+        aria-label: concat(self.name, " branch, status: ", self.status);
+        tabindex: if self.isFocused then "0" else "-1";
+      };
+      createBranchButton -> {
+        role: "button";
+        aria-label: "Create a new branch";
+        aria-haspopup: "dialog";
+      };
+    }
+  }
+
+  props {
+    activeBranch: String = "main"
+    branchTree: list { name: String, status: String, parent: option String, depth: Int } = []
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-active-branch: ?activeBranch;
+    }
+
+    currentBranchLabel -> {
+      data-part: "current-branch-label";
+      text: ?activeBranch;
+      onClick: if state == "collapsed" then send(OPEN) else send(CLOSE);
+      onKeyDown: if key == "Enter" or key == "Space" then send(OPEN) else if key == "Escape" then send(CLOSE) else noop;
+    }
+
+    currentBranchBadge -> {
+      data-part: "current-branch-badge";
+      data-status: if ?activeBranch == "main" then "active" else "proposed";
+    }
+
+    dropdown -> {
+      data-part: "dropdown";
+      data-visible: if state == "expanded" then "true" else "false";
+      hidden: if state == "collapsed" or state == "switching" then true else false;
+    }
+
+    branchTree -> {
+      data-part: "branch-tree";
+    }
+
+    branchNode -> {
+      data-part: "branch-node";
+      data-branch: self.name;
+      data-status: self.status;
+      data-depth: self.depth;
+      data-active: if self.name == ?activeBranch then "true" else "false";
+      tabindex: if self.isFocused then "0" else "-1";
+      onClick: send(SELECT_BRANCH, { branch: self.name });
+      onKeyDown: if key == "Enter" or key == "Space" then send(SELECT_BRANCH, { branch: self.name }) else if key == "ArrowDown" then send(FOCUS_NEXT_BRANCH) else if key == "ArrowUp" then send(FOCUS_PREV_BRANCH) else noop;
+    }
+
+    branchName -> {
+      data-part: "branch-name";
+      text: self.name;
+    }
+
+    branchStatus -> {
+      data-part: "branch-status";
+      data-status: self.status;
+    }
+
+    createBranchButton -> {
+      data-part: "create-branch-button";
+      onClick: send(CREATE_BRANCH);
+      onKeyDown: if key == "Enter" or key == "Space" then send(CREATE_BRANCH) else noop;
+    }
+  }
+
+  affordance {
+    serves: navigation;
+    specificity: 8;
+    when {
+      viewType: "branch-selector";
+    }
+    bind {
+      activeBranch: activeBranch;
+      branchTree: branchTree;
+    }
+  }
+
+  invariant {
+    example "open dropdown then select a branch": {
+      after currentBranchLabel.click -> ok
+      then root -> { data-state: "expanded" }
+      and dropdown -> { data-visible: "true" }
+      and currentBranchLabel -> { aria-expanded: "true" }
+      then branchNode.click({ branch: "staging" }) -> ok
+      then root -> { data-state: "switching" }
+      then send(SWITCH_COMPLETE) -> ok
+      then root -> { data-state: "collapsed" }
+      and root -> { data-active-branch: "staging" }
+    }
+
+    example "escape closes dropdown": {
+      after currentBranchLabel.click -> ok
+      then root -> { data-state: "expanded" }
+      then send(ESCAPE) -> ok
+      then root -> { data-state: "collapsed" }
+      and dropdown -> { data-visible: "false" }
+    }
+
+    example "switch error returns to expanded": {
+      after currentBranchLabel.click -> ok
+      then branchNode.click({ branch: "draft-v2" }) -> ok
+      then root -> { data-state: "switching" }
+      then send(SWITCH_ERROR) -> ok
+      then root -> { data-state: "expanded" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      root -> { data-state: state }
+    }
+
+    always "dropdown hidden when not expanded": {
+      if state == "collapsed" or state == "switching" then dropdown -> { data-visible: "false" }
+    }
+
+    always "active branch node is marked": {
+      forall node in branchNode:
+        node -> { data-active: if node.name == ?activeBranch then "true" else "false" }
+    }
+
+    always "currentBranchLabel aria-expanded matches expanded state": {
+      currentBranchLabel -> { aria-expanded: if state == "expanded" then "true" else "false" }
+    }
+
+    never "two branch nodes simultaneously marked active": {
+      exists n1 in branchNode:
+        exists n2 in branchNode:
+          n1 != n2 and n1 -> { data-active: "true" } and n2 -> { data-active: "true" }
+    }
+
+    action branchNode.click {
+      requires: state == "expanded"
+      ensures ok: state == "switching"
+    }
+
+    action currentBranchLabel.click {
+      requires: state == "collapsed"
+      ensures ok: state == "expanded"
+    }
+
+    "SELECT_BRANCH calls VersionSpace/enter with the selected branch name";
+    "CREATE_BRANCH opens a dialog that calls VersionSpace/fork on confirmation";
+    "branchStatus data-status reflects branch status from branchTree prop: active, archived, or proposed";
+    "Badge color green=active, gray=archived, blue=proposed is driven by data-status on branchStatus and currentBranchBadge";
+    "Sub-spaces are rendered as nested branchNode entries with increasing data-depth values";
+  }
+
+}
