@@ -1,7 +1,7 @@
 ---
 name: view-shell
 description: Name and bind the user facing identity of a view by holding references to all subordinate configuration concepts filter , sort , group , projection , presentation , interaction , and data source . ViewShell owns no query or render logic itself ; it is a composition point that lets a view be addressed by a single stable name and resolved into a complete , hydrated ViewConfig at runtime . A nullable legacyConfig field supports migration from monolithic JSON based view records without breaking existing callers
-argument-hint: [command] [name] [title] [description] [dataSource] [filter] [sort] [group] [projection] [presentation] [interaction] [features] [pagination]
+argument-hint: [command] [name] [title] [description] [dataSource] [filter] [sort] [group] [projection] [presentation] [interaction]
 allowed-tools: Read, Grep, Glob, Bash
 ---
 
@@ -20,7 +20,7 @@ Register a new named view shell with the given title , description , and
  child spec references . The view is immediately addressable by name and 
  ready for resolution into a complete ViewConfig .
 
-**Arguments:** `$0` **name** (string), `$1` **title** (string), `$2` **description** (string), `$3` **dataSource** (string), `$4` **filter** (string), `$5` **sort** (string), `$6` **group** (string), `$7` **projection** (string), `$8` **presentation** (string), `$9` **interaction** (string), `$10` **features** (string), `$11` **pagination** (string)
+**Arguments:** `$0` **name** (string), `$1` **title** (string), `$2` **description** (string), `$3` **dataSource** (string), `$4` **filter** (string), `$5` **sort** (string), `$6` **group** (string), `$7` **projection** (string), `$8` **presentation** (string), `$9` **interaction** (string)
 
 ### get
 Return the view shell s title , description , and all child spec reference 
@@ -33,7 +33,7 @@ Replace the title , description , and all child spec references for the
  named view . The view s name remains unchanged ; all other fields are 
  overwritten with the supplied values .
 
-**Arguments:** `$0` **name** (string), `$1` **title** (string), `$2` **description** (string), `$3` **dataSource** (string), `$4` **filter** (string), `$5` **sort** (string), `$6` **group** (string), `$7` **projection** (string), `$8` **presentation** (string), `$9` **interaction** (string), `$10` **features** (string), `$11` **pagination** (string)
+**Arguments:** `$0` **name** (string), `$1` **title** (string), `$2` **description** (string), `$3` **dataSource** (string), `$4` **filter** (string), `$5` **sort** (string), `$6` **group** (string), `$7` **projection** (string), `$8` **presentation** (string), `$9` **interaction** (string)
 
 ### resolve
 Hydrate all referenced child specs into a complete ViewConfig JSON string . 
@@ -50,12 +50,10 @@ Return all registered view shells as a JSON array , each entry containing
 
 ### resolveHydrated
 Load the ViewShell entry by name , then fetch each non empty child spec 
- by calling the corresponding concept s get action . Only fetches child specs 
- whose feature is listed in the features set ; disabled features are returned 
- as empty strings . Returns fully hydrated data actual FilterNode trees as 
- JSON strings , SortKey arrays , ProjectionField arrays , DataSourceConfig 
- objects , PresentationSpec fields , InteractionSpec fields , GroupSpec fields , 
- and PaginationSpec fields not just reference name strings . Child specs 
- that are not registered ( empty ref or notfound ) are returned as empty strings .
+ by calling the corresponding concept s get action . Returns fully hydrated 
+ data actual FilterNode trees as JSON strings , SortKey arrays , ProjectionField 
+ arrays , DataSourceConfig objects , PresentationSpec fields , InteractionSpec 
+ fields , GroupSpec fields not just reference name strings . Child specs that 
+ are not registered ( empty ref or notfound ) are returned as empty strings .
 
 **Arguments:** `$0` **name** (string)

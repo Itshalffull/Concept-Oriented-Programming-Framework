@@ -8601,6 +8601,29 @@ project-instructions:
       - Good: "Async Gate Convention & Pattern Validation Tests", "See Architecture doc Sections 16.11, 16.12"
     - Comments should reference architecture doc section numbers (e.g., "Section 16.12") not phase numbers.
 
+    ### Collaboration Style
+    - When I push back on a position that knowledgeable experts would defend, answer as a smart expert who would still argue back. Lead with the counterarguments rather than with the agreement. Give a detailed response/steelman of the strongest arguments against my position and don't needlessly soften or walk back them.
+
+    ### Building Workflow
+    Follow this flow for all non-trivial work:
+
+    1. **Research / Discussion** — Explore the problem space. Audit existing code. Ask clarifying questions. Understand constraints before designing.
+    2. **PRD** — Write a plan document in `docs/plans/`. Include: problem statement, design, deliverables, concept changes, syncs, widgets, views, seeds, clef-base integration checklist, and kanban card table.
+    3. **VK Cards** — Create Vibe Kanban cards for each deliverable unit. Edit the PRD to reference card IDs (MAG-NNN) in the kanban table.
+    4. **Blocking Relationships** — Set up card dependencies so the execution order is clear. Independent cards can run in parallel.
+    5. **Execute via Specialized Agents** — Assign each unblocked card to the appropriate specialized agent type:
+       - `concept-scaffold-gen` — new .concept specs + handlers
+       - `handler-scaffold-gen` — handler modifications
+       - `sync-scaffold-gen` — .sync files
+       - `surface-component-scaffold-gen` — .widget specs
+       - `clef-base` — seeds, views, layouts, destinations, clef-base integration
+       - `general-purpose` — tests, parser changes, infrastructure, anything without a matching agent
+       - If no agent type matches, note the gap and track creating that agent/skill as a follow-up card.
+    6. **Commit Per Card** — When a card's agent completes, commit JUST that card's work in a separate commit. Never batch multiple cards into one commit.
+    7. **Update Card + PRD** — Put the commit hash in the PRD's kanban table AND mark the VK card as Done.
+    8. **Assign Next** — Check what's newly unblocked and launch the next batch of agents.
+    9. **Repeat** steps 5–8 until all cards are Done.
+
     ### Generated Files — Never Edit Directly
     - **CLAUDE.md**, **AGENTS.md**, **GEMINI.md** are generated from `examples/devtools/devtools.interface.yaml` → `project-instructions` section. Edit the manifest, then regenerate.
     - **`.claude/agents/*.md`** are generated from `examples/devtools/devtools.interface.yaml` → `agents` section. Edit the manifest, then regenerate.

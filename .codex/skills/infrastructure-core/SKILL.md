@@ -6,7 +6,7 @@ description: Platform infrastructure primitives that underpin every clef-base
  synchronization ( ConfigSync ) , event pub / sub ( EventBus ) , input validation 
  ( Validator ) , entity reflection to the content system ( EntityReflector ) , 
  and file system artifact discovery ( FileCatalog ) .
-argument-hint: [command] [type] [name] [metadata]
+argument-hint: [concept] [command] [args...]
 allowed-tools: Read, Grep, Glob, Bash
 ---
 
@@ -24,38 +24,3 @@ Platform infrastructure primitives that underpin every clef-base
  and file system artifact discovery ( FileCatalog ) .
 
 ## Commands
-
-### registerPlugin
-Surface action: registerPlugin
-
-**Arguments:** `$0` **type** (string), `$1` **name** (string), `$2` **metadata** (string)
-
-### discoverPlugins
-Surface action: discoverPlugins
-
-**Arguments:** `$0` **type** (string)
-
-### invalidateCache
-Surface action: invalidateCache
-
-**Arguments:** `$0` **bin** (I), `$1` **key** (string)
-
-### publishEvent
-Surface action: publishEvent
-
-**Arguments:** `$0` **event** (I), `$1` **payload** (string)
-
-### validate
-Surface action: validate
-
-**Arguments:** `$0` **validator** (I), `$1` **data** (string)
-
-### getCached
-Surface query: getCached
-
-**Arguments:** `$0` **bin** (I), `$1` **key** (string)
-
-### getPluginDefinitions
-Surface query: getPluginDefinitions
-
-**Arguments:** `$0` **type** (string)

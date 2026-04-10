@@ -37,6 +37,7 @@ Build sequences of query instructions as inspectable , composable data . A Query
 ## References
 
 - [QueryProgram instruction grammar and pipeline reference](references/query-program-grammar.md)
+- [.view file grammar reference](references/view-grammar.md)
 ## Anti-Patterns
 
 ### Using list + client-side schema filter instead of listBySchema

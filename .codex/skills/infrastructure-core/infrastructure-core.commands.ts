@@ -12,4 +12,4 @@ export async function handleInfrastructureCoreSkill(
   return JSON.stringify(result.body, null, 2);
 }
 
-export const infrastructureCoreSkillCommands = ['registerPlugin', 'discoverPlugins', 'invalidateCache', 'publishEvent', 'validate', 'getCached', 'getPluginDefinitions'];
+export const infrastructureCoreSkillCommands = [];

@@ -20,8 +20,6 @@ viewShellCommand
   .requiredOption('--projection <projection>', 'Projection')
   .requiredOption('--presentation <presentation>', 'Presentation')
   .requiredOption('--interaction <interaction>', 'Interaction')
-  .requiredOption('--features <features>', 'Features')
-  .requiredOption('--pagination <pagination>', 'Pagination')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     try {
@@ -71,8 +69,6 @@ viewShellCommand
   .requiredOption('--projection <projection>', 'Projection')
   .requiredOption('--presentation <presentation>', 'Presentation')
   .requiredOption('--interaction <interaction>', 'Interaction')
-  .requiredOption('--features <features>', 'Features')
-  .requiredOption('--pagination <pagination>', 'Pagination')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     try {
@@ -130,7 +126,7 @@ viewShellCommand
 
 viewShellCommand
   .command('resolve-hydrated')
-  .description('Load the ViewShell entry by name , then fetch each non empty child spec by calling the corresponding concept s get action . Only fetches child specs whose feature is listed in the features set ; disabled features are returned as empty strings . Returns fully hydrated data actual FilterNode trees as JSON strings , SortKey arrays , ProjectionField arrays , DataSourceConfig objects , PresentationSpec fields , InteractionSpec fields , GroupSpec fields , and PaginationSpec fields not just reference name strings . Child specs that are not registered ( empty ref or notfound ) are returned as empty strings .')
+  .description('Load the ViewShell entry by name , then fetch each non empty child spec by calling the corresponding concept s get action . Returns fully hydrated data actual FilterNode trees as JSON strings , SortKey arrays , ProjectionField arrays , DataSourceConfig objects , PresentationSpec fields , InteractionSpec fields , GroupSpec fields not just reference name strings . Child specs that are not registered ( empty ref or notfound ) are returned as empty strings .')
   .requiredOption('--name <name>', 'Name')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {

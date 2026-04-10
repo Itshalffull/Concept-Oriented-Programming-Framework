@@ -12,4 +12,4 @@ export async function handleRuntimeInfrastructureSkill(
   return JSON.stringify(result.body, null, 2);
 }
 
-export const runtimeInfrastructureSkillCommands = ['createProgram', 'ensureIndex', 'getEffectHandlers', 'getCached'];
+export const runtimeInfrastructureSkillCommands = [];

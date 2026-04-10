@@ -6,7 +6,7 @@ description: Complete runtime infrastructure monadic execution pipeline
  and application-level infrastructure primitives ( cache , plugin 
  registry , event bus ) . The layer between concept handlers and 
  the physical world .
-argument-hint: [command] [concept] [action]
+argument-hint: [concept] [command] [args...]
 allowed-tools: Read, Grep, Glob, Bash
 ---
 
@@ -24,23 +24,3 @@ Complete runtime infrastructure monadic execution pipeline
  the physical world .
 
 ## Commands
-
-### createProgram
-Surface action: createProgram
-
-**Arguments:** `$0` **concept** (string), `$1` **action** (string)
-
-### ensureIndex
-Surface action: ensureIndex
-
-**Arguments:** `$0` **relation** (string), `$1` **field** (string)
-
-### getEffectHandlers
-Surface query: getEffectHandlers
-
-**Arguments:** `$0` **protocol** (string)
-
-### getCached
-Surface query: getCached
-
-**Arguments:** `$0` **program** (R)
