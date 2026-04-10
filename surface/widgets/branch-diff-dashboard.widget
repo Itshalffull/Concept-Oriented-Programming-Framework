@@ -1,0 +1,420 @@
+@version(1)
+widget branch-diff-dashboard {
+
+  purpose {
+    Branch comparison changeset view displayed before a merge or propose operation.
+    Presents the structured output of VersionSpace/diff as three grouped sections —
+    Created, Modified, and Deleted — each with per-entity action buttons. Users can
+    view a created entity in its branch context, open the diff view for a modified
+    entity, or restore a deleted entity. Cherry-pick mode enables checkbox selection
+    of individual changes for partial merges via VersionSpace/cherry_pick. A "Merge
+    all" button performs a full VersionSpace/merge of the source branch into the
+    target. A "Discard branch" button invokes VersionSpace/archive to remove the
+    source branch entirely.
+  }
+
+  anatomy {
+    root:               container     { Top-level dashboard wrapper }
+    header:             container     { Branch comparison heading with source, arrow, target, and propose button }
+    sourceBranch:       text          { Name of the source (from) branch }
+    targetBranch:       text          { Name of the target (to) branch }
+    summary:            container     { Counts row: N created · M modified · K deleted }
+    createdCount:       text          { Number of entities created on the source branch }
+    modifiedCount:      text          { Number of entities modified on the source branch }
+    deletedCount:       text          { Number of entities deleted on the source branch }
+    changeList:         container     { Grouped list of all change items }
+    changeItem:         container     { One row representing a single entity change }
+    changeIcon:         presentation  { Icon indicating change type: + created, ~ modified, - deleted }
+    changeTitle:        text          { Entity title or identifier for this change row }
+    changeType:         text          { Human-readable change type label }
+    viewButton:         action        { Opens the entity in its branch context (created entities) }
+    diffButton:         action        { Opens the diff view for this entity (modified entities) }
+    restoreButton:      action        { Restores a deleted entity from the source branch }
+    cherryPickCheckbox: interactive   { Per-row checkbox for selecting this change in cherry-pick mode }
+    selectAllCheckbox:  interactive   { Header-level checkbox to select or deselect all changes }
+    mergeAllButton:     action        { Merges all changes from source into target via VersionSpace/merge }
+    cherryPickButton:   action        { Merges only the checked changes via VersionSpace/cherry_pick }
+    discardBranchButton: action       { Archives the source branch via VersionSpace/archive }
+  }
+
+  states {
+    loading [initial] {
+      on LOADED      -> loaded;
+      on LOAD_EMPTY  -> empty;
+      on LOAD_ERROR  -> loaded;
+      entry [fetchChangeset];
+    }
+
+    loaded {
+      on ENTER_SELECTING     -> selecting;
+      on MERGE_ALL           -> merging;
+      on DISCARD             -> loaded;
+      on RESTORE             -> loaded;
+      entry [renderChangeset];
+    }
+
+    selecting {
+      on TOGGLE_ITEM         -> selecting;
+      on SELECT_ALL          -> selecting;
+      on CHERRY_PICK         -> merging;
+      on CANCEL_SELECT       -> loaded;
+      entry [enableCheckboxes];
+      exit [clearCheckboxes];
+    }
+
+    merging {
+      on MERGE_COMPLETE      -> loaded;
+      on MERGE_ERROR         -> loaded;
+      entry [beginMerge];
+    }
+
+    empty {
+      on DISCARD             -> empty;
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      Space  -> TOGGLE_ITEM;
+      Enter  -> CHERRY_PICK;
+      Escape -> CANCEL_SELECT;
+      Tab    -> FOCUS_NEXT;
+    }
+    focus {
+      trap: false;
+      initial: mergeAllButton;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: concat("Branch comparison: ", ?sourceBranch, " into ", ?targetBranch);
+        aria-busy: if state == "loading" or state == "merging" then "true" else "false";
+        data-state: state;
+      };
+      changeList -> {
+        role: "list";
+        aria-label: "Entity changes";
+        aria-live: "polite";
+      };
+      changeItem -> {
+        role: "listitem";
+        aria-label: concat(self.changeType, ": ", self.title);
+      };
+      cherryPickCheckbox -> {
+        role: "checkbox";
+        aria-label: concat("Select ", self.title, " for cherry-pick");
+        aria-checked: if self.isChecked then "true" else "false";
+        aria-disabled: if state != "selecting" then "true" else "false";
+        tabindex: if state == "selecting" then "0" else "-1";
+      };
+      selectAllCheckbox -> {
+        role: "checkbox";
+        aria-label: "Select all changes";
+        aria-checked: if self.allSelected then "true" else if self.someSelected then "mixed" else "false";
+        aria-disabled: if state != "selecting" then "true" else "false";
+      };
+      mergeAllButton -> {
+        role: "button";
+        aria-label: concat("Merge all changes from ", ?sourceBranch, " into ", ?targetBranch);
+        aria-disabled: if state == "merging" or state == "empty" then "true" else "false";
+      };
+      cherryPickButton -> {
+        role: "button";
+        aria-label: "Cherry-pick selected changes";
+        aria-disabled: if state != "selecting" then "true" else "false";
+      };
+      discardBranchButton -> {
+        role: "button";
+        aria-label: concat("Discard branch ", ?sourceBranch);
+        aria-disabled: if state == "merging" then "true" else "false";
+      };
+      viewButton -> {
+        role: "button";
+        aria-label: concat("View ", self.title, " on branch ", ?sourceBranch);
+      };
+      diffButton -> {
+        role: "button";
+        aria-label: concat("Open diff for ", self.title);
+      };
+      restoreButton -> {
+        role: "button";
+        aria-label: concat("Restore deleted entity ", self.title);
+      };
+    }
+  }
+
+  props {
+    sourceBranch: String = ""
+    targetBranch: String = ""
+    changeset:    option String
+  }
+
+  connect {
+    root -> {
+      data-part:          "root";
+      data-state:         state;
+      data-source-branch: ?sourceBranch;
+      data-target-branch: ?targetBranch;
+    }
+
+    header -> {
+      data-part: "header";
+    }
+
+    sourceBranch -> {
+      data-part: "source-branch";
+      text: ?sourceBranch;
+    }
+
+    targetBranch -> {
+      data-part: "target-branch";
+      text: ?targetBranch;
+    }
+
+    summary -> {
+      data-part: "summary";
+      hidden: if state == "loading" or state == "empty" then true else false;
+    }
+
+    createdCount -> {
+      data-part: "created-count";
+      text: self.count;
+    }
+
+    modifiedCount -> {
+      data-part: "modified-count";
+      text: self.count;
+    }
+
+    deletedCount -> {
+      data-part: "deleted-count";
+      text: self.count;
+    }
+
+    changeList -> {
+      data-part: "change-list";
+      hidden: if state == "loading" or state == "empty" then true else false;
+    }
+
+    changeItem -> {
+      data-part:        "change-item";
+      data-change-type: self.changeType;
+      data-entity-id:   self.entityId;
+      data-checked:     if state == "selecting" and self.isChecked then "true" else "false";
+    }
+
+    changeIcon -> {
+      data-part:        "change-icon";
+      data-change-type: self.changeType;
+    }
+
+    changeTitle -> {
+      data-part: "change-title";
+      text: self.title;
+    }
+
+    changeType -> {
+      data-part: "change-type";
+      text: self.changeType;
+    }
+
+    viewButton -> {
+      data-part: "view-button";
+      hidden: if self.changeType != "created" then true else false;
+      onClick: send(VIEW_ENTITY, { entityId: self.entityId, branch: ?sourceBranch });
+      onKeyDown: if key == "Enter" then send(VIEW_ENTITY, { entityId: self.entityId, branch: ?sourceBranch }) else noop;
+    }
+
+    diffButton -> {
+      data-part: "diff-button";
+      hidden: if self.changeType != "modified" then true else false;
+      onClick: send(OPEN_DIFF, { entityId: self.entityId, leftRef: concat(?sourceBranch, "://", self.entityId), rightRef: concat(?targetBranch, "://", self.entityId) });
+      onKeyDown: if key == "Enter" then send(OPEN_DIFF, { entityId: self.entityId }) else noop;
+    }
+
+    restoreButton -> {
+      data-part: "restore-button";
+      hidden: if self.changeType != "deleted" then true else false;
+      onClick: send(RESTORE, { entityId: self.entityId });
+      onKeyDown: if key == "Enter" then send(RESTORE, { entityId: self.entityId }) else noop;
+    }
+
+    cherryPickCheckbox -> {
+      data-part: "cherry-pick-checkbox";
+      hidden: if state != "selecting" then true else false;
+      checked: if self.isChecked then true else false;
+      disabled: if state != "selecting" then true else false;
+      onChange: send(TOGGLE_ITEM, { entityId: self.entityId });
+    }
+
+    selectAllCheckbox -> {
+      data-part: "select-all-checkbox";
+      hidden: if state != "selecting" then true else false;
+      checked: if self.allSelected then true else false;
+      onChange: send(SELECT_ALL, { checked: self.value });
+    }
+
+    mergeAllButton -> {
+      data-part: "merge-all-button";
+      disabled: if state == "merging" or state == "empty" then true else false;
+      onClick: send(MERGE_ALL, { source: ?sourceBranch, target: ?targetBranch });
+      onKeyDown: if key == "Enter" then send(MERGE_ALL, { source: ?sourceBranch, target: ?targetBranch }) else noop;
+    }
+
+    cherryPickButton -> {
+      data-part: "cherry-pick-button";
+      hidden: if state != "selecting" then true else false;
+      disabled: if state != "selecting" then true else false;
+      onClick: send(CHERRY_PICK, { source: ?sourceBranch, target: ?targetBranch });
+      onKeyDown: if key == "Enter" then send(CHERRY_PICK, { source: ?sourceBranch, target: ?targetBranch }) else noop;
+    }
+
+    discardBranchButton -> {
+      data-part: "discard-branch-button";
+      disabled: if state == "merging" then true else false;
+      onClick: send(DISCARD, { branch: ?sourceBranch });
+      onKeyDown: if key == "Enter" then send(DISCARD, { branch: ?sourceBranch }) else noop;
+    }
+  }
+
+  affordance {
+    serves: group-section;
+    specificity: 9;
+    when { viewType: "branch-diff-dashboard" }
+    bind {
+      sourceBranch: sourceBranch;
+      targetBranch: targetBranch;
+      changeset:    changeset;
+    }
+  }
+
+  invariant {
+    example "load changeset then render summary and change list": {
+      after send(LOADED) -> ok
+      then root -> { data-state: "loaded" }
+      and summary -> { hidden: false }
+      and changeList -> { hidden: false }
+    }
+
+    example "enter selecting mode enables cherry-pick checkboxes": {
+      after send(LOADED) -> ok
+      then send(ENTER_SELECTING) -> ok
+      then root -> { data-state: "selecting" }
+      and cherryPickCheckbox -> { hidden: false }
+      and cherryPickButton -> { hidden: false }
+    }
+
+    example "toggle item checks the checkbox": {
+      after send(LOADED) -> ok
+      then send(ENTER_SELECTING) -> ok
+      then send(TOGGLE_ITEM, { entityId: "article-1" }) -> ok
+      then changeItem -> { data-checked: "true" }
+    }
+
+    example "cancel select returns to loaded": {
+      after send(LOADED) -> ok
+      then send(ENTER_SELECTING) -> ok
+      then root -> { data-state: "selecting" }
+      then send(CANCEL_SELECT) -> ok
+      then root -> { data-state: "loaded" }
+      and cherryPickCheckbox -> { hidden: true }
+    }
+
+    example "merge all transitions to merging then back to loaded": {
+      after send(LOADED) -> ok
+      then mergeAllButton.click -> ok
+      then root -> { data-state: "merging" }
+      then send(MERGE_COMPLETE) -> ok
+      then root -> { data-state: "loaded" }
+    }
+
+    example "cherry pick transitions to merging": {
+      after send(LOADED) -> ok
+      then send(ENTER_SELECTING) -> ok
+      then send(TOGGLE_ITEM, { entityId: "article-1" }) -> ok
+      then cherryPickButton.click -> ok
+      then root -> { data-state: "merging" }
+    }
+
+    example "empty state when changeset is empty": {
+      after send(LOAD_EMPTY) -> ok
+      then root -> { data-state: "empty" }
+      and changeList -> { hidden: true }
+      and summary -> { hidden: true }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      root -> { data-state: state }
+    }
+
+    always "changeList hidden during loading or empty": {
+      if state == "loading" then changeList -> { hidden: true }
+      and if state == "empty" then changeList -> { hidden: true }
+    }
+
+    always "cherryPickCheckbox visible only in selecting state": {
+      if state != "selecting" then cherryPickCheckbox -> { hidden: true }
+    }
+
+    always "cherryPickButton visible only in selecting state": {
+      if state != "selecting" then cherryPickButton -> { hidden: true }
+    }
+
+    always "mergeAllButton disabled during merging": {
+      if state == "merging" then mergeAllButton -> { disabled: true }
+    }
+
+    always "viewButton visible only for created changeItems": {
+      forall ci in changeItem:
+        if ci.changeType != "created" then ci.viewButton -> { hidden: true }
+    }
+
+    always "diffButton visible only for modified changeItems": {
+      forall ci in changeItem:
+        if ci.changeType != "modified" then ci.diffButton -> { hidden: true }
+    }
+
+    always "restoreButton visible only for deleted changeItems": {
+      forall ci in changeItem:
+        if ci.changeType != "deleted" then ci.restoreButton -> { hidden: true }
+    }
+
+    never "cherry-pick possible outside selecting state": {
+      state != "selecting" and cherryPickButton -> { hidden: false }
+    }
+
+    never "mergeAllButton enabled during merging": {
+      state == "merging" and mergeAllButton -> { disabled: false }
+    }
+
+    action mergeAllButton.click {
+      requires: state == "loaded"
+      ensures ok: state == "merging"
+    }
+
+    action cherryPickButton.click {
+      requires: state == "selecting"
+      ensures ok: state == "merging"
+    }
+
+    action discardBranchButton.click {
+      requires: state == "loaded" or state == "empty"
+      ensures ok: state == "loaded"
+    }
+
+    "LOADED event is dispatched after VersionSpace/diff returns the changeset for sourceBranch vs targetBranch";
+    "MERGE_ALL invokes VersionSpace/merge with source and target branch names";
+    "CHERRY_PICK invokes VersionSpace/cherry_pick with the list of selected entityIds and the target branch";
+    "DISCARD invokes VersionSpace/archive on the source branch";
+    "RESTORE invokes a restore action to recreate the deleted entity on the source branch before any merge";
+    "OPEN_DIFF navigates to the diff-view widget with leftRef set to the source-branch-scoped URI and rightRef to the target-branch-scoped URI";
+    "VIEW_ENTITY navigates to the entity detail page scoped to the source branch via Namespace/resolve";
+    "clearCheckboxes on exit of selecting state resets all cherryPickCheckbox.isChecked to false";
+  }
+
+}

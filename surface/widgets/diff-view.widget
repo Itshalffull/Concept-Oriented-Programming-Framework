@@ -1,0 +1,381 @@
+@version(1)
+widget diff-view {
+
+  purpose {
+    Compares any two addressable states — two revisions, two branches, or a
+    revision versus the current version — by presenting a structured field-level
+    diff. Non-text fields are compared at the field level (not character level);
+    rich-text body fields are compared at the block level with added, removed, and
+    changed highlighting. The widget supports a side-by-side mode (left/right
+    columns) and an inline mode (unified diff within a single column) toggled by
+    the user. Navigation controls let the user jump between individual field
+    changes. A "Restore left" button invokes Version/rollback to roll the entity
+    back to the left-side revision.
+  }
+
+  anatomy {
+    root:                 container     { Top-level wrapper; hosts header and diff content }
+    header:               container     { Contextual heading area: entity title, left/right labels, mode toggle }
+    leftLabel:            text          { Descriptor for the left side — revision identifier, date, author }
+    rightLabel:           text          { Descriptor for the right side — revision identifier or "current" }
+    leftSelector:         interactive   { Ref picker or dropdown for choosing the left addressable state }
+    rightSelector:        interactive   { Ref picker or dropdown for choosing the right addressable state }
+    diffList:             container     { Ordered list of field-level diff entries }
+    fieldDiff:            container     { One diff row representing a single field comparison }
+    fieldName:            text          { Label for the field being compared }
+    removedValue:         text          { Old value removed from the left side (shown red) }
+    addedValue:           text          { New value added on the right side (shown green) }
+    unchangedValue:       text          { Value unchanged on both sides }
+    collapsedUnchanged:   container     { Collapsed section hiding runs of unchanged fields }
+    expandButton:         action        { Expands a collapsedUnchanged section to reveal hidden fields }
+    modeToggle:           action        { Toggles between side-by-side and inline diff display modes }
+    restoreButton:        action        { Invokes rollback to restore the entity to the left-side revision }
+    previousChangeButton: action        { Moves keyboard focus and scroll to the previous changed field }
+    nextChangeButton:     action        { Moves keyboard focus and scroll to the next changed field }
+  }
+
+  states {
+    loading [initial] {
+      on LOADED      -> loaded;
+      on LOAD_EMPTY  -> empty;
+      on LOAD_ERROR  -> loaded;
+      entry [fetchDiff];
+    }
+
+    loaded {
+      on TOGGLE_MODE            -> loaded;
+      on EXPAND_UNCHANGED       -> loaded;
+      on NEXT_CHANGE            -> loaded;
+      on PREV_CHANGE            -> loaded;
+      on RESTORE_LEFT           -> loaded;
+      on SELECT_LEFT            -> loading;
+      on SELECT_RIGHT           -> loading;
+      entry [renderDiff];
+    }
+
+    side-by-side {
+      on TOGGLE_MODE            -> inline;
+      on EXPAND_UNCHANGED       -> side-by-side;
+      on NEXT_CHANGE            -> side-by-side;
+      on PREV_CHANGE            -> side-by-side;
+      on RESTORE_LEFT           -> side-by-side;
+      on SELECT_LEFT            -> loading;
+      on SELECT_RIGHT           -> loading;
+    }
+
+    inline {
+      on TOGGLE_MODE            -> side-by-side;
+      on EXPAND_UNCHANGED       -> inline;
+      on NEXT_CHANGE            -> inline;
+      on PREV_CHANGE            -> inline;
+      on RESTORE_LEFT           -> inline;
+      on SELECT_LEFT            -> loading;
+      on SELECT_RIGHT           -> loading;
+    }
+
+    empty {
+      on SELECT_LEFT            -> loading;
+      on SELECT_RIGHT           -> loading;
+      on LOADED                 -> loaded;
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      n          -> NEXT_CHANGE;
+      p          -> PREV_CHANGE;
+      ArrowRight -> NEXT_CHANGE;
+      ArrowLeft  -> PREV_CHANGE;
+      Escape     -> RESTORE_LEFT;
+      Tab        -> FOCUS_NEXT;
+    }
+    focus {
+      trap: false;
+      initial: modeToggle;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: concat("Diff: ", ?entityId);
+        aria-busy: if state == "loading" then "true" else "false";
+        data-state: state;
+      };
+      diffList -> {
+        role: "list";
+        aria-label: "Field changes";
+        aria-live: "polite";
+      };
+      fieldDiff -> {
+        role: "listitem";
+        aria-label: concat(self.fieldName, ": ", if self.hasChange then "changed" else "unchanged");
+      };
+      removedValue -> {
+        role: "deletion";
+        aria-label: concat("Removed: ", self.text);
+      };
+      addedValue -> {
+        role: "insertion";
+        aria-label: concat("Added: ", self.text);
+      };
+      expandButton -> {
+        role: "button";
+        aria-label: concat("Show ", self.hiddenCount, " unchanged fields");
+        aria-expanded: "false";
+      };
+      modeToggle -> {
+        role: "button";
+        aria-label: if state == "side-by-side" then "Switch to inline mode" else "Switch to side-by-side mode";
+        aria-pressed: if state == "side-by-side" then "true" else "false";
+      };
+      restoreButton -> {
+        role: "button";
+        aria-label: concat("Restore to ", ?leftRef);
+        aria-disabled: if state == "loading" or state == "empty" then "true" else "false";
+      };
+      previousChangeButton -> {
+        role: "button";
+        aria-label: "Go to previous change";
+      };
+      nextChangeButton -> {
+        role: "button";
+        aria-label: "Go to next change";
+      };
+      leftSelector -> {
+        role: "combobox";
+        aria-label: "Left revision or branch reference";
+      };
+      rightSelector -> {
+        role: "combobox";
+        aria-label: "Right revision or branch reference";
+      };
+    }
+  }
+
+  props {
+    leftRef:   String = ""
+    rightRef:  String = ""
+    entityId:  String = ""
+    diffData:  option String
+  }
+
+  connect {
+    root -> {
+      data-part:   "root";
+      data-state:  state;
+      data-entity: ?entityId;
+      data-mode:   if state == "side-by-side" then "side-by-side" else if state == "inline" then "inline" else "loaded";
+    }
+
+    header -> {
+      data-part: "header";
+    }
+
+    leftLabel -> {
+      data-part: "left-label";
+      text: ?leftRef;
+    }
+
+    rightLabel -> {
+      data-part: "right-label";
+      text: ?rightRef;
+    }
+
+    leftSelector -> {
+      data-part: "left-selector";
+      value: ?leftRef;
+      onChange: send(SELECT_LEFT, { ref: self.value });
+    }
+
+    rightSelector -> {
+      data-part: "right-selector";
+      value: ?rightRef;
+      onChange: send(SELECT_RIGHT, { ref: self.value });
+    }
+
+    diffList -> {
+      data-part: "diff-list";
+      hidden: if state == "loading" or state == "empty" then true else false;
+    }
+
+    fieldDiff -> {
+      data-part:    "field-diff";
+      data-field:   self.fieldName;
+      data-changed: if self.hasChange then "true" else "false";
+    }
+
+    fieldName -> {
+      data-part: "field-name";
+      text: self.fieldName;
+    }
+
+    removedValue -> {
+      data-part: "removed-value";
+      text: self.text;
+      hidden: if not self.hasChange then true else false;
+    }
+
+    addedValue -> {
+      data-part: "added-value";
+      text: self.text;
+      hidden: if not self.hasChange then true else false;
+    }
+
+    unchangedValue -> {
+      data-part: "unchanged-value";
+      text: self.text;
+      hidden: if self.hasChange then true else false;
+    }
+
+    collapsedUnchanged -> {
+      data-part: "collapsed-unchanged";
+      data-count: self.hiddenCount;
+      hidden: if self.hiddenCount == 0 then true else false;
+    }
+
+    expandButton -> {
+      data-part: "expand-button";
+      onClick: send(EXPAND_UNCHANGED, { sectionId: self.sectionId });
+      onKeyDown: if key == "Enter" or key == "Space" then send(EXPAND_UNCHANGED, { sectionId: self.sectionId }) else noop;
+    }
+
+    modeToggle -> {
+      data-part:   "mode-toggle";
+      data-active: if state == "side-by-side" then "true" else "false";
+      onClick: if state == "side-by-side" then send(TOGGLE_MODE) else send(TOGGLE_MODE);
+      onKeyDown: if key == "Enter" or key == "Space" then send(TOGGLE_MODE) else noop;
+    }
+
+    restoreButton -> {
+      data-part: "restore-button";
+      disabled: if state == "loading" or state == "empty" then true else false;
+      onClick: send(RESTORE_LEFT, { ref: ?leftRef });
+      onKeyDown: if key == "Enter" then send(RESTORE_LEFT, { ref: ?leftRef }) else noop;
+    }
+
+    previousChangeButton -> {
+      data-part: "previous-change-button";
+      onClick: send(PREV_CHANGE);
+      onKeyDown: if key == "Enter" then send(PREV_CHANGE) else noop;
+    }
+
+    nextChangeButton -> {
+      data-part: "next-change-button";
+      onClick: send(NEXT_CHANGE);
+      onKeyDown: if key == "Enter" then send(NEXT_CHANGE) else noop;
+    }
+  }
+
+  affordance {
+    serves: group-section;
+    specificity: 9;
+    when { viewType: "diff-view" }
+    bind {
+      leftRef:  leftRef;
+      rightRef: rightRef;
+      entityId: entityId;
+      diffData: diffData;
+    }
+  }
+
+  invariant {
+    example "load diff then render field changes": {
+      after send(LOADED) -> ok
+      then root -> { data-state: "loaded" }
+      and diffList -> { hidden: false }
+    }
+
+    example "toggle from loaded to side-by-side mode": {
+      after send(LOADED) -> ok
+      then modeToggle.click -> ok
+      then root -> { data-state: "side-by-side" }
+      and modeToggle -> { data-active: "true" }
+    }
+
+    example "toggle side-by-side to inline": {
+      after send(LOADED) -> ok
+      then send(TOGGLE_MODE) -> ok
+      then root -> { data-state: "side-by-side" }
+      then send(TOGGLE_MODE) -> ok
+      then root -> { data-state: "inline" }
+      and modeToggle -> { data-active: "false" }
+    }
+
+    example "next and previous change navigation": {
+      after send(LOADED) -> ok
+      then nextChangeButton.click -> ok
+      then root -> { data-state: "loaded" }
+      then previousChangeButton.click -> ok
+      then root -> { data-state: "loaded" }
+    }
+
+    example "restore left triggers rollback": {
+      after send(LOADED) -> ok
+      then restoreButton.click -> ok
+    }
+
+    example "select new left ref triggers reload": {
+      after send(LOADED) -> ok
+      then send(SELECT_LEFT, { ref: "draft-v2://article-1@v3" }) -> ok
+      then root -> { data-state: "loading" }
+    }
+
+    example "empty state when diff has no results": {
+      after send(LOAD_EMPTY) -> ok
+      then root -> { data-state: "empty" }
+      and diffList -> { hidden: true }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      root -> { data-state: state }
+    }
+
+    always "diffList hidden during loading or empty": {
+      if state == "loading" then diffList -> { hidden: true }
+      and if state == "empty" then diffList -> { hidden: true }
+    }
+
+    always "removedValue and addedValue hidden for unchanged fields": {
+      forall fd in fieldDiff:
+        if not fd.hasChange then fd.removedValue -> { hidden: true }
+        and if not fd.hasChange then fd.addedValue -> { hidden: true }
+    }
+
+    always "restoreButton disabled while loading": {
+      if state == "loading" then restoreButton -> { disabled: true }
+    }
+
+    never "diffList shown during loading": {
+      state == "loading" and diffList -> { hidden: false }
+    }
+
+    never "removedValue and addedValue both empty on a changed field": {
+      exists fd in fieldDiff:
+        fd.hasChange == true and
+        fd.removedValue.text == "" and
+        fd.addedValue.text == ""
+    }
+
+    action modeToggle.click {
+      requires: state == "loaded"
+      ensures ok: state == "side-by-side"
+    }
+
+    action restoreButton.click {
+      requires: state == "loaded" or state == "side-by-side" or state == "inline"
+      ensures ok: state == "loaded"
+    }
+
+    "LOADED event is dispatched after Version/diff or VersionSpace/diff returns the diff payload for the given leftRef and rightRef";
+    "RESTORE_LEFT invokes Version/rollback with the revision extracted from leftRef, scoped to the namespace if present";
+    "SELECT_LEFT and SELECT_RIGHT replace the respective ref and re-trigger the diff fetch via the loading state";
+    "TOGGLE_MODE cycles between side-by-side and inline display; the first toggle after loaded enters side-by-side";
+    "Field diffing is value-level for scalars; block-level for rich text using block identity hashing";
+    "Cross-branch diff resolves each ref through Namespace/resolve before calling Version/diff";
+  }
+
+}

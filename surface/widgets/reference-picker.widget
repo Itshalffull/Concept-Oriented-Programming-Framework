@@ -23,10 +23,14 @@ widget reference-picker {
     resultTitle:        text          { Primary display field value of the entity }
     resultSubtitle:     text          { Secondary info (schema badge, path) shown under title }
     createOnMissOption: action        { Inline option rendered when search has no results }
-    branchSelector:     interactive   { Branch dropdown shown when showBranchSelector is true }
-    qualifierSelector:  interactive   { Qualifier input shown when showQualifier is true }
-    selectedDisplay:    container     { Compact display of the current value(s) when picker is closed }
-    clearButton:        action        { Removes the current selection }
+    branchSelector:       interactive   { Branch dropdown shown when showBranchSelector is true; defaults to active VersionContext }
+    qualifierSection:     container     { Collapsible qualifier panel shown when showQualifier is true and the qualifier is enabled }
+    qualifierCheckbox:    interactive   { Toggle that enables or disables pinning to a specific revision or date }
+    qualifierVersionList: container     { List of available revision entries the user can pin to }
+    qualifierDateInput:   interactive   { Free-text date input for temporal qualifiers (e.g. 2026-04-01) }
+    qualifierPreview:     text          { Read-only preview of the resulting URI with namespace and qualifier applied }
+    selectedDisplay:      container     { Compact display of the current value(s) when picker is closed }
+    clearButton:          action        { Removes the current selection }
   }
 
   states {
@@ -39,6 +43,7 @@ widget reference-picker {
       on CLOSE -> closed;
       on TYPE -> searching;
       on SELECT -> selected;
+      on TOGGLE_QUALIFIER -> open;
       entry [queryRecentTargets; positionResultList];
       exit [clearSearchInput];
     }
@@ -116,9 +121,29 @@ widget reference-picker {
         role: "combobox";
         aria-label: "Branch";
       };
-      qualifierSelector -> {
+      qualifierSection -> {
+        role: "group";
+        aria-label: "Revision pin";
+        aria-hidden: if not ?showQualifier or state == "closed" then "true" else "false";
+      };
+      qualifierCheckbox -> {
+        role: "checkbox";
+        aria-label: "Pin to specific revision";
+        aria-checked: if self.isChecked then "true" else "false";
+      };
+      qualifierVersionList -> {
+        role: "listbox";
+        aria-label: "Available revisions";
+      };
+      qualifierDateInput -> {
         role: "textbox";
-        aria-label: "Qualifier";
+        aria-label: "As of date";
+        aria-placeholder: "YYYY-MM-DD";
+      };
+      qualifierPreview -> {
+        role: "status";
+        aria-label: "URI preview";
+        aria-live: "polite";
       };
       selectedDisplay -> {
         role: "group";
@@ -201,10 +226,33 @@ widget reference-picker {
       onChange: send(SELECT_BRANCH, { branch: self.value });
     }
 
-    qualifierSelector -> {
-      data-part: "qualifier-selector";
+    qualifierSection -> {
+      data-part: "qualifier-section";
       hidden: if not ?showQualifier or state == "closed" then true else false;
+    }
+
+    qualifierCheckbox -> {
+      data-part: "qualifier-checkbox";
+      hidden: if not ?showQualifier or state == "closed" then true else false;
+      checked: if self.isChecked then true else false;
+      onChange: send(TOGGLE_QUALIFIER, { enabled: self.value });
+    }
+
+    qualifierVersionList -> {
+      data-part: "qualifier-version-list";
+      hidden: if not self.qualifierEnabled or not ?showQualifier then true else false;
+    }
+
+    qualifierDateInput -> {
+      data-part: "qualifier-date-input";
+      hidden: if not self.qualifierEnabled or not ?showQualifier then true else false;
       onInput: send(SET_QUALIFIER, { qualifier: self.value });
+    }
+
+    qualifierPreview -> {
+      data-part: "qualifier-preview";
+      hidden: if not ?showQualifier or state == "closed" then true else false;
+      text: self.previewUri;
     }
 
     selectedDisplay -> {
@@ -306,10 +354,44 @@ widget reference-picker {
           i1 != i2 and i1 -> { data-selected: "true" } and i2 -> { data-selected: "true" }
     }
 
+    example "toggle qualifier opens qualifier section": {
+      after searchInput.focus -> ok
+      then qualifierCheckbox.click -> ok
+      then root -> { data-state: "open" }
+      and qualifierSection -> { hidden: false }
+      and qualifierVersionList -> { hidden: false }
+    }
+
+    example "qualifier preview updates when version selected": {
+      after searchInput.focus -> ok
+      then qualifierCheckbox.click -> ok
+      then send(SET_QUALIFIER, { qualifier: "v3" }) -> ok
+      then qualifierPreview -> { }
+    }
+
+    always "qualifierSection hidden when closed": {
+      if state == "closed" then qualifierSection -> { hidden: true }
+    }
+
+    always "qualifierSection hidden when showQualifier is false": {
+      not ?showQualifier and qualifierSection -> { hidden: true }
+    }
+
+    always "qualifierPreview live region present when qualifier section open": {
+      if ?showQualifier and state != "closed" then qualifierPreview -> { }
+    }
+
+    never "qualifierVersionList visible when qualifier not enabled": {
+      not self.qualifierEnabled and qualifierVersionList -> { hidden: false }
+    }
+
     "SELECT must emit a value-change event carrying entityId so parent can call FieldDefinition/update";
     "CREATE flow must invoke ContentNode/create on the targetSchema before transitioning to selected";
     "branchSelector is only mounted when showBranchSelector is true";
-    "qualifierSelector is only mounted when showQualifier is true";
+    "qualifierSection is only mounted when showQualifier is true; it stays in the open state and does not alter the FSM beyond TOGGLE_QUALIFIER";
+    "TOGGLE_QUALIFIER toggles self.qualifierEnabled which controls visibility of qualifierVersionList and qualifierDateInput within the qualifier section";
+    "qualifierPreview derives its text by composing the selected branch (from branchSelector), the selected entityId, and the qualifier into the URI format [namespace://]entity-id[@qualifier]";
+    "branchSelector defaults to the active VersionContext namespace on open so that search is automatically scoped to the current branch";
     "search debounce is 200ms to avoid excessive queries during fast typing";
   }
 
