@@ -618,7 +618,8 @@ No new ViewShell feature. No NamespaceSpec concept. Just template variables on D
 
 | Card | PRD Sections | Blocked By | Blocks | Priority | Commit |
 |---|---|---|---|---|---|
-| **MAG-570** VersionSpace as Namespace Provider + Lifecycle Syncs | §2 | — | MAG-572, MAG-574 | high | |
+| **MAG-578** Namespace Concept Update: resolve + register + root | §10 | — | MAG-570 | high | |
+| **MAG-570** VersionSpace as Namespace Provider + Lifecycle Syncs | §2 | MAG-578 | MAG-572, MAG-574 | high | `2c90bdc2` |
 | **MAG-571** Reference/SyncedContent Qualifier Parsing (Framework) | §3, §7 | — | MAG-572, MAG-574 | high | |
 | **MAG-572** Revision Resolution Syncs (Version, Temporal, DAGHistory) | §1, §3, §6 | MAG-570, MAG-571 | MAG-574 | high | |
 | **MAG-573** Dependent Concept Sync Updates (Backlink, Search, Alias, Snippet) + Retention Pin Sync | §7.1–7.5, §10 | MAG-570 | MAG-574 | medium | |
@@ -629,7 +630,65 @@ No new ViewShell feature. No NamespaceSpec concept. Just template variables on D
 
 ---
 
-## 10. Open Questions
+## 10. Namespace Concept Updates Required
+
+The Namespace concept needs 3 changes to support resolution scoping (not just navigation). These are prerequisites for all the resolution syncs (MAG-572) to work.
+
+### 10.1 Add `resolve` action
+
+Currently missing. All resolution syncs call `Namespace/resolve(path)` but the action doesn't exist.
+
+```
+action resolve(path: String)
+  -> ok(node: N, provider: String)   // provider: "VersionSpace", "Schema", etc.
+  -> notfound(message: String)
+```
+
+Returns the node at the given path plus who registered it. The routing syncs dispatch based on provider.
+
+### 10.2 Generalize `createNamespacedPage` → `register`
+
+Current name is page-specific. Should be general-purpose scope registration.
+
+```
+action register(node: N, path: String, provider: String)
+  -> ok()
+  -> exists(message: String)
+```
+
+`provider` identifies what kind of scope this is — "VersionSpace", "Schema", "Kernel", etc. Kept as opaque metadata on the node, returned by `resolve`.
+
+Keep `createNamespacedPage` as an alias for backward compatibility (calls register with provider: "page").
+
+### 10.3 Root namespace from kernel instance UID
+
+Boot-time sync creates the root:
+
+```
+sync KernelRegistersRootNamespace [eager]
+when KernelBoot/boot completes ok(kernel: ?kernelId)
+then Namespace/register(node: ?kernelId, path: "/", provider: "kernel")
+```
+
+The `kernelId` is the globally unique instance identifier from Connection. For local use, the root is implicit (references omit it). For cross-instance references:
+- Local: `draft-v2://article-1` (root implied)
+- Cross-instance: `clef://instance-abc/draft-v2://article-1` (full URI)
+
+### 10.4 What does NOT need to change for VersionSpace branching
+
+These are multi-tenant concerns, NOT VersionSpace branching concerns:
+
+- EventBus namespace scoping → events are instance-global, branches share events
+- PluginRegistry namespace → plugins are framework-wide
+- API path segments → branches are scoped by VersionContext header, not URL path
+- Cache namespace keys → branch-aware caching already works via version-aware-load (different branch = different storage reads = different cache entries via tag-based invalidation)
+- ContentStorage namespace parameter → version-aware-load sync already scopes reads/writes via VersionContext interception. No concept change needed.
+
+Multi-tenancy is a valid future use of Namespace but should be a separate PRD.
+
+---
+
+## 11. Open Questions
 
 1. **Revision garbage collection (RESOLVED — RetentionPolicy + reference pins):**
    - ContentHash deduplication (already exists) eliminates noise from auto-saves and metadata-only updates
