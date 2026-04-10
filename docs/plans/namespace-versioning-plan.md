@@ -297,31 +297,194 @@ Currently `[[article-1]]` creates a Reference with target: "article-1". Extended
 
 The parser ONLY extracts and stores. It doesn't resolve. Resolution is sync-driven.
 
-### 6.4 UI changes
+### 6.4 UI / UX — Full Specification
 
-**Entity detail page:** When viewing a qualified reference, show:
-- Banner: "Viewing revision v3 from March 15, 2026" (read-only mode)
-- Timeline slider or version list in sidebar
-- "View current" button to jump to latest
+#### 6.4.1 Branch Indicator (global, always visible)
 
-**Reference picker:** Namespace scope selector + optional qualifier input:
+Shows the active VersionSpace in the app shell header. Always visible so users know which branch they're on.
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│  ◫ Clef Base          🌿 draft-v2 ▾           👤 Alice      │
+│                       ├─ main                                │
+│                       ├─ draft-v2  ← active                  │
+│                       │  └─ alice-experiment                 │
+│                       ├─ staging                             │
+│                       └─ [+ New branch]                      │
+└──────────────────────────────────────────────────────────────┘
+```
+
+- Dropdown shows full Namespace tree of VersionSpaces
+- Switching branches = VersionSpace/enter + page refresh
+- Sub-spaces shown nested
+- "New branch" = VersionSpace/fork
+- Badge color: green=active, gray=archived, blue=proposed
+
+#### 6.4.2 Historical Mode Banner
+
+When viewing an entity with a `@qualifier` (any revision/temporal reference), show a read-only banner:
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│  ⏱ Viewing revision v3 from March 15, 2026                  │
+│  by Alice · 3 changes from v2          [View current] [Diff] │
+└──────────────────────────────────────────────────────────────┘
+│                                                              │
+│  Title: My Article                                           │
+│  Body: (read-only, historical content)                       │
+│                                                              │
+```
+
+- All fields read-only (gray background, no edit affordances)
+- "View current" button jumps to `@latest`
+- "Diff" button shows diff between this revision and current
+- Author + change count from Version metadata
+- If revision was compacted: "Showing nearest available (March 12) — original March 10 was compacted"
+
+#### 6.4.3 Version Timeline (entity sidebar)
+
+On every entity detail page, a sidebar widget shows revision history:
+
+```
+┌─ History ──────────────────────┐
+│  ● v7  Today, 2:30pm   Alice  │ ← current
+│  ○ v6  Today, 11:00am  Bob    │
+│  ○ v5  Yesterday        Alice  │
+│  ○ v4  Apr 7            Alice  │
+│  ○ v3  Apr 5            Bob    │ ← pinned by [[contract@v3]]
+│  ○ v2  Mar 30           Alice  │
+│  ○ v1  Mar 15           Alice  │ ← creation
+│                                │
+│  [Show all]  [Compare two ▾]  │
+└────────────────────────────────┘
+```
+
+- Click any revision → opens entity in historical mode with banner
+- Pin icon on revisions that are referenced (`[[...@v3]]`)
+- "Compare two" → select two revisions → diff view
+- Compacted revisions shown as dimmed: "○ ~Mar 20 (compacted)"
+- Filter by author, date range
+
+#### 6.4.4 Diff View
+
+Compare any two addressable states — two revisions, two branches, or revision vs current:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Diff: Article "My Article"                                  │
+│  Left:  v3 (Mar 5, Bob)        Right: current (v7, Alice)   │
+│  ──────────────────────────────────────────────────────────│
+│  Title                                                       │
+│  - My Draft Article                                          │
+│  + My Article                                                │
+│                                                              │
+│  Body                                                        │
+│  ... (unchanged lines collapsed) ...                         │
+│  - This paragraph was removed.                               │
+│  + This new paragraph was added by Alice.                    │
+│                                                              │
+│  Author                                                      │
+│  (unchanged: Alice)                                          │
+│                                                              │
+│  [← Previous change]  [Next change →]  [Restore left]       │
+└─────────────────────────────────────────────────────────────┘
+```
+
+- Side-by-side or inline diff mode toggle
+- Field-level diffing (not character-level for non-text fields)
+- Rich text body: block-level diff with added/removed/changed highlighting
+- "Restore left" button: rollback to the left-side revision
+- Cross-branch diff: `draft-v2://article-1` vs `staging://article-1`
+
+#### 6.4.5 Reference Picker with Namespace + Qualifier
+
+Updated reference picker for `[[` mentions and relation field pickers:
+
 ```
 ┌──────────────────────────────────────┐
 │  Link to...                          │
-│  Scope:  ▾ Current (base)           │
-│          ○ draft-v2                  │
+│  ─────────────────────────────────  │
+│  Branch: ▾ Current (draft-v2)       │
+│          ○ main                      │
+│          ○ draft-v2  ← active        │
 │          ○ staging                   │
 │  ─────────────────────────────────  │
 │  🔍 Search entities...              │
 │  ─────────────────────────────────  │
+│  📄 My Article                       │
+│  📄 Design Doc                       │
+│  📄 API Reference                    │
+│  ─────────────────────────────────  │
 │  ☐ Pin to specific revision         │
-│    Version: ▾ Latest                │
-│             ○ v3 (Mar 15)           │
-│             ○ v2 (Mar 10)           │
-│             ○ v1 (Mar 1)            │
-│             ○ As of date...         │
+│    ○ Latest (default)               │
+│    ○ v3 — Mar 15 by Bob             │
+│    ○ v2 — Mar 10 by Alice           │
+│    ○ As of date: [________]         │
+│  ─────────────────────────────────  │
+│  Result: [[draft-v2://article-1@v3]] │
+│                    [Insert link]     │
 └──────────────────────────────────────┘
 ```
+
+- Branch selector defaults to active VersionContext
+- Entity search scoped to selected branch
+- Revision pin is optional — collapsed by default
+- Preview of the final URI at the bottom
+- Same picker used for: `[[` mentions, relation field values, SyncedContent transclusion
+
+#### 6.4.6 Branch Diff Dashboard
+
+A dedicated view for comparing branches before merge/propose:
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│  Compare: draft-v2 → main                    [Propose merge] │
+│  ──────────────────────────────────────────────────────────│
+│  3 created · 7 modified · 1 deleted                          │
+│                                                              │
+│  Created:                                                    │
+│    + 📄 New Landing Page                          [view]     │
+│    + 📄 FAQ Section                               [view]     │
+│    + 🖼 Hero Image                                [view]     │
+│                                                              │
+│  Modified:                                                   │
+│    ~ 📄 About Page (3 field changes)              [diff]     │
+│    ~ 📄 Pricing (1 field change)                  [diff]     │
+│    ~ 📄 Homepage (body rewritten)                 [diff]     │
+│    ...                                                       │
+│                                                              │
+│  Deleted:                                                    │
+│    - 📄 Old Landing Page                          [restore]  │
+│                                                              │
+│  [Cherry-pick selected]  [Merge all]  [Discard branch]       │
+└──────────────────────────────────────────────────────────────┘
+```
+
+- Shows VersionSpace/diff output as a structured changeset
+- Click "diff" on modified → opens diff view
+- Click "view" on created → opens entity in branch context
+- Cherry-pick: select individual changes to merge
+- Propose merge: VersionSpace/propose → review workflow
+- Drives existing VersionSpace/merge, cherry_pick, diff actions
+
+#### 6.4.7 Widgets Needed
+
+| Widget | Purpose | Used In |
+|---|---|---|
+| `branch-indicator.widget` | Global branch dropdown in app shell header | AppShell |
+| `historical-mode-banner.widget` | Read-only revision banner with actions | Entity detail (when @qualifier) |
+| `version-timeline.widget` | Revision history sidebar with pin indicators | Entity detail sidebar |
+| `diff-view.widget` | Side-by-side/inline diff for any two states | Diff page, merge review |
+| `branch-diff-dashboard.widget` | Branch comparison changeset view | Branch compare page |
+| Updated: `reference-picker` | Branch selector + revision pin qualifier | `[[` mentions, relation fields |
+
+#### 6.4.8 Views + Destinations Needed
+
+| View | Path | Purpose |
+|---|---|---|
+| `branch-compare` | `/admin/branches/:a/compare/:b` | Branch diff dashboard |
+| `entity-history` | Entity detail sidebar embed | Version timeline |
+| Updated: `version-spaces-list` | `/admin/branches` | Add branch tree (Namespace hierarchy), status badges, merge/archive actions |
 
 ---
 
@@ -458,16 +621,30 @@ No new ViewShell feature. No NamespaceSpec concept. Just template variables on D
 | **MAG-570** VersionSpace as Namespace Provider + Lifecycle Syncs | §2 | — | MAG-572, MAG-574 | high | |
 | **MAG-571** Reference/SyncedContent Qualifier Parsing (Framework) | §3, §7 | — | MAG-572, MAG-574 | high | |
 | **MAG-572** Revision Resolution Syncs (Version, Temporal, DAGHistory) | §1, §3, §6 | MAG-570, MAG-571 | MAG-574 | high | |
-| **MAG-573** Dependent Concept Sync Updates (Backlink, Search, Alias, Snippet) | §7.1–7.5 | MAG-570 | MAG-574 | medium | |
+| **MAG-573** Dependent Concept Sync Updates (Backlink, Search, Alias, Snippet) + Retention Pin Sync | §7.1–7.5, §10 | MAG-570 | MAG-574 | medium | |
 | **MAG-574** DataSourceSpec {{namespace}}/{{qualifier}} + View Integration | §8 | MAG-570–573 | MAG-575 | medium | |
-| **MAG-575** UI: Historical Mode Banner + Reference Picker Qualifier + Timeline | §7 (UI) | MAG-570–574 | — | medium | |
+| **MAG-575** Widgets: branch-indicator, historical-mode-banner, version-timeline | §6.4.1–6.4.3, §6.4.7 | — | MAG-576 | medium | |
+| **MAG-576** Widgets: diff-view, branch-diff-dashboard + Updated reference-picker | §6.4.4–6.4.6, §6.4.7 | MAG-575 | MAG-577 | medium | |
+| **MAG-577** Views + Destinations + Seeds + Integration Tests | §6.4.8 | MAG-570–576 | — | medium | |
 
 ---
 
 ## 10. Open Questions
 
-1. **Revision garbage collection** — If every save creates a Version snapshot and every snapshot is referenceable, storage grows unboundedly. RetentionPolicy concept exists — should it govern revision cleanup? What happens to references that point at cleaned-up revisions?
+1. **Revision garbage collection (RESOLVED — RetentionPolicy + reference pins):**
+   - ContentHash deduplication (already exists) eliminates noise from auto-saves and metadata-only updates
+   - RetentionPolicy governs tiered compaction: last 30 days = every revision, 30–90 days = daily snapshots, 90+ days = weekly. Configurable per schema.
+   - References pin revisions: `[[contract@v3]]` acts as a hold — RetentionPolicy/dispose checks for Reference/SyncedContent pins before cleanup
+   - Broken references (compacted revision) resolve to nearest available: "Showing March 12 revision (March 10 original was compacted)" — graceful degradation, not error
+   - New sync: `retention-checks-revision-references` — before dispose, scan for pins. No concept changes.
 
-2. **Branch + revision denormalization** — If `author.name` is denormalized per-branch AND revisions are addressable, do we denormalize per-branch-per-revision? That's O(branches × revisions × entities) storage. Probably not — revision-qualified reads should resolve at query time (join or lazy), not denormalize.
+2. **Branch + revision denormalization (RESOLVED — HEAD only, copy-on-write):**
+   - Denormalize the HEAD of each branch. Historical revisions (any `@qualifier`) resolve at read time (join or lazy) — never denormalized.
+   - Follows VersionSpace copy-on-write semantics: only denormalize in a branch if the branch has an override that affects the value. Two triggers:
+     - Source entity overrides the relation field (Article on draft-v2 sets a different author)
+     - Target entity is overridden (Person on draft-v2 changes name)
+   - If neither source nor target is overridden on the branch, the base denormalized value is inherited — no copy stored.
+   - compile-query rule: if qualifier present → skip denormalized data, use join/lazy. If no qualifier → use denormalized data.
+   - Storage cost: O(overrides), not O(branches × entities). A branch with 3 overrides out of 10,000 entities stores 3 extra denormalized records.
 
-3. **Merge conflict on revision-pinned references** — If a view pins `contract.terms@v1` and the contract entity is deleted, what happens? The reference should resolve to the last known snapshot, not fail. RetentionPolicy should prevent deletion of entities with pinned references.
+3. **Merge conflict on revision-pinned references (RESOLVED — same as Q1):** References pin revisions. If the current entity is deleted but `contract@v1` is referenced, the v1 snapshot survives (RetentionPolicy hold). The reference resolves to the frozen snapshot with a banner: "This entity was deleted. Showing pinned revision v1."
