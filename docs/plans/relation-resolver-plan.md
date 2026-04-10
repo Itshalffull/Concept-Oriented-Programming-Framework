@@ -310,18 +310,29 @@ concept RelationSpec [R] {
 
 ### Path structure
 
+Two path types — `field` (schema-bound) and `link` (graph-based):
+
 ```json
 [
   { "field": "author", "include": ["name", "avatar"] },
-  { "field": "author.company", "include": ["name", "logo"], "lazy": true }
+  { "field": "author.company", "include": ["name", "logo"], "lazy": true },
+  { "link": "backlinks", "include": ["title", "schema"], "lazy": true },
+  { "link": "tagged-with", "include": ["term"] }
 ]
 ```
 
-- `field` — the relation field path (dot-notation for multi-hop)
-- `include` — which target fields to make available for projection
-- `lazy` — optional, default false. When true AND the field is not denormalized, the client resolves instead of the server injecting a join. Has no effect when the field IS denormalized (denormalized data is always used if present).
+**Field paths:**
+- `field` — relation field path from FieldDefinition (dot-notation for multi-hop)
+- `include` — which target fields to project
+- `lazy` — optional. When true AND not denormalized, client resolves
 
-RelationSpec does NOT control denormalization strategy — that lives on the FieldDefinition. RelationSpec only declares what the view wants and whether non-denormalized fields should use lazy resolution.
+**Link paths:**
+- `link` — relation/reference type from the linking graph
+- `include` — which target fields to project
+- `lazy` — optional (default true for link paths, since they're often unbounded)
+- `maxCount` — optional, max entities to resolve (default 10 for link paths)
+
+RelationSpec does NOT control denormalization strategy. For field paths, denorm config lives on FieldDefinition.typeConfig. For link paths, denorm config lives on a Property. RelationSpec only declares what the view wants.
 
 ### Resolution rules (in compile-query sync)
 
@@ -752,6 +763,53 @@ Guard on `features contains "relation"`, fetch RelationSpec.
 | relation-field-bridges-linking | ContentStorage/save (relation field changed) | Relation/create in linking graph |
 | linking-bridges-relation-field | Relation/create (typed, matching field) | Property/set on source entity |
 | compile-query-with-relations | ViewShell/resolve (relation feature) | Inject joins for non-denormalized paths |
+
+### Unified relation type registry
+
+FieldDefinition IS the type registry for relations. The Relation concept's `type` field should reference a FieldDefinition, not be an independent free-form string.
+
+When `FieldDefinition/create(schema: "Article", fieldId: "author", fieldType: "relation", target: "Person")` is called, "author" becomes a known relation type. When `Relation/create(source, target, type: "author")` is created, the system knows it maps to Article→Person.
+
+This means:
+- FieldDefinition defines the type: name, target schema, cardinality, constraints
+- Relation records reference the type by name
+- The reference-picker widget shows only valid targets (from FieldDefinition.typeConfig.target)
+- The linking graph UI shows typed relations with schema badges
+
+### Two kinds of RelationSpec paths: field and link
+
+RelationSpec supports two path types:
+
+**Field paths** — resolve through FieldDefinition (typed, schema-bound, single/multi):
+```json
+{ "field": "author", "include": ["name", "avatar"] }
+```
+
+**Link paths** — resolve through the Relation/Reference/Backlink graph (always multi, may be untyped):
+```json
+{ "link": "backlinks", "include": ["title", "schema"], "lazy": true }
+{ "link": "mentions", "include": ["title"] }
+{ "link": "tagged-with", "include": ["term", "vocabulary"] }
+```
+
+Valid `link` types:
+- `"backlinks"` — all entities that reference this entity (via Reference/Backlink)
+- `"mentions"` — entities that mention this entity in rich text content
+- `"tagged-with"` — taxonomy terms applied to this entity
+- `"schemas"` — schemas applied to this entity (via Schema/applyTo)
+- `"{relation-type}"` — any typed Relation with this type name
+
+**Denormalization works for both.** "Denormalize the titles of my 3 most recent backlinks" is handled by the same RelationResolver infrastructure as "denormalize author.name." The resolver doesn't care where the link came from — it resolves target entity fields and writes dot-notation keys.
+
+For link paths, the denormalization config lives on a Property (not FieldDefinition, since there's no field):
+```
+Property/set("Article", "denormalize.backlinks", '{
+  "enabled": true, "include": ["title", "schema"], "source": "auto",
+  "maxCount": 10
+}')
+```
+
+`maxCount` limits how many linked entities to denormalize (backlinks can be unbounded — you don't want to denormalize 10,000 backlink titles).
 
 ### Bidirectional bridge
 
