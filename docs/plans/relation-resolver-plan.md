@@ -5,7 +5,7 @@
 **Status:** Implementation-ready
 **New concepts:** 2 (RelationResolver, RelationSpec)
 **Modified concepts:** 1 (FieldDefinition — relation typeConfig expanded)
-**New syncs:** 2
+**New syncs:** 3
 **Modified syncs:** 1 (compile-query)
 **Modified widgets:** 3 (field-header-popover, field-config-drawer, schema-fields-editor)
 **New widget:** 1 (relation-config-panel)
@@ -425,7 +425,46 @@ then {
 
 The handler checks the reverse index. If nobody references this entity, returns `no_references` immediately.
 
-### 4.3 compile-query.sync (MODIFIED)
+### 4.3 relation-field-bridges-linking.sync (NEW)
+
+**Currently missing:** Schema relation fields and the Reference/Backlink/Relation linking graph are completely disconnected. Setting `author: "person-42"` on an Article stores a string but the linking graph has no idea about it. The backlinks panel, reference graph, and "what links here" don't see schema relation fields.
+
+This sync bridges them:
+
+```
+sync RelationFieldBridgesLinking [eventual]
+purpose: "When a relation field value is set on an entity, create a
+Relation record in the linking graph so backlinks, reference graph,
+and relation queries all see schema-based relations."
+
+when {
+  ContentStorage/save: [ id: ?id ] => [ ok: _ ]
+}
+where {
+  Schema/getSchemasFor: [ entity_id: ?id ] => [ ok: ?schemas ]
+  FieldDefinition/list: [ schema: ?schemas ] => [ ok: ?fields ]
+  filter(?fields where fieldType = "relation")
+}
+then {
+  // For each relation field with a value:
+  Relation/create: [
+    source: ?id,
+    target: ?fieldValue,
+    type: ?fieldId,
+    schema: ?schema
+  ]
+}
+```
+
+This means:
+- Setting `article.author = "person-42"` automatically creates `Relation(article-1 → person-42, type: "author")`
+- The existing backlink infrastructure picks it up — Person-42's backlinks panel shows "Referenced by Article-1 (author)"
+- The reference graph sees the link
+- Removing or changing the field value updates/removes the Relation record
+
+**Important:** This sync should also REMOVE stale Relation records when a field value changes. If author changes from person-42 to person-99, the old Relation to person-42 is deleted and a new one to person-99 is created.
+
+### 4.4 compile-query.sync (MODIFIED)
 
 Add a new variant that handles RelationSpec:
 
@@ -695,7 +734,7 @@ Guard on `features contains "relation"`, fetch RelationSpec.
 |---|---|---|---|---|---|
 | **MAG-565** RelationResolver Concept + Handler | §2 | — | MAG-567, MAG-569 | high | |
 | **MAG-566** RelationSpec Concept + Handler | §3 | — | MAG-567, MAG-569 | high | |
-| **MAG-567** Resolution Syncs + compile-query Update | §4, §9 | MAG-565, MAG-566 | MAG-569 | high | |
+| **MAG-567** Resolution Syncs + Linking Bridge + compile-query Update | §4, §9 | MAG-565, MAG-566 | MAG-569 | high | |
 | **MAG-568** relation-config-panel Widget + Schema Editor Updates | §6, §8 | — | MAG-569 | medium | |
 | **MAG-569** Integration Tests + ViewShell Update + .view Examples | §5, §7, §9 | MAG-565–568 | — | medium | |
 
