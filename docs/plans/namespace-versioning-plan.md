@@ -707,3 +707,143 @@ Multi-tenancy is a valid future use of Namespace but should be a separate PRD.
    - Storage cost: O(overrides), not O(branches × entities). A branch with 3 overrides out of 10,000 entities stores 3 extra denormalized records.
 
 3. **Merge conflict on revision-pinned references (RESOLVED — same as Q1):** References pin revisions. If the current entity is deleted but `contract@v1` is referenced, the v1 snapshot survives (RetentionPolicy hold). The reference resolves to the frozen snapshot with a banner: "This entity was deleted. Showing pinned revision v1."
+
+---
+
+## 12. Next Step: Multi-Tenancy via Namespace
+
+Multi-tenancy uses the same Namespace infrastructure as VersionSpace branching. A tenant IS a namespace — registered with `Namespace/register(node: "acme", path: "/acme", provider: "tenant")`. Tenants nest with branches: `/acme/draft-v2/article-1`.
+
+This section specifies exactly what needs to change for each component. The Namespace concept and resolution syncs from §10 and MAG-570–577 are prerequisites — multi-tenancy builds on them.
+
+### 12.1 Tenant Namespace Provider
+
+New sync: when a tenant is created, register as Namespace node:
+
+```
+sync TenantRegistersNamespace [eager]
+when Tenant/create completes ok(tenant: ?tenantId)
+then Namespace/register(node: ?tenantId, path: "/?tenantId", provider: "tenant")
+```
+
+Requires: a Tenant concept (or use an existing concept like Organization/Workspace). The provider string `"tenant"` lets the resolution chain scope data differently from VersionSpace providers.
+
+### 12.2 ContentStorage: Add `namespace` parameter to all actions
+
+Currently `version-aware-load` scopes reads via VersionContext interception. For multi-tenancy, the scoping needs to be explicit — VersionContext is per-user session, but tenant scoping is per-request and must be enforced.
+
+**Concept changes to ContentStorage:**
+
+```
+action save(record: R, data: String, namespace: option String)
+action load(record: R, namespace: option String)  
+action list(prefix: String, namespace: option String)
+action query(filter: String, namespace: option String)
+```
+
+When `namespace` is provided, the storage adapter prefixes all keys: `tenant:acme:node:article-1`. When absent, falls back to VersionContext (existing behavior). The parameter takes priority over VersionContext — explicit scoping overrides implicit.
+
+**Handler change:** The storage adapter's `get`, `find`, `put`, `del` calls prepend the namespace prefix to the relation name. For the in-memory adapter, this means the relation `node` becomes `acme:node` within the `acme` namespace.
+
+**Sync change:** A new `tenant-scoping-on-save.sync` stamps the active tenant namespace from the request context onto every save. Similar to `version-aware-save` but for tenants.
+
+### 12.3 SearchIndex: Add `namespace` parameter
+
+```
+action indexItem(index: I, item: String, data: String, namespace: option String)
+action search(index: I, query: String, namespace: option String)
+```
+
+When `namespace` is provided, index entries carry the namespace and search filters by it. Implemented as a field on the index entry, indexed via `ensureIndex('search-entries', 'namespace')`.
+
+**Sync:** `search-index-with-tenant.sync` — on ContentStorage/save, read active tenant from request context, pass to SearchIndex/index.
+
+### 12.4 Reference / Backlink: Add `namespace` metadata
+
+Reference/addRef already has an `origin: option String` metadata field. Namespace goes here — no concept change needed. The sync `backlink-reindex-with-namespace.sync` (MAG-573) already passes namespace metadata through. For multi-tenancy, the tenant ID is included in the metadata alongside any VersionSpace qualifier.
+
+No concept change. Just ensure the resolution syncs (MAG-572) check tenant namespace in addition to VersionSpace namespace when routing.
+
+### 12.5 Alias: Add `scope` parameter to `resolve`
+
+```
+action resolve(name: String, scope: option String)
+  -> ok(entity: A)
+  -> notfound(message: String)
+```
+
+When `scope` is provided, look up alias within that namespace first, fall back to global. The `alias-resolves-in-namespace.sync` (MAG-573) already does this — it just needs the Alias concept to accept the `scope` parameter.
+
+**Concept change:** Add `scope: option String` to `resolve` action signature.
+
+### 12.6 SyncedContent: namespace-qualify source
+
+```
+action createReference(ref: S, original: S, sourceNamespace: option String)
+```
+
+When `sourceNamespace` is set, the transclusion resolves the original within that namespace. The `synced-content-resolves-qualified.sync` (MAG-573) already routes qualified sources. For multi-tenancy, cross-tenant transclusion would carry the tenant namespace.
+
+**Concept change:** Add `sourceNamespace: option String` to `createReference`.
+
+### 12.7 EventBus: namespace-scoped dispatch
+
+```
+action dispatch(event: E, data: String, namespace: option String)
+action subscribe(event: String, handler: String, priority: Int, namespace: option String)
+```
+
+When `namespace` is provided on dispatch, only subscribers with matching namespace (or no namespace filter) receive the event. This prevents tenant A's event handlers from seeing tenant B's events.
+
+**Concept change:** Add `namespace: option String` to `dispatch` and `subscribe`.
+
+### 12.8 Cache: namespace-prefixed keys
+
+No concept change. The `save-invalidates-cache.sync` already uses tag-based invalidation with schema names as tags. For multi-tenancy, add the tenant namespace as an additional tag:
+
+```
+Cache/set(bin, key: "tenant:acme:" + key, data, tags: schema + ",tenant:acme", maxAge)
+```
+
+**Sync change:** `cache-namespace-prefix.sync` — wraps cache keys with active tenant namespace prefix. Tag-based invalidation automatically scopes by tenant tag.
+
+### 12.9 API Layer (Bind): namespace in requests
+
+Three options for passing namespace in API requests:
+
+1. **Header:** `X-Namespace: tenant:acme` — cleanest, doesn't pollute URLs
+2. **Path segment:** `/api/tenants/acme/content/...` — explicit, bookmarkable
+3. **Query param:** `?namespace=tenant:acme` — simplest to implement
+
+Recommendation: **Header for default tenant scope** (set by auth middleware from credentials), **path segment for explicit cross-tenant access** (admin APIs). The interface manifest declares which strategy each target uses.
+
+**Manifest change:** Add `namespaceStrategy: header | path | query` to each target config. The Bind generator reads this and generates the appropriate parameter handling.
+
+### 12.10 Pilot / PageMap: namespace in agent context
+
+```
+action navigate(destination: String, params: option String, namespace: option String)
+```
+
+When an agent operates within a tenant namespace, all Pilot actions are scoped. The Connection concept already carries the active namespace context — Pilot reads it from there.
+
+**Concept change:** Add `namespace: option String` to Pilot surface actions. Default: read from Connection's active namespace.
+
+### 12.11 Implementation order
+
+| Phase | What | Concept changes | Syncs |
+|---|---|---|---|
+| **Already done** | Namespace resolve/register + VersionSpace provider | Namespace (§10) | MAG-570 |
+| **Phase 1** | ContentStorage scoping + tenant provider | ContentStorage | tenant-scoping-on-save |
+| **Phase 2** | Search + Reference + Alias scoping | SearchIndex, Alias | search-index-with-tenant |
+| **Phase 3** | SyncedContent + EventBus + Cache | SyncedContent, EventBus | cache-namespace-prefix |
+| **Phase 4** | API layer + Pilot | Bind config, Pilot | — |
+
+Each phase is independently deployable. Phase 1 is the critical path — without ContentStorage scoping, nothing else matters.
+
+### 12.12 What does NOT change
+
+- **PluginRegistry** — plugins are framework-wide, not tenant-scoped
+- **TypeSystem / Validator** — types and validation rules are global
+- **FormBuilder / FieldPlacement / ComponentMapping** — UI configuration is typically global (tenants share the same editor experience). Per-tenant UI customization would be a separate feature.
+- **Outline / Diff / Patch / Merge** — content operations are namespace-transparent; scoping happens at the storage layer
