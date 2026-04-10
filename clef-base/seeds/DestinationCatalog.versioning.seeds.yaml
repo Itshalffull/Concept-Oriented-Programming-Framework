@@ -1,0 +1,12 @@
+# Versioning destination entries for the shell navigation.
+
+concept: DestinationCatalog
+action: register
+entries:
+  - destination: version-spaces
+    name: version-spaces
+    targetConcept: VersionSpace
+    targetView: version-spaces-list
+    href: /admin/branches
+    icon: "⎇"
+    group: System

@@ -1,0 +1,41 @@
+view "entity-history" {
+  shell: "entity-history"
+
+  features {
+    sort
+    projection
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"Version\",\"action\":\"list\",\"params\":{\"entity\":\"{{entityId}}\"}}"
+    }
+    sort: {
+      keys: "[{\"field\":\"createdAt\",\"direction\":\"desc\"}]"
+    }
+    projection: {
+      fields: "[{\"key\":\"versionId\",\"label\":\"Revision\"},{\"key\":\"createdAt\",\"label\":\"Date\",\"formatter\":\"relative-date\"},{\"key\":\"author\",\"label\":\"Author\"},{\"key\":\"summary\",\"label\":\"Summary\",\"formatter\":\"truncate\"}]"
+    }
+    presentation: {
+      displayType: "timeline",
+      hints: "{\"orientation\":\"vertical\",\"compact\":true}"
+    }
+  }
+
+  purpose {
+    Chronological revision history for a single entity, displayed
+    as a vertical timeline in the entity detail sidebar.
+    Read-only — restore actions live in the version-timeline widget.
+  }
+
+  invariants {
+    always "purity is read-only": {
+      purity = "read-only"
+    }
+
+    always "no invoke instructions": {
+      invokeCount = 0
+    }
+  }
+}

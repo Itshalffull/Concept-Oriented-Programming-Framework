@@ -65,3 +65,8 @@ entries:
     hints: '{}'
     displayModePolicy: use
     defaultDisplayMode: check-result-inline
+
+  - name: timeline-default
+    displayType: timeline
+    hints: '{"orientation":"vertical","compact":true}'
+    displayModePolicy: bypass

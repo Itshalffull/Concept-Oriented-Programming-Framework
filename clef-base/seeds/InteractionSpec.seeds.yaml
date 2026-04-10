@@ -113,3 +113,9 @@ entries:
     rowClick: '{"navigateTo":"/content/{cv}"}'
     rowActions: '[]'
     pickerMode: false
+  # branch-compare
+  - name: branch-compare-navigate
+    createForm: 'null'
+    rowClick: '{"action":"navigate","destination":"entity-detail"}'
+    rowActions: '[]'
+    pickerMode: false

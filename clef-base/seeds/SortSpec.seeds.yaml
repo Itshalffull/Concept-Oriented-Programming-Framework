@@ -7,3 +7,6 @@ action: create
 entries:
   - name: natural-order
     keys: '[]'
+
+  - name: entity-history-sort
+    keys: '[{"field":"createdAt","direction":"desc"}]'
