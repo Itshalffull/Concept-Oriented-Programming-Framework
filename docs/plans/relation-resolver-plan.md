@@ -316,8 +316,7 @@ Two path types — `field` (schema-bound) and `link` (graph-based):
 [
   { "field": "author", "include": ["name", "avatar"] },
   { "field": "author.company", "include": ["name", "logo"], "lazy": true },
-  { "link": "backlinks", "include": ["title", "schema"], "lazy": true },
-  { "link": "tagged-with", "include": ["term"] }
+  { "link": "backlinks", "include": ["title", "schema"], "lazy": true }
 ]
 ```
 
@@ -785,19 +784,19 @@ RelationSpec supports two path types:
 { "field": "author", "include": ["name", "avatar"] }
 ```
 
-**Link paths** — resolve through the Relation/Reference/Backlink graph (always multi, may be untyped):
+**Link paths** — reverse lookups through the Reference/Backlink graph (always multi):
 ```json
 { "link": "backlinks", "include": ["title", "schema"], "lazy": true }
-{ "link": "mentions", "include": ["title"] }
-{ "link": "tagged-with", "include": ["term", "vocabulary"] }
+{ "link": "mentions", "include": ["title"], "lazy": true }
 ```
 
 Valid `link` types:
 - `"backlinks"` — all entities that reference this entity (via Reference/Backlink)
 - `"mentions"` — entities that mention this entity in rich text content
-- `"tagged-with"` — taxonomy terms applied to this entity
-- `"schemas"` — schemas applied to this entity (via Schema/applyTo)
-- `"{relation-type}"` — any typed Relation with this type name
+
+That's it. Everything else (tags, categories, author, assignee, related articles) is already a relation field on a schema — accessed via `field` paths, not `link` paths. The content-native model unifies all forward-direction relations as schema fields.
+
+`link` paths exist only for **reverse lookups** — "who points at me?" — which is the one thing a field can't express (fields go Article → Person, not Person ← Article).
 
 **Denormalization works for both.** "Denormalize the titles of my 3 most recent backlinks" is handled by the same RelationResolver infrastructure as "denormalize author.name." The resolver doesn't care where the link came from — it resolves target entity fields and writes dot-notation keys.
 
