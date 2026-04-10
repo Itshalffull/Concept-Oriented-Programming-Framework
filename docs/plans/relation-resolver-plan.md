@@ -165,6 +165,44 @@ This means: zero write cost until a view actually needs the data. If you define 
 - "Backfill" button for newly enabled fields
 - "Clear" button to remove denormalized data
 
+#### Three-level override hierarchy
+
+Denormalization can be controlled from three places, with clear priority:
+
+| Priority | Source | Scope | Where Edited |
+|---|---|---|---|
+| 1 (highest) | View-level override | This view only | View editor (RelationSpec config) |
+| 2 | Schema-level override | All views of this schema | Schema editor Level 2/3 |
+| 3 (lowest) | System auto-decision | Per schema+field | Automatic |
+
+**View-level override** (in RelationSpec path):
+```json
+{ "field": "author", "include": ["name"], "forceResolve": "denormalize" }
+```
+Valid values for `forceResolve`: `"denormalize"` (force it), `"join"` (force join-at-read), `"lazy"` (force client resolve), or absent (use schema/auto decision).
+
+A view author uses this when: "My dashboard is read 10,000x/day. I need `author.name` denormalized even though the schema admin or auto-decision says no." The view takes responsibility for its own write amplification.
+
+**Schema-level override** (in Property):
+A schema admin uses this when: "I know Person records rarely change. Enable denormalization globally for all views that access `author.name`." Or conversely: "Person records change 200x/day. Disable denormalization globally — no view should pay that cost."
+
+**How compile-query resolves:**
+```
+1. Check RelationSpec path: does it have forceResolve?
+   → YES: use that strategy
+   → NO: fall through
+
+2. Check schema Property: denormalize.{fieldId}.enabled?
+   → explicit true/false with auto=false: use that
+   → auto=true or absent: fall through
+
+3. Check if data IS denormalized (dot-notation field exists in record)?
+   → YES: project it (free)
+   → NO: join-at-read (default fallback)
+```
+
+Step 3 is the elegant part — even without any explicit configuration, if denormalized data happens to be present (from a previous auto-decision that was later overridden), compile-query uses it. The data's presence IS the signal.
+
 #### When auto-denormalization is overridden:
 
 ```
@@ -312,9 +350,40 @@ For each path in RelationSpec:
 2. **Not denormalized, lazy=false (default):** Inject `QueryProgram/join` instruction
 3. **Not denormalized, lazy=true:** Add to projection as `{ key: "author.company.name", resolve: "lazy" }` — the client fetches asynchronously after initial render
 
-### How it shows up in the schema editor
+### How it shows up in editors
 
-Not directly — RelationSpec is configured through the view system (ViewShell features). But the schema editor's **field-config-drawer** shows which views use each relation field (via SchemaUsage), so the admin can see "3 views access author.name" and decide whether to enable denormalization.
+**In the view editor** (when configuring a view's RelationSpec):
+
+```
+┌────────────────────────────────────────────┐
+│  Relation Fields                           │
+│  ──────────────────────────────────────── │
+│  author (→ Person)                         │
+│    ☑ name     ⚡ auto-denormalized         │
+│    ☑ avatar   ⚡ auto-denormalized         │
+│    ☐ email                                 │
+│    Resolution: ● Auto  ○ Denormalize       │
+│                ○ Join   ○ Lazy             │
+│                                            │
+│  author.company (→ Company)                │
+│    ☑ name     🔄 join-at-read (depth 2)   │
+│    ☐ logo                                  │
+│    Resolution: ○ Auto  ○ Denormalize       │
+│                ○ Join   ● Lazy             │
+│                                            │
+│  "Auto" uses the schema/system decision.   │
+│  Override only when this view's needs      │
+│  differ from the default.                  │
+└────────────────────────────────────────────┘
+```
+
+The view author sees:
+- Which relation fields are available (from FieldDefinition includes)
+- Current resolution status for each (auto/denormalize/join/lazy)
+- Override radio buttons — defaults to "Auto" (respect schema decision)
+- Checking a field adds it to the RelationSpec's `include` array
+
+**In the schema editor** (Level 2 drawer): Shows the schema-wide denormalization status and per-view overrides (see wireframe in §6). The schema admin can enable/disable denormalization globally, and see which views have overridden the decision.
 
 ### ViewShell integration
 
@@ -488,12 +557,16 @@ When configuring a **relation** field:
 │     └ ☐ name   ☐ logo  (depth 2)       │
 │                                          │
 │  ─ Pre-resolve (Performance) ────────── │
-│  ☑ Pre-resolve for fast reads            │
-│  Denormalized fields:                    │
-│    ☑ name  ☑ avatar                      │
-│  Depth: [1 ▾]                            │
-│  ⚡ Denormalized on 47 Article records   │
+│  ⚡ Auto-enabled (47 records, depth 1)   │
+│  Denormalized: name, avatar              │
+│  ~12 propagation writes/day              │
+│  [Override: Disable for all views]       │
 │  [Backfill now]  [Clear denormalized]    │
+│                                          │
+│  ─ Per-View Overrides ─────────────────│
+│  Content List: ⚡ denormalize (auto)     │
+│  Dashboard:    ⚡ denormalize (auto)     │
+│  Admin Table:  🔄 join (view override)   │
 │                                          │
 │  ─ Usage ──────────────────────────────│
 │  Used by 3 views:                        │
