@@ -1,0 +1,259 @@
+@version(1)
+widget filter-popover {
+
+  purpose {
+    Floating popover panel for composing nested AND/OR filter conditions on a
+    data view. Each condition row selects a field, an operator, and a typed
+    value; conditions can be grouped into sub-groups with independent AND/OR
+    conjunction settings, supporting up to three levels of nesting — matching
+    the Notion advanced filter model. The conjunction toggle at the start of
+    each row (after the first) switches that row join with the preceding
+    condition between AND and OR. Rows and groups can be removed individually.
+    A "Save for everyone" checkbox promotes a personal filter to a shared view
+    filter. Changes do not auto-commit — the parent must listen for APPLY to
+    write back to FilterSpec. Intended to be opened by the filter toolbar
+    button in view-editor-toolbar.
+  }
+
+  anatomy {
+    root:                  container    { Top-level popover panel wrapper }
+    conditionList:         container    { Ordered list of top-level condition rows and condition groups }
+    conditionGroup:        container    { Grouped sub-list of conditions sharing an independent conjunction }
+    groupConjunction:      action       { AND/OR toggle that controls how conditions inside a conditionGroup join }
+    conditionRow:          container    { One filter condition: conjunction + fieldPicker + operatorPicker + valueInput + removeCondition }
+    conjunctionToggle:     action       { AND/OR toggle shown before each non-first condition row or group }
+    fieldPicker:           container    { Slot that composes field-picker-dropdown for selecting the filter field }
+    operatorPicker:        container    { Slot that composes operator-dropdown for selecting the filter operator }
+    valueInput:            container    { Slot that composes typed-value-input for entering the filter value }
+    removeCondition:       action       { Button that removes this condition row from the list }
+    addConditionButton:    action       { Ghost button that appends a new empty condition row }
+    addGroupButton:        action       { Ghost button that appends a new empty condition group }
+    saveForEveryoneCheckbox: action     { Checkbox that marks the filter as shared across all view users }
+  }
+
+  states {
+    closed [initial] {
+      on OPEN -> open;
+    }
+
+    open {
+      on ADD_CONDITION -> adding-condition;
+      on ADD_GROUP -> open;
+      on REMOVE_CONDITION -> open;
+      on REMOVE_GROUP -> open;
+      on TOGGLE_CONJUNCTION -> open;
+      on TOGGLE_GROUP_CONJUNCTION -> open;
+      on FIELD_CHANGE -> open;
+      on OPERATOR_CHANGE -> open;
+      on VALUE_CHANGE -> open;
+      on TOGGLE_SAVE_FOR_EVERYONE -> open;
+      on APPLY -> closed;
+      on CLOSE -> closed;
+      on ESCAPE -> closed;
+      entry [positionPanel; focusFirstInteractive];
+      exit [returnFocusTrigger];
+    }
+
+    adding-condition {
+      on CONDITION_ADDED -> open;
+      on CANCEL_ADD -> open;
+      on ESCAPE -> open;
+      entry [appendEmptyConditionRow; focusNewFieldPicker];
+    }
+  }
+
+  accessibility {
+    role: dialog;
+    keyboard {
+      Escape -> ESCAPE;
+      Tab -> FOCUS_NEXT;
+    }
+    focus {
+      trap: true;
+      initial: conditionList;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "dialog";
+        aria-label: "Filter conditions";
+        aria-modal: "true";
+        data-state: if state == "closed" then "closed" else "open";
+      };
+      conditionList -> {
+        role: "list";
+        aria-label: "Filter rules";
+      };
+      conditionGroup -> {
+        role: "group";
+        aria-label: "Filter group";
+      };
+      groupConjunction -> {
+        role: "button";
+        aria-label: concat("Group join: ", self.conjunction);
+        aria-pressed: if self.conjunction == "or" then "true" else "false";
+      };
+      conditionRow -> {
+        role: "listitem";
+        aria-label: concat("Condition ", self.index);
+      };
+      conjunctionToggle -> {
+        role: "button";
+        aria-label: concat("Join with: ", self.conjunction);
+        aria-pressed: if self.conjunction == "or" then "true" else "false";
+      };
+      fieldPicker -> {
+        role: "group";
+        aria-label: "Field selector";
+      };
+      operatorPicker -> {
+        role: "group";
+        aria-label: "Operator selector";
+      };
+      valueInput -> {
+        role: "group";
+        aria-label: "Filter value";
+      };
+      removeCondition -> {
+        role: "button";
+        aria-label: concat("Remove condition ", self.index);
+      };
+      addConditionButton -> {
+        role: "button";
+        aria-label: "Add filter rule";
+      };
+      addGroupButton -> {
+        role: "button";
+        aria-label: "Add filter group";
+      };
+      saveForEveryoneCheckbox -> {
+        role: "checkbox";
+        aria-label: "Save filter for everyone";
+        aria-checked: if self.checked then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    open: Bool = false
+    schema: String = ""
+    currentFilter: option String
+    saveForEveryone: Bool = false
+    maxNestingDepth: Int = 3
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: if state == "closed" then "closed" else "open";
+      hidden: if state == "closed" then true else false;
+    }
+
+    conditionList -> {
+      data-part: "condition-list";
+    }
+
+    conditionGroup -> {
+      data-part: "condition-group";
+      data-depth: self.depth;
+      data-conjunction: self.conjunction;
+    }
+
+    groupConjunction -> {
+      data-part: "group-conjunction";
+      data-conjunction: self.conjunction;
+      onClick: send(TOGGLE_GROUP_CONJUNCTION, { groupId: self.groupId });
+      onKeyDown: if key == "Enter" or key == " " then send(TOGGLE_GROUP_CONJUNCTION, { groupId: self.groupId }) else noop;
+    }
+
+    conditionRow -> {
+      data-part: "condition-row";
+      data-condition-id: self.id;
+      data-index: self.index;
+      data-depth: self.depth;
+    }
+
+    conjunctionToggle -> {
+      data-part: "conjunction-toggle";
+      data-conjunction: self.conjunction;
+      onClick: send(TOGGLE_CONJUNCTION, { conditionId: self.conditionId });
+      onKeyDown: if key == "Enter" or key == " " then send(TOGGLE_CONJUNCTION, { conditionId: self.conditionId }) else noop;
+      hidden: if self.index == 0 then true else false;
+    }
+
+    fieldPicker -> {
+      data-part: "field-picker";
+      data-condition-id: self.conditionId;
+    }
+
+    operatorPicker -> {
+      data-part: "operator-picker";
+      data-condition-id: self.conditionId;
+    }
+
+    valueInput -> {
+      data-part: "value-input";
+      data-condition-id: self.conditionId;
+    }
+
+    removeCondition -> {
+      data-part: "remove-condition";
+      data-condition-id: self.conditionId;
+      onClick: send(REMOVE_CONDITION, { conditionId: self.conditionId });
+      onKeyDown: if key == "Enter" then send(REMOVE_CONDITION, { conditionId: self.conditionId }) else noop;
+    }
+
+    addConditionButton -> {
+      data-part: "add-condition-button";
+      onClick: send(ADD_CONDITION);
+      onKeyDown: if key == "Enter" then send(ADD_CONDITION) else noop;
+    }
+
+    addGroupButton -> {
+      data-part: "add-group-button";
+      onClick: send(ADD_GROUP);
+      onKeyDown: if key == "Enter" then send(ADD_GROUP) else noop;
+      hidden: if ?maxNestingDepth <= 1 then true else false;
+    }
+
+    saveForEveryoneCheckbox -> {
+      data-part: "save-for-everyone-checkbox";
+      data-checked: if ?saveForEveryone then "true" else "false";
+      onClick: send(TOGGLE_SAVE_FOR_EVERYONE);
+      onKeyDown: if key == "Enter" or key == " " then send(TOGGLE_SAVE_FOR_EVERYONE) else noop;
+    }
+  }
+
+  compose {
+    fieldPicker:    widget("field-picker-dropdown", { schema: ?schema; groupBy: "type" })
+    operatorPicker: widget("operator-dropdown", { fieldType: self.fieldType; currentOperator: self.operator })
+    valueInput:     widget("typed-value-input", { fieldType: self.fieldType; value: self.value; operatorIsUnary: self.operatorIsUnary; schema: ?schema })
+  }
+
+  invariant {
+    "OPEN event sets root data-state to open and removes the hidden attribute";
+    "CLOSE event sets root data-state to closed and adds the hidden attribute";
+    "Escape key in open state transitions to closed — same as CLOSE";
+    "ADD_CONDITION transitions from open to adding-condition; CONDITION_ADDED transitions back to open";
+    "REMOVE_CONDITION stays in open state and removes the corresponding conditionRow from conditionList";
+    "TOGGLE_CONJUNCTION stays in open state and flips the conjunctionToggle data-conjunction between and and or";
+    "ADD_GROUP stays in open state and appends a new conditionGroup to conditionList";
+    "TOGGLE_SAVE_FOR_EVERYONE flips saveForEveryoneCheckbox data-checked between true and false on each invocation";
+    "the first conditionRow in any list or group has conjunctionToggle hidden because there is no preceding row to join";
+    "addGroupButton is hidden when maxNestingDepth prop is 1 or less";
+    "APPLY event transitions from open to closed";
+    "root data-state reflects the FSM state in every reachable state: closed, open, adding-condition";
+    "root is hidden when data-state is closed and visible when data-state is open or adding-condition";
+    "root aria-modal is true whenever the panel is visible so the page behind is inert";
+    "all three states are reachable: closed is the initial state, open is reached via OPEN, adding-condition is reached via ADD_CONDITION from open";
+    "APPLY event carries the complete updated filter tree as payload so the parent view-editor-toolbar can write it to FilterSpec without re-reading DOM";
+    "FIELD_CHANGE, OPERATOR_CHANGE, and VALUE_CHANGE events carry the conditionId and new value as payload — the widget maintains a draft filter tree internally and emits APPLY only when the user explicitly commits";
+    "nesting depth is tracked per conditionGroup via data-depth attribute; the addGroupButton is hidden when the focused condition row already sits at maxNestingDepth";
+    "conjunction toggle default is AND; toggling switches the label text and data-conjunction between and and or";
+    "groupConjunction applies to all direct children of its conditionGroup; it is independent from the top-level conjunction toggles";
+    "saveForEveryoneCheckbox visibility is controlled by the parent based on user permissions — the widget always renders it but the parent may hide it";
+    "when the last condition in a group is removed the group itself is also removed from conditionList";
+    "focus is trapped inside the popover while open; when the popover closes, focus returns to the toolbar filter button";
+  }
+
+}

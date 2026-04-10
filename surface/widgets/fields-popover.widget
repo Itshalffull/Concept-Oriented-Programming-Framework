@@ -1,0 +1,272 @@
+@version(1)
+widget fields-popover {
+
+  purpose {
+    Floating popover panel for controlling which fields are visible in a data
+    view and in what order they appear. Every field in the schema is listed
+    with a checkbox controlling its visibility, a type badge for identification,
+    a label, and a drag handle for reordering. A search input at the top
+    filters the list by field name or type, collapsing non-matching rows.
+    Show All and Hide All bulk-action buttons toggle all non-primary fields
+    simultaneously. The primary field (typically "Title" or the first defined
+    field) cannot be hidden and its checkbox is always checked and disabled.
+    An Add Field button at the bottom opens a field creation flow. Changes are
+    collected and emitted via APPLY so the parent can write back to
+    ProjectionSpec. Intended to be opened by the fields toolbar button in
+    view-editor-toolbar.
+  }
+
+  anatomy {
+    root:          container    { Top-level popover panel wrapper }
+    searchInput:   interactive  { Text input that filters the field list by name or type }
+    fieldList:     container    { Scrollable list of field rows }
+    fieldRow:      container    { One field entry: dragHandle + fieldCheckbox + fieldLabel + fieldTypeBadge }
+    fieldCheckbox: action       { Checkbox that toggles this field visibility in the view }
+    fieldLabel:    text         { Human-readable field name }
+    fieldTypeBadge: presentation { Short type label (e.g. "text", "date", "select") for at-a-glance identification }
+    dragHandle:    action       { Six-dot grip icon that initiates drag-to-reorder for a fieldRow }
+    showAllButton: action       { Button that makes all non-primary fields visible }
+    hideAllButton: action       { Button that hides all non-primary fields }
+    addFieldButton: action      { Button that opens a new-field creation flow }
+  }
+
+  states {
+    closed [initial] {
+      on OPEN -> open;
+    }
+
+    open {
+      on SEARCH -> searching;
+      on TOGGLE_FIELD -> open;
+      on SHOW_ALL -> open;
+      on HIDE_ALL -> open;
+      on DRAG_START -> dragging;
+      on ADD_FIELD -> open;
+      on APPLY -> closed;
+      on CLOSE -> closed;
+      on ESCAPE -> closed;
+      entry [positionPanel; focusSearchInput];
+      exit [returnFocusTrigger];
+    }
+
+    searching {
+      on SEARCH -> searching;
+      on CLEAR_SEARCH -> open;
+      on TOGGLE_FIELD -> searching;
+      on SHOW_ALL -> searching;
+      on HIDE_ALL -> searching;
+      on DRAG_START -> dragging;
+      on APPLY -> closed;
+      on ESCAPE -> closed;
+      entry [filterFieldList];
+      exit [clearFilter];
+    }
+
+    dragging {
+      on DROP -> open;
+      on DRAG_CANCEL -> open;
+      on ESCAPE -> open;
+      entry [activateDragSort; lockScroll];
+      exit [unlockScroll; commitFieldOrder];
+    }
+  }
+
+  accessibility {
+    role: dialog;
+    keyboard {
+      Escape -> ESCAPE;
+      Tab -> FOCUS_NEXT;
+    }
+    focus {
+      trap: true;
+      initial: searchInput;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "dialog";
+        aria-label: "Field visibility";
+        aria-modal: "true";
+        data-state: if state == "closed" then "closed" else "open";
+      };
+      searchInput -> {
+        role: "searchbox";
+        aria-label: "Search fields";
+        aria-controls: "fields-popover-list";
+        aria-busy: if state == "searching" then "true" else "false";
+        aria-autocomplete: "list";
+      };
+      fieldList -> {
+        role: "list";
+        aria-label: "View fields";
+        aria-description: "Toggle checkboxes to show or hide fields; drag handles to reorder";
+      };
+      fieldRow -> {
+        role: "listitem";
+        aria-label: concat(self.fieldLabel, " — ", self.fieldType, if self.isPrimary then " (primary, always visible)" else "");
+        data-primary: if self.isPrimary then "true" else "false";
+        data-visible: if self.isVisible then "true" else "false";
+        data-dragging: if state == "dragging" and self.isDragged then "true" else "false";
+      };
+      fieldCheckbox -> {
+        role: "checkbox";
+        aria-label: concat("Show ", self.fieldLabel);
+        aria-checked: if self.isVisible then "true" else "false";
+        aria-disabled: if self.isPrimary then "true" else "false";
+        tabindex: if self.isPrimary then "-1" else "0";
+      };
+      fieldLabel -> {
+        role: "presentation";
+      };
+      fieldTypeBadge -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      dragHandle -> {
+        role: "button";
+        aria-label: concat("Reorder field: ", self.fieldLabel);
+        aria-roledescription: "drag handle";
+        tabindex: "0";
+        aria-disabled: if self.isPrimary then "true" else "false";
+      };
+      showAllButton -> {
+        role: "button";
+        aria-label: "Show all fields";
+      };
+      hideAllButton -> {
+        role: "button";
+        aria-label: "Hide all non-primary fields";
+      };
+      addFieldButton -> {
+        role: "button";
+        aria-label: "Add a new field";
+      };
+    }
+  }
+
+  props {
+    open: Bool = false
+    schema: String = ""
+    currentProjection: option String
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: if state == "closed" then "closed" else "open";
+      hidden: if state == "closed" then true else false;
+    }
+
+    searchInput -> {
+      data-part: "search-input";
+      hidden: if state == "closed" then true else false;
+      placeholder: "Search fields...";
+      onInput: send(SEARCH, { query: self.value });
+      onKeyDown: if key == "Escape" then send(ESCAPE) else noop;
+    }
+
+    fieldList -> {
+      data-part: "field-list";
+      data-dragging: if state == "dragging" then "true" else "false";
+    }
+
+    fieldRow -> {
+      data-part: "field-row";
+      data-field-key: self.fieldKey;
+      data-field-type: self.fieldType;
+      data-primary: if self.isPrimary then "true" else "false";
+      data-visible: if self.isVisible then "true" else "false";
+      data-dragged: if state == "dragging" and self.isDragged then "true" else "false";
+      data-drop-target: if state == "dragging" and self.isDropTarget then "true" else "false";
+      draggable: if not self.isPrimary then "true" else "false";
+      onDragStart: if not self.isPrimary then send(DRAG_START, { fieldKey: self.fieldKey }) else noop;
+      onDragEnd: send(DROP, { fieldKey: self.fieldKey; targetIndex: self.dropTargetIndex });
+      hidden: if state == "searching" and not self.matchesSearch then true else false;
+    }
+
+    fieldCheckbox -> {
+      data-part: "field-checkbox";
+      data-field-key: self.fieldKey;
+      data-checked: if self.isVisible then "true" else "false";
+      data-primary: if self.isPrimary then "true" else "false";
+      disabled: if self.isPrimary then true else false;
+      onClick: if not self.isPrimary then send(TOGGLE_FIELD, { fieldKey: self.fieldKey }) else noop;
+      onKeyDown: if key == "Enter" or key == " " then if not self.isPrimary then send(TOGGLE_FIELD, { fieldKey: self.fieldKey }) else noop else noop;
+    }
+
+    fieldLabel -> {
+      data-part: "field-label";
+      text: self.fieldLabel;
+    }
+
+    fieldTypeBadge -> {
+      data-part: "field-type-badge";
+      data-field-type: self.fieldType;
+      text: self.fieldType;
+    }
+
+    dragHandle -> {
+      data-part: "drag-handle";
+      data-field-key: self.fieldKey;
+      disabled: if self.isPrimary then true else false;
+      tabindex: if self.isPrimary then "-1" else "0";
+      onKeyDown: if not self.isPrimary then if key == "ArrowUp" then send(MOVE_UP, { fieldKey: self.fieldKey }) else if key == "ArrowDown" then send(MOVE_DOWN, { fieldKey: self.fieldKey }) else noop else noop;
+    }
+
+    showAllButton -> {
+      data-part: "show-all-button";
+      onClick: send(SHOW_ALL);
+      onKeyDown: if key == "Enter" then send(SHOW_ALL) else noop;
+    }
+
+    hideAllButton -> {
+      data-part: "hide-all-button";
+      onClick: send(HIDE_ALL);
+      onKeyDown: if key == "Enter" then send(HIDE_ALL) else noop;
+    }
+
+    addFieldButton -> {
+      data-part: "add-field-button";
+      onClick: send(ADD_FIELD);
+      onKeyDown: if key == "Enter" then send(ADD_FIELD) else noop;
+    }
+  }
+
+  invariant {
+    "OPEN event sets root data-state to open and removes the hidden attribute; searchInput becomes visible";
+    "CLOSE event sets root data-state to closed and adds the hidden attribute";
+    "Escape key in open state transitions to closed";
+    "SEARCH with a non-empty query transitions from open to searching; searchInput aria-busy becomes true";
+    "CLEAR_SEARCH transitions from searching back to open";
+    "Escape key in searching state transitions to closed";
+    "TOGGLE_FIELD flips the matching fieldRow data-visible between true and false on each invocation";
+    "SHOW_ALL sets data-visible to true on every non-primary fieldRow; primary field is unaffected";
+    "HIDE_ALL sets data-visible to false on every non-primary fieldRow; primary field is unaffected";
+    "the primary fieldRow always has data-visible true and fieldCheckbox disabled regardless of HIDE_ALL or search";
+    "DRAG_START transitions from open or searching to dragging; fieldList data-dragging becomes true";
+    "DROP transitions from dragging back to open; fieldList data-dragging becomes false; field order is committed";
+    "Escape key in dragging state cancels the drag and returns to open without changing field order";
+    "TOGGLE_FIELD is valid from searching state and keeps the state as searching afterward";
+    "non-matching fieldRows have hidden true during searching state";
+    "APPLY transitions from open or searching to closed";
+    "root data-state reflects the FSM state in every reachable state: closed, open, searching, dragging";
+    "root is hidden when data-state is closed and visible when data-state is open, searching, or dragging";
+    "searchInput aria-busy is true only in searching state and false in all other states";
+    "fieldList data-dragging is true only when FSM state is dragging";
+    "primary field dragHandle has disabled true and tabindex -1 in every state";
+    "the primary fieldRow is never hidden in any state including searching";
+    "no two fieldRows share the same order index at any time";
+    "an empty query string never causes the searching state; searching requires at least one character";
+    "all four states are reachable: closed is initial, open via OPEN, searching via SEARCH from open, dragging via DRAG_START";
+    "APPLY carries the full updated ProjectionSpec JSON — ordered list of fieldKey/visible pairs — as payload so the parent can write to ProjectionSpec without re-reading DOM";
+    "TOGGLE_FIELD carries fieldKey as payload; the widget maintains a draft visibility map internally and emits APPLY only when explicitly committed";
+    "SHOW_ALL does not affect the primary field; HIDE_ALL does not affect the primary field; both stay in the current state (open or searching) after firing";
+    "ADD_FIELD emits the ADD_FIELD event and stays in open state; the parent is responsible for opening a field creation dialog in response";
+    "search matching is case-insensitive prefix-and-substring on both fieldLabel and fieldType";
+    "drag is disabled for the primary field (draggable set to false and dragHandle disabled); all other field rows are draggable";
+    "MOVE_UP and MOVE_DOWN on dragHandle are keyboard alternatives to drag; they swap order indices with the adjacent row";
+    "field order from the drag/keyboard reorder is reflected immediately in the DOM (fieldRow order in fieldList) and committed to ProjectionSpec via APPLY";
+    "focus is trapped inside the popover while open; on close, focus returns to the toolbar fields button";
+  }
+
+}

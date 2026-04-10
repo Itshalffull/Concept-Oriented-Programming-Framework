@@ -1,0 +1,215 @@
+@version(1)
+widget sort-popover {
+
+  purpose {
+    Floating popover panel for composing an ordered stack of sort rules on a
+    data view. Each sort rule selects a field and a direction (ascending or
+    descending). Rules are applied in priority order from top to bottom — the
+    first rule is the primary sort, subsequent rules break ties. Rules can be
+    reordered by dragging their drag handles, with keyboard-accessible move-up
+    and move-down alternatives. Removing a rule shifts the priority of rules
+    below it. A ghost "Add sort" button appends a new empty rule. The direction
+    toggle renders a visual ascending/descending indicator (▲/▼) and flips on
+    click. Changes are collected as a draft and emitted via APPLY so the parent
+    can write back to SortSpec. Intended to be opened by the sort toolbar
+    button in view-editor-toolbar.
+  }
+
+  anatomy {
+    root:             container    { Top-level popover panel wrapper }
+    sortList:         container    { Ordered list of sort rule rows }
+    sortRow:          container    { One sort rule: dragHandle + fieldPicker + directionToggle + directionIcon + removeSortButton }
+    dragHandle:       action       { Six-dot grip icon that initiates drag-to-reorder for a sortRow }
+    fieldPicker:      container    { Slot that composes field-picker-dropdown for selecting the sort field }
+    directionToggle:  action       { Clickable toggle that switches between ascending and descending }
+    directionIcon:    presentation { Visual ascending (▲) or descending (▼) indicator inside directionToggle }
+    removeSortButton: action       { Button that removes this sort rule from the list }
+    addSortButton:    action       { Ghost button that appends a new empty sort rule }
+  }
+
+  states {
+    closed [initial] {
+      on OPEN -> open;
+    }
+
+    open {
+      on ADD_SORT -> open;
+      on REMOVE_SORT -> open;
+      on FIELD_CHANGE -> open;
+      on DIRECTION_CHANGE -> open;
+      on DRAG_START -> dragging;
+      on APPLY -> closed;
+      on CLOSE -> closed;
+      on ESCAPE -> closed;
+      entry [positionPanel; focusFirstInteractive];
+      exit [returnFocusTrigger];
+    }
+
+    dragging {
+      on DROP -> open;
+      on DRAG_CANCEL -> open;
+      on ESCAPE -> open;
+      entry [activateDragSort; lockScroll];
+      exit [unlockScroll; commitSortOrder];
+    }
+  }
+
+  accessibility {
+    role: dialog;
+    keyboard {
+      Escape -> ESCAPE;
+      Tab -> FOCUS_NEXT;
+    }
+    focus {
+      trap: true;
+      initial: sortList;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "dialog";
+        aria-label: "Sort rules";
+        aria-modal: "true";
+        data-state: if state == "closed" then "closed" else "open";
+      };
+      sortList -> {
+        role: "list";
+        aria-label: "Sort order";
+        aria-description: "Drag rows to change sort priority";
+      };
+      sortRow -> {
+        role: "listitem";
+        aria-label: concat("Sort rule ", self.priority, ": ", self.fieldLabel, " ", self.direction);
+        data-dragging: if state == "dragging" and self.isDragged then "true" else "false";
+      };
+      dragHandle -> {
+        role: "button";
+        aria-label: concat("Reorder sort rule ", self.priority);
+        aria-roledescription: "drag handle";
+        tabindex: "0";
+      };
+      fieldPicker -> {
+        role: "group";
+        aria-label: "Sort field";
+      };
+      directionToggle -> {
+        role: "button";
+        aria-label: if self.direction == "asc" then "Ascending — click to switch to descending" else "Descending — click to switch to ascending";
+        aria-pressed: if self.direction == "desc" then "true" else "false";
+      };
+      directionIcon -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      removeSortButton -> {
+        role: "button";
+        aria-label: concat("Remove sort rule ", self.priority);
+      };
+      addSortButton -> {
+        role: "button";
+        aria-label: "Add sort rule";
+      };
+    }
+  }
+
+  props {
+    open: Bool = false
+    schema: String = ""
+    currentSort: option String
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: if state == "closed" then "closed" else "open";
+      hidden: if state == "closed" then true else false;
+    }
+
+    sortList -> {
+      data-part: "sort-list";
+      data-dragging: if state == "dragging" then "true" else "false";
+    }
+
+    sortRow -> {
+      data-part: "sort-row";
+      data-sort-id: self.id;
+      data-priority: self.priority;
+      data-direction: self.direction;
+      data-dragged: if state == "dragging" and self.isDragged then "true" else "false";
+      data-drop-target: if state == "dragging" and self.isDropTarget then "true" else "false";
+      draggable: "true";
+      onDragStart: send(DRAG_START, { sortId: self.id });
+      onDragEnd: send(DROP, { sortId: self.id; targetPriority: self.dropTargetPriority });
+    }
+
+    dragHandle -> {
+      data-part: "drag-handle";
+      data-sort-id: self.sortId;
+      tabindex: "0";
+      onKeyDown: if key == "ArrowUp" then send(MOVE_UP, { sortId: self.sortId }) else if key == "ArrowDown" then send(MOVE_DOWN, { sortId: self.sortId }) else noop;
+    }
+
+    fieldPicker -> {
+      data-part: "field-picker";
+      data-sort-id: self.sortId;
+    }
+
+    directionToggle -> {
+      data-part: "direction-toggle";
+      data-sort-id: self.sortId;
+      data-direction: self.direction;
+      onClick: send(DIRECTION_CHANGE, { sortId: self.sortId; direction: if self.direction == "asc" then "desc" else "asc" });
+      onKeyDown: if key == "Enter" or key == " " then send(DIRECTION_CHANGE, { sortId: self.sortId; direction: if self.direction == "asc" then "desc" else "asc" }) else noop;
+    }
+
+    directionIcon -> {
+      data-part: "direction-icon";
+      data-direction: self.direction;
+    }
+
+    removeSortButton -> {
+      data-part: "remove-sort-button";
+      data-sort-id: self.sortId;
+      onClick: send(REMOVE_SORT, { sortId: self.sortId });
+      onKeyDown: if key == "Enter" then send(REMOVE_SORT, { sortId: self.sortId }) else noop;
+    }
+
+    addSortButton -> {
+      data-part: "add-sort-button";
+      onClick: send(ADD_SORT);
+      onKeyDown: if key == "Enter" then send(ADD_SORT) else noop;
+    }
+  }
+
+  compose {
+    fieldPicker: widget("field-picker-dropdown", { schema: ?schema; groupBy: "type" })
+  }
+
+  invariant {
+    "OPEN event sets root data-state to open and removes the hidden attribute";
+    "CLOSE event sets root data-state to closed and adds the hidden attribute";
+    "Escape key in open state transitions to closed";
+    "ADD_SORT stays in open state and appends a new sortRow with priority equal to the new list length";
+    "REMOVE_SORT stays in open state and removes the corresponding sortRow; remaining rows renumber sequentially";
+    "DIRECTION_CHANGE stays in open state and updates data-direction on the matching sortRow and directionToggle";
+    "DRAG_START transitions from open to dragging; sortList data-dragging becomes true";
+    "DROP transitions from dragging back to open; sortList data-dragging becomes false; sort order is committed";
+    "Escape key in dragging state cancels the drag and returns to open without changing sort order";
+    "APPLY transitions from open to closed";
+    "ArrowUp on dragHandle fires MOVE_UP and swaps the row with the one above it in the sortList";
+    "root data-state reflects the FSM state in every reachable state: closed, open, dragging";
+    "root is hidden when data-state is closed and visible when data-state is open or dragging";
+    "sortList data-dragging is true only when FSM state is dragging";
+    "sort priorities are sequential integers starting at 1 and incrementing by 1 with no gaps";
+    "each schema field appears in at most one sort row at a time — duplicate fields are not allowed";
+    "no two sort rows share the same data-priority value at any time";
+    "all three states are reachable: closed is initial, open via OPEN, dragging via DRAG_START from open";
+    "APPLY carries the full updated SortSpec JSON as payload so the parent view-editor-toolbar can write to SortSpec without re-reading DOM";
+    "FIELD_CHANGE carries sortId and new fieldKey; parent must reset direction to asc when field changes";
+    "MOVE_UP and MOVE_DOWN on drag handle are keyboard alternatives to drag — they reorder by swapping priorities with the adjacent rule";
+    "drag handle has tabindex 0 so keyboard users can reach it; pressing Enter or Space enters keyboard drag mode (DRAG_START), then ArrowUp/Down move the item, Enter confirms (DROP), Escape cancels (DRAG_CANCEL)";
+    "direction icon renders up-arrow when data-direction is asc and down-arrow when desc — glyph rendering is delegated to the adapter";
+    "when the last sort rule is removed, sortList remains rendered but is empty — addSortButton stays visible";
+  }
+
+}
