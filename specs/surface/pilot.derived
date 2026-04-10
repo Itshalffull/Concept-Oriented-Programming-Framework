@@ -38,7 +38,7 @@ derived Pilot {
   }
 
   surface {
-    action navigate(destination: String, params: option String) {
+    action navigate(destination: String, params: option String, namespace: option String) {
       entry: Navigator/go matches on destination: ?destination
       triggers: [
         Navigator/go(destination: ?destination, params: ?params)
