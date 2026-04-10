@@ -728,15 +728,72 @@ Guard on `features contains "relation"`, fetch RelationSpec.
 
 ---
 
-## 10. Kanban Cards
+## 10. Full Clef-Base Integration Checklist
+
+### Code changes required
+
+| Change | File(s) | Notes |
+|---|---|---|
+| Add `"relation"` to VALID_VIEW_FEATURES | `handlers/ts/framework/view-spec-parser.ts` | Parser currently rejects `relation` in features block |
+| Add `relation: V -> String` to ViewShell state | `specs/view/view-shell.concept`, handler | New child spec ref slot |
+| RelationResolver handler | `handlers/ts/app/relation-resolver.handler.ts` | Functional StorageProgram |
+| RelationSpec handler | `handlers/ts/view/relation-spec.handler.ts` | Functional StorageProgram (view suite) |
+| Add RelationSpec to view suite.yaml | `specs/view/suite.yaml` | Recommended concept |
+| Register handlers in kernel | `clef-base/lib/kernel.ts` | RelationResolver + RelationSpec |
+| `ensureIndex('relation-refs', 'target')` | `clef-base/lib/kernel.ts` | Reverse index for propagation |
+| Add `relation` to ViewShell features default | `handlers/ts/view/view-shell.handler.ts` | So existing views don't break |
+
+### Syncs required
+
+| Sync | Trigger | Effect |
+|---|---|---|
+| relation-resolve-on-save | ContentStorage/save | RelationResolver/resolve |
+| relation-propagate-on-save | ContentStorage/save | RelationResolver/propagate |
+| relation-field-bridges-linking | ContentStorage/save (relation field changed) | Relation/create in linking graph |
+| linking-bridges-relation-field | Relation/create (typed, matching field) | Property/set on source entity |
+| compile-query-with-relations | ViewShell/resolve (relation feature) | Inject joins for non-denormalized paths |
+
+### Bidirectional bridge
+
+The field ↔ linking graph bridge works both directions:
+
+**Field → Linking:** When a relation field value is set, create a `Relation` record. The existing `bidirectional-links.sync` then triggers `Backlink/reindex`, so backlinks panel sees the link.
+
+**Linking → Field:** When a typed `Relation` is created AND the type matches a FieldDefinition fieldId on the source's schema, set the field value via `Property/set`. This means creating a Relation through the graph UI auto-populates the schema field.
+
+**Untyped References and `[[mentions]]` do NOT backfill fields.** Only typed Relations with a `type` matching a relation field name trigger the reverse bridge.
+
+### Seeds required
+
+| Seed file | Contents |
+|---|---|
+| `clef-base/seeds/RelationSpec.seeds.yaml` | Example relation specs for existing views that show related entity fields |
+
+### Views to update
+
+Any existing view that displays related entity data (e.g., "Author" column on article list) should get a RelationSpec ref and `relation` in features. The data currently comes from client-side resolution or hardcoded joins — this standardizes it.
+
+### Widget: reference-picker
+
+The inline-cell-editor already composes a `reference-picker` for relation fields. This widget needs to:
+- Search target entities by display field
+- Show recent/frequent targets
+- Support "create on miss" (type a name that doesn't exist → offer to create)
+- Show the target's display field in the cell after selection
+
+If `reference-picker.widget` doesn't exist yet, it needs to be created as part of this work.
+
+---
+
+## 11. Kanban Cards
 
 | Card | PRD Sections | Blocked By | Blocks | Priority | Commit |
 |---|---|---|---|---|---|
-| **MAG-565** RelationResolver Concept + Handler | §2 | — | MAG-567, MAG-569 | high | |
-| **MAG-566** RelationSpec Concept + Handler | §3 | — | MAG-567, MAG-569 | high | |
-| **MAG-567** Resolution Syncs + Linking Bridge + compile-query Update | §4, §9 | MAG-565, MAG-566 | MAG-569 | high | |
-| **MAG-568** relation-config-panel Widget + Schema Editor Updates | §6, §8 | — | MAG-569 | medium | |
-| **MAG-569** Integration Tests + ViewShell Update + .view Examples | §5, §7, §9 | MAG-565–568 | — | medium | |
+| **MAG-565** RelationResolver Concept + Handler | §2, §5 | — | MAG-567, MAG-569 | high | |
+| **MAG-566** RelationSpec Concept + Handler + ViewShell Integration | §3, §9, §10 | — | MAG-567, MAG-569 | high | |
+| **MAG-567** Syncs: resolve, propagate, field↔linking bridge, compile-query | §4, §10 | MAG-565, MAG-566 | MAG-569 | high | |
+| **MAG-568** Widgets: relation-config-panel, reference-picker + Schema Editor Updates | §6, §8, §10 | — | MAG-569 | medium | |
+| **MAG-569** Integration Tests + Parser Update + Seeds + .view Examples | §7, §10 | MAG-565–568 | — | medium | |
 
 ---
 
