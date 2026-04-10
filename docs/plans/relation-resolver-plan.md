@@ -165,57 +165,46 @@ This means: zero write cost until a view actually needs the data. If you define 
 - "Backfill" button for newly enabled fields
 - "Clear" button to remove denormalized data
 
-#### Three-level override hierarchy
+#### Single data source, three editors
 
-Denormalization can be controlled from three places, with clear priority:
+The denormalization config lives in ONE place: the FieldDefinition's `typeConfig.denormalize` object. Per included field, it tracks whether denormalization is enabled and who made that decision.
 
-| Priority | Source | Scope | Where Edited |
-|---|---|---|---|
-| 1 (highest) | View-level override | This view only | View editor (RelationSpec config) |
-| 2 | Schema-level override | All views of this schema | Schema editor Level 2/3 |
-| 3 (lowest) | System auto-decision | Per schema+field | Automatic |
-
-**View-level override** (in RelationSpec path):
 ```json
-{ "field": "author", "include": ["name"], "forceResolve": "denormalize" }
-```
-Valid values for `forceResolve`: `"denormalize"` (force it), `"join"` (force join-at-read), `"lazy"` (force client resolve), or absent (use schema/auto decision).
-
-A view author uses this when: "My dashboard is read 10,000x/day. I need `author.name` denormalized even though the schema admin or auto-decision says no." The view takes responsibility for its own write amplification.
-
-**Schema-level override** (in Property):
-A schema admin uses this when: "I know Person records rarely change. Enable denormalization globally for all views that access `author.name`." Or conversely: "Person records change 200x/day. Disable denormalization globally — no view should pay that cost."
-
-**How compile-query resolves:**
-```
-1. Check RelationSpec path: does it have forceResolve?
-   → YES: use that strategy
-   → NO: fall through
-
-2. Check schema Property: denormalize.{fieldId}.enabled?
-   → explicit true/false with auto=false: use that
-   → auto=true or absent: fall through
-
-3. Check if data IS denormalized (dot-notation field exists in record)?
-   → YES: project it (free)
-   → NO: join-at-read (default fallback)
+{
+  "target": "Person",
+  "cardinality": "single",
+  "displayField": "name",
+  "denormalize": {
+    "name":   { "enabled": true,  "source": "auto",             "reason": "low-fanout-depth-1" },
+    "avatar": { "enabled": true,  "source": "view:dashboard",   "reason": "view-requested" },
+    "email":  { "enabled": false, "source": "schema-admin",     "reason": "write-heavy-target" }
+  }
+}
 ```
 
-Step 3 is the elegant part — even without any explicit configuration, if denormalized data happens to be present (from a previous auto-decision that was later overridden), compile-query uses it. The data's presence IS the signal.
+Three editors write to the same field via `FieldDefinition/update`:
 
-#### When auto-denormalization is overridden:
+| Editor | When | Writes `source` as |
+|---|---|---|
+| Auto-decision | RelationSpec first requests the field | `"auto"` |
+| Schema admin | Level 2/3 drawer toggle | `"schema-admin"` |
+| View author | View editor relation config | `"view:{viewName}"` |
 
+Last write wins. `source` is provenance (who decided), not priority. There's no override hierarchy to resolve — the current value IS the truth.
+
+**How compile-query uses it:**
 ```
-Property/set(schema, "denormalize.{fieldId}", '{
-  "auto": false,              // user overrode
-  "enabled": false,           // explicitly disabled
-  "reason": "user-disabled",
-  "overriddenBy": "admin",
-  "overriddenAt": "2026-04-09T..."
-}')
+1. Read FieldDefinition for the relation field
+2. For each included field in RelationSpec:
+   a. Check denormalize.{field}.enabled in typeConfig
+   b. If true → project dot-notation key from denormalized record
+   c. If false and lazy hint on RelationSpec → mark for client resolve
+   d. If false and no lazy hint → inject join instruction
 ```
 
-The Level 2 drawer shows "Pre-resolution disabled (manual override)" with an "Auto-detect" button to revert to system decision.
+No separate Property, no override chain, no "which one wins" logic. One read from FieldDefinition, one answer.
+
+**Reverting to auto:** Any editor can set `source: "auto"` to hand the decision back to the system. The next auto-evaluation (triggered by RelationSpec changes or propagation stats) will re-decide.
 
 #### Growth handling (what happens when 50 records becomes 50,000)
 
@@ -256,19 +245,9 @@ On auto-downgrade, existing denormalized fields are NOT immediately removed (tha
 
 #### Configuration storage:
 
-The denormalization config lives as a Property on the schema, keyed by field:
+The denormalization config lives on the FieldDefinition's `typeConfig` — NOT as a separate Property. RelationResolver reads `FieldDefinition/get(schema, fieldId)` during `resolve()`, checks `typeConfig.denormalize.{field}.enabled`, and writes dot-notation fields for enabled includes.
 
-```
-Property/set("Article", "denormalize.author", '{
-  "auto": true,
-  "enabled": true,
-  "include": ["name", "avatar"],
-  "depth": 1,
-  "reason": "low-fanout-depth-1"
-}')
-```
-
-RelationResolver reads these properties during `resolve()`. When `enabled: true`, it writes dot-notation fields. When `enabled: false` or absent, no denormalization — the compile-query sync falls back to join-at-read.
+No separate config store. No Property lookups. One read from FieldDefinition, one source of truth.
 
 ### How it shows up in the schema editor
 
@@ -340,15 +319,18 @@ concept RelationSpec [R] {
 
 - `field` — the relation field path (dot-notation for multi-hop)
 - `include` — which target fields to make available for projection
-- `lazy` — optional, default false. When true AND not denormalized, client resolves instead of server join
+- `lazy` — optional, default false. When true AND the field is not denormalized, the client resolves instead of the server injecting a join. Has no effect when the field IS denormalized (denormalized data is always used if present).
+
+RelationSpec does NOT control denormalization strategy — that lives on the FieldDefinition. RelationSpec only declares what the view wants and whether non-denormalized fields should use lazy resolution.
 
 ### Resolution rules (in compile-query sync)
 
 For each path in RelationSpec:
-1. **Check denormalized:** Does the per-schema relation already have `{field}.{include[0]}`?
-   - YES → just add to projection (zero cost)
-2. **Not denormalized, lazy=false (default):** Inject `QueryProgram/join` instruction
-3. **Not denormalized, lazy=true:** Add to projection as `{ key: "author.company.name", resolve: "lazy" }` — the client fetches asynchronously after initial render
+1. **Read FieldDefinition** for the relation field
+2. **Check typeConfig.denormalize.{includedField}.enabled:**
+   - YES → project the dot-notation key from the per-schema relation (zero cost)
+3. **Not denormalized, lazy=true on the path:** Add to projection as `{ key: "author.company.name", resolve: "lazy" }` — client fetches asynchronously
+4. **Not denormalized, lazy=false (default):** Inject `QueryProgram/join` instruction
 
 ### How it shows up in editors
 
@@ -359,31 +341,33 @@ For each path in RelationSpec:
 │  Relation Fields                           │
 │  ──────────────────────────────────────── │
 │  author (→ Person)                         │
-│    ☑ name     ⚡ auto-denormalized         │
-│    ☑ avatar   ⚡ auto-denormalized         │
+│    ☑ name     ⚡ denormalized (auto)       │
+│    ☑ avatar   ⚡ denormalized (auto)       │
 │    ☐ email                                 │
-│    Resolution: ● Auto  ○ Denormalize       │
-│                ○ Join   ○ Lazy             │
+│    ☐ lazy (use if not denormalized)        │
+│    [Enable denormalization]                │ ← writes to FieldDefinition
 │                                            │
 │  author.company (→ Company)                │
-│    ☑ name     🔄 join-at-read (depth 2)   │
+│    ☑ name     🔄 join-at-read             │
 │    ☐ logo                                  │
-│    Resolution: ○ Auto  ○ Denormalize       │
-│                ○ Join   ● Lazy             │
+│    ☑ lazy (load after initial render)      │
+│    [Enable denormalization]                │ ← writes to FieldDefinition
 │                                            │
-│  "Auto" uses the schema/system decision.   │
-│  Override only when this view's needs      │
-│  differ from the default.                  │
+│  Checking a field adds it to this view's   │
+│  RelationSpec. Enabling denormalization     │
+│  updates the FieldDefinition (affects all  │
+│  views of this schema).                    │
 └────────────────────────────────────────────┘
 ```
 
 The view author sees:
-- Which relation fields are available (from FieldDefinition includes)
-- Current resolution status for each (auto/denormalize/join/lazy)
-- Override radio buttons — defaults to "Auto" (respect schema decision)
-- Checking a field adds it to the RelationSpec's `include` array
+- Which relation fields are available (from FieldDefinition type config)
+- Current denorm status (reading from FieldDefinition, same as schema editor sees)
+- Checkboxes to include fields in this view's RelationSpec
+- `lazy` checkbox per path (stored on RelationSpec, not FieldDefinition)
+- "Enable denormalization" button — writes to FieldDefinition, affects all views. The button shows a confirmation: "This will pre-resolve author.name for all 47 Article records. All views using this field will benefit."
 
-**In the schema editor** (Level 2 drawer): Shows the schema-wide denormalization status and per-view overrides (see wireframe in §6). The schema admin can enable/disable denormalization globally, and see which views have overridden the decision.
+**In the schema editor** (Level 2 drawer): Shows the same denormalization status from the same FieldDefinition record. The schema admin can enable/disable denormalization, and sees which views request each included field (via SchemaUsage). Both editors read and write the same data.
 
 ### ViewShell integration
 
