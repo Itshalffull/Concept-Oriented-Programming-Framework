@@ -984,19 +984,84 @@ then
   // (handled by clearDenormalized internally)
 ```
 
-### 14.3 Reverse join-at-read instruction
+### 14.3 QueryProgram reverseJoin instruction (NEW)
 
-Current `QueryProgram/join` only does forward joins. Reverse resolution (non-denormalized) needs either:
+Current `QueryProgram/join` only does forward joins: "enrich each record by looking up a related record." Reverse resolution needs the inverse: "find all records in another relation that point AT a given entity."
 
-**Option A:** New `QueryProgram/reverseJoin` instruction:
+#### New action on QueryProgram
+
 ```
-reverseJoin(sourceRelation, sourceField, thisEntityId, bindAs, maxCount?)
+action reverseJoin [Q] {
+  purpose {
+    Find all records in a source relation where a specified field
+    matches the current entity ID. Appends matching records as an
+    array bound to bindAs. Used for reverse relation paths — "show
+    all Articles where author = this Person."
+  }
+  input {
+    program: Q,
+    sourceRelation: String,   // e.g., "schema:Article"
+    sourceField: String,      // e.g., "author" (the field that references this entity)
+    entityId: String,         // the current entity's ID (from scan/binding)
+    bindAs: String,           // binding name for the result array
+    maxCount: Int?            // optional limit (default: 10)
+  }
+  variant ok { program: Q }
+  variant sealed { message: String }
+  variant notfound { message: String }
+}
 ```
-Finds all records in sourceRelation where sourceField = thisEntityId.
 
-**Option B:** Always require denormalization or lazy for reverse paths. No join-at-read for reverse. Simpler — reverse paths default to lazy anyway.
+#### Instruction shape
 
-**Recommendation:** Option B for MVP. Reverse defaults to lazy, denormalize when performance matters. Add reverseJoin later if join-at-read is needed.
+```typescript
+{
+  type: 'reverseJoin',
+  sourceRelation: string,   // which relation to scan
+  sourceField: string,      // which field to match against
+  entityId: string,         // the entity ID to find references to
+  bindAs: string,           // result binding
+  maxCount: number          // max results (default 10)
+}
+```
+
+#### Provider implementations
+
+**Kernel query provider:** Add `'reverseJoin'` to `KERNEL_CAPABILITIES`. Execute as:
+```sql
+SELECT * FROM {sourceRelation} WHERE {sourceField} = {entityId} LIMIT {maxCount}
+```
+
+**In-memory provider:** Filter the source relation's records where `record[sourceField] === entityId`, slice to maxCount.
+
+**With secondary index:** If `ensureIndex(sourceRelation, sourceField)` has been called, the reverse lookup is O(1) + O(K) instead of a full scan.
+
+#### How compile-query uses it
+
+For a reverse path `{ "reverse": "author", "sourceSchema": "Article", "include": ["title"] }`:
+
+```
+// If NOT denormalized:
+QueryProgram/reverseJoin: [
+  sourceRelation: "schema:Article",
+  sourceField: "author",
+  entityId: ?currentEntityId,
+  bindAs: "articles_as_author",
+  maxCount: 10
+]
+// Then project: articles_as_author[].title
+```
+
+If denormalized, the data is already on the record — just project it. reverseJoin is only injected when the reverse path is not denormalized and not lazy.
+
+#### Relation to the reverse index
+
+The `relation-refs` reverse index is used by RelationResolver for propagation. But `reverseJoin` at query time uses the per-schema relation directly (with a secondary index on the source field). These are complementary:
+
+- `relation-refs` → used at WRITE time for propagation (which entities to update)
+- `ensureIndex + reverseJoin` → used at READ time for query resolution (which entities to return)
+
+Both need `ensureIndex('schema:Article', 'author')` for performance. The kernel boot should ensure indexes on all relation fields.
 
 ### 14.4 Create-on-miss for reference/tag widgets
 
@@ -1018,10 +1083,24 @@ A boot-time process that reads `clef-base/schemas/*.schema.yaml` and creates Fie
 
 ## 15. Open Questions
 
-1. **Max fan-out safety** — When propagating, if a Company is referenced by 50,000 Articles, the propagate action could be very expensive. Should there be a circuit breaker? Options: async queue with rate limiting, skip propagation above threshold and mark records as stale.
+1. **Max fan-out safety (RESOLVED — use CircuitBreaker)** — `specs/execution/circuit-breaker.concept` already exists. RelationResolver/propagate should call `CircuitBreaker/check` before executing large fan-outs. If the circuit is open (too many recent failures or timeouts), propagation is skipped and records are marked stale. The denormalized data becomes eventually-consistent rather than immediately-consistent — acceptable for the high-fan-out case. The circuit recovers automatically when propagation succeeds again.
 
 2. **Lazy resolution protocol** — How does the client know a field is lazy? Options: projection metadata (`{ resolve: "lazy", targetConcept: "Company", targetField: "name" }`), or a separate `lazyFields` array in the query result.
 
-3. **Denormalization and VersionSpace** — If an entity is in a VersionSpace branch, should denormalized fields resolve against the branch's version of the target? Probably yes, but adds complexity to the resolve handler.
+3. **Lazy resolution protocol** — How does the client know a field is lazy? Projection metadata (`{ resolve: "lazy", targetConcept: "Person", targetField: "name" }`) vs a separate `lazyFields` array.
 
-4. **Reverse join-at-read** — Should we add a `reverseJoin` QueryProgram instruction, or is lazy + denormalize sufficient for all reverse use cases?
+### 15.1 VersionSpace / Multiverse Resolution (RESOLVED — yes, branch-aware)
+
+Denormalized fields, reverseJoin, and forward joins MUST resolve against the active VersionSpace branch. If Person-42 has `name: "Alice"` on main but `name: "Alicia"` on the `draft-v2` branch, and the current viewer is on `draft-v2`, then:
+
+- `author.name` should resolve to "Alicia" (not "Alice")
+- `reverseJoin` should find Articles that exist on `draft-v2` (including draft-only articles)
+- Denormalized data should be branch-aware
+
+**Implementation:** RelationResolver's `resolve()` and `propagate()` actions accept an optional `versionContext` parameter. When present, all storage reads go through the VersionSpace-aware load path (`version-aware-load` sync) instead of raw `ContentStorage/load`.
+
+For denormalized data, each branch gets its own denormalized values — the per-schema relation key includes the branch: `schema:Article:draft-v2/article-1` vs `schema:Article:main/article-1`. This multiplies storage but ensures branch isolation.
+
+For reverseJoin at query time, the `sourceRelation` parameter is branch-qualified: `reverseJoin("schema:Article:draft-v2", "author", entityId, bindAs)`.
+
+The ViewRenderer already passes VersionContext through to query execution. RelationResolver and compile-query just need to thread it through.
