@@ -1,0 +1,246 @@
+@version(1)
+widget operator-dropdown {
+
+  purpose {
+    Context-sensitive operator selector whose available options are driven entirely
+    by the field type of the filter condition being edited. Text fields expose
+    linguistic operators (contains, starts with, is empty); number fields expose
+    comparison operators (greater than, between, is empty); date fields expose
+    temporal operators (is before, is within, is empty); select and multi-select
+    fields expose membership operators (is any of, has all of); relation and boolean
+    fields expose their own minimal operator sets. Renders as a compact dropdown
+    trigger that opens a floating listbox of operator options, each with a short
+    human-readable label and optional description. Closing the dropdown (via
+    selection or Escape) fires an onChange event carrying the chosen operator string.
+    Intended for use inside filter-popover, filter-pill, and the stepwise notebook
+    editor wherever a field is being filtered.
+  }
+
+  anatomy {
+    root:                container    { Outer wrapper; holds trigger and floating listbox }
+    selectedOperator:    action       { Trigger button showing the currently active operator label }
+    selectedLabel:       text         { Text content of the selected operator inside the trigger }
+    dropdownList:        container    { Floating listbox of available operator options }
+    operatorOption:      action       { Selectable row for one operator }
+    operatorLabel:       text         { Short operator label shown in each row (e.g. "contains") }
+    operatorDescription: text         { Optional clarifying description shown under the label }
+  }
+
+  states {
+    closed [initial] {
+      on OPEN -> open;
+    }
+
+    open {
+      on SELECT -> closed;
+      on CLOSE -> closed;
+      on ESCAPE -> closed;
+      entry [positionDropdown; focusFirstOption];
+      exit [returnFocusTrigger];
+    }
+  }
+
+  accessibility {
+    role: combobox;
+    keyboard {
+      ArrowDown -> FOCUS_NEXT_OPTION;
+      ArrowUp -> FOCUS_PREV_OPTION;
+      Enter -> SELECT;
+      Escape -> ESCAPE;
+      Tab -> CLOSE;
+      Space -> SELECT;
+    }
+    focus {
+      trap: false;
+      initial: selectedOperator;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "combobox";
+        aria-expanded: if state == "open" then "true" else "false";
+        aria-haspopup: "listbox";
+        aria-owns: "operator-dropdown-list";
+        data-state: state;
+        data-field-type: ?fieldType;
+      };
+      selectedOperator -> {
+        role: "button";
+        aria-label: concat("Operator: ", self.currentOperatorLabel);
+        aria-expanded: if state == "open" then "true" else "false";
+        aria-haspopup: "listbox";
+        aria-controls: "operator-dropdown-list";
+      };
+      selectedLabel -> {
+        role: "presentation";
+      };
+      dropdownList -> {
+        role: "listbox";
+        aria-label: concat(?fieldType, " filter operators");
+        aria-hidden: if state != "open" then "true" else "false";
+      };
+      operatorOption -> {
+        role: "option";
+        aria-selected: if self.value == ?currentOperator then "true" else "false";
+        aria-label: if self.description != "" then concat(self.label, " — ", self.description) else self.label;
+        tabindex: if self.isFocused then "0" else "-1";
+      };
+      operatorLabel -> {
+        role: "presentation";
+      };
+      operatorDescription -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    fieldType: String = "text"
+    currentOperator: String = "is"
+    onChange: String = ""
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-field-type: ?fieldType;
+    }
+
+    selectedOperator -> {
+      data-part: "selected-operator";
+      data-operator: ?currentOperator;
+      onClick: send(OPEN);
+      onKeyDown: if key == "ArrowDown" or key == "Enter" or key == " " then send(OPEN) else noop;
+    }
+
+    selectedLabel -> {
+      data-part: "selected-label";
+      text: self.currentOperatorLabel;
+    }
+
+    dropdownList -> {
+      data-part: "dropdown-list";
+      hidden: if state != "open" then true else false;
+    }
+
+    operatorOption -> {
+      data-part: "operator-option";
+      data-operator: self.value;
+      data-selected: if self.value == ?currentOperator then "true" else "false";
+      tabindex: if self.isFocused then "0" else "-1";
+      onClick: send(SELECT, { operator: self.value });
+      onKeyDown: if key == "Enter" or key == " " then send(SELECT, { operator: self.value }) else if key == "Escape" then send(ESCAPE) else noop;
+    }
+
+    operatorLabel -> {
+      data-part: "operator-label";
+      text: self.label;
+    }
+
+    operatorDescription -> {
+      data-part: "operator-description";
+      text: self.description;
+      hidden: if self.description == "" then true else false;
+    }
+  }
+
+  affordance {
+    serves: single-choice;
+    specificity: 12;
+    when { viewType: "operator-dropdown" }
+    bind {
+      currentOperator: currentOperator;
+      fieldType: fieldType;
+    }
+  }
+
+  invariant {
+    example "clicking trigger opens dropdown": {
+      after selectedOperator.click -> ok
+      then root -> { data-state: "open" }
+      and dropdownList -> { hidden: false }
+    }
+
+    example "selecting an operator closes dropdown": {
+      after selectedOperator.click -> ok
+      then send(SELECT, { operator: "contains" }) -> ok
+      then root -> { data-state: "closed" }
+      and dropdownList -> { hidden: true }
+    }
+
+    example "Escape closes dropdown without selection": {
+      after selectedOperator.click -> ok
+      then key(Escape) -> ok
+      then root -> { data-state: "closed" }
+      and dropdownList -> { hidden: true }
+    }
+
+    example "current operator option is marked selected": {
+      after selectedOperator.click -> ok
+      then operatorOption -> { data-operator: ?currentOperator; data-selected: "true" }
+    }
+
+    example "field type drives available options for text": {
+      after selectedOperator.click -> ok
+      then root -> { data-field-type: "text" }
+      and operatorOption -> { data-operator: "contains" }
+      and operatorOption -> { data-operator: "starts-with" }
+      and operatorOption -> { data-operator: "is-empty" }
+    }
+
+    example "field type drives available options for number": {
+      after selectedOperator.click -> ok
+      then root -> { data-field-type: "number" }
+      and operatorOption -> { data-operator: "greater-than" }
+      and operatorOption -> { data-operator: "between" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        root -> { data-state: s.name }
+    }
+
+    always "dropdownList hidden when closed": {
+      if state == "closed" then dropdownList -> { hidden: true }
+    }
+
+    always "dropdownList visible when open": {
+      if state == "open" then dropdownList -> { hidden: false }
+    }
+
+    always "exactly one option marked selected": {
+      exists o in operatorOptions:
+        o -> { data-selected: "true" } and
+        forall o2 in operatorOptions:
+          if o2 != o then o2 -> { data-selected: "false" }
+    }
+
+    always "aria-expanded matches open state": {
+      if state == "open" then selectedOperator -> { aria-expanded: "true" }
+      and if state == "closed" then selectedOperator -> { aria-expanded: "false" }
+    }
+
+    never "operator from wrong field type shown": {
+      ?fieldType == "boolean" and operatorOption -> { data-operator: "contains" }
+    }
+
+    never "multiple options selected simultaneously": {
+      exists o1 in operatorOptions:
+        exists o2 in operatorOptions:
+          o1 != o2 and o1 -> { data-selected: "true" } and o2 -> { data-selected: "true" }
+    }
+
+    "SELECT event must carry the operator string as payload so parent can update FilterSpec without reading DOM";
+    "operator sets by field type are: text=[is, is-not, contains, does-not-contain, starts-with, ends-with, is-empty, is-not-empty]; number=[equals, not-equals, greater-than, greater-or-equal, less-than, less-or-equal, between, is-empty]; date=[is, is-before, is-after, is-on-or-before, is-on-or-after, is-within, is-empty]; select=[is, is-not, is-any-of, is-none-of, is-empty]; multi-select=[has-any-of, has-all-of, has-none-of, is-empty]; relation=[is, is-not, is-any-of, is-empty]; boolean=[is-true, is-false]";
+    "is-empty and is-not-empty operators are unary — selecting them must also set operatorIsUnary on the sibling typed-value-input to hide the value control";
+    "between operator for number fields requires the parent to render two typed-value-input controls (min and max); this widget emits the operator and the parent decides the layout";
+    "is-within operator for date fields expects the value to be a relative range string (e.g. last-7-days); typed-value-input in date mode provides those presets";
+    "defaulting currentOperator to the first valid operator for the new fieldType when fieldType changes is the responsibility of the parent — this widget displays the currentOperator prop faithfully";
+  }
+
+}
