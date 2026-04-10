@@ -325,18 +325,146 @@ The parser ONLY extracts and stores. It doesn't resolve. Resolution is sync-driv
 
 ---
 
-## 7. Kanban Cards
+## 7. Dependent Concept Sync Updates
 
-| Card | PRD Sections | Blocked By | Blocks | Priority | Commit |
-|---|---|---|---|---|---|
-| **MAG-570** VersionSpace as Namespace Provider + Syncs | §2 | — | MAG-572, MAG-573 | high | |
-| **MAG-571** Reference/SyncedContent Qualifier Parsing | §3, §6.3 | — | MAG-572, MAG-573 | high | |
-| **MAG-572** Revision Resolution (Version, TemporalVersion, DAGHistory) | §1, §3 | MAG-570, MAG-571 | MAG-573 | high | |
-| **MAG-573** UI: Historical Mode Banner + Reference Picker Qualifier + Timeline | §6.4 | MAG-570–572 | — | medium | |
+These concepts don't change — they stay independent. But the syncs that wire them need namespace/qualifier awareness.
+
+### 7.1 Backlink reindex with namespace metadata
+
+Current: `SaveReindexesBacklinks` fires Backlink/reindex on every save.
+
+Update: The reindex sync passes namespace metadata from the Reference through to the Backlink record. Backlinks panel can then show "Referenced by Article-1 (on draft-v2)" vs "Referenced by Article-1 (base)."
+
+```
+sync BacklinkReindexWithNamespace [eventual]
+when Reference/addRef ok
+  where metadata contains namespace
+then Backlink/reindex: [ source_id: ?source, metadata: ?metadata ]
+```
+
+Backlink concept doesn't change — `metadata` is already an opaque string it stores.
+
+### 7.2 SyncedContent resolution with qualifiers
+
+Current: SyncedContent/resolve fetches content by ref.
+
+Update: Resolution sync checks for namespace/qualifier in the transclusion ref and routes through the resolution chain.
+
+```
+sync SyncedContentResolvesQualified [eager]
+when SyncedContent/resolve
+  where sourceRef contains "@" or "://"
+then
+  // Parse namespace + qualifier from sourceRef
+  // Route: Namespace/resolve → VersionSpace/resolve → Version/rollback (if qualified)
+  // Return resolved content to SyncedContent
+```
+
+SyncedContent concept doesn't change — it requests content by opaque ref.
+
+### 7.3 SearchIndex scoped by namespace
+
+Current: SearchIndex/index indexes entity content globally.
+
+Update: Index entries carry namespace metadata. Search queries can filter by namespace.
+
+```
+sync SearchIndexWithNamespace [eventual]
+when ContentStorage/save ok
+  where VersionContext active
+then SearchIndex/index: [ entity: ?id, namespace: ?activeNamespace ]
+```
+
+SearchIndex concept doesn't change — namespace is just another indexed field.
+
+### 7.4 Alias resolution scoped by namespace
+
+Current: Alias/resolve returns entity ID globally.
+
+Update: Resolution sync checks active namespace and scopes alias lookup.
+
+```
+sync AliasResolvesInNamespace [eager]
+when Alias/resolve
+  where VersionContext active
+then
+  // Look up alias within namespace first, fall back to global
+  Alias/resolve: [ alias: ?alias, scope: ?activeNamespace ]
+```
+
+Alias concept doesn't change — `scope` is just a filter parameter on the existing resolve action.
+
+### 7.5 Snippet anchoring with namespace
+
+Current: Snippet stores source ref + text selection.
+
+Update: Source ref carries namespace/qualifier metadata. When resolving the snippet's anchor, the sync routes through the namespace chain.
+
+```
+sync SnippetResolvesQualified [eager]
+when Snippet/resolve
+  where sourceRef contains namespace or qualifier metadata
+then
+  // Resolve source entity through namespace/qualifier chain
+  // Verify text anchor still exists at the resolved version
+  // Return snippet with resolution status
+```
+
+Snippet concept doesn't change — source ref is opaque.
 
 ---
 
-## 8. Open Questions
+## 8. Views Get Namespace for Free
+
+Views don't need a NamespaceSpec. The active VersionContext scopes all storage reads automatically via the `version-aware-load` sync.
+
+### Default behavior (90% of views)
+
+The user has `enter`ed a VersionSpace → VersionContext stack is active → all `find` and `get` calls resolve through the active namespace. Views don't do anything special.
+
+### Explicit namespace scoping (cross-branch views)
+
+DataSourceSpec already supports template variables (`{{schemaId}}`, `{{entityId}}`). Add `{{namespace}}` and `{{qualifier}}`:
+
+```json
+{
+  "concept": "ContentNode",
+  "action": "listBySchema",
+  "params": {
+    "schema": "Article",
+    "namespace": "{{namespace}}",
+    "qualifier": "{{qualifier}}"
+  }
+}
+```
+
+- `{{namespace}}` defaults to the active VersionContext (free behavior)
+- Override: `"namespace": "draft-v2"` pins to a specific branch
+- `{{qualifier}}` defaults to `@latest`
+- Override: `"qualifier": "@2026-04-01"` shows historical data
+
+**Compare branches:** Two views side-by-side, one with `"namespace": "main"`, other with `"namespace": "draft-v2"`. Same view definition, different namespace params.
+
+**Historical view:** URL parameter `/admin/content?asOf=2026-04-01` sets `{{qualifier}}` for the entire page.
+
+No new ViewShell feature. No NamespaceSpec concept. Just template variables on DataSourceSpec that the version-aware storage layer honors.
+
+---
+
+## 9. Kanban Cards
+
+| Card | PRD Sections | Blocked By | Blocks | Priority | Commit |
+|---|---|---|---|---|---|
+| **MAG-570** VersionSpace as Namespace Provider + Lifecycle Syncs | §2 | — | MAG-572, MAG-574 | high | |
+| **MAG-571** Reference/SyncedContent Qualifier Parsing (Framework) | §3, §7 | — | MAG-572, MAG-574 | high | |
+| **MAG-572** Revision Resolution Syncs (Version, Temporal, DAGHistory) | §1, §3, §6 | MAG-570, MAG-571 | MAG-574 | high | |
+| **MAG-573** Dependent Concept Sync Updates (Backlink, Search, Alias, Snippet) | §7.1–7.5 | MAG-570 | MAG-574 | medium | |
+| **MAG-574** DataSourceSpec {{namespace}}/{{qualifier}} + View Integration | §8 | MAG-570–573 | MAG-575 | medium | |
+| **MAG-575** UI: Historical Mode Banner + Reference Picker Qualifier + Timeline | §7 (UI) | MAG-570–574 | — | medium | |
+
+---
+
+## 10. Open Questions
 
 1. **Revision garbage collection** — If every save creates a Version snapshot and every snapshot is referenceable, storage grows unboundedly. RetentionPolicy concept exists — should it govern revision cleanup? What happens to references that point at cleaned-up revisions?
 
