@@ -1,0 +1,21 @@
+# Clean up linking graph and denormalized data when a relation field is removed.
+# Fires only for FieldDefinitions with fieldType = "relation"; text, date, and
+# other field types are ignored. clearDenormalized also removes the reverse
+# index entries stored under this field in relation-refs.
+# See relation-resolver-plan.md §14.2.
+
+sync RelationFieldDeletionCleanup [eventual]
+  purpose: "Remove typed Relation records and denormalized dot-notation fields when a relation FieldDefinition is deleted, preventing orphaned linking-graph and storage data"
+when {
+  FieldDefinition/remove: [ schema: ?schema;
+                             fieldId: ?field_id ] => [ ok: _ ]
+}
+where {
+  filter(?fieldType = "relation")
+}
+then {
+  Relation/removeByType: [ type: ?field_id; sourceSchema: ?schema ]
+}
+then {
+  RelationResolver/clearDenormalized: [ schema: ?schema; field: ?field_id ]
+}

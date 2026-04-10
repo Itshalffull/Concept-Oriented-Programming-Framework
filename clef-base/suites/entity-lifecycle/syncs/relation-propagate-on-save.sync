@@ -1,0 +1,13 @@
+# Re-resolve denormalized fields on entities that reference the changed entity.
+# RelationResolver.propagate consults the reverse index (relation-refs) and
+# returns no_references immediately when nothing points at this entity.
+# See relation-resolver-plan.md §4.2.
+
+sync RelationPropagateOnSave [eventual]
+  purpose: "Re-resolve denormalized relation fields on all entities that reference the just-saved entity, keeping fan-out copies consistent"
+when {
+  ContentStorage/save: [ id: ?id ] => [ ok: _ ]
+}
+then {
+  RelationResolver/propagate: [ changedEntity: ?id ]
+}

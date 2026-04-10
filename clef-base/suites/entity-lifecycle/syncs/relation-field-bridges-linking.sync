@@ -1,0 +1,28 @@
+# Bridge schema relation fields into the typed linking graph on save.
+# When a node with relation FieldDefinitions is saved, a Relation record is
+# created (or updated) in the linking graph so backlinks, reference panels,
+# and graph queries see schema-based relations alongside unstructured [[links]].
+# Stale Relation records from a previous field value are removed by
+# Relation/removeBySourceAndType before the new one is written.
+# See relation-resolver-plan.md §4.3 and §10 (bidirectional bridge).
+
+sync RelationFieldBridgesLinking [eventual]
+  purpose: "Create a typed Relation record in the linking graph for every relation field value present on a saved entity, and remove stale records when field values change"
+when {
+  ContentStorage/save: [ id: ?id ] => [ ok: _ ]
+}
+where {
+  Schema/getSchemasFor: [ entity_id: ?id ] => [ ok: ?schemas ]
+  guard(?schemas != "")
+  FieldDefinition/list: [ schema: ?schemas ] => [ ok: ?fields ]
+  filter(?fields where fieldType = "relation")
+}
+then {
+  Relation/removeBySourceAndType: [ source: ?id; type: ?fields.fieldId; schema: ?fields.schema ]
+}
+then {
+  Relation/create: [ source: ?id;
+                     target: ?fields.value;
+                     type: ?fields.fieldId;
+                     schema: ?fields.schema ]
+}
