@@ -1,0 +1,19 @@
+# Hash qualifier resolution from Reference/resolve metadata.
+# When a resolved reference carries a content-hash qualifier
+# (@sha256:abc123...), looks up the corresponding DAG node by its
+# contentRef so the exact commit object is returned.
+
+sync ResolveHashQualifier [eager]
+  purpose: "Route a resolved reference with a hash qualifier (@sha256:...) to DAGHistory/get so the specific DAG node identified by that content hash is returned"
+when {
+  Reference/resolve: [ target: ?target; metadata: ?metadata ]
+    => [ ok(target: ?target) ]
+}
+where {
+  bind(?metadata.qualifierKind as ?kind)
+  guard(?kind = "hash")
+  bind(?metadata.qualifier as ?contentRef)
+}
+then {
+  DAGHistory/get: [ contentRef: ?contentRef ]
+}

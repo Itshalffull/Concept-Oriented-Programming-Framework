@@ -1,0 +1,19 @@
+# Version qualifier resolution from Reference/resolve metadata.
+# When a resolved reference carries a @v{N} qualifier, rolls back the
+# entity to that numbered snapshot via Version/rollback so the caller
+# receives the point-in-time content rather than the current state.
+
+sync ResolveVersionQualifier [eager]
+  purpose: "Route a resolved reference with a version qualifier (@v3, @v12, etc.) to Version/rollback so the historical snapshot is returned instead of current state"
+when {
+  Reference/resolve: [ target: ?target; metadata: ?metadata ]
+    => [ ok(target: ?target) ]
+}
+where {
+  bind(?metadata.qualifierKind as ?kind)
+  guard(?kind = "version")
+  bind(?metadata.qualifier as ?version)
+}
+then {
+  Version/rollback: [ version: ?version ]
+}

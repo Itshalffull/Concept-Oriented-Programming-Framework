@@ -1,0 +1,24 @@
+# Keyword qualifier resolution from Reference/resolve metadata.
+# Handles the two named revision keywords: @latest (no-op — default
+# behavior already returns current state) and @previous (resolves to
+# the second-to-last snapshot by listing versions and selecting the
+# penultimate entry).
+
+sync ResolveKeywordQualifier [eager]
+  purpose: "Resolve the @previous keyword qualifier to the second-to-last snapshot by listing versions for the entity and rolling back to the penultimate one; @latest is a no-op and is excluded by the guard"
+when {
+  Reference/resolve: [ target: ?target; metadata: ?metadata ]
+    => [ ok(target: ?target) ]
+}
+where {
+  bind(?metadata.qualifierKind as ?kind)
+  guard(?kind = "keyword")
+  bind(?metadata.qualifier as ?keyword)
+  guard(?keyword = "previous")
+  Version/listVersions: [ entity: ?target ]
+    => [ ok(versions: ?versions) ]
+  bind(?versions[-2] as ?previousVersion)
+}
+then {
+  Version/rollback: [ version: ?previousVersion ]
+}

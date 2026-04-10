@@ -1,0 +1,21 @@
+# Namespace scope resolution from Reference/resolve metadata.
+# When a resolved reference carries a namespace prefix (e.g. draft-v2://),
+# the reference is first resolved through Namespace to obtain the
+# corresponding VersionSpace node, then VersionSpace/resolve applies
+# the branch overlay chain to return the entity's branch-local state.
+
+sync ResolveNamespaceScope [eager]
+  purpose: "Scope a resolved reference to its declared namespace by routing through Namespace/resolve and then VersionSpace/resolve so branch overrides are applied before content is returned"
+when {
+  Reference/resolve: [ target: ?target; metadata: ?metadata ]
+    => [ ok(target: ?target) ]
+}
+where {
+  bind(?metadata.namespace as ?namespace)
+  guard(?namespace != null)
+  Namespace/resolve: [ path: ?namespace ]
+    => [ ok(space: ?space) ]
+}
+then {
+  VersionSpace/resolve: [ space: ?space; entity_id: ?target ]
+}
