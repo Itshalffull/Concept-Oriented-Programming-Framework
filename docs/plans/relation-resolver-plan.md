@@ -1083,11 +1083,25 @@ A boot-time process that reads `clef-base/schemas/*.schema.yaml` and creates Fie
 
 ## 15. Open Questions
 
-1. **Max fan-out safety (RESOLVED — use CircuitBreaker)** — `specs/execution/circuit-breaker.concept` already exists. RelationResolver/propagate should call `CircuitBreaker/check` before executing large fan-outs. If the circuit is open (too many recent failures or timeouts), propagation is skipped and records are marked stale. The denormalized data becomes eventually-consistent rather than immediately-consistent — acceptable for the high-fan-out case. The circuit recovers automatically when propagation succeeds again.
+1. **Max fan-out safety (RESOLVED — cost threshold in handler, not CircuitBreaker)** — CircuitBreaker is designed for external service failures, not expensive-but-successful operations. Instead, RelationResolver/propagate checks reverse ref count BEFORE executing:
+   - Count < 1,000 → propagate inline (immediate)
+   - Count 1,000–10,000 → enqueue for background processing (eventual, via Queue if available)
+   - Count > 10,000 → skip, mark denormalized records as `_stale: true`
+   A background sweep re-resolves stale records periodically. Views can show a subtle "data may be outdated" indicator on stale fields.
 
 2. **Lazy resolution protocol** — How does the client know a field is lazy? Options: projection metadata (`{ resolve: "lazy", targetConcept: "Company", targetField: "name" }`), or a separate `lazyFields` array in the query result.
 
-3. **Lazy resolution protocol** — How does the client know a field is lazy? Projection metadata (`{ resolve: "lazy", targetConcept: "Person", targetField: "name" }`) vs a separate `lazyFields` array.
+3. **Lazy resolution protocol (RESOLVED — per-row `_lazy` map)** — Each row in the query result carries a `_lazy` key with resolution instructions for lazy fields:
+   ```json
+   {
+     "title": "My Article",
+     "author.name": "Alice",
+     "_lazy": {
+       "author.company.name": { "ref": "company-7", "field": "name" }
+     }
+   }
+   ```
+   The client renders immediately (showing "—" or spinner for lazy fields), then resolves each `_lazy` entry asynchronously via `ContentNode/get`. The compile-query sync populates `_lazy` for paths where `lazy: true` AND not denormalized. Long-term, a batch `/resolve-lazy` endpoint would reduce round trips.
 
 ### 15.1 VersionSpace / Multiverse Resolution (RESOLVED — yes, branch-aware)
 
