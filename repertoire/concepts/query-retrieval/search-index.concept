@@ -28,7 +28,7 @@ concept SearchIndex [I] {
       fixture create_duplicate_index { index: "articles", config: "{}" } after create_articles_index -> error
     }
 
-    action indexItem(index: I, item: String, data: String) {
+    action indexItem(index: I, item: String, data: String, namespace: option String) {
       -> ok(index: I) {
         Process the item through the processor pipeline
         and add it to the index.
@@ -54,7 +54,7 @@ concept SearchIndex [I] {
       fixture remove_from_missing_index { index: "nonexistent", item: "doc-1" } -> error
     }
 
-    action search(index: I, query: String) {
+    action search(index: I, query: String, namespace: option String) {
       -> ok(results: String) {
         Execute a search query against the index and
         return ranked results with relevance scores.
