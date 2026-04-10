@@ -38,41 +38,9 @@ const _handler: FunctionalConceptHandler = {
     const projection  = input.projection  as string;
     const presentation = input.presentation as string;
     const interaction = input.interaction as string;
-    const featuresRaw = (input.features as string) ?? '';
-    const pagination  = (input.pagination as string) ?? '';
 
     if (!name || (typeof name === 'string' && name.trim() === '')) {
       return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
-    }
-
-    // Resolve the enabled feature set — default to all features when not specified.
-    const ALL_FEATURES = ['filter', 'sort', 'group', 'projection', 'interaction', 'pagination'];
-    let enabledFeatures: string[];
-    if (!featuresRaw || featuresRaw.trim() === '') {
-      enabledFeatures = ALL_FEATURES;
-    } else {
-      try {
-        enabledFeatures = JSON.parse(featuresRaw) as string[];
-      } catch {
-        return complete(createProgram(), 'error', { message: 'features must be a valid JSON array' }) as StorageProgram<Result>;
-      }
-    }
-
-    // Validate: non-empty child spec refs for disabled features are rejected.
-    const featureRefMap: Array<{ feature: string; ref: string }> = [
-      { feature: 'filter',      ref: filter      ?? '' },
-      { feature: 'sort',        ref: sort         ?? '' },
-      { feature: 'group',       ref: group        ?? '' },
-      { feature: 'projection',  ref: projection   ?? '' },
-      { feature: 'interaction', ref: interaction  ?? '' },
-      { feature: 'pagination',  ref: pagination   ?? '' },
-    ];
-    for (const { feature, ref } of featureRefMap) {
-      if (ref && ref.trim() !== '' && !enabledFeatures.includes(feature)) {
-        return complete(createProgram(), 'feature_disabled', {
-          message: `Feature "${feature}" is disabled but a non-empty ref was provided`,
-        }) as StorageProgram<Result>;
-      }
     }
 
     // Check for duplicates before validating optional title — duplicate wins
@@ -87,20 +55,17 @@ const _handler: FunctionalConceptHandler = {
         if (!title || (typeof title === 'string' && title.trim() === '')) {
           return complete(b, 'error', { message: 'title is required' });
         }
-        const features = JSON.stringify(enabledFeatures);
         const b2 = put(b, 'view', name, {
           name,
           title,
           description,
           dataSource,
-          filter:      enabledFeatures.includes('filter')      ? (filter ?? '')      : '',
-          sort:        enabledFeatures.includes('sort')         ? (sort ?? '')        : '',
-          group:       enabledFeatures.includes('group')        ? (group ?? '')       : '',
-          projection:  enabledFeatures.includes('projection')   ? (projection ?? '')  : '',
+          filter,
+          sort,
+          group,
+          projection,
           presentation,
-          interaction: enabledFeatures.includes('interaction')  ? (interaction ?? '') : '',
-          pagination:  enabledFeatures.includes('pagination')   ? (pagination ?? '')  : '',
-          features,
+          interaction,
           legacyConfig: null,
         });
         return complete(b2, 'ok', { view: name });
@@ -149,41 +114,9 @@ const _handler: FunctionalConceptHandler = {
     const projection  = input.projection  as string;
     const presentation = input.presentation as string;
     const interaction = input.interaction as string;
-    const featuresRaw = (input.features as string) ?? '';
-    const pagination  = (input.pagination as string) ?? '';
 
     if (title !== undefined && typeof title === 'string' && title.trim() === '') {
       return complete(createProgram(), 'error', { message: 'title is required' }) as StorageProgram<Result>;
-    }
-
-    // Resolve the enabled feature set — default to all features when not specified.
-    const ALL_FEATURES = ['filter', 'sort', 'group', 'projection', 'interaction', 'pagination'];
-    let enabledFeatures: string[];
-    if (!featuresRaw || featuresRaw.trim() === '') {
-      enabledFeatures = ALL_FEATURES;
-    } else {
-      try {
-        enabledFeatures = JSON.parse(featuresRaw) as string[];
-      } catch {
-        return complete(createProgram(), 'error', { message: 'features must be a valid JSON array' }) as StorageProgram<Result>;
-      }
-    }
-
-    // Validate: non-empty child spec refs for disabled features are rejected.
-    const featureRefMap: Array<{ feature: string; ref: string }> = [
-      { feature: 'filter',      ref: filter      ?? '' },
-      { feature: 'sort',        ref: sort         ?? '' },
-      { feature: 'group',       ref: group        ?? '' },
-      { feature: 'projection',  ref: projection   ?? '' },
-      { feature: 'interaction', ref: interaction  ?? '' },
-      { feature: 'pagination',  ref: pagination   ?? '' },
-    ];
-    for (const { feature, ref } of featureRefMap) {
-      if (ref && ref.trim() !== '' && !enabledFeatures.includes(feature)) {
-        return complete(createProgram(), 'feature_disabled', {
-          message: `Feature "${feature}" is disabled but a non-empty ref was provided`,
-        }) as StorageProgram<Result>;
-      }
     }
 
     let p = createProgram();
@@ -192,20 +125,17 @@ const _handler: FunctionalConceptHandler = {
       (b) => b.existing == null,
       (b) => complete(b, 'notfound', { message: `View "${name}" not found` }),
       (b) => {
-        const features = JSON.stringify(enabledFeatures);
         let b2 = put(b, 'view', name, {
           name,
           title,
           description,
           dataSource,
-          filter:      enabledFeatures.includes('filter')      ? (filter ?? '')      : '',
-          sort:        enabledFeatures.includes('sort')         ? (sort ?? '')        : '',
-          group:       enabledFeatures.includes('group')        ? (group ?? '')       : '',
-          projection:  enabledFeatures.includes('projection')   ? (projection ?? '')  : '',
+          filter,
+          sort,
+          group,
+          projection,
           presentation,
-          interaction: enabledFeatures.includes('interaction')  ? (interaction ?? '') : '',
-          pagination:  enabledFeatures.includes('pagination')   ? (pagination ?? '')  : '',
-          features,
+          interaction,
           legacyConfig: null,
         });
         return complete(b2, 'ok', { view: name });
@@ -301,18 +231,16 @@ const _handler: FunctionalConceptHandler = {
       (b) => completeFrom(b, 'ok', (bindings) => {
         const rec = bindings.existing as Record<string, unknown>;
         return {
-          view:         rec.name          as string,
-          title:        rec.title         as string,
-          description:  (rec.description  as string) ?? '',
-          dataSource:   (rec.dataSource   as string) ?? '',
-          filter:       (rec.filter       as string) ?? '',
-          sort:         (rec.sort         as string) ?? '',
-          group:        (rec.group        as string) ?? '',
-          projection:   (rec.projection   as string) ?? '',
+          view:         rec.name         as string,
+          title:        rec.title        as string,
+          description:  (rec.description as string) ?? '',
+          dataSource:   (rec.dataSource  as string) ?? '',
+          filter:       (rec.filter      as string) ?? '',
+          sort:         (rec.sort        as string) ?? '',
+          group:        (rec.group       as string) ?? '',
+          projection:   (rec.projection  as string) ?? '',
           presentation: (rec.presentation as string) ?? '',
           interaction:  (rec.interaction  as string) ?? '',
-          pagination:   (rec.pagination   as string) ?? '',
-          features:     (rec.features     as string) ?? '',
         };
       }),
     ) as StorageProgram<Result>;
@@ -380,20 +308,6 @@ function resolveHydrated(
 
     const rec = shell as Record<string, unknown>;
 
-    // Resolve enabled features — default to all when not set (backward compatibility).
-    const ALL_FEATURES = ['filter', 'sort', 'group', 'projection', 'interaction', 'pagination'];
-    const featuresRaw = (rec.features as string) ?? '';
-    let enabledFeatures: string[];
-    if (!featuresRaw || featuresRaw.trim() === '') {
-      enabledFeatures = ALL_FEATURES;
-    } else {
-      try {
-        enabledFeatures = JSON.parse(featuresRaw) as string[];
-      } catch {
-        enabledFeatures = ALL_FEATURES;
-      }
-    }
-
     // If no kernel is wired, gracefully degrade to ref-name response (same as resolve).
     if (!_kernel) {
       return {
@@ -402,19 +316,16 @@ function resolveHydrated(
         title:        rec.title         as string,
         description:  (rec.description  as string) ?? '',
         dataSource:   (rec.dataSource   as string) ?? '',
-        filter:       enabledFeatures.includes('filter')      ? ((rec.filter      as string) ?? '') : '',
-        sort:         enabledFeatures.includes('sort')         ? ((rec.sort        as string) ?? '') : '',
-        group:        enabledFeatures.includes('group')        ? ((rec.group       as string) ?? '') : '',
-        projection:   enabledFeatures.includes('projection')   ? ((rec.projection  as string) ?? '') : '',
-        presentation: (rec.presentation  as string) ?? '',
-        interaction:  enabledFeatures.includes('interaction')  ? ((rec.interaction as string) ?? '') : '',
-        pagination:   enabledFeatures.includes('pagination')   ? ((rec.pagination  as string) ?? '') : '',
-        features:     featuresRaw,
+        filter:       (rec.filter       as string) ?? '',
+        sort:         (rec.sort         as string) ?? '',
+        group:        (rec.group        as string) ?? '',
+        projection:   (rec.projection   as string) ?? '',
+        presentation: (rec.presentation as string) ?? '',
+        interaction:  (rec.interaction  as string) ?? '',
       };
     }
 
     // Helper: invoke a child spec's get action, returning the result or null.
-    // Only dispatches when the ref is non-empty (avoids unnecessary kernel calls).
     async function fetchChild(
       conceptUri: string,
       refName: string | undefined,
@@ -425,30 +336,15 @@ function resolveHydrated(
       return result as Record<string, unknown>;
     }
 
-    // Only fetch child specs whose feature is enabled. dataSource and presentation
-    // are always-on (never gated by the features set).
-    const [filterResult, sortResult, groupResult, projectionResult, sourceResult, presentationResult, interactionResult, paginationResult] =
+    const [filterResult, sortResult, groupResult, projectionResult, sourceResult, presentationResult, interactionResult] =
       await Promise.all([
-        enabledFeatures.includes('filter')
-          ? fetchChild('urn:clef/FilterSpec',       rec.filter       as string)
-          : Promise.resolve(null),
-        enabledFeatures.includes('sort')
-          ? fetchChild('urn:clef/SortSpec',         rec.sort         as string)
-          : Promise.resolve(null),
-        enabledFeatures.includes('group')
-          ? fetchChild('urn:clef/GroupSpec',        rec.group        as string)
-          : Promise.resolve(null),
-        enabledFeatures.includes('projection')
-          ? fetchChild('urn:clef/ProjectionSpec',   rec.projection   as string)
-          : Promise.resolve(null),
+        fetchChild('urn:clef/FilterSpec',       rec.filter       as string),
+        fetchChild('urn:clef/SortSpec',         rec.sort         as string),
+        fetchChild('urn:clef/GroupSpec',        rec.group        as string),
+        fetchChild('urn:clef/ProjectionSpec',   rec.projection   as string),
         fetchChild('urn:clef/DataSourceSpec',   rec.dataSource   as string),
         fetchChild('urn:clef/PresentationSpec', rec.presentation as string),
-        enabledFeatures.includes('interaction')
-          ? fetchChild('urn:clef/InteractionSpec',  rec.interaction  as string)
-          : Promise.resolve(null),
-        enabledFeatures.includes('pagination')
-          ? fetchChild('urn:clef/PaginationSpec',   rec.pagination   as string)
-          : Promise.resolve(null),
+        fetchChild('urn:clef/InteractionSpec',  rec.interaction  as string),
       ]);
 
     return {
@@ -456,7 +352,6 @@ function resolveHydrated(
       view:         rec.name         as string,
       title:        rec.title        as string,
       description:  (rec.description as string) ?? '',
-      features:     featuresRaw,
 
       // DataSource: { source, kind, config, parameters } — config is a JSON string
       dataSource: sourceResult
@@ -524,19 +419,6 @@ function resolveHydrated(
             rowClick:    interactionResult.rowClick,
             rowActions:  interactionResult.rowActions,
             pickerMode:  interactionResult.pickerMode,
-          })
-        : '',
-
-      // Pagination: { name, mode, pageSize, maxSize, position, totalCount, hasMore }
-      pagination: paginationResult
-        ? JSON.stringify({
-            name:       paginationResult.name,
-            mode:       paginationResult.mode,
-            pageSize:   paginationResult.pageSize,
-            maxSize:    paginationResult.maxSize,
-            position:   paginationResult.position,
-            totalCount: paginationResult.totalCount,
-            hasMore:    paginationResult.hasMore,
           })
         : '',
     };

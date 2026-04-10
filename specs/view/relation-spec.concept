@@ -1,0 +1,177 @@
+@version(1)
+@category("view")
+@visibility("public")
+concept RelationSpec [R] {
+
+  purpose {
+    Declare which relation fields a view wants resolved and how each should be
+    presented. Each spec holds a name and a JSON array of path descriptors —
+    forward field paths, reverse field paths, and link paths. The query pipeline
+    reads these declarations to decide whether to project denormalized data,
+    inject a join instruction, or mark fields for lazy client-side resolution.
+    RelationSpec does not control denormalization strategy — it only expresses
+    what the view wants.
+  }
+
+  state {
+    specs: set R
+    name:  R -> String
+    paths: R -> String
+  }
+
+  actions {
+
+    action create(name: String, paths: String) {
+      -> ok(spec: R) {
+        Register a new named relation spec with the given JSON path array. The
+        spec is immediately addressable for resolution and composition into a
+        ViewShell.
+      }
+      -> duplicate(spec: R) {
+        A relation spec with this name is already registered.
+      }
+      -> error(message: String) {
+        The name is empty or the paths value is not valid JSON.
+      }
+      fixture create_author { name: "article-relations", paths: "[{\"field\":\"author\",\"include\":[\"name\",\"avatar\"]}]" }
+      fixture create_reverse { name: "person-articles", paths: "[{\"reverse\":\"author\",\"sourceSchema\":\"Article\",\"include\":[\"title\"],\"lazy\":true,\"maxCount\":10}]" }
+      fixture create_link { name: "page-backlinks", paths: "[{\"link\":\"backlinks\",\"include\":[\"title\"],\"lazy\":true,\"maxCount\":10}]" }
+      fixture create_empty_name { name: "", paths: "[]" } -> error
+      fixture create_bad_json { name: "bad-paths", paths: "not-json" } -> error
+      fixture create_duplicate { name: "article-relations", paths: "[]" } after create_author -> duplicate
+    }
+
+    action get(name: String) {
+      -> ok(spec: R, paths: String) {
+        Return the relation spec and its serialized path array for the given name.
+      }
+      -> notfound(message: String) {
+        No relation spec with this name has been registered.
+      }
+      fixture get_existing { name: $create_author.spec } after create_author
+      fixture get_missing { name: "nonexistent" } -> notfound
+    }
+
+    action update(name: String, paths: String) {
+      -> ok(spec: R) {
+        Replace the path array for the named relation spec. All existing paths are
+        discarded and replaced with the provided JSON array.
+      }
+      -> notfound(message: String) {
+        No relation spec with this name has been registered.
+      }
+      -> error(message: String) {
+        The paths value is not valid JSON.
+      }
+      fixture update_paths { name: "article-relations", paths: "[{\"field\":\"author\",\"include\":[\"name\",\"avatar\",\"email\"]}]" } after create_author
+      fixture update_missing { name: "nonexistent", paths: "[]" } -> notfound
+      fixture update_bad_json { name: "article-relations", paths: "not-json" } after create_author -> error
+    }
+
+    action addPath(name: String, path: String) {
+      -> ok(spec: R, paths: String) {
+        Append a single serialized path descriptor to the named relation spec's
+        path array. The path is provided as a JSON object string.
+      }
+      -> notfound(message: String) {
+        No relation spec with this name has been registered.
+      }
+      -> error(message: String) {
+        The path argument is not valid JSON or is missing required fields.
+      }
+      fixture add_forward_path { name: "article-relations", path: "{\"field\":\"category\",\"include\":[\"label\"]}" } after create_author
+      fixture add_missing { name: "nonexistent", path: "{\"field\":\"author\",\"include\":[\"name\"]}" } -> notfound
+      fixture add_bad_json { name: "article-relations", path: "not-json" } after create_author -> error
+    }
+
+    action removePath(name: String, field: String) {
+      -> ok(spec: R, paths: String) {
+        Remove the path descriptor whose forward field, reverse field, or link
+        name matches the given field value. Returns the updated path array.
+      }
+      -> notfound(message: String) {
+        No relation spec with this name has been registered.
+      }
+      -> path_not_found(message: String) {
+        No path with the given field identifier exists in the spec's path array.
+      }
+      fixture remove_existing_path { name: "article-relations", field: "author" } after create_author
+      fixture remove_spec_missing { name: "nonexistent", field: "author" } -> notfound
+      fixture remove_path_missing { name: "article-relations", field: "nonexistent-field" } after create_author -> path_not_found
+    }
+
+    action remove(name: String) {
+      -> ok() {
+        Delete the named relation spec and all its registered paths.
+      }
+      -> notfound(message: String) {
+        No relation spec with this name has been registered.
+      }
+      fixture remove_existing { name: "article-relations" } after create_author
+      fixture remove_missing { name: "nonexistent" } -> notfound
+    }
+
+    action list() {
+      -> ok(specs: String) {
+        Return a JSON-serialized array of all registered relation spec names.
+      }
+      fixture list_all {} after create_author
+    }
+
+  }
+
+  example "create then get returns spec": {
+    after create(name: "author-relation", paths: "[{\"field\":\"author\",\"include\":[\"name\"]}]") -> ok(spec: r)
+    then get(name: "author-relation") -> ok(paths: p)
+    and  p != none
+  }
+
+  example "addPath appends to existing paths": {
+    after create(name: "article-rel", paths: "[{\"field\":\"author\",\"include\":[\"name\"]}]") -> ok(spec: r)
+    then addPath(name: "article-rel", path: "{\"field\":\"category\",\"include\":[\"label\"]}") -> ok(paths: p)
+    and  p != none
+  }
+
+  example "removePath drops the matching path": {
+    after create(name: "multi-rel", paths: "[{\"field\":\"author\",\"include\":[\"name\"]},{\"field\":\"category\",\"include\":[\"label\"]}]") -> ok(spec: r)
+    then removePath(name: "multi-rel", field: "author") -> ok(paths: p)
+    and  p != none
+  }
+
+  example "duplicate create is rejected": {
+    after create(name: "dup-rel", paths: "[]") -> ok(spec: r)
+    then create(name: "dup-rel", paths: "[]") -> duplicate(spec: r)
+  }
+
+  example "remove then get returns notfound": {
+    after create(name: "temp-rel", paths: "[]") -> ok(spec: r)
+    and  remove(name: "temp-rel") -> ok
+    then get(name: "temp-rel") -> notfound
+  }
+
+  always "specs have non-empty names": {
+    forall r in specs:
+    r.name != ""
+  }
+
+  always "specs have valid paths JSON": {
+    forall r in specs:
+    r.paths != none
+  }
+
+  never "specs with null name": {
+    exists r in specs:
+    r.name = none
+  }
+
+  action create {
+    requires: name != "" and paths != ""
+    ensures ok: spec != none
+  }
+
+  action get {
+    requires: name != ""
+    ensures ok: paths != none
+  }
+
+}

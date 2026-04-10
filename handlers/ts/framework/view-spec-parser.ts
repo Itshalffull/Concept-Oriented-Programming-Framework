@@ -63,6 +63,7 @@ export const VALID_VIEW_FEATURES = new Set([
   'projection',
   'interaction',
   'pagination',
+  'relation',
 ]);
 
 // --- Token Types ---
