@@ -108,42 +108,95 @@ concept RelationResolver [R] {
 }
 ```
 
-### Denormalization configuration
+### Auto-Denormalization (Smart Defaults)
 
-Lives as a Property on the schema:
+**Nobody configures denormalization manually by default.** When a relation field is created with `include` fields, the system automatically decides whether to denormalize based on measurable properties:
+
+#### Decision logic (runs on FieldDefinition/create and FieldDefinition/update):
 
 ```
-Property/set("Article", "denormalize", '{
-  "author": { "include": ["name", "avatar"], "depth": 1 },
-  "author.company": { "include": ["name"], "depth": 2 }
+1. Count referencing entities:
+   entities = count(entities with this schema)
+   → entities < maxFanOut (default 10,000): AUTO-ENABLE
+   → entities ≥ maxFanOut: SKIP, warn in Level 2 drawer
+
+2. Check depth:
+   → depth 1: AUTO-ENABLE
+   → depth 2+: SKIP, require explicit opt-in
+
+3. Check target write frequency (if metrics available):
+   → < 10 writes/hour on target schema: AUTO-ENABLE
+   → ≥ 10 writes/hour: WARN in Level 2 drawer
+
+4. Store decision:
+   Property/set(schema, "denormalize.{fieldId}", '{
+     "auto": true,
+     "enabled": true,
+     "include": ["name", "avatar"],
+     "depth": 1,
+     "reason": "low-fanout-depth-1",
+     "entityCount": 47,
+     "decidedAt": "2026-04-09T..."
+   }')
+```
+
+#### What users see at each level:
+
+**Level 1 (popover):** User checks "include name, avatar" → denormalization happens silently. No toggle, no decision. The included fields just appear as projectable columns.
+
+**Level 2 (drawer):** Shows a "Performance" section:
+- If auto-enabled: "⚡ Pre-resolved (automatic) — 47 records, ~0.1ms reads"
+- If auto-skipped: "⚠ Not pre-resolved — 52,000 records would cause high write amplification. [Enable anyway] [Keep as join-at-read]"
+- If target is write-heavy: "⚠ Person records change 200x/day. Pre-resolving means 200×47 = 9,400 propagation writes/day. [Enable anyway] [Disable]"
+- Manual override toggle: user can force enable/disable regardless of auto-decision
+
+**Level 3 (full editor):** Shows denormalization dashboard:
+- Per-field: denorm status, entity count, propagation cost estimate
+- Schema-wide: "This schema causes ~N extra writes/day from denormalization"
+- Bulk toggle for power users
+- "Backfill" button for newly enabled fields
+- "Clear" button to remove denormalized data
+
+#### When auto-denormalization is overridden:
+
+```
+Property/set(schema, "denormalize.{fieldId}", '{
+  "auto": false,              // user overrode
+  "enabled": false,           // explicitly disabled
+  "reason": "user-disabled",
+  "overriddenBy": "admin",
+  "overriddenAt": "2026-04-09T..."
 }')
 ```
 
-Or equivalently, on the FieldDefinition via an extended typeConfig:
+The Level 2 drawer shows "Pre-resolution disabled (manual override)" with an "Auto-detect" button to revert to system decision.
 
-```json
-{
-  "target": "Person",
-  "cardinality": "single",
-  "displayField": "name",
-  "denormalize": {
-    "include": ["name", "avatar"],
-    "depth": 1
-  }
-}
+#### Configuration storage:
+
+The denormalization config lives as a Property on the schema, keyed by field:
+
+```
+Property/set("Article", "denormalize.author", '{
+  "auto": true,
+  "enabled": true,
+  "include": ["name", "avatar"],
+  "depth": 1,
+  "reason": "low-fanout-depth-1"
+}')
 ```
 
-When `denormalize` is present in the typeConfig, the RelationResolver writes those fields. When absent, no denormalization — views must use join or lazy.
+RelationResolver reads these properties during `resolve()`. When `enabled: true`, it writes dot-notation fields. When `enabled: false` or absent, no denormalization — the compile-query sync falls back to join-at-read.
 
 ### How it shows up in the schema editor
 
 **Level 1 (column header popover):** Not shown — denormalization is an infrastructure concern, not casual editing.
 
-**Level 2 (field-config-drawer):** A new "Performance" section in the Settings tab:
-- Toggle: "Pre-resolve for fast reads" (enables/disables denormalization)
-- When enabled: checkboxes for which included fields to denormalize
-- Depth selector: 1 / 2 / 3 (with warning at 2+: "deeper = more write amplification")
-- Shows current denormalization stats: "Denormalized on 47 Article records"
+**Level 2 (field-config-drawer):** A "Performance" section in the Settings tab. Content is context-dependent:
+- If auto-enabled: "⚡ Pre-resolved (automatic)" with stats and a "Disable" override
+- If auto-skipped with reason: warning explaining why + "Enable anyway" button
+- Manual override always available but tucked behind the auto-decision
+- Depth selector only shown when depth > 1 is possible (target has relations)
+- Shows propagation cost estimate: "~N writes/day from updates to Person records"
 
 **Level 3 (schema-fields-editor):** Relation field rows show a small lightning bolt icon (⚡) when denormalization is enabled. The full editor's field detail pane shows denormalization stats and a "Backfill" button for newly enabled fields.
 
