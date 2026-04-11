@@ -1,0 +1,397 @@
+@version(1)
+widget form-field-input {
+
+  purpose {
+    Form-context field input widget that renders the correct interactive control for a
+    given FieldDefinition type — covering text, textarea, number, date, datetime, boolean
+    toggle, select, multi-select tag chips, relation entity picker, person/member picker,
+    media file upload, URL, email, rich-text block editor, JSON textarea, rating, currency,
+    percentage, and file attachment. Extends the filter-context typed-value-input with
+    full edit-mode behavior: visible label, required indicator, inline validation messages
+    with icons, character count tracking, help text, clear and toggle action buttons, and
+    disabled/readonly state handling. Intended for composition inside form-renderer per
+    field slot.
+  }
+
+  anatomy {
+    root:              container    { Outer group wrapper; carries data-state and data-field-type }
+    label:             text         { Visible field label }
+    requiredIndicator: presentation { Asterisk marking the field as required }
+    labelSuffix:       text         { Optional suffix appended to the label (e.g. units, hint tag) }
+    inputContainer:    container    { Inner wrapper that holds the active input control }
+    input:             interactive  { The primary input element; morphs per field type }
+    helpText:          text         { Secondary descriptive text shown below the input }
+    validationMessage: text         { Inline validation error or success message }
+    validationIcon:    presentation { Icon reinforcing the validation state (error/success) }
+    characterCount:    text         { Live character count display }
+    characterLimit:    text         { Maximum character limit label alongside characterCount }
+    clearButton:       action       { Clears the current field value }
+    toggleButton:      action       { Toggles boolean or password-reveal fields }
+  }
+
+  states {
+    idle [initial] {
+      on FOCUS -> focused;
+      on DISABLE -> disabled;
+      on SET_READONLY -> readonly;
+    }
+
+    focused {
+      on BLUR -> idle;
+      on CHANGE -> focused;
+      on VALIDATE -> valid;
+      on INVALID -> invalid;
+      on DISABLE -> disabled;
+      entry [emitFocus];
+    }
+
+    valid {
+      on FOCUS -> focused;
+      on CHANGE -> focused;
+      on DISABLE -> disabled;
+    }
+
+    invalid {
+      on FOCUS -> focused;
+      on CHANGE -> focused;
+      on CLEAR -> idle;
+      on DISABLE -> disabled;
+    }
+
+    disabled {
+      on ENABLE -> idle;
+    }
+
+    readonly {
+      on UNSET_READONLY -> idle;
+    }
+  }
+
+  accessibility {
+    role: group;
+    keyboard {
+      Tab -> FOCUS_NEXT;
+      Escape -> CLEAR;
+    }
+    focus {
+      trap: false;
+      initial: input;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: self.fieldLabel;
+        data-state: state;
+        data-field-type: ?fieldDefinition.fieldType;
+        data-required: if ?fieldDefinition.required then "true" else "false";
+        data-disabled: if state == "disabled" then "true" else "false";
+        data-readonly: if state == "readonly" then "true" else "false";
+      };
+      label -> {
+        role: "presentation";
+        for: input;
+        aria-hidden: "true";
+      };
+      requiredIndicator -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      input -> {
+        aria-required: if ?fieldDefinition.required then "true" else "false";
+        aria-invalid: if state == "invalid" then "true" else "false";
+        aria-describedby: concat(self.fieldId, "-help ", self.fieldId, "-validation");
+        aria-disabled: if state == "disabled" then "true" else "false";
+        aria-readonly: if state == "readonly" then "true" else "false";
+      };
+      helpText -> {
+        role: "note";
+        id: concat(self.fieldId, "-help");
+        aria-live: "polite";
+      };
+      validationMessage -> {
+        role: "alert";
+        id: concat(self.fieldId, "-validation");
+        aria-live: "assertive";
+        aria-atomic: "true";
+      };
+      validationIcon -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      characterCount -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: concat(self.currentLength, " of ", self.maxLength, " characters");
+      };
+      clearButton -> {
+        role: "button";
+        aria-label: "Clear field value";
+      };
+      toggleButton -> {
+        role: "button";
+        aria-label: if self.isBoolean then (if self.checked then "Turn off" else "Turn on") else "Toggle";
+        aria-pressed: if self.isBoolean then (if self.checked then "true" else "false") else "false";
+      };
+    }
+  }
+
+  props {
+    fieldDefinition: option String
+    value: option String
+    onChange: option String
+    onBlur: option String
+    validationRules: list { ruleType: String, value: option String, errorMessage: option String } = []
+    validationErrors: list String = []
+    showValidation: Bool = false
+    helpText: option String
+    placeholder: option String
+    disabled: Bool = false
+    readOnly: Bool = false
+    maxLength: option String
+    showCharacterCount: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-field-type: ?fieldDefinition;
+      data-required: if self.fieldRequired then "true" else "false";
+      data-disabled: if ?disabled or state == "disabled" then "true" else "false";
+      data-readonly: if ?readOnly or state == "readonly" then "true" else "false";
+      data-valid: if state == "valid" then "true" else "false";
+      data-invalid: if state == "invalid" then "true" else "false";
+    }
+
+    label -> {
+      data-part: "label";
+      for: self.inputId;
+    }
+
+    requiredIndicator -> {
+      data-part: "required-indicator";
+      hidden: if not self.fieldRequired then true else false;
+    }
+
+    labelSuffix -> {
+      data-part: "label-suffix";
+      hidden: if self.suffix == "" then true else false;
+    }
+
+    inputContainer -> {
+      data-part: "input-container";
+      data-field-type: self.fieldType;
+    }
+
+    input -> {
+      data-part: "input";
+      data-field-type: self.fieldType;
+      value: ?value;
+      placeholder: ?placeholder;
+      disabled: if ?disabled or state == "disabled" then true else false;
+      readOnly: if ?readOnly or state == "readonly" then true else false;
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+      onInput: send(CHANGE, { value: event.value });
+      onKeyDown: if key == "Escape" then send(CLEAR) else noop;
+      aria-required: if self.fieldRequired then "true" else "false";
+      aria-invalid: if state == "invalid" then "true" else "false";
+      aria-describedby: concat(self.fieldId, "-help ", self.fieldId, "-validation");
+    }
+
+    helpText -> {
+      data-part: "help-text";
+      id: concat(self.fieldId, "-help");
+      hidden: if ?helpText == "" then true else false;
+    }
+
+    validationMessage -> {
+      data-part: "validation-message";
+      id: concat(self.fieldId, "-validation");
+      data-valid: if state == "valid" then "true" else "false";
+      hidden: if not ?showValidation or validationErrors.length == 0 then true else false;
+    }
+
+    validationIcon -> {
+      data-part: "validation-icon";
+      data-icon: if state == "valid" then "check" else "error";
+      hidden: if not ?showValidation then true else false;
+    }
+
+    characterCount -> {
+      data-part: "character-count";
+      data-length: self.currentLength;
+      data-limit: ?maxLength;
+      hidden: if not ?showCharacterCount then true else false;
+    }
+
+    characterLimit -> {
+      data-part: "character-limit";
+      hidden: if not ?showCharacterCount or ?maxLength == "" then true else false;
+    }
+
+    clearButton -> {
+      data-part: "clear-button";
+      onClick: send(CLEAR);
+      onKeyDown: if key == "Enter" then send(CLEAR) else noop;
+      hidden: if ?value == "" or state == "disabled" or ?readOnly then true else false;
+    }
+
+    toggleButton -> {
+      data-part: "toggle-button";
+      onClick: send(CHANGE, { value: not self.checked });
+      onKeyDown: if key == "Enter" then send(CHANGE, { value: not self.checked }) else noop;
+      data-checked: if self.checked then "true" else "false";
+      hidden: if self.fieldType != "boolean" then true else false;
+    }
+  }
+
+  invariant {
+    example "text field focuses and emits on input": {
+      after input.focus -> ok
+      then root -> { data-state: "focused" }
+      then send(CHANGE, { value: "hello" }) -> ok
+      then root -> { data-state: "focused" }
+    }
+
+    example "blur from focused returns to idle": {
+      after input.focus -> ok
+      then input.blur -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    example "valid transition after successful validation": {
+      after input.focus -> ok
+      then send(VALIDATE) -> ok
+      then root -> { data-state: "valid" }
+      and validationMessage -> { hidden: true }
+    }
+
+    example "invalid state shows validation message": {
+      after input.focus -> ok
+      then send(INVALID) -> ok
+      then root -> { data-state: "invalid"; data-invalid: "true" }
+      and input -> { aria-invalid: "true" }
+    }
+
+    example "clear button hidden when value is empty": {
+      after send(CLEAR) -> ok
+      then clearButton -> { hidden: true }
+    }
+
+    example "clear button hidden when disabled": {
+      after send(DISABLE) -> ok
+      then clearButton -> { hidden: true }
+    }
+
+    example "disabled state propagates to input element": {
+      after send(DISABLE) -> ok
+      then root -> { data-state: "disabled"; data-disabled: "true" }
+      and input -> { disabled: true }
+    }
+
+    example "readonly state propagates to input element": {
+      after send(SET_READONLY) -> ok
+      then root -> { data-state: "readonly"; data-readonly: "true" }
+      and input -> { readOnly: true }
+    }
+
+    example "character count hidden unless showCharacterCount is true": {
+      then characterCount -> { hidden: true }
+    }
+
+    example "validation message hidden unless showValidation is true": {
+      then validationMessage -> { hidden: true }
+    }
+
+    example "toggleButton visible only for boolean field type": {
+      then root -> { data-field-type: "boolean" }
+      and toggleButton -> { hidden: false }
+    }
+
+    example "help text hidden when helpText prop is empty": {
+      then helpText -> { hidden: true }
+    }
+
+    example "required indicator hidden for non-required fields": {
+      then requiredIndicator -> { hidden: true }
+    }
+
+    example "required indicator visible for required fields": {
+      then root -> { data-required: "true" }
+      and requiredIndicator -> { hidden: false }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        root -> { data-state: s.name }
+    }
+
+    always "aria-invalid on input matches invalid state": {
+      if state == "invalid" then input -> { aria-invalid: "true" }
+      and if state != "invalid" then input -> { aria-invalid: "false" }
+    }
+
+    always "aria-required on input matches fieldDefinition.required": {
+      if self.fieldRequired then input -> { aria-required: "true" }
+      and if not self.fieldRequired then input -> { aria-required: "false" }
+    }
+
+    always "validationMessage linked to input via aria-describedby": {
+      input -> { aria-describedby: concat(self.fieldId, "-help ", self.fieldId, "-validation") }
+    }
+
+    always "input disabled when state is disabled": {
+      if state == "disabled" then input -> { disabled: true }
+    }
+
+    never "clear button visible when value is empty": {
+      ?value == "" and clearButton -> { hidden: false }
+    }
+
+    never "clear button visible when disabled or readonly": {
+      (state == "disabled" or ?readOnly == true) and clearButton -> { hidden: false }
+    }
+
+    never "validation message visible before showValidation is true": {
+      not ?showValidation and validationMessage -> { hidden: false }
+    }
+
+    never "character count visible unless showCharacterCount prop is true": {
+      not ?showCharacterCount and characterCount -> { hidden: false }
+    }
+
+    never "toggleButton visible for non-boolean field type": {
+      self.fieldType != "boolean" and toggleButton -> { hidden: false }
+    }
+
+    action input.focus {
+      requires: state == "idle" or state == "valid" or state == "invalid"
+      ensures ok: state == "focused"
+    }
+
+    action clearButton.click {
+      requires: ?value != "" and state != "disabled"
+      ensures ok: state == "idle"
+    }
+
+    "CHANGE event must carry the full new value so form-renderer can update form state without reading DOM";
+    "fieldDefinition.fieldType determines which native input or composed control renders inside inputContainer";
+    "for text and textarea types, if maxLength is set and showCharacterCount is true, characterCount must update on every CHANGE event";
+    "relation and person types compose reference-picker and user-picker respectively inside inputContainer";
+    "media and file types render a drag-drop upload zone with preview thumbnail inside inputContainer";
+    "rich-text type renders a mini block editor subset inside inputContainer";
+    "json type renders a monospace textarea with syntax validation on BLUR";
+    "rating type renders star or numeric rating controls inside inputContainer";
+    "currency type renders a number input prefixed with the currency symbol from fieldDefinition";
+    "percentage type renders a number input with a % suffix inside inputContainer";
+    "url and email types validate format on BLUR and transition to invalid if format check fails";
+    "select and multi-select types render searchable dropdown and tag chip picker respectively inside inputContainer";
+    "this widget does not show the field label itself — label rendering is handled by the composing form-renderer via the fieldLabel anatomy part";
+  }
+
+}

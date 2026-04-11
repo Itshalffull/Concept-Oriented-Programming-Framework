@@ -1,0 +1,37 @@
+view "form-editor" {
+  shell: "form-editor"
+
+  features {
+    projection
+    interaction
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"FormSpec\",\"action\":\"get\",\"params\":{\"form\":\"{{formId}}\"}}"
+    }
+    projection: {
+      fields: "[]"
+    }
+    interaction: {
+      createForm: "{}",
+      rowClick: "{}",
+      rowActions: "[{\"key\":\"save\",\"label\":\"Save\",\"concept\":\"FormSpec\",\"action\":\"update\"}]"
+    }
+    presentation: {
+      displayType: "detail",
+      hints: "{\"editorMode\":\"form-builder\"}"
+    }
+  }
+
+  purpose {
+    Visual form builder for a specific schema. Renders the FormBuilder component
+    with drag-and-drop field arrangement, group management, step configuration,
+    conditional visibility editing, and live preview.
+  }
+
+  invariants {
+    always "purity is read-write": { purity = "read-write" }
+  }
+}

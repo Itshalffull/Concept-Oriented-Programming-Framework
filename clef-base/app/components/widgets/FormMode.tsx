@@ -2,13 +2,18 @@
 
 import React, { useState, useCallback } from 'react';
 import { FieldWidget } from './FieldWidget';
+import { FormRenderer } from './FormRenderer';
 
 export interface SchemaField {
   name: string;
   label?: string;
-  type?: 'text' | 'textarea' | 'select' | 'boolean' | 'json';
+  type?: string;
   mutability?: 'editable' | 'readonly' | 'system';
   options?: string[];
+  required?: boolean;
+  placeholder?: string;
+  helpText?: string;
+  validations?: string; // JSON string of ValidationRule[]
 }
 
 interface FormModeProps {
@@ -16,9 +21,13 @@ interface FormModeProps {
   fields: SchemaField[];
   onSave: (changes: Record<string, unknown>) => Promise<void>;
   onCancel: () => void;
+  /** When provided, attempt FormSpec resolution for the schema. If a FormSpec
+   *  exists, renders via FormRenderer; otherwise falls back to the flat
+   *  FieldWidget list. */
+  schemaId?: string;
 }
 
-export const FormMode: React.FC<FormModeProps> = ({ entity, fields, onSave, onCancel }) => {
+export const FormMode: React.FC<FormModeProps> = ({ entity, fields, onSave, onCancel, schemaId }) => {
   const [values, setValues] = useState<Record<string, unknown>>({ ...entity });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,6 +55,38 @@ export const FormMode: React.FC<FormModeProps> = ({ entity, fields, onSave, onCa
       setSaving(false);
     }
   }, [values, entity, fields, onSave]);
+
+  // When schemaId is provided, delegate to FormRenderer which handles FormSpec
+  // resolution internally. If the schema has no FormSpec, FormRenderer falls
+  // back to its own FlatFallback renderer (FieldDefinition-driven).
+  if (schemaId) {
+    const handleFormRendererSubmit = async (submittedValues: Record<string, unknown>) => {
+      // Compute diff: only send fields that changed from the original entity value.
+      const changes: Record<string, unknown> = {};
+      for (const [key, val] of Object.entries(submittedValues)) {
+        const originalVal = entity[key];
+        const submittedStr = typeof val === 'string' ? val : JSON.stringify(val);
+        const originalStr = typeof originalVal === 'string' ? originalVal : JSON.stringify(originalVal ?? null);
+        if (submittedStr !== originalStr) {
+          changes[key] = val;
+        }
+      }
+      if (Object.keys(changes).length > 0) {
+        await onSave(changes);
+      }
+    };
+
+    return (
+      <FormRenderer
+        schemaId={schemaId}
+        mode="edit"
+        initialValues={entity}
+        onSubmit={handleFormRendererSubmit}
+        onCancel={onCancel}
+        compact={true}
+      />
+    );
+  }
 
   return (
     <div>

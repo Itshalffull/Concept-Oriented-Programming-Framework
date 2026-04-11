@@ -1,0 +1,248 @@
+# @fixtures-added
+@version(1)
+@category("view")
+@visibility("public")
+concept FormSpec [F] {
+
+  purpose {
+    Declare how a schema's fields are presented for editing — field order,
+    grouping, conditional visibility, widget overrides, and multi-step flow.
+    Independent of storage types and read display (PresentationSpec). A single
+    schema can have multiple FormSpecs (e.g., "quick create" vs "full edit" vs
+    "admin form") enabling context-appropriate editing surfaces without
+    duplicating schema logic.
+  }
+
+  state {
+    forms: set F
+    identity {
+      schema: F -> String
+      name: F -> String
+      mode: F -> "create" | "edit" | "both"
+    }
+    layout {
+      steps: F -> String
+      layout: F -> String
+      conditions: F -> String
+      defaults: F -> String
+      overrides: F -> String
+    }
+  }
+
+  actions {
+
+    action create(form: F, schema: String, name: String, mode: String) {
+      -> ok(form: F) {
+        Register a new named form spec for the given schema and mode. The form
+        is immediately addressable for retrieval, update, and rendering.
+      }
+      -> duplicate(form: F) {
+        A form spec with this name already exists for this schema and mode
+        combination. Names must be unique per schema+mode pair.
+      }
+      -> error(message: String) {
+        The schema or name is empty, making the form spec unaddressable, or
+        the mode is not one of "create", "edit", or "both".
+      }
+      fixture create_ok { form: "article-quick-create", schema: "article", name: "quick-create", mode: "create" }
+      fixture create_edit { form: "article-full-edit", schema: "article", name: "full-edit", mode: "edit" }
+      fixture create_both { form: "task-form", schema: "task", name: "task-form", mode: "both" }
+      fixture create_duplicate { form: "article-quick-create-dup", schema: "article", name: "quick-create", mode: "create" } after create_ok -> duplicate
+      fixture create_empty_schema { form: "bad-form", schema: "", name: "my-form", mode: "create" } -> error
+      fixture create_empty_name { form: "bad-form2", schema: "article", name: "", mode: "create" } -> error
+      fixture create_invalid_mode { form: "bad-form3", schema: "article", name: "some-form", mode: "view" } -> error
+    }
+
+    action update(form: F, layout: option String, steps: option String, conditions: option String, defaults: option String, overrides: option String) {
+      -> ok(form: F) {
+        Apply the given layout, steps, conditions, defaults, and/or overrides
+        to the form spec, leaving unspecified fields unchanged.
+      }
+      -> notfound(form: F) {
+        No form spec exists with this identifier.
+      }
+      fixture update_ok { form: "article-quick-create", layout: '{"groups":[{"id":"basic","label":"Basic Info","fieldIds":["title","body"]}]}', steps: none, conditions: none, defaults: '{"status":"draft"}', overrides: none } after create_ok
+      fixture update_missing { form: "nonexistent-form", layout: none, steps: none, conditions: none, defaults: none, overrides: none } -> notfound
+    }
+
+    action addField(form: F, fieldId: String, group: option String, position: option Int) {
+      -> ok(form: F) {
+        Insert the field into the form's layout at the given position within
+        the specified group, or append it if no position is supplied.
+      }
+      -> notfound(form: F) {
+        No form spec exists with this identifier.
+      }
+      fixture add_field_ok { form: "article-quick-create", fieldId: "tags", group: "basic", position: none } after create_ok
+      fixture add_field_positioned { form: "article-quick-create", fieldId: "author", group: none, position: 0 } after create_ok
+      fixture add_field_missing { form: "nonexistent-form", fieldId: "title", group: none, position: none } -> notfound
+    }
+
+    action removeField(form: F, fieldId: String) {
+      -> ok(form: F) {
+        Remove the field from the form's layout. If the field appears in
+        multiple groups it is removed from all of them.
+      }
+      -> notfound(form: F) {
+        No form spec exists with this identifier.
+      }
+      fixture remove_field_ok { form: "article-quick-create", fieldId: "tags" } after add_field_ok
+      fixture remove_field_missing { form: "nonexistent-form", fieldId: "title" } -> notfound
+    }
+
+    action reorderField(form: F, fieldId: String, position: Int) {
+      -> ok(form: F) {
+        Move the field to the specified zero-based position within its current
+        group, shifting other fields to accommodate the new order.
+      }
+      -> notfound(form: F) {
+        No form spec exists with this identifier.
+      }
+      fixture reorder_ok { form: "article-quick-create", fieldId: "body", position: 0 } after create_ok
+      fixture reorder_missing { form: "nonexistent-form", fieldId: "title", position: 0 } -> notfound
+    }
+
+    action addCondition(form: F, fieldId: String, condition: String) {
+      -> ok(form: F) {
+        Register a conditional visibility rule for the field within the form.
+        The condition is a serialized FieldCondition JSON expression evaluated
+        at render time.
+      }
+      -> notfound(form: F) {
+        No form spec exists with this identifier.
+      }
+      fixture add_condition_ok { form: "article-quick-create", fieldId: "publishedAt", condition: '{"when":{"field":"status","eq":"published"},"show":true}' } after create_ok
+      fixture add_condition_missing { form: "nonexistent-form", fieldId: "title", condition: '{"when":{"field":"x","eq":"y"},"show":true}' } -> notfound
+    }
+
+    action removeCondition(form: F, fieldId: String) {
+      -> ok(form: F) {
+        Remove any conditional visibility rule for the field, making it
+        unconditionally visible in the form.
+      }
+      -> notfound(form: F) {
+        No form spec exists with this identifier.
+      }
+      fixture remove_condition_ok { form: "article-quick-create", fieldId: "publishedAt" } after add_condition_ok
+      fixture remove_condition_missing { form: "nonexistent-form", fieldId: "title" } -> notfound
+    }
+
+    action addStep(form: F, title: String, position: option Int) {
+      -> ok(form: F) {
+        Append or insert a new step into the form's multi-step flow at the
+        given position. Steps partition groups of fields into wizard pages.
+      }
+      -> notfound(form: F) {
+        No form spec exists with this identifier.
+      }
+      fixture add_step_ok { form: "article-quick-create", title: "Details", position: none } after create_ok
+      fixture add_step_positioned { form: "article-quick-create", title: "Review", position: 0 } after create_ok
+      fixture add_step_missing { form: "nonexistent-form", title: "Basic", position: none } -> notfound
+    }
+
+    action removeStep(form: F, stepIndex: Int) {
+      -> ok(form: F) {
+        Remove the step at the given zero-based index from the form's
+        multi-step flow. Fields assigned to the removed step are unassigned.
+      }
+      -> notfound(form: F) {
+        No form spec exists with this identifier.
+      }
+      fixture remove_step_ok { form: "article-quick-create", stepIndex: 0 } after add_step_ok
+      fixture remove_step_missing { form: "nonexistent-form", stepIndex: 0 } -> notfound
+    }
+
+    action get(form: F) {
+      -> ok(form: F, schema: String, name: String, mode: String, layout: String, steps: String, conditions: String, defaults: String, overrides: String) {
+        Return the form spec's schema binding, mode, and all layout configuration
+        as serialized JSON strings, exactly as stored.
+      }
+      -> notfound(form: F) {
+        No form spec exists with this identifier.
+      }
+      fixture get_ok { form: "article-quick-create" } after create_ok
+      fixture get_missing { form: "nonexistent-form" } -> notfound
+    }
+
+    action list(schema: option String) {
+      -> ok(items: String) {
+        Return all registered form specs as a JSON array. When schema is
+        supplied, return only form specs for that schema; otherwise return
+        all form specs across all schemas.
+      }
+      fixture list_all { schema: none }
+      fixture list_by_schema { schema: "article" }
+    }
+
+    action resolve(schema: String, mode: String) {
+      -> ok(form: F, layout: String, steps: String, conditions: String, defaults: String, overrides: String) {
+        Find the canonical form spec for the given schema and mode, returning
+        its full layout configuration. A "both" form satisfies either "create"
+        or "edit" mode requests when no exact match exists.
+      }
+      -> notfound(schema: String, mode: String) {
+        No form spec is registered for this schema and mode combination.
+      }
+      fixture resolve_ok { schema: "article", mode: "create" } after create_ok
+      fixture resolve_missing { schema: "nonexistent-schema", mode: "create" } -> notfound
+    }
+
+    action remove(form: F) {
+      -> ok(form: F) {
+        Permanently delete the form spec and all its layout configuration.
+      }
+      -> notfound(form: F) {
+        No form spec exists with this identifier.
+      }
+      fixture remove_ok { form: "article-quick-create" } after create_ok
+      fixture remove_missing { form: "nonexistent-form" } -> notfound
+    }
+
+  }
+
+  example "create then get returns full config": {
+    after create(form: "article-qc", schema: "article", name: "quick-create", mode: "create") -> ok(form: f)
+    then  get(form: f) -> ok(schema: s, name: n, mode: m)
+    and   s != none
+    and   n != none
+    and   m != none
+  }
+
+  example "duplicate create is rejected": {
+    after create(form: "task-form", schema: "task", name: "task-form", mode: "both") -> ok(form: f)
+    then  create(form: "task-form-2", schema: "task", name: "task-form", mode: "both") -> duplicate(form: f2)
+  }
+
+  example "resolve finds form by schema and mode": {
+    after create(form: "article-create-form", schema: "article", name: "create-form", mode: "create") -> ok(form: f)
+    then  resolve(schema: "article", mode: "create") -> ok(form: r)
+  }
+
+  example "update persists layout changes": {
+    after create(form: "note-form", schema: "note", name: "note-form", mode: "edit") -> ok(form: f)
+    then  update(form: f, layout: '{"groups":[]}', steps: none, conditions: none, defaults: none, overrides: none) -> ok(form: f2)
+    then  get(form: f2) -> ok(layout: l)
+    and   l != none
+  }
+
+  always "forms have non-empty schema and name": {
+    forall f in forms:
+    f.schema != "" and f.name != ""
+  }
+
+  always "mode is always a valid value": {
+    forall f in forms:
+    f.mode in {"create", "edit", "both"}
+  }
+
+  never "orphaned form state": {
+    exists f in forms:
+    f.schema = none or f.name = none
+  }
+
+  action create {
+    requires: schema != "" and name != ""
+    ensures ok: form != none
+  }
+
+}

@@ -1,0 +1,426 @@
+@version(1)
+widget form-preview {
+
+  purpose {
+    Live preview of the form currently being designed in the form builder. Renders
+    fields, groups, and steps using sample data so the designer can verify layout,
+    label copy, validation messaging, and conditional visibility behaviour before
+    publishing. A responsive toolbar lets the designer switch between desktop, tablet,
+    and mobile viewport sizes. Multi-step forms are navigated via Prev/Next buttons
+    and a dot indicator. The preview is read-only by default; interacting with field
+    inputs does not mutate concept state. A reset button clears any typed sample
+    values. Submission displays a submitted overlay; errors display an error summary.
+  }
+
+  anatomy {
+    root:             container    { Outer wrapper; bounds the preview viewport }
+    toolbar:          container    { Top bar with device-mode toggles and reset button }
+    deviceToggle:     container    { Button group for switching device viewport width }
+    desktopButton:    action       { Sets preview viewport to desktop width }
+    tabletButton:     action       { Sets preview viewport to tablet width }
+    mobileButton:     action       { Sets preview viewport to mobile width }
+    resetButton:      action       { Clears all typed sample values and resets to idle }
+    formContainer:    container    { Scrollable area rendering the form fields and groups }
+    stepIndicator:    container    { Progress indicator row showing all steps }
+    stepDots:         presentation { Row of dots, one per step; filled dot marks current step }
+    currentStepLabel: text         { Human-readable label of the current step }
+    fieldGroup:       container    { A named group of fields rendered together }
+    groupHeader:      text         { Display label for the field group }
+    fieldSlot:        container    { Wrapper for a single rendered field }
+    fieldInput:       interactive  { Rendered input control for the field (read-only sample) }
+    validationMessage: text        { Inline validation error message below a field input }
+    characterCount:   text         { Live character count shown for text fields with maxLength }
+    navigationBar:    container    { Bottom bar with Prev/Next step navigation and Submit }
+    prevButton:       action       { Navigates to the previous step }
+    nextButton:       action       { Navigates to the next step }
+    submitButton:     action       { Simulates form submission for preview purposes }
+    submittedOverlay: container    { Full-pane overlay shown after simulated submission }
+    errorSummary:     container    { Summary list of validation errors shown at the top on submit attempt }
+  }
+
+  states {
+    idle [initial] {
+      on BEGIN_FILL   -> filling;
+      on SUBMIT       -> validating;
+    }
+
+    filling {
+      on SUBMIT       -> validating;
+      on RESET        -> idle;
+    }
+
+    validating {
+      on VALID        -> submitted;
+      on INVALID      -> error;
+    }
+
+    submitted {
+      on RESET        -> idle;
+    }
+
+    error {
+      on BEGIN_FILL   -> filling;
+      on SUBMIT       -> validating;
+      on RESET        -> idle;
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      Tab       -> FOCUS_NEXT_FIELD;
+      Shift+Tab -> FOCUS_PREV_FIELD;
+      Enter     -> SUBMIT;
+      Escape    -> RESET;
+    }
+    focus {
+      trap: false;
+      initial: formContainer;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Form preview";
+        aria-live: "polite";
+        data-state: state;
+      };
+      toolbar -> {
+        role: "toolbar";
+        aria-label: "Preview controls";
+        aria-orientation: "horizontal";
+      };
+      deviceToggle -> {
+        role: "group";
+        aria-label: "Device viewport";
+      };
+      desktopButton -> {
+        role: "radio";
+        aria-label: "Desktop preview";
+        aria-checked: if ?deviceMode == "desktop" then "true" else "false";
+      };
+      tabletButton -> {
+        role: "radio";
+        aria-label: "Tablet preview";
+        aria-checked: if ?deviceMode == "tablet" then "true" else "false";
+      };
+      mobileButton -> {
+        role: "radio";
+        aria-label: "Mobile preview";
+        aria-checked: if ?deviceMode == "mobile" then "true" else "false";
+      };
+      resetButton -> {
+        role: "button";
+        aria-label: "Reset form preview";
+      };
+      formContainer -> {
+        role: "form";
+        aria-label: "Form preview content";
+      };
+      stepIndicator -> {
+        role: "progressbar";
+        aria-label: "Step progress";
+        aria-valuenow: ?currentStep;
+        aria-valuemin: "1";
+        aria-valuemax: ?totalSteps;
+      };
+      fieldGroup -> {
+        role: "group";
+        aria-label: self.groupLabel;
+      };
+      fieldInput -> {
+        aria-label: self.fieldLabel;
+        aria-required: if self.required then "true" else "false";
+        aria-describedby: if self.hasValidationError then "validation-message" else none;
+      };
+      validationMessage -> {
+        role: "alert";
+        aria-live: "assertive";
+        aria-hidden: if self.hasError then "false" else "true";
+      };
+      errorSummary -> {
+        role: "alert";
+        aria-label: "Form errors";
+        aria-live: "assertive";
+        aria-hidden: if state == "error" then "false" else "true";
+      };
+      prevButton -> {
+        role: "button";
+        aria-label: "Previous step";
+        aria-disabled: if ?currentStep == 1 then "true" else "false";
+      };
+      nextButton -> {
+        role: "button";
+        aria-label: "Next step";
+        aria-disabled: if ?currentStep == ?totalSteps then "true" else "false";
+      };
+      submitButton -> {
+        role: "button";
+        aria-label: "Submit form (preview)";
+        aria-disabled: if state == "validating" or state == "submitted" then "true" else "false";
+        aria-busy: if state == "validating" then "true" else "false";
+      };
+      submittedOverlay -> {
+        role: "status";
+        aria-label: "Form submitted";
+        aria-live: "polite";
+        aria-hidden: if state == "submitted" then "false" else "true";
+      };
+    }
+  }
+
+  props {
+    formSpec: option { formId: String, name: String, steps: list { stepId: String, label: String }, groups: list { groupId: String, label: String, stepId: String }, conditions: list { fieldId: String, conditionFieldId: String, operator: String, value: String } }
+    fieldDefinitions: list { fieldId: String, label: String, fieldType: String, placeholder: String, helpText: String, required: Bool, widget: String, groupId: option String, stepId: String, width: union "full" | "half" | "third" | "quarter", hidden: Bool } = []
+    deviceMode: union "desktop" | "tablet" | "mobile" = "desktop"
+    sampleData: list { fieldId: String, value: String } = []
+    currentStep: Int = 1
+    totalSteps: Int = 1
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-device: ?deviceMode;
+    }
+
+    toolbar -> {
+      data-part: "toolbar";
+    }
+
+    deviceToggle -> {
+      data-part: "device-toggle";
+      data-active-device: ?deviceMode;
+    }
+
+    desktopButton -> {
+      data-part: "desktop-button";
+      data-active: if ?deviceMode == "desktop" then "true" else "false";
+      onClick: send(SET_DEVICE, { mode: "desktop" });
+    }
+
+    tabletButton -> {
+      data-part: "tablet-button";
+      data-active: if ?deviceMode == "tablet" then "true" else "false";
+      onClick: send(SET_DEVICE, { mode: "tablet" });
+    }
+
+    mobileButton -> {
+      data-part: "mobile-button";
+      data-active: if ?deviceMode == "mobile" then "true" else "false";
+      onClick: send(SET_DEVICE, { mode: "mobile" });
+    }
+
+    resetButton -> {
+      data-part: "reset-button";
+      onClick: send(RESET);
+    }
+
+    formContainer -> {
+      data-part: "form-container";
+      data-state: state;
+      data-step: ?currentStep;
+    }
+
+    stepIndicator -> {
+      data-part: "step-indicator";
+      data-visible: if ?totalSteps > 1 then "true" else "false";
+      hidden: if ?totalSteps > 1 then false else true;
+    }
+
+    stepDots -> {
+      data-part: "step-dots";
+      data-current: ?currentStep;
+      data-total: ?totalSteps;
+    }
+
+    currentStepLabel -> {
+      data-part: "current-step-label";
+    }
+
+    fieldGroup -> {
+      data-part: "field-group";
+      data-group-id: self.groupId;
+    }
+
+    groupHeader -> {
+      data-part: "group-header";
+    }
+
+    fieldSlot -> {
+      data-part: "field-slot";
+      data-field-id: self.fieldId;
+      data-width: self.width;
+      data-hidden: if self.hidden then "true" else "false";
+      hidden: if self.hidden then true else false;
+    }
+
+    fieldInput -> {
+      data-part: "field-input";
+      data-field-id: self.fieldId;
+      data-field-type: self.fieldType;
+      value: self.sampleValue;
+      placeholder: self.placeholder;
+      onFocus: send(BEGIN_FILL);
+      onInput: send(UPDATE_SAMPLE, { fieldId: self.fieldId, value: self.value });
+    }
+
+    validationMessage -> {
+      data-part: "validation-message";
+      data-field-id: self.fieldId;
+      data-visible: if self.hasError then "true" else "false";
+      hidden: if self.hasError then false else true;
+    }
+
+    characterCount -> {
+      data-part: "character-count";
+      data-field-id: self.fieldId;
+      data-visible: if self.showCount then "true" else "false";
+      hidden: if self.showCount then false else true;
+    }
+
+    navigationBar -> {
+      data-part: "navigation-bar";
+      data-visible: if ?totalSteps > 1 then "true" else "false";
+      hidden: if ?totalSteps > 1 then false else true;
+    }
+
+    prevButton -> {
+      data-part: "prev-button";
+      disabled: if ?currentStep == 1 then true else false;
+      onClick: if ?currentStep > 1 then send(PREV_STEP) else noop;
+    }
+
+    nextButton -> {
+      data-part: "next-button";
+      disabled: if ?currentStep == ?totalSteps then true else false;
+      hidden: if ?currentStep == ?totalSteps then true else false;
+      onClick: if ?currentStep < ?totalSteps then send(NEXT_STEP) else noop;
+    }
+
+    submitButton -> {
+      data-part: "submit-button";
+      data-state: state;
+      hidden: if ?currentStep == ?totalSteps then false else true;
+      disabled: if state == "validating" or state == "submitted" then true else false;
+      onClick: send(SUBMIT);
+    }
+
+    submittedOverlay -> {
+      data-part: "submitted-overlay";
+      data-visible: if state == "submitted" then "true" else "false";
+      hidden: if state == "submitted" then false else true;
+    }
+
+    errorSummary -> {
+      data-part: "error-summary";
+      data-visible: if state == "error" then "true" else "false";
+      hidden: if state == "error" then false else true;
+    }
+  }
+
+  invariant {
+    example "begin fill transitions to filling": {
+      after fieldInput.focus -> ok
+      then root -> { data-state: "filling" }
+    }
+
+    example "reset from filling returns to idle": {
+      after fieldInput.focus -> ok
+      then root -> { data-state: "filling" }
+      then resetButton.click -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    example "valid submit transitions to submitted": {
+      after submitButton.click -> ok
+      then root -> { data-state: "validating" }
+      then send(VALID) -> ok
+      then root -> { data-state: "submitted" }
+      and submittedOverlay -> { data-visible: "true" }
+    }
+
+    example "invalid submit transitions to error": {
+      after submitButton.click -> ok
+      then root -> { data-state: "validating" }
+      then send(INVALID) -> ok
+      then root -> { data-state: "error" }
+      and errorSummary -> { data-visible: "true" }
+    }
+
+    example "resume filling after error": {
+      after transition(from: "error", event: "BEGIN_FILL") -> ok
+      then root -> { data-state: "filling" }
+    }
+
+    example "device mode switching updates data-device": {
+      after tabletButton.click -> ok
+      then root -> { data-device: "tablet" }
+      and tabletButton -> { data-active: "true" }
+      and desktopButton -> { data-active: "false" }
+    }
+
+    example "step navigation with Prev and Next": {
+      after nextButton.click -> ok
+      then formContainer -> { data-step: 2 }
+      then prevButton.click -> ok
+      then formContainer -> { data-step: 1 }
+    }
+
+    always "data-state on root reflects FSM": {
+      root -> { data-state: state }
+    }
+
+    always "submitted overlay visible only when submitted": {
+      submittedOverlay -> { data-visible: if state == "submitted" then "true" else "false" }
+    }
+
+    always "error summary visible only when in error state": {
+      errorSummary -> { data-visible: if state == "error" then "true" else "false" }
+    }
+
+    always "step indicator hidden for single-step forms": {
+      if ?totalSteps == 1 then stepIndicator -> { hidden: true } else stepIndicator -> { hidden: false }
+    }
+
+    always "prevButton disabled on first step": {
+      if ?currentStep == 1 then prevButton -> { disabled: true }
+    }
+
+    always "nextButton hidden on last step": {
+      if ?currentStep == ?totalSteps then nextButton -> { hidden: true }
+    }
+
+    always "submitButton shown only on last step": {
+      if ?currentStep == ?totalSteps then submitButton -> { hidden: false } else submitButton -> { hidden: true }
+    }
+
+    never "unreachable state": {
+      exists s in states:
+        s.inbound_count = 0 and s != "idle"
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    action submitButton.click {
+      requires: state == "idle" or state == "filling" or state == "error"
+      ensures ok: state == "validating"
+    }
+
+    action resetButton.click {
+      requires: state != "idle"
+      ensures ok: state == "idle"
+    }
+
+    "fieldInput interactions in the preview do not invoke concept actions — all changes are local sample data only";
+    "Conditional fields (hasCondition == true) must be hidden or shown based on the evaluated condition against sampleData";
+    "Hidden fields (hidden == true on fieldDefinition) must never be rendered in the preview regardless of conditions";
+    "deviceMode prop change updates root data-device and resizes formContainer without resetting FSM state";
+    "characterCount is visible only for field types that have a maxLength constraint";
+    "validationMessage is visible per-field only in the error state when that field fails validation";
+    "NEXT_STEP and PREV_STEP do not transition the FSM state — they update currentStep prop in the parent";
+  }
+
+}

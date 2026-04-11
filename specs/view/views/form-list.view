@@ -1,0 +1,40 @@
+view "form-list" {
+  shell: "form-list"
+
+  features {
+    filter
+    sort
+    projection
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"FormSpec\",\"action\":\"list\"}"
+    }
+    filter: {
+      node: "{\"type\":\"true\"}"
+    }
+    sort: {
+      keys: "[{\"field\":\"schema\",\"direction\":\"asc\"}]"
+    }
+    projection: {
+      fields: "[{\"key\":\"name\",\"label\":\"Form Name\"},{\"key\":\"schema\",\"label\":\"Schema\",\"formatter\":\"badge\"},{\"key\":\"mode\",\"label\":\"Mode\",\"formatter\":\"badge\"}]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+  }
+
+  purpose {
+    Browse all form specifications. Each row shows a FormSpec with its target
+    schema, mode (create/edit/both), and field/step counts. Row click navigates
+    to the form builder for that schema.
+  }
+
+  invariants {
+    always "purity is read-only": { purity = "read-only" }
+    always "no invoke instructions": { invokeCount = 0 }
+  }
+}

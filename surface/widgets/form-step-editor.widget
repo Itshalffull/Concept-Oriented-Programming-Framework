@@ -1,0 +1,380 @@
+@version(1)
+widget form-step-editor {
+
+  purpose {
+    Multi-step form wizard step configuration editor. Presents an ordered list
+    of step cards where each card shows a step number, an editable step title,
+    and the set of field groups assigned to that step. Steps can be added,
+    removed, and reordered via drag-and-drop or keyboard. Each step card
+    displays the associated group chips and exposes add/remove group controls.
+    A progress preview at the bottom renders dot or label navigation matching
+    the configured steps so authors can verify the wizard flow before publishing.
+    A read-only toggle suppresses all mutation controls for view-only contexts.
+  }
+
+  anatomy {
+    root:              container    { Top-level step editor wrapper }
+    stepList:          container   { Ordered list of step cards }
+    stepCard:          container   { A single step configuration card: number + title + groups }
+    stepNumber:        text        { Ordinal position label displayed on the step card }
+    stepTitle:         text        { Display title shown on the collapsed step card }
+    stepTitleInput:    interactive { Editable text field for the step title, active while editing-step }
+    stepGroupList:     container   { Row of group chips assigned to this step }
+    stepGroupChip:     container   { Chip showing a group that belongs to this step }
+    addGroupButton:    action      { Appends a group to the current step from the available groups list }
+    removeGroupButton: action      { Removes the associated group chip from this step }
+    removeStepButton:  action      { Removes the entire step from the wizard }
+    addStepButton:     action      { Appends a new blank step after the last step }
+    dragHandle:        action      { Drag handle for reordering step cards }
+    stepConnector:     presentation { Visual line connecting adjacent step cards in the list }
+    progressPreview:   container   { Live preview of the progress indicator strip }
+    progressDots:      presentation { Dot indicators in the progress preview, one per step }
+    progressLabels:    presentation { Label row in the progress preview, one per step }
+    readOnlyToggle:    action      { Toggles read-only mode on the editor }
+    emptyState:        container   { Placeholder shown when no steps have been configured }
+  }
+
+  states {
+    idle [initial] {
+      on START_DRAG_STEP  -> dragging-step;
+      on BEGIN_EDIT_TITLE -> editing-step;
+      on BEGIN_ADD_STEP   -> adding-step;
+      on REMOVE_STEP      -> idle;
+      on ADD_GROUP        -> idle;
+      on REMOVE_GROUP     -> idle;
+      on TOGGLE_READONLY  -> idle;
+    }
+
+    editing-step {
+      on COMMIT_TITLE -> idle;
+      on CANCEL_TITLE -> idle;
+      entry [focusStepTitleInput];
+      exit [persistStepTitle];
+    }
+
+    dragging-step {
+      on DROP_STEP    -> idle;
+      on CANCEL_DRAG  -> idle;
+      entry [setDragPayload; highlightDropTargets];
+      exit [clearDragPayload; clearDropTargets];
+    }
+
+    adding-step {
+      on COMMIT_ADD   -> idle;
+      on CANCEL_ADD   -> idle;
+      entry [focusNewStepTitleInput];
+    }
+  }
+
+  accessibility {
+    role: list;
+    keyboard {
+      Tab         -> FOCUS_NEXT;
+      Enter       -> BEGIN_EDIT_TITLE;
+      Escape      -> CANCEL_TITLE;
+      Delete      -> REMOVE_STEP;
+      ArrowUp     -> MOVE_STEP_UP;
+      ArrowDown   -> MOVE_STEP_DOWN;
+      Space       -> START_DRAG_STEP;
+    }
+    focus {
+      trap: false;
+      initial: stepCard;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "list";
+        aria-label: "Form steps";
+        data-state: state;
+      };
+      stepList -> {
+        role: "list";
+        aria-label: concat("Steps: ", stepCount, " configured");
+      };
+      stepCard -> {
+        role: "listitem";
+        aria-label: concat("Step ", self.stepNumber, ": ", self.title);
+        aria-grabbed: if state == "dragging-step" and self.isGrabbed then "true" else "false";
+      };
+      stepNumber -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      stepTitle -> {
+        role: "heading";
+        aria-level: "3";
+        aria-label: self.title;
+      };
+      stepTitleInput -> {
+        role: "textbox";
+        aria-label: "Step title";
+        aria-required: "true";
+      };
+      stepGroupList -> {
+        role: "group";
+        aria-label: concat("Groups for step ", self.stepNumber);
+      };
+      stepGroupChip -> {
+        role: "listitem";
+        aria-label: concat("Group: ", self.groupLabel);
+      };
+      addGroupButton -> {
+        role: "button";
+        aria-label: concat("Add group to step ", self.stepNumber);
+        aria-haspopup: "listbox";
+      };
+      removeGroupButton -> {
+        role: "button";
+        aria-label: concat("Remove group ", self.groupLabel, " from step ", self.stepNumber);
+      };
+      removeStepButton -> {
+        role: "button";
+        aria-label: concat("Remove step ", self.stepNumber, ": ", self.title);
+      };
+      addStepButton -> {
+        role: "button";
+        aria-label: "Add step";
+      };
+      dragHandle -> {
+        role: "button";
+        aria-label: concat("Drag to reorder step ", self.stepNumber);
+        aria-roledescription: "drag handle";
+      };
+      progressPreview -> {
+        role: "region";
+        aria-label: "Progress indicator preview";
+        aria-live: "polite";
+      };
+      readOnlyToggle -> {
+        role: "button";
+        aria-label: if ?readOnly then "Disable read-only mode" else "Enable read-only mode";
+        aria-pressed: if ?readOnly then "true" else "false";
+      };
+      emptyState -> {
+        role: "status";
+        aria-label: "No steps configured";
+        aria-live: "polite";
+      };
+    }
+  }
+
+  props {
+    steps:         list { stepId: String, title: String, groupIds: list String } = []
+    groups:        list { groupId: String, label: String } = []
+    readOnly:      Bool = false
+    onUpdate:      String = ""
+    onAddStep:     String = ""
+    onRemoveStep:  String = ""
+  }
+
+  connect {
+    root -> {
+      data-part:      "root";
+      data-state:     state;
+      data-step-count: stepCount;
+      data-readonly:  if ?readOnly then "true" else "false";
+    }
+
+    stepList -> {
+      data-part: "step-list";
+    }
+
+    stepCard -> {
+      data-part:      "step-card";
+      data-step-id:   self.stepId;
+      data-step-index: self.index;
+      data-grabbed:   if state == "dragging-step" and self.isGrabbed then "true" else "false";
+      tabindex:       "0";
+    }
+
+    stepNumber -> {
+      data-part: "step-number";
+      text:      self.stepNumber;
+    }
+
+    stepTitle -> {
+      data-part: "step-title";
+      text:      self.title;
+      hidden:    if state == "editing-step" and self.isActive then true else false;
+      onDoubleClick: if ?readOnly then noop else send(BEGIN_EDIT_TITLE, { stepId: self.stepId });
+    }
+
+    stepTitleInput -> {
+      data-part: "step-title-input";
+      value:     self.title;
+      hidden:    if state == "editing-step" and self.isActive then false else true;
+      onInput:   send(COMMIT_TITLE, { stepId: self.stepId, title: event.value });
+      onKeyDown: if key == "Enter" then send(COMMIT_TITLE) else if key == "Escape" then send(CANCEL_TITLE) else noop;
+      onBlur:    send(COMMIT_TITLE);
+      disabled:  if ?readOnly then true else false;
+    }
+
+    stepGroupList -> {
+      data-part: "step-group-list";
+    }
+
+    stepGroupChip -> {
+      data-part:     "step-group-chip";
+      data-group-id: self.groupId;
+    }
+
+    addGroupButton -> {
+      data-part: "add-group-button";
+      onClick:   if ?readOnly then noop else send(ADD_GROUP, { stepId: self.stepId });
+      disabled:  if ?readOnly then true else false;
+    }
+
+    removeGroupButton -> {
+      data-part:  "remove-group-button";
+      data-group-id: self.groupId;
+      onClick:    if ?readOnly then noop else send(REMOVE_GROUP, { stepId: self.stepId, groupId: self.groupId });
+      disabled:   if ?readOnly then true else false;
+    }
+
+    removeStepButton -> {
+      data-part: "remove-step-button";
+      onClick:   if ?readOnly then noop else send(REMOVE_STEP, { stepId: self.stepId });
+      disabled:  if ?readOnly then true else false;
+    }
+
+    addStepButton -> {
+      data-part: "add-step-button";
+      onClick:   if ?readOnly then noop else send(BEGIN_ADD_STEP);
+      disabled:  if ?readOnly then true else false;
+    }
+
+    dragHandle -> {
+      data-part:       "drag-handle";
+      data-step-id:    self.stepId;
+      onPointerDown:   if ?readOnly then noop else send(START_DRAG_STEP, { stepId: self.stepId });
+      onKeyDown:       if key == "Space" then send(START_DRAG_STEP, { stepId: self.stepId }) else if key == "ArrowUp" then send(MOVE_STEP_UP, { stepId: self.stepId }) else if key == "ArrowDown" then send(MOVE_STEP_DOWN, { stepId: self.stepId }) else if key == "Escape" then send(CANCEL_DRAG) else noop;
+      tabindex:        "0";
+      disabled:        if ?readOnly then true else false;
+    }
+
+    stepConnector -> {
+      data-part: "step-connector";
+    }
+
+    progressPreview -> {
+      data-part: "progress-preview";
+    }
+
+    progressDots -> {
+      data-part: "progress-dots";
+    }
+
+    progressLabels -> {
+      data-part: "progress-labels";
+    }
+
+    readOnlyToggle -> {
+      data-part:    "read-only-toggle";
+      data-active:  if ?readOnly then "true" else "false";
+      onClick:      send(TOGGLE_READONLY);
+    }
+
+    emptyState -> {
+      data-part: "empty-state";
+      hidden:    if stepCount > 0 then true else false;
+    }
+  }
+
+  invariant {
+    example "add first step": {
+      then root -> { data-state: "idle" }
+      and emptyState -> { hidden: false }
+      after addStepButton.click -> ok
+      then root -> { data-state: "adding-step" }
+      then send(COMMIT_ADD) -> ok
+      then root -> { data-state: "idle" }
+      and root -> { data-step-count: "1" }
+      and emptyState -> { hidden: true }
+    }
+
+    example "edit step title": {
+      after stepTitle.doubleClick -> ok
+      then root -> { data-state: "editing-step" }
+      and stepTitleInput -> { hidden: false }
+      and stepTitle -> { hidden: true }
+      then send(COMMIT_TITLE) -> ok
+      then root -> { data-state: "idle" }
+      and stepTitleInput -> { hidden: true }
+      and stepTitle -> { hidden: false }
+    }
+
+    example "cancel title edit with Escape": {
+      after stepTitle.doubleClick -> ok
+      then root -> { data-state: "editing-step" }
+      then stepTitleInput.keyDown(Escape) -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    example "reorder steps via drag": {
+      after dragHandle.pointerDown -> ok
+      then root -> { data-state: "dragging-step" }
+      and stepCard -> { data-grabbed: "true" }
+      then send(DROP_STEP) -> ok
+      then root -> { data-state: "idle" }
+      and stepCard -> { data-grabbed: "false" }
+    }
+
+    example "cancel drag via Escape": {
+      after dragHandle.keyDown(Space) -> ok
+      then root -> { data-state: "dragging-step" }
+      then dragHandle.keyDown(Escape) -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    example "remove step": {
+      after send(REMOVE_STEP) -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      root -> { data-state: state }
+    }
+
+    always "emptyState hidden when steps exist": {
+      if stepCount > 0 then emptyState -> { hidden: true }
+    }
+
+    always "stepTitleInput hidden when not editing-step": {
+      if state != "editing-step" then stepTitleInput -> { hidden: true }
+    }
+
+    never "mutation controls enabled when readonly": {
+      ?readOnly == true and (
+        addStepButton -> { disabled: false } or
+        removeStepButton -> { disabled: false } or
+        dragHandle -> { disabled: false } or
+        addGroupButton -> { disabled: false } or
+        removeGroupButton -> { disabled: false }
+      )
+    }
+
+    action addStepButton.click {
+      requires: state == "idle" and not ?readOnly
+      ensures ok: state == "adding-step"
+    }
+
+    action dragHandle.pointerDown {
+      requires: state == "idle" and not ?readOnly
+      ensures ok: state == "dragging-step"
+    }
+
+    "COMMIT_ADD appends a new step to the steps list and calls onAddStep";
+    "REMOVE_STEP removes the step by stepId and calls onRemoveStep; if the removed step was the last one, emptyState becomes visible";
+    "COMMIT_TITLE calls onUpdate with the updated step title";
+    "ADD_GROUP assigns the selected groupId to the step identified by stepId";
+    "REMOVE_GROUP unassigns the groupId from the step identified by stepId";
+    "progressPreview must reflect the current step count: one dot and one label per step";
+    "stepCard data-step-index must be the zero-based position after any reordering";
+    "a group can appear in at most one step at a time";
+  }
+
+}

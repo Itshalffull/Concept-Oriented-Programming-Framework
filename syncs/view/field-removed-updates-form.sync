@@ -1,0 +1,16 @@
+# FormSpec field synchronization — removing a FieldDefinition.
+# When a field is removed from a schema, strip it from every FormSpec
+# that covers the same schema to prevent stale field references.
+
+sync FieldRemovedUpdatesForm [eager]
+  purpose: "Remove a deleted FieldDefinition from every existing FormSpec for the same schema to prevent stale field references in rendered forms"
+when {
+  FieldDefinition/remove: [ field: ?f; schema: ?s ]
+    => ok(field: ?f; schema: ?s)
+}
+where {
+  FormSpec: { ?form schema: ?s }
+}
+then {
+  FormSpec/removeField: [ form: ?form; fieldId: ?f ]
+}

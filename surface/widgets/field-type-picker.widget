@@ -1,0 +1,322 @@
+@version(1)
+widget field-type-picker {
+
+  purpose {
+    Grouped, icon-driven field type selector used when adding or changing a schema field's
+    type. Presents available types in labelled groups (Text, Number, Date/Time, Choice,
+    Reference, Special), each with an icon, name, and short description. Supports
+    keyboard type-ahead filtering, a search input for free-text filtering across all
+    groups, and a recent-types section at the top for quick reselection. Emits the chosen
+    type via onSelect and highlights the currently selected type with a selected indicator.
+    Inspired by the Drupal 10.2 revamped field UI pattern.
+  }
+
+  anatomy {
+    root:             container    { Top-level picker wrapper; carries data-state }
+    searchInput:      interactive  { Free-text search input for filtering type options }
+    searchClear:      action       { Button that clears the search query }
+    typeGrid:         container    { Grid of all visible type groups and their options }
+    typeGroup:        container    { A labelled section grouping related field types }
+    typeGroupLabel:   text         { Label heading for a type group (e.g. "Text", "Number") }
+    typeOption:       action       { Selectable card for one field type }
+    typeIcon:         presentation { Icon representing the field type category }
+    typeLabel:        text         { Short display name of the field type }
+    typeDescription:  text         { One-line description of what the field type stores }
+    recentSection:    container    { Section above the main grid listing recently used types }
+    recentLabel:      text         { "Recently used" heading label }
+    recentType:       action       { Shortcut card for a recently used type }
+    selectedIndicator: presentation { Visual checkmark or highlight on the currently selected type option }
+  }
+
+  states {
+    closed [initial] {
+      on OPEN -> open;
+    }
+
+    open {
+      on CLOSE -> closed;
+      on ESCAPE -> closed;
+      on SEARCH -> searching;
+      on SELECT -> selected;
+      entry [focusSearchInput];
+      exit [clearSearch];
+    }
+
+    searching {
+      on CLEAR_SEARCH -> open;
+      on SELECT -> selected;
+      on ESCAPE -> closed;
+      on SEARCH -> searching;
+      entry [filterTypeOptions];
+    }
+
+    selected {
+      on OPEN -> open;
+      on CLOSE -> closed;
+    }
+  }
+
+  accessibility {
+    role: listbox;
+    keyboard {
+      ArrowDown -> FOCUS_NEXT_OPTION;
+      ArrowUp -> FOCUS_PREV_OPTION;
+      ArrowRight -> FOCUS_NEXT_GROUP;
+      ArrowLeft -> FOCUS_PREV_GROUP;
+      Enter -> SELECT;
+      Escape -> ESCAPE;
+      Tab -> FOCUS_SEARCH;
+    }
+    focus {
+      trap: false;
+      initial: searchInput;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "listbox";
+        aria-label: "Select field type";
+        aria-multiselectable: "false";
+        data-state: state;
+      };
+      searchInput -> {
+        role: "searchbox";
+        aria-label: "Search field types";
+        aria-controls: typeGrid;
+        aria-autocomplete: "list";
+      };
+      searchClear -> {
+        role: "button";
+        aria-label: "Clear search";
+        aria-hidden: if state != "searching" then "true" else "false";
+      };
+      typeGrid -> {
+        role: "presentation";
+        aria-label: "Field type groups";
+      };
+      typeGroup -> {
+        role: "group";
+        aria-labelledby: typeGroupLabel;
+      };
+      typeGroupLabel -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      typeOption -> {
+        role: "option";
+        aria-label: concat(self.label, ": ", self.description);
+        aria-selected: if self.value == ?selectedType then "true" else "false";
+      };
+      recentSection -> {
+        role: "group";
+        aria-label: "Recently used field types";
+        aria-hidden: if state == "searching" then "true" else "false";
+      };
+      recentType -> {
+        role: "option";
+        aria-label: concat("Recently used: ", self.label);
+        aria-selected: if self.value == ?selectedType then "true" else "false";
+      };
+      selectedIndicator -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    onSelect: option String
+    selectedType: option String
+    recentTypes: list { value: String, label: String } = []
+    open: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-selected-type: ?selectedType;
+      hidden: if state == "closed" then true else false;
+    }
+
+    searchInput -> {
+      data-part: "search-input";
+      placeholder: "Search field types...";
+      value: searchQuery;
+      onInput: send(SEARCH, { query: event.value });
+      onFocus: noop;
+      onKeyDown: if key == "ArrowDown" then send(FOCUS_NEXT_OPTION) else if key == "Escape" then send(ESCAPE) else noop;
+    }
+
+    searchClear -> {
+      data-part: "search-clear";
+      hidden: if state != "searching" then true else false;
+      onClick: send(CLEAR_SEARCH);
+    }
+
+    typeGrid -> {
+      data-part: "type-grid";
+    }
+
+    typeGroup -> {
+      data-part: "type-group";
+      data-group-id: self.groupId;
+      hidden: if self.hasNoVisibleOptions then true else false;
+    }
+
+    typeGroupLabel -> {
+      data-part: "type-group-label";
+      id: concat("group-label-", self.groupId);
+    }
+
+    typeOption -> {
+      data-part: "type-option";
+      data-value: self.value;
+      data-group: self.groupId;
+      data-selected: if self.value == ?selectedType then "true" else "false";
+      onClick: send(SELECT, { value: self.value });
+      onKeyDown: if key == "Enter" then send(SELECT, { value: self.value }) else if key == "ArrowDown" then send(FOCUS_NEXT_OPTION) else if key == "ArrowUp" then send(FOCUS_PREV_OPTION) else if key == "Escape" then send(ESCAPE) else noop;
+      tabIndex: if self.isFocused then "0" else "-1";
+    }
+
+    typeIcon -> {
+      data-part: "type-icon";
+      data-icon: self.icon;
+    }
+
+    typeLabel -> {
+      data-part: "type-label";
+    }
+
+    typeDescription -> {
+      data-part: "type-description";
+    }
+
+    recentSection -> {
+      data-part: "recent-section";
+      hidden: if recentTypes.length == 0 or state == "searching" then true else false;
+    }
+
+    recentLabel -> {
+      data-part: "recent-label";
+    }
+
+    recentType -> {
+      data-part: "recent-type";
+      data-value: self.value;
+      data-selected: if self.value == ?selectedType then "true" else "false";
+      onClick: send(SELECT, { value: self.value });
+      onKeyDown: if key == "Enter" then send(SELECT, { value: self.value }) else if key == "Escape" then send(ESCAPE) else noop;
+      tabIndex: if self.isFocused then "0" else "-1";
+    }
+
+    selectedIndicator -> {
+      data-part: "selected-indicator";
+      hidden: if ?selectedType == "" then true else false;
+    }
+  }
+
+  invariant {
+    example "opens and focuses search input": {
+      after send(OPEN) -> ok
+      then root -> { data-state: "open"; hidden: false }
+      and searchInput -> { data-part: "search-input" }
+    }
+
+    example "typing filters options and shows search clear button": {
+      after send(OPEN) -> ok
+      then send(SEARCH, { query: "text" }) -> ok
+      then root -> { data-state: "searching" }
+      and searchClear -> { hidden: false }
+    }
+
+    example "clearing search returns to open state": {
+      after send(OPEN) -> ok
+      then send(SEARCH, { query: "text" }) -> ok
+      then searchClear.click -> ok
+      then root -> { data-state: "open" }
+      and searchClear -> { hidden: true }
+    }
+
+    example "selecting a type transitions to selected": {
+      after send(OPEN) -> ok
+      then send(SELECT, { value: "plain-text" }) -> ok
+      then root -> { data-state: "selected"; data-selected-type: "plain-text" }
+    }
+
+    example "Escape closes the picker": {
+      after send(OPEN) -> ok
+      then key(Escape) -> ok
+      then root -> { data-state: "closed"; hidden: true }
+    }
+
+    example "recent section hidden while searching": {
+      after send(OPEN) -> ok
+      then send(SEARCH, { query: "dat" }) -> ok
+      then recentSection -> { hidden: true }
+    }
+
+    example "selected indicator absent when no type is selected": {
+      after send(OPEN) -> ok
+      then selectedIndicator -> { hidden: true }
+    }
+
+    example "selected indicator present after selection": {
+      after send(OPEN) -> ok
+      then send(SELECT, { value: "integer" }) -> ok
+      then typeOption -> { data-selected: "true" }
+      and selectedIndicator -> { hidden: false }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        root -> { data-state: s.name }
+    }
+
+    always "root hidden when closed": {
+      if state == "closed" then root -> { hidden: true }
+    }
+
+    always "typeOption aria-selected true only for the selectedType": {
+      forall o in typeOptions:
+        if o.value == ?selectedType then o -> { data-selected: "true" }
+        and if o.value != ?selectedType then o -> { data-selected: "false" }
+    }
+
+    always "searchClear hidden unless actively searching": {
+      if state != "searching" then searchClear -> { hidden: true }
+    }
+
+    always "groups with no matching options are hidden during search": {
+      if state == "searching" then
+        forall g in typeGroups:
+          if g.hasNoVisibleOptions then g -> { hidden: true }
+    }
+
+    never "multiple options aria-selected simultaneously": {
+      exists o1 in typeOptions:
+        exists o2 in typeOptions:
+          o1 != o2 and o1 -> { data-selected: "true" } and o2 -> { data-selected: "true" }
+    }
+
+    never "recent section visible while searching": {
+      state == "searching" and recentSection -> { hidden: false }
+    }
+
+    action typeOption.click {
+      requires: state == "open" or state == "searching"
+      ensures ok: state == "selected"
+      ensures ok: root -> { data-selected-type: self.value }
+    }
+
+    "SELECT event must invoke the onSelect callback prop with the chosen type value";
+    "type-ahead keyboard input on any focused typeOption should redirect to searchInput and begin filtering";
+    "roving tabindex must be applied to typeOptions and recentTypes so only one element is in the tab sequence at a time";
+    "groups are: Text (plain-text, formatted-text, long-text), Number (integer, decimal, currency, percentage), Date/Time (date, datetime, duration), Choice (boolean, select, multi-select, rating), Reference (relation, person, file, media), Special (url, email, json, rich-text, formula, computed)";
+    "recentTypes list is provided by the consumer; this widget does not maintain recent-type history internally";
+  }
+
+}

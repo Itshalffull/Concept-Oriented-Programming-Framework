@@ -1,0 +1,350 @@
+@version(1)
+widget form-condition-editor {
+
+  purpose {
+    Visual editor for configuring conditional visibility rules on form fields.
+    Each rule specifies: the target field whose visibility is controlled, the
+    source field whose value drives the condition, the comparison operator, and
+    the value to compare against. Rules are listed vertically; a chain indicator
+    line visually links conditions that affect related fields. A preview dot next
+    to each rule glows when the condition would currently pass given the form's
+    live values. The widget detects circular dependency chains — where field A
+    shows based on field B which shows based on field A — and surfaces a warning
+    state with an explanatory message identifying the offending fields. All
+    mutations are propagated via onUpdate.
+  }
+
+  anatomy {
+    root:               container    { Top-level condition editor wrapper }
+    conditionList:      container    { Ordered list of condition rows }
+    conditionRow:       container    { A single condition: target field + when clause + remove button }
+    targetFieldLabel:   text        { Label identifying the field controlled by this condition }
+    whenLabel:          text        { Static "when" conjunction label between target and source pickers }
+    sourceFieldPicker:  interactive { Dropdown for selecting the source field to observe }
+    operatorPicker:     interactive { Dropdown for selecting the comparison operator }
+    valuePicker:        interactive { Input or dropdown for the value to compare against }
+    removeButton:       action      { Removes this condition row }
+    addButton:          action      { Appends a new blank condition row }
+    chainIndicator:     container   { Vertical grouping region for related condition rows }
+    chainLine:          presentation { Visual connecting line between chained condition rows }
+    previewIndicator:   container   { Live preview dot showing whether the condition currently passes }
+    previewDot:         presentation { Coloured dot: green when condition passes, grey when it does not }
+    emptyState:         container   { Placeholder shown when no conditions are configured }
+    warningMessage:     container   { Warning panel shown in warning-circular state }
+  }
+
+  states {
+    idle [initial] {
+      on BEGIN_ADD      -> adding;
+      on BEGIN_EDIT     -> editing;
+      on REMOVE_CONDITION -> idle;
+      on CHECK_CIRCULAR -> warning-circular;
+    }
+
+    adding {
+      on COMMIT_ADD   -> idle;
+      on CANCEL_ADD   -> idle;
+      entry [focusSourceFieldPicker];
+      exit [validateConditions];
+    }
+
+    editing {
+      on COMMIT_EDIT  -> idle;
+      on CANCEL_EDIT  -> idle;
+      entry [focusEditedPicker];
+      exit [validateConditions];
+    }
+
+    warning-circular {
+      on RESOLVE_CIRCULAR -> idle;
+      on REMOVE_CONDITION -> idle;
+      entry [highlightCircularFields];
+      exit [clearCircularHighlights];
+    }
+  }
+
+  accessibility {
+    role: list;
+    keyboard {
+      Tab    -> FOCUS_NEXT;
+      Enter  -> BEGIN_EDIT;
+      Delete -> REMOVE_CONDITION;
+      Escape -> CANCEL_EDIT;
+    }
+    focus {
+      trap: false;
+      initial: addButton;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "list";
+        aria-label: "Conditional visibility rules";
+        data-state: state;
+        aria-live: "polite";
+      };
+      conditionList -> {
+        role: "list";
+        aria-label: concat("Conditions: ", conditionCount, " rules");
+      };
+      conditionRow -> {
+        role: "listitem";
+        aria-label: concat("Show ", self.targetFieldLabel, " when ", self.sourceFieldLabel, " ", self.operator, " ", self.value);
+        aria-invalid: if self.hasCircularRef then "true" else "false";
+      };
+      targetFieldLabel -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      whenLabel -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      sourceFieldPicker -> {
+        role: "combobox";
+        aria-label: concat("Source field for condition on ", self.targetFieldLabel);
+        aria-required: "true";
+        aria-expanded: if state == "adding" or state == "editing" then "true" else "false";
+      };
+      operatorPicker -> {
+        role: "combobox";
+        aria-label: "Comparison operator";
+        aria-required: "true";
+      };
+      valuePicker -> {
+        role: "combobox";
+        aria-label: concat("Value to compare for ", self.sourceFieldLabel);
+        aria-required: "true";
+      };
+      removeButton -> {
+        role: "button";
+        aria-label: concat("Remove condition: show ", self.targetFieldLabel, " when ", self.sourceFieldLabel, " ", self.operator, " ", self.value);
+      };
+      addButton -> {
+        role: "button";
+        aria-label: "Add visibility condition";
+      };
+      chainIndicator -> {
+        role: "group";
+        aria-label: concat("Condition chain for field group: ", self.chainGroupLabel);
+      };
+      previewIndicator -> {
+        role: "status";
+        aria-label: if self.conditionPasses then concat("Condition passes: ", self.targetFieldLabel, " is visible") else concat("Condition does not pass: ", self.targetFieldLabel, " is hidden");
+        aria-live: "polite";
+      };
+      emptyState -> {
+        role: "status";
+        aria-label: "No conditional visibility rules configured. All fields are always visible.";
+        aria-live: "polite";
+      };
+      warningMessage -> {
+        role: "alert";
+        aria-label: "Circular dependency detected";
+        aria-live: "assertive";
+        hidden: if state == "warning-circular" then false else true;
+      };
+    }
+  }
+
+  props {
+    conditions:       list { conditionId: String, fieldId: String, showWhen: list { field: String, operator: String, value: String } } = []
+    availableFields:  list { fieldId: String, label: String, fieldType: String } = []
+    fieldOrder:       list String = []
+    onUpdate:         String = ""
+  }
+
+  connect {
+    root -> {
+      data-part:            "root";
+      data-state:           state;
+      data-condition-count: conditionCount;
+      data-has-circular:    if state == "warning-circular" then "true" else "false";
+    }
+
+    conditionList -> {
+      data-part: "condition-list";
+    }
+
+    conditionRow -> {
+      data-part:         "condition-row";
+      data-condition-id: self.conditionId;
+      data-field-id:     self.fieldId;
+      data-circular:     if self.hasCircularRef then "true" else "false";
+      data-editing:      if (state == "editing" or state == "adding") and self.isActive then "true" else "false";
+    }
+
+    targetFieldLabel -> {
+      data-part: "target-field-label";
+      text:      self.targetFieldLabel;
+    }
+
+    whenLabel -> {
+      data-part: "when-label";
+      text:      "when";
+    }
+
+    sourceFieldPicker -> {
+      data-part:       "source-field-picker";
+      data-value:      self.sourceFieldId;
+      data-field-type: self.sourceFieldType;
+      onChange:        send(COMMIT_EDIT, { conditionId: self.conditionId, field: "sourceField", value: event.value });
+      onFocus:         send(BEGIN_EDIT, { conditionId: self.conditionId, picker: "source" });
+      onKeyDown:       if key == "Escape" then send(CANCEL_EDIT) else noop;
+    }
+
+    operatorPicker -> {
+      data-part:  "operator-picker";
+      data-value: self.operator;
+      onChange:   send(COMMIT_EDIT, { conditionId: self.conditionId, field: "operator", value: event.value });
+      onFocus:    send(BEGIN_EDIT, { conditionId: self.conditionId, picker: "operator" });
+      onKeyDown:  if key == "Escape" then send(CANCEL_EDIT) else noop;
+    }
+
+    valuePicker -> {
+      data-part:  "value-picker";
+      data-value: self.value;
+      onChange:   send(COMMIT_EDIT, { conditionId: self.conditionId, field: "value", value: event.value });
+      onFocus:    send(BEGIN_EDIT, { conditionId: self.conditionId, picker: "value" });
+      onBlur:     send(COMMIT_EDIT);
+      onKeyDown:  if key == "Escape" then send(CANCEL_EDIT) else if key == "Enter" then send(COMMIT_EDIT) else noop;
+    }
+
+    removeButton -> {
+      data-part: "remove-button";
+      onClick:   send(REMOVE_CONDITION, { conditionId: self.conditionId });
+      onKeyDown: if key == "Delete" then send(REMOVE_CONDITION, { conditionId: self.conditionId }) else noop;
+    }
+
+    addButton -> {
+      data-part: "add-button";
+      onClick:   send(BEGIN_ADD);
+      onKeyDown: if key == "Enter" or key == " " then send(BEGIN_ADD) else noop;
+    }
+
+    chainIndicator -> {
+      data-part:       "chain-indicator";
+      data-chain-id:   self.chainId;
+    }
+
+    chainLine -> {
+      data-part: "chain-line";
+    }
+
+    previewIndicator -> {
+      data-part:   "preview-indicator";
+      data-passes: if self.conditionPasses then "true" else "false";
+    }
+
+    previewDot -> {
+      data-part:   "preview-dot";
+      data-passes: if self.conditionPasses then "true" else "false";
+    }
+
+    emptyState -> {
+      data-part: "empty-state";
+      hidden:    if conditionCount > 0 then true else false;
+    }
+
+    warningMessage -> {
+      data-part: "warning-message";
+      hidden:    if state == "warning-circular" then false else true;
+    }
+  }
+
+  invariant {
+    example "add first condition": {
+      then root -> { data-state: "idle" }
+      and emptyState -> { hidden: false }
+      after addButton.click -> ok
+      then root -> { data-state: "adding" }
+      then send(COMMIT_ADD) -> ok
+      then root -> { data-state: "idle" }
+      and root -> { data-condition-count: "1" }
+      and emptyState -> { hidden: true }
+    }
+
+    example "edit existing condition": {
+      after sourceFieldPicker.focus -> ok
+      then root -> { data-state: "editing" }
+      and conditionRow -> { data-editing: "true" }
+      then send(COMMIT_EDIT) -> ok
+      then root -> { data-state: "idle" }
+      and conditionRow -> { data-editing: "false" }
+    }
+
+    example "cancel edit with Escape": {
+      after sourceFieldPicker.focus -> ok
+      then root -> { data-state: "editing" }
+      then sourceFieldPicker.keyDown(Escape) -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    example "remove condition": {
+      after removeButton.click -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    example "circular dependency triggers warning": {
+      after send(CHECK_CIRCULAR) -> ok
+      then root -> { data-state: "warning-circular" }
+      and root -> { data-has-circular: "true" }
+      and warningMessage -> { hidden: false }
+      then send(RESOLVE_CIRCULAR) -> ok
+      then root -> { data-state: "idle" }
+      and root -> { data-has-circular: "false" }
+      and warningMessage -> { hidden: true }
+    }
+
+    example "condition preview dot reflects pass state": {
+      then previewDot -> { data-passes: if self.conditionPasses then "true" else "false" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      root -> { data-state: state }
+    }
+
+    always "emptyState hidden when conditions exist": {
+      if conditionCount > 0 then emptyState -> { hidden: true }
+    }
+
+    always "warningMessage hidden when not warning-circular": {
+      if state != "warning-circular" then warningMessage -> { hidden: true }
+    }
+
+    never "no circular dependencies": {
+      forall c in conditions:
+        c.showWhen.field == c.fieldId
+    }
+
+    never "source field appears after target field in fieldOrder": {
+      forall c in conditions:
+        fieldOrder.indexOf(c.showWhen.field) > fieldOrder.indexOf(c.fieldId)
+    }
+
+    action addButton.click {
+      requires: state == "idle"
+      ensures ok: state == "adding"
+    }
+
+    action removeButton.click {
+      requires: state == "idle" or state == "warning-circular"
+      ensures ok: state == "idle"
+    }
+
+    "COMMIT_ADD calls onUpdate with the new condition appended to conditions list";
+    "COMMIT_EDIT calls onUpdate with the modified condition; validateConditions runs on exit to detect cycles";
+    "REMOVE_CONDITION calls onUpdate with the condition removed; if the removal resolves a circular dependency, state transitions from warning-circular to idle";
+    "CHECK_CIRCULAR fires automatically on exit from adding and editing states via validateConditions";
+    "operatorPicker options are filtered by the source field's fieldType: string fields get equals/not-equals/contains/starts-with; number fields get equals/not-equals/greater-than/less-than; boolean fields get is-true/is-false";
+    "valuePicker renders a text input for string/number types and a toggle for boolean types";
+    "conditionRow data-circular must be 'true' for all rows that participate in a detected cycle";
+    "chainLine visual must only render when two or more conditionRows share the same target or source field";
+    "previewDot data-passes reflects whether the current live form values satisfy the condition, not just whether the condition is syntactically valid";
+    "fieldOrder drives the dependency ordering invariant: a condition's sourceField must appear earlier in fieldOrder than its fieldId to avoid forward-reference cycles";
+  }
+
+}

@@ -1,0 +1,471 @@
+@version(1)
+widget form-group-editor {
+
+  purpose {
+    Configuration editor for a single form field group — a named container that
+    organises fields into sections, tabs, accordion panels, columns, or fieldsets.
+    Exposes controls to rename the group, change its layout type, adjust column
+    count for column-type groups, toggle collapsibility, add an optional description,
+    and manage the ordered list of fields assigned to the group. Fields are added
+    via a picker dropdown and removed individually via chip remove buttons. Field
+    chips can be reordered by dragging. A drag-and-drop empty drop zone is shown
+    when the group contains no fields, providing a landing target for fields dragged
+    from sibling groups or the unplaced list.
+  }
+
+  anatomy {
+    root:                container   { Top-level group editor wrapper }
+    groupHeader:         container   { Header row: group label input, type selector, remove button }
+    groupLabel:          text        { Display label shown on the collapsed group header }
+    groupLabelInput:     interactive { Editable text input for the group label }
+    groupTypeSelector:   container   { Row of type option buttons }
+    sectionOption:       action      { Selects the section layout type }
+    tabOption:           action      { Selects the tab layout type }
+    accordionOption:     action      { Selects the accordion layout type }
+    fieldsetOption:      action      { Selects the fieldset layout type }
+    columnsOption:       action      { Selects the columns layout type }
+    groupFieldList:      container   { Ordered list of field chips assigned to this group }
+    fieldChip:           container   { Chip for a field assigned to this group }
+    fieldChipLabel:      text        { Field label text inside the chip }
+    fieldChipRemove:     action      { Removes this field from the group }
+    addFieldButton:      action      { Opens the field picker dropdown }
+    fieldPickerDropdown: container   { Dropdown listing available fields to add }
+    columnCountSelector: interactive { Numeric selector for column count when type is columns }
+    collapsedToggle:     action      { Toggles whether the group renders collapsed by default }
+    descriptionInput:    interactive { Optional description text for the group }
+    dragHandle:          action      { Drag handle for reordering field chips within the group }
+    removeGroupButton:   action      { Removes this group from the form }
+    addGroupButton:      action      { Appends a new sibling group after this one }
+    emptyDropZone:       container   { Drop target shown when the group has no fields }
+  }
+
+  states {
+    idle [initial] {
+      on BEGIN_EDIT_LABEL   -> editing;
+      on OPEN_TYPE_SELECTOR -> selecting-type;
+      on OPEN_FIELD_PICKER  -> adding-field;
+      on START_DRAG_FIELD   -> dragging-field;
+      on REMOVE_FIELD       -> idle;
+      on REMOVE_GROUP       -> idle;
+      on ADD_GROUP          -> idle;
+      on SET_COLUMN_COUNT   -> idle;
+      on TOGGLE_COLLAPSED   -> idle;
+      on EDIT_DESCRIPTION   -> idle;
+    }
+
+    editing {
+      on COMMIT_LABEL -> idle;
+      on CANCEL_LABEL -> idle;
+      entry [focusGroupLabelInput];
+      exit [persistGroupLabel];
+    }
+
+    selecting-type {
+      on SELECT_TYPE  -> idle;
+      on CLOSE_TYPES  -> idle;
+      entry [focusFirstTypeOption];
+    }
+
+    adding-field {
+      on PICK_FIELD   -> idle;
+      on CLOSE_PICKER -> idle;
+      entry [openFieldPickerDropdown];
+      exit [closeFieldPickerDropdown];
+    }
+
+    dragging-field {
+      on DROP_FIELD   -> idle;
+      on CANCEL_DRAG  -> idle;
+      entry [setDragPayload];
+      exit [clearDragPayload];
+    }
+  }
+
+  accessibility {
+    role: group;
+    keyboard {
+      Enter  -> BEGIN_EDIT_LABEL;
+      Escape -> CANCEL_LABEL;
+      Tab    -> FOCUS_NEXT;
+      Delete -> REMOVE_FIELD;
+      Space  -> START_DRAG_FIELD;
+      ArrowLeft -> MOVE_FIELD_LEFT;
+      ArrowRight -> MOVE_FIELD_RIGHT;
+    }
+    focus {
+      trap: false;
+      initial: groupLabelInput;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: concat("Field group: ", self.label);
+        data-state: state;
+        data-group-type: self.groupType;
+      };
+      groupHeader -> {
+        role: "group";
+        aria-label: "Group header controls";
+      };
+      groupLabel -> {
+        role: "heading";
+        aria-level: "4";
+        aria-label: self.label;
+      };
+      groupLabelInput -> {
+        role: "textbox";
+        aria-label: "Group label";
+        aria-required: "true";
+      };
+      groupTypeSelector -> {
+        role: "group";
+        aria-label: "Group layout type";
+      };
+      sectionOption -> {
+        role: "radio";
+        aria-label: "Section";
+        aria-checked: if self.groupType == "section" then "true" else "false";
+      };
+      tabOption -> {
+        role: "radio";
+        aria-label: "Tab";
+        aria-checked: if self.groupType == "tab" then "true" else "false";
+      };
+      accordionOption -> {
+        role: "radio";
+        aria-label: "Accordion";
+        aria-checked: if self.groupType == "accordion" then "true" else "false";
+      };
+      fieldsetOption -> {
+        role: "radio";
+        aria-label: "Fieldset";
+        aria-checked: if self.groupType == "fieldset" then "true" else "false";
+      };
+      columnsOption -> {
+        role: "radio";
+        aria-label: "Columns";
+        aria-checked: if self.groupType == "columns" then "true" else "false";
+      };
+      groupFieldList -> {
+        role: "list";
+        aria-label: concat("Fields in group: ", fieldCount, " fields");
+      };
+      fieldChip -> {
+        role: "listitem";
+        aria-label: concat("Field: ", self.fieldLabel);
+        aria-grabbed: if state == "dragging-field" and self.isGrabbed then "true" else "false";
+      };
+      fieldChipLabel -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      fieldChipRemove -> {
+        role: "button";
+        aria-label: concat("Remove field ", self.fieldLabel, " from group");
+      };
+      addFieldButton -> {
+        role: "button";
+        aria-label: "Add field to group";
+        aria-haspopup: "listbox";
+        aria-expanded: if state == "adding-field" then "true" else "false";
+      };
+      fieldPickerDropdown -> {
+        role: "listbox";
+        aria-label: "Available fields";
+        hidden: if state == "adding-field" then false else true;
+      };
+      columnCountSelector -> {
+        role: "spinbutton";
+        aria-label: "Number of columns";
+        aria-valuemin: "2";
+        aria-valuemax: "6";
+        hidden: if self.groupType != "columns" then true else false;
+      };
+      collapsedToggle -> {
+        role: "button";
+        aria-label: if self.defaultCollapsed then "Set to expanded by default" else "Set to collapsed by default";
+        aria-pressed: if self.defaultCollapsed then "true" else "false";
+      };
+      descriptionInput -> {
+        role: "textbox";
+        aria-label: "Group description (optional)";
+        aria-multiline: "true";
+      };
+      dragHandle -> {
+        role: "button";
+        aria-label: concat("Drag to reorder field ", self.fieldLabel);
+        aria-roledescription: "drag handle";
+      };
+      removeGroupButton -> {
+        role: "button";
+        aria-label: concat("Remove group: ", self.label);
+      };
+      addGroupButton -> {
+        role: "button";
+        aria-label: "Add sibling group after this group";
+      };
+      emptyDropZone -> {
+        role: "listbox";
+        aria-label: concat("Drop zone for group ", self.label, ", currently empty");
+        aria-dropeffect: if state == "dragging-field" then "move" else "none";
+        hidden: if fieldCount > 0 then true else false;
+      };
+    }
+  }
+
+  props {
+    group:            list { groupId: String, label: String, groupType: String, fieldIds: list String, columnCount: Int, defaultCollapsed: Bool, description: option String } = []
+    availableFields:  list { fieldId: String, label: String, fieldType: String } = []
+    onUpdate:         String = ""
+    onRemove:         String = ""
+  }
+
+  connect {
+    root -> {
+      data-part:       "root";
+      data-state:      state;
+      data-group-id:   self.groupId;
+      data-group-type: self.groupType;
+      data-field-count: fieldCount;
+    }
+
+    groupHeader -> {
+      data-part: "group-header";
+    }
+
+    groupLabel -> {
+      data-part: "group-label";
+      text:      self.label;
+      hidden:    if state == "editing" then true else false;
+      onDoubleClick: send(BEGIN_EDIT_LABEL);
+    }
+
+    groupLabelInput -> {
+      data-part: "group-label-input";
+      value:     self.label;
+      hidden:    if state == "editing" then false else true;
+      onInput:   send(COMMIT_LABEL, { label: event.value });
+      onKeyDown: if key == "Enter" then send(COMMIT_LABEL) else if key == "Escape" then send(CANCEL_LABEL) else noop;
+      onBlur:    send(COMMIT_LABEL);
+    }
+
+    groupTypeSelector -> {
+      data-part: "group-type-selector";
+    }
+
+    sectionOption -> {
+      data-part:   "section-option";
+      data-active: if self.groupType == "section" then "true" else "false";
+      onClick:     send(SELECT_TYPE, { groupType: "section" });
+    }
+
+    tabOption -> {
+      data-part:   "tab-option";
+      data-active: if self.groupType == "tab" then "true" else "false";
+      onClick:     send(SELECT_TYPE, { groupType: "tab" });
+    }
+
+    accordionOption -> {
+      data-part:   "accordion-option";
+      data-active: if self.groupType == "accordion" then "true" else "false";
+      onClick:     send(SELECT_TYPE, { groupType: "accordion" });
+    }
+
+    fieldsetOption -> {
+      data-part:   "fieldset-option";
+      data-active: if self.groupType == "fieldset" then "true" else "false";
+      onClick:     send(SELECT_TYPE, { groupType: "fieldset" });
+    }
+
+    columnsOption -> {
+      data-part:   "columns-option";
+      data-active: if self.groupType == "columns" then "true" else "false";
+      onClick:     send(SELECT_TYPE, { groupType: "columns" });
+    }
+
+    groupFieldList -> {
+      data-part: "group-field-list";
+    }
+
+    fieldChip -> {
+      data-part:     "field-chip";
+      data-field-id: self.fieldId;
+      data-grabbed:  if state == "dragging-field" and self.isGrabbed then "true" else "false";
+    }
+
+    fieldChipLabel -> {
+      data-part: "field-chip-label";
+      text:      self.fieldLabel;
+    }
+
+    fieldChipRemove -> {
+      data-part: "field-chip-remove";
+      onClick:   send(REMOVE_FIELD, { fieldId: self.fieldId });
+      onKeyDown: if key == "Delete" then send(REMOVE_FIELD, { fieldId: self.fieldId }) else noop;
+    }
+
+    addFieldButton -> {
+      data-part:    "add-field-button";
+      data-open:    if state == "adding-field" then "true" else "false";
+      onClick:      send(OPEN_FIELD_PICKER);
+      onKeyDown:    if key == "Enter" or key == " " then send(OPEN_FIELD_PICKER) else noop;
+    }
+
+    fieldPickerDropdown -> {
+      data-part: "field-picker-dropdown";
+      hidden:    if state == "adding-field" then false else true;
+      onSelect:  send(PICK_FIELD, { fieldId: event.value });
+      onKeyDown: if key == "Escape" then send(CLOSE_PICKER) else noop;
+    }
+
+    columnCountSelector -> {
+      data-part: "column-count-selector";
+      value:     self.columnCount;
+      hidden:    if self.groupType != "columns" then true else false;
+      onChange:  send(SET_COLUMN_COUNT, { columnCount: event.value });
+    }
+
+    collapsedToggle -> {
+      data-part:    "collapsed-toggle";
+      data-active:  if self.defaultCollapsed then "true" else "false";
+      onClick:      send(TOGGLE_COLLAPSED);
+    }
+
+    descriptionInput -> {
+      data-part:   "description-input";
+      value:       self.description;
+      placeholder: "Optional group description";
+      onInput:     send(EDIT_DESCRIPTION, { description: event.value });
+      onBlur:      send(EDIT_DESCRIPTION, { description: event.value });
+    }
+
+    dragHandle -> {
+      data-part:     "drag-handle";
+      data-field-id: self.fieldId;
+      onPointerDown: send(START_DRAG_FIELD, { fieldId: self.fieldId });
+      onKeyDown:     if key == "Space" then send(START_DRAG_FIELD, { fieldId: self.fieldId }) else if key == "ArrowLeft" then send(MOVE_FIELD_LEFT, { fieldId: self.fieldId }) else if key == "ArrowRight" then send(MOVE_FIELD_RIGHT, { fieldId: self.fieldId }) else if key == "Escape" then send(CANCEL_DRAG) else noop;
+      tabindex:      "0";
+    }
+
+    removeGroupButton -> {
+      data-part: "remove-group-button";
+      onClick:   send(REMOVE_GROUP);
+      onKeyDown: if key == "Enter" or key == " " then send(REMOVE_GROUP) else noop;
+    }
+
+    addGroupButton -> {
+      data-part: "add-group-button";
+      onClick:   send(ADD_GROUP);
+      onKeyDown: if key == "Enter" or key == " " then send(ADD_GROUP) else noop;
+    }
+
+    emptyDropZone -> {
+      data-part: "empty-drop-zone";
+      hidden:    if fieldCount > 0 then true else false;
+      data-active: if state == "dragging-field" then "true" else "false";
+      onDrop:    send(DROP_FIELD, { groupId: self.groupId, fieldId: self.draggedFieldId, position: 0 });
+    }
+  }
+
+  invariant {
+    example "edit group label": {
+      after groupLabel.doubleClick -> ok
+      then root -> { data-state: "editing" }
+      and groupLabelInput -> { hidden: false }
+      and groupLabel -> { hidden: true }
+      then send(COMMIT_LABEL) -> ok
+      then root -> { data-state: "idle" }
+      and groupLabelInput -> { hidden: true }
+      and groupLabel -> { hidden: false }
+    }
+
+    example "cancel label edit": {
+      after groupLabel.doubleClick -> ok
+      then root -> { data-state: "editing" }
+      then groupLabelInput.keyDown(Escape) -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    example "add field via picker": {
+      after addFieldButton.click -> ok
+      then root -> { data-state: "adding-field" }
+      and addFieldButton -> { data-open: "true" }
+      and fieldPickerDropdown -> { hidden: false }
+      then send(PICK_FIELD) -> ok
+      then root -> { data-state: "idle" }
+      and fieldPickerDropdown -> { hidden: true }
+    }
+
+    example "remove field chip": {
+      after fieldChipRemove.click -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    example "reorder fields via drag": {
+      after dragHandle.pointerDown -> ok
+      then root -> { data-state: "dragging-field" }
+      and fieldChip -> { data-grabbed: "true" }
+      then send(DROP_FIELD) -> ok
+      then root -> { data-state: "idle" }
+      and fieldChip -> { data-grabbed: "false" }
+    }
+
+    example "change group type": {
+      after tabOption.click -> ok
+      then root -> { data-state: "idle" }
+      and root -> { data-group-type: "tab" }
+      and tabOption -> { data-active: "true" }
+      and sectionOption -> { data-active: "false" }
+    }
+
+    example "columns type shows column count selector": {
+      after columnsOption.click -> ok
+      then columnCountSelector -> { hidden: false }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      root -> { data-state: state }
+    }
+
+    always "fieldPickerDropdown hidden when not adding-field": {
+      if state != "adding-field" then fieldPickerDropdown -> { hidden: true }
+    }
+
+    always "columnCountSelector hidden for non-column types": {
+      if self.groupType != "columns" then columnCountSelector -> { hidden: true }
+    }
+
+    always "emptyDropZone hidden when group has fields": {
+      if fieldCount > 0 then emptyDropZone -> { hidden: true }
+    }
+
+    never "field appears in availableFields after being added to group": {
+      exists f in availableFields: f.fieldId == self.fieldId and fieldChip -> { data-field-id: f.fieldId }
+    }
+
+    action fieldChipRemove.click {
+      requires: state == "idle"
+      ensures ok: state == "idle"
+    }
+
+    action addFieldButton.click {
+      requires: state == "idle"
+      ensures ok: state == "adding-field"
+    }
+
+    "COMMIT_LABEL calls onUpdate with the updated group label";
+    "PICK_FIELD adds the selected field to the group's fieldIds list and removes it from availableFields";
+    "REMOVE_FIELD removes the fieldId from the group's fieldIds list and returns it to availableFields";
+    "SELECT_TYPE calls onUpdate with the new groupType; switching away from columns resets columnCount to 2";
+    "SET_COLUMN_COUNT is only active when groupType is columns; valid range is 2 to 6 inclusive";
+    "TOGGLE_COLLAPSED calls onUpdate toggling the group's defaultCollapsed property";
+    "REMOVE_GROUP calls onRemove; all fields in the group return to the unplaced pool";
+    "ADD_GROUP calls onUpdate to insert a new empty sibling group immediately after this group in the step";
+    "DROP_FIELD within the group reorders fieldIds; position 0 is before the first chip";
+  }
+
+}

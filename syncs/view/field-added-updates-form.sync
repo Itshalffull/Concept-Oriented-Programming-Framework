@@ -1,0 +1,16 @@
+# FormSpec field synchronization — adding a FieldDefinition.
+# When a new field is created for a schema, append that field to every
+# FormSpec that covers the same schema so all forms stay current.
+
+sync FieldAddedUpdatesForm [eager]
+  purpose: "Append a newly created FieldDefinition to every existing FormSpec for the same schema so forms do not fall out of sync with the schema"
+when {
+  FieldDefinition/create: [ field: ?f; schema: ?s ]
+    => ok(field: ?f; schema: ?s)
+}
+where {
+  FormSpec: { ?form schema: ?s }
+}
+then {
+  FormSpec/addField: [ form: ?form; fieldId: ?f ]
+}

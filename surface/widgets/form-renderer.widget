@@ -1,0 +1,516 @@
+@version(1)
+widget form-renderer {
+
+  purpose {
+    Runtime form renderer that reads a FormSpec and its associated FieldDefinitions to
+    present the actual form that users fill out. Supports single-page and multi-step
+    (wizard) forms with a step progress bar, per-step field groups, conditional field
+    visibility, inline validation, character counts, and an error summary. Navigates
+    between steps with prev/next buttons and submits on the final step. Composes
+    form-field-input per field slot so each field renders the appropriate input control
+    for its type. Intended for both create and edit modes; initial values can be
+    injected for edit mode prepopulation.
+  }
+
+  anatomy {
+    root:             container    { Top-level form wrapper; carries data-state and data-mode }
+    form:             container    { Semantic form element wrapping all field content }
+    stepBar:          container    { Horizontal progress bar listing all wizard steps }
+    stepDot:          action       { Individual step dot or pill in the step bar }
+    stepLabel:        text         { Label text displayed beneath or beside a step dot }
+    stepContent:      container    { Visible content area for the currently active step }
+    fieldGroup:       container    { Named group of related fields within a step }
+    groupHeader:      container    { Header row for a field group; holds the group label }
+    groupContent:     container    { Body of a field group; holds field slots }
+    fieldSlot:        container    { Single field wrapper composing form-field-input }
+    fieldLabel:       text         { Visible label for a field }
+    requiredIndicator: presentation { Asterisk or visual cue marking a required field }
+    fieldInput:       container    { Slot housing the composed form-field-input widget }
+    fieldHelpText:    text         { Secondary descriptive text below the field input }
+    validationMessage: text        { Validation error or success message for a field }
+    characterCount:   text         { Live character count display for text/textarea fields }
+    navigationBar:    container    { Bottom bar holding prev, next, submit, and cancel buttons }
+    prevButton:       action       { Navigates to the previous wizard step }
+    nextButton:       action       { Navigates to the next wizard step after validating current step }
+    submitButton:     action       { Submits the completed form; shown only on the last step }
+    cancelButton:     action       { Cancels the form and invokes onCancel }
+    progressBar:      presentation { Visual horizontal progress bar showing overall completion }
+    progressText:     text         { Text label showing current step number and total (e.g. "Step 2 of 4") }
+    errorSummary:     container    { Summary panel listing all validation errors across all steps }
+    errorItem:        action       { Individual error item in the error summary; focuses the offending field on click }
+    loadingOverlay:   container    { Full-form overlay shown while the form submission is in flight }
+    successOverlay:   container    { Full-form overlay shown after successful submission }
+  }
+
+  states {
+    idle [initial] {
+      on START_FILL -> filling;
+    }
+
+    filling {
+      on NEXT_STEP -> step-transitioning;
+      on PREV_STEP -> step-transitioning;
+      on SUBMIT -> validating;
+      on CANCEL -> idle;
+      on FIELD_CHANGE -> filling;
+    }
+
+    step-transitioning {
+      on STEP_READY -> filling;
+      entry [focusFirstFieldInStep];
+    }
+
+    validating {
+      on VALIDATION_PASSED -> submitting;
+      on VALIDATION_FAILED -> filling;
+      entry [validateAllVisibleRequiredFields];
+    }
+
+    submitting {
+      on SUBMIT_SUCCESS -> submitted;
+      on SUBMIT_ERROR -> error;
+      entry [showLoadingOverlay];
+      exit [hideLoadingOverlay];
+    }
+
+    submitted {
+      entry [showSuccessOverlay];
+    }
+
+    error {
+      on RETRY -> validating;
+      on CANCEL -> idle;
+    }
+  }
+
+  accessibility {
+    role: form;
+    keyboard {
+      Tab -> FOCUS_NEXT;
+      Enter -> NEXT_STEP;
+      Escape -> CANCEL;
+    }
+    focus {
+      trap: false;
+      initial: fieldInput;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "form";
+        aria-label: ?formName;
+        data-state: state;
+        data-mode: ?mode;
+      };
+      form -> {
+        role: "form";
+        aria-label: ?formName;
+        novalidate: "true";
+      };
+      stepBar -> {
+        role: "list";
+        aria-label: "Form steps";
+        aria-hidden: if stepCount == 1 then "true" else "false";
+      };
+      stepDot -> {
+        role: "listitem";
+        aria-current: if self.isCurrent then "step" else "false";
+        aria-label: concat("Step ", self.index, ": ", self.label);
+        aria-disabled: if self.isCompleted then "false" else "true";
+      };
+      stepContent -> {
+        role: "region";
+        aria-label: concat("Step ", currentStep, " of ", stepCount);
+        aria-live: "polite";
+      };
+      fieldGroup -> {
+        role: "group";
+        aria-labelledby: groupHeader;
+      };
+      fieldSlot -> {
+        role: "group";
+        aria-label: self.fieldLabel;
+      };
+      fieldLabel -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      requiredIndicator -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      fieldHelpText -> {
+        role: "note";
+        aria-live: "polite";
+      };
+      validationMessage -> {
+        role: "alert";
+        aria-live: "assertive";
+        aria-atomic: "true";
+      };
+      navigationBar -> {
+        role: "group";
+        aria-label: "Form navigation";
+      };
+      prevButton -> {
+        role: "button";
+        aria-label: "Previous step";
+        aria-disabled: if currentStep == 1 then "true" else "false";
+      };
+      nextButton -> {
+        role: "button";
+        aria-label: "Next step";
+        aria-hidden: if currentStep == stepCount then "true" else "false";
+      };
+      submitButton -> {
+        role: "button";
+        aria-label: "Submit form";
+        aria-hidden: if currentStep != stepCount then "true" else "false";
+        aria-busy: if state == "submitting" then "true" else "false";
+      };
+      cancelButton -> {
+        role: "button";
+        aria-label: "Cancel";
+      };
+      progressBar -> {
+        role: "progressbar";
+        aria-label: "Form progress";
+        aria-valuemin: "0";
+        aria-valuemax: "100";
+        aria-valuenow: progressPercent;
+      };
+      errorSummary -> {
+        role: "alert";
+        aria-label: "Form errors";
+        aria-live: "assertive";
+        aria-hidden: if errorCount == 0 then "true" else "false";
+      };
+      errorItem -> {
+        role: "link";
+        aria-label: self.message;
+      };
+      loadingOverlay -> {
+        role: "status";
+        aria-label: "Submitting form";
+        aria-live: "polite";
+        aria-hidden: if state != "submitting" then "true" else "false";
+      };
+      successOverlay -> {
+        role: "status";
+        aria-label: "Form submitted successfully";
+        aria-live: "polite";
+        aria-hidden: if state != "submitted" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    schemaId: String
+    formName: String
+    mode: union "create" | "edit" = "create"
+    initialValues: list { fieldId: String, value: option String } = []
+    onSubmit: option String
+    onCancel: option String
+    steps: list { stepId: String, label: String, fieldGroups: list String } = []
+    readOnly: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-mode: ?mode;
+      data-schema-id: ?schemaId;
+      data-step-count: stepCount;
+      data-current-step: currentStep;
+      data-readonly: if ?readOnly then "true" else "false";
+    }
+
+    form -> {
+      data-part: "form";
+      onSubmit: send(SUBMIT);
+    }
+
+    stepBar -> {
+      data-part: "step-bar";
+      hidden: if stepCount == 1 then true else false;
+    }
+
+    stepDot -> {
+      data-part: "step-dot";
+      data-step-index: self.index;
+      data-current: if self.isCurrent then "true" else "false";
+      data-completed: if self.isCompleted then "true" else "false";
+      onClick: if self.isCompleted then send(GOTO_STEP, { stepIndex: self.index }) else noop;
+    }
+
+    stepLabel -> {
+      data-part: "step-label";
+    }
+
+    stepContent -> {
+      data-part: "step-content";
+      data-step-index: currentStep;
+    }
+
+    fieldGroup -> {
+      data-part: "field-group";
+      data-group-id: self.groupId;
+      hidden: if self.conditionMet == false then true else false;
+    }
+
+    groupHeader -> {
+      data-part: "group-header";
+    }
+
+    groupContent -> {
+      data-part: "group-content";
+    }
+
+    fieldSlot -> {
+      data-part: "field-slot";
+      data-field-id: self.fieldId;
+      data-field-type: self.fieldType;
+      data-required: if self.required then "true" else "false";
+      hidden: if self.hidden then true else false;
+    }
+
+    fieldLabel -> {
+      data-part: "field-label";
+      for: self.fieldId;
+    }
+
+    requiredIndicator -> {
+      data-part: "required-indicator";
+      hidden: if not self.required then true else false;
+    }
+
+    fieldInput -> {
+      data-part: "field-input";
+      data-field-id: self.fieldId;
+    }
+
+    fieldHelpText -> {
+      data-part: "field-help-text";
+      id: concat(self.fieldId, "-help");
+      hidden: if self.helpText == "" then true else false;
+    }
+
+    validationMessage -> {
+      data-part: "validation-message";
+      id: concat(self.fieldId, "-validation");
+      data-valid: if self.isValid then "true" else "false";
+      hidden: if not self.hasError then true else false;
+    }
+
+    characterCount -> {
+      data-part: "character-count";
+      data-field-id: self.fieldId;
+      hidden: if not self.showCharacterCount then true else false;
+    }
+
+    navigationBar -> {
+      data-part: "navigation-bar";
+    }
+
+    prevButton -> {
+      data-part: "prev-button";
+      onClick: send(PREV_STEP);
+      disabled: if currentStep == 1 or ?readOnly then true else false;
+      hidden: if stepCount == 1 then true else false;
+    }
+
+    nextButton -> {
+      data-part: "next-button";
+      onClick: send(NEXT_STEP);
+      disabled: if ?readOnly then true else false;
+      hidden: if currentStep == stepCount or stepCount == 1 then true else false;
+    }
+
+    submitButton -> {
+      data-part: "submit-button";
+      onClick: send(SUBMIT);
+      disabled: if state == "submitting" or ?readOnly then true else false;
+      hidden: if currentStep != stepCount then true else false;
+      data-loading: if state == "submitting" then "true" else "false";
+    }
+
+    cancelButton -> {
+      data-part: "cancel-button";
+      onClick: send(CANCEL);
+    }
+
+    progressBar -> {
+      data-part: "progress-bar";
+      data-progress: progressPercent;
+      hidden: if stepCount == 1 then true else false;
+    }
+
+    progressText -> {
+      data-part: "progress-text";
+      hidden: if stepCount == 1 then true else false;
+    }
+
+    errorSummary -> {
+      data-part: "error-summary";
+      hidden: if errorCount == 0 then true else false;
+    }
+
+    errorItem -> {
+      data-part: "error-item";
+      data-field-id: self.fieldId;
+      onClick: send(FOCUS_FIELD, { fieldId: self.fieldId });
+      onKeyDown: if key == "Enter" then send(FOCUS_FIELD, { fieldId: self.fieldId }) else noop;
+    }
+
+    loadingOverlay -> {
+      data-part: "loading-overlay";
+      hidden: if state != "submitting" then true else false;
+    }
+
+    successOverlay -> {
+      data-part: "success-overlay";
+      hidden: if state != "submitted" then true else false;
+    }
+  }
+
+  compose {
+    fieldInput: widget("form-field-input", {
+      fieldDefinition: self.fieldDefinition;
+      value: self.currentValue;
+      onChange: send(FIELD_CHANGE, { fieldId: self.fieldId, value: event.value });
+      onBlur: send(VALIDATE_FIELD, { fieldId: self.fieldId });
+      validationErrors: self.fieldErrors;
+      showValidation: state == "validating" or self.wasTouched;
+      helpText: self.helpText;
+      placeholder: self.placeholder;
+    })
+  }
+
+  invariant {
+    example "starts idle and transitions to filling on first interaction": {
+      then root -> { data-state: "idle" }
+      then send(START_FILL) -> ok
+      then root -> { data-state: "filling" }
+    }
+
+    example "next step transitions through step-transitioning then back to filling": {
+      after send(START_FILL) -> ok
+      then send(NEXT_STEP) -> ok
+      then root -> { data-state: "step-transitioning" }
+      then send(STEP_READY) -> ok
+      then root -> { data-state: "filling" }
+    }
+
+    example "failed validation returns to filling with error summary": {
+      after send(START_FILL) -> ok
+      then send(SUBMIT) -> ok
+      then root -> { data-state: "validating" }
+      then send(VALIDATION_FAILED) -> ok
+      then root -> { data-state: "filling" }
+      and errorSummary -> { hidden: false }
+    }
+
+    example "successful submission shows success overlay": {
+      after send(START_FILL) -> ok
+      then send(SUBMIT) -> ok
+      then send(VALIDATION_PASSED) -> ok
+      then root -> { data-state: "submitting" }
+      and loadingOverlay -> { hidden: false }
+      then send(SUBMIT_SUCCESS) -> ok
+      then root -> { data-state: "submitted" }
+      and successOverlay -> { hidden: false }
+      and loadingOverlay -> { hidden: true }
+    }
+
+    example "submit error allows retry": {
+      after send(START_FILL) -> ok
+      then send(SUBMIT) -> ok
+      then send(VALIDATION_PASSED) -> ok
+      then send(SUBMIT_ERROR) -> ok
+      then root -> { data-state: "error" }
+      then send(RETRY) -> ok
+      then root -> { data-state: "validating" }
+    }
+
+    example "cancel from filling returns to idle": {
+      after send(START_FILL) -> ok
+      then send(CANCEL) -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    example "prev button hidden on first step": {
+      after send(START_FILL) -> ok
+      then root -> { data-current-step: "1" }
+      and prevButton -> { disabled: true }
+    }
+
+    example "submit button hidden unless on last step": {
+      after send(START_FILL) -> ok
+      then root -> { data-current-step: "1"; data-step-count: "3" }
+      and submitButton -> { hidden: true }
+      and nextButton -> { hidden: false }
+    }
+
+    example "step bar hidden for single-step forms": {
+      after send(START_FILL) -> ok
+      then root -> { data-step-count: "1" }
+      and stepBar -> { hidden: true }
+      and progressBar -> { hidden: true }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        root -> { data-state: s.name }
+    }
+
+    always "loading overlay visible only while submitting": {
+      if state == "submitting" then loadingOverlay -> { hidden: false }
+      and if state != "submitting" then loadingOverlay -> { hidden: true }
+    }
+
+    always "success overlay visible only when submitted": {
+      if state == "submitted" then successOverlay -> { hidden: false }
+      and if state != "submitted" then successOverlay -> { hidden: true }
+    }
+
+    always "submit button disabled while submitting": {
+      if state == "submitting" then submitButton -> { disabled: true }
+    }
+
+    always "error summary hidden when no errors": {
+      if errorCount == 0 then errorSummary -> { hidden: true }
+    }
+
+    never "hidden fields included in submission payload": {
+      exists f in hiddenFields:
+        f.fieldId in submittedValues
+    }
+
+    never "submit possible while required visible fields are empty": {
+      state == "submitting" and exists f in visibleRequiredFields:
+        f.value == ""
+    }
+
+    never "required indicator shown for non-required fields": {
+      exists f in fields:
+        not f.required and fieldSlot -> { data-required: "true" }
+    }
+
+    action submitButton.click {
+      requires: state == "filling" and currentStep == stepCount
+      ensures ok: state == "validating"
+    }
+
+    "FIELD_CHANGE must not trigger navigation — only update the in-memory form values";
+    "step dots for future uncompleted steps must not be clickable (aria-disabled=true)";
+    "on step transition focus must move to the first visible, non-disabled input in the new step";
+    "conditional field visibility is evaluated from FormSpec conditions against current form values";
+    "initial values are applied before the widget enters filling state so fields render pre-populated in edit mode";
+    "the error summary lists errors across all steps, not only the current step";
+  }
+
+}
