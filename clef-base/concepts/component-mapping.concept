@@ -28,6 +28,13 @@ concept ComponentMapping [M] {
       prop_name: M -> String
       prop_source: M -> String
     }
+
+    action_bindings {
+      action_binds: set M
+      action_mapping: M -> M
+      action_part: M -> String
+      action_binding_ref: M -> String
+    }
   }
 
   capabilities {
@@ -45,8 +52,9 @@ concept ComponentMapping [M] {
       -> ok(mapping: M, name: String, widget_id: String,
             widget_variant: option String, schema: option String,
             display_mode: option String,
-            slot_bindings: String, prop_bindings: String) {
-        Returns the full mapping with all slot and prop bindings.
+            slot_bindings: String, prop_bindings: String,
+            action_bindings: String) {
+        Returns the full mapping with all slot, prop, and action bindings.
       }
       -> notfound(message: String) {
         The mapping does not exist.
@@ -62,6 +70,8 @@ concept ComponentMapping [M] {
       -> invalid(message: String) {
         The widget ID does not exist or the Schema is unknown.
       }
+      fixture create_ok { name: "Article Card", widget_id: "card", schema: "Article", display_mode: "teaser" }
+      fixture create_empty_name { name: "", widget_id: "card", schema: "Article", display_mode: "teaser" } -> invalid
     }
 
     action bindSlot(mapping: M, slot_name: String, sources: list String) {
@@ -81,6 +91,17 @@ concept ComponentMapping [M] {
       -> notfound(message: String) {
         The mapping or prop does not exist.
       }
+    }
+
+    action bindAction(mapping: M, actionPart: String, binding: String) {
+      -> ok() {
+        Action part bound to ActionBinding reference.
+      }
+      -> notfound(message: String) {
+        The mapping does not exist.
+      }
+      fixture bind_action_ok { mapping: $create_ok.mapping, actionPart: "removeBlock", binding: "remove-block-binding" } after create_ok
+      fixture bind_action_missing { mapping: "nonexistent", actionPart: "removeBlock", binding: "some-binding" } -> notfound
     }
 
     action render(mapping: M, context: String) {

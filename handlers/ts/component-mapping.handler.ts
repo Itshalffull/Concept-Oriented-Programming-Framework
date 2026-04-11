@@ -70,13 +70,16 @@ const _handler: FunctionalConceptHandler = {
       (thenP) => {
         thenP = find(thenP, 'slot_binding', {}, 'allSlots');
         thenP = find(thenP, 'prop_binding', {}, 'allProps');
+        thenP = find(thenP, 'action_binding', {}, 'allActionBinds');
 
         return completeFrom(thenP, 'ok', (bindings) => {
           const mapping = bindings.mapping as Record<string, unknown>;
           const allSlots = bindings.allSlots as Record<string, unknown>[];
           const allProps = bindings.allProps as Record<string, unknown>[];
+          const allActionBinds = bindings.allActionBinds as Record<string, unknown>[];
           const slots = allSlots.filter((s) => s.mapping_id === mappingId);
           const props = allProps.filter((p) => p.mapping_id === mappingId);
+          const actionBinds = allActionBinds.filter((a) => a.mapping_id === mappingId);
 
           return {
             mapping: mappingId,
@@ -92,6 +95,10 @@ const _handler: FunctionalConceptHandler = {
             prop_bindings: JSON.stringify(props.map((p) => ({
               prop_name: p.prop_name,
               source: p.source,
+            }))),
+            action_bindings: JSON.stringify(actionBinds.map((a) => ({
+              action_part: a.action_part,
+              binding_ref: a.binding_ref,
             }))),
           };
         });
@@ -174,6 +181,29 @@ const _handler: FunctionalConceptHandler = {
           mapping_id: mappingId,
           prop_name: propName,
           source: source || '',
+        });
+        return complete(thenP, 'ok', {});
+      },
+      (elseP) => complete(elseP, 'notfound', { message: `Mapping '${mappingId}' does not exist.` }),
+    ) as StorageProgram<Result>;
+  },
+
+  bindAction(input: Record<string, unknown>) {
+    const mappingId = input.mapping as string;
+    const actionPart = input.actionPart as string;
+    const binding = input.binding as string;
+
+    let p = createProgram();
+    p = get(p, 'mapping', mappingId, 'mapping');
+
+    return branch(p, 'mapping',
+      (thenP) => {
+        const actionBindId = nextId('action_bind');
+        thenP = put(thenP, 'action_binding', actionBindId, {
+          id: actionBindId,
+          mapping_id: mappingId,
+          action_part: actionPart,
+          binding_ref: binding,
         });
         return complete(thenP, 'ok', {});
       },
