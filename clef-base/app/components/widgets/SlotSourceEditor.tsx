@@ -66,6 +66,11 @@ interface PropBinding {
   source: string;
 }
 
+interface ActionBinding {
+  action_part: string;
+  binding: string;
+}
+
 interface MappingData {
   variant: string;
   mapping: string;
@@ -76,6 +81,7 @@ interface MappingData {
   display_mode: string | null;
   slot_bindings: string;
   prop_bindings: string;
+  action_bindings: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -197,6 +203,10 @@ export const SlotSourceEditor: React.FC<SlotSourceEditorProps> = ({
 
   const [slots, setSlots] = useState<SlotBinding[] | null>(null);
   const [props, setProps] = useState<PropBinding[] | null>(null);
+  const [actionBindings, setActionBindings] = useState<ActionBinding[] | null>(null);
+  const [showAddActionBinding, setShowAddActionBinding] = useState(false);
+  const [newActionPart, setNewActionPart] = useState('');
+  const [newActionBindingRef, setNewActionBindingRef] = useState('');
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -211,6 +221,9 @@ export const SlotSourceEditor: React.FC<SlotSourceEditorProps> = ({
         const rawProps = typeof data.prop_bindings === 'string'
           ? JSON.parse(data.prop_bindings || '[]')
           : data.prop_bindings ?? [];
+        const rawActionBindings = typeof data.action_bindings === 'string'
+          ? JSON.parse(data.action_bindings || '[]')
+          : data.action_bindings ?? [];
         // Normalize sources — handler may return them as JSON string or array
         const parsedSlots: SlotBinding[] = (rawSlots as SlotBinding[]).map(s => ({
           slot_name: s.slot_name,
@@ -224,11 +237,17 @@ export const SlotSourceEditor: React.FC<SlotSourceEditorProps> = ({
           prop_name: p.prop_name,
           source: typeof p.source === 'string' ? p.source : String(p.source ?? ''),
         }));
+        const parsedActionBindings: ActionBinding[] = (rawActionBindings as ActionBinding[]).map(a => ({
+          action_part: typeof a.action_part === 'string' ? a.action_part : String(a.action_part ?? ''),
+          binding: typeof a.binding === 'string' ? a.binding : String(a.binding ?? ''),
+        }));
         setSlots(parsedSlots);
         setProps(parsedProps);
+        setActionBindings(parsedActionBindings);
       } catch {
         setSlots([]);
         setProps([]);
+        setActionBindings([]);
       }
     }
   }, [data, slots]);
@@ -318,7 +337,44 @@ export const SlotSourceEditor: React.FC<SlotSourceEditorProps> = ({
   }, []);
 
   // ---------------------------------------------------------------------------
-  // Save — calls bindSlot / bindProp for each binding
+  // Action binding mutations
+  // ---------------------------------------------------------------------------
+
+  const updateActionPart = useCallback((index: number, action_part: string) => {
+    setActionBindings((prev) => {
+      if (!prev) return prev;
+      const next = [...prev];
+      next[index] = { ...next[index], action_part };
+      return next;
+    });
+  }, []);
+
+  const updateActionBindingRef = useCallback((index: number, binding: string) => {
+    setActionBindings((prev) => {
+      if (!prev) return prev;
+      const next = [...prev];
+      next[index] = { ...next[index], binding };
+      return next;
+    });
+  }, []);
+
+  const removeActionBinding = useCallback((index: number) => {
+    setActionBindings((prev) => prev ? prev.filter((_, i) => i !== index) : prev);
+  }, []);
+
+  const commitAddActionBinding = useCallback(() => {
+    if (!newActionPart.trim()) return;
+    setActionBindings((prev) => [
+      ...(prev ?? []),
+      { action_part: newActionPart.trim(), binding: newActionBindingRef.trim() },
+    ]);
+    setNewActionPart('');
+    setNewActionBindingRef('');
+    setShowAddActionBinding(false);
+  }, [newActionPart, newActionBindingRef]);
+
+  // ---------------------------------------------------------------------------
+  // Save — calls bindSlot / bindProp / bindAction for each binding
   // ---------------------------------------------------------------------------
 
   const handleSave = useCallback(async () => {
@@ -354,6 +410,19 @@ export const SlotSourceEditor: React.FC<SlotSourceEditorProps> = ({
         }
       }
 
+      // Save all action bindings
+      for (const ab of (actionBindings ?? [])) {
+        if (!ab.action_part.trim()) continue;
+        const result = await invoke('ComponentMapping', 'bindAction', {
+          mapping: mappingId,
+          actionPart: ab.action_part,
+          binding: ab.binding,
+        });
+        if (result.variant !== 'ok') {
+          throw new Error(`Failed to bind action "${ab.action_part}": ${result.message ?? result.variant}`);
+        }
+      }
+
       setSaveSuccess(true);
       onSaved?.();
     } catch (err) {
@@ -361,7 +430,7 @@ export const SlotSourceEditor: React.FC<SlotSourceEditorProps> = ({
     } finally {
       setSaving(false);
     }
-  }, [slots, props, mappingId, invoke, onSaved]);
+  }, [slots, props, actionBindings, mappingId, invoke, onSaved]);
 
   // ---------------------------------------------------------------------------
   // Render
@@ -605,6 +674,109 @@ export const SlotSourceEditor: React.FC<SlotSourceEditorProps> = ({
               </div>
             );
           })}
+        </div>
+      </section>
+
+      {/* Action Bindings */}
+      <section>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3 style={sectionHeadingStyle}>Action Bindings</h3>
+          <button data-part="button" data-variant="outlined" onClick={() => setShowAddActionBinding(true)}>
+            + Add Action Binding
+          </button>
+        </div>
+
+        {actionBindings && actionBindings.length === 0 && !showAddActionBinding && (
+          <div style={{
+            padding: 'var(--spacing-md)',
+            color: 'var(--palette-on-surface-variant)',
+            fontSize: 'var(--typography-body-sm-size)',
+            fontStyle: 'italic',
+          }}>
+            No action bindings configured. Click &quot;Add Action Binding&quot; to wire a widget action part to an ActionBinding reference.
+          </div>
+        )}
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
+          {actionBindings?.map((ab, abIdx) => (
+            <div key={abIdx} style={{
+              display: 'flex', gap: 'var(--spacing-xs)', alignItems: 'center',
+              padding: 'var(--spacing-sm)',
+              border: '1px solid var(--palette-outline-variant)',
+              borderRadius: 'var(--radius-sm)',
+            }}>
+              <input
+                style={{ ...inputStyle, maxWidth: '160px' }}
+                type="text"
+                value={ab.action_part}
+                placeholder="Action part (e.g. removeBlock)"
+                onChange={(e) => updateActionPart(abIdx, e.target.value)}
+              />
+              <span style={{ color: 'var(--palette-on-surface-variant)', fontSize: 'var(--typography-body-sm-size)' }}>
+                &rarr;
+              </span>
+              <input
+                style={inputStyle}
+                type="text"
+                value={ab.binding}
+                placeholder="ActionBinding reference (or leave blank for Unbound)"
+                onChange={(e) => updateActionBindingRef(abIdx, e.target.value)}
+              />
+              {ab.binding
+                ? <Badge variant="success">{ab.binding}</Badge>
+                : <Badge variant="secondary">Unbound</Badge>
+              }
+              <button style={removeButtonStyle} onClick={() => removeActionBinding(abIdx)} title="Remove action binding">
+                &times;
+              </button>
+            </div>
+          ))}
+
+          {showAddActionBinding && (
+            <Card variant="outlined">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
+                <div style={{
+                  fontSize: 'var(--typography-label-md-size)',
+                  fontWeight: 'var(--typography-label-md-weight)',
+                  color: 'var(--palette-on-surface)',
+                }}>
+                  New Action Binding
+                </div>
+                <div style={{ display: 'flex', gap: 'var(--spacing-xs)', alignItems: 'center' }}>
+                  <input
+                    style={{ ...inputStyle, maxWidth: '160px' }}
+                    type="text"
+                    value={newActionPart}
+                    placeholder="Action part name"
+                    onChange={(e) => setNewActionPart(e.target.value)}
+                    autoFocus
+                  />
+                  <span style={{ color: 'var(--palette-on-surface-variant)', fontSize: 'var(--typography-body-sm-size)' }}>
+                    &rarr;
+                  </span>
+                  <input
+                    style={inputStyle}
+                    type="text"
+                    value={newActionBindingRef}
+                    placeholder="ActionBinding reference"
+                    onChange={(e) => setNewActionBindingRef(e.target.value)}
+                  />
+                </div>
+                <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
+                  <button data-part="button" data-variant="filled" onClick={commitAddActionBinding}>
+                    Save
+                  </button>
+                  <button data-part="button" data-variant="outlined" onClick={() => {
+                    setShowAddActionBinding(false);
+                    setNewActionPart('');
+                    setNewActionBindingRef('');
+                  }}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </Card>
+          )}
         </div>
       </section>
 
