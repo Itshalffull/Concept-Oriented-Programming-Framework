@@ -17,6 +17,7 @@ concept ActionBinding [B] {
     definition {
       target: B -> String
       parameterMap: B -> String
+      reversalAction: B -> option String
       label: B -> option String
       icon: B -> option String
       buttonVariant: B -> option String
@@ -42,6 +43,7 @@ concept ActionBinding [B] {
     action bind(binding: B, target: String, parameterMap: String,
                 precondition: option String, confirmWhen: option String,
                 executionPolicy: String, retryPolicy: option String,
+                reversalAction: option String,
                 label: option String, icon: option String,
                 buttonVariant: option String) {
       -> ok(binding: B) {
@@ -98,6 +100,7 @@ concept ActionBinding [B] {
       -> ok(binding: B, target: String, parameterMap: String,
             precondition: option String, confirmWhen: option String,
             executionPolicy: String, retryPolicy: option String,
+            reversalAction: option String,
             label: option String, icon: option String,
             buttonVariant: option String, status: String) {
         Return the full binding configuration and current execution status.

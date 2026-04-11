@@ -25,6 +25,7 @@ const _handler: FunctionalConceptHandler = {
     const confirmWhen = (input.confirmWhen as string) || null;
     const executionPolicy = input.executionPolicy as string;
     const retryPolicy = (input.retryPolicy as string) || null;
+    const reversalAction = (input.reversalAction as string) || null;
     const label = (input.label as string) || null;
     const icon = (input.icon as string) || null;
     const buttonVariant = (input.buttonVariant as string) || null;
@@ -73,6 +74,7 @@ const _handler: FunctionalConceptHandler = {
           confirmWhen,
           executionPolicy,
           retryPolicy,
+          reversalAction,
           label,
           icon,
           buttonVariant,
@@ -107,6 +109,7 @@ const _handler: FunctionalConceptHandler = {
           confirmWhen: rec.confirmWhen ?? null,
           executionPolicy: rec.executionPolicy,
           retryPolicy: rec.retryPolicy ?? null,
+          reversalAction: rec.reversalAction ?? null,
           label: rec.label ?? null,
           icon: rec.icon ?? null,
           buttonVariant: rec.buttonVariant ?? null,

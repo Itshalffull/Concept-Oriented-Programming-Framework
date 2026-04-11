@@ -605,7 +605,7 @@ describe('ActionBinding functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('bind'), input: fc.record({ binding: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }), parameterMap: fc.string({ minLength: 1, maxLength: 50 }), precondition: fc.string(), confirmWhen: fc.string(), executionPolicy: fc.string({ minLength: 1, maxLength: 50 }), retryPolicy: fc.string(), label: fc.string(), icon: fc.string(), buttonVariant: fc.string() }) }),
+              fc.record({ action: fc.constant('bind'), input: fc.record({ binding: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }), parameterMap: fc.string({ minLength: 1, maxLength: 50 }), precondition: fc.string(), confirmWhen: fc.string(), executionPolicy: fc.string({ minLength: 1, maxLength: 50 }), retryPolicy: fc.string(), reversalAction: fc.string(), label: fc.string(), icon: fc.string(), buttonVariant: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ binding: fc.string() }) }),
               fc.record({ action: fc.constant('invoke'), input: fc.record({ binding: fc.string(), context: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('confirm'), input: fc.record({ binding: fc.string() }) }),
@@ -641,7 +641,7 @@ describe('ActionBinding functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('bind'), input: fc.record({ binding: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }), parameterMap: fc.string({ minLength: 1, maxLength: 50 }), precondition: fc.string(), confirmWhen: fc.string(), executionPolicy: fc.string({ minLength: 1, maxLength: 50 }), retryPolicy: fc.string(), label: fc.string(), icon: fc.string(), buttonVariant: fc.string() }) }),
+              fc.record({ action: fc.constant('bind'), input: fc.record({ binding: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }), parameterMap: fc.string({ minLength: 1, maxLength: 50 }), precondition: fc.string(), confirmWhen: fc.string(), executionPolicy: fc.string({ minLength: 1, maxLength: 50 }), retryPolicy: fc.string(), reversalAction: fc.string(), label: fc.string(), icon: fc.string(), buttonVariant: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ binding: fc.string() }) }),
               fc.record({ action: fc.constant('invoke'), input: fc.record({ binding: fc.string(), context: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('confirm'), input: fc.record({ binding: fc.string() }) }),
@@ -692,7 +692,7 @@ describe('ActionBinding functional handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ binding: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }), parameterMap: fc.string({ minLength: 1, maxLength: 50 }), precondition: fc.string(), confirmWhen: fc.string(), executionPolicy: fc.string({ minLength: 1, maxLength: 50 }), retryPolicy: fc.string(), label: fc.string(), icon: fc.string(), buttonVariant: fc.string() }),
+          fc.record({ binding: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }), parameterMap: fc.string({ minLength: 1, maxLength: 50 }), precondition: fc.string(), confirmWhen: fc.string(), executionPolicy: fc.string({ minLength: 1, maxLength: 50 }), retryPolicy: fc.string(), reversalAction: fc.string(), label: fc.string(), icon: fc.string(), buttonVariant: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
             const result = await safeInvoke(async () => {
