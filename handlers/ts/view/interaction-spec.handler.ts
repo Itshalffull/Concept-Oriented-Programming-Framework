@@ -12,6 +12,8 @@ import {
   get,
   find,
   put,
+  merge,
+  mergeFrom,
   complete,
   completeFrom,
   branch,
@@ -34,6 +36,8 @@ const _handler: FunctionalConceptHandler = {
     const rowClick = (input.rowClick ?? '') as string;
     const rowActions = (input.rowActions ?? '[]') as string;
     const pickerMode = (input.pickerMode ?? false) as boolean;
+    const createProgramRef = (input.createProgram ?? null) as string | null;
+    const actionProgramRef = (input.actionProgram ?? null) as string | null;
 
     if (!name || name.trim() === '') {
       return complete(createProgram(), 'error', {
@@ -60,6 +64,11 @@ const _handler: FunctionalConceptHandler = {
           rowClick,
           rowActions,
           pickerMode,
+          createProgram: createProgramRef,
+          actionProgram: actionProgramRef,
+          actionBindings: null,
+          createBinding: null,
+          bulkBindings: null,
         });
         return complete(b2, 'ok', { interaction: name });
       },
@@ -107,6 +116,73 @@ const _handler: FunctionalConceptHandler = {
       }));
       return { interactions: JSON.stringify(interactions) };
     }) as StorageProgram<Result>;
+  },
+
+  addRowAction(input: Record<string, unknown>) {
+    const name = input.name as string;
+    const binding = (input.binding ?? '') as string;
+
+    if (!binding || binding.trim() === '') {
+      return complete(createProgram(), 'error', {
+        message: 'binding is required',
+      }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = get(p, 'interaction', name, 'existing');
+
+    return branch(
+      p,
+      'existing',
+      // existing != null — append binding ID to actionBindings JSON array
+      (b) => {
+        const b2 = mergeFrom(b, 'interaction', name, (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          const currentBindings = existing.actionBindings as string | null;
+          let ids: string[] = [];
+          if (currentBindings) {
+            try { ids = JSON.parse(currentBindings); } catch { ids = []; }
+          }
+          if (!ids.includes(binding)) ids.push(binding);
+          return { actionBindings: JSON.stringify(ids) };
+        });
+        return complete(b2, 'ok', { interaction: name });
+      },
+      // existing == null — notfound
+      (b) =>
+        complete(b, 'notfound', {
+          message: `No interaction spec with name "${name}" found`,
+        }),
+    ) as StorageProgram<Result>;
+  },
+
+  setCreateBinding(input: Record<string, unknown>) {
+    const name = input.name as string;
+    const binding = (input.binding ?? '') as string;
+
+    if (!binding || binding.trim() === '') {
+      return complete(createProgram(), 'error', {
+        message: 'binding is required',
+      }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = get(p, 'interaction', name, 'existing');
+
+    return branch(
+      p,
+      'existing',
+      // existing != null — set createBinding
+      (b) => {
+        const b2 = merge(b, 'interaction', name, { createBinding: binding });
+        return complete(b2, 'ok', { interaction: name });
+      },
+      // existing == null — notfound
+      (b) =>
+        complete(b, 'notfound', {
+          message: `No interaction spec with name "${name}" found`,
+        }),
+    ) as StorageProgram<Result>;
   },
 };
 

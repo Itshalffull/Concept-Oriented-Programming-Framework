@@ -1,0 +1,50 @@
+# Legacy Interaction Compat — migration path for inline rowActions JSON (MAG-632)
+#
+# MIGRATION INTENT
+# ----------------
+# Prior to MAG-632, callers embedded row-action configuration directly as inline
+# JSON in the InteractionSpec/create `rowActions` parameter (a serialized
+# RowActionConfig[] array). ActionBinding IDs did not exist.
+#
+# After MAG-632, the preferred pattern is:
+#   1. Create ActionBinding entities (one per row action) via ActionBinding/create.
+#   2. Reference those IDs through InteractionSpec/addRowAction.
+#   3. The `actionBindings` state field on InteractionSpec holds the JSON array of IDs.
+#
+# This sync documents the migration boundary. When an InteractionSpec is created
+# with a non-empty `rowActions` payload that looks like legacy inline config
+# (i.e., it contains objects rather than bare string IDs), a migration sync would:
+#   1. Parse the `rowActions` JSON array.
+#   2. For each inline RowActionConfig, call ActionBinding/create to register a
+#      proper binding entity and obtain its ID.
+#   3. Call InteractionSpec/addRowAction for each resulting ID.
+#
+# The sync body below is intentionally left as a stub because ActionBinding is
+# not yet deployed in this environment. When ActionBinding/create is available,
+# replace the comment block with a real `then` clause following this pattern:
+#
+#   sync LegacyInteractionRowActionsMigration [eager]
+#     purpose: "When an InteractionSpec is created with legacy inline rowActions JSON,
+#               create ActionBinding entities for each config entry and wire them to
+#               the InteractionSpec via addRowAction."
+#   when {
+#     InteractionSpec/create: [ name: ?name; rowActions: ?rowActionsJson ]
+#       => ok(interaction: ?interaction)
+#   }
+#   where {
+#     guard(?rowActionsJson != "" and ?rowActionsJson != "[]")
+#     # Additional guard: parse and check for object entries vs bare ID strings
+#     # would be expressed here once the guard DSL supports JSON introspection.
+#   }
+#   then {
+#     # For each parsed entry — requires traverse support in sync engine:
+#     # ActionBinding/create: [ config: ?rowActionsJson ]
+#     #   => ok(id: ?bindingId)
+#     # InteractionSpec/addRowAction: [ name: ?name; binding: ?bindingId ]
+#   }
+#
+# Until ActionBinding is available, no migration is performed automatically.
+# Callers should migrate by:
+#   a) Creating ActionBinding entities directly.
+#   b) Passing an empty `rowActions` ("[]") to InteractionSpec/create.
+#   c) Calling InteractionSpec/addRowAction with each binding ID.

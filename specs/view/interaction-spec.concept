@@ -24,6 +24,9 @@ concept InteractionSpec [I] {
     pickerMode: I -> Bool
     createProgram: I -> option String
     actionProgram: I -> option String
+    actionBindings: I -> option String
+    createBinding: I -> option String
+    bulkBindings: I -> option String
   }
 
   actions {
@@ -69,6 +72,39 @@ concept InteractionSpec [I] {
         containing name, createForm, rowClick, rowActions, and pickerMode.
       }
       fixture list_all {}
+    }
+
+    action addRowAction(name: String, binding: String) {
+      -> ok(interaction: I) {
+        Append an ActionBinding ID to the row-action binding list for the named
+        interaction spec. The spec is updated in place and the new list is available
+        immediately on subsequent get calls.
+      }
+      -> notfound(message: String) {
+        No interaction spec with this name is registered; the binding cannot be added.
+      }
+      -> error(message: String) {
+        The binding string is empty, making the row action unaddressable.
+      }
+      fixture addRowAction_ok { name: "content-list-controls", binding: "action-binding-1" } after create_content_controls
+      fixture addRowAction_notfound { name: "nonexistent-spec", binding: "action-binding-1" } -> notfound
+      fixture addRowAction_empty_binding { name: "content-list-controls", binding: "" } after create_content_controls -> error
+    }
+
+    action setCreateBinding(name: String, binding: String) {
+      -> ok(interaction: I) {
+        Set the ActionBinding ID to use for the create form action of the named
+        interaction spec. Replaces any previously set create binding.
+      }
+      -> notfound(message: String) {
+        No interaction spec with this name is registered; the create binding cannot be set.
+      }
+      -> error(message: String) {
+        The binding string is empty, making the create action unaddressable.
+      }
+      fixture setCreateBinding_ok { name: "content-list-controls", binding: "create-binding-1" } after create_content_controls
+      fixture setCreateBinding_notfound { name: "nonexistent-spec", binding: "create-binding-1" } -> notfound
+      fixture setCreateBinding_empty_binding { name: "content-list-controls", binding: "" } after create_content_controls -> error
     }
 
   }

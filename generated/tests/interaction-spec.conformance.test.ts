@@ -282,6 +282,198 @@ describe('InteractionSpec functional handler', () => {
 
   });
 
+  describe('addRowAction', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = interactionSpecHandler.addRowAction({ name: "content-list-controls", binding: "action-binding-1" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = interactionSpecHandler.addRowAction({ name: "content-list-controls", binding: "action-binding-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = interactionSpecHandler.addRowAction({ name: "content-list-controls", binding: "action-binding-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = interactionSpecHandler.addRowAction({ name: "content-list-controls", binding: "action-binding-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = interactionSpecHandler.addRowAction({ name: "content-list-controls", binding: "action-binding-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof interactionSpecHandler.addRowAction !== 'function') return;
+      const result = await interpret(interactionSpecHandler.addRowAction({ name: "content-list-controls", binding: "action-binding-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "addRowAction_ok" -> ok', async () => {
+      if (typeof interactionSpecHandler.addRowAction !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_content_controls = await interpret(interactionSpecHandler.create({ name: "content-list-controls", createForm: {"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":"true"}]}, rowClick: {"navigateTo":"/content/{node}"}, rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null }), storage);
+      const _pool = Object.assign({}, (afterResult_create_content_controls?.output ?? {}));
+      const _fixtureInput = { name: "content-list-controls", binding: "action-binding-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(interactionSpecHandler.addRowAction({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "addRowAction_notfound" -> notfound', async () => {
+      if (typeof interactionSpecHandler.addRowAction !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interactionSpecHandler.addRowAction({ name: "nonexistent-spec", binding: "action-binding-1" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
+    });
+
+    it('fixture "addRowAction_empty_binding" -> error', async () => {
+      if (typeof interactionSpecHandler.addRowAction !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_content_controls = await interpret(interactionSpecHandler.create({ name: "content-list-controls", createForm: {"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":"true"}]}, rowClick: {"navigateTo":"/content/{node}"}, rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null }), storage);
+      const _pool = Object.assign({}, (afterResult_create_content_controls?.output ?? {}));
+      const _fixtureInput = { name: "content-list-controls", binding: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(interactionSpecHandler.addRowAction({ ..._fixtureInput }), storage);
+      expect(result.variant).not.toBe('ok');
+    });
+
+  });
+
+  describe('setCreateBinding', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = interactionSpecHandler.setCreateBinding({ name: "content-list-controls", binding: "create-binding-1" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = interactionSpecHandler.setCreateBinding({ name: "content-list-controls", binding: "create-binding-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = interactionSpecHandler.setCreateBinding({ name: "content-list-controls", binding: "create-binding-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = interactionSpecHandler.setCreateBinding({ name: "content-list-controls", binding: "create-binding-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = interactionSpecHandler.setCreateBinding({ name: "content-list-controls", binding: "create-binding-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof interactionSpecHandler.setCreateBinding !== 'function') return;
+      const result = await interpret(interactionSpecHandler.setCreateBinding({ name: "content-list-controls", binding: "create-binding-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "setCreateBinding_ok" -> ok', async () => {
+      if (typeof interactionSpecHandler.setCreateBinding !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_content_controls = await interpret(interactionSpecHandler.create({ name: "content-list-controls", createForm: {"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":"true"}]}, rowClick: {"navigateTo":"/content/{node}"}, rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null }), storage);
+      const _pool = Object.assign({}, (afterResult_create_content_controls?.output ?? {}));
+      const _fixtureInput = { name: "content-list-controls", binding: "create-binding-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(interactionSpecHandler.setCreateBinding({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "setCreateBinding_notfound" -> notfound', async () => {
+      if (typeof interactionSpecHandler.setCreateBinding !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interactionSpecHandler.setCreateBinding({ name: "nonexistent-spec", binding: "create-binding-1" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
+    });
+
+    it('fixture "setCreateBinding_empty_binding" -> error', async () => {
+      if (typeof interactionSpecHandler.setCreateBinding !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_content_controls = await interpret(interactionSpecHandler.create({ name: "content-list-controls", createForm: {"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":"true"}]}, rowClick: {"navigateTo":"/content/{node}"}, rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null }), storage);
+      const _pool = Object.assign({}, (afterResult_create_content_controls?.output ?? {}));
+      const _fixtureInput = { name: "content-list-controls", binding: "" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(interactionSpecHandler.setCreateBinding({ ..._fixtureInput }), storage);
+      expect(result.variant).not.toBe('ok');
+    });
+
+  });
+
   describe('register()', () => {
     it('declares concept name', async () => {
       if (typeof interactionSpecHandler.register !== 'function') return;
@@ -326,6 +518,8 @@ describe('InteractionSpec functional handler', () => {
               fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), createForm: fc.string({ minLength: 1, maxLength: 50 }), rowClick: fc.string({ minLength: 1, maxLength: 50 }), rowActions: fc.string({ minLength: 1, maxLength: 50 }), pickerMode: fc.boolean(), createProgram: fc.string(), actionProgram: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
+              fc.record({ action: fc.constant('addRowAction'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), binding: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('setCreateBinding'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), binding: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -358,6 +552,8 @@ describe('InteractionSpec functional handler', () => {
               fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), createForm: fc.string({ minLength: 1, maxLength: 50 }), rowClick: fc.string({ minLength: 1, maxLength: 50 }), rowActions: fc.string({ minLength: 1, maxLength: 50 }), pickerMode: fc.boolean(), createProgram: fc.string(), actionProgram: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
+              fc.record({ action: fc.constant('addRowAction'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), binding: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('setCreateBinding'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), binding: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
