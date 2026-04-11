@@ -1,0 +1,309 @@
+@version(1)
+widget action-button {
+
+  purpose {
+    Headless button widget that surfaces the full ActionBinding execution lifecycle
+    as variant-driven FSM states. A single clickable trigger drives an action through
+    confirmation, validation, execution, and outcome states, rendering feedback
+    (spinner, success icon, inline error) appropriate to each state without
+    prescribing visual appearance. Connects directly to ActionBinding completion
+    variants: ok, error, invalid, notfound, and unauthorized. Supports an optional
+    confirmation gate before execution, auto-dismisses from success after two
+    seconds, and exposes a retry affordance on retryable errors.
+  }
+
+  anatomy {
+    root:         container     { Top-level wrapper; carries data-state for variant-driven styling }
+    button:       action        { The primary clickable trigger element the user activates }
+    label:        text          { Button label text drawn from the label prop }
+    icon:         presentation  { Optional decorative icon displayed alongside the label }
+    spinner:      presentation  { Animated loading spinner; visible only in the executing state }
+    successIcon:  presentation  { Check-mark icon indicating successful completion; visible in success state }
+    errorMessage: text          { Inline error or explanation text; visible in error, invalid, notfound, and unauthorized states }
+    retryButton:  action        { Secondary button that re-triggers execution; visible in error state when retryable }
+  }
+
+  states {
+    idle [initial] {
+      on CLICK -> confirming;
+      on CLICK_DIRECT -> executing;
+    }
+
+    confirming {
+      on CONFIRM -> executing;
+      on CANCEL -> idle;
+    }
+
+    executing {
+      on OK -> success;
+      on ERROR -> error;
+      on INVALID -> invalid;
+      on NOTFOUND -> notfound;
+      on UNAUTHORIZED -> unauthorized;
+      entry [setAriaBusy; disableButton];
+      exit [clearAriaBusy; enableButton];
+    }
+
+    success {
+      on RESET -> idle;
+      entry [startAutoDismissTimer];
+      exit [clearAutoDismissTimer];
+    }
+
+    error {
+      on RETRY -> executing;
+      on DISMISS -> idle;
+    }
+
+    invalid {
+      on DISMISS -> idle;
+    }
+
+    notfound {
+      on DISMISS -> idle;
+    }
+
+    unauthorized {
+      on DISMISS -> idle;
+    }
+  }
+
+  accessibility {
+    role: button;
+    keyboard {
+      Enter -> CLICK;
+      Space -> CLICK;
+      Escape -> CANCEL;
+    }
+    focus {
+      trap: false;
+      initial: button;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "none";
+        aria-live: "polite";
+        aria-atomic: "true";
+      };
+      button -> {
+        role: "button";
+        aria-label: ?label;
+        aria-busy: if state == "executing" then "true" else "false";
+        aria-disabled: if state == "executing" or state == "confirming" or ?disabled then "true" else "false";
+      };
+      label -> {
+        role: "none";
+        aria-hidden: "true";
+      };
+      icon -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      spinner -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      successIcon -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      errorMessage -> {
+        role: "alert";
+        aria-live: "polite";
+        aria-atomic: "true";
+      };
+      retryButton -> {
+        role: "button";
+        aria-label: "Retry";
+      };
+    }
+  }
+
+  props {
+    label: String
+    icon: option String
+    disabled: Bool = false
+    loading: Bool = false
+    errorText: option String
+    retryable: Bool = false
+    buttonVariant: String = "default"
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-variant: ?buttonVariant;
+      data-disabled: if ?disabled then "true" else "false";
+    }
+
+    button -> {
+      data-part: "button";
+      disabled: if state == "executing" or state == "confirming" or ?disabled then true else false;
+      aria-busy: if state == "executing" then "true" else "false";
+      aria-disabled: if state == "executing" or state == "confirming" or ?disabled then "true" else "false";
+      data-loading: if state == "executing" then "true" else "false";
+      onClick: if state == "idle" and ?disabled == false then send(CLICK) else noop;
+    }
+
+    label -> {
+      data-part: "label";
+      text: ?label;
+    }
+
+    icon -> {
+      data-part: "icon";
+      aria-hidden: "true";
+      data-icon: ?icon;
+      hidden: if ?icon then false else true;
+    }
+
+    spinner -> {
+      data-part: "spinner";
+      aria-hidden: "true";
+      hidden: if state == "executing" then false else true;
+      data-active: if state == "executing" then "true" else "false";
+    }
+
+    successIcon -> {
+      data-part: "success-icon";
+      aria-hidden: "true";
+      hidden: if state == "success" then false else true;
+      data-active: if state == "success" then "true" else "false";
+    }
+
+    errorMessage -> {
+      data-part: "error-message";
+      role: "alert";
+      aria-live: "polite";
+      text: ?errorText;
+      hidden: if state == "error" or state == "invalid" or state == "notfound" or state == "unauthorized" then false else true;
+      data-active: if state == "error" or state == "invalid" or state == "notfound" or state == "unauthorized" then "true" else "false";
+    }
+
+    retryButton -> {
+      data-part: "retry-button";
+      hidden: if state == "error" and ?retryable then false else true;
+      data-visible: if state == "error" and ?retryable then "true" else "false";
+      onClick: if state == "error" and ?retryable then send(RETRY) else noop;
+    }
+  }
+
+  affordance {
+    serves: invoke;
+    specificity: 10;
+    bind {
+      label: actionLabel;
+      disabled: isDisabled;
+      errorText: errorMessage;
+      retryable: canRetry;
+    }
+  }
+
+  invariant {
+    example "CLICK from idle enters executing (no confirmation gate)": {
+      after transition(from: "idle", event: "CLICK_DIRECT") -> ok
+      then state.name = "executing"
+    }
+
+    example "executing resolves to success on OK": {
+      after transition(from: "executing", event: "OK") -> ok
+      then state.name = "success"
+    }
+
+    example "executing resolves to error on ERROR": {
+      after transition(from: "executing", event: "ERROR") -> ok
+      then state.name = "error"
+    }
+
+    example "executing resolves to invalid on INVALID": {
+      after transition(from: "executing", event: "INVALID") -> ok
+      then state.name = "invalid"
+    }
+
+    example "executing resolves to notfound on NOTFOUND": {
+      after transition(from: "executing", event: "NOTFOUND") -> ok
+      then state.name = "notfound"
+    }
+
+    example "executing resolves to unauthorized on UNAUTHORIZED": {
+      after transition(from: "executing", event: "UNAUTHORIZED") -> ok
+      then state.name = "unauthorized"
+    }
+
+    example "RETRY from error re-enters executing": {
+      after transition(from: "error", event: "RETRY") -> ok
+      then state.name = "executing"
+    }
+
+    example "CANCEL from confirming returns to idle": {
+      after transition(from: "confirming", event: "CANCEL") -> ok
+      then state.name = "idle"
+    }
+
+    example "DISMISS from error returns to idle": {
+      after transition(from: "error", event: "DISMISS") -> ok
+      then state.name = "idle"
+    }
+
+    example "DISMISS from invalid returns to idle": {
+      after transition(from: "invalid", event: "DISMISS") -> ok
+      then state.name = "idle"
+    }
+
+    example "DISMISS from notfound returns to idle": {
+      after transition(from: "notfound", event: "DISMISS") -> ok
+      then state.name = "idle"
+    }
+
+    example "DISMISS from unauthorized returns to idle": {
+      after transition(from: "unauthorized", event: "DISMISS") -> ok
+      then state.name = "idle"
+    }
+
+    example "RESET from success returns to idle": {
+      after transition(from: "success", event: "RESET") -> ok
+      then state.name = "idle"
+    }
+
+    example "CLICK from idle enters confirming when confirmation required": {
+      after transition(from: "idle", event: "CLICK") -> ok
+      then state.name = "confirming"
+    }
+
+    example "CONFIRM from confirming enters executing": {
+      after transition(from: "confirming", event: "CONFIRM") -> ok
+      then state.name = "executing"
+    }
+
+    never "idle and executing simultaneously": {
+      state = "idle" and state = "executing"
+    }
+
+    never "success and error simultaneously": {
+      state = "success" and state = "error"
+    }
+
+    never "confirming and executing simultaneously": {
+      state = "confirming" and state = "executing"
+    }
+
+    "data-state on root must always reflect the current FSM state name";
+    "spinner must carry data-active=true only in the executing state";
+    "successIcon must carry data-active=true only in the success state";
+    "errorMessage must carry data-active=true only in error, invalid, notfound, and unauthorized states";
+    "button aria-busy must be true in executing state and false in all other states";
+    "button aria-disabled must be true in executing and confirming states";
+    "retryButton must be hidden when state is not error or retryable prop is false";
+    "Enter and Space keys must dispatch CLICK from idle state";
+    "Escape key must dispatch CANCEL from confirming and DISMISS from error, invalid, notfound, unauthorized";
+    "success state RESET event must auto-fire after 2 seconds via startAutoDismissTimer entry action";
+    "aria-busy must be cleared on exit from executing state regardless of outcome variant";
+    "retryButton must not receive keyboard focus when hidden";
+    "errorMessage live region must announce on state entry without requiring focus movement";
+    "disabled prop must propagate aria-disabled to button in all states";
+    "all states must be reachable from the initial idle state";
+  }
+
+}
