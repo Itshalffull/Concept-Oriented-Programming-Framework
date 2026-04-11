@@ -1,0 +1,125 @@
+@version(1)
+@category("view")
+@visibility("public")
+concept QueryPurityProvider [R] {
+
+  purpose {
+    Classify a QueryProgram's purity and extract read fields plus
+    invoked actions by walking its instruction tree. Scan, filter,
+    sort, group, project, join, and limit contribute to readFields.
+    Invoke and traverseInvoke instructions contribute to
+    invokedActions. Traverse instructions inherit purity from their
+    body sub-program or declaredEffects. Purity classification:
+    no instructions = pure, only reads = read-only, any
+    invoke/traverseInvoke/read-write-traverse = read-write.
+  }
+
+  state {
+    results: set R
+    readFields: R -> set String
+    invokedActions: R -> set String
+    purity: R -> String
+  }
+
+  actions {
+
+    action analyze(program: String) {
+      -> ok(result: R, readFields: String, invokedActions: String, purity: String) {
+        Walk the instruction tree. Scan/filter/sort/group/project/join
+        and limit instructions contribute to readFields. Invoke and
+        traverseInvoke instructions contribute to invokedActions. For
+        traverse instructions, inherit purity from the body sub-program
+        or declaredEffects when available. Classify purity: no
+        instructions yields pure, only read-contributing instructions
+        yields read-only, any invoke/traverseInvoke or a traverse whose
+        body is read-write yields read-write.
+      }
+      -> error(message: String) {
+        The program string could not be parsed into a valid instruction
+        tree, or the program string is empty.
+      }
+
+      fixture analyze_read_only {
+        program: "{\"instructions\":[{\"tag\":\"scan\",\"source\":\"articles\",\"bindAs\":\"rows\"},{\"tag\":\"filter\",\"predicate\":{\"type\":\"eq\",\"field\":\"status\",\"value\":\"active\"},\"bindAs\":\"filtered\"}],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[],\"invocations\":[]}}"
+      }
+      fixture analyze_read_write {
+        program: "{\"instructions\":[{\"tag\":\"scan\",\"source\":\"articles\",\"bindAs\":\"rows\"},{\"tag\":\"invoke\",\"concept\":\"Article\",\"action\":\"archive\",\"args\":{},\"bindAs\":\"result\"}],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[],\"invocations\":[\"Article/archive\"]}}"
+      }
+      fixture analyze_pure {
+        program: "{\"instructions\":[],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[],\"invocations\":[]}}"
+      }
+      fixture analyze_invalid {
+        program: "not valid json{{{"
+      } -> error
+    }
+
+    action get(result: R) {
+      -> ok(readFields: String, invokedActions: String, purity: String) {
+        Return the previously computed read fields, invoked actions, and
+        purity classification for a stored analysis result.
+      }
+      -> notfound() {
+        No analysis result exists with this identifier.
+      }
+
+      fixture get_existing {
+        result: $analyze_read_only.result
+      } after analyze_read_only
+      fixture get_missing {
+        result: "nonexistent-result-id"
+      } -> notfound
+    }
+
+  }
+
+  example "scan and filter yields read-only purity": {
+    after analyze(program: "{\"instructions\":[{\"tag\":\"scan\",\"source\":\"articles\",\"bindAs\":\"rows\"},{\"tag\":\"filter\",\"predicate\":{\"type\":\"eq\",\"field\":\"status\",\"value\":\"active\"},\"bindAs\":\"filtered\"}],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[],\"invocations\":[]}}")
+      -> ok(result: r, readFields: rf, invokedActions: ia, purity: p)
+    then p = "read-only"
+  }
+
+  example "scan and invoke yields read-write purity": {
+    after analyze(program: "{\"instructions\":[{\"tag\":\"scan\",\"source\":\"articles\",\"bindAs\":\"rows\"},{\"tag\":\"invoke\",\"concept\":\"Article\",\"action\":\"archive\",\"args\":{},\"bindAs\":\"result\"}],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[],\"invocations\":[\"Article/archive\"]}}")
+      -> ok(result: r, readFields: rf, invokedActions: ia, purity: p)
+    then p = "read-write"
+  }
+
+  example "empty program yields pure purity": {
+    after analyze(program: "{\"instructions\":[],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[],\"invocations\":[]}}")
+      -> ok(result: r, readFields: rf, invokedActions: ia, purity: p)
+    then p = "pure"
+  }
+
+  example "get after analyze returns stored result": {
+    after analyze(program: "{\"instructions\":[{\"tag\":\"scan\",\"source\":\"articles\",\"bindAs\":\"rows\"},{\"tag\":\"filter\",\"predicate\":{\"type\":\"eq\",\"field\":\"status\",\"value\":\"active\"},\"bindAs\":\"filtered\"}],\"terminated\":false,\"effects\":{\"reads\":[],\"writes\":[],\"completionVariants\":[],\"performs\":[],\"invocations\":[]}}")
+      -> ok(result: r, readFields: rf, invokedActions: ia, purity: p)
+    then get(result: r) -> ok(purity: p2)
+    then p2 = "read-only"
+  }
+
+  always "purity is one of pure, read-only, or read-write": {
+    forall r in results:
+    r.purity = "pure" or r.purity = "read-only" or r.purity = "read-write"
+  }
+
+  always "results with invoked actions are read-write": {
+    forall r in results:
+    r.invokedActions != "[]" implies r.purity = "read-write"
+  }
+
+  never "read-only result with non-empty invoked actions": {
+    exists r in results: r.purity = "read-only" and r.invokedActions != "[]"
+  }
+
+  action analyze {
+    requires: program != ""
+    ensures ok: result in results
+  }
+
+  action get {
+    requires: result != ""
+    ensures ok: readFields != "" and invokedActions != "" and purity != ""
+    ensures notfound: result not in results
+  }
+
+}

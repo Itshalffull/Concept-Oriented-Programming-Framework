@@ -6,6 +6,9 @@
 // wiring. Actual execution dispatch returns a placeholder result since external
 // backend modules are injected via syncs, not imported directly.
 // See architecture doc Section 10.1 (ConceptManifest IR) for query patterns.
+// Coroutine-style invoke execution (Sections 10.2, 16.11): execute yields
+// invoke_pending when hitting an invoke instruction; resumeAfterInvoke
+// continues from the serialized continuation.
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
@@ -63,6 +66,216 @@ function evaluateFilterNode(node: Record<string, unknown>, record: Record<string
       return !evaluateFilterNode(node.condition as Record<string, unknown>, record);
     default: return true;
   }
+}
+
+// ─── Continuation type ────────────────────────────────────────────────────
+
+interface Continuation {
+  remainingInstructions: Array<Record<string, unknown>>;
+  bindings: Record<string, unknown>;
+  programId: string;
+  instructionIndex: number;
+  traverseState?: {
+    sourceBinding: string;
+    currentIndex: number;
+    totalItems: number;
+    accumulatedResults: unknown[];
+  };
+}
+
+// ─── executeInstructions helper ───────────────────────────────────────────
+//
+// Iterates over instructions starting at startIndex, applying each to
+// currentSet. Returns either an invoke_pending descriptor (coroutine yield)
+// or the final rows string. Pure JavaScript — called inside mapBindings
+// callbacks so no StorageProgram monad is needed here.
+
+type InstructionResult =
+  | { kind: 'ok'; rows: string; instructionCount: number }
+  | {
+      kind: 'invoke_pending';
+      concept: string;
+      action: string;
+      input: string;
+      continuation: Continuation;
+    };
+
+function executeInstructions(
+  instructions: Array<Record<string, unknown>>,
+  bindings: Record<string, unknown>,
+  startIndex: number,
+  programId: string,
+  relationCache: Record<string, Array<Record<string, unknown>>>,
+): InstructionResult {
+  let currentSet: Array<Record<string, unknown>> = [];
+  // Restore current set from bindings if present (used on resume)
+  if (bindings['_currentSet'] != null) {
+    currentSet = bindings['_currentSet'] as Array<Record<string, unknown>>;
+  }
+
+  for (let i = startIndex; i < instructions.length; i++) {
+    const instr = instructions[i];
+    const instrType = (instr.type as string) ?? '';
+
+    switch (instrType) {
+      case 'scan': {
+        const source = instr.source as string;
+        currentSet = relationCache[source] ?? [];
+        break;
+      }
+      case 'filter': {
+        const node = typeof instr.node === 'string' ? JSON.parse(instr.node as string) : instr.node;
+        currentSet = currentSet.filter(record => evaluateFilterNode(node as Record<string, unknown>, record));
+        break;
+      }
+      case 'join': {
+        const joinSource = instr.source as string;
+        const localField = instr.localField as string;
+        const foreignField = instr.foreignField as string;
+        const joinBindAs = instr.bindAs as string;
+        const joinData = relationCache[joinSource] ?? [];
+
+        const lookupMap = new Map<string, Array<Record<string, unknown>>>();
+        for (const jRecord of joinData) {
+          const fVal = String(jRecord[foreignField] ?? '');
+          const existing = lookupMap.get(fVal) ?? [];
+          existing.push(jRecord);
+          lookupMap.set(fVal, existing);
+        }
+
+        currentSet = currentSet.map(record => {
+          const lVal = String(record[localField] ?? '');
+          const matched = lookupMap.get(lVal) ?? [];
+          return { ...record, [joinBindAs]: matched.map(m => m.schema ?? m) };
+        });
+        break;
+      }
+      case 'sort': {
+        const keys: Array<{ field: string; direction: string }> =
+          typeof instr.keys === 'string' ? JSON.parse(instr.keys as string) : (instr.keys ?? []);
+        currentSet = [...currentSet];
+        for (const key of [...keys].reverse()) {
+          const desc = key.direction === 'desc';
+          currentSet.sort((a, b) => {
+            const aVal = a[key.field];
+            const bVal = b[key.field];
+            if (aVal == null && bVal == null) return 0;
+            if (aVal == null) return desc ? 1 : -1;
+            if (bVal == null) return desc ? -1 : 1;
+            if (aVal < bVal) return desc ? 1 : -1;
+            if (aVal > bVal) return desc ? -1 : 1;
+            return 0;
+          });
+        }
+        break;
+      }
+      case 'group': {
+        const groupKeys: string[] = typeof instr.keys === 'string' ? JSON.parse(instr.keys as string) : (instr.keys ?? []);
+        const groups = new Map<string, Array<Record<string, unknown>>>();
+        for (const record of currentSet) {
+          const groupKey = groupKeys.map(k => String(record[k] ?? '')).join('::');
+          const existingGroup = groups.get(groupKey) ?? [];
+          existingGroup.push(record);
+          groups.set(groupKey, existingGroup);
+        }
+        currentSet = Array.from(groups.entries()).map(([key, items]) => ({
+          _groupKey: key,
+          _count: items.length,
+          _items: items,
+        }));
+        break;
+      }
+      case 'project': {
+        const fields: string[] = typeof instr.fields === 'string' ? JSON.parse(instr.fields as string) : (instr.fields ?? []);
+        currentSet = currentSet.map(record => {
+          const projected: Record<string, unknown> = {};
+          for (const f of fields) {
+            if (f in record) projected[f] = record[f];
+          }
+          return projected;
+        });
+        break;
+      }
+      case 'limit': {
+        const count = typeof instr.count === 'number' ? instr.count : parseInt(String(instr.count ?? '0'), 10);
+        currentSet = currentSet.slice(0, count);
+        break;
+      }
+      case 'pure':
+        // Terminal — stop processing
+        return { kind: 'ok', rows: JSON.stringify(currentSet), instructionCount: instructions.length };
+
+      case 'invoke': {
+        // Coroutine yield: serialize remaining instructions + bindings as continuation
+        const remainingInstructions = instructions.slice(i + 1);
+        const continuation: Continuation = {
+          remainingInstructions,
+          bindings: { ...bindings, _currentSet: currentSet },
+          programId,
+          instructionIndex: i,
+        };
+        return {
+          kind: 'invoke_pending',
+          concept: instr.concept as string,
+          action: instr.action as string,
+          input: typeof instr.input === 'string' ? instr.input : JSON.stringify(instr.input ?? {}),
+          continuation,
+        };
+      }
+
+      case 'traverseInvoke': {
+        // traverseInvoke: iterate over source, yield on first item's invoke,
+        // continuation tracks traversal position
+        const sourceBinding = instr.sourceBinding as string;
+        const items = (bindings[sourceBinding] ?? currentSet) as Array<unknown>;
+        const accumulatedResults = (bindings['_traverseResults'] ?? []) as unknown[];
+        const currentIndex = typeof bindings['_traverseIndex'] === 'number' ? bindings['_traverseIndex'] as number : 0;
+
+        if (currentIndex < items.length) {
+          const item = items[currentIndex];
+          const remainingInstructions = instructions.slice(i); // stay on traverseInvoke
+          const continuation: Continuation = {
+            remainingInstructions,
+            bindings: {
+              ...bindings,
+              _currentSet: currentSet,
+              _traverseIndex: currentIndex + 1,
+              _traverseResults: accumulatedResults,
+              [sourceBinding]: items,
+            },
+            programId,
+            instructionIndex: i,
+            traverseState: {
+              sourceBinding,
+              currentIndex,
+              totalItems: items.length,
+              accumulatedResults,
+            },
+          };
+          const itemAction = instr.action as string;
+          const itemConcept = instr.concept as string;
+          const itemInput = typeof item === 'object' ? JSON.stringify(item) : String(item);
+          return {
+            kind: 'invoke_pending',
+            concept: itemConcept,
+            action: itemAction,
+            input: itemInput,
+            continuation,
+          };
+        }
+        // All items processed — advance with accumulated results
+        currentSet = accumulatedResults as Array<Record<string, unknown>>;
+        break;
+      }
+
+      default:
+        // Unknown instruction — skip
+        break;
+    }
+  }
+
+  // Reached end of instructions without pure or invoke
+  return { kind: 'ok', rows: JSON.stringify(currentSet), instructionCount: instructions.length };
 }
 
 // ─── Handler ───────────────────────────────────────────────────────────────
@@ -162,15 +375,14 @@ const _handler: FunctionalConceptHandler = {
             message: (bindings._parseCheck as { ok: false; message: string }).message,
           })),
           (bb) => {
-            // Kernel provider: interpret QueryProgram instructions in-memory.
-            // Scans storage relations, applies filters, joins, sorts, projects, limits.
-            // For non-kernel kinds, syncs dispatch to external providers.
+            // Parse program and extract instructions
             const parsed = JSON.parse(typeof program === 'string' ? program : '{}');
             const instructions: Array<Record<string, unknown>> = Array.isArray(parsed.instructions)
               ? parsed.instructions
               : (Array.isArray(parsed) ? parsed : []);
 
-            // Execute instructions sequentially against concept storage
+            // Build relation cache from storage, then run the instruction walker.
+            // Invoke instructions yield invoke_pending (coroutine); others execute in-memory.
             let p3 = find(bb, 'node', {}, '_allNodes');
             p3 = find(p3, 'membership', {}, '_allMemberships');
             p3 = mapBindings(p3, (bindings) => {
@@ -180,117 +392,117 @@ const _handler: FunctionalConceptHandler = {
                 node: allNodes,
                 membership: allMemberships,
               };
+              const programId = (parsed.id as string) ?? 'program';
+              return executeInstructions(instructions, {}, 0, programId, relationCache);
+            }, '_execResult');
 
-              let currentSet: Array<Record<string, unknown>> = [];
-
-              for (const instr of instructions) {
-                const instrType = (instr.type as string) ?? '';
-
-                switch (instrType) {
-                  case 'scan': {
-                    const source = instr.source as string;
-                    currentSet = relationCache[source] ?? [];
-                    break;
-                  }
-                  case 'filter': {
-                    const node = typeof instr.node === 'string' ? JSON.parse(instr.node) : instr.node;
-                    currentSet = currentSet.filter(record => evaluateFilterNode(node, record));
-                    break;
-                  }
-                  case 'join': {
-                    const joinSource = instr.source as string;
-                    const localField = instr.localField as string;
-                    const foreignField = instr.foreignField as string;
-                    const joinBindAs = instr.bindAs as string;
-                    const joinData = relationCache[joinSource] ?? [];
-
-                    // Build lookup map: foreignField value → list of matching join records
-                    const lookupMap = new Map<string, Array<Record<string, unknown>>>();
-                    for (const jRecord of joinData) {
-                      const fVal = String(jRecord[foreignField] ?? '');
-                      const existing = lookupMap.get(fVal) ?? [];
-                      existing.push(jRecord);
-                      lookupMap.set(fVal, existing);
-                    }
-
-                    // Enrich each record with joined data
-                    currentSet = currentSet.map(record => {
-                      const lVal = String(record[localField] ?? '');
-                      const matched = lookupMap.get(lVal) ?? [];
-                      return { ...record, [joinBindAs]: matched.map(m => m.schema ?? m) };
-                    });
-                    break;
-                  }
-                  case 'sort': {
-                    const keys: Array<{ field: string; direction: string }> =
-                      typeof instr.keys === 'string' ? JSON.parse(instr.keys) : (instr.keys ?? []);
-                    currentSet = [...currentSet];
-                    for (const key of keys.reverse()) {
-                      const desc = key.direction === 'desc';
-                      currentSet.sort((a, b) => {
-                        const aVal = a[key.field];
-                        const bVal = b[key.field];
-                        if (aVal == null && bVal == null) return 0;
-                        if (aVal == null) return desc ? 1 : -1;
-                        if (bVal == null) return desc ? -1 : 1;
-                        if (aVal < bVal) return desc ? 1 : -1;
-                        if (aVal > bVal) return desc ? -1 : 1;
-                        return 0;
-                      });
-                    }
-                    break;
-                  }
-                  case 'group': {
-                    const groupKeys: string[] = typeof instr.keys === 'string' ? JSON.parse(instr.keys) : (instr.keys ?? []);
-                    const groups = new Map<string, Array<Record<string, unknown>>>();
-                    for (const record of currentSet) {
-                      const groupKey = groupKeys.map(k => String(record[k] ?? '')).join('::');
-                      const existing = groups.get(groupKey) ?? [];
-                      existing.push(record);
-                      groups.set(groupKey, existing);
-                    }
-                    currentSet = Array.from(groups.entries()).map(([key, items]) => ({
-                      _groupKey: key,
-                      _count: items.length,
-                      _items: items,
-                    }));
-                    break;
-                  }
-                  case 'project': {
-                    const fields: string[] = typeof instr.fields === 'string' ? JSON.parse(instr.fields) : (instr.fields ?? []);
-                    currentSet = currentSet.map(record => {
-                      const projected: Record<string, unknown> = {};
-                      for (const f of fields) {
-                        if (f in record) projected[f] = record[f];
-                      }
-                      return projected;
-                    });
-                    break;
-                  }
-                  case 'limit': {
-                    const count = typeof instr.count === 'number' ? instr.count : parseInt(String(instr.count ?? '0'), 10);
-                    currentSet = currentSet.slice(0, count);
-                    break;
-                  }
-                  case 'pure':
-                    // Terminal — stop processing
-                    break;
-                  default:
-                    // Unknown instruction — skip
-                    break;
-                }
-              }
-
-              return JSON.stringify(currentSet);
-            }, '_executedRows');
-
-            return completeFrom(p3, 'ok', (bindings) => ({
-              rows: bindings._executedRows as string,
-              metadata: JSON.stringify({ kind, instructionCount: instructions.length }),
-            }));
+            return branch(p3,
+              (bb2) => (bb2._execResult as InstructionResult).kind === 'invoke_pending',
+              (bb2) => completeFrom(bb2, 'invoke_pending', (bindings) => {
+                const result = bindings._execResult as Extract<InstructionResult, { kind: 'invoke_pending' }>;
+                return {
+                  concept: result.concept,
+                  action: result.action,
+                  input: result.input,
+                  continuation: JSON.stringify(result.continuation),
+                };
+              }),
+              (bb2) => completeFrom(bb2, 'ok', (bindings) => {
+                const result = bindings._execResult as Extract<InstructionResult, { kind: 'ok' }>;
+                return {
+                  rows: result.rows,
+                  metadata: JSON.stringify({ kind, instructionCount: result.instructionCount }),
+                };
+              }),
+            );
           },
         );
       },
+    ) as StorageProgram<Result>;
+  },
+
+  resumeAfterInvoke(input: Record<string, unknown>) {
+    const continuationRaw = input.continuation as string;
+    const variantRaw = input.variant as string;
+    const outputRaw = input.output as string;
+
+    if (!continuationRaw || (typeof continuationRaw === 'string' && continuationRaw.trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'continuation is required' }) as StorageProgram<Result>;
+    }
+
+    // Parse the continuation — return error if invalid JSON
+    let continuation: Continuation;
+    try {
+      continuation = JSON.parse(continuationRaw) as Continuation;
+    } catch {
+      return complete(createProgram(), 'error', { message: 'continuation is not valid JSON' }) as StorageProgram<Result>;
+    }
+
+    // Parse the invoke output — return error if invalid JSON
+    let parsedOutput: unknown;
+    try {
+      parsedOutput = JSON.parse(typeof outputRaw === 'string' ? outputRaw : '{}');
+    } catch {
+      return complete(createProgram(), 'error', { message: 'output is not valid JSON' }) as StorageProgram<Result>;
+    }
+
+    // Bind the invoke result into the continuation's bindings, then continue execution.
+    // We need access to storage for relation data, so we load nodes/memberships.
+    let p = createProgram();
+    p = find(p, 'node', {}, '_resumeNodes');
+    p = find(p, 'membership', {}, '_resumeMemberships');
+
+    // Enrich bindings with the invoke result and continue
+    p = mapBindings(p, (storageBindings) => {
+      const allNodes = (storageBindings._resumeNodes as Array<Record<string, unknown>>) || [];
+      const allMemberships = (storageBindings._resumeMemberships as Array<Record<string, unknown>>) || [];
+      const relationCache: Record<string, Array<Record<string, unknown>>> = {
+        node: allNodes,
+        membership: allMemberships,
+      };
+
+      // Merge the invoke result into the continuation's bindings
+      const enrichedBindings: Record<string, unknown> = {
+        ...continuation.bindings,
+        _invokeVariant: variantRaw,
+        _invokeOutput: parsedOutput,
+      };
+
+      // If this was a traverseInvoke, accumulate the result and advance the index
+      const ts = continuation.traverseState;
+      if (ts != null) {
+        const accumulated = [...ts.accumulatedResults, { variant: variantRaw, ...((parsedOutput as Record<string, unknown>) ?? {}) }];
+        enrichedBindings['_traverseResults'] = accumulated;
+        enrichedBindings['_traverseIndex'] = ts.currentIndex + 1;
+      }
+
+      return executeInstructions(
+        continuation.remainingInstructions,
+        enrichedBindings,
+        0,
+        continuation.programId,
+        relationCache,
+      );
+    }, '_resumeResult');
+
+    return branch(p,
+      (b) => (b._resumeResult as InstructionResult).kind === 'invoke_pending',
+      (b) => completeFrom(b, 'invoke_pending', (bindings) => {
+        const result = bindings._resumeResult as Extract<InstructionResult, { kind: 'invoke_pending' }>;
+        return {
+          concept: result.concept,
+          action: result.action,
+          input: result.input,
+          continuation: JSON.stringify(result.continuation),
+        };
+      }),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const result = bindings._resumeResult as Extract<InstructionResult, { kind: 'ok' }>;
+        return {
+          rows: result.rows,
+          metadata: JSON.stringify({ programId: continuation.programId, instructionCount: result.instructionCount }),
+        };
+      }),
     ) as StorageProgram<Result>;
   },
 

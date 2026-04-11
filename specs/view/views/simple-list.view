@@ -1,0 +1,13 @@
+view "simple-list" {
+  shell: "simple-list"
+
+  purpose {
+    Minimal data listing with no filtering or actions.
+  }
+
+  invariants {
+    always "read-only": {
+      purity = "read-only"
+    }
+  }
+}

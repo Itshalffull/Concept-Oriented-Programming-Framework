@@ -1,0 +1,28 @@
+view "content-list" {
+  shell: "content-list"
+
+  purpose {
+    Browse all content entities with schema-based filtering and
+    alphabetical sorting. Read-only — no inline write actions.
+  }
+
+  invariants {
+    always "purity is read-only": {
+      purity = "read-only"
+    }
+
+    always "no invoke instructions": {
+      invokeCount = 0
+    }
+
+    always "projects only known fields": {
+      forall f in projectedFields:
+      f in ["id", "node", "kind", "name"]
+    }
+
+    always "filter fields exist in source": {
+      forall f in filterFields:
+      f in sourceFields
+    }
+  }
+}

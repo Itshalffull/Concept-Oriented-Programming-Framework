@@ -24,6 +24,14 @@
     "alwaysLoaded": false
   },
   {
+    "name": "query_execution_resume_after_invoke",
+    "briefDescription": "The invoke completed and the remaining program executed successfully .",
+    "category": "QueryExecution",
+    "concept": "QueryExecution",
+    "action": "resumeAfterInvoke",
+    "alwaysLoaded": false
+  },
+  {
     "name": "query_execution_plan_pushdown",
     "briefDescription": "Decompose a query program into a pushdown portion that the named \n provider c...",
     "category": "QueryExecution",

@@ -496,10 +496,55 @@ concept ScoreApi [Q] {
       fixture explain_empty { symbol: "" } -> error
     }
 
+    // ─── View Queries (View Layer) ──────────────────────────
+
+    action listViews() {
+      -> ok(views: String) {
+        Return all indexed ViewEntity entries as a JSON array, each
+        containing name, shellRef, purposeText, and purity.
+      }
+      fixture list_views {} after list_all
+    }
+
+    action getView(name: String) {
+      -> ok(view: String) {
+        Return the full ViewEntity record for the named view as JSON,
+        including all analysis fields (purity, invokedActions,
+        projectedFields, filterFields, invariants).
+      }
+      -> notfound(message: String) {
+        No view with this name is indexed.
+      }
+      fixture get_view_existing { name: "content-list" } after list_all
+      fixture get_view_missing { name: "nonexistent" } -> notfound
+    }
+
+    action findViewsByShell(shellRef: String) {
+      -> ok(views: String) {
+        Return all views referencing this ViewShell as a JSON array.
+      }
+      fixture find_views_by_shell { shellRef: "content-list" } after list_all
+    }
+
+    action findViewsByPurity(purity: String) {
+      -> ok(views: String) {
+        Return all views with the given purity classification.
+      }
+      fixture find_views_by_purity { purity: "read-only" } after list_all
+    }
+
+    action findViewsByInvokedAction(action: String) {
+      -> ok(views: String) {
+        Return all views whose invokedActions include the given
+        concept/action pair.
+      }
+      fixture find_views_by_action { action: "Task/escalate" } after list_all
+    }
+
     // ─── Index Management ───────────────────────────────────
 
     action status() {
-      -> ok(indexed: Bool, conceptCount: Int, symbolCount: Int, fileCount: Int, syncCount: Int, handlerCount: Int, widgetImplCount: Int, themeImplCount: Int, suiteCount: Int, deploymentCount: Int, interfaceCount: Int, lastIndexed: DateTime) {
+      -> ok(indexed: Bool, conceptCount: Int, symbolCount: Int, fileCount: Int, syncCount: Int, handlerCount: Int, widgetImplCount: Int, themeImplCount: Int, suiteCount: Int, deploymentCount: Int, interfaceCount: Int, viewCount: Int, lastIndexed: DateTime) {
         Get the current status of the Score index. Returns
         counts of indexed entities and the last indexing time.
       }
@@ -507,12 +552,12 @@ concept ScoreApi [Q] {
     }
 
     action reindex() {
-      -> ok(conceptCount: Int, symbolCount: Int, fileCount: Int, syncCount: Int, handlerCount: Int, widgetImplCount: Int, themeImplCount: Int, suiteCount: Int, deploymentCount: Int, interfaceCount: Int, duration: Int) {
+      -> ok(conceptCount: Int, symbolCount: Int, fileCount: Int, syncCount: Int, handlerCount: Int, widgetImplCount: Int, themeImplCount: Int, suiteCount: Int, deploymentCount: Int, interfaceCount: Int, viewCount: Int, duration: Int) {
         Force a full reindex of the project. Parses all files,
         extracts symbols, builds semantic graph, indexes handler
         implementations, widget implementations, theme implementations,
-        computes analysis overlays, and generates embeddings. Returns
-        counts and duration in milliseconds.
+        view manifests, computes analysis overlays, and generates
+        embeddings. Returns counts and duration in milliseconds.
       }
       -> ok(startedAt: DateTime) {
         A reindex is already in progress.
@@ -523,11 +568,12 @@ concept ScoreApi [Q] {
 
   invariant {
   example "reindex populates query indexes": {
-    after reindex() -> ok(conceptCount: c, symbolCount: s, fileCount: f, syncCount: y, handlerCount: h, widgetImplCount: w, themeImplCount: t2, duration: d)
-    then status() -> ok(indexed: true, conceptCount: c, symbolCount: s, fileCount: f, syncCount: y, handlerCount: h, widgetImplCount: w, themeImplCount: t2, lastIndexed: t)
+    after reindex() -> ok(conceptCount: c, symbolCount: s, fileCount: f, syncCount: y, handlerCount: h, widgetImplCount: w, themeImplCount: t2, viewCount: vc, duration: d)
+    then status() -> ok(indexed: true, conceptCount: c, symbolCount: s, fileCount: f, syncCount: y, handlerCount: h, widgetImplCount: w, themeImplCount: t2, viewCount: vc, lastIndexed: t)
     and listConcepts() -> ok(concepts: concepts)
     and listSyncs() -> ok(syncs: syncs)
     and listHandlers() -> ok(handlers: handlers)
+    and listViews() -> ok(views: views)
   }
 
   always "every queries entry has kind": {

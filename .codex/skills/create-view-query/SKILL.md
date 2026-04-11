@@ -60,9 +60,17 @@ DataSourceSpec  FilterSpec  SortSpec  GroupSpec  ProjectionSpec  PresentationSpe
 
 | Concept | Type Param | Purpose |
 |---------|-----------|---------|
-| **QueryProgram [Q]** | query | Composable query instruction sequences. Actions: create, scan, filter, sort, group, project, limit, join, pure (termination), compose (monadic bind). Programs are sealed after `pure` — no further instructions allowed. |
-| **QueryExecution [E]** | execution | Registry and dispatcher for execution providers. Routes to kernel, in-memory, remote, or federated backends. Supports pushdown analysis for query optimization. |
+| **QueryProgram [Q]** | query | Composable query instruction sequences. Read instructions: create, scan, filter, sort, group, project, limit, join, pure (termination), compose (monadic bind). Write instructions: invoke (concept action dispatch via syncs), match (multi-way conditional on completion variant), traverseInvoke (batch invoke over bound set), traverse (general sub-program iteration). Programs are sealed after `pure`. Purity tracked: `pure`, `read-only`, `read-write`. |
+| **QueryExecution [E]** | execution | Registry and dispatcher for execution providers. Routes to kernel, in-memory, remote, or federated backends. Supports pushdown analysis for query optimization. Coroutine-style execution for invoke instructions: yields `invoke_pending` with structured continuation, resumes via `resumeAfterInvoke`. |
 | **RemoteQueryProvider [R]** | provider | External API query execution. Maps query instructions to HTTP calls via Projection. Splits programs into pushdown (API-native) and residual (in-memory). |
+
+### Static Analysis Layer (recommended)
+
+| Concept | Type Param | Purpose |
+|---------|-----------|---------|
+| **InvokeEffectProvider [T]** | invoke-effect | Extracts all concept/action pairs from invoke, traverseInvoke, and traverse instructions. Enables static authorization pre-check and impact analysis. |
+| **QueryPurityProvider [R]** | purity | Classifies QueryProgram purity (pure/read-only/read-write) and extracts read fields + invoked actions. Drives caching decisions. |
+| **QueryCompletionCoverage [C]** | coverage | Verifies every invoke variant has downstream handling via match. Reports uncovered variants at build time. |
 
 ## Step-by-Step Design Process
 
@@ -311,10 +319,57 @@ ViewShell resolved
     QueryProgram/pure("ok", "projected")
 ```
 
-Three compilation variants exist:
-- **CompileQuery**: scan → filter → sort → project → pure
-- **CompileQueryWithSchemaJoin**: scan → join(membership) → filter → sort → project → pure
-- **CompileQueryWithGroup**: scan → filter → group → sort → project → pure
+Four compilation variants exist:
+- **CompileQuery**: scan → filter → sort → project → pure (read-only)
+- **CompileQueryWithSchemaJoin**: scan → join(membership) → filter → sort → project → pure (read-only)
+- **CompileQueryWithGroup**: scan → filter → group → sort → project → pure (read-only)
+- **CompileActionQuery**: scan → filter → invoke/traverseInvoke → match → scan → pure (read-write, from InteractionSpec's createProgram/actionProgram)
+
+### Step 8b: Add Invoke Instructions (for read-write views)
+
+If the view supports inline actions (create, bulk update, etc.), add invoke instructions:
+
+```
+# Single invoke — create a record, then refresh
+QueryProgram/invoke:
+  program: "create-and-refresh"
+  concept: "ContentNode"
+  action: "create"
+  input: '{"node":"new-article","kind":"concept"}'
+  bindAs: "createResult"
+
+# Multi-way match on completion variant
+QueryProgram/match:
+  program: "create-and-refresh"
+  binding: "createResult"
+  cases: '{"ok":"refresh-prog","duplicate":"dup-prog","*":"error-prog"}'
+  bindAs: "final"
+
+# Batch invoke — escalate all overdue tasks
+QueryProgram/traverseInvoke:
+  program: "bulk-escalate"
+  sourceBinding: "overdue"
+  itemBinding: "_task"
+  concept: "Task"
+  action: "escalate"
+  inputTemplate: '{"taskId":"$_task.id"}'
+  bindAs: "results"
+
+# General traverse — per-item sub-program with error handling
+QueryProgram/traverse:
+  program: "bulk-archive"
+  sourceBinding: "completed"
+  itemBinding: "_task"
+  bodyProgram: "archive-body"    # must be sealed
+  bindAs: "outcomes"
+  declaredEffects: '{"invokedActions":["Task/archive"]}'
+```
+
+**Purity rules:**
+- Programs with only read instructions (scan, filter, sort, etc.) are `read-only`
+- Programs with any invoke, traverseInvoke, or traverse-with-invoke-body are `read-write`
+- `read-write` programs are never cached
+- Purity is monotonic: once promoted, it never decreases
 
 ### Step 9: Execute the Query
 
@@ -362,8 +417,11 @@ Supported formats: `toggle-group`, `text-dsl`, `url-params`, `visual-builder`, `
 | `compose-filters.sync` | recommended | Composes FilterSpec predicates with FilterRepresentation |
 | `filter-from-dsl.sync` | optional | Parses DSL string → FilterSpec |
 | `filter-to-dsl.sync` | optional | Serializes FilterSpec → DSL string |
-| `compile-query.sync` | optional | Builds QueryProgram from ViewShell |
-| `execute-query.sync` | optional | Dispatches QueryProgram to QueryExecution |
+| `compile-query.sync` | optional | Builds read-only QueryProgram from ViewShell |
+| `compile-action-query.sync` | optional | Builds read-write QueryProgram from InteractionSpec's createProgram/actionProgram |
+| `execute-query.sync` | optional | Dispatches sealed QueryProgram to QueryExecution |
+| `execute-invoke.sync` | optional | Routes invoke_pending to Connection/invoke |
+| `invoke-complete.sync` | optional | Returns invoke completion to QueryExecution for resume |
 | `execute-remote-query.sync` | optional | Routes to RemoteQueryProvider |
 | `compile-remote-query.sync` | optional | Compiles for remote data sources |
 
@@ -395,6 +453,10 @@ RemoteQueryProvider performs pushdown analysis — sending as much of the query 
 | Executing queries without QueryProgram | No optimization, no analysis, no caching | Compile to QueryProgram, execute via QueryExecution |
 | Mixing filter logic with display logic | Coupling prevents reuse | FilterSpec for logic, FilterRepresentation for UI |
 | Mutating a QueryProgram after pure | Violates the sealed invariant | Create a new program or compose two programs |
+| Invoking concept actions directly from views | Bypasses sync engine, no observability | Use QueryProgram/invoke — dispatches through syncs |
+| Using invoke without match for error handling | Silently drops error variants | Add match with cases for all variants |
+| Not declaring .view invariants for read-write views | Purity can change silently, invoke targets can break | Add `.view` file with purity + completion coverage invariants |
+| Using traverseInvoke when per-item error handling needed | Can't branch on individual item failures | Use traverse with a body sub-program containing invoke + match |
 
 ## Quick Reference: Pipeline Shapes
 
@@ -424,6 +486,66 @@ QueryProgram A (scan source1 → filter → pure)
 QueryProgram B (scan source2 → filter → pure)
 compose(A, B) → merge → project → present
 ```
+
+**Action view** (inline create/edit, read-write):
+```
+DataSource → Filter → invoke(Concept/action) → match(ok/error) → re-scan → Project → Present
+```
+
+**Bulk action view** (batch operations, read-write):
+```
+DataSource → Filter → traverseInvoke(Concept/action per item) → re-scan → Project → Present
+```
+
+**Complex action view** (per-item error handling, read-write):
+```
+DataSource → Filter → traverse(body: invoke → match → handle) → Project → Present
+```
+
+## View Invariants (.view files)
+
+After building a view query pipeline, declare invariants in a `.view` manifest to get auto-generated tests:
+
+```
+view "content-list" {
+  shell: "content-list"
+
+  purpose {
+    Browse all content entities with schema-based filtering and
+    alphabetical sorting. Read-only — no inline write actions.
+  }
+
+  invariants {
+    always "purity is read-only": {
+      purity = "read-only"
+    }
+
+    always "no invoke instructions": {
+      invokeCount = 0
+    }
+
+    always "projects only known fields": {
+      forall f in projectedFields:
+      f in ["id", "node", "kind", "name"]
+    }
+  }
+}
+```
+
+Place `.view` files in `specs/view/views/` and register in `suite.yaml`:
+
+```yaml
+views:
+  - path: ./views/content-list.view
+    description: "Content listing view — read-only"
+```
+
+Generate tests:
+```bash
+npx tsx scripts/generate-view-tests.ts
+```
+
+See `.claude/skills/create-view-query/references/view-grammar.md` for full grammar.
 
 ## Related Skills
 

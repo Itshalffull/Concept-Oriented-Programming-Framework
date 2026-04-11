@@ -22,11 +22,13 @@ concept InteractionSpec [I] {
     rowClick: I -> String
     rowActions: I -> list String
     pickerMode: I -> Bool
+    createProgram: I -> option String
+    actionProgram: I -> option String
   }
 
   actions {
 
-    action create(name: String, createForm: String, rowClick: String, rowActions: String, pickerMode: Bool) {
+    action create(name: String, createForm: String, rowClick: String, rowActions: String, pickerMode: Bool, createProgram: option String, actionProgram: option String) {
       -> ok(interaction: I) {
         Register a new named interaction spec with the given create-form config,
         row-click rule, row-action list, and picker-mode flag. The spec is
@@ -40,17 +42,19 @@ concept InteractionSpec [I] {
       -> error(message: String) {
         The name is empty, making the interaction spec unaddressable.
       }
-      fixture create_content_controls { name: "content-list-controls", createForm: '{"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":true}]}', rowClick: '{"navigateTo":"/content/{node}"}', rowActions: '[]', pickerMode: false }
-      fixture create_readonly { name: "readonly-controls", createForm: '', rowClick: '', rowActions: '[]', pickerMode: false }
-      fixture create_picker { name: "picker-controls", createForm: '', rowClick: '', rowActions: '[]', pickerMode: true }
-      fixture create_duplicate { name: "content-list-controls", createForm: '', rowClick: '', rowActions: '[]', pickerMode: false } after create_content_controls -> duplicate
-      fixture create_empty_name { name: "", createForm: '', rowClick: '', rowActions: '[]', pickerMode: false } -> error
+      fixture create_content_controls { name: "content-list-controls", createForm: '{"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":true}]}', rowClick: '{"navigateTo":"/content/{node}"}', rowActions: '[]', pickerMode: false, createProgram: none, actionProgram: none }
+      fixture create_readonly { name: "readonly-controls", createForm: '', rowClick: '', rowActions: '[]', pickerMode: false, createProgram: none, actionProgram: none }
+      fixture create_picker { name: "picker-controls", createForm: '', rowClick: '', rowActions: '[]', pickerMode: true, createProgram: none, actionProgram: none }
+      fixture create_with_program { name: "invoke-controls", createForm: '', rowClick: '', rowActions: '[]', pickerMode: false, createProgram: "content-create-qprog", actionProgram: none }
+      fixture create_duplicate { name: "content-list-controls", createForm: '', rowClick: '', rowActions: '[]', pickerMode: false, createProgram: none, actionProgram: none } after create_content_controls -> duplicate
+      fixture create_empty_name { name: "", createForm: '', rowClick: '', rowActions: '[]', pickerMode: false, createProgram: none, actionProgram: none } -> error
     }
 
     action get(name: String) {
-      -> ok(interaction: I, createForm: String, rowClick: String, rowActions: String, pickerMode: Bool) {
+      -> ok(interaction: I, createForm: String, rowClick: String, rowActions: String, pickerMode: Bool, createProgram: option String, actionProgram: option String) {
         Return the interaction spec's create-form config, row-click rule,
-        row-action list, and picker-mode flag exactly as registered.
+        row-action list, picker-mode flag, and optional invoke-bearing
+        QueryProgram references exactly as registered.
       }
       -> notfound(message: String) {
         No interaction spec with this name is registered.
@@ -70,21 +74,21 @@ concept InteractionSpec [I] {
   }
 
   example "create then get returns interaction": {
-    after create(name: "content-list-controls", createForm: '{"concept":"ContentNode","action":"create","fields":[]}', rowClick: '{"navigateTo":"/content/{node}"}', rowActions: '[]', pickerMode: false) -> ok(interaction: i)
-    then get(name: "content-list-controls") -> ok(createForm: cf, rowClick: rc, rowActions: ra, pickerMode: pm)
+    after create(name: "content-list-controls", createForm: '{"concept":"ContentNode","action":"create","fields":[]}', rowClick: '{"navigateTo":"/content/{node}"}', rowActions: '[]', pickerMode: false, createProgram: none, actionProgram: none) -> ok(interaction: i)
+    then get(name: "content-list-controls") -> ok(createForm: cf, rowClick: rc, rowActions: ra, pickerMode: pm, createProgram: cp, actionProgram: ap)
     and  cf != none
     and  rc != none
   }
 
   example "picker mode is stored": {
-    after create(name: "picker-controls", createForm: '', rowClick: '', rowActions: '[]', pickerMode: true) -> ok(interaction: i)
+    after create(name: "picker-controls", createForm: '', rowClick: '', rowActions: '[]', pickerMode: true, createProgram: none, actionProgram: none) -> ok(interaction: i)
     then get(name: "picker-controls") -> ok(pickerMode: pm)
     and  pm != none
   }
 
   example "duplicate create is rejected": {
-    after create(name: "dup-controls", createForm: '', rowClick: '', rowActions: '[]', pickerMode: false) -> ok(interaction: i)
-    then create(name: "dup-controls", createForm: '', rowClick: '', rowActions: '[]', pickerMode: false) -> duplicate(interaction: i)
+    after create(name: "dup-controls", createForm: '', rowClick: '', rowActions: '[]', pickerMode: false, createProgram: none, actionProgram: none) -> ok(interaction: i)
+    then create(name: "dup-controls", createForm: '', rowClick: '', rowActions: '[]', pickerMode: false, createProgram: none, actionProgram: none) -> duplicate(interaction: i)
   }
 
   always "interactions have non-empty names": {
@@ -100,6 +104,12 @@ concept InteractionSpec [I] {
   action create {
     requires: name != ""
     ensures ok: interaction != none
+  }
+
+  example "createProgram reference is stored and retrieved": {
+    after create(name: "invoke-controls", createForm: '', rowClick: '', rowActions: '[]', pickerMode: false, createProgram: "content-create-qprog", actionProgram: none) -> ok(interaction: i)
+    then get(name: "invoke-controls") -> ok(createProgram: cp)
+    and  cp != none
   }
 
 }

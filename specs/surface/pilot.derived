@@ -16,6 +16,7 @@ derived Pilot {
     PageMap
     Binding
     View
+    ViewEntity
   }
 
   syncs {
@@ -30,7 +31,9 @@ derived Pilot {
     ]
     recommended: [
       navigate-waits-for-ready,
-      interact-refreshes-snapshot
+      interact-refreshes-snapshot,
+      host-mount-loads-view-metadata,
+      page-map-attaches-view-context
     ]
   }
 
@@ -87,8 +90,36 @@ derived Pilot {
       reads: PageMap/list(hostRef: ?currentHost)
     }
 
-    query read(label: option String) {
-      reads: View/resolve(label: ?label)
+    query read(label: String) {
+      entry: PageMap/find matches on label: ?label
+      reads: [
+        View/resolve(view: ?view),
+        -> viewName: ?entry.viewName,
+        -> viewPurpose: ?entry.viewPurpose,
+        -> viewPurity: ?entry.viewPurity,
+        -> viewInvokedActions: ?entry.viewInvokedActions
+      ]
+    }
+
+    query viewInfo(viewName: String) {
+      entry: ViewEntity/get matches on name: ?viewName
+      reads: [
+        -> name: ?entry.name,
+        -> shellRef: ?entry.shellRef,
+        -> purposeText: ?entry.purposeText,
+        -> purity: ?entry.purity,
+        -> invokedActions: ?entry.invokedActions,
+        -> projectedFields: ?entry.projectedFields,
+        -> filterFields: ?entry.filterFields,
+        -> invariantCount: ?entry.invariantCount,
+        -> invariantNames: ?entry.invariantNames
+      ]
+    }
+
+    query views() {
+      reads: [
+        ViewEntity/list()
+      ]
     }
 
     query overlays() {

@@ -15,6 +15,8 @@ interactionSpecCommand
   .requiredOption('--row-click <rowClick>', 'Row Click')
   .requiredOption('--row-actions <rowActions>', 'Row Actions')
   .requiredOption('--picker-mode <pickerMode>', 'Picker Mode')
+  .requiredOption('--create-program <createProgram>', 'Create Program')
+  .requiredOption('--action-program <actionProgram>', 'Action Program')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     try {
@@ -33,7 +35,7 @@ interactionSpecCommand
 
 interactionSpecCommand
   .command('get')
-  .description('Return the interaction spec s create form config , row click rule , row action list , and picker mode flag exactly as registered .')
+  .description('Return the interaction spec s create form config , row click rule , row action list , picker mode flag , and optional invoke bearing QueryProgram references exactly as registered .')
   .requiredOption('--name <name>', 'Name')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {

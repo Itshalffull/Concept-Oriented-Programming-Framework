@@ -1,0 +1,22 @@
+# Attach view metadata to PageMap entries when they are registered in a view-bearing host
+
+sync PageMapAttachesViewContext [eager]
+  purpose: "When PageMap/register fires for an entry in a host that has a mounted view, update the entry with the view's name, purpose, purity, and invoked actions from the ViewEntity lookup."
+when {
+  PageMap/register: [ entry: ?entry; hostRef: ?hostRef ]
+    => ok(entry: ?entry)
+}
+where {
+  Host: { ?hostRef view: ?view }
+  guard(?view != none)
+  ViewEntity/get: [ name: ?view ]
+    => ok(view: _; purposeText: ?purpose; purity: ?purity; invokedActions: ?invokedActions)
+}
+then {
+  PageMap/update: [
+    entry: ?entry;
+    viewName: ?view;
+    viewPurpose: ?purpose;
+    viewPurity: ?purity;
+    viewInvokedActions: ?invokedActions ]
+}

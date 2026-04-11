@@ -36,6 +36,12 @@ Dispatch execution of a serialized query program to all registered
 
 **Arguments:** `$0` **program** (string), `$1` **kind** (string)
 
+### resumeAfterInvoke
+The invoke completed and the remaining program executed successfully . 
+ Returns final result rows and execution metadata .
+
+**Arguments:** `$0` **continuation** (string), `$1` **variant** (string), `$2` **output** (string)
+
 ### planPushdown
 Decompose a query program into a pushdown portion that the named 
  provider can execute natively and a residual portion that must run 

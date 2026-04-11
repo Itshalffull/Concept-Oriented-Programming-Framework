@@ -1,0 +1,19 @@
+# Wire view metadata into the host context when a view is mounted
+
+sync HostMountLoadsViewMetadata [eager]
+  purpose: "When a Host mounts with a view reference, look up the ViewEntity to fetch the view's purpose, purity, and invoked actions. This metadata is stored so that page-map population syncs can attach it to registered entries."
+when {
+  Host/mount: [ concept: ?concept; view: ?view ]
+    => ok(host: ?host)
+}
+where {
+  guard(?view != none)
+  ViewEntity/get: [ name: ?view ]
+    => ok(view: _; purposeText: ?purpose; purity: ?purity; invokedActions: ?invokedActions)
+}
+then {
+  Host/trackResource: [
+    host: ?host;
+    kind: "viewMetadata";
+    ref: ?view ]
+}

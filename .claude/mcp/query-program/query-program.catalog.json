@@ -78,5 +78,37 @@
     "concept": "QueryProgram",
     "action": "compose",
     "alwaysLoaded": false
+  },
+  {
+    "name": "query_program_invoke",
+    "briefDescription": "Append an Invoke instruction that declares a concept action \n invocation .",
+    "category": "QueryProgram",
+    "concept": "QueryProgram",
+    "action": "invoke",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "query_program_match",
+    "briefDescription": "Append a Match instruction that inspects the variant tag bound \n at binding .",
+    "category": "QueryProgram",
+    "concept": "QueryProgram",
+    "action": "match",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "query_program_traverse_invoke",
+    "briefDescription": "Append a TraverseInvoke instruction that iterates over the \n record set bound...",
+    "category": "QueryProgram",
+    "concept": "QueryProgram",
+    "action": "traverseInvoke",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "query_program_traverse",
+    "briefDescription": "Append a Traverse instruction that iterates over the record \n set bound at so...",
+    "category": "QueryProgram",
+    "concept": "QueryProgram",
+    "action": "traverse",
+    "alwaysLoaded": false
   }
 ]
