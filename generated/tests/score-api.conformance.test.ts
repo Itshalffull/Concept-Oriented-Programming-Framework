@@ -2746,6 +2746,362 @@ describe('ScoreApi functional handler', () => {
 
   });
 
+  describe('listViews', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = scoreApiHandler.listViews({  });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = scoreApiHandler.listViews({  });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = scoreApiHandler.listViews({  });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = scoreApiHandler.listViews({  });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = scoreApiHandler.listViews({  });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof scoreApiHandler.listViews !== 'function') return;
+      const result = await interpret(scoreApiHandler.listViews({  }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "list_views" -> ok', async () => {
+      if (typeof scoreApiHandler.listViews !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { ..._pool } as Record<string, unknown>;
+      const result = await interpret(scoreApiHandler.listViews({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('getView', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = scoreApiHandler.getView({ name: "content-list" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = scoreApiHandler.getView({ name: "content-list" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = scoreApiHandler.getView({ name: "content-list" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = scoreApiHandler.getView({ name: "content-list" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = scoreApiHandler.getView({ name: "content-list" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof scoreApiHandler.getView !== 'function') return;
+      const result = await interpret(scoreApiHandler.getView({ name: "content-list" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "get_view_existing" -> ok', async () => {
+      if (typeof scoreApiHandler.getView !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { name: "content-list" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(scoreApiHandler.getView({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_view_missing" -> notfound', async () => {
+      if (typeof scoreApiHandler.getView !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreApiHandler.getView({ name: "nonexistent" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
+    });
+
+  });
+
+  describe('findViewsByShell', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = scoreApiHandler.findViewsByShell({ shellRef: "content-list" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = scoreApiHandler.findViewsByShell({ shellRef: "content-list" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = scoreApiHandler.findViewsByShell({ shellRef: "content-list" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = scoreApiHandler.findViewsByShell({ shellRef: "content-list" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = scoreApiHandler.findViewsByShell({ shellRef: "content-list" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof scoreApiHandler.findViewsByShell !== 'function') return;
+      const result = await interpret(scoreApiHandler.findViewsByShell({ shellRef: "content-list" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "find_views_by_shell" -> ok', async () => {
+      if (typeof scoreApiHandler.findViewsByShell !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { shellRef: "content-list" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(scoreApiHandler.findViewsByShell({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('findViewsByPurity', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = scoreApiHandler.findViewsByPurity({ purity: "read-only" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = scoreApiHandler.findViewsByPurity({ purity: "read-only" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = scoreApiHandler.findViewsByPurity({ purity: "read-only" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = scoreApiHandler.findViewsByPurity({ purity: "read-only" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = scoreApiHandler.findViewsByPurity({ purity: "read-only" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof scoreApiHandler.findViewsByPurity !== 'function') return;
+      const result = await interpret(scoreApiHandler.findViewsByPurity({ purity: "read-only" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "find_views_by_purity" -> ok', async () => {
+      if (typeof scoreApiHandler.findViewsByPurity !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { purity: "read-only" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(scoreApiHandler.findViewsByPurity({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('findViewsByInvokedAction', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = scoreApiHandler.findViewsByInvokedAction({ action: "Task/escalate" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = scoreApiHandler.findViewsByInvokedAction({ action: "Task/escalate" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = scoreApiHandler.findViewsByInvokedAction({ action: "Task/escalate" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = scoreApiHandler.findViewsByInvokedAction({ action: "Task/escalate" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = scoreApiHandler.findViewsByInvokedAction({ action: "Task/escalate" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof scoreApiHandler.findViewsByInvokedAction !== 'function') return;
+      const result = await interpret(scoreApiHandler.findViewsByInvokedAction({ action: "Task/escalate" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "find_views_by_action" -> ok', async () => {
+      if (typeof scoreApiHandler.findViewsByInvokedAction !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_list_all = await interpret(scoreApiHandler.listFiles({ pattern: "*" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_all?.output ?? {}));
+      const _fixtureInput = { action: "Task/escalate" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(scoreApiHandler.findViewsByInvokedAction({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
   describe('status', () => {
     it('builds a valid StorageProgram', () => {
       const program = scoreApiHandler.status({  });
@@ -2909,6 +3265,8 @@ describe('ScoreApi functional handler', () => {
       let w = widgetImplCount;
       let themeImplCount = reindexResult0.output["themeImplCount"];
       let t2 = themeImplCount;
+      let viewCount = reindexResult0.output["viewCount"];
+      let vc = viewCount;
       let duration = reindexResult0.output["duration"];
       let d = duration;
       const thenResult0 = await interpret(scoreApiHandler.status({  }), storage);
@@ -2919,6 +3277,8 @@ describe('ScoreApi functional handler', () => {
       expect(thenResult2.variant).toBe("ok");
       const thenResult3 = await interpret(scoreApiHandler.listHandlers({  }), storage);
       expect(thenResult3.variant).toBe("ok");
+      const thenResult4 = await interpret(scoreApiHandler.listViews({  }), storage);
+      expect(thenResult4.variant).toBe("ok");
     });
 
   });
@@ -2965,6 +3325,11 @@ describe('ScoreApi functional handler', () => {
               fc.record({ action: fc.constant('getDataFlow'), input: fc.record({ from: fc.string({ minLength: 1, maxLength: 50 }), to: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('search'), input: fc.record({ query: fc.string({ minLength: 1, maxLength: 50 }), limit: fc.integer({ min: 1, max: 1000 }) }) }),
               fc.record({ action: fc.constant('explain'), input: fc.record({ symbol: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('listViews'), input: fc.record({  }) }),
+              fc.record({ action: fc.constant('getView'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findViewsByShell'), input: fc.record({ shellRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findViewsByPurity'), input: fc.record({ purity: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findViewsByInvokedAction'), input: fc.record({ action: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('status'), input: fc.record({  }) }),
               fc.record({ action: fc.constant('reindex'), input: fc.record({  }) }),
             ),
@@ -3032,6 +3397,11 @@ describe('ScoreApi functional handler', () => {
               fc.record({ action: fc.constant('getDataFlow'), input: fc.record({ from: fc.string({ minLength: 1, maxLength: 50 }), to: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('search'), input: fc.record({ query: fc.string({ minLength: 1, maxLength: 50 }), limit: fc.integer({ min: 1, max: 1000 }) }) }),
               fc.record({ action: fc.constant('explain'), input: fc.record({ symbol: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('listViews'), input: fc.record({  }) }),
+              fc.record({ action: fc.constant('getView'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findViewsByShell'), input: fc.record({ shellRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findViewsByPurity'), input: fc.record({ purity: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findViewsByInvokedAction'), input: fc.record({ action: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('status'), input: fc.record({  }) }),
               fc.record({ action: fc.constant('reindex'), input: fc.record({  }) }),
             ),

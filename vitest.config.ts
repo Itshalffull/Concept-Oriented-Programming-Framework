@@ -22,6 +22,8 @@ export default defineConfig({
       'repertoire/**/tests/**/*.test.ts',
       'surface/widgets/**/*.test.ts',
       'surface/widgets/**/*.test.tsx',
+      'clef-base/**/__tests__/**/*.test.ts',
+      'clef-base/**/__tests__/**/*.test.tsx',
     ],
     globals: true,
   },

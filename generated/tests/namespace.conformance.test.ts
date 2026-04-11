@@ -32,6 +32,178 @@ describe('Namespace functional handler', () => {
     storage = createInMemoryStorage();
   });
 
+  describe('register', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = namespaceHandler.register({ node: "vs-draft-v2", path: "draft-v2", provider: "VersionSpace" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = namespaceHandler.register({ node: "vs-draft-v2", path: "draft-v2", provider: "VersionSpace" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = namespaceHandler.register({ node: "vs-draft-v2", path: "draft-v2", provider: "VersionSpace" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = namespaceHandler.register({ node: "vs-draft-v2", path: "draft-v2", provider: "VersionSpace" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = namespaceHandler.register({ node: "vs-draft-v2", path: "draft-v2", provider: "VersionSpace" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof namespaceHandler.register !== 'function') return;
+      const result = await interpret(namespaceHandler.register({ node: "vs-draft-v2", path: "draft-v2", provider: "VersionSpace" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "register_version_space" -> ok', async () => {
+      if (typeof namespaceHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(namespaceHandler.register({ node: "vs-draft-v2", path: "draft-v2", provider: "VersionSpace" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_tenant" -> ok', async () => {
+      if (typeof namespaceHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(namespaceHandler.register({ node: "tenant-acme", path: "acme", provider: "tenant" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_kernel_root" -> ok', async () => {
+      if (typeof namespaceHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(namespaceHandler.register({ node: "kernel-abc123", path: "/", provider: "kernel" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_duplicate" -> exists', async () => {
+      if (typeof namespaceHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_register_version_space = await interpret(namespaceHandler.register({ node: "vs-draft-v2", path: "draft-v2", provider: "VersionSpace" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_version_space?.output ?? {}));
+      const _fixtureInput = { node: "vs-other", path: "draft-v2", provider: "VersionSpace" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(namespaceHandler.register({ ..._fixtureInput }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('exists'));
+    });
+
+  });
+
+  describe('resolve', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = namespaceHandler.resolve({ path: "draft-v2" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = namespaceHandler.resolve({ path: "draft-v2" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = namespaceHandler.resolve({ path: "draft-v2" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = namespaceHandler.resolve({ path: "draft-v2" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = namespaceHandler.resolve({ path: "draft-v2" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof namespaceHandler.resolve !== 'function') return;
+      const result = await interpret(namespaceHandler.resolve({ path: "draft-v2" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "resolve_existing" -> ok', async () => {
+      if (typeof namespaceHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_register_version_space = await interpret(namespaceHandler.register({ node: "vs-draft-v2", path: "draft-v2", provider: "VersionSpace" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_version_space?.output ?? {}));
+      const _fixtureInput = { path: "draft-v2" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(namespaceHandler.resolve({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_missing" -> notfound', async () => {
+      if (typeof namespaceHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(namespaceHandler.resolve({ path: "nonexistent/path" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
+    });
+
+  });
+
   describe('createNamespacedPage', () => {
     it('builds a valid StorageProgram', () => {
       const program = namespaceHandler.createNamespacedPage({ node: "ns-alpha-1", path: "projects/alpha/docs" });
@@ -87,14 +259,34 @@ describe('Namespace functional handler', () => {
     it('fixture "create_nested_page" -> ok', async () => {
       if (typeof namespaceHandler.createNamespacedPage !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(namespaceHandler.createNamespacedPage({ node: "ns-alpha-1", path: "projects/alpha/docs" }), storage);
+      const afterResult_register_version_space = await interpret(namespaceHandler.register({ node: "vs-draft-v2", path: "draft-v2", provider: "VersionSpace" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_version_space?.output ?? {}));
+      const _fixtureInput = { node: "ns-alpha-1", path: "projects/alpha/docs" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(namespaceHandler.createNamespacedPage({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_root_page" -> ok', async () => {
       if (typeof namespaceHandler.createNamespacedPage !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(namespaceHandler.createNamespacedPage({ node: "ns-root-1", path: "home" }), storage);
+      const afterResult_register_version_space = await interpret(namespaceHandler.register({ node: "vs-draft-v2", path: "draft-v2", provider: "VersionSpace" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_version_space?.output ?? {}));
+      const _fixtureInput = { node: "ns-root-1", path: "home" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(namespaceHandler.createNamespacedPage({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -162,6 +354,7 @@ describe('Namespace functional handler', () => {
     it('fixture "get_existing_children" -> ok', async () => {
       if (typeof namespaceHandler.getChildren !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_register_version_space = await interpret(namespaceHandler.register({ node: "vs-draft-v2", path: "draft-v2", provider: "VersionSpace" }), storage);
       const afterResult_create_nested_page = await interpret(namespaceHandler.createNamespacedPage({ node: "ns-alpha-1", path: "projects/alpha/docs" }), storage);
       const result = await interpret(namespaceHandler.getChildren({ node: afterResult_create_nested_page?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
@@ -231,6 +424,7 @@ describe('Namespace functional handler', () => {
     it('fixture "get_existing_hierarchy" -> ok', async () => {
       if (typeof namespaceHandler.getHierarchy !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_register_version_space = await interpret(namespaceHandler.register({ node: "vs-draft-v2", path: "draft-v2", provider: "VersionSpace" }), storage);
       const afterResult_create_nested_page = await interpret(namespaceHandler.createNamespacedPage({ node: "ns-alpha-1", path: "projects/alpha/docs" }), storage);
       const result = await interpret(namespaceHandler.getHierarchy({ node: afterResult_create_nested_page?.output?.["id"] }), storage);
       expect(result.variant).toBe('ok');
@@ -300,6 +494,7 @@ describe('Namespace functional handler', () => {
     it('fixture "move_existing_node" -> ok', async () => {
       if (typeof namespaceHandler.move !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_register_version_space = await interpret(namespaceHandler.register({ node: "vs-draft-v2", path: "draft-v2", provider: "VersionSpace" }), storage);
       const afterResult_create_nested_page = await interpret(namespaceHandler.createNamespacedPage({ node: "ns-alpha-1", path: "projects/alpha/docs" }), storage);
       const result = await interpret(namespaceHandler.move({ node: afterResult_create_nested_page?.output?.["id"], newPath: "archive/alpha/docs" }), storage);
       expect(result.variant).toBe('ok');
@@ -314,21 +509,6 @@ describe('Namespace functional handler', () => {
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof namespaceHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = namespaceHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      const name = result.output?.name ?? result.name;
-      expect(name).toBe('Namespace');
-    });
-  });
 
   describe('invariant examples', () => {
     it("createNamespacedPage-then-getChildren", async () => {
@@ -347,6 +527,8 @@ describe('Namespace functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
+              fc.record({ action: fc.constant('register'), input: fc.record({ node: fc.string(), path: fc.string({ minLength: 1, maxLength: 50 }), provider: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ path: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('createNamespacedPage'), input: fc.record({ node: fc.string(), path: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('getChildren'), input: fc.record({ node: fc.string() }) }),
               fc.record({ action: fc.constant('getHierarchy'), input: fc.record({ node: fc.string() }) }),
@@ -380,6 +562,8 @@ describe('Namespace functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
+              fc.record({ action: fc.constant('register'), input: fc.record({ node: fc.string(), path: fc.string({ minLength: 1, maxLength: 50 }), provider: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ path: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('createNamespacedPage'), input: fc.record({ node: fc.string(), path: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('getChildren'), input: fc.record({ node: fc.string() }) }),
               fc.record({ action: fc.constant('getHierarchy'), input: fc.record({ node: fc.string() }) }),
