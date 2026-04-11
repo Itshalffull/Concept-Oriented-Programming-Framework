@@ -1,0 +1,420 @@
+@version(1)
+widget view-code-editor {
+
+  purpose {
+    Split visual-and-code editor for .view files. The left pane presents all
+    six view-configuration concepts (DataSourceSpec, FilterSpec, SortSpec,
+    GroupSpec, ProjectionSpec, PresentationSpec) as condensed inline form
+    sections — no popovers — so the user can adjust every concern without
+    leaving the editor. The right pane is a syntax-highlighted, line-numbered
+    text editor that displays and accepts the canonical .view file format.
+    Changes in either pane propagate bidirectionally: a visual edit regenerates
+    the .view source and a valid code edit immediately updates the visual
+    controls. A sync indicator reports "✓ Synced" or "⚠ Parse error at line N";
+    on error the visual side retains the last successfully parsed state while
+    the code side highlights the offending lines. A live preview pane beneath
+    the split shows query results for the current (last-good) configuration.
+    Mode can be narrowed to visual-only or code-only via a three-segment toggle,
+    or the panel can be hidden with previewToggle. The widget is accessible as
+    an opt-in advanced mode from any data view, toggled by keyboard shortcut or
+    the mode-toggle button.
+  }
+
+  anatomy {
+    root:                container    { Top-level wrapper containing the mode toggle, the split panes, and the preview pane }
+    modeToggle:          container    { Three-segment control that selects Visual-only, Split, or Code-only display mode }
+    modeVisualButton:    action       { Segment that activates visual-only mode, hiding the code pane }
+    modeSplitButton:     action       { Segment that activates split mode, showing both panes side by side }
+    modeCodeButton:      action       { Segment that activates code-only mode, hiding the visual pane }
+    visualPane:          container    { Left pane containing the condensed inline form sections for all six concepts }
+    sourceSectionLabel:  text         { "Source" heading inside the visual pane }
+    sourceSectionBody:   interactive  { Inline data-source picker (collection dropdown) }
+    filterSectionLabel:  text         { "Filter" heading inside the visual pane }
+    filterSectionBody:   container    { Inline filter condition rows — same content as filter-popover without the popover chrome }
+    sortSectionLabel:    text         { "Sort" heading inside the visual pane }
+    sortSectionBody:     container    { Inline sort rows (field + direction toggle pairs) }
+    groupSectionLabel:   text         { "Group" heading inside the visual pane }
+    groupSectionBody:    container    { Inline group field picker and grouping options }
+    fieldsSectionLabel:  text         { "Fields" heading inside the visual pane }
+    fieldsSectionBody:   container    { Inline field visibility chips with drag handles }
+    displaySectionLabel: text         { "Display" heading inside the visual pane }
+    displaySectionBody:  container    { Inline display-mode segmented control and row-height picker }
+    codePane:            container    { Right pane containing the code editor chrome }
+    codeInput:           interactive  { Multi-line text editor for authoring .view file syntax }
+    lineNumbers:         presentation { Column of line numbers aligned to each code row in codeInput }
+    syntaxHighlight:     presentation { Overlay rendering keyword, string, number, and punctuation tokens with distinct colors }
+    autocompletePopup:   container    { Floating suggestion list that appears after typing partial tokens in codeInput }
+    autocompleteOption:  action       { A single completion suggestion inside autocompletePopup }
+    cursorPosition:      text         { Status text showing current cursor line and column (e.g. "Ln 4, Col 12") }
+    syncIndicator:       text         { Status text reporting sync state: "✓ Synced" or "⚠ Parse error at line N" }
+    errorHighlight:      presentation { Red underline or gutter mark on lines that triggered a parse error }
+    errorMessage:        text         { Inline error description beneath the offending line or in a status bar }
+    previewPane:         container    { Bottom pane rendering a live read-only data preview (table or card grid) }
+    previewToggle:       action       { Button that collapses or expands the preview pane }
+  }
+
+  states {
+    visual-only [initial] {
+      on SET_SPLIT          -> split;
+      on SET_CODE           -> code-only;
+      on VISUAL_CHANGE      -> syncing;
+      on TOGGLE_PREVIEW     -> visual-only;
+    }
+
+    code-only {
+      on SET_VISUAL         -> visual-only;
+      on SET_SPLIT          -> split;
+      on CODE_CHANGE        -> syncing;
+      on TOGGLE_PREVIEW     -> code-only;
+    }
+
+    split {
+      on SET_VISUAL         -> visual-only;
+      on SET_CODE           -> code-only;
+      on VISUAL_CHANGE      -> syncing;
+      on CODE_CHANGE        -> syncing;
+      on TOGGLE_PREVIEW     -> split;
+    }
+
+    syncing {
+      on SYNC_OK            -> split;
+      on SYNC_FROM_VISUAL   -> visual-only;
+      on SYNC_FROM_CODE     -> code-only;
+      on SYNC_ERROR         -> sync-error;
+      entry [parseOrSerialize];
+    }
+
+    sync-error {
+      on CODE_CHANGE        -> syncing;
+      on VISUAL_CHANGE      -> syncing;
+      on SET_VISUAL         -> visual-only;
+      on SET_CODE           -> code-only;
+      on SET_SPLIT          -> split;
+      on DISMISS_ERROR      -> split;
+      entry [highlightErrorLines; showErrorMessage];
+      exit [clearErrorHighlights];
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      Escape              -> DISMISS_ERROR;
+      Tab                 -> FOCUS_NEXT_SECTION;
+      ArrowDown           -> AUTOCOMPLETE_NEXT;
+      ArrowUp             -> AUTOCOMPLETE_PREV;
+      Enter               -> AUTOCOMPLETE_ACCEPT;
+      Ctrl+Shift+Backslash -> SET_SPLIT;
+    }
+    focus {
+      trap: false;
+      initial: codeInput;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "View code editor";
+        data-state: state;
+      };
+      modeToggle -> {
+        role: "group";
+        aria-label: "Editor mode";
+      };
+      modeVisualButton -> {
+        role: "radio";
+        aria-checked: if state == "visual-only" then "true" else "false";
+        aria-label: "Visual mode";
+      };
+      modeSplitButton -> {
+        role: "radio";
+        aria-checked: if state == "split" then "true" else "false";
+        aria-label: "Split mode";
+      };
+      modeCodeButton -> {
+        role: "radio";
+        aria-checked: if state == "code-only" then "true" else "false";
+        aria-label: "Code mode";
+      };
+      visualPane -> {
+        role: "form";
+        aria-label: "Visual editor";
+        aria-hidden: if state == "code-only" then "true" else "false";
+      };
+      codePane -> {
+        role: "group";
+        aria-label: "Code editor";
+        aria-hidden: if state == "visual-only" then "true" else "false";
+      };
+      codeInput -> {
+        role: "textbox";
+        aria-multiline: "true";
+        aria-label: ".view file source";
+        aria-describedby: syncIndicator;
+        spellcheck: "false";
+        autocomplete: "off";
+      };
+      lineNumbers -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      syntaxHighlight -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      autocompletePopup -> {
+        role: "listbox";
+        aria-label: "Autocomplete suggestions";
+        aria-live: "polite";
+      };
+      autocompleteOption -> {
+        role: "option";
+        aria-selected: "false";
+      };
+      cursorPosition -> {
+        role: "status";
+        aria-live: "off";
+        aria-label: "Cursor position";
+      };
+      syncIndicator -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: if state == "sync-error" then "Parse error" else "Synced";
+      };
+      errorHighlight -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      errorMessage -> {
+        role: "alert";
+        aria-live: "assertive";
+        aria-hidden: if state == "sync-error" then "false" else "true";
+      };
+      previewPane -> {
+        role: "region";
+        aria-label: "Live preview";
+        aria-live: "polite";
+      };
+      previewToggle -> {
+        role: "button";
+        aria-expanded: if ?previewOpen then "true" else "false";
+        aria-controls: "preview-pane";
+        aria-label: if ?previewOpen then "Collapse preview" else "Expand preview";
+      };
+    }
+  }
+
+  props {
+    mode:                union "visual-only" | "split" | "code-only" = "split"
+    viewSource:          String = ""
+    viewName:            String = ""
+    previewOpen:         Bool   = true
+    readOnly:            Bool   = false
+    shellNames:          list String = []
+    availableFields:     list String = []
+    availableFeatures:   list String = []
+    errorLine:           option Int
+    errorText:           option String
+    syncedAt:            option String
+  }
+
+  connect {
+    root -> {
+      data-part:   "root";
+      data-state:  state;
+      data-mode:   if state == "visual-only" then "visual-only" else if state == "code-only" then "code-only" else "split";
+    }
+
+    modeToggle -> {
+      data-part: "mode-toggle";
+    }
+
+    modeVisualButton -> {
+      data-part:    "mode-visual-button";
+      data-active:  if state == "visual-only" then "true" else "false";
+      tabindex:     if state == "visual-only" then "0" else "-1";
+      onClick:      send(SET_VISUAL);
+      onKeyDown:    if key == "Enter" or key == " " then send(SET_VISUAL) else noop;
+    }
+
+    modeSplitButton -> {
+      data-part:    "mode-split-button";
+      data-active:  if state == "split" then "true" else "false";
+      tabindex:     if state == "split" then "0" else "-1";
+      onClick:      send(SET_SPLIT);
+      onKeyDown:    if key == "Enter" or key == " " then send(SET_SPLIT) else noop;
+    }
+
+    modeCodeButton -> {
+      data-part:    "mode-code-button";
+      data-active:  if state == "code-only" then "true" else "false";
+      tabindex:     if state == "code-only" then "0" else "-1";
+      onClick:      send(SET_CODE);
+      onKeyDown:    if key == "Enter" or key == " " then send(SET_CODE) else noop;
+    }
+
+    visualPane -> {
+      data-part:  "visual-pane";
+      hidden:     if state == "code-only" then true else false;
+    }
+
+    sourceSectionLabel -> {
+      data-part: "source-section-label";
+      text:      "Source";
+    }
+
+    sourceSectionBody -> {
+      data-part: "source-section-body";
+      onInput:   send(VISUAL_CHANGE);
+      disabled:  if ?readOnly then true else false;
+    }
+
+    filterSectionLabel -> {
+      data-part: "filter-section-label";
+      text:      "Filter";
+    }
+
+    filterSectionBody -> {
+      data-part: "filter-section-body";
+    }
+
+    sortSectionLabel -> {
+      data-part: "sort-section-label";
+      text:      "Sort";
+    }
+
+    sortSectionBody -> {
+      data-part: "sort-section-body";
+    }
+
+    groupSectionLabel -> {
+      data-part: "group-section-label";
+      text:      "Group";
+    }
+
+    groupSectionBody -> {
+      data-part: "group-section-body";
+    }
+
+    fieldsSectionLabel -> {
+      data-part: "fields-section-label";
+      text:      "Fields";
+    }
+
+    fieldsSectionBody -> {
+      data-part: "fields-section-body";
+    }
+
+    displaySectionLabel -> {
+      data-part: "display-section-label";
+      text:      "Display";
+    }
+
+    displaySectionBody -> {
+      data-part: "display-section-body";
+    }
+
+    codePane -> {
+      data-part: "code-pane";
+      hidden:    if state == "visual-only" then true else false;
+    }
+
+    codeInput -> {
+      data-part:   "code-input";
+      value:       ?viewSource;
+      readOnly:    if ?readOnly then true else false;
+      onInput:     send(CODE_CHANGE);
+      onKeyDown:   if key == "Escape" then send(DISMISS_ERROR) else noop;
+    }
+
+    lineNumbers -> {
+      data-part: "line-numbers";
+    }
+
+    syntaxHighlight -> {
+      data-part: "syntax-highlight";
+    }
+
+    autocompletePopup -> {
+      data-part: "autocomplete-popup";
+      hidden:    if state == "syncing" or state == "sync-error" then true else false;
+    }
+
+    autocompleteOption -> {
+      data-part: "autocomplete-option";
+      onClick:   send(AUTOCOMPLETE_ACCEPT);
+    }
+
+    cursorPosition -> {
+      data-part: "cursor-position";
+    }
+
+    syncIndicator -> {
+      data-part:        "sync-indicator";
+      data-sync-state:  if state == "sync-error" then "error" else if state == "syncing" then "syncing" else "ok";
+      text:             if state == "sync-error" then concat("⚠ Parse error at line ", ?errorLine) else if state == "syncing" then "Syncing…" else concat("✓ Synced", if ?syncedAt then concat(" ", ?syncedAt) else "");
+    }
+
+    errorHighlight -> {
+      data-part:      "error-highlight";
+      data-error-line: ?errorLine;
+      hidden:         if state == "sync-error" then false else true;
+    }
+
+    errorMessage -> {
+      data-part: "error-message";
+      text:      if state == "sync-error" and ?errorText then ?errorText else "";
+      hidden:    if state == "sync-error" then false else true;
+    }
+
+    previewPane -> {
+      data-part: "preview-pane";
+      hidden:    if ?previewOpen then false else true;
+    }
+
+    previewToggle -> {
+      data-part:  "preview-toggle";
+      onClick:    send(TOGGLE_PREVIEW);
+      onKeyDown:  if key == "Enter" or key == " " then send(TOGGLE_PREVIEW) else noop;
+    }
+  }
+
+  compose {
+    _filterSection:  widget("filter-popover",       { inline: true })
+    _sortSection:    widget("sort-popover",          { inline: true })
+    _groupSection:   widget("group-popover",         { inline: true })
+    _fieldsSection:  widget("fields-popover",        { inline: true })
+    _displaySection: widget("display-mode-switcher", { inline: true })
+  }
+
+  invariant {
+    "modeCodeButton data-active must be 'true' only when state == code-only; clicking it in any mode sends SET_CODE and transitions toward code-only";
+    "modeVisualButton data-active must be 'true' only when state == visual-only; clicking it sends SET_VISUAL";
+    "modeSplitButton data-active must be 'true' only when state == split; clicking it sends SET_SPLIT";
+    "exactly one of modeVisualButton, modeSplitButton, modeCodeButton has aria-checked 'true' at all times";
+    "visualPane hidden attribute is true only when state == code-only; false otherwise";
+    "codePane hidden attribute is true only when state == visual-only; false otherwise";
+    "visualPane and codePane are never both hidden at the same time";
+    "root data-state must equal the current FSM state name at all times";
+    "any VISUAL_CHANGE or CODE_CHANGE event transitions state to syncing";
+    "syncing state transitions to sync-error on SYNC_ERROR; exits clearErrorHighlights then enters highlightErrorLines and showErrorMessage";
+    "syncing state transitions back to split, visual-only, or code-only on SYNC_OK, SYNC_FROM_VISUAL, or SYNC_FROM_CODE respectively";
+    "in sync-error state: errorHighlight hidden is false, errorMessage hidden is false, syncIndicator data-sync-state is 'error'";
+    "in non-sync-error states: errorHighlight hidden is true, errorMessage hidden is true";
+    "syncIndicator text begins with '✓ Synced' when state is not syncing or sync-error; begins with '⚠ Parse error at line' when state is sync-error";
+    "codeInput must have aria-multiline 'true' and role 'textbox' at all times regardless of mode";
+    "lineNumbers must have aria-hidden 'true' at all times";
+    "syntaxHighlight must have aria-hidden 'true' at all times";
+    "autocompletePopup hidden is true while state is syncing or sync-error; visible only when codeInput is focused and completions are available";
+    "previewPane hidden is true only when previewOpen prop is false";
+    "previewToggle aria-expanded reflects previewOpen prop: 'true' when open, 'false' when closed";
+    "DISMISS_ERROR event in sync-error state transitions to split and calls clearErrorHighlights exit action";
+    "all five states (visual-only, code-only, split, syncing, sync-error) are reachable from visual-only initial state";
+    "visual-only -> syncing reachable via VISUAL_CHANGE; syncing -> sync-error via SYNC_ERROR; sync-error -> visual-only via SET_VISUAL";
+    "readOnly prop disables sourceSectionBody and codeInput; clicking either must not send events when readOnly is true";
+    "parseOrSerialize entry action in syncing fires the appropriate direction: serialize when triggered by VISUAL_CHANGE, parse when triggered by CODE_CHANGE";
+    "the visual pane sections (source, filter, sort, group, fields, display) always reflect the last-successfully-parsed configuration regardless of current sync-error content in codeInput";
+    "modeToggle buttons use roving tabindex: the active mode button has tabindex 0; the other two have tabindex -1";
+  }
+
+}

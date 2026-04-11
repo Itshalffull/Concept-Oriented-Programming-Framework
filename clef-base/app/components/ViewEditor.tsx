@@ -25,6 +25,7 @@ import { Badge } from './widgets/Badge';
 import { useConceptQuery } from '../../lib/use-concept-query';
 import { useKernelInvoke, useNavigator } from '../../lib/clef-provider';
 import { ViewRenderer } from './ViewRenderer';
+import { ViewEditorToolbar } from './widgets/ViewEditorToolbar';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -927,6 +928,31 @@ export const ViewEditor: React.FC<ViewEditorProps> = ({ viewId }) => {
             {saving ? 'Saving...' : saveSuccess ? 'Saved' : 'Save'}
           </button>
         </div>
+      </div>
+
+      {/* ViewEditorToolbar — save button integrated into the toolbar pattern */}
+      <div style={{ marginBottom: 'var(--spacing-md)', border: '1px solid var(--palette-outline-variant)', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
+        <ViewEditorToolbar
+          availableFields={fields.map((f) => ({ key: f.key, label: f.label ?? f.key }))}
+          filterConditions={[]}
+          onFilterConditionsChange={() => undefined}
+          sortKeys={sorts.map((s) => ({ field: s.field, direction: s.direction }))}
+          onSortKeysChange={(keys) => setSorts(keys.map((k) => ({ field: k.field, direction: k.direction })))}
+          groupConfig={groups ? { field: groups } : null}
+          onGroupConfigChange={(cfg) => setGroups(cfg?.field ?? '')}
+          fieldVisibility={fields.map((f) => ({ key: f.key, label: f.label, visible: f.visible !== false }))}
+          onFieldVisibilityChange={(vis) => {
+            setFields(fields.map((f) => {
+              const v = vis.find((vi) => vi.key === f.key);
+              return v !== undefined ? { ...f, visible: v.visible } : f;
+            }));
+          }}
+          currentLayout={layout}
+          onLayoutChange={setLayout}
+          hasUnsavedChanges={isDirty}
+          saveState={saving ? 'saving' : saveSuccess ? 'saved' : 'idle'}
+          onSave={handleSave}
+        />
       </div>
 
       {/* Save feedback */}

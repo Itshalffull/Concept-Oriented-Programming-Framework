@@ -49,6 +49,9 @@ import {
   applySortKeys,
   parseSortKeys,
 } from '../../lib/filter-evaluator';
+import { ViewEditorToolbar, type FilterCondition, type SortKey as ToolbarSortKey, type GroupConfig as ToolbarGroupConfig, type FieldVisibilityConfig } from './widgets/ViewEditorToolbar';
+import { ViewTabBar } from './widgets/ViewTabBar';
+import { type FieldDef } from './widgets/FieldPickerDropdown';
 
 interface ViewConfig {
   view: string;
@@ -215,7 +218,35 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
   const [resolvedLayout, setResolvedLayout] = useState<string | null>(null);
   const [resolvedWidget, setResolvedWidget] = useState<string | null>(null);
 
+  // Toolbar state — advanced filter conditions, sort keys, group, and field visibility
+  // managed by ViewEditorToolbar. Separate from the toggle-group activeFilters system.
+  const [toolbarFilterConditions, setToolbarFilterConditions] = useState<FilterCondition[]>([]);
+  const [toolbarSortKeys, setToolbarSortKeys] = useState<ToolbarSortKey[]>([]);
+  const [toolbarGroupConfig, setToolbarGroupConfig] = useState<ToolbarGroupConfig | null>(null);
+  const [toolbarFieldVisibility, setToolbarFieldVisibility] = useState<FieldVisibilityConfig[]>([]);
+  const [toolbarLayout, setToolbarLayout] = useState<string | null>(null);
+  const [showToolbar, setShowToolbar] = useState(false);
+
   const isInlineMode = !!inlineData;
+
+  // Saved views for the ViewTabBar — load all ViewShells so we can show tabs
+  const { data: savedViewsData } = useConceptQuery<Record<string, unknown>>(
+    (!compact && !isInlineMode && viewId) ? 'ViewShell' : '__none__',
+    (!compact && !isInlineMode && viewId) ? 'list' : '__none__',
+  );
+  const savedViews = useMemo(() => {
+    if (!savedViewsData) return [];
+    const items = (savedViewsData as Record<string, unknown>).items;
+    if (!items) return [];
+    try {
+      const parsed = typeof items === 'string' ? JSON.parse(items) : items;
+      if (!Array.isArray(parsed)) return [];
+      return parsed.map((v: Record<string, unknown>) => ({
+        id: String(v.name ?? v.view ?? ''),
+        name: String(v.title ?? v.name ?? v.view ?? ''),
+      }));
+    } catch { return []; }
+  }, [savedViewsData]);
 
   // Step 1: Load ViewShell/resolveHydrated — the sole config resolution path.
   // resolveHydrated returns fully hydrated child spec data — filter trees, sort keys,
@@ -236,6 +267,13 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
       interaction: string;
     }>(
       'ViewShell', 'resolveHydrated', { name: viewId ?? '__none__' },
+    );
+
+  const { data: legacyViewResult, loading: legacyViewLoading, error: legacyViewError } =
+    useConceptQuery<ViewConfig>(
+      (!isInlineMode && viewId && !shellResult?.view) ? 'View' : '__none__',
+      (!isInlineMode && viewId && !shellResult?.view) ? 'get' : '__none__',
+      (!isInlineMode && viewId && !shellResult?.view) ? { view: viewId } : undefined,
     );
 
   // Parse hydrated ViewShell result into a ViewConfig shape and extract
@@ -361,10 +399,11 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
     } satisfies ViewConfig;
   }, [hydratedSpecs, shellResult]);
 
-  // ViewShell is the sole config source — use resolved shell config directly.
-  const viewConfig = shellViewConfig;
-  const configLoading = shellLoading;
-  const configError = shellError ?? null;
+  const viewConfig = shellViewConfig ?? legacyViewResult ?? null;
+  const configLoading = shellLoading || (!shellViewConfig && legacyViewLoading);
+  const configError = viewConfig
+    ? null
+    : (legacyViewError ?? shellError ?? null);
 
   // Parse the config
   let dataSource: DataSourceConfig | null = null;
@@ -577,30 +616,89 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
   // Parse sort keys from view config
   const sortKeys = useMemo(() => parseSortKeys(viewConfig?.sorts), [viewConfig?.sorts]);
 
-  // Apply interactive filters then sort
+  // Initialize toolbar field visibility when fields are loaded (one-time, non-destructive)
+  const toolbarFieldsInitialized = toolbarFieldVisibility.length > 0;
+  if (!toolbarFieldsInitialized && fields.length > 0) {
+    setToolbarFieldVisibility(
+      fields.map((f) => ({ key: f.key, label: f.label, visible: f.visible !== false }))
+    );
+  }
+
+  // Apply interactive filters then sort, then toolbar conditions
   const displayData = useMemo(() => {
     let filtered = allData;
 
-    // Apply interactive filters via FilterNode tree evaluation
+    // Apply interactive toggle-group filters via FilterNode tree evaluation
     if (interactiveFilters.length > 0 && Object.keys(activeFilters).length > 0) {
       const filterTree = buildFilterTree(activeFilters, interactiveFilters);
       filtered = filtered.filter((row) => evaluateFilterNode(filterTree, row));
     }
 
-    // Apply sort if configured
-    if (sortKeys.length > 0) {
-      filtered = applySortKeys(filtered, sortKeys);
+    // Apply toolbar advanced filter conditions (AND all conditions together)
+    if (toolbarFilterConditions.length > 0) {
+      filtered = filtered.filter((row) => {
+        return toolbarFilterConditions.every((cond) => {
+          const rawVal = row[cond.field];
+          const cellStr = rawVal != null ? String(rawVal) : '';
+          const condVal = cond.value;
+          switch (cond.operator) {
+            case 'eq': return cellStr === condVal;
+            case 'neq': return cellStr !== condVal;
+            case 'contains': return cellStr.toLowerCase().includes(condVal.toLowerCase());
+            case 'notContains': return !cellStr.toLowerCase().includes(condVal.toLowerCase());
+            case 'startsWith': return cellStr.toLowerCase().startsWith(condVal.toLowerCase());
+            case 'endsWith': return cellStr.toLowerCase().endsWith(condVal.toLowerCase());
+            case 'isEmpty': return cellStr === '' || rawVal == null;
+            case 'isNotEmpty': return cellStr !== '' && rawVal != null;
+            case 'gt': return Number(cellStr) > Number(condVal);
+            case 'gte': return Number(cellStr) >= Number(condVal);
+            case 'lt': return Number(cellStr) < Number(condVal);
+            case 'lte': return Number(cellStr) <= Number(condVal);
+            case 'before': return cellStr < condVal;
+            case 'after': return cellStr > condVal;
+            case 'on': return cellStr === condVal;
+            default: return true;
+          }
+        });
+      });
+    }
+
+    // Apply toolbar sort (overrides config sort when toolbar sort is active)
+    const effectiveSortKeys = toolbarSortKeys.length > 0 ? toolbarSortKeys : sortKeys;
+    if (effectiveSortKeys.length > 0) {
+      filtered = applySortKeys(filtered, effectiveSortKeys);
     }
 
     return filtered;
-  }, [allData, activeFilters, interactiveFilters, sortKeys]);
+  }, [allData, activeFilters, interactiveFilters, toolbarFilterConditions, toolbarSortKeys, sortKeys]);
 
   const layout = inlineLayout ?? viewConfig?.layout ?? 'table';
-  const effectiveLayout = resolvedLayout ?? layout;
-  const effectiveFields = inlineFields ?? fields;
+  // Toolbar layout override takes precedence over config layout
+  const effectiveLayout = resolvedLayout ?? (toolbarLayout ?? layout);
+
+  // Effective fields: apply toolbar field visibility filter when toolbar has been initialized
+  const baseFields = inlineFields ?? fields;
+  const effectiveFields = toolbarFieldVisibility.length > 0
+    ? baseFields.filter((f) => {
+        const vis = toolbarFieldVisibility.find((v) => v.key === f.key);
+        return vis === undefined ? true : vis.visible;
+      })
+    : baseFields;
   const viewTitle = titleOverride ?? viewConfig?.title ?? viewId ?? '';
   const viewDescription = viewConfig?.description ?? '';
   const loading = (isInlineMode ? false : configLoading) || (isInlineMode ? false : dataLoading);
+
+  // Build available fields list for toolbar pickers from the field config
+  const toolbarAvailableFields = useMemo((): FieldDef[] => {
+    if (baseFields.length > 0) {
+      return baseFields.map((f) => ({ key: f.key, label: f.label ?? f.key }));
+    }
+    // Fallback: derive from data keys if no field config
+    if (allData.length > 0) {
+      return Object.keys(allData[0]).map((k) => ({ key: k, label: k }));
+    }
+    return [];
+  }, [baseFields, allData]);
 
   useEffect(() => {
     const interactor = getDisplayInteractor(layout);
@@ -997,6 +1095,20 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
 
   return (
     <div>
+      {/* ViewTabBar — tabs for switching between saved views */}
+      {!compact && !isInlineMode && savedViews.length > 1 && viewId && (
+        <ViewTabBar
+          tabs={savedViews.map(v => ({ id: v.id, label: v.name }))}
+          activeViewId={viewId}
+          onTabClick={(id) => {
+            // Navigate to the same page but with a different view — for now refresh with the new viewId
+            // In practice this would switch the active view without a full page nav
+            if (id !== viewId) navigateToHref(`/admin/view-builder/${encodeURIComponent(id)}`);
+          }}
+          onCreateNew={() => navigateToHref('/admin/view-builder')}
+        />
+      )}
+
       {!compact && (
         <>
           <div className="page-header">
@@ -1006,6 +1118,30 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
               <Badge variant="secondary">{effectiveLayout}</Badge>
               {resolvedWidget && (
                 <Badge variant="info">{resolvedWidget}</Badge>
+              )}
+              {/* Save as View — appears when ad-hoc toolbar filters are active */}
+              {toolbarFilterConditions.length > 0 && viewId && (
+                <button
+                  data-part="button"
+                  data-variant="outlined"
+                  onClick={() => navigateToHref('/admin/view-builder')}
+                  title="Save current filter/sort/group as a new view"
+                  style={{ fontSize: 'var(--typography-body-sm-size)' }}
+                >
+                  Save as View
+                </button>
+              )}
+              {/* Edit View gear — navigate to view editor */}
+              {viewId && !isInlineMode && (
+                <button
+                  data-part="button"
+                  data-variant="outlined"
+                  onClick={() => navigateToHref(`/admin/view-builder/${encodeURIComponent(viewId)}`)}
+                  title="Edit this view's configuration"
+                  style={{ padding: 'var(--spacing-xs) var(--spacing-sm)', fontSize: '16px', lineHeight: 1 }}
+                >
+                  &#9881;
+                </button>
               )}
               {controls.create && (
                 <button data-part="button" data-variant="filled" onClick={() => setShowCreate(true)}>
@@ -1023,7 +1159,29 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
         </>
       )}
 
-      {renderFilters()}
+      {/* ViewEditorToolbar — shown when toolbar is enabled or there are interactive filters/fields */}
+      {!compact && !isInlineMode && (toolbarAvailableFields.length > 0 || interactiveFilters.length > 0) && (
+        <ViewEditorToolbar
+          availableFields={toolbarAvailableFields}
+          filterConditions={toolbarFilterConditions}
+          onFilterConditionsChange={setToolbarFilterConditions}
+          sortKeys={toolbarSortKeys}
+          onSortKeysChange={setToolbarSortKeys}
+          groupConfig={toolbarGroupConfig}
+          onGroupConfigChange={setToolbarGroupConfig}
+          fieldVisibility={toolbarFieldVisibility}
+          onFieldVisibilityChange={setToolbarFieldVisibility}
+          currentLayout={effectiveLayout}
+          onLayoutChange={(l) => {
+            setToolbarLayout(l);
+            setResolvedLayout(null); // clear widget-resolver override
+          }}
+          hasUnsavedChanges={false}
+        />
+      )}
+
+      {/* Legacy toggle-group filters — shown only when no toolbar-managed filter conditions */}
+      {toolbarFilterConditions.length === 0 && renderFilters()}
 
       {renderDisplay()}
 

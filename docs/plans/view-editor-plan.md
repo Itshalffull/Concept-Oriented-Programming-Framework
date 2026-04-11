@@ -2,11 +2,11 @@
 
 **Version:** 1.0.0
 **Date:** 2026-04-10
-**Status:** Implementation-ready
+**Status:** Complete
 **Research:** `docs/research/views/view-editor-research.md`
-**Patterns implemented:** 3 of 5 (toolbar-with-popovers, stepwise notebook, dual-mode)
+**Patterns implemented:** 5 of 5 (toolbar-with-popovers, stepwise notebook, dual-mode, tab bar, filter pills)
 **New widgets:** 15
-**New views:** 2
+**New views:** 2 (view-editor, view-creation)
 **Modified components:** ViewEditor.tsx, ViewRenderer.tsx
 
 ---
@@ -341,14 +341,14 @@ Each toolbar button / notebook step maps directly to a view suite concept:
 
 | Card | What | Blocked By | Priority |
 |---|---|---|---|
-| **MAG-593** Cross-cutting: typed-value-input, operator-dropdown, field-picker-dropdown | — | high |
-| **MAG-594** Toolbar: view-editor-toolbar, filter-pill | MAG-593 | high |
-| **MAG-595** Popovers: filter-popover, sort-popover, group-popover, fields-popover | MAG-593 | high |
-| **MAG-596** Display: display-mode-switcher + view-tab-bar | — | high |
-| **MAG-597** Stepwise: view-creation-notebook | MAG-593, MAG-595 | medium |
-| **MAG-598** Dual-mode: view-code-editor | MAG-594 | medium |
-| **MAG-599** Integration: wire into ViewEditor.tsx + ViewRenderer.tsx + seeds | MAG-593–598 | medium |
-| **MAG-600** Tests + .view files for editor views | MAG-593–599 | medium |
+| **MAG-593** ✅ Cross-cutting: typed-value-input, operator-dropdown, field-picker-dropdown | — | high |
+| **MAG-594** ✅ Toolbar: view-editor-toolbar, filter-pill | MAG-593 | high |
+| **MAG-595** ✅ Popovers: filter-popover, sort-popover, group-popover, fields-popover | MAG-593 | high |
+| **MAG-596** ✅ Display: display-mode-switcher + view-tab-bar | — | high |
+| **MAG-597** ✅ Stepwise: view-creation-notebook | MAG-593, MAG-595 | medium |
+| **MAG-598** ✅ Dual-mode: view-code-editor | MAG-594 | medium |
+| **MAG-599** ✅ Integration: wire into ViewEditor.tsx + ViewRenderer.tsx | MAG-593–598 | medium |
+| **MAG-600** ✅ Tests + .view files for editor views | MAG-593–599 | medium |
 
 ---
 

@@ -1,0 +1,55 @@
+view "view-creation" {
+  shell: "view-creation"
+
+  features {
+    filter
+    sort
+    projection
+    interaction
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ViewShell\",\"action\":\"create\"}"
+    }
+    filter: {
+      node: "{\"type\":\"true\"}"
+    }
+    sort: {
+      keys: "[]"
+    }
+    projection: {
+      fields: "[]"
+    }
+    interaction: {
+      createForm: "{\"concept\":\"ViewShell\",\"action\":\"create\",\"fields\":[{\"name\":\"name\",\"label\":\"View Name\",\"required\":true},{\"name\":\"title\",\"label\":\"Display Title\"}]}",
+      rowClick: "{}",
+      rowActions: "[]"
+    }
+    presentation: {
+      displayType: "detail",
+      hints: "{\"editorMode\":\"stepwise-notebook\",\"steps\":[\"dataSource\",\"filter\",\"fields\",\"group\",\"sort\",\"display\"],\"showPerStepPreview\":true}"
+    }
+  }
+
+  purpose {
+    Stepwise notebook for creating a new view from scratch. Six numbered
+    step cards appear in data-flow pipeline order: Data Source, Filter,
+    Fields, Group, Sort, Display. Each step maps one-to-one to a view
+    suite concept. A per-step preview button shows the first 10 records
+    at that pipeline stage. A code toggle at the top switches to the
+    .view syntax editor for power users.
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+
+    always "invokes ViewShell create": {
+      forall ia in invokedActions:
+      ia startsWith "ViewShell/" or ia startsWith "DataSourceSpec/" or ia startsWith "FilterSpec/" or ia startsWith "SortSpec/" or ia startsWith "GroupSpec/" or ia startsWith "ProjectionSpec/" or ia startsWith "PresentationSpec/"
+    }
+  }
+}

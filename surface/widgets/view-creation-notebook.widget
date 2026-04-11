@@ -1,0 +1,371 @@
+@version(1)
+widget view-creation-notebook {
+
+  purpose {
+    A vertical pipeline of six numbered step cards for creating a new view from
+    scratch. Steps appear in data-flow order — Data Source, Filter, Fields, Group,
+    Sort, Display — each mapping one-to-one to a view suite concept. Flow arrows
+    between cards reinforce the pipeline metaphor: output from each step feeds the
+    next. Each step card contains inline configuration controls appropriate to its
+    concept. A per-step preview button (labeled with a play icon and the running
+    record count) lets users validate the pipeline at any intermediate point by
+    showing the first ten result rows at that stage in a slide-down preview pane.
+    A code toggle button in the header switches to the dual-mode editor (MAG-598).
+    Save and Cancel buttons at the bottom commit or discard the new view. The
+    notebook is presented as a full-page flow, typically reached from the "Create
+    View" entry point in the view tab bar.
+  }
+
+  anatomy {
+    root:               container    { Full-page notebook wrapper containing header, step list, preview pane, and footer actions }
+    stepList:           container    { Vertical ordered list of all six step cards with flow connectors between them }
+    stepCard:           container    { Individual step card wrapping stepNumber, stepTitle, stepContent, and stepPreviewButton; role="group" }
+    stepNumber:         text         { Numeric label (1 to 6) identifying the step position in the pipeline }
+    stepTitle:          text         { Human-readable name of the step (e.g. "Data Source" or "Filter") }
+    stepContent:        container    { Scrollable body of a step card housing its specific configuration controls }
+    stepPreviewButton:  action       { Play-icon button that triggers a step-level preview; shows current record count via stepPreviewCount }
+    stepPreviewCount:   text         { Record count badge displayed inside or alongside stepPreviewButton (e.g. "7 records") }
+    stepConnector:      presentation { Vertical arrow between adjacent step cards visualising pipeline flow direction }
+    dataSourceStep:     container    { Step 1 content area: collection picker dropdown and join relationship button }
+    filterStep:         container    { Step 2 content area: inline filter condition rows (field, operator, value) with add-condition control }
+    fieldsStep:         container    { Step 3 content area: chip row of selected fields each with drag handle; add and show-all controls }
+    groupStep:          container    { Step 4 content area: group-by field picker, hide-empty toggle, and default-collapse toggle }
+    sortStep:           container    { Step 5 content area: ordered sort-rule rows (field + direction) with drag handles and add-sort control }
+    displayStep:        container    { Step 6 content area: layout-type segmented control and secondary display options (row height, cover field) }
+    previewPane:        container    { Slide-down panel that shows a step-level or full preview; hidden until triggered }
+    previewTable:       container    { Tabular data grid inside previewPane rendering the first ten result rows }
+    previewCount:       text         { Total record count label displayed above or inside previewPane (e.g. "7 results") }
+    codeToggleButton:   action       { Button in the notebook header that switches to the dual-mode code/visual editor }
+    saveButton:         action       { Commits the configured view as a new ViewShell; disabled while saving }
+    cancelButton:       action       { Discards all configuration and closes the notebook without saving }
+  }
+
+  states {
+    editing [initial] {
+      on PREVIEW_STEP  -> previewing;
+      on PREVIEW_FULL  -> previewing;
+      on SAVE          -> saving;
+      on CANCEL        -> editing;
+      on CODE_TOGGLE   -> editing;
+    }
+
+    previewing {
+      on PREVIEW_DONE  -> editing;
+      on PREVIEW_STEP  -> previewing;
+      on PREVIEW_FULL  -> previewing;
+      on CLOSE_PREVIEW -> editing;
+      on SAVE          -> saving;
+      on CANCEL        -> editing;
+      on CODE_TOGGLE   -> editing;
+      entry [fetchStepPreview; showPreviewPane];
+      exit [hidePreviewPane];
+    }
+
+    saving {
+      on SAVE_SUCCESS  -> editing;
+      on SAVE_ERROR    -> editing;
+      entry [disableSaveButton; submitViewShell];
+      exit [enableSaveButton];
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      Tab         -> FOCUS_NEXT;
+      Enter       -> ACTIVATE_FOCUSED;
+      Escape      -> CLOSE_PREVIEW;
+      ArrowDown   -> FOCUS_NEXT_STEP;
+      ArrowUp     -> FOCUS_PREV_STEP;
+    }
+    focus {
+      trap: false;
+      initial: dataSourceStep;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Create view — pipeline notebook";
+        data-state: state;
+      };
+      stepList -> {
+        role: "list";
+        aria-label: "View configuration steps";
+      };
+      stepCard -> {
+        role: "group";
+        aria-label: concat(self.stepNumber, ". ", self.stepTitle);
+        data-step: self.stepKey;
+      };
+      stepNumber -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      stepTitle -> {
+        role: "heading";
+        aria-level: "3";
+      };
+      stepContent -> {
+        role: "region";
+        aria-label: concat(self.stepTitle, " configuration");
+      };
+      stepPreviewButton -> {
+        role: "button";
+        aria-label: concat("Preview results after step ", self.stepNumber, ": ", self.stepPreviewCount, " records");
+        aria-pressed: if state == "previewing" and self.isActivePreviewStep then "true" else "false";
+        aria-controls: "preview-pane";
+      };
+      stepPreviewCount -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: concat(self.stepPreviewCount, " records at this step");
+      };
+      stepConnector -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      previewPane -> {
+        role: "region";
+        aria-label: "Step preview results";
+        aria-live: "polite";
+        hidden: if state == "editing" then true else false;
+      };
+      previewTable -> {
+        role: "table";
+        aria-label: "Preview data (first 10 rows)";
+      };
+      previewCount -> {
+        role: "status";
+        aria-live: "polite";
+      };
+      codeToggleButton -> {
+        role: "button";
+        aria-label: "Switch to code editor";
+        aria-keyshortcuts: "Control+Shift+K";
+      };
+      saveButton -> {
+        role: "button";
+        aria-label: if state == "saving" then "Saving view…" else "Save view";
+        aria-disabled: if state == "saving" then "true" else "false";
+        aria-busy: if state == "saving" then "true" else "false";
+      };
+      cancelButton -> {
+        role: "button";
+        aria-label: "Cancel and discard view";
+      };
+    }
+  }
+
+  props {
+    schema:              String = ""
+    dataSource:          option String
+    initialFilter:       option String
+    initialFields:       option String
+    initialGroup:        option String
+    initialSort:         option String
+    initialDisplay:      option String
+    viewName:            String = "Untitled view"
+    previewStepCounts:   list { stepKey: String, count: Int } = []
+  }
+
+  connect {
+    root -> {
+      data-part:  "root";
+      data-state: state;
+    }
+
+    stepList -> {
+      data-part: "step-list";
+    }
+
+    stepCard -> {
+      data-part:  "step-card";
+      data-step:  self.stepKey;
+      tabindex:   "0";
+      onKeyDown:  if key == "Enter" then send(ACTIVATE_FOCUSED, { stepKey: self.stepKey }) else noop;
+    }
+
+    stepNumber -> {
+      data-part: "step-number";
+      text:      self.stepNumber;
+    }
+
+    stepTitle -> {
+      data-part: "step-title";
+      text:      self.stepTitle;
+    }
+
+    stepContent -> {
+      data-part: "step-content";
+      data-step: self.stepKey;
+    }
+
+    stepPreviewButton -> {
+      data-part:  "step-preview-button";
+      data-step:  self.stepKey;
+      data-active: if state == "previewing" and self.isActivePreviewStep then "true" else "false";
+      onClick:    send(PREVIEW_STEP, { stepKey: self.stepKey });
+      onKeyDown:  if key == "Enter" or key == " " then send(PREVIEW_STEP, { stepKey: self.stepKey }) else noop;
+    }
+
+    stepPreviewCount -> {
+      data-part: "step-preview-count";
+      data-step: self.stepKey;
+      text:      if self.stepPreviewCount != null then concat("▶ ", self.stepPreviewCount) else "▶";
+    }
+
+    stepConnector -> {
+      data-part: "step-connector";
+    }
+
+    dataSourceStep -> {
+      data-part: "data-source-step";
+      data-step: "data-source";
+    }
+
+    filterStep -> {
+      data-part: "filter-step";
+      data-step: "filter";
+    }
+
+    fieldsStep -> {
+      data-part: "fields-step";
+      data-step: "fields";
+    }
+
+    groupStep -> {
+      data-part: "group-step";
+      data-step: "group";
+    }
+
+    sortStep -> {
+      data-part: "sort-step";
+      data-step: "sort";
+    }
+
+    displayStep -> {
+      data-part: "display-step";
+      data-step: "display";
+    }
+
+    previewPane -> {
+      data-part:  "preview-pane";
+      hidden:     if state == "editing" then true else false;
+      data-state: if state == "previewing" then "open" else "closed";
+    }
+
+    previewTable -> {
+      data-part: "preview-table";
+    }
+
+    previewCount -> {
+      data-part: "preview-count";
+    }
+
+    codeToggleButton -> {
+      data-part:  "code-toggle-button";
+      onClick:    send(CODE_TOGGLE);
+      onKeyDown:  if key == "Enter" or key == " " then send(CODE_TOGGLE) else noop;
+    }
+
+    saveButton -> {
+      data-part:  "save-button";
+      data-state: state;
+      disabled:   if state == "saving" then true else false;
+      onClick:    if state == "editing" or state == "previewing" then send(SAVE) else noop;
+      onKeyDown:  if key == "Enter" or key == " " then send(SAVE) else noop;
+    }
+
+    cancelButton -> {
+      data-part:  "cancel-button";
+      disabled:   if state == "saving" then true else false;
+      onClick:    send(CANCEL);
+      onKeyDown:  if key == "Enter" or key == " " then send(CANCEL) else noop;
+    }
+  }
+
+  compose {
+    _fieldPickerDropdown: widget("field-picker-dropdown", { schema: ?schema })
+    _operatorDropdown:    widget("operator-dropdown",     { schema: ?schema })
+    _typedValueInput:     widget("typed-value-input",     { schema: ?schema })
+  }
+
+  invariant {
+    example "preview step then save": {
+      after stepPreviewButton.click -> ok
+      then previewPane -> { hidden: false; data-state: "open" }
+      and root -> { data-state: "previewing" }
+      then saveButton.click -> ok
+      then root -> { data-state: "saving" }
+      and saveButton -> { disabled: true }
+    }
+
+    example "cancel from editing closes notebook": {
+      after cancelButton.click -> ok
+      then root -> { data-state: "editing" }
+    }
+
+    example "code toggle fires CODE_TOGGLE event": {
+      after codeToggleButton.click -> ok
+      then root -> { data-state: "editing" }
+    }
+
+    example "preview pane hidden in editing state": {
+      then previewPane -> { hidden: true; data-state: "closed" }
+      then root -> { data-state: "editing" }
+    }
+
+    forall step in [dataSourceStep, filterStep, fieldsStep, groupStep, sortStep, displayStep]:
+      step.data-part != ""
+
+    always "data-state on root matches FSM": {
+      root -> { data-state: state }
+    }
+
+    always "save button disabled while saving": {
+      if state == "saving" then saveButton -> { disabled: true }
+    }
+
+    always "preview pane hidden when editing": {
+      if state == "editing" then previewPane -> { hidden: true }
+    }
+
+    always "preview pane visible when previewing": {
+      if state == "previewing" then previewPane -> { hidden: false }
+    }
+
+    never "save fires while already saving": {
+      state == "saving" and saveButton.click -> ok
+    }
+
+    never "cancel fires while saving": {
+      state == "saving" and cancelButton.click -> ok
+    }
+
+    action stepPreviewButton.click {
+      requires: state == "editing" or state == "previewing"
+      ensures ok: state == "previewing"
+      ensures ok: previewPane.hidden == false
+    }
+
+    action saveButton.click {
+      requires: state == "editing" or state == "previewing"
+      ensures ok: state == "saving"
+      ensures ok: saveButton.disabled == true
+    }
+
+    "all three FSM states are reachable: editing is initial; PREVIEW_STEP reaches previewing from editing; SAVE reaches saving from editing or previewing";
+    "stepCard elements use role=group with aria-label combining stepNumber and stepTitle for screen reader context";
+    "stepPreviewCount updates via aria-live=polite after each PREVIEW_STEP fetch so screen readers announce the new count";
+    "previewPane uses aria-live=polite so newly loaded preview rows are announced without focus disruption";
+    "saveButton aria-busy is true only while state==saving; aria-disabled mirrors the disabled prop";
+    "codeToggleButton sends CODE_TOGGLE without changing notebook FSM state — the parent component is responsible for mounting view-code-editor";
+    "stepConnector parts are aria-hidden=true in all states — they are purely decorative pipeline flow indicators";
+    "CANCEL from saving state is blocked (cancelButton disabled); CANCEL from editing or previewing is always permitted";
+    "composed field-picker-dropdown, operator-dropdown, and typed-value-input widgets are shared across filterStep, fieldsStep, groupStep, and sortStep — they are not re-instantiated per step";
+    "per-step preview fetches at most 10 rows at that pipeline stage; previewCount displays the full count of records that would result, not capped to 10";
+    "PREVIEW_STEP while already in previewing state for a different step replaces the current preview with the newly requested step's results without returning to editing first";
+  }
+
+}

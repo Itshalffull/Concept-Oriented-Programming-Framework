@@ -1,0 +1,55 @@
+view "view-editor" {
+  shell: "view-editor"
+
+  features {
+    filter
+    sort
+    projection
+    interaction
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ViewShell\",\"action\":\"resolveHydrated\",\"params\":{\"name\":\"{{viewId}}\"}}"
+    }
+    filter: {
+      node: "{\"type\":\"true\"}"
+    }
+    sort: {
+      keys: "[]"
+    }
+    projection: {
+      fields: "[{\"key\":\"title\",\"label\":\"Title\"},{\"key\":\"dataSource\",\"label\":\"Data Source\"},{\"key\":\"layout\",\"label\":\"Layout\",\"formatter\":\"badge\"},{\"key\":\"filters\",\"label\":\"Filters\",\"formatter\":\"json-count\"},{\"key\":\"sorts\",\"label\":\"Sorts\",\"formatter\":\"json-count\"},{\"key\":\"visibleFields\",\"label\":\"Fields\",\"formatter\":\"json-count\"}]"
+    }
+    interaction: {
+      createForm: "{}",
+      rowClick: "{}",
+      rowActions: "[{\"key\":\"save\",\"label\":\"Save\",\"concept\":\"View\",\"action\":\"update\"},{\"key\":\"duplicate\",\"label\":\"Duplicate\",\"concept\":\"ViewShell\",\"action\":\"create\"},{\"key\":\"delete\",\"label\":\"Delete\",\"concept\":\"View\",\"action\":\"remove\",\"destructive\":true}]"
+    }
+    presentation: {
+      displayType: "detail",
+      hints: "{\"editorMode\":\"toolbar-with-popovers\",\"showCodeToggle\":true,\"showPreviewPane\":true}"
+    }
+  }
+
+  purpose {
+    Full-page view editor combining toolbar-with-popovers and dual-mode
+    visual/code editing. Opens when a user edits an existing view. The toolbar
+    provides quick access to filter, sort, group, fields, and display
+    configuration via popovers. A code toggle switches to the .view file
+    syntax editor with bidirectional sync. A live preview pane shows
+    the rendered view in real time.
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+
+    always "invokes View or ViewShell actions": {
+      forall ia in invokedActions:
+      ia startsWith "View/" or ia startsWith "ViewShell/" or ia startsWith "FilterSpec/" or ia startsWith "SortSpec/" or ia startsWith "ProjectionSpec/" or ia startsWith "PresentationSpec/"
+    }
+  }
+}
