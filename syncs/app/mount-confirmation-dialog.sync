@@ -1,0 +1,15 @@
+# Mount the confirmation overlay when an ActionBinding invocation requires user confirmation
+
+sync MountConfirmationDialog [eager]
+  purpose: "Present a confirmation dialog as an overlay when ActionBinding/invoke returns the confirming variant, blocking execution until the user approves"
+when {
+  ActionBinding/invoke: [ binding: ?b; context: ?ctx ]
+    => [ confirming(binding: ?b; message: ?msg) ]
+}
+then {
+  Host/mount: [
+    concept: "ActionBinding";
+    view: "confirmation-dialog";
+    zone: "overlay";
+    params: ?msg ]
+}

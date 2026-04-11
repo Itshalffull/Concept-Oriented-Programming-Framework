@@ -1,0 +1,15 @@
+# Record every successful ActionBinding invocation in the action log for audit and replay
+
+sync TraceActionInvocation [eager]
+  purpose: "Record a completed ActionBinding invocation in ActionLog so every cross-concept call is auditable"
+when {
+  ActionBinding/invoke: [ binding: ?b; context: ?ctx ]
+    => ok(result: ?r; trace: ?t)
+}
+then {
+  ActionLog/record: [
+    action: ?b;
+    params: ?ctx;
+    result: ?r;
+    trace: ?t ]
+}

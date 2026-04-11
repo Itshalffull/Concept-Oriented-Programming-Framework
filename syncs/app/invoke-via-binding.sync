@@ -1,0 +1,17 @@
+# Delegate a resolved ActionBinding invocation through the Binding transport layer
+
+sync InvokeViaBinding [eager]
+  purpose: "Forward a resolved ActionBinding invocation to Binding/invoke using the binding's declared target and parameter map"
+when {
+  ActionBinding/invoke: [ binding: ?b; context: ?ctx ]
+    => ok(result: ?r; trace: ?t)
+}
+where {
+  ActionBinding: { ?b target: ?target; parameterMap: ?pm }
+}
+then {
+  Binding/invoke: [
+    binding: ?b;
+    action: ?target;
+    input: ?ctx ]
+}
