@@ -1,4 +1,5 @@
-import { createInMemoryStorage } from '../../runtime/adapters/storage';
+import { resolve } from 'node:path';
+import { createSQLiteStorage } from '../../runtime/adapters/sqlite-storage';
 import { createStorageFromEnv } from '../../runtime/adapters/upstash-storage';
 import type { Kernel } from '../../runtime/self-hosted';
 import type { ConceptStorage } from '../../runtime/types';
@@ -39,13 +40,14 @@ declare global {
 }
 
 function createIdentityStorages(): Record<IdentityStoreName, ConceptStorage> {
+  const dbPath = resolve(process.cwd(), '.clef', 'identity.db');
   return {
-    'access-catalog': createStorageFromEnv('clef-base:access-catalog') ?? createInMemoryStorage(),
-    authentication: createStorageFromEnv('clef-base:authentication') ?? createInMemoryStorage(),
-    authorization: createStorageFromEnv('clef-base:authorization') ?? createInMemoryStorage(),
-    'access-control': createStorageFromEnv('clef-base:access-control') ?? createInMemoryStorage(),
-    'resource-grant-policy': createStorageFromEnv('clef-base:resource-grant-policy') ?? createInMemoryStorage(),
-    session: createStorageFromEnv('clef-base:session') ?? createInMemoryStorage(),
+    'access-catalog': createStorageFromEnv('clef-base:access-catalog') ?? createSQLiteStorage({ dbPath, namespace: 'access-catalog' }),
+    authentication: createStorageFromEnv('clef-base:authentication') ?? createSQLiteStorage({ dbPath, namespace: 'authentication' }),
+    authorization: createStorageFromEnv('clef-base:authorization') ?? createSQLiteStorage({ dbPath, namespace: 'authorization' }),
+    'access-control': createStorageFromEnv('clef-base:access-control') ?? createSQLiteStorage({ dbPath, namespace: 'access-control' }),
+    'resource-grant-policy': createStorageFromEnv('clef-base:resource-grant-policy') ?? createSQLiteStorage({ dbPath, namespace: 'resource-grant-policy' }),
+    session: createStorageFromEnv('clef-base:session') ?? createSQLiteStorage({ dbPath, namespace: 'session' }),
   };
 }
 
@@ -102,6 +104,15 @@ export async function bootstrapIdentity(kernel: Kernel) {
       });
     }
   }
+
+  // The admin login path must not depend on AccessCatalog seed ordering.
+  // Ensure the admin role exists and can open the admin shell even if
+  // the declarative role seed failed to register.
+  await createManagedRole('admin');
+  await kernel.invokeConcept('urn:clef/Authorization', 'grantPermission', {
+    role: 'admin',
+    permission: ADMIN_PERMISSION,
+  });
 
   const user = getConfiguredAdminUser();
   const provider = getConfiguredAuthProvider();

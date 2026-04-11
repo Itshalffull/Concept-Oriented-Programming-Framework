@@ -1,5 +1,6 @@
 import 'server-only';
 
+import { createHmac, timingSafeEqual } from 'node:crypto';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import type { NextRequest } from 'next/server';
@@ -27,8 +28,90 @@ export interface AdminSession {
   permissions: string[];
 }
 
+interface SessionCookiePayload {
+  sessionId: string;
+  user: string;
+  device: string;
+  roles: string[];
+  permissions: string[];
+}
+
+function base64UrlEncode(value: string) {
+  return Buffer.from(value, 'utf8').toString('base64url');
+}
+
+function base64UrlDecode(value: string) {
+  return Buffer.from(value, 'base64url').toString('utf8');
+}
+
+function getSessionCookieSecret() {
+  return (
+    process.env.CLEF_BASE_SESSION_SECRET?.trim() ||
+    process.env.CLEF_BASE_ADMIN_PASSWORD?.trim() ||
+    'clef-base-dev-session-secret'
+  );
+}
+
+function signSessionPayload(encodedPayload: string) {
+  return createHmac('sha256', getSessionCookieSecret()).update(encodedPayload).digest('base64url');
+}
+
+function parseSessionCookie(value: string | undefined): AdminSession | null {
+  if (!value?.startsWith('v1.')) return null;
+
+  const [, encodedPayload, signature] = value.split('.');
+  if (!encodedPayload || !signature) return null;
+
+  const expectedSignature = signSessionPayload(encodedPayload);
+  const actual = Buffer.from(signature, 'utf8');
+  const expected = Buffer.from(expectedSignature, 'utf8');
+  if (
+    actual.length !== expected.length ||
+    !timingSafeEqual(actual, expected)
+  ) {
+    return null;
+  }
+
+  try {
+    const payload = JSON.parse(base64UrlDecode(encodedPayload)) as SessionCookiePayload;
+    return {
+      sessionId: String(payload.sessionId ?? ''),
+      user: String(payload.user ?? ''),
+      device: String(payload.device ?? 'browser'),
+      roles: Array.isArray(payload.roles) ? payload.roles.map((role) => String(role)) : [],
+      permissions: Array.isArray(payload.permissions)
+        ? payload.permissions.map((permission) => String(permission))
+        : [],
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function createSessionCookieValue(session: AdminSession) {
+  const encodedPayload = base64UrlEncode(
+    JSON.stringify({
+      sessionId: session.sessionId,
+      user: session.user,
+      device: session.device,
+      roles: session.roles,
+      permissions: session.permissions,
+    } satisfies SessionCookiePayload),
+  );
+  return `v1.${encodedPayload}.${signSessionPayload(encodedPayload)}`;
+}
+
+export function getSessionIdFromCookie(value: string | undefined) {
+  return parseSessionCookie(value)?.sessionId ?? value;
+}
+
 async function loadSession(sessionId: string | undefined): Promise<AdminSession | null> {
   if (!sessionId) return null;
+
+  const cookieSession = parseSessionCookie(sessionId);
+  if (cookieSession) {
+    return cookieSession;
+  }
 
   await ensureSeeded();
   const kernel = getKernel();
@@ -102,8 +185,18 @@ export async function loginAsAdmin(options: {
     return { ok: false as const, message: 'Unable to create an authenticated session.' };
   }
 
-  const permissions = await readUserPermissions(options.user);
-  return { ok: true as const, sessionId: String(sessionResult.session), permissions };
+  const [roles, permissions] = await Promise.all([
+    readUserRoles(options.user),
+    readUserPermissions(options.user),
+  ]);
+  return {
+    ok: true as const,
+    sessionId: String(sessionResult.session),
+    roles,
+    permissions,
+    user: options.user,
+    device: options.device,
+  };
 }
 
 export async function logoutCurrentSession(sessionId: string | undefined) {

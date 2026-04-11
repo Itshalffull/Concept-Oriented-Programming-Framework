@@ -19,7 +19,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { useKernelInvoke } from '../../../lib/clef-provider';
+import { useKernelInvoke } from '../../lib/clef-provider';
 import { HostedPage } from './HostedPage';
 import { ViewRenderer } from './ViewRenderer';
 import { LayoutRenderer } from './LayoutRenderer';
@@ -39,7 +39,16 @@ interface ResolvedDestination {
 
 type PageKind = 'view' | 'layout' | 'not-found' | 'loading';
 
-function resolvePageKind(targetView: string): { kind: 'view' | 'layout'; id: string } {
+const LIST_VIEW_ALIASES: Record<string, string> = {
+  clips: 'clips-list',
+  transcripts: 'transcripts-list',
+  media: 'media-library',
+  'process-specs': 'process-specs-list',
+};
+
+function resolvePageKind(destination: ResolvedDestination): { kind: 'view' | 'layout'; id: string } {
+  const { name, targetView } = destination;
+
   // Explicit prefix: "view:my-view" or "layout:my-layout"
   if (targetView.startsWith('view:')) {
     return { kind: 'view', id: targetView.slice(5) };
@@ -49,7 +58,10 @@ function resolvePageKind(targetView: string): { kind: 'view' | 'layout'; id: str
   }
 
   // Convention-based: "list" suffix → view, otherwise → layout
-  if (targetView.endsWith('-list') || targetView === 'list') {
+  if (targetView === 'list') {
+    return { kind: 'view', id: LIST_VIEW_ALIASES[name] ?? 'list' };
+  }
+  if (targetView.endsWith('-list')) {
     return { kind: 'view', id: targetView };
   }
 
@@ -79,7 +91,7 @@ export const DynamicPage: React.FC<DynamicPageProps> = ({ slug }) => {
         if (cancelled) return;
         if (result.variant === 'ok') {
           const dest = result as unknown as ResolvedDestination;
-          const resolved = resolvePageKind(dest.targetView);
+          const resolved = resolvePageKind(dest);
           setPageKind(resolved.kind);
           setPageId(resolved.id);
 

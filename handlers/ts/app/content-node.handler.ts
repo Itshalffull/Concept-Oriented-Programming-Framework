@@ -6,7 +6,7 @@
 // concept), not from a "type" field. ContentNode is a universal entity pool.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, del, branch, complete, completeFrom,
+  createProgram, get as spGet, find, put, del, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -149,7 +149,66 @@ const _contentNodeHandler: FunctionalConceptHandler = {
   stats(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'node', {}, 'items');
-    return completeFrom(p, 'ok', (bindings) => ({ items: JSON.stringify((bindings.items as Array<Record<string, unknown>>) || []) })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => {
+      const items = (bindings.items as Array<Record<string, unknown>>) || [];
+      const countWhere = (predicate: (item: Record<string, unknown>) => boolean) =>
+        items.filter(predicate).length;
+
+      const stats = [
+        {
+          label: 'Total Nodes',
+          value: items.length,
+          description: 'All content nodes currently stored in the shared pool.',
+        },
+        {
+          label: 'Concepts',
+          value: countWhere((item) => String(item.node ?? '').startsWith('concept:')),
+          description: 'Reflected concept entities available in the kernel.',
+        },
+        {
+          label: 'Widgets',
+          value: countWhere((item) => String(item.node ?? '').startsWith('widget:')),
+          description: 'Registered UI widgets available to render views and layouts.',
+        },
+        {
+          label: 'Syncs',
+          value: countWhere((item) => String(item.node ?? '').startsWith('sync:')),
+          description: 'Synchronization rules reflected into the content graph.',
+        },
+        {
+          label: 'Workflows',
+          value: countWhere((item) => String(item.node ?? '').startsWith('workflow:')),
+          description: 'Workflow definitions persisted in the content pool.',
+        },
+        {
+          label: 'Automation Rules',
+          value: countWhere((item) => String(item.node ?? '').startsWith('automation-rule:')),
+          description: 'Saved automation rules configured in this deployment.',
+        },
+        {
+          label: 'Version Spaces',
+          value: countWhere((item) => String(item.node ?? '').startsWith('version-space:')),
+          description: 'Named version spaces available for multiverse-style editing.',
+        },
+        {
+          label: 'Process Specs',
+          value: countWhere((item) => String(item.node ?? '').startsWith('process-spec:')),
+          description: 'Stored process specifications in the automation catalog.',
+        },
+        {
+          label: 'Process Runs',
+          value: countWhere((item) => String(item.node ?? '').startsWith('process-run:')),
+          description: 'Tracked executions of process specifications.',
+        },
+        {
+          label: 'Step Runs',
+          value: countWhere((item) => String(item.node ?? '').startsWith('step-run:')),
+          description: 'Individual step execution records across all process runs.',
+        },
+      ];
+
+      return { items: JSON.stringify(stats) };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   listBySchema(input: Record<string, unknown>) {
@@ -161,18 +220,53 @@ const _contentNodeHandler: FunctionalConceptHandler = {
     const limit = typeof input.limit === 'number' ? input.limit : undefined;
     const offset = typeof input.offset === 'number' ? input.offset : undefined;
 
-    // Read from the per-schema denormalized relation populated by SchemaIndexOnApply.
-    // This avoids a full membership scan and in-memory join (see §3 of the optimization plan).
-    const schemaRelation = `schema:${schema}`;
-    const findOptions = (limit != null || offset != null)
-      ? { limit, offset }
-      : undefined;
-
     let p = createProgram();
-    p = find(p, schemaRelation, {}, 'items', findOptions);
-    return completeFrom(p, 'ok', (bindings) => ({
-      items: JSON.stringify((bindings.items as Array<Record<string, unknown>>) || []),
-    })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    // Fetch all memberships and all nodes server-side
+    p = find(p, 'membership', {}, 'allMemberships');
+    p = find(p, 'node', {}, 'allNodes');
+    // Join: filter memberships by schema, then match to nodes
+    p = mapBindings(p, (bindings) => {
+      const memberships = (bindings.allMemberships as Array<Record<string, unknown>>) || [];
+      const nodes = (bindings.allNodes as Array<Record<string, unknown>>) || [];
+
+      // Build entity→schemas map from all memberships
+      const schemasByEntity = new Map<string, string[]>();
+      for (const m of memberships) {
+        const eid = m.entity_id as string;
+        const s = m.schema as string;
+        if (!eid || !s) continue;
+        const existing = schemasByEntity.get(eid) ?? [];
+        existing.push(s);
+        schemasByEntity.set(eid, existing);
+      }
+
+      // Collect entity IDs that have the target schema
+      const matchingIds = new Set<string>();
+      for (const m of memberships) {
+        if (m.schema === schema) {
+          matchingIds.add(m.entity_id as string);
+        }
+      }
+
+      // Filter nodes and enrich with schemas
+      let results = nodes
+        .filter(n => matchingIds.has(n.node as string))
+        .map(n => ({
+          ...n,
+          schemas: schemasByEntity.get(n.node as string) ?? [],
+        }));
+
+      // Apply pagination
+      const start = offset ?? 0;
+      if (limit != null) {
+        results = results.slice(start, start + limit);
+      } else if (start > 0) {
+        results = results.slice(start);
+      }
+
+      return JSON.stringify(results);
+    }, 'enrichedItems');
+    return completeFrom(p, 'ok', (bindings) => ({ items: bindings.enrichedItems as string })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   changeType(input: Record<string, unknown>) {

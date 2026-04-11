@@ -5,7 +5,7 @@
 // Supports four-zone kind for the four-layer page pattern (header, sidebar, main, footer).
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, branch, complete,
+  createProgram, get as spGet, find, put, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -20,7 +20,22 @@ const _layoutHandler: FunctionalConceptHandler = {
   list(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'layout', {}, 'items');
-    return complete(p, 'ok', { items: JSON.stringify([]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => {
+      const items = ((bindings.items as Array<Record<string, unknown>>) || [])
+        .filter((item) => item.__deleted !== true)
+        .map((item) => ({
+          layout: item.layout as string,
+          name: item.name as string,
+          kind: item.kind as string,
+          title: (item.title as string) ?? '',
+          description: (item.description as string) ?? '',
+          direction: (item.direction as string) ?? '',
+          gap: (item.gap as string) ?? '0',
+          columns: (item.columns as string) ?? '',
+          children: (item.children as string) ?? '[]',
+        }));
+      return { items: JSON.stringify(items) };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   get(input: Record<string, unknown>) {
@@ -29,7 +44,25 @@ const _layoutHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'layout', layout, 'record');
     p = branch(p, 'record',
-      (b) => complete(b, 'ok', {}),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const record = bindings.record as Record<string, unknown>;
+        return {
+          layout: record.layout as string,
+          name: record.name as string,
+          kind: record.kind as string,
+          title: (record.title as string) ?? '',
+          description: (record.description as string) ?? '',
+          direction: (record.direction as string) ?? '',
+          gap: (record.gap as string) ?? '0',
+          columns: (record.columns as string) ?? '',
+          rows: (record.rows as string) ?? '',
+          areas: (record.areas as string) ?? '[]',
+          children: (record.children as string) ?? '[]',
+          responsive: (record.responsive as string) ?? '{}',
+          createdAt: (record.createdAt as string) ?? '',
+          updatedAt: (record.updatedAt as string) ?? '',
+        };
+      }),
       (b) => complete(b, 'notfound', { message: 'Layout not found' }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;

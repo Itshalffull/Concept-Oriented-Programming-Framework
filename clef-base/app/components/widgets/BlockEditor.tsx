@@ -2672,7 +2672,8 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({
   // Handle entity reference clicks via navigateToHref
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
+      const target = e.target;
+      if (!(target instanceof HTMLElement)) return;
       if (target.classList.contains('entity-ref')) {
         e.preventDefault();
         const entity = target.dataset.entity;
@@ -2688,7 +2689,8 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({
   // Handle inline snippet-ref clicks (§8.2): navigate to entity + span anchor
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
+      const target = e.target;
+      if (!(target instanceof HTMLElement)) return;
       if (target.classList.contains('snippet-ref')) {
         e.preventDefault();
         const entityId = target.dataset.entity;
@@ -2735,14 +2737,16 @@ export const BlockEditor: React.FC<BlockEditorProps> = ({
     };
 
     const handleMouseEnter = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
+      const target = e.target;
+      if (!(target instanceof HTMLElement)) return;
       if (target.classList.contains('snippet-ref')) {
         showTooltip(target);
       }
     };
 
     const handleMouseLeave = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
+      const target = e.target;
+      if (!(target instanceof HTMLElement)) return;
       if (target.classList.contains('snippet-ref')) {
         hideTooltip();
       }

@@ -14,12 +14,29 @@ type Result = { variant: string; [key: string]: unknown };
 let counter = 0;
 function nextId(prefix: string) { return prefix + '-' + (++counter); }
 
+function parseJsonObject(raw: unknown): { ok: true; value: Record<string, unknown> } | { ok: false } {
+  if (typeof raw !== 'string' || raw.trim() === '') {
+    return { ok: true, value: {} };
+  }
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+      return { ok: true, value: parsed as Record<string, unknown> };
+    }
+    return { ok: false };
+  } catch {
+    return { ok: false };
+  }
+}
+
 const _themeHandler: FunctionalConceptHandler = {
   list(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'theme', {}, 'items');
     p = mapBindings(p, (bindings) => JSON.stringify((bindings.items as Array<Record<string, unknown>>) || []), 'itemsJson');
-    return complete(p, 'ok', { items: '' }) as StorageProgram<Result>;
+    return completeFrom(p, 'ok', (bindings) => ({
+      items: (bindings.itemsJson as string) || '[]',
+    })) as StorageProgram<Result>;
   },
 
   create(input: Record<string, unknown>) {
@@ -27,6 +44,10 @@ const _themeHandler: FunctionalConceptHandler = {
     const name = input.name as string;
     const overrides = input.overrides as string;
     const id = theme || nextId('H');
+    const parsedOverrides = parseJsonObject(overrides);
+    if (!parsedOverrides.ok) {
+      return complete(createProgram(), 'invalid', { message: 'overrides must be a valid JSON object' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     p = spGet(p, 'theme', id, 'existing');
     p = branch(p, 'existing',
@@ -39,7 +60,14 @@ const _themeHandler: FunctionalConceptHandler = {
         }, 'shouldActivate');
         b2 = putFrom(b2, 'theme', id, (bindings) => {
           const shouldActivate = bindings.shouldActivate as boolean;
-          return { id, name, base: '', overrides: overrides || JSON.stringify({}), active: shouldActivate, priority: 0 };
+          return {
+            id,
+            name,
+            base: '',
+            overrides: JSON.stringify(parsedOverrides.value),
+            active: shouldActivate,
+            priority: 0,
+          };
         });
         return complete(b2, 'ok', { theme: id });
       },
@@ -54,6 +82,10 @@ const _themeHandler: FunctionalConceptHandler = {
     const theme = input.theme as string;
     const base = input.base as string;
     const overrides = input.overrides as string;
+    const parsedOverrides = parseJsonObject(overrides);
+    if (!parsedOverrides.ok) {
+      return complete(createProgram(), 'invalid', { message: 'overrides must be a valid JSON object' }) as StorageProgram<Result>;
+    }
     let p = createProgram();
     p = spGet(p, 'theme', base, 'baseTheme');
     p = branch(p, 'baseTheme',
@@ -61,9 +93,16 @@ const _themeHandler: FunctionalConceptHandler = {
         const id = theme || nextId('H');
         let b2 = putFrom(b, 'theme', id, (bindings) => {
           const baseTheme = bindings.baseTheme as Record<string, unknown>;
-          const baseOverrides: Record<string, unknown> = JSON.parse((baseTheme.overrides as string) || '{}');
-          const newOverrides: Record<string, unknown> = overrides ? JSON.parse(overrides) : {};
-          return { id, name: `${baseTheme.name as string}-extended`, base, overrides: JSON.stringify({ ...baseOverrides, ...newOverrides }), active: false, priority: 0 };
+          const parsedBase = parseJsonObject(baseTheme.overrides as string);
+          const baseOverrides = parsedBase.ok ? parsedBase.value : {};
+          return {
+            id,
+            name: `${baseTheme.name as string}-extended`,
+            base,
+            overrides: JSON.stringify({ ...baseOverrides, ...parsedOverrides.value }),
+            active: false,
+            priority: 0,
+          };
         });
         return complete(b2, 'ok', { theme: id });
       },
@@ -157,10 +196,20 @@ const _themeHandler: FunctionalConceptHandler = {
       (b) => {
         let b2 = mapBindings(b, (bindings) => {
           const existing = bindings.existing as Record<string, unknown>;
-          const overrides: Record<string, unknown> = JSON.parse((existing.overrides as string) || '{}');
-          return JSON.stringify(overrides);
-        }, 'tokensJson');
-        return complete(b2, 'ok', { tokens: '' });
+          const parsed = parseJsonObject(existing.overrides as string);
+          return parsed.ok
+            ? { valid: true, tokensJson: JSON.stringify(parsed.value) }
+            : { valid: false, tokensJson: '{}' };
+        }, 'resolvedTheme');
+        b2 = branch(
+          b2,
+          (bindings) => !((bindings.resolvedTheme as Record<string, unknown>).valid as boolean),
+          (invalidP) => complete(invalidP, 'invalid', { message: 'Theme overrides are not valid JSON' }),
+          (okP) => completeFrom(okP, 'ok', (bindings) => ({
+            tokens: ((bindings.resolvedTheme as Record<string, unknown>).tokensJson as string) || '{}',
+          })),
+        );
+        return b2;
       },
       (b) => complete(b, 'notfound', { message: `Theme "${theme}" not found` }),
     );

@@ -85,7 +85,21 @@ const _destinationCatalogHandler: FunctionalConceptHandler = {
   list(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'destination', {}, 'destinations');
-    return complete(p, 'ok', { destinations: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => {
+      const destinations = ((bindings.destinations as Array<Record<string, unknown>>) || [])
+        .map((d) => ({
+          destination: d.id as string,
+          id: d.id as string,
+          name: d.name as string,
+          targetConcept: d.targetConcept as string,
+          targetView: d.targetView as string,
+          href: d.href as string,
+          icon: d.icon as string,
+          group: d.group as string,
+        }))
+        .sort((a, b) => a.href.localeCompare(b.href));
+      return { destinations: JSON.stringify(destinations) };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
 
