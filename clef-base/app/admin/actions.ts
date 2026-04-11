@@ -1,11 +1,13 @@
 'use server';
 
 import {
+  createSessionCookieValue,
   assignAccessRole,
   createAccessRole,
   createAccessUser,
   getAccessSnapshot,
   getCurrentAdminSession,
+  getSessionIdFromCookie,
   grantAccessPermission,
   loginAsAdmin,
   logoutCurrentSession,
@@ -48,12 +50,22 @@ export async function loginAdminAction(
   }
 
   const cookieStore = await getCookieStore();
-  cookieStore.set(AUTH_COOKIE_NAME, result.sessionId, {
+  cookieStore.set(
+    AUTH_COOKIE_NAME,
+    createSessionCookieValue({
+      sessionId: result.sessionId,
+      user: result.user,
+      device: result.device,
+      roles: result.roles,
+      permissions: result.permissions,
+    }),
+    {
     httpOnly: true,
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
     path: '/',
-  });
+    },
+  );
 
   if (result.permissions.includes(ADMIN_PERMISSION)) {
     navigate('/admin');
@@ -68,7 +80,7 @@ export async function loginAdminAction(
 
 export async function logoutAdminAction() {
   const cookieStore = await getCookieStore();
-  const sessionId = cookieStore.get(AUTH_COOKIE_NAME)?.value;
+  const sessionId = getSessionIdFromCookie(cookieStore.get(AUTH_COOKIE_NAME)?.value);
   await logoutCurrentSession(sessionId);
   cookieStore.delete(AUTH_COOKIE_NAME);
   navigate('/');

@@ -1,0 +1,22 @@
+# Rebuild the edit form and create a FieldPlacement entry when a field is added.
+# Keeps FormBuilder in sync with FieldDefinition state so the generated
+# edit form always includes every field in its schema.
+# See §2.5 of the schema-editor-plan.md.
+
+sync FieldCreateUpdatesForm [eventual]
+  purpose: "Regenerate the schema's FormBuilder form and add a FieldPlacement record whenever a new FieldDefinition is created, so the edit UI stays consistent with the schema"
+when {
+  FieldDefinition/create: [ schema: ?schema;
+                             fieldId: ?field_id;
+                             widget: ?widget;
+                             sortOrder: ?sort_order ] => [ ok: _ ]
+}
+then {
+  FormBuilder/buildForm: [ schema: ?schema ]
+}
+then {
+  FieldPlacement/create: [ schema: ?schema;
+                            fieldId: ?field_id;
+                            widget: ?widget;
+                            sortOrder: ?sort_order ]
+}

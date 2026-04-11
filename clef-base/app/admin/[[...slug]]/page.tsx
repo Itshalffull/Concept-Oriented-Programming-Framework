@@ -11,6 +11,9 @@ import { MappingsView } from '../../views/MappingsView';
 import { DisplayModesView } from '../../views/DisplayModesView';
 import { DynamicPage } from '../../components/DynamicPage';
 import { getAccessSnapshot } from '../../../lib/auth';
+import { FormBuilder } from '../../components/widgets/FormBuilder';
+import { SchemaFieldsEditor } from '../../components/widgets/SchemaFieldsEditor';
+import { CanvasBrowserView } from '../../views/CanvasBrowserView';
 
 export default async function AdminPage({
   params,
@@ -40,6 +43,14 @@ export default async function AdminPage({
     return (
       <HostedPage>
         <ViewRenderer viewId="content-list" />
+      </HostedPage>
+    );
+  }
+
+  if (slug[0] === 'schemas' && slug[1]) {
+    return (
+      <HostedPage>
+        <SchemaFieldsEditor schemaId={decodeURIComponent(slug[1])} />
       </HostedPage>
     );
   }
@@ -175,7 +186,7 @@ export default async function AdminPage({
   if (path === 'canvas') {
     return (
       <HostedPage>
-        <LayoutRenderer layoutId="canvas-browser" />
+        <CanvasBrowserView />
       </HostedPage>
     );
   }
@@ -190,6 +201,22 @@ export default async function AdminPage({
 
   if (path === 'access') {
     return <AccessAdmin initial={await getAccessSnapshot()} />;
+  }
+
+  if (slug[0] === 'forms' && slug[1]) {
+    return (
+      <HostedPage>
+        <FormBuilder schemaId={decodeURIComponent(slug[1])} />
+      </HostedPage>
+    );
+  }
+
+  if (path === 'forms') {
+    return (
+      <HostedPage>
+        <ViewRenderer viewId="form-list" />
+      </HostedPage>
+    );
   }
 
   // Dynamic page resolution: look up the path in DestinationCatalog at runtime.

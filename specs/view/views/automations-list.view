@@ -1,0 +1,41 @@
+view "automations-list" {
+  shell: "automations-list"
+
+  features {
+    filter
+    sort
+    projection
+    interaction
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"AutomationRule\",\"action\":\"list\"}"
+    }
+    filter: {
+      node: "{\"type\":\"true\"}"
+    }
+    sort: {
+      keys: "[]"
+    }
+    projection: {
+      fields: "[{\"key\":\"rule\",\"label\":\"Rule\"},{\"key\":\"trigger\",\"label\":\"Trigger\"},{\"key\":\"conditions\",\"label\":\"Conditions\"},{\"key\":\"enabled\",\"label\":\"Enabled\",\"formatter\":\"boolean-badge\"}]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+    interaction: {
+      rowActions: "[{\"key\":\"edit\",\"concept\":\"AutomationRule\",\"action\":\"update\",\"label\":\"Edit\"}]"
+    }
+  }
+
+  purpose {
+    Browse and manage event-condition-action rules that fire automatically.
+  }
+
+  invariants {
+    always "purity is read-write": { purity = "read-write" }
+  }
+}

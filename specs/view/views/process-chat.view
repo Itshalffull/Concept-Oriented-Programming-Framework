@@ -1,0 +1,47 @@
+view "process-chat" {
+  shell: "process-chat"
+
+  features {
+    interaction
+    sort
+    pagination
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ProcessConversation\",\"action\":\"list\",\"params\":{\"run_ref\":\"{{runId}}\"}}"
+    }
+    sort: {
+      keys: "[]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+    interaction: {
+      rowActions: "[{\"key\":\"send\",\"concept\":\"ProcessConversation\",\"action\":\"send\",\"label\":\"Send\"}]"
+    }
+  }
+
+  purpose {
+    Conversational interface for process execution — human and AI
+    participants collaborate through messages. Read-write with send
+    action and paginated message history.
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+
+    always "has pagination": {
+      "pagination" in enabledFeatures
+    }
+
+    always "invokes only ProcessConversation actions": {
+      forall ia in invokedActions:
+      ia startsWith "ProcessConversation/"
+    }
+  }
+}

@@ -1,0 +1,13 @@
+# When SearchIndex receives a search query tagged for live-web retrieval,
+# dispatch it to the registered WebSearchProvider. The provider_id "web_search"
+# is the PluginRegistry key under which WebSearchProvider registers itself.
+
+sync WebSearchRoutes [optional]
+when {
+  SearchIndex/search: [index: ?index, query: ?query]
+    where index.backend = "web_search"
+    => [results: ?results]
+}
+then {
+  WebSearchProvider/search: [query: ?query, max_results: none]
+}

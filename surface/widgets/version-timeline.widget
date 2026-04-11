@@ -1,0 +1,293 @@
+@version(1)
+widget version-timeline {
+
+  purpose {
+    Revision history sidebar displayed on entity detail pages. Shows the full list
+    of snapshots created by Version/listVersions as a vertical timeline of revision
+    entries. Each entry shows a dot, the revision identifier, date, author name, and
+    a pin icon if the revision is referenced by a `[[...@vN]]` wikilink elsewhere.
+    Revisions that have been compacted by the retention policy are shown dimmed with
+    a compacted label. Clicking any revision opens the entity in historical mode with
+    the historical-mode-banner. A "Show all" toggle expands the full history when many
+    revisions are present. A "Compare two" button enters a selection mode allowing the
+    user to pick exactly two revisions for a diff view, connecting to Version/diff.
+  }
+
+  anatomy {
+    root:            container    { Top-level sidebar wrapper }
+    timelineList:    container    { Ordered list of all revision entries }
+    revisionEntry:   container    { One row in the timeline representing a single revision }
+    revisionDot:     presentation { Visual dot indicating position on the timeline; filled for current }
+    revisionLabel:   text         { Revision identifier, e.g. "v7" }
+    revisionDate:    text         { Human-readable date and time of the revision }
+    revisionAuthor:  text         { Name of the author who created this revision }
+    pinnedIcon:      presentation { Pin icon shown only on revisions referenced by wikilinks }
+    compactedLabel:  text         { Label shown on compacted revisions in place of full metadata }
+    showAllButton:   action       { Expands the full revision list when it is truncated }
+    compareTwoButton: action      { Enters comparing mode to select two revisions for a diff }
+  }
+
+  states {
+    loading [initial] {
+      on LOADED -> loaded;
+      on LOAD_EMPTY -> empty;
+      entry [fetchRevisions];
+    }
+
+    loaded {
+      on SELECT_REVISION -> loaded;
+      on ENTER_COMPARE -> comparing;
+      on SHOW_ALL -> loaded;
+      entry [renderTimeline];
+    }
+
+    comparing {
+      on REVISION_SELECTED -> comparing;
+      on COMPARE_CONFIRMED -> loaded;
+      on CANCEL_COMPARE -> loaded;
+      entry [enableRevisionSelection; clearSelection];
+      exit [disableRevisionSelection];
+    }
+
+    empty {
+      on LOADED -> loaded;
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      ArrowDown -> FOCUS_NEXT_REVISION;
+      ArrowUp -> FOCUS_PREV_REVISION;
+      Enter -> SELECT_REVISION;
+      Space -> SELECT_REVISION;
+      Escape -> CANCEL_COMPARE;
+      Tab -> FOCUS_NEXT;
+    }
+    focus {
+      trap: false;
+      initial: revisionEntry;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Version history";
+        aria-busy: if state == "loading" then "true" else "false";
+        data-state: state;
+      };
+      timelineList -> {
+        role: "list";
+        aria-label: concat("Revision history for entity: ", ?entityId);
+      };
+      revisionEntry -> {
+        role: "listitem";
+        aria-label: concat(self.revisionId, ", ", self.date, " by ", self.author, if self.isPinned then ", pinned revision" else "");
+        aria-selected: if state == "comparing" and self.isSelected then "true" else "false";
+        aria-disabled: if self.isCompacted then "true" else "false";
+        tabindex: if self.isFocused then "0" else "-1";
+      };
+      pinnedIcon -> {
+        role: "img";
+        aria-label: "Pinned revision — referenced by one or more wikilinks";
+        aria-hidden: if not self.isPinned then "true" else "false";
+      };
+      compactedLabel -> {
+        role: "note";
+        aria-label: concat("Compacted: ", self.approximateDate);
+      };
+      showAllButton -> {
+        role: "button";
+        aria-label: "Show all revisions";
+        aria-expanded: if self.isExpanded then "true" else "false";
+      };
+      compareTwoButton -> {
+        role: "button";
+        aria-label: if state == "comparing" then "Cancel comparison" else "Compare two revisions";
+        aria-pressed: if state == "comparing" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    entityId: String = ""
+    revisions: list { revisionId: String, date: String, author: String, isCompacted: Bool, approximateDate: String } = []
+    pinnedRevisions: list { revisionId: String } = []
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-entity: ?entityId;
+    }
+
+    timelineList -> {
+      data-part: "timeline-list";
+    }
+
+    revisionEntry -> {
+      data-part: "revision-entry";
+      data-revision: self.revisionId;
+      data-compacted: if self.isCompacted then "true" else "false";
+      data-pinned: if self.isPinned then "true" else "false";
+      data-selected: if state == "comparing" and self.isSelected then "true" else "false";
+      tabindex: if self.isFocused then "0" else "-1";
+      onClick: if state == "comparing" then send(REVISION_SELECTED, { revisionId: self.revisionId }) else send(SELECT_REVISION, { revisionId: self.revisionId });
+      onKeyDown: if key == "Enter" or key == "Space" then if state == "comparing" then send(REVISION_SELECTED, { revisionId: self.revisionId }) else send(SELECT_REVISION, { revisionId: self.revisionId }) else noop;
+    }
+
+    revisionDot -> {
+      data-part: "revision-dot";
+      data-revision: self.revisionId;
+      data-compacted: if self.isCompacted then "true" else "false";
+    }
+
+    revisionLabel -> {
+      data-part: "revision-label";
+      text: self.revisionId;
+    }
+
+    revisionDate -> {
+      data-part: "revision-date";
+      text: self.date;
+    }
+
+    revisionAuthor -> {
+      data-part: "revision-author";
+      text: self.author;
+    }
+
+    pinnedIcon -> {
+      data-part: "pinned-icon";
+      data-visible: if self.isPinned then "true" else "false";
+      aria-hidden: if not self.isPinned then "true" else "false";
+    }
+
+    compactedLabel -> {
+      data-part: "compacted-label";
+      text: concat("~", self.approximateDate, " (compacted)");
+      data-visible: if self.isCompacted then "true" else "false";
+    }
+
+    showAllButton -> {
+      data-part: "show-all-button";
+      onClick: send(SHOW_ALL);
+      onKeyDown: if key == "Enter" or key == "Space" then send(SHOW_ALL) else noop;
+      data-expanded: if self.isExpanded then "true" else "false";
+    }
+
+    compareTwoButton -> {
+      data-part: "compare-two-button";
+      onClick: if state == "comparing" then send(CANCEL_COMPARE) else send(ENTER_COMPARE);
+      onKeyDown: if key == "Enter" or key == "Space" then if state == "comparing" then send(CANCEL_COMPARE) else send(ENTER_COMPARE) else if key == "Escape" then send(CANCEL_COMPARE) else noop;
+      data-active: if state == "comparing" then "true" else "false";
+    }
+  }
+
+  affordance {
+    serves: group-repeating;
+    specificity: 7;
+    when {
+      viewType: "version-timeline";
+    }
+    bind {
+      entityId: entityId;
+      revisions: revisions;
+      pinnedRevisions: pinnedRevisions;
+    }
+  }
+
+  invariant {
+    example "load revisions from empty then show timeline": {
+      after send(LOADED) -> ok
+      then root -> { data-state: "loaded" }
+      and timelineList -> { }
+    }
+
+    example "click revision navigates to historical mode": {
+      after send(LOADED) -> ok
+      then revisionEntry.click({ revisionId: "v3" }) -> ok
+      then root -> { data-state: "loaded" }
+    }
+
+    example "enter compare mode and select two revisions": {
+      after send(LOADED) -> ok
+      then compareTwoButton.click -> ok
+      then root -> { data-state: "comparing" }
+      and compareTwoButton -> { data-active: "true" }
+      then revisionEntry.click({ revisionId: "v5" }) -> ok
+      then revisionEntry.click({ revisionId: "v3" }) -> ok
+      then send(COMPARE_CONFIRMED) -> ok
+      then root -> { data-state: "loaded" }
+    }
+
+    example "cancel compare returns to loaded": {
+      after send(LOADED) -> ok
+      then compareTwoButton.click -> ok
+      then root -> { data-state: "comparing" }
+      then send(CANCEL_COMPARE) -> ok
+      then root -> { data-state: "loaded" }
+      and compareTwoButton -> { data-active: "false" }
+    }
+
+    example "empty history transitions to empty state": {
+      after send(LOAD_EMPTY) -> ok
+      then root -> { data-state: "empty" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      root -> { data-state: state }
+    }
+
+    always "pinned revisions show pinnedIcon": {
+      forall entry in revisionEntry:
+        if entry.isPinned then entry.pinnedIcon -> { data-visible: "true" }
+    }
+
+    always "compacted revisions show compactedLabel": {
+      forall entry in revisionEntry:
+        if entry.isCompacted then entry.compactedLabel -> { data-visible: "true" }
+    }
+
+    always "revisionEntry data-selected only set in comparing state": {
+      if state != "comparing" then forall entry in revisionEntry:
+        entry -> { data-selected: "false" }
+    }
+
+    never "more than two revisionEntries selected simultaneously in comparing state": {
+      exists e1 in revisionEntry:
+        exists e2 in revisionEntry:
+          exists e3 in revisionEntry:
+            e1 != e2 and e2 != e3 and e1 != e3
+            and e1 -> { data-selected: "true" }
+            and e2 -> { data-selected: "true" }
+            and e3 -> { data-selected: "true" }
+    }
+
+    never "compareTwoButton active outside comparing state": {
+      state != "comparing" and compareTwoButton -> { data-active: "true" }
+    }
+
+    action compareTwoButton.click {
+      requires: state == "loaded"
+      ensures ok: state == "comparing"
+    }
+
+    action revisionEntry.click {
+      requires: state == "loaded"
+      ensures ok: state == "loaded"
+    }
+
+    "SELECT_REVISION navigates the host page to the entity at the selected revisionId qualifier";
+    "COMPARE_CONFIRMED calls Version/diff with the two selected revisionIds as left and right";
+    "LOADED event is dispatched after Version/listVersions returns the revision list for entityId";
+    "isPinned is derived by checking if the revision appears in the pinnedRevisions prop";
+    "Compacted revisionEntry items are rendered dimmed via data-compacted attribute and are not clickable for navigation";
+    "showAllButton is only rendered when the timeline has more revisions than the default visible limit";
+  }
+
+}

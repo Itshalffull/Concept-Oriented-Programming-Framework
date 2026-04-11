@@ -1,0 +1,59 @@
+view "schema-table" {
+  shell: "schema-table"
+
+  features {
+    filter
+    sort
+    projection
+    interaction
+    pagination
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"FieldDefinition\",\"action\":\"list\",\"params\":{\"schema\":\"Article\"}}"
+    }
+    filter: {
+      node: "{\"type\":\"true\"}"
+    }
+    sort: {
+      keys: "[{\"field\":\"sortOrder\",\"direction\":\"asc\"}]"
+    }
+    projection: {
+      fields: "[{\"key\":\"fieldId\",\"label\":\"Field ID\",\"formatter\":\"code\"},{\"key\":\"label\",\"label\":\"Label\"},{\"key\":\"fieldType\",\"label\":\"Type\",\"formatter\":\"badge\"},{\"key\":\"required\",\"label\":\"Required\",\"formatter\":\"boolean-badge\"},{\"key\":\"unique\",\"label\":\"Unique\",\"formatter\":\"boolean-badge\"},{\"key\":\"defaultValue\",\"label\":\"Default\"},{\"key\":\"sortOrder\",\"label\":\"Order\"}]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{\"cellEdit\":true,\"columnAdd\":true,\"columnEdit\":true,\"columnReorder\":true}"
+    }
+  }
+
+  purpose {
+    Table view where columns are schema fields and rows are FieldDefinition
+    entities for a given schema. Column headers are editable — click to rename,
+    right-click for type change or delete. The [+] column adds new fields.
+    Cell values are inline-editable via InteractionSpec. This is Level 1
+    (Archetype D inline editing) from the schema editor design.
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+
+    always "invokes only FieldDefinition actions": {
+      forall ia in invokedActions:
+      ia startsWith "FieldDefinition/"
+    }
+
+    always "all invoke variants covered": {
+      uncoveredVariants = []
+    }
+
+    always "projects only known fields": {
+      forall f in projectedFields:
+      f in ["fieldId", "label", "fieldType", "required", "unique", "defaultValue", "sortOrder"]
+    }
+  }
+}

@@ -1,0 +1,48 @@
+# View definitions for the schema editor.
+# Covers schema admin list, schema detail, schema-table (inline editing), and template gallery.
+# These views back the Schema Editor admin section (/admin/schemas).
+
+concept: View
+action: create
+entries:
+  # --- Schema admin list ---
+  - view: schema-admin-list
+    dataSource: '{"concept":"Schema","action":"list"}'
+    layout: table
+    visibleFields: '[{"key":"schema","label":"Schema Name"},{"key":"fieldCount","label":"Fields","formatter":"json-count"},{"key":"entityCount","label":"Entities"},{"key":"updatedAt","label":"Updated","formatter":"date"}]'
+    controls: '{"create":{"concept":"Schema","action":"defineSchema","fields":[{"name":"schema","label":"Schema Name","required":true},{"name":"fields","label":"Fields (comma-separated)","required":true}]},"rowClick":{"navigateTo":"/admin/schemas/{schema}"}}'
+    title: Schemas
+    description: All schemas defined in the system. Each schema overlays typed fields on ContentNodes.
+    filters: '[{"field":"schema","label":"Schema","type":"toggle-group"}]'
+    defaultDisplayMode: table-row
+
+  # --- Schema detail (3-tab editor: Fields / Form / Display) ---
+  - view: schema-detail
+    dataSource: '{"concept":"Schema","action":"get","params":{"schema":"{{schemaId}}"}}'
+    layout: detail
+    visibleFields: '[{"key":"schema","label":"Schema Name"},{"key":"fields","label":"Fields","formatter":"json-count"},{"key":"extends","label":"Extends","formatter":"badge"}]'
+    controls: '{"rowClick":{"action":"open-field-drawer"}}'
+    title: Schema Detail
+    description: Full schema editor with Fields, Form layout, and Display mode tabs.
+    defaultDisplayMode: detail
+
+  # --- Schema table (Level 1 inline editing) ---
+  - view: schema-table
+    dataSource: '{"concept":"FieldDefinition","action":"list","params":{"schema":"{{schemaId}}"}}'
+    layout: table
+    visibleFields: '[{"key":"fieldId","label":"Field ID","formatter":"code"},{"key":"label","label":"Label"},{"key":"fieldType","label":"Type","formatter":"badge"},{"key":"required","label":"Required","formatter":"boolean-badge"},{"key":"unique","label":"Unique","formatter":"boolean-badge"},{"key":"defaultValue","label":"Default"},{"key":"sortOrder","label":"Order"}]'
+    controls: '{"cellEdit":true,"columnAdd":{"concept":"FieldDefinition","action":"create","fields":[{"name":"schema","label":"Schema","required":true,"hidden":true,"value":"{{schemaId}}"},{"name":"fieldId","label":"Field ID","required":true},{"name":"label","label":"Display Label","required":true},{"name":"fieldType","label":"Type","required":true,"type":"select","options":["text","number","select","multi-select","date","checkbox","person","url","email","file","rich-text","media","relation","formula","rollup","json","created-time","created-by","auto-number"]}]},"columnEdit":true,"columnReorder":true,"rowActions":[{"key":"edit","concept":"FieldDefinition","action":"update","params":{"schema":"{{schemaId}}","fieldId":"fieldId"},"label":"Edit","variant":"outlined"},{"key":"delete","concept":"FieldDefinition","action":"remove","params":{"schema":"{{schemaId}}","fieldId":"fieldId"},"label":"Delete","variant":"destructive","confirm":true}]}'
+    title: Schema Fields
+    description: Inline-editable table of all fields in this schema. Click any cell to edit its value; click column headers to rename, change type, or reorder.
+    defaultDisplayMode: table-row
+
+  # --- Schema template gallery ---
+  - view: schema-template-gallery
+    dataSource: '{"concept":"SchemaTemplate","action":"list"}'
+    layout: card-grid
+    visibleFields: '[{"key":"name","label":"Name"},{"key":"label","label":"Display Name"},{"key":"description","label":"Description"},{"key":"category","label":"Category","formatter":"badge"},{"key":"icon","label":"Icon"}]'
+    controls: '{"rowClick":{"action":"apply-template"}}'
+    title: Schema Templates
+    description: Pre-built schema starting points for common content models — articles, tasks, events, contacts, knowledge base, and meeting notes.
+    filters: '[{"field":"category","label":"Category","type":"toggle-group","options":["content","project","crm","knowledge"]}]'
+    defaultDisplayMode: card

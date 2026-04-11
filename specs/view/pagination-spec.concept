@@ -1,0 +1,234 @@
+# @fixtures-added
+@version(1)
+@category("view")
+@visibility("public")
+concept PaginationSpec [P] {
+
+  purpose {
+    Manage named pagination configurations that control how result sets are
+    divided into pages. Each spec captures a pagination mode (offset, cursor,
+    or keyset), page size, and current position so that views can request
+    successive windows of data without holding the full result set in memory.
+  }
+
+  state {
+    specs: set P
+    identity {
+      name:       P -> String
+      mode:       P -> String
+    }
+    sizing {
+      pageSize:   P -> Int
+      maxSize:    P -> Int
+    }
+    position {
+      position:   P -> String
+      totalCount: P -> Int
+      hasMore:    P -> Boolean
+    }
+  }
+
+  actions {
+
+    action create(name: String, mode: String, pageSize: Int, maxSize: Int) {
+      -> ok(spec: P) {
+        Register a new named pagination spec with the given mode and page size.
+        The position is initialised to "0", totalCount to -1 (unknown), and
+        hasMore to true. maxSize defaults to 100 when not supplied.
+      }
+      -> duplicate(name: String) {
+        A pagination spec with this name already exists.
+      }
+      -> error(message: String) {
+        mode is not one of "offset", "cursor", or "keyset"; or pageSize is not
+        a positive integer; or pageSize exceeds maxSize.
+      }
+      fixture default_offset { name: "page-1", mode: "offset", pageSize: 25, maxSize: 100 }
+      fixture cursor_spec    { name: "cursor-1", mode: "cursor", pageSize: 50, maxSize: 200 }
+      fixture keyset_spec    { name: "keyset-1", mode: "keyset", pageSize: 10, maxSize: 50 }
+      fixture duplicate      { name: "page-1", mode: "offset", pageSize: 25, maxSize: 100 } after default_offset -> duplicate
+      fixture oversized      { name: "big", mode: "offset", pageSize: 200, maxSize: 100 } -> error
+      fixture invalid_mode   { name: "bad-mode", mode: "stream", pageSize: 10, maxSize: 100 } -> error
+      fixture zero_pagesize  { name: "zero", mode: "offset", pageSize: 0, maxSize: 100 } -> error
+    }
+
+    action get(name: String) {
+      -> ok(spec: P, name: String, mode: String, pageSize: Int, maxSize: Int, position: String, totalCount: Int, hasMore: Boolean) {
+        Return the full pagination spec by name, including current position and
+        count information.
+      }
+      -> not_found(message: String) {
+        No pagination spec with this name has been registered.
+      }
+      fixture get_ok      { name: $default_offset.spec } after default_offset
+      fixture get_missing { name: "nonexistent" } -> not_found
+    }
+
+    action advance(name: String, nextPosition: String) {
+      -> ok(spec: P, position: String) {
+        Move the pagination spec to the next page position. The position field
+        is updated to nextPosition and returned.
+      }
+      -> not_found(message: String) {
+        No pagination spec with this name has been registered.
+      }
+      -> exhausted(message: String) {
+        The current hasMore flag is false; no further pages exist at this
+        position, so advancing is not permitted.
+      }
+      fixture advance_ok        { name: "page-1", nextPosition: "1" } after default_offset
+      fixture advance_missing   { name: "nonexistent", nextPosition: "1" } -> not_found
+    }
+
+    action retreat(name: String, prevPosition: String) {
+      -> ok(spec: P, position: String) {
+        Move the pagination spec to the previous page position. The position
+        field is updated to prevPosition and returned.
+      }
+      -> not_found(message: String) {
+        No pagination spec with this name has been registered.
+      }
+      -> at_start(message: String) {
+        The current position is already "0"; there is no previous page to
+        retreat to.
+      }
+      fixture retreat_ok        { name: "page-1", prevPosition: "0" } after advance_ok
+      fixture retreat_at_start  { name: "page-1", prevPosition: "0" } after default_offset -> at_start
+      fixture retreat_missing   { name: "nonexistent", prevPosition: "0" } -> not_found
+    }
+
+    action reset(name: String) {
+      -> ok(spec: P, position: String) {
+        Reset the pagination spec to the first page by setting position to "0".
+        totalCount and hasMore are left unchanged.
+      }
+      -> not_found(message: String) {
+        No pagination spec with this name has been registered.
+      }
+      fixture reset_ok      { name: "page-1" } after advance_ok
+      fixture reset_missing { name: "nonexistent" } -> not_found
+    }
+
+    action resize(name: String, pageSize: Int) {
+      -> ok(spec: P, pageSize: Int, position: String) {
+        Change the page size for the spec and reset position to "0". The new
+        page size must be positive and must not exceed the spec's maxSize.
+      }
+      -> not_found(message: String) {
+        No pagination spec with this name has been registered.
+      }
+      -> exceeds_max(message: String) {
+        The requested pageSize exceeds the spec's configured maxSize.
+      }
+      -> error(message: String) {
+        The requested pageSize is not a positive integer.
+      }
+      fixture resize_ok        { name: "page-1", pageSize: 10 } after default_offset
+      fixture resize_exceeds   { name: "page-1", pageSize: 500 } after default_offset -> exceeds_max
+      fixture resize_zero      { name: "page-1", pageSize: 0 } after default_offset -> error
+      fixture resize_missing   { name: "nonexistent", pageSize: 10 } -> not_found
+    }
+
+    action updateCount(name: String, totalCount: Int, hasMore: Boolean) {
+      -> ok(spec: P, totalCount: Int, hasMore: Boolean) {
+        Update the totalCount and hasMore fields after a query returns its
+        result set size. This keeps the pagination spec consistent with the
+        data available from the backend.
+      }
+      -> not_found(message: String) {
+        No pagination spec with this name has been registered.
+      }
+      fixture update_count_ok      { name: "page-1", totalCount: 150, hasMore: true } after default_offset
+      fixture update_count_missing { name: "nonexistent", totalCount: 0, hasMore: false } -> not_found
+    }
+
+    action remove(name: String) {
+      -> ok(name: String) {
+        Delete the named pagination spec. Subsequent operations referencing
+        this name will return not_found.
+      }
+      -> not_found(message: String) {
+        No pagination spec with this name has been registered.
+      }
+      fixture remove_ok      { name: "page-1" } after default_offset
+      fixture remove_missing { name: "nonexistent" } -> not_found
+    }
+
+    action list() {
+      -> ok(specs: String) {
+        Return a JSON-serialised array of all registered pagination spec names.
+      }
+      fixture list_all { } after default_offset
+    }
+
+    action evaluate(name: String, offset: Int, cursor: String) {
+      -> ok(limit: Int, offset: Int, cursor: String) {
+        Compute the query parameters for the current page. For offset mode the
+        result includes limit and a numeric offset derived from position and
+        pageSize. For cursor mode the result includes limit and the current
+        position as the cursor token. For keyset mode the result includes
+        limit and the current position as the keyset value.
+      }
+      -> not_found(message: String) {
+        No pagination spec with this name has been registered.
+      }
+      fixture evaluate_offset { name: "page-1", offset: 0, cursor: "" } after default_offset
+      fixture evaluate_cursor { name: "cursor-1", offset: 0, cursor: "" } after cursor_spec
+      fixture evaluate_missing { name: "nonexistent", offset: 0, cursor: "" } -> not_found
+    }
+
+  }
+
+  example "create then get returns spec": {
+    after create(name: "p1", mode: "offset", pageSize: 25, maxSize: 100) -> ok(spec: s)
+    then get(name: "p1") -> ok(mode: "offset", pageSize: 25, position: "0", totalCount: -1, hasMore: true)
+  }
+
+  example "advance then retreat returns to original position": {
+    after create(name: "p2", mode: "offset", pageSize: 10, maxSize: 100) -> ok(spec: s)
+    after advance(name: "p2", nextPosition: "1") -> ok(position: "1")
+    then retreat(name: "p2", prevPosition: "0") -> ok(position: "0")
+  }
+
+  example "resize resets position to zero": {
+    after create(name: "p3", mode: "offset", pageSize: 25, maxSize: 100) -> ok(spec: s)
+    after advance(name: "p3", nextPosition: "2") -> ok
+    then resize(name: "p3", pageSize: 10) -> ok(pageSize: 10, position: "0")
+  }
+
+  example "duplicate create is rejected": {
+    after create(name: "p4", mode: "offset", pageSize: 25, maxSize: 100) -> ok
+    then create(name: "p4", mode: "cursor", pageSize: 10, maxSize: 100) -> duplicate(name: "p4")
+  }
+
+  example "evaluate offset returns correct limit and offset": {
+    after create(name: "p5", mode: "offset", pageSize: 20, maxSize: 100) -> ok
+    after advance(name: "p5", nextPosition: "2") -> ok
+    then evaluate(name: "p5", offset: 0, cursor: "") -> ok(limit: 20, offset: 40)
+  }
+
+  always "page size within bounds": {
+    forall p in specs:
+    p.pageSize > 0 and p.pageSize <= p.maxSize
+  }
+
+  always "mode is valid": {
+    forall p in specs:
+    p.mode in {"offset", "cursor", "keyset"}
+  }
+
+  never "orphan position state": {
+    exists p in specs: p.position = none
+  }
+
+  action create {
+    requires: name != "" and pageSize > 0 and pageSize <= maxSize
+    ensures ok: spec != none
+  }
+
+  action resize {
+    requires: pageSize > 0
+    ensures ok: position = "0"
+  }
+
+}

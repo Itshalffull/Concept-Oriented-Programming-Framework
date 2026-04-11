@@ -1,0 +1,57 @@
+view "process-step-breakdown" {
+  shell: "process-step-breakdown"
+
+  features {
+    filter
+    sort
+    group
+    projection
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"StepRun\",\"action\":\"list\"}"
+    }
+    filter: {
+      node: "{\"type\":\"true\"}"
+    }
+    sort: {
+      keys: "[]"
+    }
+    group: {
+      config: "{\"type\":\"field\",\"fields\":[\"step_key\"]}"
+    }
+    projection: {
+      fields: "[]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+  }
+
+  purpose {
+    All step runs grouped by step key — shows execution distribution
+    across step types and statuses.
+  }
+
+  invariants {
+    always "purity is read-only": {
+      purity = "read-only"
+    }
+
+    always "no invoke instructions": {
+      invokeCount = 0
+    }
+
+    always "uses grouping": {
+      "group" in enabledFeatures
+    }
+
+    always "filter fields exist in source": {
+      forall f in filterFields:
+      f in sourceFields
+    }
+  }
+}

@@ -1,0 +1,122 @@
+@version(1)
+@category("research")
+concept WebSearchProvider [P] {
+
+  purpose {
+    Route web search queries to real-time web search APIs (Tavily, Exa, or
+    Google Search), returning ranked result sets with titles, URLs, and
+    summaries. Registered with PluginRegistry under provider_id "web_search"
+    so SearchIndex can dispatch live-web queries to this provider.
+  }
+
+  state {
+    providers: set P
+    config {
+      provider_id: P -> String
+      backend: P -> "tavily" | "exa" | "google"
+      api_key_ref: P -> String
+      max_results: P -> Int
+      include_domains: P -> option list String
+      exclude_domains: P -> option list String
+    }
+    metrics {
+      call_count: P -> Int
+      total_latency_ms: P -> Int
+      error_count: P -> Int
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action configure(backend: String, api_key_ref: String, max_results: Int,
+                     include_domains: option list String,
+                     exclude_domains: option list String) {
+      -> ok(provider: P) {
+        Register a new web search provider with the given backend and API
+        credential reference. The api_key_ref is an opaque string resolved
+        at runtime from the secrets store — it is never stored in plain text.
+      }
+      -> invalid(message: String) {
+        The backend name is not one of the supported values (tavily, exa, google),
+        or max_results is less than 1.
+      }
+      -> duplicate(message: String) {
+        A provider with this backend is already configured.
+      }
+      fixture tavily_config { backend: "tavily", api_key_ref: "secrets/tavily-key", max_results: 10, include_domains: none, exclude_domains: none }
+      fixture exa_config { backend: "exa", api_key_ref: "secrets/exa-key", max_results: 5, include_domains: ["arxiv.org", "scholar.google.com"], exclude_domains: none }
+      fixture invalid_backend { backend: "bing", api_key_ref: "secrets/key", max_results: 10, include_domains: none, exclude_domains: none } -> invalid
+      fixture zero_results { backend: "google", api_key_ref: "secrets/google-key", max_results: 0, include_domains: none, exclude_domains: none } -> invalid
+    }
+
+    action search(provider: P, query: String, max_results: option Int) {
+      -> ok(results: list {url: String, title: String, summary: String, score: Float, published_at: option String}) {
+        Execute the query against the configured backend and return ranked
+        results. Each result includes the source URL, page title, a snippet
+        summary, a relevance score normalised to [0, 1], and an optional
+        publication date when the backend provides one.
+      }
+      -> notfound(message: String) {
+        No provider is registered with this identifier.
+      }
+      -> error(message: String) {
+        The backend API returned an error, was unreachable, or the query
+        was rejected (e.g. rate limit exceeded or invalid API key).
+      }
+      fixture search_ok { provider: $tavily_config.provider, query: "large language model evaluation benchmarks", max_results: none } after tavily_config
+      fixture search_with_limit { provider: $exa_config.provider, query: "transformer architecture survey", max_results: 3 } after exa_config
+      fixture search_missing { provider: "nonexistent-provider", query: "test" , max_results: none } -> notfound
+    }
+
+    action getMetrics(provider: P) {
+      -> ok(call_count: Int, total_latency_ms: Int, error_count: Int, avg_latency_ms: Float) {
+        Return accumulated call statistics for this provider. The
+        avg_latency_ms is derived as total_latency_ms / call_count when
+        call_count > 0, otherwise 0.
+      }
+      -> notfound(message: String) {
+        No provider is registered with this identifier.
+      }
+      fixture metrics_ok { provider: $tavily_config.provider } after tavily_config
+      fixture metrics_missing { provider: "ghost-provider" } -> notfound
+    }
+  }
+
+  example "configure then search": {
+    after configure(backend: "tavily", api_key_ref: "secrets/tavily-key",
+                    max_results: 5, include_domains: none, exclude_domains: none)
+          -> ok(provider: p)
+    then search(provider: p, query: "AI safety research 2024", max_results: none)
+          -> ok(results: r)
+  }
+
+  example "duplicate backend rejected": {
+    after configure(backend: "exa", api_key_ref: "secrets/exa-key",
+                    max_results: 10, include_domains: none, exclude_domains: none)
+          -> ok(provider: p)
+    then configure(backend: "exa", api_key_ref: "secrets/exa-key-2",
+                   max_results: 5, include_domains: none, exclude_domains: none)
+          -> duplicate(message: m)
+  }
+
+  always "metrics initialised on configure": {
+    forall p in providers: call_count(p) >= 0
+  }
+
+  never "unconfigured backend": {
+    exists p in providers: backend(p) = none
+  }
+
+  action configure {
+    requires: api_key_ref != ""
+    ensures ok: provider != none
+  }
+
+  action search {
+    requires: query != ""
+    ensures ok: results != none
+  }
+}

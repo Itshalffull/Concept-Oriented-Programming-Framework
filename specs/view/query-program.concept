@@ -203,6 +203,31 @@ concept QueryProgram [Q] {
       } -> notfound
     }
 
+    action offset(program: Q, count: Int, output: String) {
+      -> ok(program: Q) {
+        Append an Offset instruction that skips the first count records
+        in the current record set. A count of zero skips nothing. The
+        remaining set is bound to output.
+      }
+      -> notfound() {
+        No program exists with this identifier.
+      }
+      -> sealed() {
+        The program has already been terminated with pure and cannot
+        accept new instructions.
+      }
+      fixture offset_basic {
+        program: "qprog-1",
+        count: 20,
+        output: "skipped"
+      }
+      fixture offset_missing_program {
+        program: "nonexistent",
+        count: 10,
+        output: "skipped"
+      } -> notfound
+    }
+
     action pure(program: Q, variant: String, output: String) {
       -> ok(program: Q) {
         Terminate the program with a return value consisting of a

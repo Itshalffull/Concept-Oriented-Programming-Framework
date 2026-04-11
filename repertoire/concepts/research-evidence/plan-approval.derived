@@ -1,0 +1,64 @@
+derived PlanApproval [A] {
+
+  purpose {
+    Gate research execution behind human review — a generated plan is
+    surfaced as a work item, reviewed by a designated approver, and
+    execution proceeds only after explicit approval. Rejection triggers
+    revision and resubmission, ensuring no automated research run begins
+    without a human-in-the-loop checkpoint.
+  }
+
+  composes {
+    PlanAndExecuteStrategy [A]
+    Approval [A]
+    WorkItem [A]
+  }
+
+  syncs {
+    required: [
+      plan-approval-gates-execution
+    ]
+    recommended: [
+      research-project-creates-process-run
+    ]
+  }
+
+  surface {
+    action generateAndPropose(session: A, goal: String) {
+      matches: PlanAndExecuteStrategy/plan(session: session, goal: goal)
+    }
+
+    action reviseAndResubmit(session: A, goal: String) {
+      matches: PlanAndExecuteStrategy/replan(session: session, completed: "[]", remaining: goal)
+    }
+
+    action approvePlan(approval: A, approver: String, comment: String) {
+      matches: Approval/approve(approval: approval, approver: approver, comment: comment)
+    }
+
+    action rejectPlan(approval: A, approver: String, comment: String) {
+      matches: Approval/reject(approval: approval, approver: approver, comment: comment)
+    }
+
+    query planStatus(session: A) -> PlanAndExecuteStrategy/getStatus(session: session)
+
+    query pendingApprovals() -> Approval/listPending()
+  }
+
+  principle {
+    after generateAndPropose(session: s, goal: "Compare cloud GPU pricing across providers")
+    then planStatus(session: s) shows plan in proposed state awaiting approval
+    and  pendingApprovals() includes the proposed plan approval request
+    and  approvePlan(approval: ctx, approver: "researcher-1",
+                     comment: "Plan looks comprehensive")
+    then planStatus(session: s) shows execution may proceed
+  }
+
+  principle {
+    after generateAndPropose(session: s, goal: "Research intermittent fasting effects")
+    then rejectPlan(approval: ctx, approver: "researcher-2",
+                    comment: "Too broad — narrow scope to metabolic markers")
+    then reviseAndResubmit(session: s, goal: "Research intermittent fasting effects on metabolic markers")
+    then pendingApprovals() includes the revised plan for re-review
+  }
+}

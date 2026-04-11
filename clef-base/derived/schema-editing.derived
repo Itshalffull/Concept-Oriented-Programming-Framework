@@ -1,0 +1,90 @@
+derived SchemaEditing [S] {
+
+  purpose {
+    Unified schema editing capability composing field-level definition
+    management, pre-built templates, usage tracking for safe destructive
+    operations, form layout, widget mapping, and type system validation.
+    Provides the full schema editor experience across all three ceremony
+    levels: inline column header edits, side drawer field configuration,
+    and the dedicated full-page schema editor.
+  }
+
+  composes {
+    Schema [S]
+    FieldDefinition [S]
+    SchemaTemplate [S]
+    SchemaUsage [S]
+    Property [S]
+    TypeSystem [S]
+    FormBuilder [S]
+    FieldPlacement [S]
+    Interactor [S]
+    ComponentMapping [S]
+  }
+
+  syncs {
+    required: [
+      field-usage-on-view-create,
+      field-usage-on-mapping-create,
+      field-removal-checks-usage,
+      schema-template-creates-fields,
+      field-create-updates-form,
+      field-reorder-updates-placements
+    ]
+  }
+
+  surface {
+    action createSchema(name: String, fields: String) {
+      matches: Schema/defineSchema(name: name, fields: fields)
+    }
+
+    action addField(schema: S, fieldId: String, label: String, fieldType: String) {
+      matches: FieldDefinition/create(schema: schema, fieldId: fieldId, label: label, fieldType: fieldType)
+    }
+
+    action applyTemplate(name: String, targetSchemaName: String) {
+      matches: SchemaTemplate/apply(name: name, targetSchemaName: targetSchemaName)
+    }
+
+    action configureField(schema: S, fieldId: String, label: String, description: String, required: String, validations: String) {
+      matches: FieldDefinition/update(schema: schema, fieldId: fieldId, label: label, description: description, required: required, validations: validations)
+    }
+
+    action changeFieldType(schema: S, fieldId: String, newType: String, migrationStrategy: String) {
+      matches: FieldDefinition/changeType(schema: schema, fieldId: fieldId, newType: newType, migrationStrategy: migrationStrategy)
+    }
+
+    action removeField(schema: S, fieldId: String) {
+      matches: FieldDefinition/remove(schema: schema, fieldId: fieldId)
+    }
+
+    action reorderField(schema: S, fieldId: String, newSortOrder: String) {
+      matches: FieldDefinition/reorder(schema: schema, fieldId: fieldId, newSortOrder: newSortOrder)
+    }
+
+    query getSchemaFields(schema: S) -> FieldDefinition/list(schema: schema)
+
+    query getFieldUsage(field: String) -> SchemaUsage/scan(field: field)
+
+    query listTemplates(category: String) -> SchemaTemplate/list(category: category)
+
+    query previewTemplate(name: String) -> SchemaTemplate/preview(name: name)
+
+    query getSchemaUsage(schema: S) -> SchemaUsage/scanSchema(schema: schema)
+  }
+
+  principle {
+    after applyTemplate(name: "meeting-notes", targetSchemaName: "team-meetings")
+    then getSchemaFields(schema: "team-meetings") returns the template fields
+    and  addField(schema: "team-meetings", fieldId: "custom", label: "Custom", fieldType: "text") appends to the field list
+    and  reorderField(schema: "team-meetings", fieldId: "custom", newSortOrder: "0") moves it to first position
+  }
+
+  principle {
+    after addField(schema: derivedContext, fieldId: "rating", label: "Rating", fieldType: "number")
+    then getFieldUsage(field: "derivedContext::rating") returns empty
+    and  removeField(schema: derivedContext, fieldId: "rating") succeeds immediately
+    but  after getFieldUsage reports active usages
+    then removeField is blocked until usages are unregistered
+  }
+}

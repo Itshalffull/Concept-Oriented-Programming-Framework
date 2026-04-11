@@ -1,0 +1,18 @@
+# FormSpec bootstrapping from Schema definition.
+# When a schema is defined, auto-generate a default FormSpec covering all fields
+# so that form authoring does not require a separate manual setup step.
+
+sync FormSpecFromSchema [eager]
+  purpose: "Auto-generate a default FormSpec for every new schema so the form layer is immediately usable without manual setup"
+when {
+  Schema/defineSchema: [ schema: ?s; fields: ?f ]
+    => ok(schema: ?s; fields: ?f)
+}
+then {
+  FormSpec/create: [
+    form: "default-${?s}";
+    schema: ?s;
+    name: "default";
+    mode: "both"
+  ]
+}

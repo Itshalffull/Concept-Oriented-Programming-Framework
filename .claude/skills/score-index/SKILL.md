@@ -65,6 +65,16 @@ Insert or update an interface entry in the index .
 
 **Arguments:** `$0` **name** (string), `$1` **targets** (string[]), `$2` **endpointCount** (int), `$3` **file** (string)
 
+### upsertView
+Insert or update the view entry in the index .
+
+**Arguments:** `$0` **name** (string), `$1` **sourceFile** (string), `$2` **shellRef** (string), `$3` **purposeText** (string), `$4` **purity** (string), `$5` **invokedActions** (string), `$6` **projectedFields** (string), `$7` **filterFields** (string), `$8` **sortFields** (string), `$9` **groupFields** (string), `$10` **invariantCount** (int), `$11` **invariantNames** (string), `$12` **invariantsSerialized** (string)
+
+### removeView
+Remove the view entry from the index .
+
+**Arguments:** `$0` **name** (string)
+
 ### removeByFile
 Remove all index entries associated with a file .
 

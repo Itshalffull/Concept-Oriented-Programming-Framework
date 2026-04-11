@@ -1,0 +1,43 @@
+view "branch-compare" {
+  shell: "branch-compare"
+
+  features {
+    projection
+    interaction
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"VersionSpace\",\"action\":\"diff\",\"params\":{\"source\":\"{{branchA}}\",\"target\":\"{{branchB}}\"}}"
+    }
+    projection: {
+      fields: "[{\"key\":\"entity\",\"label\":\"Entity\"},{\"key\":\"operation\",\"label\":\"Change\",\"formatter\":\"badge\"},{\"key\":\"fields\",\"label\":\"Fields Changed\"},{\"key\":\"source\",\"label\":\"Source Branch\"},{\"key\":\"target\",\"label\":\"Target Branch\"}]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{\"diffMode\":true}"
+    }
+    interaction: {
+      createForm: "null",
+      rowClick: "{\"action\":\"navigate\",\"destination\":\"entity-detail\"}"
+    }
+  }
+
+  purpose {
+    Side-by-side comparison of two branches showing entity-level
+    differences — additions, modifications, and deletions.
+    Read-only — cherry-pick and merge actions live in the
+    branch-diff-dashboard widget, not the view.
+  }
+
+  invariants {
+    always "purity is read-only": {
+      purity = "read-only"
+    }
+
+    always "no invoke instructions": {
+      invokeCount = 0
+    }
+  }
+}

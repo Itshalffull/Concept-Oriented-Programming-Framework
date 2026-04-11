@@ -1,0 +1,40 @@
+view "unlinked-references" {
+  shell: "unlinked-references"
+
+  features {
+    sort
+    projection
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ContentNode\",\"action\":\"list\"}"
+    }
+    sort: {
+      keys: "[]"
+    }
+    projection: {
+      fields: "[]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+  }
+
+  purpose {
+    Entities that mention the current entity but lack a formal
+    link. Candidates for link creation. Read-only.
+  }
+
+  invariants {
+    always "purity is read-only": {
+      purity = "read-only"
+    }
+
+    always "no invoke instructions": {
+      invokeCount = 0
+    }
+  }
+}

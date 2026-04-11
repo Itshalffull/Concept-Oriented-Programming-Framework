@@ -1,0 +1,22 @@
+# Temporal qualifier resolution from Reference/resolve metadata.
+# When a resolved reference carries a date (@2026-04-01) or datetime
+# (@2026-04-01T14:30:00Z) qualifier, dispatches to TemporalVersion/asOf
+# for bitemporal resolution. Date-only qualifiers are passed as validTime;
+# datetime qualifiers are passed as systemTime. The other dimension is null.
+
+sync ResolveTemporalQualifier [eager]
+  purpose: "Route a resolved reference with a temporal qualifier to TemporalVersion/asOf so the entity state valid at that date or point-in-system-time is returned"
+when {
+  Reference/resolve: [ target: ?target; metadata: ?metadata ]
+    => [ ok(target: ?target) ]
+}
+where {
+  bind(?metadata.qualifierKind as ?kind)
+  any(?kind = "temporal-date"; ?kind = "temporal-datetime")
+  bind(?metadata.qualifier as ?qualifier)
+  bind(?metadata.validTime as ?validTime)
+  bind(?metadata.systemTime as ?systemTime)
+}
+then {
+  TemporalVersion/asOf: [ systemTime: ?systemTime; validTime: ?validTime ]
+}

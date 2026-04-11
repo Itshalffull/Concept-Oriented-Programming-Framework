@@ -1,0 +1,40 @@
+view "snippet-backlinks" {
+  shell: "snippet-backlinks"
+
+  features {
+    sort
+    projection
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"Reference\",\"action\":\"getRefs\",\"params\":{\"source\":\"{{entityId}}\"}}"
+    }
+    sort: {
+      keys: "[]"
+    }
+    projection: {
+      fields: "[]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+  }
+
+  purpose {
+    Entities that embed a span from this entity as a snippet-embed
+    or inline reference.
+  }
+
+  invariants {
+    always "purity is read-only": {
+      purity = "read-only"
+    }
+
+    always "no invoke instructions": {
+      invokeCount = 0
+    }
+  }
+}

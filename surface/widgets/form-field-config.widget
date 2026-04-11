@@ -1,0 +1,515 @@
+@version(1)
+widget form-field-config {
+
+  purpose {
+    Side panel for configuring a single field within the form builder. Presents three
+    tabs — Settings, Validation, and Appearance — each exposing the appropriate subset
+    of field properties. The Settings tab covers label, placeholder, help text, default
+    value, widget picker, required/unique toggles, and conditional visibility rules. The
+    Validation tab hosts an ordered list of validation rules, each with a type, parameters,
+    and a custom error message. The Appearance tab controls display width and hidden state.
+    The panel opens in response to the form-builder's OPEN_FIELD_CONFIG event and closes via
+    CLOSE_CONFIG or Escape, returning focus to the originating field row.
+  }
+
+  anatomy {
+    root:                 container    { Outer wrapper for the entire configuration panel }
+    header:               container    { Panel header row containing the field label, type badge, and close button }
+    fieldLabel:           text         { Display name of the field being configured }
+    fieldTypeBadge:       presentation { Badge showing the field type (e.g., "Text", "Select") }
+    closeButton:          action       { Closes the panel and returns focus to the form builder }
+    tabs:                 container    { Tab strip for switching between Settings, Validation, and Appearance }
+    settingsTab:          action       { Activates the Settings tab }
+    validationTab:        action       { Activates the Validation tab }
+    appearanceTab:        action       { Activates the Appearance tab }
+    labelInput:           interactive  { Editable text input for the field label }
+    placeholderInput:     interactive  { Editable text input for the placeholder shown inside the field }
+    helpTextInput:        interactive  { Editable text input for the short help hint beneath the field }
+    defaultValueInput:    interactive  { Input for the default field value }
+    widgetPicker:         interactive  { Selector for the rendering widget (e.g., text-input, rich-text, date-picker) }
+    requiredToggle:       interactive  { Toggle switch marking this field as required }
+    uniqueToggle:         interactive  { Toggle switch marking this field's value as unique across records }
+    conditionalSection:   container    { Container for all conditional visibility configuration }
+    conditionToggle:      interactive  { Toggle switch that enables or disables conditional visibility for this field }
+    conditionFieldPicker: interactive  { Dropdown selecting which other field's value drives this condition }
+    conditionOperator:    interactive  { Dropdown selecting the comparison operator (equals, contains, etc.) }
+    conditionValue:       interactive  { Input for the comparison value in the condition expression }
+    addConditionButton:   action       { Appends another condition expression to the AND/OR list }
+    removeConditionButton: action      { Removes the selected condition expression }
+    validationRuleList:   container    { Ordered list of validation rules applied to this field }
+    validationRule:       container    { Single validation rule row: type, params, error message }
+    ruleType:             interactive  { Dropdown selecting the validation rule type (min-length, pattern, custom, etc.) }
+    ruleParams:           interactive  { Inputs for the selected rule type's parameters }
+    ruleMessage:          interactive  { Text input for the custom error message shown on violation }
+    addRuleButton:        action       { Appends a new validation rule to the list }
+    removeRuleButton:     action       { Removes the selected validation rule from the list }
+    widthSelector:        interactive  { Select for display width: full, half, third, quarter }
+    hiddenToggle:         interactive  { Toggle switch that hides the field from the form entirely }
+  }
+
+  states {
+    closed [initial] {
+      on OPEN -> open-settings;
+    }
+
+    open-settings {
+      on CLOSE           -> closed;
+      on SWITCH_VALIDATION -> open-validation;
+      on SWITCH_APPEARANCE -> open-appearance;
+      on TOGGLE_CONDITION -> editing-condition;
+      entry [focusLabelInput];
+    }
+
+    open-validation {
+      on CLOSE             -> closed;
+      on SWITCH_SETTINGS   -> open-settings;
+      on SWITCH_APPEARANCE -> open-appearance;
+    }
+
+    open-appearance {
+      on CLOSE             -> closed;
+      on SWITCH_SETTINGS   -> open-settings;
+      on SWITCH_VALIDATION -> open-validation;
+    }
+
+    editing-condition {
+      on CONDITION_COMMITTED -> open-settings;
+      on CONDITION_CANCELLED -> open-settings;
+      on CLOSE               -> closed;
+      entry [focusConditionFieldPicker];
+    }
+  }
+
+  accessibility {
+    role: complementary;
+    keyboard {
+      Escape -> CLOSE;
+      Tab    -> FOCUS_NEXT;
+    }
+    focus {
+      trap: false;
+      initial: labelInput;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "complementary";
+        aria-label: "Field configuration";
+        aria-hidden: if state == "closed" then "true" else "false";
+        data-state: state;
+      };
+      header -> {
+        role: "banner";
+      };
+      closeButton -> {
+        role: "button";
+        aria-label: "Close field configuration";
+      };
+      tabs -> {
+        role: "tablist";
+        aria-label: "Configuration tabs";
+        aria-orientation: "horizontal";
+      };
+      settingsTab -> {
+        role: "tab";
+        aria-selected: if state == "open-settings" or state == "editing-condition" then "true" else "false";
+        aria-controls: "settings-panel";
+      };
+      validationTab -> {
+        role: "tab";
+        aria-selected: if state == "open-validation" then "true" else "false";
+        aria-controls: "validation-panel";
+      };
+      appearanceTab -> {
+        role: "tab";
+        aria-selected: if state == "open-appearance" then "true" else "false";
+        aria-controls: "appearance-panel";
+      };
+      labelInput -> {
+        role: "textbox";
+        aria-label: "Field label";
+        aria-required: "true";
+      };
+      placeholderInput -> {
+        role: "textbox";
+        aria-label: "Placeholder text";
+      };
+      helpTextInput -> {
+        role: "textbox";
+        aria-label: "Help text";
+      };
+      defaultValueInput -> {
+        aria-label: "Default value";
+      };
+      widgetPicker -> {
+        aria-label: "Rendering widget";
+      };
+      requiredToggle -> {
+        role: "switch";
+        aria-label: "Required field";
+        aria-checked: if ?fieldDefinition.required then "true" else "false";
+      };
+      uniqueToggle -> {
+        role: "switch";
+        aria-label: "Unique value";
+        aria-checked: if ?fieldDefinition.unique then "true" else "false";
+      };
+      conditionToggle -> {
+        role: "switch";
+        aria-label: "Enable conditional visibility";
+        aria-checked: if ?fieldDefinition.hasCondition then "true" else "false";
+      };
+      conditionalSection -> {
+        role: "region";
+        aria-label: "Conditional visibility rules";
+        aria-hidden: if ?fieldDefinition.hasCondition then "false" else "true";
+      };
+      conditionFieldPicker -> {
+        aria-label: "Condition field";
+        aria-required: "true";
+      };
+      conditionOperator -> {
+        aria-label: "Condition operator";
+      };
+      conditionValue -> {
+        aria-label: "Condition value";
+      };
+      addConditionButton -> {
+        role: "button";
+        aria-label: "Add condition";
+      };
+      removeConditionButton -> {
+        role: "button";
+        aria-label: "Remove condition";
+      };
+      validationRuleList -> {
+        role: "list";
+        aria-label: "Validation rules";
+        aria-live: "polite";
+      };
+      validationRule -> {
+        role: "listitem";
+        aria-label: concat("Validation rule: ", self.ruleType);
+      };
+      addRuleButton -> {
+        role: "button";
+        aria-label: "Add validation rule";
+      };
+      removeRuleButton -> {
+        role: "button";
+        aria-label: concat("Remove rule: ", self.ruleType);
+      };
+      widthSelector -> {
+        aria-label: "Display width";
+      };
+      hiddenToggle -> {
+        role: "switch";
+        aria-label: "Hide field in form";
+        aria-checked: if ?fieldDefinition.hidden then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    fieldDefinition: option { fieldId: String, label: String, fieldType: String, placeholder: String, helpText: String, defaultValue: option String, widget: String, required: Bool, unique: Bool, hasCondition: Bool, hidden: Bool, width: union "full" | "half" | "third" | "quarter" }
+    formFieldConfig: option { conditions: list { fieldId: String, operator: String, value: String }, validationRules: list { ruleType: String, params: option String, message: String } }
+    availableFields: list { fieldId: String, label: String } = []
+    availableWidgets: list { widgetId: String, label: String } = []
+    onUpdate: option String
+    onClose: option String
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-field-id: if ?fieldDefinition != none then ?fieldDefinition.fieldId else "";
+      hidden: if state == "closed" then true else false;
+    }
+
+    header -> {
+      data-part: "header";
+    }
+
+    fieldLabel -> {
+      data-part: "field-label";
+    }
+
+    fieldTypeBadge -> {
+      data-part: "field-type-badge";
+      data-type: if ?fieldDefinition != none then ?fieldDefinition.fieldType else "";
+    }
+
+    closeButton -> {
+      data-part: "close-button";
+      onClick: send(CLOSE);
+      onKeyDown: if key == "Escape" then send(CLOSE) else noop;
+    }
+
+    tabs -> {
+      data-part: "tabs";
+    }
+
+    settingsTab -> {
+      data-part: "settings-tab";
+      data-active: if state == "open-settings" or state == "editing-condition" then "true" else "false";
+      onClick: send(SWITCH_SETTINGS);
+      tabIndex: if state == "open-settings" or state == "editing-condition" then "0" else "-1";
+    }
+
+    validationTab -> {
+      data-part: "validation-tab";
+      data-active: if state == "open-validation" then "true" else "false";
+      onClick: send(SWITCH_VALIDATION);
+      tabIndex: if state == "open-validation" then "0" else "-1";
+    }
+
+    appearanceTab -> {
+      data-part: "appearance-tab";
+      data-active: if state == "open-appearance" then "true" else "false";
+      onClick: send(SWITCH_APPEARANCE);
+      tabIndex: if state == "open-appearance" then "0" else "-1";
+    }
+
+    labelInput -> {
+      data-part: "label-input";
+      value: if ?fieldDefinition != none then ?fieldDefinition.label else "";
+      onInput: send(UPDATE_LABEL, { value: self.value });
+      hidden: if state == "open-settings" or state == "editing-condition" then false else true;
+    }
+
+    placeholderInput -> {
+      data-part: "placeholder-input";
+      value: if ?fieldDefinition != none then ?fieldDefinition.placeholder else "";
+      onInput: send(UPDATE_PLACEHOLDER, { value: self.value });
+      hidden: if state == "open-settings" or state == "editing-condition" then false else true;
+    }
+
+    helpTextInput -> {
+      data-part: "help-text-input";
+      value: if ?fieldDefinition != none then ?fieldDefinition.helpText else "";
+      onInput: send(UPDATE_HELP_TEXT, { value: self.value });
+      hidden: if state == "open-settings" or state == "editing-condition" then false else true;
+    }
+
+    defaultValueInput -> {
+      data-part: "default-value-input";
+      value: if ?fieldDefinition != none and ?fieldDefinition.defaultValue != none then ?fieldDefinition.defaultValue else "";
+      onInput: send(UPDATE_DEFAULT_VALUE, { value: self.value });
+      hidden: if state == "open-settings" or state == "editing-condition" then false else true;
+    }
+
+    widgetPicker -> {
+      data-part: "widget-picker";
+      value: if ?fieldDefinition != none then ?fieldDefinition.widget else "";
+      options: ?availableWidgets;
+      onChange: send(UPDATE_WIDGET, { value: self.value });
+      hidden: if state == "open-settings" or state == "editing-condition" then false else true;
+    }
+
+    requiredToggle -> {
+      data-part: "required-toggle";
+      checked: if ?fieldDefinition != none then ?fieldDefinition.required else false;
+      onChange: send(TOGGLE_REQUIRED);
+      hidden: if state == "open-settings" or state == "editing-condition" then false else true;
+    }
+
+    uniqueToggle -> {
+      data-part: "unique-toggle";
+      checked: if ?fieldDefinition != none then ?fieldDefinition.unique else false;
+      onChange: send(TOGGLE_UNIQUE);
+      hidden: if state == "open-settings" or state == "editing-condition" then false else true;
+    }
+
+    conditionalSection -> {
+      data-part: "conditional-section";
+      data-active: if ?fieldDefinition != none and ?fieldDefinition.hasCondition then "true" else "false";
+      hidden: if ?fieldDefinition != none and ?fieldDefinition.hasCondition then false else true;
+    }
+
+    conditionToggle -> {
+      data-part: "condition-toggle";
+      checked: if ?fieldDefinition != none then ?fieldDefinition.hasCondition else false;
+      onChange: send(TOGGLE_CONDITION);
+      hidden: if state == "open-settings" or state == "editing-condition" then false else true;
+    }
+
+    conditionFieldPicker -> {
+      data-part: "condition-field-picker";
+      options: ?availableFields;
+      onChange: send(UPDATE_CONDITION_FIELD, { fieldId: self.value });
+      hidden: if state == "editing-condition" then false else true;
+    }
+
+    conditionOperator -> {
+      data-part: "condition-operator";
+      onChange: send(UPDATE_CONDITION_OPERATOR, { operator: self.value });
+      hidden: if state == "editing-condition" then false else true;
+    }
+
+    conditionValue -> {
+      data-part: "condition-value";
+      onInput: send(UPDATE_CONDITION_VALUE, { value: self.value });
+      hidden: if state == "editing-condition" then false else true;
+    }
+
+    addConditionButton -> {
+      data-part: "add-condition-button";
+      onClick: send(ADD_CONDITION);
+      hidden: if state == "open-settings" or state == "editing-condition" then false else true;
+    }
+
+    removeConditionButton -> {
+      data-part: "remove-condition-button";
+      onClick: send(REMOVE_CONDITION, { index: self.conditionIndex });
+    }
+
+    validationRuleList -> {
+      data-part: "validation-rule-list";
+      data-empty: if ?formFieldConfig == none or ?formFieldConfig.validationRules.length == 0 then "true" else "false";
+      hidden: if state == "open-validation" then false else true;
+    }
+
+    validationRule -> {
+      data-part: "validation-rule";
+      data-rule-type: self.ruleType;
+    }
+
+    ruleType -> {
+      data-part: "rule-type";
+      value: self.ruleType;
+      onChange: send(UPDATE_RULE_TYPE, { index: self.ruleIndex, ruleType: self.value });
+    }
+
+    ruleParams -> {
+      data-part: "rule-params";
+      value: self.params;
+      onInput: send(UPDATE_RULE_PARAMS, { index: self.ruleIndex, params: self.value });
+    }
+
+    ruleMessage -> {
+      data-part: "rule-message";
+      value: self.message;
+      onInput: send(UPDATE_RULE_MESSAGE, { index: self.ruleIndex, message: self.value });
+    }
+
+    addRuleButton -> {
+      data-part: "add-rule-button";
+      onClick: send(ADD_RULE);
+      hidden: if state == "open-validation" then false else true;
+    }
+
+    removeRuleButton -> {
+      data-part: "remove-rule-button";
+      onClick: send(REMOVE_RULE, { index: self.ruleIndex });
+    }
+
+    widthSelector -> {
+      data-part: "width-selector";
+      value: if ?fieldDefinition != none then ?fieldDefinition.width else "full";
+      onChange: send(UPDATE_WIDTH, { width: self.value });
+      hidden: if state == "open-appearance" then false else true;
+    }
+
+    hiddenToggle -> {
+      data-part: "hidden-toggle";
+      checked: if ?fieldDefinition != none then ?fieldDefinition.hidden else false;
+      onChange: send(TOGGLE_HIDDEN);
+      hidden: if state == "open-appearance" then false else true;
+    }
+  }
+
+  invariant {
+    example "open panel navigates to open-settings": {
+      after send(OPEN) -> ok
+      then root -> { data-state: "open-settings" }
+      and root -> { hidden: false }
+    }
+
+    example "close panel via button": {
+      after send(OPEN) -> ok
+      then closeButton.click -> ok
+      then root -> { data-state: "closed" }
+      and root -> { hidden: true }
+    }
+
+    example "tab switching from settings to validation": {
+      after send(OPEN) -> ok
+      then validationTab.click -> ok
+      then root -> { data-state: "open-validation" }
+      and validationTab -> { data-active: "true" }
+      and settingsTab -> { data-active: "false" }
+    }
+
+    example "tab switching from validation to appearance": {
+      after transition(from: "open-validation", event: "SWITCH_APPEARANCE") -> ok
+      then root -> { data-state: "open-appearance" }
+      and appearanceTab -> { data-active: "true" }
+    }
+
+    example "toggle condition enters editing-condition": {
+      after send(OPEN) -> ok
+      then conditionToggle.change -> ok
+      then root -> { data-state: "editing-condition" }
+      and settingsTab -> { data-active: "true" }
+    }
+
+    example "commit condition returns to open-settings": {
+      after transition(from: "editing-condition", event: "CONDITION_COMMITTED") -> ok
+      then root -> { data-state: "open-settings" }
+    }
+
+    example "Escape closes from any open state": {
+      after transition(from: "open-validation", event: "CLOSE") -> ok
+      then root -> { data-state: "closed" }
+    }
+
+    always "data-state on root reflects FSM": {
+      root -> { data-state: state }
+    }
+
+    always "settings content visible in settings and editing-condition states": {
+      if state == "open-settings" or state == "editing-condition" then
+        labelInput -> { hidden: false }
+      else
+        labelInput -> { hidden: true }
+    }
+
+    always "validation content visible only in open-validation state": {
+      validationRuleList -> { hidden: if state == "open-validation" then false else true }
+    }
+
+    always "appearance content visible only in open-appearance state": {
+      widthSelector -> { hidden: if state == "open-appearance" then false else true }
+    }
+
+    always "panel hidden when closed": {
+      if state == "closed" then root -> { hidden: true } else root -> { hidden: false }
+    }
+
+    never "unreachable state": {
+      exists s in states:
+        s.inbound_count = 0 and s != "closed"
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    action closeButton.click {
+      requires: state != "closed"
+      ensures ok: state == "closed"
+    }
+
+    action addRuleButton.click {
+      requires: state == "open-validation"
+      ensures ok: state == "open-validation"
+    }
+
+    "conditionalSection is visible only when fieldDefinition.hasCondition is true";
+    "conditionFieldPicker, conditionOperator, conditionValue are visible only in editing-condition state";
+    "The settingsTab aria-selected must be true in both open-settings and editing-condition states";
+    "Switching tabs does not lose unsaved input — changes are sent via UPDATE_* events on each input interaction";
+    "Closing the panel without committing condition changes cancels the editing-condition sub-flow";
+  }
+
+}

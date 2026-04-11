@@ -1,0 +1,43 @@
+view "clips-list" {
+  shell: "clips-list"
+
+  features {
+    filter
+    sort
+    projection
+    interaction
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ContentNode\",\"action\":\"listBySchema\",\"params\":{\"schema\":\"Clip\"}}"
+    }
+    filter: {
+      node: "{\"type\":\"eq\",\"field\":\"kind\",\"value\":\"clip\"}"
+    }
+    sort: {
+      keys: "[{\"field\":\"startTime\",\"direction\":\"asc\"}]"
+    }
+    projection: {
+      fields: "[{\"key\":\"node\",\"label\":\"Clip\"},{\"key\":\"kind\",\"label\":\"Kind\"},{\"key\":\"startTime\",\"label\":\"Start\"},{\"key\":\"endTime\",\"label\":\"End\"},{\"key\":\"status\",\"label\":\"Status\"}]"
+    }
+
+    presentation: {
+      displayType: "card-grid",
+      hints: "{}"
+    }
+  }
+
+  purpose {
+    Browse temporal segments extracted from audio and video.
+    Card grid with kind badges, start/end times, and status indicators.
+    Read-write.
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+  }
+}

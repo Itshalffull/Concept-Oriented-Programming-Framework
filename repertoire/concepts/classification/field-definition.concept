@@ -1,0 +1,212 @@
+@version(1)
+concept FieldDefinition [F] {
+  purpose {
+    A typed field within a schema — the atomic unit of content structure.
+    Each field has an immutable machine ID (stable for references, APIs, and
+    storage keys) and a mutable human label. Fields carry type, cardinality,
+    validation rules, default value, and display hints, giving schema authors
+    full control over how content is structured, validated, and presented.
+  }
+
+  state {
+    fields: set F
+
+    identity {
+      fieldId:     F -> String
+      schema:      F -> String
+      label:       F -> String
+      description: F -> String
+    }
+
+    typing {
+      fieldType:   F -> String
+      cardinality: F -> String
+      typeConfig:  F -> String
+    }
+
+    constraints {
+      required:    F -> Bool
+      unique:      F -> Bool
+      validations: F -> String
+    }
+
+    display {
+      defaultValue: F -> String
+      widget:       F -> String
+      formatter:    F -> String
+      sortOrder:    F -> Int
+    }
+
+    metadata {
+      createdAt: F -> String
+      updatedAt: F -> String
+    }
+  }
+
+  actions {
+    action create(schema: String, fieldId: String, label: String, fieldType: String, cardinality: String, typeConfig: String, required: Bool, unique: Bool, validations: String, defaultValue: String, widget: String, formatter: String, sortOrder: Int) {
+      -> ok(id: F) {
+        A new field is registered under the given schema with an immutable fieldId.
+        The field is ready to store typed content on any entity of that schema.
+      }
+      -> duplicate(fieldId: String) {
+        A field with this fieldId already exists in the schema.
+        fieldId must be unique within a schema; choose a different machine name.
+      }
+      -> invalid_type(fieldType: String) {
+        The given fieldType is not in the recognised set of supported types.
+        Consult the valid type list (text, number, select, etc.) and retry.
+      }
+      -> schema_not_found(schema: String) {
+        No schema with this name exists. Create the schema before adding fields to it.
+      }
+
+      fixture create_ok { schema: "article", fieldId: "due_date", label: "Due Date", fieldType: "date", cardinality: "single", typeConfig: "{}", required: false, unique: false, validations: "[]", defaultValue: "", widget: "", formatter: "", sortOrder: 1 }
+      fixture create_text_ok { schema: "article", fieldId: "summary", label: "Summary", fieldType: "text", cardinality: "single", typeConfig: "{}", required: true, unique: false, validations: "[]", defaultValue: "", widget: "", formatter: "", sortOrder: 2 }
+      fixture invalid_field_type { schema: "article", fieldId: "bad_field", label: "Bad", fieldType: "unknown-type", cardinality: "single", typeConfig: "{}", required: false, unique: false, validations: "[]", defaultValue: "", widget: "", formatter: "", sortOrder: 10 } -> invalid_type
+      fixture duplicate_field { schema: "article", fieldId: "due_date", label: "Due Date Again", fieldType: "date", cardinality: "single", typeConfig: "{}", required: false, unique: false, validations: "[]", defaultValue: "", widget: "", formatter: "", sortOrder: 99 } after create_ok -> duplicate
+    }
+
+    action update(schema: String, fieldId: String, label: String, description: String, required: Bool, unique: Bool, validations: String, defaultValue: String, widget: String, formatter: String, sortOrder: Int) {
+      -> ok(id: F) {
+        The field's mutable properties have been updated. The fieldId remains unchanged.
+      }
+      -> not_found(message: String) {
+        No field with this fieldId exists in the named schema.
+      }
+
+      fixture update_ok { schema: "article", fieldId: "due_date", label: "Deadline", description: "When this article is due", required: true, unique: false, validations: "[]", defaultValue: "", widget: "date-picker", formatter: "relative-date", sortOrder: 1 } after create_ok
+      fixture update_missing { schema: "article", fieldId: "nonexistent", label: "X", description: "", required: false, unique: false, validations: "[]", defaultValue: "", widget: "", formatter: "", sortOrder: 0 } -> not_found
+    }
+
+    action changeType(schema: String, fieldId: String, newType: String, newTypeConfig: String, migrationStrategy: String) {
+      -> ok(id: F) {
+        The field's type and type configuration have been updated.
+        Existing field data may require migration depending on the strategy.
+      }
+      -> not_found(message: String) {
+        No field with this fieldId exists in the named schema.
+      }
+      -> data_loss_warning(affectedCount: Int, lossDescription: String) {
+        The requested type change cannot be performed losslessly.
+        The response includes the count of affected records and a description of
+        what data would be lost. Confirm and retry with migrationStrategy set to
+        acknowledge the loss before the change is applied.
+      }
+      -> invalid_type(fieldType: String) {
+        The given newType is not in the recognised set of supported types.
+      }
+
+      fixture change_type_ok { schema: "article", fieldId: "due_date", newType: "text", newTypeConfig: "{}", migrationStrategy: "coerce" } after create_ok -> data_loss_warning
+      fixture change_type_missing { schema: "article", fieldId: "nonexistent", newType: "text", newTypeConfig: "{}", migrationStrategy: "coerce" } -> not_found
+      fixture change_type_invalid { schema: "article", fieldId: "due_date", newType: "unknown-type", newTypeConfig: "{}", migrationStrategy: "coerce" } after create_ok -> invalid_type
+    }
+
+    action rename(schema: String, fieldId: String, newLabel: String) {
+      -> ok(id: F) {
+        The field's human-readable label has been updated. The immutable fieldId is unchanged.
+      }
+      -> not_found(message: String) {
+        No field with this fieldId exists in the named schema.
+      }
+
+      fixture rename_ok { schema: "article", fieldId: "due_date", newLabel: "Publish Date" } after create_ok
+      fixture rename_missing { schema: "article", fieldId: "nonexistent", newLabel: "X" } -> not_found
+    }
+
+    action remove(schema: String, fieldId: String) {
+      -> ok() {
+        The field has been removed from the schema.
+        Syncs may check for active usages before this action is called.
+      }
+      -> not_found(message: String) {
+        No field with this fieldId exists in the named schema.
+      }
+      -> in_use(usages: String) {
+        The field is referenced by one or more active entities or expressions
+        and cannot be removed without first clearing those references.
+        The usages field describes where the field is currently referenced.
+      }
+
+      fixture remove_ok { schema: "article", fieldId: "due_date" } after create_ok
+      fixture remove_missing { schema: "article", fieldId: "nonexistent" } -> not_found
+    }
+
+    action reorder(schema: String, fieldId: String, newSortOrder: Int) {
+      -> ok(id: F) {
+        The field's sort position within the schema has been updated.
+      }
+      -> not_found(message: String) {
+        No field with this fieldId exists in the named schema.
+      }
+
+      fixture reorder_ok { schema: "article", fieldId: "due_date", newSortOrder: 5 } after create_ok
+      fixture reorder_missing { schema: "article", fieldId: "nonexistent", newSortOrder: 5 } -> not_found
+    }
+
+    action get(schema: String, fieldId: String) {
+      -> ok(id: F, fieldId: String, schema: String, label: String, description: String, fieldType: String, cardinality: String, typeConfig: String, required: Bool, unique: Bool, validations: String, defaultValue: String, widget: String, formatter: String, sortOrder: Int, createdAt: String, updatedAt: String) {
+        Return the full definition of the named field including all type and display metadata.
+      }
+      -> not_found(message: String) {
+        No field with this fieldId exists in the named schema.
+      }
+
+      fixture get_ok { schema: "article", fieldId: "due_date" } after create_ok
+      fixture get_missing { schema: "article", fieldId: "nonexistent" } -> not_found
+    }
+
+    action list(schema: String) {
+      -> ok(fields: String) {
+        Return all fields belonging to the named schema, ordered by sortOrder ascending.
+        The fields value is a JSON array of field records.
+      }
+
+      fixture list_ok { schema: "article" } after create_ok
+      fixture list_empty { schema: "no-fields-schema" }
+    }
+
+    action promote(schema: String, fieldId: String) {
+      -> ok(id: F) {
+        The field has been marked as reusable across schemas.
+        Syncs can propagate this into a shared field registry.
+      }
+      -> not_found(message: String) {
+        No field with this fieldId exists in the named schema.
+      }
+
+      fixture promote_ok { schema: "article", fieldId: "due_date" } after create_ok
+      fixture promote_missing { schema: "article", fieldId: "nonexistent" } -> not_found
+    }
+  }
+
+  example "create then get": {
+    after create(schema: "article", fieldId: "title", label: "Title", fieldType: "text", cardinality: "single", typeConfig: "{}", required: true, unique: false, validations: "[]", defaultValue: "", widget: "", formatter: "", sortOrder: 1) -> ok(id: f)
+    then get(schema: "article", fieldId: "title") -> ok(label: "Title", fieldType: "text")
+  }
+
+  example "create then rename": {
+    after create(schema: "article", fieldId: "pub_date", label: "Publish Date", fieldType: "date", cardinality: "single", typeConfig: "{}", required: false, unique: false, validations: "[]", defaultValue: "", widget: "", formatter: "", sortOrder: 2) -> ok(id: f)
+    then rename(schema: "article", fieldId: "pub_date", newLabel: "Release Date") -> ok(id: f)
+    and get(schema: "article", fieldId: "pub_date") -> ok(label: "Release Date", fieldId: "pub_date")
+  }
+
+  example "create then remove": {
+    after create(schema: "article", fieldId: "temp_field", label: "Temp", fieldType: "text", cardinality: "single", typeConfig: "{}", required: false, unique: false, validations: "[]", defaultValue: "", widget: "", formatter: "", sortOrder: 99) -> ok(id: f)
+    then remove(schema: "article", fieldId: "temp_field") -> ok()
+    and get(schema: "article", fieldId: "temp_field") -> not_found(message: m)
+  }
+
+  always "fieldId is immutable after creation": {
+    forall f in fields: fieldId(f) != none
+  }
+
+  always "fieldType is in valid type set": {
+    forall f in fields:
+      fieldType(f) in { "text", "number", "select", "multi-select", "date", "checkbox", "person", "url", "email", "file", "rich-text", "media", "relation", "formula", "rollup", "json", "created-time", "created-by", "auto-number" }
+  }
+
+  never "missing schema reference": {
+    exists f in fields: schema(f) = none
+  }
+}

@@ -1,0 +1,14 @@
+# When Retriever completes a first-stage retrieval and the retriever is
+# configured for diversity selection, dispatch the candidate set to the
+# registered MMRDiversityProvider before returning results to the caller.
+
+sync MMRRoutes [optional]
+when {
+  Retriever/retrieve: [retriever: ?retriever, query: ?query]
+    where retriever.retriever_type = "mmr"
+    => [documents: ?candidates]
+}
+then {
+  MMRDiversityProvider/select: [query: ?query, candidates: ?candidates,
+                                 lambda_override: none]
+}

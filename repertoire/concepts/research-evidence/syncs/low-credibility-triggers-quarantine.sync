@@ -1,0 +1,13 @@
+# When a DataQuality validation produces a gate-severity failure, move
+# the item into quarantine so it cannot be cited in new research until
+# a human reviews and either releases or discards it.
+
+sync LowCredibilityTriggersQuarantine [eventual] [recommended]
+  purpose: "Quarantine captured sources that fail the source-credibility quality gate so they are held for human review and cannot be used as citation evidence."
+when {
+  DataQuality/validate: [item: ?item; rulesetId: "source-credibility"]
+    => invalid(violations: ?violations)
+}
+then {
+  DataQuality/quarantine: [itemId: ?item; violations: ?violations]
+}

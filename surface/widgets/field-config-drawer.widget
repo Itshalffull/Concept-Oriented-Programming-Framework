@@ -1,0 +1,396 @@
+@version(2)
+@canonical-implementation(form-field-config)
+widget field-config-drawer {
+
+  purpose {
+    Side drawer for per-field advanced configuration. The canonical React
+    implementation is form-field-config.widget (implemented as the config panel
+    inside FormBuilder.tsx). This spec adds drawer-specific behavior: opening
+    from column header popovers or table row gear icons, slide-in animation,
+    and focus trapping. The three-tab structure (Settings, Validations,
+    Appearance) is shared with form-field-config.
+
+    Original: Side drawer that slides in from the right to provide per-field advanced
+    configuration across three tabs: Settings (label, description, required,
+    unique, default value, cardinality), Validations (visual rule list for
+    composing per-field validation constraints), and Appearance (widget gallery
+    and formatter gallery for controlling how the field is edited and displayed).
+    Opens from the column header popover gear icon or the "Configure field" menu
+    item. Connects to FieldDefinition/update and FieldDefinition/changeType.
+    Focus is trapped while open; Escape closes the drawer.
+  }
+
+  anatomy {
+    root:               container   { Drawer root — full-height side panel anchored to the right edge }
+    header:             container   { Sticky top bar showing field identity and close button }
+    fieldName:          text        { Read-only display of the current field label }
+    fieldType:          action      { Button showing current type; opens type-picker for type change }
+    tabBar:             container   { Tab strip with Settings, Validations, Appearance tabs }
+    settingsPane:       container   { Scrollable content area for the Settings tab }
+    labelInput:         interactive { Text input for the mutable field label }
+    descriptionInput:   interactive { Textarea for the field help text shown in forms }
+    requiredToggle:     interactive { Toggle switch marking the field as required }
+    uniqueToggle:       interactive { Toggle switch marking the field as unique }
+    defaultValueInput:  interactive { Input for the field default value, type-aware rendering }
+    cardinalitySelector: interactive { Selector for single vs multiple cardinality }
+    validationsPane:    container   { Scrollable content area for the Validations tab }
+    ruleList:           container   { Ordered list of currently configured validation rules }
+    addRuleButton:      action      { Opens the add-rule flow to append a new rule }
+    appearancePane:     container   { Scrollable content area for the Appearance tab }
+    widgetGallery:      container   { Embedded widget-gallery sub-widget for edit widget selection }
+    widgetPreview:      container   { Live preview of the selected edit widget }
+    formatterGallery:   container   { Gallery of display formatters for this field type }
+    closeButton:        action      { Closes the drawer without forcing an explicit save }
+  }
+
+  states {
+    closed [initial] {
+      on OPEN -> settings-tab;
+    }
+
+    open {
+      on CLOSE -> closed;
+      on SELECT_SETTINGS -> settings-tab;
+      on SELECT_VALIDATIONS -> validations-tab;
+      on SELECT_APPEARANCE -> appearance-tab;
+      entry [trapFocus];
+      exit [releaseFocus; persistPendingChanges];
+    }
+
+    settings-tab {
+      on CLOSE -> closed;
+      on SELECT_VALIDATIONS -> validations-tab;
+      on SELECT_APPEARANCE -> appearance-tab;
+      on CHANGE_TYPE -> settings-tab;
+      entry [trapFocus; focusLabelInput];
+      exit [persistPendingChanges];
+    }
+
+    validations-tab {
+      on CLOSE -> closed;
+      on SELECT_SETTINGS -> settings-tab;
+      on SELECT_APPEARANCE -> appearance-tab;
+      entry [trapFocus];
+      exit [persistPendingChanges];
+    }
+
+    appearance-tab {
+      on CLOSE -> closed;
+      on SELECT_SETTINGS -> settings-tab;
+      on SELECT_VALIDATIONS -> validations-tab;
+      entry [trapFocus; loadWidgetGallery];
+      exit [persistPendingChanges];
+    }
+  }
+
+  accessibility {
+    role: complementary;
+    keyboard {
+      Escape -> CLOSE;
+      Tab -> FOCUS_NEXT;
+    }
+    focus {
+      trap: true;
+      initial: labelInput;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "complementary";
+        aria-label: concat("Field configuration: ", ?fieldLabel);
+        aria-modal: "true";
+        aria-expanded: if state == "closed" then "false" else "true";
+        aria-hidden: if state == "closed" then "true" else "false";
+      };
+      header -> {
+        role: "banner";
+        aria-label: concat("Configuring field: ", ?fieldLabel);
+      };
+      fieldName -> {
+        role: "heading";
+        aria-level: "2";
+      };
+      fieldType -> {
+        role: "button";
+        aria-label: concat("Field type: ", ?fieldType, ". Click to change.");
+        aria-haspopup: "dialog";
+      };
+      tabBar -> {
+        role: "tablist";
+        aria-label: "Field configuration tabs";
+      };
+      settingsPane -> {
+        role: "tabpanel";
+        aria-label: "Settings";
+        aria-hidden: if state != "settings-tab" then "true" else "false";
+      };
+      validationsPane -> {
+        role: "tabpanel";
+        aria-label: "Validations";
+        aria-hidden: if state != "validations-tab" then "true" else "false";
+      };
+      appearancePane -> {
+        role: "tabpanel";
+        aria-label: "Appearance";
+        aria-hidden: if state != "appearance-tab" then "true" else "false";
+      };
+      labelInput -> {
+        role: "textbox";
+        aria-label: "Field label";
+        aria-required: "true";
+      };
+      descriptionInput -> {
+        role: "textbox";
+        aria-label: "Field description";
+        aria-multiline: "true";
+      };
+      requiredToggle -> {
+        role: "switch";
+        aria-label: "Required";
+        aria-checked: if ?required then "true" else "false";
+      };
+      uniqueToggle -> {
+        role: "switch";
+        aria-label: "Unique";
+        aria-checked: if ?unique then "true" else "false";
+      };
+      cardinalitySelector -> {
+        role: "radiogroup";
+        aria-label: "Cardinality";
+      };
+      ruleList -> {
+        role: "list";
+        aria-label: "Validation rules";
+      };
+      addRuleButton -> {
+        role: "button";
+        aria-label: "Add validation rule";
+      };
+      widgetGallery -> {
+        role: "region";
+        aria-label: "Edit widget selection";
+      };
+      widgetPreview -> {
+        role: "region";
+        aria-label: "Widget preview";
+        aria-live: "polite";
+      };
+      formatterGallery -> {
+        role: "region";
+        aria-label: "Display formatter selection";
+      };
+      closeButton -> {
+        role: "button";
+        aria-label: "Close field configuration drawer";
+      };
+    }
+  }
+
+  props {
+    schema: String
+    fieldId: String
+    fieldType: String = "text"
+    fieldLabel: String = ""
+    required: Bool = false
+    unique: Bool = false
+    cardinality: String = "single"
+    description: String = ""
+    defaultValue: option String
+    currentWidget: option String
+    currentFormatter: option String
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-field-type: ?fieldType;
+      aria-hidden: if state == "closed" then "true" else "false";
+    }
+
+    header -> {
+      data-part: "header";
+    }
+
+    fieldName -> {
+      data-part: "field-name";
+      text: ?fieldLabel;
+    }
+
+    fieldType -> {
+      data-part: "field-type";
+      data-current-type: ?fieldType;
+      onClick: send(CHANGE_TYPE);
+    }
+
+    tabBar -> {
+      data-part: "tab-bar";
+      data-active-tab: state;
+    }
+
+    settingsPane -> {
+      data-part: "settings-pane";
+      data-active: if state == "settings-tab" then "true" else "false";
+      hidden: if state != "settings-tab" then true else false;
+    }
+
+    labelInput -> {
+      data-part: "label-input";
+      value: ?fieldLabel;
+      onInput: send(UPDATE_LABEL);
+      onFocus: noop;
+    }
+
+    descriptionInput -> {
+      data-part: "description-input";
+      value: ?description;
+      onInput: send(UPDATE_DESCRIPTION);
+    }
+
+    requiredToggle -> {
+      data-part: "required-toggle";
+      data-checked: if ?required then "true" else "false";
+      onClick: send(TOGGLE_REQUIRED);
+    }
+
+    uniqueToggle -> {
+      data-part: "unique-toggle";
+      data-checked: if ?unique then "true" else "false";
+      onClick: send(TOGGLE_UNIQUE);
+    }
+
+    defaultValueInput -> {
+      data-part: "default-value-input";
+      data-field-type: ?fieldType;
+    }
+
+    cardinalitySelector -> {
+      data-part: "cardinality-selector";
+      data-value: ?cardinality;
+      onChange: send(SET_CARDINALITY);
+    }
+
+    validationsPane -> {
+      data-part: "validations-pane";
+      data-active: if state == "validations-tab" then "true" else "false";
+      hidden: if state != "validations-tab" then true else false;
+    }
+
+    ruleList -> {
+      data-part: "rule-list";
+    }
+
+    addRuleButton -> {
+      data-part: "add-rule-button";
+      onClick: send(ADD_RULE);
+    }
+
+    appearancePane -> {
+      data-part: "appearance-pane";
+      data-active: if state == "appearance-tab" then "true" else "false";
+      hidden: if state != "appearance-tab" then true else false;
+    }
+
+    widgetGallery -> {
+      data-part: "widget-gallery";
+      data-field-type: ?fieldType;
+    }
+
+    widgetPreview -> {
+      data-part: "widget-preview";
+      data-current-widget: ?currentWidget;
+    }
+
+    formatterGallery -> {
+      data-part: "formatter-gallery";
+      data-field-type: ?fieldType;
+    }
+
+    closeButton -> {
+      data-part: "close-button";
+      onClick: send(CLOSE);
+    }
+  }
+
+  compose {
+    fieldType:      widget("type-picker",              { currentType: ?fieldType, showAdvanced: true })
+    validationsPane: widget("validation-rule-builder", { schema: ?schema, fieldId: ?fieldId, fieldType: ?fieldType })
+    widgetGallery:  widget("widget-gallery",           { fieldType: ?fieldType, currentWidget: ?currentWidget })
+  }
+
+  invariant {
+    example "opens to settings tab": {
+      after send(OPEN) -> ok
+      then root -> { data-state: "settings-tab" }
+      and settingsPane -> { data-active: "true" }
+      and validationsPane -> { data-active: "false" }
+      and appearancePane -> { data-active: "false" }
+    }
+
+    example "tab navigation: settings to validations": {
+      after send(OPEN) -> ok
+      then send(SELECT_VALIDATIONS) -> ok
+      then root -> { data-state: "validations-tab" }
+      and validationsPane -> { data-active: "true" }
+      and settingsPane -> { data-active: "false" }
+    }
+
+    example "tab navigation: settings to appearance": {
+      after send(OPEN) -> ok
+      then send(SELECT_APPEARANCE) -> ok
+      then root -> { data-state: "appearance-tab" }
+      and appearancePane -> { data-active: "true" }
+      and settingsPane -> { data-active: "false" }
+    }
+
+    example "close from settings-tab": {
+      after send(OPEN) -> ok
+      then closeButton.click -> ok
+      then root -> { data-state: "closed" }
+      and root -> { aria-hidden: "true" }
+    }
+
+    example "Escape closes from validations tab": {
+      after send(OPEN) -> ok
+      then send(SELECT_VALIDATIONS) -> ok
+      then key(Escape) -> ok
+      then root -> { data-state: "closed" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        root -> { data-state: s.name }
+    }
+
+    always "only active pane is visible": {
+      if state == "settings-tab" then settingsPane -> { data-active: "true" }
+      and if state == "settings-tab" then validationsPane -> { data-active: "false" }
+      and if state == "settings-tab" then appearancePane -> { data-active: "false" }
+    }
+
+    always "drawer is aria-hidden when closed": {
+      if state == "closed" then root -> { aria-hidden: "true" }
+    }
+
+    never "all three panes active simultaneously": {
+      settingsPane -> { data-active: "true" }
+      and validationsPane -> { data-active: "true" }
+    }
+
+    never "focus escapes drawer while open": {
+      exists e in focusEvents:
+        e.target.outside(root) and state != "closed"
+    }
+
+    "labelInput must call FieldDefinition/update on blur or debounced input";
+    "requiredToggle must call FieldDefinition/update with required flag change";
+    "uniqueToggle must call FieldDefinition/update with unique flag change";
+    "fieldType CHANGE_TYPE must call FieldDefinition/changeType and show data-loss warning when applicable";
+    "widgetGallery selection must call FieldDefinition/update with new widget value";
+    "pendingChanges are persisted on tab switch and on CLOSE";
+  }
+
+}

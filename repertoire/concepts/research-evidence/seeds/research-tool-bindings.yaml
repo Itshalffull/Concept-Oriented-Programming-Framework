@@ -1,0 +1,128 @@
+# Research tool binding registrations.
+# Registers ToolBinding entries for the research-specific tools referenced by
+# the deep-researcher, synthesis-writer, and fact-checker persona instruction
+# blocks. Each binding maps a tool name (as the LLM sees it) to a Clef concept
+# action invocation with fixed parameter overrides.
+#
+# These bindings are consumed by AgentLoop/ToolInvocationDispatch: when the LLM
+# calls a tool by name, the kernel looks up the binding and invokes the
+# corresponding concept action via the Connection concept.
+#
+# Annotation notes:
+#   audience: "agent"     — only visible to LLM agents, not end users
+#   destructive: false    — all research tools are non-destructive reads/creates
+#   idempotent: true      — safe to retry on transient failure
+#   open_world: false     — closed tool set, discoverable up front
+
+concept: ToolBinding
+action: define
+entries:
+  # capture_source — ingests a URL as a research-source ContentNode via Capture/clip.
+  # The LLM provides the URL; mode and schema overlay are fixed by this binding.
+  - name: capture_source
+    description: "Fetch and archive a URL as a research source. Returns a source page ID that can be referenced in citations."
+    input_schema: '{"type":"object","properties":{"url":{"type":"string","description":"The URL to capture"},"title":{"type":"string","description":"Optional title override for the source"}},"required":["url"]}'
+    output_schema: '{"type":"object","properties":{"source_id":{"type":"string"},"credibility_tier":{"type":"string"}}}'
+    handler: Capture/clip
+    annotations: '{"audience":"agent","destructive":false,"idempotent":true,"open_world":false}'
+    timeout_ms: 30000
+    requires_approval: false
+
+  # capture_snippet — creates a TextSpan + Snippet from a text excerpt within a captured source.
+  # The LLM provides the source page ID, start/end character offsets, and the extracted text.
+  - name: capture_snippet
+    description: "Extract a text snippet from a captured source for use as a citation anchor. Returns a snippet ID."
+    input_schema: '{"type":"object","properties":{"source_id":{"type":"string","description":"ID of the research-source page to extract from"},"text":{"type":"string","description":"The exact text of the snippet"},"start_offset":{"type":"integer","description":"Character offset where the snippet starts"},"end_offset":{"type":"integer","description":"Character offset where the snippet ends"}},"required":["source_id","text"]}'
+    output_schema: '{"type":"object","properties":{"snippet_id":{"type":"string"},"text":{"type":"string"}}}'
+    handler: Snippet/create
+    annotations: '{"audience":"agent","destructive":false,"idempotent":false,"open_world":false}'
+    timeout_ms: 10000
+    requires_approval: false
+
+  # evaluate_credibility — runs the source-credibility QualityProfile against a captured source.
+  # Returns a credibility_tier and any rule violations.
+  - name: evaluate_credibility
+    description: "Evaluate the credibility of a captured research source using the source-credibility quality profile. Returns a tier (authoritative, reliable, mixed, low_quality, quarantine) and any rule violations."
+    input_schema: '{"type":"object","properties":{"source_id":{"type":"string","description":"ID of the research-source page to evaluate"}},"required":["source_id"]}'
+    output_schema: '{"type":"object","properties":{"credibility_tier":{"type":"string"},"violations":{"type":"array","items":{"type":"string"}},"passed":{"type":"boolean"}}}'
+    handler: DataQuality/validate
+    annotations: '{"audience":"agent","destructive":false,"idempotent":true,"open_world":false}'
+    timeout_ms: 15000
+    requires_approval: false
+
+  # search_web — searches the web via the registered web_search SearchIndex backend.
+  # Returns a list of result URLs and titles for the agent to decide which to capture.
+  - name: search_web
+    description: "Search the web for research sources on a query. Returns a list of URLs and titles. Use capture_source to archive promising results."
+    input_schema: '{"type":"object","properties":{"query":{"type":"string","description":"The search query"},"limit":{"type":"integer","description":"Maximum number of results to return","default":10}},"required":["query"]}'
+    output_schema: '{"type":"object","properties":{"results":{"type":"array","items":{"type":"object","properties":{"url":{"type":"string"},"title":{"type":"string"},"snippet":{"type":"string"}}}}}}'
+    handler: SearchIndex/search
+    annotations: '{"audience":"agent","destructive":false,"idempotent":true,"open_world":true}'
+    timeout_ms: 20000
+    requires_approval: false
+
+  # search_scholar — searches academic databases via the scholar_search SearchIndex backend.
+  # Returns peer-reviewed papers with DOIs for the agent to evaluate and capture.
+  - name: search_scholar
+    description: "Search academic databases for peer-reviewed research on a query. Returns papers with titles, authors, DOIs, and abstracts. Use capture_source to archive full papers."
+    input_schema: '{"type":"object","properties":{"query":{"type":"string","description":"The academic search query"},"limit":{"type":"integer","description":"Maximum number of results to return","default":10},"year_from":{"type":"integer","description":"Filter to papers published on or after this year"}},"required":["query"]}'
+    output_schema: '{"type":"object","properties":{"results":{"type":"array","items":{"type":"object","properties":{"title":{"type":"string"},"authors":{"type":"string"},"doi":{"type":"string"},"year":{"type":"integer"},"abstract":{"type":"string"},"url":{"type":"string"}}}}}}'
+    handler: SearchIndex/search
+    annotations: '{"audience":"agent","destructive":false,"idempotent":true,"open_world":true}'
+    timeout_ms: 25000
+    requires_approval: false
+
+  # create_claim — extracts and registers a named assertable claim from the report text.
+  # Claims must subsequently be linked to citations via link_citation.
+  - name: create_claim
+    description: "Register an assertable claim extracted from the research. The claim must be linked to at least one citation before the report can be published."
+    input_schema: '{"type":"object","properties":{"text":{"type":"string","description":"The full text of the claim"},"report_id":{"type":"string","description":"ID of the research-report page this claim belongs to"},"section_type":{"type":"string","description":"Report section this claim appears in (e.g. findings, analysis, conclusion)"}},"required":["text","report_id"]}'
+    output_schema: '{"type":"object","properties":{"claim_id":{"type":"string"},"status":{"type":"string"}}}'
+    handler: Claim/extract
+    annotations: '{"audience":"agent","destructive":false,"idempotent":false,"open_world":false}'
+    timeout_ms: 10000
+    requires_approval: false
+
+  # link_citation — creates an evidentiary link between a registered claim and a snippet.
+  # Returns the citation ID and initial support score.
+  - name: link_citation
+    description: "Link a claim to a supporting evidence snippet. Creates a Citation record with an initial support score. Multiple snippets can be linked to one claim."
+    input_schema: '{"type":"object","properties":{"claim_id":{"type":"string","description":"ID of the claim to link"},"snippet_id":{"type":"string","description":"ID of the supporting snippet"},"support_note":{"type":"string","description":"Brief explanation of how the snippet supports the claim"}},"required":["claim_id","snippet_id"]}'
+    output_schema: '{"type":"object","properties":{"citation_id":{"type":"string"},"support_score":{"type":"number"}}}'
+    handler: Citation/link
+    annotations: '{"audience":"agent","destructive":false,"idempotent":false,"open_world":false}'
+    timeout_ms: 10000
+    requires_approval: false
+
+  # verify_citation — checks that a claim is faithfully supported by its linked snippet.
+  # Used by the fact-checker persona to run NLI verification.
+  - name: verify_citation
+    description: "Verify that a claim is faithfully supported by its linked evidence snippet. Runs an NLI entailment check and returns a faithfulness score and any hallucination flags."
+    input_schema: '{"type":"object","properties":{"citation_id":{"type":"string","description":"ID of the citation to verify"},"strict":{"type":"boolean","description":"If true, flag borderline cases; if false, only flag clear hallucinations","default":true}},"required":["citation_id"]}'
+    output_schema: '{"type":"object","properties":{"faithfulness_score":{"type":"number"},"verdict":{"type":"string","enum":["supported","partially_supported","contradicted","unverifiable"]},"reason":{"type":"string"}}}'
+    handler: Citation/verify
+    annotations: '{"audience":"agent","destructive":false,"idempotent":true,"open_world":false}'
+    timeout_ms: 20000
+    requires_approval: false
+
+  # get_snippet — resolves a snippet by ID, returning its text and source metadata.
+  # Used by the fact-checker to retrieve the full text of a cited snippet for comparison.
+  - name: get_snippet
+    description: "Retrieve the full text and source metadata of a snippet by ID. Returns the snippet text, the source URL, and credibility tier."
+    input_schema: '{"type":"object","properties":{"snippet_id":{"type":"string","description":"ID of the snippet to retrieve"}},"required":["snippet_id"]}'
+    output_schema: '{"type":"object","properties":{"text":{"type":"string"},"source_url":{"type":"string"},"credibility_tier":{"type":"string"},"status":{"type":"string"}}}'
+    handler: Snippet/resolve
+    annotations: '{"audience":"agent","destructive":false,"idempotent":true,"open_world":false}'
+    timeout_ms: 5000
+    requires_approval: false
+
+  # get_claim — retrieves a claim by ID, including its linked citations and verification status.
+  # Used by the fact-checker to examine individual claims during verification.
+  - name: get_claim
+    description: "Retrieve a claim by ID with its current verification status and linked citations."
+    input_schema: '{"type":"object","properties":{"claim_id":{"type":"string","description":"ID of the claim to retrieve"}},"required":["claim_id"]}'
+    output_schema: '{"type":"object","properties":{"text":{"type":"string"},"status":{"type":"string"},"citations":{"type":"array","items":{"type":"string"}},"faithfulness_score":{"type":"number"}}}'
+    handler: Claim/get
+    annotations: '{"audience":"agent","destructive":false,"idempotent":true,"open_world":false}'
+    timeout_ms: 5000
+    requires_approval: false

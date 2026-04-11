@@ -1,0 +1,23 @@
+# Back-populate schema relation fields when a typed Relation is created through
+# the linking graph UI or API. Only fires for Relations whose type matches a
+# known relation FieldDefinition on the source entity's schema. Untyped
+# References and [[mentions]] do not trigger this bridge.
+# See relation-resolver-plan.md §10 (bidirectional bridge).
+
+sync LinkingBridgesRelationField [eventual]
+  purpose: "When a typed Relation is created and its type matches a relation FieldDefinition on the source schema, write the target ID back onto the source entity's schema field so both representations stay in sync"
+when {
+  Relation/create: [ source: ?source;
+                     target: ?target;
+                     type: ?type;
+                     schema: ?schema ] => [ ok: _ ]
+}
+where {
+  FieldDefinition/get: [ schema: ?schema; fieldId: ?type ] => [ ok: ?field ]
+  filter(?field.fieldType = "relation")
+}
+then {
+  Property/set: [ entity: ?source;
+                  key: ?type;
+                  value: ?target ]
+}

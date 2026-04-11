@@ -1,0 +1,72 @@
+# ResearchReport — Content-Native Schema Definition
+# A structured deep research report. Sections are Outline child blocks
+# with the "report-section" child schema. ContentCompiler dispatches to
+# a ResearchReportCompiler provider that walks the block tree, extracts
+# claims via Claim/extract, and produces citation coverage metrics.
+# General syncs in content-native-schema.sync auto-wire everything.
+
+name: research-report
+version: 1
+
+fields:
+  - name: project_id
+    type: string
+    required: true
+  - name: report_status
+    type: string
+    default: "draft"
+    enum: [draft, verified, published]
+  - name: citation_coverage
+    type: number
+  - name: overall_faithfulness
+    type: number
+  - name: perspective_count
+    type: number
+
+contentNative:
+  childSchema: report-section
+  defaultTemplate: standard-research-report
+  compilationProvider: ResearchReportCompiler
+  displayWidget: schema-block-editor
+
+childSchemaDefinition:
+  name: report-section
+  isChildSchema: true
+  fields:
+    - name: section_type
+      type: string
+      enum: [executive_summary, methodology, findings, analysis, conclusion, appendix]
+    - name: perspective
+      type: string
+    - name: claim_count
+      type: number
+      default: 0
+    - name: citation_count
+      type: number
+      default: 0
+    - name: verification_status
+      type: string
+      default: "unverified"
+      enum: [unverified, partial, verified]
+
+defaultBlocks:
+  - sectionType: executive_summary
+    section_type: executive_summary
+    description: "High-level summary of findings"
+    defaultContent: ""
+  - sectionType: methodology
+    section_type: methodology
+    description: "Sources consulted, search strategy, perspectives applied"
+    defaultContent: ""
+  - sectionType: findings
+    section_type: findings
+    description: "Key findings with inline citations"
+    defaultContent: ""
+  - sectionType: analysis
+    section_type: analysis
+    description: "Cross-perspective analysis and contradictions"
+    defaultContent: ""
+  - sectionType: conclusion
+    section_type: conclusion
+    description: "Conclusions and confidence assessment"
+    defaultContent: ""

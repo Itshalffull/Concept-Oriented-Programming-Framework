@@ -1,0 +1,41 @@
+view "workflows-list" {
+  shell: "workflows-list"
+
+  features {
+    filter
+    sort
+    projection
+    interaction
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"Workflow\",\"action\":\"list\"}"
+    }
+    filter: {
+      node: "{\"type\":\"true\"}"
+    }
+    sort: {
+      keys: "[]"
+    }
+    projection: {
+      fields: "[]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+    interaction: {
+      rowActions: "[{\"key\":\"edit\",\"concept\":\"Workflow\",\"action\":\"update\",\"label\":\"Edit\"}]"
+    }
+  }
+
+  purpose {
+    Manage content moderation state machines with states and transitions.
+  }
+
+  invariants {
+    always "purity is read-write": { purity = "read-write" }
+  }
+}

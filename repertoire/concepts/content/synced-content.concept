@@ -14,7 +14,7 @@ concept SyncedContent [S] {
   }
 
   actions {
-    action createReference(ref: S, original: S) {
+    action createReference(ref: S, original: S, sourceNamespace: option String) {
       -> ok() {
         Creates a live reference that mirrors the original's content.
       }

@@ -1,0 +1,209 @@
+@version(2)
+@canonical-implementation(form-field-config)
+widget widget-gallery {
+
+  purpose {
+    Visual gallery of available edit widgets for a given field type. The
+    Appearance tab in form-field-config.widget / FormBuilder.tsx now serves
+    as the canonical surface for widget selection. This standalone spec
+    is retained for use cases where the gallery appears outside the
+    form builder (e.g., display-mode-editor).
+
+    Original: Visual gallery of available edit widgets for a given field type, displayed
+    as a grid of cards with thumbnail previews, widget names, and short
+    descriptions. Filters the available widget list to those compatible with
+    the current field type by calling Interactor/classify. The currently
+    selected widget is marked with a selected indicator. Selecting a new card
+    emits a WIDGET_SELECTED event that the parent field-config-drawer uses to
+    call FieldDefinition/update. Used in the Appearance tab of the drawer.
+  }
+
+  anatomy {
+    root:              container    { Top-level gallery wrapper }
+    galleryGrid:       container    { CSS grid holding all widget cards }
+    widgetCard:        action       { Selectable card representing one available widget }
+    widgetThumbnail:   presentation { Visual preview thumbnail of how the widget looks }
+    widgetName:        text         { Display name of the widget (e.g. "Single-line text") }
+    widgetDescription: text         { One-line description of the widget's best use case }
+    selectedIndicator: presentation { Visible checkmark or border shown on the selected card }
+  }
+
+  states {
+    browsing [initial] {
+      on SELECT_WIDGET -> selected;
+    }
+
+    selected {
+      on SELECT_WIDGET -> selected;
+      on DESELECT -> browsing;
+    }
+  }
+
+  accessibility {
+    role: radiogroup;
+    keyboard {
+      ArrowRight -> FOCUS_NEXT_CARD;
+      ArrowLeft -> FOCUS_PREV_CARD;
+      ArrowDown -> FOCUS_NEXT_ROW;
+      ArrowUp -> FOCUS_PREV_ROW;
+      Enter -> SELECT_WIDGET;
+      Space -> SELECT_WIDGET;
+    }
+    focus {
+      trap: false;
+      initial: widgetCard;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "radiogroup";
+        aria-label: "Widget selection";
+      };
+      galleryGrid -> {
+        role: "presentation";
+      };
+      widgetCard -> {
+        role: "radio";
+        aria-label: concat(self.widgetName, ": ", self.widgetDescription);
+        aria-checked: if self.selected then "true" else "false";
+        tabindex: if self.selected then "0" else "-1";
+      };
+      widgetThumbnail -> {
+        role: "img";
+        aria-label: concat(self.widgetName, " preview");
+        aria-hidden: "false";
+      };
+      widgetName -> {
+        role: "presentation";
+      };
+      widgetDescription -> {
+        role: "presentation";
+      };
+      selectedIndicator -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    fieldType: String = "text"
+    currentWidget: option String
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-field-type: ?fieldType;
+    }
+
+    galleryGrid -> {
+      data-part: "gallery-grid";
+    }
+
+    widgetCard -> {
+      data-part: "widget-card";
+      data-widget-id: self.widgetId;
+      data-selected: if self.selected then "true" else "false";
+      onClick: send(SELECT_WIDGET, { widgetId: self.widgetId });
+      onKeyDown: if key == "Enter" or key == " " then send(SELECT_WIDGET, { widgetId: self.widgetId }) else noop;
+      tabindex: if self.selected then "0" else "-1";
+    }
+
+    widgetThumbnail -> {
+      data-part: "widget-thumbnail";
+      data-widget-id: self.widgetId;
+    }
+
+    widgetName -> {
+      data-part: "widget-name";
+      text: self.widgetName;
+    }
+
+    widgetDescription -> {
+      data-part: "widget-description";
+      text: self.widgetDescription;
+    }
+
+    selectedIndicator -> {
+      data-part: "selected-indicator";
+      data-visible: if self.selected then "true" else "false";
+      aria-hidden: "true";
+    }
+  }
+
+  affordance {
+    serves: single-choice;
+    specificity: 3;
+    when {
+      context: "widget-selection";
+    }
+    bind {
+      fieldType: fieldType;
+      currentWidget: currentWidget;
+    }
+  }
+
+  invariant {
+    example "initial state is browsing with no selection when currentWidget is absent": {
+      then root -> { data-state: "browsing" }
+    }
+
+    example "initial state is selected when currentWidget prop is provided": {
+      after mount(currentWidget: "text-input") -> ok
+      then root -> { data-state: "selected" }
+      and widgetCard -> { data-widget-id: "text-input", data-selected: "true" }
+    }
+
+    example "clicking a card transitions to selected": {
+      after widgetCard.click({ widgetId: "slug-input" }) -> ok
+      then root -> { data-state: "selected" }
+      and widgetCard -> { data-widget-id: "slug-input", data-selected: "true" }
+    }
+
+    example "clicking a different card updates selection": {
+      after mount(currentWidget: "text-input") -> ok
+      then widgetCard.click({ widgetId: "url-input" }) -> ok
+      then widgetCard -> { data-widget-id: "url-input", data-selected: "true" }
+      and widgetCard -> { data-widget-id: "text-input", data-selected: "false" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        root -> { data-state: s.name }
+    }
+
+    always "exactly one card is selected in selected state": {
+      if state == "selected" then
+        exists exactly one c in widgetCards:
+          c -> { data-selected: "true" }
+    }
+
+    always "no card is selected in browsing state": {
+      if state == "browsing" then
+        forall c in widgetCards:
+          c -> { data-selected: "false" }
+    }
+
+    always "roving tabindex: only selected card has tabindex 0": {
+      if state == "selected" then
+        forall c in widgetCards:
+          if c.selected then c -> { tabindex: "0" } else c -> { tabindex: "-1" }
+    }
+
+    never "selectedIndicator visible when card is not selected": {
+      self.selected == false and selectedIndicator -> { data-visible: "true" }
+    }
+
+    "SELECT_WIDGET event must carry widgetId payload to parent via onWidgetSelect callback";
+    "galleryGrid must only render widgets whose fieldType compatibility list includes the fieldType prop";
+    "Interactor/classify must be called with fieldType to derive the filtered widget list on mount and on fieldType change";
+    "widgetCard thumbnail images must have descriptive alt text matching widgetName for accessibility";
+    "keyboard roving tabindex must move focus through widgetCards in row-major order";
+  }
+
+}

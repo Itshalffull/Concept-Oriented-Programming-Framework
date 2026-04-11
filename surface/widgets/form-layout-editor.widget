@@ -1,0 +1,391 @@
+@version(2)
+@superseded-by(form-builder)
+widget form-layout-editor {
+
+  purpose {
+    SUPERSEDED by form-builder.widget + FormBuilder.tsx — the form builder provides
+    the canonical drag-and-drop field arrangement surface with groups, steps,
+    conditional visibility, and live preview. This spec is retained for reference only.
+
+    Original purpose: Drag-and-drop editor for arranging schema fields into groups, tabs, sections,
+    and sidebars — controlling the edit form layout that content editors see. The
+    Form Layout tab of the Level 3 full schema editor. The canvas on the left shows
+    groups and placed field slots; the unplaced-fields panel on the right shows fields
+    not yet assigned to any group. A live preview panel shows how the form will render.
+    Layout containers can be added as main-content sections, sidebar panels, tab groups,
+    accordion sections, or fieldsets. Persists layout via Property/set for the schema's
+    editorLayout and fieldGroups content-native properties.
+  }
+
+  anatomy {
+    root:              container   { Top-level editor, two-column layout: canvas + preview }
+    layoutCanvas:      container   { Interactive canvas where groups and field slots are arranged }
+    dropZone:          container   { Drop target area within a group that accepts field slots }
+    group:             container   { A named layout container (section, tab, sidebar, accordion, fieldset) }
+    groupHeader:       container   { Header row for a group: label, type badge, collapse toggle, remove button }
+    groupLabel:        interactive { Editable text label for the group }
+    groupTypeBadge:    presentation { Badge showing the group layout type (tab, section, sidebar, etc.) }
+    removeGroupButton: action      { Removes the group (returns its fields to the unplaced list) }
+    collapseGroupButton: action    { Collapses or expands the group in the canvas }
+    fieldSlot:         container   { A placed field — shows field label, type badge, drag handle }
+    fieldSlotLabel:    text        { Label of the placed field }
+    fieldSlotDragHandle: action    { Drag handle for moving the field slot between groups }
+    removeSlotButton:  action      { Returns this field to the unplaced list }
+    unplacedFieldsList: container  { Panel listing fields not yet placed in any group }
+    unplacedFieldItem: container   { Single unplaced field — drag to place into a group }
+    previewPanel:      container   { Live preview of the rendered edit form }
+    previewToggle:     action      { Shows or hides the preview panel }
+    addGroupButton:    action      { Adds a new main-content section group to the canvas }
+    addTabButton:      action      { Adds a new tab-group container to the canvas }
+    addSidebarButton:  action      { Adds a sidebar panel to the canvas }
+    addAccordionButton: action     { Adds an accordion-section group to the canvas }
+    addFieldsetButton: action      { Adds a fieldset group to the canvas }
+  }
+
+  states {
+    idle [initial] {
+      on START_DRAG_FIELD -> dragging;
+      on START_DRAG_GROUP -> dragging;
+      on EDIT_GROUP_LABEL -> editing-group;
+      on TOGGLE_PREVIEW -> previewing;
+    }
+
+    dragging {
+      on DROP_FIELD -> idle;
+      on DROP_GROUP -> idle;
+      on CANCEL_DRAG -> idle;
+      entry [setDragPayload; highlightDropZones];
+      exit [clearDragPayload; clearDropZoneHighlights];
+    }
+
+    previewing {
+      on TOGGLE_PREVIEW -> idle;
+      on EDIT_GROUP_LABEL -> editing-group;
+      entry [renderPreview];
+    }
+
+    editing-group {
+      on COMMIT_GROUP_LABEL -> idle;
+      on CANCEL_GROUP_LABEL -> idle;
+      on TOGGLE_PREVIEW -> previewing;
+      entry [focusGroupLabelInput];
+      exit [persistGroupLabel];
+    }
+  }
+
+  accessibility {
+    role: application;
+    keyboard {
+      Tab -> FOCUS_NEXT;
+      Space -> START_DRAG_FIELD;
+      ArrowUp -> MOVE_SLOT_UP;
+      ArrowDown -> MOVE_SLOT_DOWN;
+      ArrowLeft -> MOVE_SLOT_TO_PREV_GROUP;
+      ArrowRight -> MOVE_SLOT_TO_NEXT_GROUP;
+      Escape -> CANCEL_DRAG;
+      Enter -> COMMIT_GROUP_LABEL;
+    }
+    focus {
+      trap: false;
+      initial: layoutCanvas;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "application";
+        aria-label: concat("Form layout editor for schema: ", ?schema);
+        data-state: state;
+      };
+      layoutCanvas -> {
+        role: "region";
+        aria-label: "Layout canvas";
+        aria-description: "Drag fields from the unplaced list into groups to define the edit form layout";
+      };
+      group -> {
+        role: "group";
+        aria-label: concat(self.label, " group, type: ", self.layoutType);
+      };
+      dropZone -> {
+        role: "listbox";
+        aria-label: concat("Drop zone for group ", self.groupLabel);
+        aria-dropeffect: if state == "dragging" then "move" else "none";
+      };
+      fieldSlot -> {
+        role: "option";
+        aria-label: concat(self.label, " field, type ", self.fieldType);
+        aria-grabbed: if state == "dragging" and self.isGrabbed then "true" else "false";
+      };
+      fieldSlotDragHandle -> {
+        role: "button";
+        aria-label: concat("Drag to reposition field ", self.label);
+        aria-roledescription: "drag handle";
+      };
+      removeSlotButton -> {
+        role: "button";
+        aria-label: concat("Remove field ", self.label, " from layout");
+      };
+      unplacedFieldsList -> {
+        role: "list";
+        aria-label: "Unplaced fields";
+        aria-description: "Drag fields from this list into the canvas to place them";
+      };
+      unplacedFieldItem -> {
+        role: "listitem";
+        aria-label: concat(self.label, " field, unplaced");
+        aria-grabbed: if state == "dragging" and self.isGrabbed then "true" else "false";
+      };
+      groupLabel -> {
+        role: "textbox";
+        aria-label: "Group label";
+        aria-required: "true";
+      };
+      previewPanel -> {
+        role: "region";
+        aria-label: "Form preview";
+        aria-live: "polite";
+        aria-hidden: if state != "previewing" then "true" else "false";
+      };
+      previewToggle -> {
+        role: "button";
+        aria-label: if state == "previewing" then "Hide preview" else "Show preview";
+        aria-pressed: if state == "previewing" then "true" else "false";
+      };
+      addGroupButton -> {
+        role: "button";
+        aria-label: "Add section group";
+      };
+      addTabButton -> {
+        role: "button";
+        aria-label: "Add tab group";
+      };
+      addSidebarButton -> {
+        role: "button";
+        aria-label: "Add sidebar panel";
+      };
+      addAccordionButton -> {
+        role: "button";
+        aria-label: "Add accordion section";
+      };
+      addFieldsetButton -> {
+        role: "button";
+        aria-label: "Add fieldset";
+      };
+      removeGroupButton -> {
+        role: "button";
+        aria-label: concat("Remove group ", self.label);
+      };
+    }
+  }
+
+  props {
+    schema: String
+    fields: list { fieldId: String, label: String, fieldType: String } = []
+    layout: list { groupId: String, label: String, layoutType: String, fieldIds: list String } = []
+    readOnly: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-schema: ?schema;
+      data-readonly: if ?readOnly then "true" else "false";
+    }
+
+    layoutCanvas -> {
+      data-part: "layout-canvas";
+      data-drag-active: if state == "dragging" then "true" else "false";
+    }
+
+    dropZone -> {
+      data-part: "drop-zone";
+      data-group-id: self.groupId;
+      data-active: if state == "dragging" then "true" else "false";
+      onDrop: send(DROP_FIELD, { groupId: self.groupId, fieldId: self.draggedFieldId, position: self.dropPosition });
+    }
+
+    group -> {
+      data-part: "group";
+      data-group-id: self.groupId;
+      data-layout-type: self.layoutType;
+    }
+
+    groupHeader -> {
+      data-part: "group-header";
+    }
+
+    groupLabel -> {
+      data-part: "group-label";
+      value: self.label;
+      onFocus: send(EDIT_GROUP_LABEL, { groupId: self.groupId });
+      onKeyDown: if key == "Enter" then send(COMMIT_GROUP_LABEL) else if key == "Escape" then send(CANCEL_GROUP_LABEL) else noop;
+      onBlur: send(COMMIT_GROUP_LABEL);
+      disabled: if ?readOnly then true else false;
+    }
+
+    groupTypeBadge -> {
+      data-part: "group-type-badge";
+      data-type: self.layoutType;
+    }
+
+    removeGroupButton -> {
+      data-part: "remove-group-button";
+      onClick: send(REMOVE_GROUP, { groupId: self.groupId });
+      disabled: if ?readOnly then true else false;
+    }
+
+    collapseGroupButton -> {
+      data-part: "collapse-group-button";
+      onClick: send(TOGGLE_GROUP_COLLAPSE, { groupId: self.groupId });
+      aria-expanded: if self.collapsed then "false" else "true";
+    }
+
+    fieldSlot -> {
+      data-part: "field-slot";
+      data-field-id: self.fieldId;
+      data-group-id: self.groupId;
+    }
+
+    fieldSlotLabel -> {
+      data-part: "field-slot-label";
+    }
+
+    fieldSlotDragHandle -> {
+      data-part: "field-slot-drag-handle";
+      onPointerDown: send(START_DRAG_FIELD, { fieldId: self.fieldId, fromGroupId: self.groupId });
+      onKeyDown: if key == "Space" then send(START_DRAG_FIELD, { fieldId: self.fieldId, fromGroupId: self.groupId }) else if key == "ArrowUp" then send(MOVE_SLOT_UP, { fieldId: self.fieldId }) else if key == "ArrowDown" then send(MOVE_SLOT_DOWN, { fieldId: self.fieldId }) else if key == "Escape" then send(CANCEL_DRAG) else noop;
+      tabIndex: "0";
+      disabled: if ?readOnly then true else false;
+    }
+
+    removeSlotButton -> {
+      data-part: "remove-slot-button";
+      onClick: send(REMOVE_SLOT, { fieldId: self.fieldId, groupId: self.groupId });
+      disabled: if ?readOnly then true else false;
+    }
+
+    unplacedFieldsList -> {
+      data-part: "unplaced-fields-list";
+    }
+
+    unplacedFieldItem -> {
+      data-part: "unplaced-field-item";
+      data-field-id: self.fieldId;
+      onPointerDown: send(START_DRAG_FIELD, { fieldId: self.fieldId, fromGroupId: "unplaced" });
+      onKeyDown: if key == "Space" then send(START_DRAG_FIELD, { fieldId: self.fieldId, fromGroupId: "unplaced" }) else noop;
+      tabIndex: "0";
+    }
+
+    previewPanel -> {
+      data-part: "preview-panel";
+      data-visible: if state == "previewing" then "true" else "false";
+    }
+
+    previewToggle -> {
+      data-part: "preview-toggle";
+      onClick: send(TOGGLE_PREVIEW);
+      data-active: if state == "previewing" then "true" else "false";
+    }
+
+    addGroupButton -> {
+      data-part: "add-group-button";
+      onClick: send(ADD_GROUP, { layoutType: "main-content" });
+      disabled: if ?readOnly then true else false;
+    }
+
+    addTabButton -> {
+      data-part: "add-tab-button";
+      onClick: send(ADD_GROUP, { layoutType: "tab-group" });
+      disabled: if ?readOnly then true else false;
+    }
+
+    addSidebarButton -> {
+      data-part: "add-sidebar-button";
+      onClick: send(ADD_GROUP, { layoutType: "sidebar" });
+      disabled: if ?readOnly then true else false;
+    }
+
+    addAccordionButton -> {
+      data-part: "add-accordion-button";
+      onClick: send(ADD_GROUP, { layoutType: "accordion-section" });
+      disabled: if ?readOnly then true else false;
+    }
+
+    addFieldsetButton -> {
+      data-part: "add-fieldset-button";
+      onClick: send(ADD_GROUP, { layoutType: "fieldset" });
+      disabled: if ?readOnly then true else false;
+    }
+  }
+
+  invariant {
+    example "place a field via drag": {
+      after fieldSlotDragHandle.pointerDown -> ok
+      then root -> { data-state: "dragging" }
+      and layoutCanvas -> { data-drag-active: "true" }
+      then dropZone.drop -> ok
+      then root -> { data-state: "idle" }
+      and layoutCanvas -> { data-drag-active: "false" }
+    }
+
+    example "edit group label": {
+      after groupLabel.focus -> ok
+      then root -> { data-state: "editing-group" }
+      then send(COMMIT_GROUP_LABEL) -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    example "toggle preview": {
+      after previewToggle.click -> ok
+      then root -> { data-state: "previewing" }
+      and previewPanel -> { data-visible: "true" }
+      then previewToggle.click -> ok
+      then root -> { data-state: "idle" }
+      and previewPanel -> { data-visible: "false" }
+    }
+
+    example "cancel drag via Escape": {
+      after fieldSlotDragHandle.keyDown(Space) -> ok
+      then root -> { data-state: "dragging" }
+      then fieldSlotDragHandle.keyDown(Escape) -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    always "data-state on root reflects FSM": {
+      root -> { data-state: state }
+    }
+
+    always "drop zones are only active while dragging": {
+      dropZone -> { data-active: if state == "dragging" then "true" else "false" }
+    }
+
+    always "preview panel visible only while previewing": {
+      previewPanel -> { data-visible: if state == "previewing" then "true" else "false" }
+    }
+
+    never "edit actions enabled while readonly": {
+      ?readOnly == true and (
+        fieldSlotDragHandle -> { disabled: false } or
+        addGroupButton -> { disabled: false } or
+        removeGroupButton -> { disabled: false }
+      )
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    action dropZone.drop {
+      requires: state == "dragging"
+      ensures ok: state == "idle"
+    }
+
+    "DROP_FIELD calls Property/set for fieldGroups with the updated placement";
+    "ADD_GROUP calls Property/set for editorLayout with the new group appended";
+    "REMOVE_GROUP returns all slots in that group to the unplacedFieldsList";
+    "Escape during dragging cancels the drag without modifying the layout";
+    "A field cannot appear in more than one group at a time";
+    "A field that is in unplacedFieldsList is not in any group's field list";
+    "TOGGLE_PREVIEW from previewing returns to idle, not to editing-group";
+  }
+
+}

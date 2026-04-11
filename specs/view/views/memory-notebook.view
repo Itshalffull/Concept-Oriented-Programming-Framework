@@ -1,0 +1,42 @@
+view "memory-notebook" {
+  shell: "memory-notebook"
+
+  features {
+    filter
+    sort
+    projection
+    interaction
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ContentNode\",\"action\":\"list\"}"
+    }
+    filter: {
+      node: "{\"type\":\"true\"}"
+    }
+    sort: {
+      keys: "[]"
+    }
+    projection: {
+      fields: "[]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+  }
+
+  purpose {
+    Curated research memory — approved semantic memories with category
+    badges, confidence scores, and provenance links. Supports approve,
+    retract, and supersede actions. Read-write (approve/retract).
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+  }
+}

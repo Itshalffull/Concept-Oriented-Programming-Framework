@@ -1,0 +1,137 @@
+@version(1)
+@category("research")
+concept CrossEncoderRerankerProvider [P] {
+
+  purpose {
+    Apply cross-encoder neural reranking to a candidate document set,
+    producing fine-grained relevance scores by jointly encoding the query
+    and each document together. Registered with PluginRegistry under
+    provider_id "cross_encoder_reranker" so Retriever can dispatch
+    second-stage reranking to this provider.
+  }
+
+  state {
+    providers: set P
+    config {
+      provider_id: P -> String
+      model: P -> String
+      top_n: P -> Int
+      score_threshold: P -> option Float
+      batch_size: P -> Int
+    }
+    metrics {
+      call_count: P -> Int
+      total_latency_ms: P -> Int
+      error_count: P -> Int
+      documents_reranked: P -> Int
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action configure(model: String, top_n: Int, score_threshold: option Float,
+                     batch_size: Int) {
+      -> ok(provider: P) {
+        Register a cross-encoder reranker using the specified model. Supported
+        models include cross-encoder/ms-marco-MiniLM-L-6-v2,
+        cross-encoder/ms-marco-electra-base, and BAAI/bge-reranker-large.
+        top_n sets the maximum number of documents returned after reranking.
+        batch_size controls how many query-document pairs are scored per
+        inference call.
+      }
+      -> invalid(message: String) {
+        The model identifier is empty, top_n is less than 1, or batch_size
+        is less than 1.
+      }
+      -> duplicate(message: String) {
+        A cross-encoder provider using this model is already configured.
+      }
+      fixture minilm_config { model: "cross-encoder/ms-marco-MiniLM-L-6-v2", top_n: 5, score_threshold: 0.3, batch_size: 32 }
+      fixture electra_config { model: "cross-encoder/ms-marco-electra-base", top_n: 10, score_threshold: none, batch_size: 16 }
+      fixture empty_model { model: "", top_n: 5, score_threshold: none, batch_size: 32 } -> invalid
+      fixture zero_top_n { model: "cross-encoder/ms-marco-MiniLM-L-6-v2", top_n: 0, score_threshold: none, batch_size: 32 } -> invalid
+    }
+
+    action rerank(provider: P, query: String,
+                  documents: list {id: String, content: String, metadata: option String}) {
+      -> ok(reranked: list {id: String, content: String, score: Float, rank: Int, metadata: option String}) {
+        Score each document by jointly encoding it with the query through the
+        cross-encoder model. Return documents ordered by descending relevance
+        score, limited to top_n results and filtered by score_threshold when
+        configured. The rank field is 1-indexed position in the output list.
+      }
+      -> notfound(message: String) {
+        No provider is registered with this identifier.
+      }
+      -> error(message: String) {
+        The model inference call failed, the document list was empty, or the
+        query string was empty.
+      }
+      fixture rerank_ok {
+        provider: $minilm_config.provider,
+        query: "transformer attention mechanism",
+        documents: [
+          { id: "doc-1", content: "Self-attention allows models to attend to all positions.", metadata: none },
+          { id: "doc-2", content: "Convolutional networks use local receptive fields.", metadata: none },
+          { id: "doc-3", content: "The attention head computes queries, keys and values.", metadata: none }
+        ]
+      } after minilm_config
+      fixture rerank_empty_query {
+        provider: $minilm_config.provider,
+        query: "",
+        documents: [{ id: "doc-1", content: "Some content.", metadata: none }]
+      } after minilm_config -> error
+      fixture rerank_missing { provider: "ghost-provider", query: "test", documents: [] } -> notfound
+    }
+
+    action getMetrics(provider: P) {
+      -> ok(call_count: Int, total_latency_ms: Int, error_count: Int,
+            documents_reranked: Int, avg_latency_ms: Float) {
+        Return accumulated call statistics. avg_latency_ms is
+        total_latency_ms / call_count when call_count > 0, otherwise 0.
+      }
+      -> notfound(message: String) {
+        No provider is registered with this identifier.
+      }
+      fixture metrics_ok { provider: $minilm_config.provider } after minilm_config
+      fixture metrics_missing { provider: "no-provider" } -> notfound
+    }
+  }
+
+  example "configure then rerank candidates": {
+    after configure(model: "cross-encoder/ms-marco-MiniLM-L-6-v2",
+                    top_n: 3, score_threshold: 0.2, batch_size: 32)
+          -> ok(provider: p)
+    then rerank(provider: p, query: "climate change impact on agriculture",
+                documents: [
+                  { id: "d1", content: "Rising temperatures reduce crop yields globally.", metadata: none },
+                  { id: "d2", content: "Urban heat islands affect city infrastructure.", metadata: none }
+                ])
+          -> ok(reranked: r)
+  }
+
+  always "metrics initialised on configure": {
+    forall p in providers: call_count(p) >= 0
+  }
+
+  never "negative documents_reranked": {
+    exists p in providers: documents_reranked(p) < 0
+  }
+
+  never "unconfigured model": {
+    exists p in providers: model(p) = none
+  }
+
+  action configure {
+    requires: model != ""
+    ensures ok: provider != none
+  }
+
+  action rerank {
+    requires: query != ""
+    ensures ok: reranked != none
+  }
+}

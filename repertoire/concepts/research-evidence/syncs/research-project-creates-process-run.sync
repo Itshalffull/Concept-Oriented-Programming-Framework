@@ -1,0 +1,13 @@
+# When a ResearchProject transitions to "planning" status, start a
+# ProcessRun from the deep-research-process spec so the configurable
+# multi-step research workflow begins executing immediately.
+
+sync ResearchProjectCreatesProcessRun [eager] [required]
+  purpose: "Start a deep-research-process ProcessRun when a ResearchProject moves into planning, binding the project as the run's input so every downstream step has access to query, budget, and perspective config."
+when {
+  ResearchProject/transition: [project: ?proj; new_status: "planning"]
+    => ok(project: ?proj)
+}
+then {
+  ProcessRun/start: [spec_ref: "deep-research-process"; spec_version: 1; input: ?proj]
+}

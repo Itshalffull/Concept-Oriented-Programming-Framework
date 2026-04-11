@@ -1,0 +1,34 @@
+# When PlanAndExecuteStrategy generates a plan, request an Approval on
+# the plan page to gate execution.  When the Approval is granted, advance
+# the ResearchProject to "executing" so the gather-sources step proceeds.
+#
+# The rejection path (Approval/reject → back to "planning") is handled
+# separately by the process graph's on_variant="rejected" edge routing.
+
+sync PlanRequiresApproval [eager] [required]
+  purpose: "Request human approval on the generated research plan page before allowing the process run to continue past the planning step, enabling users to review, edit, and accept sub-questions before source gathering begins."
+when {
+  PlanAndExecuteStrategy/plan: [session: ?session; goal: ?goal]
+    => ok(steps: ?steps)
+}
+where {
+  AgentSession: { ?session context: ?ctx }
+  Property: { ?ctx key: "plan_page_id"; value: ?plan_page }
+}
+then {
+  Approval/request: [step_ref: ?plan_page; policy_kind: "one_of"; required_count: 1; roles: "human"]
+}
+
+sync ApprovalAdvancesToExecuting [eager] [required]
+  purpose: "Advance the ResearchProject to executing status once a plan approval is granted, unblocking the source-gathering step in the process run."
+when {
+  Approval/approve: [approval: ?approval; actor: ?actor; comment: ?comment]
+    => ok(approval: ?approval; step_ref: ?plan_page)
+}
+where {
+  Property: { ?plan_page key: "schema"; value: "research-plan" }
+  Property: { ?plan_page key: "project_id"; value: ?proj }
+}
+then {
+  ResearchProject/transition: [project: ?proj; new_status: "executing"]
+}

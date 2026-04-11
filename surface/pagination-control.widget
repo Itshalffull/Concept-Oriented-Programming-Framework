@@ -1,0 +1,220 @@
+@version(1)
+widget pagination-control {
+
+  purpose {
+    Navigation control for paginated views. Displays the current page
+    position and total record count, and lets the user move to the
+    previous or next page and change the number of records per page.
+    Connects to PaginationSpec/advance, PaginationSpec/retreat, and
+    PaginationSpec/resize. Disables directional buttons automatically
+    when the view is on the first or last page, and enters a loading
+    state while the next page is being fetched.
+  }
+
+  anatomy {
+    root:             container  { Top-level navigation wrapper }
+    prevButton:       action     { Button that navigates to the previous page }
+    nextButton:       action     { Button that navigates to the next page }
+    pageIndicator:    text       { Displays the current page number and total page count }
+    pageSizeSelector: interactive { Select control for changing the number of records per page }
+    totalCount:       text       { Displays the total number of matching records }
+  }
+
+  states {
+    idle [initial] {
+      on LOAD -> loading;
+      on REACH_FIRST -> firstPage;
+      on REACH_LAST -> lastPage;
+      on DISABLE -> disabled;
+    }
+
+    loading {
+      on LOADED -> idle;
+      on LOADED_FIRST -> firstPage;
+      on LOADED_LAST -> lastPage;
+    }
+
+    firstPage {
+      on NEXT -> loading;
+      on REACH_LAST -> lastPage;
+      on DISABLE -> disabled;
+    }
+
+    lastPage {
+      on PREV -> loading;
+      on REACH_FIRST -> firstPage;
+      on DISABLE -> disabled;
+    }
+
+    disabled {
+      on ENABLE -> idle;
+    }
+  }
+
+  accessibility {
+    role: navigation;
+    keyboard {
+      ArrowLeft -> PREV;
+      ArrowRight -> NEXT;
+    }
+    focus {
+      trap: false;
+      initial: prevButton;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "navigation";
+        aria-label: "Pagination";
+      };
+      prevButton -> {
+        role: "button";
+        aria-label: "Previous page";
+        aria-disabled: if state == "firstPage" or state == "disabled" or state == "loading" then "true" else "false";
+      };
+      nextButton -> {
+        role: "button";
+        aria-label: "Next page";
+        aria-disabled: if state == "lastPage" or state == "disabled" or state == "loading" then "true" else "false";
+      };
+      pageIndicator -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: "Page indicator";
+      };
+      pageSizeSelector -> {
+        role: "combobox";
+        aria-label: "Records per page";
+      };
+      totalCount -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: "Total records";
+      };
+    }
+  }
+
+  props {
+    pagination_spec_name: String
+    pageSize: Int = 25
+    currentPage: Int = 1
+    totalPages: option Int
+    hasMore: Bool = false
+    disabled: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+    }
+
+    prevButton -> {
+      data-part: "prev-button";
+      disabled: if state == "firstPage" or state == "disabled" or state == "loading" then true else false;
+      aria-disabled: if state == "firstPage" or state == "disabled" or state == "loading" then "true" else "false";
+      onClick: send(PREV);
+    }
+
+    nextButton -> {
+      data-part: "next-button";
+      disabled: if state == "lastPage" or state == "disabled" or state == "loading" then true else false;
+      aria-disabled: if state == "lastPage" or state == "disabled" or state == "loading" then "true" else "false";
+      onClick: send(NEXT);
+    }
+
+    pageIndicator -> {
+      data-part: "page-indicator";
+      text: if ?totalPages then concat("Page ", ?currentPage, " of ", ?totalPages) else concat("Page ", ?currentPage);
+    }
+
+    pageSizeSelector -> {
+      data-part: "page-size-selector";
+      disabled: if state == "disabled" then true else false;
+      onInput: send(RESIZE);
+    }
+
+    totalCount -> {
+      data-part: "total-count";
+      text: if ?totalPages then concat(?totalPages, " pages") else "Loading...";
+    }
+  }
+
+  affordance {
+    serves: navigation;
+    specificity: 8;
+    when {
+      feature: "pagination";
+    }
+    bind {
+      pagination_spec_name: pagination_spec_name;
+      pageSize: pageSize;
+      currentPage: currentPage;
+      totalPages: totalPages;
+      hasMore: hasMore;
+    }
+  }
+
+  invariant {
+    example "prevButton disabled on first page": {
+      after transition(from: "idle", event: "REACH_FIRST") -> ok
+      then root -> { data-state: "firstPage" }
+      and prevButton -> { aria-disabled: "true" }
+      and nextButton -> { aria-disabled: "false" }
+    }
+
+    example "nextButton disabled on last page": {
+      after transition(from: "idle", event: "REACH_LAST") -> ok
+      then root -> { data-state: "lastPage" }
+      and nextButton -> { aria-disabled: "true" }
+      and prevButton -> { aria-disabled: "false" }
+    }
+
+    example "both buttons disabled when disabled": {
+      after transition(from: "idle", event: "DISABLE") -> ok
+      then root -> { data-state: "disabled" }
+      and prevButton -> { aria-disabled: "true" }
+      and nextButton -> { aria-disabled: "true" }
+    }
+
+    example "loading state entered on NEXT from firstPage": {
+      after transition(from: "firstPage", event: "NEXT") -> ok
+      then root -> { data-state: "loading" }
+    }
+
+    example "loading state entered on PREV from lastPage": {
+      after transition(from: "lastPage", event: "PREV") -> ok
+      then root -> { data-state: "loading" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        root -> { data-state: s.name }
+    }
+
+    always "prevButton disabled in firstPage state": {
+      if state == "firstPage" then prevButton -> { aria-disabled: "true" }
+    }
+
+    always "nextButton disabled in lastPage state": {
+      if state == "lastPage" then nextButton -> { aria-disabled: "true" }
+    }
+
+    always "both nav buttons disabled when overall state is disabled": {
+      if state == "disabled" then prevButton -> { aria-disabled: "true" }
+      and if state == "disabled" then nextButton -> { aria-disabled: "true" }
+    }
+
+    never "both directional buttons enabled on first or last page": {
+      state == "firstPage" and prevButton -> { aria-disabled: "false" }
+    }
+
+    "pageSizeSelector onInput must dispatch RESIZE to PaginationSpec/resize";
+    "pageIndicator text must update after every page transition";
+    "totalCount must reflect the latest PaginationSpec/updateCount value";
+  }
+
+}

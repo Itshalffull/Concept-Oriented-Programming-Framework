@@ -12,4 +12,4 @@ export async function handleClefBaseSkill(
   return JSON.stringify(result.body, null, 2);
 }
 
-export const clefBaseSkillCommands = ['createContent', 'compileContent', 'defineSchema', 'applySchema', 'spawnAgent', 'invokeAgent', 'createTrigger', 'startProcess', 'approveStep', 'createView', 'resolveView', 'installPackage', 'browsePackages', 'createDiagram', 'exportDiagram', 'analyzeGraph', 'getContent', 'getAgentStatus', 'listSessions', 'getProcessStatus', 'getView'];
+export const clefBaseSkillCommands = [];

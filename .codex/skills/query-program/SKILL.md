@@ -20,6 +20,9 @@ Build sequences of query instructions as inspectable , composable data . A Query
 - **FilterSpec is Algebraic:** Filters compose via AND trees. The identity filter is {type:'true'}. Composition is associative. This enables incremental filter building in UIs.
 - **SortSpec Composition is Ordered:** Sort composition is NOT commutative. compose(byName, byDate) means sort by name then break ties by date. This matches user mental models.
 - **Schema-Scoped Data Sources:** When a view shows data from a single schema, ALWAYS use listBySchema in the DataSourceSpec instead of list + client-side schema filter. listBySchema does a server-side join returning pre-filtered, schema-enriched results in one query. Use list only when the view genuinely shows all content types with interactive schema toggles.
+- **PaginationSpec for Paginated Views:** When a view needs pagination, include 'pagination' in the ViewShell features set and provide a PaginationSpec ref. The PaginationSpec manages mode (offset, cursor, keyset), page size, and position. compile-query injects offset+limit from PaginationSpec/evaluate. paginate-on-execute updates the spec's totalCount after query execution.
+- **ViewShell Selective Features:** Views declare which specs they need via the features field: a JSON array of enabled feature names (filter, sort, group, projection, interaction, pagination). Always-on: dataSource, presentation. view-resolve.sync only fetches child specs for enabled features. .view files declare features in a features {} block.
+- **Per-Schema Denormalized Relations:** schema-index-on-apply.sync maintains denormalized schema:{name} relations. listBySchema reads from these directly instead of joining membership + node tables. This eliminates the O(M+N) full-table join — a single find('schema:Article', {}, { limit: 50 }) suffices.
 - **Split Execution by sourceType:** Filters are partitioned by sourceType for split execution: system + contextual push to backend, interactive + search run locally in-memory. This lets views fetch pre-filtered data from the kernel while keeping toggle filters responsive without round-trips. For E2EE (encrypted-local kind), ALL processing runs locally after client-side decrypt.
 - **Pushdown for Remote Sources:** RemoteQueryProvider splits a QueryProgram into pushdown (sent to API) and residual (executed in-memory). Views over REST APIs get the same composable experience as local queries.
 
@@ -90,21 +93,32 @@ Append a Limit instruction truncating to at most N records.
 
 **Arguments:** `$0` **program** (Q), `$1` **count** (int), `$2` **output** (string)
 
-### Step 9: Terminate Program
+### Step 9: Offset (Skip) Records
+
+Append an Offset instruction skipping the first N records. Used with Limit for pagination: offset(20) + limit(10) returns records 20-29. Both offset and limit are kernel capabilities — pushed to backend (SQL OFFSET/LIMIT, API query params).
+
+**Arguments:** `$0` **program** (Q), `$1` **count** (int), `$2` **output** (string)
+
+### Step 10: Terminate Program
 
 Seal the program with a terminal variant and output binding. No further instructions may be appended. The program's terminated flag becomes true.
 
 **Arguments:** `$0` **program** (Q), `$1` **variant** (string), `$2` **output** (string)
 
-### Step 10: Compose Programs
+### Step 11: Compose Programs
 
 Monadic bind: chain two programs — run first, bind its output to bindAs, then continue with second. Inherits the union of both readFields.
 
 **Arguments:** `$0` **first** (Q), `$1` **second** (Q), `$2` **bindAs** (string)
 
+### Step 12: Add .view Fixtures
+
+Add fixture blocks to the .view file declaring ViewShell + child spec data for testing invariants. Each fixture names a specType (dataSource, filter, sort, group, projection, presentation, interaction, pagination) with key-value fields. The test generator seeds mock storage from fixtures, then runs compileAndAnalyze to assert invariants.
+
 ## References
 
 - [QueryProgram instruction grammar and pipeline reference](references/query-program-grammar.md)
+- [.view file grammar reference](references/view-grammar.md)
 ## Anti-Patterns
 
 ### Using list + client-side schema filter instead of listBySchema

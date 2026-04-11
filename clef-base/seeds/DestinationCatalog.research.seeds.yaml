@@ -1,0 +1,34 @@
+# Deep research destination entries for the shell navigation.
+
+concept: DestinationCatalog
+action: register
+entries:
+  # === Research ===
+  - destination: research
+    name: research
+    targetConcept: ResearchProject
+    targetView: research-projects
+    href: /admin/research
+    icon: "🔬"
+    group: Content
+  - destination: sources
+    name: sources
+    targetConcept: ContentNode
+    targetView: source-library
+    href: /admin/sources
+    icon: "📚"
+    group: Content
+  - destination: memory
+    name: memory
+    targetConcept: AgentMemory
+    targetView: memory-notebook
+    href: /admin/memory
+    icon: "🧠"
+    group: Content
+  - destination: evidence
+    name: evidence
+    targetConcept: Claim
+    targetView: evidence-graph
+    href: /admin/evidence
+    icon: "🔗"
+    group: Advanced

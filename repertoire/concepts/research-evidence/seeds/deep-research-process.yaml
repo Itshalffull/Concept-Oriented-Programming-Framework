@@ -1,0 +1,458 @@
+# Deep Research Process — configurable ProcessSpec seed.
+# Creates the deep research workflow as a content-native process-spec page.
+# Steps are Outline children with the process-step child schema applied.
+# Edges are stored as a JSON metadata block on the process-spec page.
+#
+# This is NOT hardcoded — users can edit the workflow through:
+#   - workflow-editor widget (n8n-style node-graph canvas)
+#   - process-map-graph widget (visual directed graph)
+#   - schema-block-editor (add/remove/reorder Outline children)
+#
+# Step types used:
+#   llm       — dispatches to AgentSession/spawn using step's required_role
+#   approval  — gates execution, dispatches to Approval/request
+#   automation — runs without human or LLM involvement
+#
+# The required_role values reference persona page IDs defined in:
+#   - deep-researcher-persona.yaml (plan, gather_sources, publish steps)
+#   - synthesis-writer-persona.yaml (synthesize step)
+#   - fact-checker-persona.yaml (verify_cites step)
+#
+# Edges encode the full routing graph including revision loops.
+# Parallel routing on gather_sources is expressed via routing="parallel"
+# which activates the parallel-fork/parallel-join syncs per sub-question.
+#
+# Referenced by: MAG-533 (Research ProcessSpec Seed)
+# PRD sections: §2.5.2, §5
+
+concept: ContentNode
+action: create
+entries:
+  - node: process-spec:deep-research-process
+    type: process-spec
+    content: '{"spec_name":"Deep Research Process","spec_status":"active","spec_version":1,"spec_description":"Configurable multi-step research workflow: plan, gather, quality-check, synthesize, verify, review, and publish. Each step dispatches to a specialist persona. Supports revision loops at plan, synthesis, and human-review stages.","spec_steps":8,"spec_edges":11}'
+    createdBy: system
+
+---
+
+# Apply the process-spec schema to the process page
+# (redundant if the content-native-schema sync fires, but safe as a seed guard)
+
+concept: Schema
+action: applyTo
+entries:
+  - entity_id: process-spec:deep-research-process
+    schema: process-spec
+
+---
+
+# Set the process-spec Properties on the page
+
+concept: Property
+action: set
+entries:
+  - entity: process-spec:deep-research-process
+    key: name
+    value: "Deep Research Process"
+  - entity: process-spec:deep-research-process
+    key: description
+    value: "Configurable multi-step deep research workflow. Supports plan revision loops, parallel source gathering, quality gating, synthesis, citation verification, and human review before publish."
+  - entity: process-spec:deep-research-process
+    key: version
+    value: "1"
+  - entity: process-spec:deep-research-process
+    key: status
+    value: active
+  - entity: process-spec:deep-research-process
+    key: owner
+    value: system
+  - entity: process-spec:deep-research-process
+    key: tags
+    value: "research,llm,deep-research"
+
+---
+
+# Step 1: plan
+# LLM step — deep-researcher persona decomposes query into sub-questions
+# using PlanAndExecuteStrategy. Produces a research-plan content-native page.
+
+concept: Outline
+action: create
+entries:
+  - node: process-spec:deep-research-process:step:plan
+    parent: process-spec:deep-research-process
+
+---
+
+concept: Property
+action: set
+entries:
+  - entity: process-spec:deep-research-process:step:plan
+    key: step_type
+    value: llm
+  - entity: process-spec:deep-research-process:step:plan
+    key: step_key
+    value: plan
+  - entity: process-spec:deep-research-process:step:plan
+    key: required_role
+    value: "agent-persona:deep-researcher"
+  - entity: process-spec:deep-research-process:step:plan
+    key: strategy
+    value: plan_and_execute
+  - entity: process-spec:deep-research-process:step:plan
+    key: timeout_ms
+    value: "300000"
+  - entity: process-spec:deep-research-process:step:plan
+    key: retry_count
+    value: "1"
+  - entity: process-spec:deep-research-process:step:plan
+    key: on_success
+    value: approve_plan
+  - entity: process-spec:deep-research-process:step:plan
+    key: content
+    value: "Decompose the research query into sub-questions with strategies and dependencies. Assign perspectives and estimate complexity. Output is a research-plan content-native page for human review."
+
+---
+
+# Step 2: approve_plan
+# Approval step — human reviews the generated plan, approves or sends back for revision.
+
+concept: Outline
+action: create
+entries:
+  - node: process-spec:deep-research-process:step:approve_plan
+    parent: process-spec:deep-research-process
+
+---
+
+concept: Property
+action: set
+entries:
+  - entity: process-spec:deep-research-process:step:approve_plan
+    key: step_type
+    value: approval
+  - entity: process-spec:deep-research-process:step:approve_plan
+    key: step_key
+    value: approve_plan
+  - entity: process-spec:deep-research-process:step:approve_plan
+    key: required_role
+    value: human
+  - entity: process-spec:deep-research-process:step:approve_plan
+    key: approval_policy
+    value: one_of
+  - entity: process-spec:deep-research-process:step:approve_plan
+    key: timeout_ms
+    value: "86400000"
+  - entity: process-spec:deep-research-process:step:approve_plan
+    key: retry_count
+    value: "0"
+  - entity: process-spec:deep-research-process:step:approve_plan
+    key: on_success
+    value: gather_sources
+  - entity: process-spec:deep-research-process:step:approve_plan
+    key: on_failure
+    value: plan
+  - entity: process-spec:deep-research-process:step:approve_plan
+    key: content
+    value: "Review the research plan. Approve to proceed with source gathering, or reject with notes to revise the plan."
+
+---
+
+# Step 3: gather_sources
+# LLM step — deep-researcher runs web and academic searches in parallel per sub-question.
+# Each result is captured as a research-source page and run through quality evaluation.
+
+concept: Outline
+action: create
+entries:
+  - node: process-spec:deep-research-process:step:gather_sources
+    parent: process-spec:deep-research-process
+
+---
+
+concept: Property
+action: set
+entries:
+  - entity: process-spec:deep-research-process:step:gather_sources
+    key: step_type
+    value: llm
+  - entity: process-spec:deep-research-process:step:gather_sources
+    key: step_key
+    value: gather_sources
+  - entity: process-spec:deep-research-process:step:gather_sources
+    key: required_role
+    value: "agent-persona:deep-researcher"
+  - entity: process-spec:deep-research-process:step:gather_sources
+    key: routing
+    value: parallel
+  - entity: process-spec:deep-research-process:step:gather_sources
+    key: timeout_ms
+    value: "600000"
+  - entity: process-spec:deep-research-process:step:gather_sources
+    key: retry_count
+    value: "2"
+  - entity: process-spec:deep-research-process:step:gather_sources
+    key: on_success
+    value: quality_gate
+  - entity: process-spec:deep-research-process:step:gather_sources
+    key: content
+    value: "Gather sources in parallel for each sub-question. Use web_search and search_scholar tools. Capture promising results as research-source pages. Evaluate credibility on each source."
+
+---
+
+# Step 4: quality_gate
+# Automation step — checks that gathered sources meet minimum credibility thresholds.
+# Fails if credibility_score is below threshold, looping back for more sources.
+
+concept: Outline
+action: create
+entries:
+  - node: process-spec:deep-research-process:step:quality_gate
+    parent: process-spec:deep-research-process
+
+---
+
+concept: Property
+action: set
+entries:
+  - entity: process-spec:deep-research-process:step:quality_gate
+    key: step_type
+    value: automation
+  - entity: process-spec:deep-research-process:step:quality_gate
+    key: step_key
+    value: quality_gate
+  - entity: process-spec:deep-research-process:step:quality_gate
+    key: condition_expr
+    value: "credibility_score >= 0.7"
+  - entity: process-spec:deep-research-process:step:quality_gate
+    key: timeout_ms
+    value: "30000"
+  - entity: process-spec:deep-research-process:step:quality_gate
+    key: retry_count
+    value: "0"
+  - entity: process-spec:deep-research-process:step:quality_gate
+    key: on_success
+    value: synthesize
+  - entity: process-spec:deep-research-process:step:quality_gate
+    key: on_failure
+    value: gather_sources
+  - entity: process-spec:deep-research-process:step:quality_gate
+    key: content
+    value: "Check that at least 70% of gathered sources meet the source-credibility QualityProfile threshold. If the score is below threshold, loop back to gather higher-quality sources."
+
+---
+
+# Step 5: synthesize
+# LLM step — synthesis-writer persona generates the research report sections
+# with inline citations. Uses a different persona from gather_sources.
+
+concept: Outline
+action: create
+entries:
+  - node: process-spec:deep-research-process:step:synthesize
+    parent: process-spec:deep-research-process
+
+---
+
+concept: Property
+action: set
+entries:
+  - entity: process-spec:deep-research-process:step:synthesize
+    key: step_type
+    value: llm
+  - entity: process-spec:deep-research-process:step:synthesize
+    key: step_key
+    value: synthesize
+  - entity: process-spec:deep-research-process:step:synthesize
+    key: required_role
+    value: "agent-persona:synthesis-writer"
+  - entity: process-spec:deep-research-process:step:synthesize
+    key: timeout_ms
+    value: "600000"
+  - entity: process-spec:deep-research-process:step:synthesize
+    key: retry_count
+    value: "1"
+  - entity: process-spec:deep-research-process:step:synthesize
+    key: on_success
+    value: verify_cites
+  - entity: process-spec:deep-research-process:step:synthesize
+    key: content
+    value: "Generate the full research report using the standard-research-report template. Write each section with inline citations to captured snippets. Register claims via create_claim and link evidence via link_citation."
+
+---
+
+# Step 6: verify_cites
+# LLM step — fact-checker persona runs two-round citation verification:
+# Round 1 = claim-support NLI, Round 2 = intermediate hallucination detection.
+
+concept: Outline
+action: create
+entries:
+  - node: process-spec:deep-research-process:step:verify_cites
+    parent: process-spec:deep-research-process
+
+---
+
+concept: Property
+action: set
+entries:
+  - entity: process-spec:deep-research-process:step:verify_cites
+    key: step_type
+    value: llm
+  - entity: process-spec:deep-research-process:step:verify_cites
+    key: step_key
+    value: verify_cites
+  - entity: process-spec:deep-research-process:step:verify_cites
+    key: required_role
+    value: "agent-persona:fact-checker"
+  - entity: process-spec:deep-research-process:step:verify_cites
+    key: timeout_ms
+    value: "300000"
+  - entity: process-spec:deep-research-process:step:verify_cites
+    key: retry_count
+    value: "0"
+  - entity: process-spec:deep-research-process:step:verify_cites
+    key: on_success
+    value: human_review
+  - entity: process-spec:deep-research-process:step:verify_cites
+    key: on_failure
+    value: synthesize
+  - entity: process-spec:deep-research-process:step:verify_cites
+    key: content
+    value: "Two-round citation verification. Round 1: NLI entailment check — each claim must be supported by its cited snippets. Round 2: intermediate hallucination detection — regenerate from sources and compare drift. Flag any contradictions, unsupported claims, or fabricated statistics."
+
+---
+
+# Step 7: human_review
+# Approval step — human reviews the final report, resolves flagged issues, approves for publish.
+
+concept: Outline
+action: create
+entries:
+  - node: process-spec:deep-research-process:step:human_review
+    parent: process-spec:deep-research-process
+
+---
+
+concept: Property
+action: set
+entries:
+  - entity: process-spec:deep-research-process:step:human_review
+    key: step_type
+    value: approval
+  - entity: process-spec:deep-research-process:step:human_review
+    key: step_key
+    value: human_review
+  - entity: process-spec:deep-research-process:step:human_review
+    key: required_role
+    value: human
+  - entity: process-spec:deep-research-process:step:human_review
+    key: approval_policy
+    value: one_of
+  - entity: process-spec:deep-research-process:step:human_review
+    key: timeout_ms
+    value: "86400000"
+  - entity: process-spec:deep-research-process:step:human_review
+    key: retry_count
+    value: "0"
+  - entity: process-spec:deep-research-process:step:human_review
+    key: on_success
+    value: publish
+  - entity: process-spec:deep-research-process:step:human_review
+    key: on_failure
+    value: synthesize
+  - entity: process-spec:deep-research-process:step:human_review
+    key: content
+    value: "Review the research report. Resolve any flagged unsupported claims, verify citation quality scores meet thresholds, and approve for publication — or reject to return to synthesis with revision notes."
+
+---
+
+# Step 8: publish
+# Automation step — finalizes the report, promotes key findings to agent memory,
+# and records provenance for the full research chain.
+
+concept: Outline
+action: create
+entries:
+  - node: process-spec:deep-research-process:step:publish
+    parent: process-spec:deep-research-process
+
+---
+
+concept: Property
+action: set
+entries:
+  - entity: process-spec:deep-research-process:step:publish
+    key: step_type
+    value: automation
+  - entity: process-spec:deep-research-process:step:publish
+    key: step_key
+    value: publish
+  - entity: process-spec:deep-research-process:step:publish
+    key: required_role
+    value: "agent-persona:deep-researcher"
+  - entity: process-spec:deep-research-process:step:publish
+    key: timeout_ms
+    value: "60000"
+  - entity: process-spec:deep-research-process:step:publish
+    key: retry_count
+    value: "2"
+  - entity: process-spec:deep-research-process:step:publish
+    key: content
+    value: "Finalize the research report: set report_status to 'published', record full Provenance chain (capture → snippet → citation → report), promote key findings to AgentMemory semantic tier, and update the ResearchProject status to 'completed'."
+
+---
+
+# Routing edges — the full directed graph including revision loops.
+# Stored as JSON metadata on the process-spec page.
+# ProcessRun reads this to build the execution graph for flow-token routing.
+#
+# Edge semantics:
+#   on_variant      — matches the step completion variant tag (ok, rejected, error, etc.)
+#   condition_expr  — evaluated against ProcessVariables for data-based branching
+#   priority        — when multiple edges match, highest priority wins (default 0)
+#
+# Graph shape:
+#   plan → approve_plan (ok)
+#   approve_plan → gather_sources (ok)         ← forward
+#   approve_plan → plan (rejected)             ← revision loop
+#   gather_sources → quality_gate (ok)
+#   quality_gate → synthesize (pass)
+#   quality_gate → gather_sources (fail)       ← retry loop
+#   synthesize → verify_cites (ok)
+#   verify_cites → human_review (ok)
+#   verify_cites → synthesize (error)          ← re-synthesis loop
+#   human_review → publish (ok)                ← forward
+#   human_review → synthesize (rejected)       ← revision loop
+
+concept: Property
+action: set
+entries:
+  - entity: process-spec:deep-research-process
+    key: edges
+    value: '[{"from_step":"plan","to_step":"approve_plan","on_variant":"ok","condition_expr":null,"priority":10},{"from_step":"approve_plan","to_step":"gather_sources","on_variant":"ok","condition_expr":null,"priority":10},{"from_step":"approve_plan","to_step":"plan","on_variant":"rejected","condition_expr":null,"priority":5},{"from_step":"gather_sources","to_step":"quality_gate","on_variant":"ok","condition_expr":null,"priority":10},{"from_step":"quality_gate","to_step":"synthesize","on_variant":"ok","condition_expr":"pass","priority":10},{"from_step":"quality_gate","to_step":"gather_sources","on_variant":"ok","condition_expr":"fail","priority":5},{"from_step":"synthesize","to_step":"verify_cites","on_variant":"ok","condition_expr":null,"priority":10},{"from_step":"verify_cites","to_step":"human_review","on_variant":"ok","condition_expr":null,"priority":10},{"from_step":"verify_cites","to_step":"synthesize","on_variant":"error","condition_expr":null,"priority":5},{"from_step":"human_review","to_step":"publish","on_variant":"ok","condition_expr":null,"priority":10},{"from_step":"human_review","to_step":"synthesize","on_variant":"rejected","condition_expr":null,"priority":5}]'
+
+---
+
+# Default budget constraint metadata.
+# These values are starting defaults and are overridden per ResearchProject
+# when ProcessRun/start is called with project budget context.
+
+concept: Property
+action: set
+entries:
+  - entity: process-spec:deep-research-process
+    key: default_max_tokens
+    value: "200000"
+  - entity: process-spec:deep-research-process
+    key: default_max_search_calls
+    value: "50"
+  - entity: process-spec:deep-research-process
+    key: default_max_duration_minutes
+    value: "60"
+  - entity: process-spec:deep-research-process
+    key: default_require_credibility_tier
+    value: reliable
+  - entity: process-spec:deep-research-process
+    key: default_min_perspectives
+    value: "2"

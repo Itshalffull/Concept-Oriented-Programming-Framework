@@ -1,0 +1,49 @@
+view "active-sessions" {
+  shell: "active-sessions"
+
+  features {
+    filter
+    sort
+    projection
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"AgentSession\",\"action\":\"list\",\"params\":{\"status\":\"active\"}}"
+    }
+    filter: {
+      node: "{\"type\":\"eq\",\"field\":\"status\",\"value\":\"active\"}"
+    }
+    sort: {
+      keys: "[{\"field\":\"startedAt\",\"direction\":\"desc\"}]"
+    }
+    projection: {
+      fields: "[{\"key\":\"session\",\"label\":\"Session\"},{\"key\":\"agent\",\"label\":\"Agent\"},{\"key\":\"status\",\"label\":\"Status\"},{\"key\":\"startedAt\",\"label\":\"Started\"},{\"key\":\"duration\",\"label\":\"Duration\"}]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+  }
+
+  purpose {
+    Monitor active agent sessions with filtering by agent,
+    status, and duration. Read-only — no inline write actions.
+  }
+
+  invariants {
+    always "purity is read-only": {
+      purity = "read-only"
+    }
+
+    always "no invoke instructions": {
+      invokeCount = 0
+    }
+
+    always "filter fields exist in source": {
+      forall f in filterFields:
+      f in sourceFields
+    }
+  }
+}

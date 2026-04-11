@@ -291,10 +291,122 @@ describe('QueryExecution functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
+    it('fixture "execute_invoke_pending" -> ok', async () => {
+      if (typeof queryExecutionHandler.execute !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_register_kernel = await interpret(queryExecutionHandler.registerKind({ kind: "kernel" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_kernel?.output ?? {}));
+      const _fixtureInput = { program: {"instructions":[{"type":"invoke","concept":"Task","action":"complete","input":"{}"}]}, kind: "kernel" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(queryExecutionHandler.execute({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
     it('fixture "execute_unknown" -> error', async () => {
       if (typeof queryExecutionHandler.execute !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(queryExecutionHandler.execute({ program: {}, kind: "unknown" }), storage);
+      expect(result.variant).not.toBe('ok');
+    });
+
+  });
+
+  describe('resumeAfterInvoke', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = queryExecutionHandler.resumeAfterInvoke({ continuation: {"remainingInstructions":[],"bindings":{},"programId":"p1","instructionIndex":"1"}, variant: "ok", output: {"rows":[]} });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = queryExecutionHandler.resumeAfterInvoke({ continuation: {"remainingInstructions":[],"bindings":{},"programId":"p1","instructionIndex":"1"}, variant: "ok", output: {"rows":[]} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = queryExecutionHandler.resumeAfterInvoke({ continuation: {"remainingInstructions":[],"bindings":{},"programId":"p1","instructionIndex":"1"}, variant: "ok", output: {"rows":[]} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = queryExecutionHandler.resumeAfterInvoke({ continuation: {"remainingInstructions":[],"bindings":{},"programId":"p1","instructionIndex":"1"}, variant: "ok", output: {"rows":[]} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = queryExecutionHandler.resumeAfterInvoke({ continuation: {"remainingInstructions":[],"bindings":{},"programId":"p1","instructionIndex":"1"}, variant: "ok", output: {"rows":[]} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof queryExecutionHandler.resumeAfterInvoke !== 'function') return;
+      const result = await interpret(queryExecutionHandler.resumeAfterInvoke({ continuation: {"remainingInstructions":[],"bindings":{},"programId":"p1","instructionIndex":"1"}, variant: "ok", output: {"rows":[]} }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "resume_ok" -> ok', async () => {
+      if (typeof queryExecutionHandler.resumeAfterInvoke !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_register_kernel = await interpret(queryExecutionHandler.registerKind({ kind: "kernel" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_kernel?.output ?? {}));
+      const _fixtureInput = { continuation: {"remainingInstructions":[],"bindings":{},"programId":"p1","instructionIndex":"1"}, variant: "ok", output: {"rows":[]} } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(queryExecutionHandler.resumeAfterInvoke({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resume_chain" -> ok', async () => {
+      if (typeof queryExecutionHandler.resumeAfterInvoke !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_register_kernel = await interpret(queryExecutionHandler.registerKind({ kind: "kernel" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_kernel?.output ?? {}));
+      const _fixtureInput = { continuation: {"remainingInstructions":[{"type":"invoke","concept":"Task","action":"archive","input":"{}"}],"bindings":{},"programId":"p2","instructionIndex":"2"}, variant: "ok", output: {} } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(queryExecutionHandler.resumeAfterInvoke({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resume_invalid" -> error', async () => {
+      if (typeof queryExecutionHandler.resumeAfterInvoke !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(queryExecutionHandler.resumeAfterInvoke({ continuation: "not-json", variant: "ok", output: "{}" }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -596,6 +708,7 @@ describe('QueryExecution functional handler', () => {
               fc.record({ action: fc.constant('registerKind'), input: fc.record({ kind: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }), capabilities: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('execute'), input: fc.record({ program: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resumeAfterInvoke'), input: fc.record({ continuation: fc.string({ minLength: 1, maxLength: 50 }), variant: fc.string({ minLength: 1, maxLength: 50 }), output: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('planPushdown'), input: fc.record({ program: fc.string({ minLength: 1, maxLength: 50 }), provider: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
@@ -631,6 +744,7 @@ describe('QueryExecution functional handler', () => {
               fc.record({ action: fc.constant('registerKind'), input: fc.record({ kind: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('register'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }), capabilities: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('execute'), input: fc.record({ program: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resumeAfterInvoke'), input: fc.record({ continuation: fc.string({ minLength: 1, maxLength: 50 }), variant: fc.string({ minLength: 1, maxLength: 50 }), output: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('planPushdown'), input: fc.record({ program: fc.string({ minLength: 1, maxLength: 50 }), provider: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),

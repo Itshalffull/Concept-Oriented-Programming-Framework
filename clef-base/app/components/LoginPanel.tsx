@@ -13,7 +13,7 @@ export function LoginPanel({ defaultUser }: { defaultUser: string }) {
   });
 
   useEffect(() => {
-    if (state.message) {
+    if (state.message === 'admin') {
       router.push('/admin');
     }
   }, [router, state.message]);

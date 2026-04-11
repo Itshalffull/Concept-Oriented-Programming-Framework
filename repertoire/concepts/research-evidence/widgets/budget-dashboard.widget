@@ -1,0 +1,183 @@
+@version(1)
+widget budget-dashboard {
+
+  purpose {
+    Stat-cards widget displaying three resource gauges for a research
+    project: tokens used vs max_tokens, search calls used vs
+    max_search_calls, and time elapsed vs max_duration_minutes. Each
+    card transitions to a warning state at 80% utilization and a
+    critical state at 100%. Connects to ResearchProject/get for live
+    budget data. Used in the research workspace header and budget
+    monitoring overlay.
+  }
+
+  anatomy {
+    root:        container  { Dashboard wrapper containing all three budget cards }
+    tokenCard:   container  { Token budget stat card }
+    searchCard:  container  { Search call budget stat card }
+    timeCard:    container  { Time budget stat card }
+    gaugeBar:    container  { Fill bar inside each card reflecting utilization ratio }
+    warningIcon: container  { Warning icon shown when a card enters warning or critical state }
+  }
+
+  states {
+    normal [initial] {
+      on WARN -> warning;
+      on LOAD -> normal;
+    }
+
+    warning {
+      on NORMALIZE -> normal;
+      on EXHAUST -> critical;
+      entry [showWarningIcons];
+      exit [hideWarningIcons];
+    }
+
+    critical {
+      on NORMALIZE -> normal;
+      entry [showCriticalIcons; announceExhausted];
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {}
+    focus {
+      trap: false;
+      initial: root;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Research budget dashboard";
+        aria-live: "polite";
+      };
+      tokenCard -> {
+        role: "figure";
+        aria-label: concat("Tokens: ", self.tokensUsed, " of ", self.maxTokens);
+      };
+      searchCard -> {
+        role: "figure";
+        aria-label: concat("Searches: ", self.searchUsed, " of ", self.maxSearches);
+      };
+      timeCard -> {
+        role: "figure";
+        aria-label: concat("Time: ", self.timeElapsed, " of ", self.maxMinutes, " minutes");
+      };
+      gaugeBar -> {
+        role: "meter";
+        aria-valuemin: "0";
+        aria-valuemax: "100";
+        aria-valuenow: self.utilizationPercent;
+        aria-valuetext: concat(self.utilizationPercent, "% used");
+      };
+      warningIcon -> {
+        role: "img";
+        aria-label: "Budget warning";
+      };
+    }
+  }
+
+  props {
+    project_id: String
+    showLabels: Bool = true
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      aria-live: "polite";
+    }
+    tokenCard -> {
+      data-part: "token-card";
+      data-utilization: self.tokenUtilization;
+      data-warning: if self.tokenUtilization >= 80 and self.tokenUtilization < 100 then "true" else "false";
+      data-critical: if self.tokenUtilization >= 100 then "true" else "false";
+    }
+    searchCard -> {
+      data-part: "search-card";
+      data-utilization: self.searchUtilization;
+      data-warning: if self.searchUtilization >= 80 and self.searchUtilization < 100 then "true" else "false";
+      data-critical: if self.searchUtilization >= 100 then "true" else "false";
+    }
+    timeCard -> {
+      data-part: "time-card";
+      data-utilization: self.timeUtilization;
+      data-warning: if self.timeUtilization >= 80 and self.timeUtilization < 100 then "true" else "false";
+      data-critical: if self.timeUtilization >= 100 then "true" else "false";
+    }
+    gaugeBar -> {
+      data-part: "gauge-bar";
+      data-fill: self.utilizationPercent;
+    }
+    warningIcon -> {
+      data-part: "warning-icon";
+      data-visible: if state == "warning" or state == "critical" then "true" else "false";
+      data-severity: if state == "critical" then "critical" else "warning";
+    }
+  }
+
+  affordance {
+    serves: stat-cards;
+    specificity: 25;
+    when {
+      concept: "ResearchProject";
+      view: "budget";
+    }
+    bind {
+      project_id: project_id;
+    }
+  }
+
+  invariant {
+    example "warn transitions normal to warning": {
+      after transition(from: "normal", event: "WARN") -> ok
+      then root -> { data-state: "warning" }
+      and warningIcon -> { data-visible: "true"; data-severity: "warning" }
+    }
+
+    example "exhaust transitions warning to critical": {
+      after transition(from: "warning", event: "EXHAUST") -> ok
+      then root -> { data-state: "critical" }
+      and warningIcon -> { data-severity: "critical" }
+    }
+
+    example "normalize from warning returns to normal": {
+      after transition(from: "warning", event: "NORMALIZE") -> ok
+      then root -> { data-state: "normal" }
+      and warningIcon -> { data-visible: "false" }
+    }
+
+    example "normalize from critical returns to normal": {
+      after transition(from: "critical", event: "NORMALIZE") -> ok
+      then root -> { data-state: "normal" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        root -> { data-state: s.name }
+    }
+
+    always "warning icon hidden in normal state": {
+      if state == "normal" then warningIcon -> { data-visible: "false" }
+    }
+
+    always "token card data-critical reflects exhaustion": {
+      if self.tokenUtilization >= 100 then tokenCard -> { data-critical: "true" }
+    }
+
+    never "warning and critical severity simultaneously": {
+      warningIcon -> { data-severity: "warning" } and warningIcon -> { data-severity: "critical" }
+    }
+
+    "Budget transitions from normal to warning must occur at exactly 80% utilization of any resource";
+    "Critical state must be announced via aria-live when first entered, not on every update";
+    "Each gauge bar fill percentage must match the corresponding resource utilization value";
+  }
+
+}

@@ -1,0 +1,47 @@
+view "check-overview" {
+  shell: "check-overview"
+
+  features {
+    filter
+    sort
+    projection
+    interaction
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"CheckVerification\",\"action\":\"list\"}"
+    }
+    filter: {
+      node: "{\"type\":\"true\"}"
+    }
+    sort: {
+      keys: "[]"
+    }
+    projection: {
+      fields: "[{\"key\":\"check_ref\",\"label\":\"Check\"},{\"key\":\"step_ref\",\"label\":\"Step\"},{\"key\":\"status\",\"label\":\"Status\"},{\"key\":\"result_score\",\"label\":\"Score\"},{\"key\":\"mode\",\"label\":\"Mode\"},{\"key\":\"evaluated_at\",\"label\":\"Evaluated\"}]"
+    }
+
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+  }
+
+  purpose {
+    Global view of all check verifications across all process runs.
+    Read-write — supports row-click navigation to check detail.
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+
+    always "filter fields exist in source": {
+      forall f in filterFields:
+      f in sourceFields
+    }
+  }
+}

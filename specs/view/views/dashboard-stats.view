@@ -1,0 +1,23 @@
+view "dashboard-stats" {
+  shell: "dashboard-stats"
+
+  features {
+    projection
+  }
+
+  fixture default {
+    presentation: {
+      displayType: "stat-cards",
+      hints: "{\"columns\":4}"
+    }
+  }
+
+  purpose {
+    System statistics displayed as summary cards on the dashboard.
+  }
+
+  invariants {
+    always "purity is read-only": { purity = "read-only" }
+    always "no invoke instructions": { invokeCount = 0 }
+  }
+}

@@ -335,6 +335,86 @@ export const scoreIndexTools = [
   },
   {
     "type": "tool",
+    "name": "score_index_upsert_view",
+    "description": "Upsert view scoreindex — Insert or update the view entry in the index .",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "sourceFile": {
+          "type": "string"
+        },
+        "shellRef": {
+          "type": "string"
+        },
+        "purposeText": {
+          "type": "string"
+        },
+        "purity": {
+          "type": "string"
+        },
+        "invokedActions": {
+          "type": "string"
+        },
+        "projectedFields": {
+          "type": "string"
+        },
+        "filterFields": {
+          "type": "string"
+        },
+        "sortFields": {
+          "type": "string"
+        },
+        "groupFields": {
+          "type": "string"
+        },
+        "invariantCount": {
+          "type": "integer"
+        },
+        "invariantNames": {
+          "type": "string"
+        },
+        "invariantsSerialized": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "sourceFile",
+        "shellRef",
+        "purposeText",
+        "purity",
+        "invokedActions",
+        "projectedFields",
+        "filterFields",
+        "sortFields",
+        "groupFields",
+        "invariantCount",
+        "invariantNames",
+        "invariantsSerialized"
+      ]
+    }
+  },
+  {
+    "type": "tool",
+    "name": "score_index_remove_view",
+    "description": "Remove view scoreindex — Remove the view entry from the index .",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ]
+    }
+  },
+  {
+    "type": "tool",
     "name": "score_index_remove_by_file",
     "description": "Remove by file scoreindex — Remove all index entries associated with a file .",
     "inputSchema": {

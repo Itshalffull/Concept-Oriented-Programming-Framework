@@ -877,6 +877,51 @@ class DerivedParser {
 /**
  * Parse a .derived file source string into a DerivedAST.
  */
+/**
+ * Convert a parsed DerivedAST into a ConceptManifest-compatible shape
+ * for interface generation. Surface actions become actions, surface
+ * queries become read-only actions.
+ */
+export function derivedToManifest(derived: DerivedAST): any {
+  const actions = [
+    ...(derived.surfaceActions || []).map((a: any) => ({
+      name: a.name || a.action || 'unknown',
+      params: (a.params || []).map((p: any) => ({
+        name: typeof p === 'string' ? p : (p.name || 'param'),
+        type: { kind: 'primitive', name: 'String' },
+        required: false,
+      })),
+      variants: [
+        { name: 'ok', fields: [] },
+        { name: 'error', fields: [{ name: 'message', type: { kind: 'primitive', name: 'String' } }] },
+      ],
+      fixtures: [],
+    })),
+    ...(derived.surfaceQueries || []).map((q: any) => ({
+      name: q.name || q.query || 'unknown',
+      params: [],
+      variants: [{ name: 'ok', fields: [] }],
+      fixtures: [],
+    })),
+  ];
+
+  return {
+    uri: `derived://${derived.name}`,
+    name: derived.name,
+    typeParams: (derived.typeParams || []).map((t: any) => ({
+      name: typeof t === 'string' ? t : (t.name || 'T'),
+      constraint: undefined,
+    })),
+    relations: [],
+    actions,
+    invariants: [],
+    graphqlSchema: '',
+    jsonSchemas: { invocations: {}, completions: {} },
+    capabilities: [],
+    purpose: derived.purpose || '',
+  };
+}
+
 export function parseDerivedFile(source: string): DerivedAST {
   const tokens = tokenize(source);
   const parser = new DerivedParser(tokens);

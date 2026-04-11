@@ -81,3 +81,19 @@ entries:
   - name: reference-get-refs-source
     kind: concept-action
     config: '{"concept":"Reference","action":"getRefs","params":{"source":"{{entityId}}"}}'
+
+  - name: version-space-diff-source
+    kind: concept-action
+    config: '{"concept":"VersionSpace","action":"diff","params":{"source":"{{branchA}}","target":"{{branchB}}"}}'
+
+  - name: version-list-entity-source
+    kind: concept-action
+    config: '{"concept":"Version","action":"list","params":{"entity":"{{entityId}}"}}'
+
+  - name: form-spec-list-source
+    kind: concept-action
+    config: '{"concept":"FormSpec","action":"list"}'
+
+  - name: form-spec-get-source
+    kind: concept-action
+    config: '{"concept":"FormSpec","action":"get","params":{"form":"{{formId}}"}}'

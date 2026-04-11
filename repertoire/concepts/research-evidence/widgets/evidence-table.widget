@@ -1,0 +1,188 @@
+@version(1)
+widget evidence-table {
+
+  purpose {
+    Data-table widget presenting a claims-by-citations matrix for a research
+    report. Each row is a claim extracted from the report; each cell shows
+    whether a citation supports that claim and at what score. Supports
+    keyboard navigation between cells and a focused cell state for
+    inspecting citation details. Connects to Claim/listByReport and
+    Citation/listByClaim.
+  }
+
+  anatomy {
+    root:             container  { Table wrapper }
+    tableHeader:      container  { Column header row with claim and source headings }
+    claimRow:         container  { Single row representing one extracted claim }
+    citationCell:     container  { Individual cell at the intersection of a claim and citation }
+    supportIndicator: container  { Visual indicator of the support relationship (verified/weak/refuted) }
+    emptyState:       container  { Placeholder content shown when no claims exist }
+  }
+
+  states {
+    loading [initial] {
+      on LOAD_COMPLETE -> loaded;
+      on LOAD_ERROR -> loaded;
+    }
+
+    loaded {
+      on FOCUS_CELL -> cellFocused;
+      on REFRESH -> loading;
+    }
+
+    empty {
+      on REFRESH -> loading;
+    }
+
+    cellFocused {
+      on BLUR_CELL -> loaded;
+      on ESCAPE -> loaded;
+      on FOCUS_CELL -> cellFocused;
+      entry [highlightCell];
+      exit [unhighlightCell];
+    }
+  }
+
+  accessibility {
+    role: grid;
+    keyboard {
+      ArrowRight -> FOCUS_NEXT_CELL;
+      ArrowLeft -> FOCUS_PREV_CELL;
+      ArrowDown -> FOCUS_NEXT_ROW;
+      ArrowUp -> FOCUS_PREV_ROW;
+      Enter -> FOCUS_CELL;
+      Escape -> BLUR_CELL;
+      Home -> FOCUS_FIRST_CELL;
+      End -> FOCUS_LAST_CELL;
+    }
+    focus {
+      trap: false;
+      initial: claimRow;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "grid";
+        aria-label: "Evidence table";
+        aria-busy: if state == "loading" then "true" else "false";
+        aria-rowcount: self.totalRows;
+        aria-colcount: self.totalCols;
+      };
+      tableHeader -> {
+        role: "rowgroup";
+      };
+      claimRow -> {
+        role: "row";
+        aria-rowindex: self.rowIndex;
+        aria-label: concat("Claim: ", self.claimText);
+      };
+      citationCell -> {
+        role: "gridcell";
+        aria-colindex: self.colIndex;
+        aria-label: concat("Support from ", self.sourceTitle, ": ", self.status);
+        aria-selected: if self.isFocused then "true" else "false";
+        tabindex: if self.isFocused then "0" else "-1";
+      };
+      emptyState -> {
+        role: "status";
+        aria-live: "polite";
+      };
+    }
+  }
+
+  props {
+    report_entity_id: String
+    showVerificationStatus: Bool = true
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      aria-busy: if state == "loading" then "true" else "false";
+    }
+    tableHeader -> {
+      data-part: "table-header";
+      data-visible: if state == "loaded" or state == "cellFocused" then "true" else "false";
+    }
+    claimRow -> {
+      data-part: "claim-row";
+      data-claim-id: self.claimId;
+      tabindex: if self.isFocused then "0" else "-1";
+      onClick: send(FOCUS_CELL, { cellId: self.id });
+    }
+    citationCell -> {
+      data-part: "citation-cell";
+      data-status: self.status;
+      data-focused: if self.isFocused then "true" else "false";
+      tabindex: if self.isFocused then "0" else "-1";
+      onClick: send(FOCUS_CELL, { cellId: self.id });
+      onKeyDown: if key == "Enter" then send(FOCUS_CELL, { cellId: self.id }) else noop;
+    }
+    supportIndicator -> {
+      data-part: "support-indicator";
+      data-status: self.status;
+      data-score: self.score;
+      data-visible: if ?showVerificationStatus then "true" else "false";
+    }
+    emptyState -> {
+      data-part: "empty-state";
+      data-visible: if state == "empty" then "true" else "false";
+    }
+  }
+
+  affordance {
+    serves: data-table;
+    specificity: 20;
+    when {
+      concept: "Claim";
+      view: "matrix";
+    }
+    bind {
+      report_entity_id: report_entity_id;
+    }
+  }
+
+  compose {
+    citationInspector: widget("citation-inspector", { open: if state == "cellFocused" then true else false });
+  }
+
+  invariant {
+    example "load_complete transitions loading to loaded": {
+      after transition(from: "loading", event: "LOAD_COMPLETE") -> ok
+      then root -> { data-state: "loaded" }
+    }
+
+    example "focus_cell transitions loaded to cellFocused": {
+      after transition(from: "loaded", event: "FOCUS_CELL") -> ok
+      then root -> { data-state: "cellFocused" }
+    }
+
+    example "escape transitions cellFocused to loaded": {
+      after transition(from: "cellFocused", event: "ESCAPE") -> ok
+      then root -> { data-state: "loaded" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        root -> { data-state: s.name }
+    }
+
+    always "empty state hidden unless state is empty": {
+      if state != "empty" then emptyState -> { data-visible: "false" }
+    }
+
+    never "cell tabindex 0 when not focused": {
+      exists c in citationCell:
+        c.isFocused == false and c -> { tabindex: "0" }
+    }
+
+    "Only one cell may have tabindex 0 at a time (roving tabindex)";
+    "Arrow key navigation must wrap correctly at row and column boundaries";
+    "Focused cell citation inspector must open inline without losing grid focus";
+  }
+
+}

@@ -1,0 +1,292 @@
+@version(1)
+widget relation-config-panel {
+
+  purpose {
+    Reusable configuration panel for relation field settings. Provides
+    a compact collapsed summary view that expands to show target schema
+    selection, display field selection, cardinality toggle, included
+    field tree (with depth indicators for multi-hop paths), and a
+    denormalization section with performance stats, backfill, and clear
+    controls. Used inside field-header-popover (Level 1) and
+    field-config-drawer (Level 2 Settings tab). All writes go through
+    FieldDefinition/update. Backfill triggers RelationResolver/backfill.
+  }
+
+  anatomy {
+    root:                container     { Panel root; wraps collapsed summary or expanded form }
+    collapsedSummary:    container     { Single-line summary shown in collapsed state }
+    summaryTarget:       text          { Target schema name shown in summary (e.g. "→ Person") }
+    summaryIncludes:     text          { Count of included fields (e.g. "includes 2") }
+    expandToggle:        action        { Button that expands or collapses the panel }
+    targetSchemaSelect:  interactive   { Dropdown for selecting the target schema }
+    displayFieldSelect:  interactive   { Dropdown for selecting the display field of the target }
+    cardinalityToggle:   interactive   { Radio toggle for Single vs Multiple cardinality }
+    includeFieldTree:    container     { Scrollable tree of fields available from the target schema }
+    includeFieldCheckbox: interactive  { Individual checkbox for each field in the include tree }
+    depthIndicator:      presentation  { Badge showing hop depth (depth 1, depth 2, etc.) }
+    denormToggle:        interactive   { Toggle enabling or disabling denormalization for the field }
+    denormStats:         container     { Auto-decision status and propagation cost summary }
+    backfillButton:      action        { Triggers RelationResolver/backfill for this schema+field }
+    clearButton:         action        { Triggers RelationResolver/clearDenormalized for this schema+field }
+    usageList:           container     { List of views that access this relation field }
+  }
+
+  states {
+    collapsed [initial] {
+      on EXPAND -> expanded;
+    }
+
+    expanded {
+      on COLLAPSE -> collapsed;
+      on START_BACKFILL -> backfilling;
+      entry [loadTargetSchemas; loadIncludeFields];
+    }
+
+    backfilling {
+      on BACKFILL_COMPLETE -> expanded;
+      on BACKFILL_ERROR -> expanded;
+      entry [invokeBackfill];
+      exit [refreshDenormStats];
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      Enter -> EXPAND;
+      Escape -> COLLAPSE;
+      Space -> EXPAND;
+    }
+    focus {
+      trap: false;
+      initial: targetSchemaSelect;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: concat("Relation configuration for ", ?fieldId);
+      };
+      expandToggle -> {
+        role: "button";
+        aria-expanded: if state == "collapsed" then "false" else "true";
+        aria-controls: "relation-config-expanded";
+        aria-label: if state == "collapsed" then "Expand relation configuration" else "Collapse relation configuration";
+      };
+      targetSchemaSelect -> {
+        role: "combobox";
+        aria-label: "Target schema";
+        aria-required: "true";
+      };
+      displayFieldSelect -> {
+        role: "combobox";
+        aria-label: "Display field";
+      };
+      cardinalityToggle -> {
+        role: "radiogroup";
+        aria-label: "Cardinality";
+      };
+      includeFieldTree -> {
+        role: "group";
+        aria-label: "Included fields from target schema";
+      };
+      includeFieldCheckbox -> {
+        role: "checkbox";
+        aria-label: self.fieldName;
+        aria-checked: if self.included then "true" else "false";
+      };
+      denormToggle -> {
+        role: "switch";
+        aria-label: "Pre-resolve (denormalize) this relation field";
+        aria-checked: if ?currentConfig.denormEnabled then "true" else "false";
+      };
+      backfillButton -> {
+        role: "button";
+        aria-label: "Backfill denormalized data for all existing records";
+        aria-busy: if state == "backfilling" then "true" else "false";
+        aria-disabled: if state != "expanded" then "true" else "false";
+      };
+      clearButton -> {
+        role: "button";
+        aria-label: "Clear all denormalized data for this field";
+        aria-disabled: if state != "expanded" then "true" else "false";
+      };
+      usageList -> {
+        role: "list";
+        aria-label: "Views using this relation field";
+      };
+    }
+  }
+
+  props {
+    schema: String
+    fieldId: String
+    targetSchema: String = ""
+    currentConfig: option String
+    allowDepth2: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-schema: ?schema;
+      data-field-id: ?fieldId;
+    }
+
+    collapsedSummary -> {
+      data-part: "collapsed-summary";
+      hidden: if state != "collapsed" then true else false;
+    }
+
+    summaryTarget -> {
+      data-part: "summary-target";
+      text: if ?targetSchema != "" then concat("→ ", ?targetSchema) else "No target";
+    }
+
+    summaryIncludes -> {
+      data-part: "summary-includes";
+    }
+
+    expandToggle -> {
+      data-part: "expand-toggle";
+      data-expanded: if state == "collapsed" then "false" else "true";
+      onClick: if state == "collapsed" then send(EXPAND) else send(COLLAPSE);
+    }
+
+    targetSchemaSelect -> {
+      data-part: "target-schema-select";
+      value: ?targetSchema;
+      hidden: if state == "collapsed" then true else false;
+      onChange: send(SELECT_TARGET_SCHEMA, { schema: self.value });
+    }
+
+    displayFieldSelect -> {
+      data-part: "display-field-select";
+      hidden: if state == "collapsed" then true else false;
+      onChange: send(SELECT_DISPLAY_FIELD, { field: self.value });
+    }
+
+    cardinalityToggle -> {
+      data-part: "cardinality-toggle";
+      hidden: if state == "collapsed" then true else false;
+      onChange: send(SET_CARDINALITY, { value: self.value });
+    }
+
+    includeFieldTree -> {
+      data-part: "include-field-tree";
+      hidden: if state == "collapsed" then true else false;
+    }
+
+    includeFieldCheckbox -> {
+      data-part: "include-field-checkbox";
+      data-field: self.fieldName;
+      data-depth: self.depth;
+      data-checked: if self.included then "true" else "false";
+      onClick: send(TOGGLE_INCLUDE, { field: self.fieldName, depth: self.depth });
+    }
+
+    depthIndicator -> {
+      data-part: "depth-indicator";
+      data-depth: self.depth;
+      text: concat("depth ", self.depth);
+    }
+
+    denormToggle -> {
+      data-part: "denorm-toggle";
+      hidden: if state == "collapsed" then true else false;
+      data-checked: if ?currentConfig.denormEnabled then "true" else "false";
+      onClick: send(TOGGLE_DENORM);
+    }
+
+    denormStats -> {
+      data-part: "denorm-stats";
+      hidden: if state == "collapsed" then true else false;
+      data-backfilling: if state == "backfilling" then "true" else "false";
+    }
+
+    backfillButton -> {
+      data-part: "backfill-button";
+      hidden: if state == "collapsed" then true else false;
+      disabled: if state != "expanded" then true else false;
+      onClick: send(START_BACKFILL);
+    }
+
+    clearButton -> {
+      data-part: "clear-button";
+      hidden: if state == "collapsed" then true else false;
+      disabled: if state != "expanded" then true else false;
+      onClick: send(CLEAR_DENORM);
+    }
+
+    usageList -> {
+      data-part: "usage-list";
+      hidden: if state == "collapsed" then true else false;
+    }
+  }
+
+  invariant {
+    example "expands from collapsed": {
+      after expandToggle.click -> ok
+      then root -> { data-state: "expanded" }
+      and expandToggle -> { data-expanded: "true" }
+      and collapsedSummary -> { hidden: true }
+    }
+
+    example "collapses from expanded": {
+      after send(EXPAND) -> ok
+      then expandToggle.click -> ok
+      then root -> { data-state: "collapsed" }
+      and expandToggle -> { data-expanded: "false" }
+    }
+
+    example "backfill transitions through backfilling state": {
+      after send(EXPAND) -> ok
+      then backfillButton.click -> ok
+      then root -> { data-state: "backfilling" }
+      and backfillButton -> { aria-busy: "true" }
+      then send(BACKFILL_COMPLETE) -> ok
+      then root -> { data-state: "expanded" }
+      and backfillButton -> { aria-busy: "false" }
+    }
+
+    example "backfill error returns to expanded": {
+      after send(EXPAND) -> ok
+      then backfillButton.click -> ok
+      then send(BACKFILL_ERROR) -> ok
+      then root -> { data-state: "expanded" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        root -> { data-state: s.name }
+    }
+
+    always "expanded content hidden when collapsed": {
+      if state == "collapsed" then targetSchemaSelect -> { hidden: true }
+      and if state == "collapsed" then includeFieldTree -> { hidden: true }
+      and if state == "collapsed" then denormToggle -> { hidden: true }
+    }
+
+    always "backfill and clear disabled outside expanded": {
+      if state != "expanded" then backfillButton -> { disabled: true }
+      and if state != "expanded" then clearButton -> { disabled: true }
+    }
+
+    never "backfilling state entered from collapsed": {
+      state == "backfilling" and expandToggle -> { data-expanded: "false" }
+    }
+
+    "targetSchemaSelect changes must call FieldDefinition/update with new target";
+    "displayFieldSelect changes must call FieldDefinition/update with new displayField";
+    "cardinalityToggle changes must call FieldDefinition/update with new cardinality";
+    "includeFieldCheckbox toggles must call FieldDefinition/update updating the include list in typeConfig";
+    "denormToggle must call FieldDefinition/update with updated denormalize config";
+    "backfillButton must call RelationResolver/backfill with schema and fieldId";
+    "clearButton must call RelationResolver/clearDenormalized with schema and fieldId";
+  }
+
+}

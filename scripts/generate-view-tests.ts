@@ -14,7 +14,7 @@
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, statSync } from 'fs';
 import { resolve, basename, join } from 'path';
-import { parseViewFile, type ViewSpec } from '../handlers/ts/framework/view-spec-parser.js';
+import { parseViewFile, type ViewSpec, type ViewFixture } from '../handlers/ts/framework/view-spec-parser.js';
 import type {
   InvariantDecl,
   InvariantASTStep,
@@ -436,6 +436,53 @@ function renderAssertionInLoop(
 /**
  * Render a complete vitest test file for a ViewSpec.
  */
+/**
+ * Generate storage seeding code from a ViewFixture.
+ * Creates a ViewShell record and child spec records in mock storage.
+ */
+function renderFixtureSeeding(fixture: ViewFixture, shellName: string, features: string[] | undefined): string {
+  const lines: string[] = [];
+
+  // Build child spec ref names from the fixture
+  const specRefs: Record<string, string> = {};
+  const SPEC_RELATIONS: Record<string, string> = {
+    dataSource: 'source',
+    filter: 'filter',
+    sort: 'sort',
+    group: 'group',
+    projection: 'projection',
+    presentation: 'presentation',
+    interaction: 'interaction',
+    pagination: 'pagination',
+  };
+
+  for (const [specType, fields] of Object.entries(fixture.specs)) {
+    const refName = `${shellName}-${specType}`;
+    specRefs[specType] = refName;
+    const relation = SPEC_RELATIONS[specType] || specType;
+    lines.push(`    await storage.put(${JSON.stringify(relation)}, ${JSON.stringify(refName)}, ${JSON.stringify({ name: refName, ...fields })});`);
+  }
+
+  // Build ViewShell record
+  const shellRecord: Record<string, string> = {
+    name: shellName,
+    title: shellName,
+    description: '',
+    dataSource: specRefs.dataSource || '',
+    filter: specRefs.filter || '',
+    sort: specRefs.sort || '',
+    group: specRefs.group || '',
+    projection: specRefs.projection || '',
+    presentation: specRefs.presentation || '',
+    interaction: specRefs.interaction || '',
+    features: features ? JSON.stringify(features) : '',
+    pagination: specRefs.pagination || '',
+  };
+  lines.push(`    await storage.put('view', ${JSON.stringify(shellName)}, ${JSON.stringify(shellRecord)});`);
+
+  return lines.join('\n');
+}
+
 export function renderViewTestFile(spec: ViewSpec, relPath: string): string {
   const viewName = spec.name;
   const shellName = spec.shell;
@@ -443,6 +490,12 @@ export function renderViewTestFile(spec: ViewSpec, relPath: string): string {
   const invariantTests = spec.invariants
     .map(inv => renderInvariantAssertion(inv, viewName))
     .join('\n\n');
+
+  // If fixtures exist, use the first one for seeding; otherwise leave a TODO
+  const hasFixture = spec.fixtures && spec.fixtures.length > 0;
+  const seedingCode = hasFixture
+    ? renderFixtureSeeding(spec.fixtures[0], shellName, spec.features)
+    : '    // No fixture declared — seed storage manually or add a fixture block to the .view file';
 
   return `// generated/tests/${viewName}.view.test.ts
 // Auto-generated from ${relPath} — do not edit manually
@@ -455,8 +508,7 @@ describe('View: ${viewName}', () => {
 
   beforeAll(async () => {
     const storage = createMockStorage();
-    // TODO: Seed storage with ViewShell + child specs
-    // In a real pipeline, this would load from the project's spec files
+${seedingCode}
     analysis = await compileAndAnalyze(${JSON.stringify(shellName)}, storage);
   });
 

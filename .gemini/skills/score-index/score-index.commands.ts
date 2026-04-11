@@ -12,4 +12,4 @@ export async function handleScoreIndexSkill(
   return JSON.stringify(result.body, null, 2);
 }
 
-export const scoreIndexSkillCommands = ['upsertConcept', 'upsertSync', 'upsertSymbol', 'upsertFile', 'upsertHandler', 'upsertWidgetImpl', 'upsertThemeImpl', 'upsertDeployment', 'upsertSuiteManifest', 'upsertInterface', 'removeByFile', 'clear', 'stats'];
+export const scoreIndexSkillCommands = ['upsertConcept', 'upsertSync', 'upsertSymbol', 'upsertFile', 'upsertHandler', 'upsertWidgetImpl', 'upsertThemeImpl', 'upsertDeployment', 'upsertSuiteManifest', 'upsertInterface', 'upsertView', 'removeView', 'removeByFile', 'clear', 'stats'];

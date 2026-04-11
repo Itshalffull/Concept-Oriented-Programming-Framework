@@ -1,0 +1,59 @@
+# Pre-built schema templates for one-click content model creation.
+# Each template's fields array contains FieldDefinition-shaped objects.
+
+concept: SchemaTemplate
+action: register
+entries:
+  - name: article
+    label: Article
+    description: Blog post or long-form article with SEO-friendly slug, excerpt, featured image, author, and publish date.
+    category: content
+    icon: "📝"
+    fields: '[{"fieldId":"title","label":"Title","fieldType":"text","cardinality":"single","required":true,"unique":false,"sortOrder":1},{"fieldId":"slug","label":"Slug","fieldType":"text","cardinality":"single","required":true,"unique":true,"sortOrder":2,"typeConfig":"{\"pattern\":\"^[a-z0-9-]+$\"}"},{"fieldId":"excerpt","label":"Excerpt","fieldType":"text","cardinality":"single","required":false,"unique":false,"sortOrder":3},{"fieldId":"body","label":"Body","fieldType":"rich-text","cardinality":"single","required":true,"unique":false,"sortOrder":4},{"fieldId":"featuredImage","label":"Featured Image","fieldType":"media","cardinality":"single","required":false,"unique":false,"sortOrder":5,"typeConfig":"{\"allowedTypes\":[\"image\"]}"},{"fieldId":"author","label":"Author","fieldType":"reference","cardinality":"single","required":false,"unique":false,"sortOrder":6,"typeConfig":"{\"targetSchemas\":[\"Person\"]}"},{"fieldId":"tags","label":"Tags","fieldType":"multi-select","cardinality":"multiple","required":false,"unique":false,"sortOrder":7},{"fieldId":"publishedAt","label":"Published At","fieldType":"date","cardinality":"single","required":false,"unique":false,"sortOrder":8,"typeConfig":"{\"includeTime\":true}"}]'
+    properties: '{"compilationProvider":"Article","displayWidget":"article-card","schemaIcon":"📝","schemaColor":"#3b82f6"}'
+    sampleData: '[]'
+
+  - name: tasks
+    label: Tasks
+    description: Task board with status, priority, assignee, and due date. Works as a Kanban, list, or calendar.
+    category: project
+    icon: "✓"
+    fields: '[{"fieldId":"title","label":"Title","fieldType":"text","cardinality":"single","required":true,"unique":false,"sortOrder":1},{"fieldId":"status","label":"Status","fieldType":"select","cardinality":"single","required":true,"unique":false,"sortOrder":2,"defaultValue":"todo","typeConfig":"{\"options\":[{\"label\":\"To Do\",\"value\":\"todo\",\"color\":\"#94a3b8\"},{\"label\":\"In Progress\",\"value\":\"doing\",\"color\":\"#3b82f6\"},{\"label\":\"Done\",\"value\":\"done\",\"color\":\"#22c55e\"}]}"},{"fieldId":"priority","label":"Priority","fieldType":"select","cardinality":"single","required":false,"unique":false,"sortOrder":3,"typeConfig":"{\"options\":[{\"label\":\"P1 — Critical\",\"value\":\"p1\",\"color\":\"#ef4444\"},{\"label\":\"P2 — High\",\"value\":\"p2\",\"color\":\"#f97316\"},{\"label\":\"P3 — Medium\",\"value\":\"p3\",\"color\":\"#eab308\"},{\"label\":\"P4 — Low\",\"value\":\"p4\",\"color\":\"#94a3b8\"}]}"},{"fieldId":"assignee","label":"Assignee","fieldType":"reference","cardinality":"single","required":false,"unique":false,"sortOrder":4,"typeConfig":"{\"targetSchemas\":[\"Person\"]}"},{"fieldId":"dueDate","label":"Due Date","fieldType":"date","cardinality":"single","required":false,"unique":false,"sortOrder":5,"typeConfig":"{\"includeTime\":false}"},{"fieldId":"description","label":"Description","fieldType":"rich-text","cardinality":"single","required":false,"unique":false,"sortOrder":6}]'
+    properties: '{"displayWidget":"task-card","schemaIcon":"✓","schemaColor":"#8b5cf6"}'
+    sampleData: '[]'
+
+  - name: events
+    label: Events
+    description: Event calendar with start/end dates, location, organizer, and RSVP count.
+    category: content
+    icon: "📅"
+    fields: '[{"fieldId":"title","label":"Title","fieldType":"text","cardinality":"single","required":true,"unique":false,"sortOrder":1},{"fieldId":"startDate","label":"Start Date","fieldType":"date","cardinality":"single","required":true,"unique":false,"sortOrder":2,"typeConfig":"{\"includeTime\":true}"},{"fieldId":"endDate","label":"End Date","fieldType":"date","cardinality":"single","required":false,"unique":false,"sortOrder":3,"typeConfig":"{\"includeTime\":true}"},{"fieldId":"location","label":"Location","fieldType":"text","cardinality":"single","required":false,"unique":false,"sortOrder":4},{"fieldId":"description","label":"Description","fieldType":"rich-text","cardinality":"single","required":false,"unique":false,"sortOrder":5},{"fieldId":"organizer","label":"Organizer","fieldType":"reference","cardinality":"single","required":false,"unique":false,"sortOrder":6,"typeConfig":"{\"targetSchemas\":[\"Person\"]}"},{"fieldId":"rsvpCount","label":"RSVP Count","fieldType":"number","cardinality":"single","required":false,"unique":false,"sortOrder":7,"typeConfig":"{\"format\":\"integer\",\"min\":0}"}]'
+    properties: '{"displayWidget":"event-card","schemaIcon":"📅","schemaColor":"#f59e0b"}'
+    sampleData: '[]'
+
+  - name: contacts
+    label: Contacts
+    description: CRM contact record with name, email, phone, company, role, notes, and avatar.
+    category: crm
+    icon: "👤"
+    fields: '[{"fieldId":"firstName","label":"First Name","fieldType":"text","cardinality":"single","required":true,"unique":false,"sortOrder":1},{"fieldId":"lastName","label":"Last Name","fieldType":"text","cardinality":"single","required":true,"unique":false,"sortOrder":2},{"fieldId":"email","label":"Email","fieldType":"email","cardinality":"single","required":false,"unique":true,"sortOrder":3},{"fieldId":"phone","label":"Phone","fieldType":"text","cardinality":"single","required":false,"unique":false,"sortOrder":4},{"fieldId":"company","label":"Company","fieldType":"text","cardinality":"single","required":false,"unique":false,"sortOrder":5},{"fieldId":"role","label":"Role","fieldType":"text","cardinality":"single","required":false,"unique":false,"sortOrder":6},{"fieldId":"notes","label":"Notes","fieldType":"rich-text","cardinality":"single","required":false,"unique":false,"sortOrder":7},{"fieldId":"avatar","label":"Avatar","fieldType":"media","cardinality":"single","required":false,"unique":false,"sortOrder":8,"typeConfig":"{\"allowedTypes\":[\"image\"]}"}]'
+    properties: '{"displayWidget":"contact-card","schemaIcon":"👤","schemaColor":"#06b6d4"}'
+    sampleData: '[]'
+
+  - name: knowledge-base
+    label: Knowledge Base
+    description: Knowledge base article with body, category, tags, related articles, and review date.
+    category: knowledge
+    icon: "📚"
+    fields: '[{"fieldId":"title","label":"Title","fieldType":"text","cardinality":"single","required":true,"unique":false,"sortOrder":1},{"fieldId":"body","label":"Body","fieldType":"rich-text","cardinality":"single","required":true,"unique":false,"sortOrder":2},{"fieldId":"category","label":"Category","fieldType":"select","cardinality":"single","required":false,"unique":false,"sortOrder":3,"typeConfig":"{\"options\":[{\"label\":\"How-to\",\"value\":\"how-to\"},{\"label\":\"Reference\",\"value\":\"reference\"},{\"label\":\"Troubleshooting\",\"value\":\"troubleshooting\"},{\"label\":\"Conceptual\",\"value\":\"conceptual\"}]}"},{"fieldId":"tags","label":"Tags","fieldType":"multi-select","cardinality":"multiple","required":false,"unique":false,"sortOrder":4},{"fieldId":"relatedArticles","label":"Related Articles","fieldType":"relation","cardinality":"multiple","required":false,"unique":false,"sortOrder":5,"typeConfig":"{\"targetSchemas\":[\"knowledge-base\"],\"displayField\":\"title\"}"},{"fieldId":"lastReviewedAt","label":"Last Reviewed","fieldType":"date","cardinality":"single","required":false,"unique":false,"sortOrder":6,"typeConfig":"{\"includeTime\":false}"}]'
+    properties: '{"displayWidget":"knowledge-card","schemaIcon":"📚","schemaColor":"#10b981"}'
+    sampleData: '[]'
+
+  - name: meeting-notes
+    label: Meeting Notes
+    description: Meeting notes with date, attendees, agenda, notes, action items, and recording link.
+    category: content
+    icon: "🗒"
+    fields: '[{"fieldId":"title","label":"Title","fieldType":"text","cardinality":"single","required":true,"unique":false,"sortOrder":1},{"fieldId":"date","label":"Date","fieldType":"date","cardinality":"single","required":true,"unique":false,"sortOrder":2,"typeConfig":"{\"includeTime\":true}"},{"fieldId":"attendees","label":"Attendees","fieldType":"multi-select","cardinality":"multiple","required":false,"unique":false,"sortOrder":3},{"fieldId":"agenda","label":"Agenda","fieldType":"rich-text","cardinality":"single","required":false,"unique":false,"sortOrder":4},{"fieldId":"notes","label":"Notes","fieldType":"rich-text","cardinality":"single","required":false,"unique":false,"sortOrder":5},{"fieldId":"actionItems","label":"Action Items","fieldType":"rich-text","cardinality":"single","required":false,"unique":false,"sortOrder":6},{"fieldId":"recording","label":"Recording","fieldType":"media","cardinality":"single","required":false,"unique":false,"sortOrder":7,"typeConfig":"{\"allowedTypes\":[\"video\",\"audio\"]}"}]'
+    properties: '{"compilationProvider":"MeetingNotes","displayWidget":"meeting-notes-card","schemaIcon":"🗒","schemaColor":"#64748b"}'
+    sampleData: '[]'

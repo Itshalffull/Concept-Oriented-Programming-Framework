@@ -1,0 +1,16 @@
+# Initialize the research-source content-native schema.
+# Registers Schema fields and sets content-native Properties
+# so the general syncs in content-native-schema.sync auto-wire
+# page promotion, schema overlay, and DataQuality/validate trigger.
+# No child schema — source content is flat cleaned text.
+# No compilation provider — the content IS the source.
+
+sync ResearchSourceSchemaInit [eager]
+  purpose { Register the research-source schema with displayWidget Property. }
+when {
+  Schema/defineSchema: [ schema: "research-source"; fields: "uri,source_type,fetch_method,content_hash,retrieved_by,retrieved_at,access_scope,license,credibility_tier,status" ]
+    => ok()
+}
+then {
+  Property/set: [ entity: "research-source"; key: "displayWidget"; value: "schema-block-editor" ]
+}

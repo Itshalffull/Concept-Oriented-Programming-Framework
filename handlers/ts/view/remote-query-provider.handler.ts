@@ -124,6 +124,8 @@ function planPushdownInstructions(
         }
       } else if (instrType === 'limit') {
         apiParams['limit'] = instr.count;
+      } else if (instrType === 'offset') {
+        apiParams['offset'] = instr.count;
       }
     } else {
       residualInstructions.push(instr);
@@ -178,6 +180,13 @@ function applyResidualInstructions(
           ? instr.count
           : parseInt(String(instr.count ?? '0'), 10);
         currentSet = currentSet.slice(0, count);
+        break;
+      }
+      case 'offset': {
+        const count = typeof instr.count === 'number'
+          ? instr.count
+          : parseInt(String(instr.count ?? '0'), 10);
+        currentSet = currentSet.slice(count);
         break;
       }
       case 'project': {

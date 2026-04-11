@@ -5,7 +5,7 @@
  * formal execution provider conforming to the execute/planPushdown interface
  * declared in query-execution.concept.
  *
- * Capabilities: ["scan", "filter", "sort", "limit", "join"]
+ * Capabilities: ["scan", "filter", "sort", "limit", "join", "offset"]
  *
  * execute(program):
  *   Parses a serialized QueryProgram (JSON with `instructions` array).
@@ -38,7 +38,8 @@ export type Instruction =
   | { type: 'sort'; keys: SortKey[]; bindAs?: string }
   | { type: 'group'; keys: string[]; config?: Record<string, unknown>; bindAs?: string }
   | { type: 'project'; fields: string[]; bindAs?: string }
-  | { type: 'limit'; count: number; output?: string };
+  | { type: 'limit'; count: number; output?: string }
+  | { type: 'offset'; count: number; bindAs?: string };
 
 export interface QueryProgram {
   instructions: Instruction[];
@@ -134,6 +135,12 @@ function applyInstruction(
       return rows.slice(0, count);
     }
 
+    case 'offset': {
+      const count = instruction.count;
+      if (typeof count !== 'number' || count < 0) return rows;
+      return rows.slice(count);
+    }
+
     default:
       return rows;
   }
@@ -210,7 +217,7 @@ export function execute(
  * be routed to the residual program by compile-split-query.sync before
  * planPushdown is called (see architecture doc Section 5.1).
  */
-const KERNEL_CAPABILITIES = new Set<string>(['scan', 'filter', 'sort', 'limit', 'join']);
+const KERNEL_CAPABILITIES = new Set<string>(['scan', 'filter', 'sort', 'limit', 'join', 'offset']);
 
 export function planPushdown(programJson: string): PushdownPlan | null {
   const program = parseProgram(programJson);
@@ -238,7 +245,7 @@ export function planPushdown(programJson: string): PushdownPlan | null {
 export const kernelQueryProvider = {
   name: 'default-kernel',
   kind: 'kernel',
-  capabilities: ['scan', 'filter', 'sort', 'limit', 'join'] as const,
+  capabilities: ['scan', 'filter', 'sort', 'limit', 'join', 'offset'] as const,
   execute,
   planPushdown,
 } as const;

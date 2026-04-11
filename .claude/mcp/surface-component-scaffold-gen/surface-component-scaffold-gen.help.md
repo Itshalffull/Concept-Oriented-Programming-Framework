@@ -12,6 +12,7 @@ Scaffold a Clef Surface headless component **{input}** with .widget spec (anatom
 - **Finite State Machine Discipline:** Every component is a finite state machine with explicit states, events, transitions, and guards. No implicit state.
 - **Anatomy Contract:** The anatomy defines named parts (root, trigger, content, etc.) that both the machine and renderer reference. This is the only coupling point.
 - **Props API via connect():** The machine's connect() action transforms internal state into framework-neutral props objects — one per anatomy part.
+- **Pagination Control Pattern:** For paginated views, use the pagination-control.widget pattern: parts (root, prevButton, nextButton, pageIndicator, pageSizeSelector, totalCount), states (idle, loading, firstPage, lastPage, disabled), connect to PaginationSpec/advance and PaginationSpec/retreat. See surface/pagination-control.widget for the reference implementation.
 **generate:**
 - [ ] Component name is PascalCase?
 - [ ] Parts list defines all structural elements?

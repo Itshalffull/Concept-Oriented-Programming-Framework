@@ -1,0 +1,35 @@
+derived AdapterInfrastructure [A] {
+
+  purpose {
+    Storage and transport adapter infrastructure — the pluggable
+    backends that connect concept handlers to physical systems.
+    Storage adapters implement ConceptStorage (in-memory, file,
+    PostgreSQL, SQLite, DynamoDB, Redis, Firestore). Transport
+    adapters implement ConceptTransport (HTTP, WebSocket, pub/sub,
+    SQS, serverless). Includes secondary index support, conflict
+    resolution, connection pooling, and cold start optimization.
+  }
+
+  composes {
+    StorageAdapterScaffoldGen [A]
+    TransportAdapterScaffoldGen [A]
+    StorageProvider [A]
+  }
+
+  surface {
+    action generateStorageAdapter(backend: String, config: String) {
+      matches: StorageAdapterScaffoldGen/generate(backend: backend, config: config)
+    }
+
+    action generateTransportAdapter(protocol: String, config: String) {
+      matches: TransportAdapterScaffoldGen/generate(protocol: protocol, config: config)
+    }
+
+    query listProviders(kind: String) -> StorageProvider/list(kind: kind)
+  }
+
+  principle {
+    after generateStorageAdapter(backend: "postgresql", config: "{}")
+    then listProviders(kind: "storage") includes the generated adapter
+  }
+}

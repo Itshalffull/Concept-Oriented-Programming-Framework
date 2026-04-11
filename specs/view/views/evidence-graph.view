@@ -1,0 +1,33 @@
+view "evidence-graph" {
+  shell: "evidence-graph"
+
+  features {
+    projection
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ContentNode\",\"action\":\"list\",\"params\":{\"type\":\"evidence\"}}"
+    }
+    projection: {
+      fields: "[{\"key\":\"node\",\"label\":\"Node\"},{\"key\":\"type\",\"label\":\"Type\"},{\"key\":\"score\",\"label\":\"Score\"}]"
+    }
+    presentation: {
+      displayType: "graph",
+      hints: "{}"
+    }
+  }
+
+  purpose {
+    Force-directed graph showing the full evidence chain — report to
+    claims to citations to snippets to sources. Node colors by entity
+    type, edge labels show support scores. Read-only graph visualization.
+  }
+
+  invariants {
+    always "purity is read-only": {
+      purity = "read-only"
+    }
+  }
+}

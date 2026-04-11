@@ -1,0 +1,262 @@
+@version(1)
+widget display-mode-switcher {
+
+  purpose {
+    Segmented icon control for toggling between view display types (table, board,
+    calendar, timeline, gallery, list, graph). Acts as the primary view-type selector
+    in the view editor toolbar. When a mode with secondary configuration options is
+    selected (e.g. table row height, gallery cover field), a secondary options panel
+    expands below the mode strip without navigating away. The widget is a radiogroup
+     - exactly one mode is active at all times.
+  }
+
+  anatomy {
+    root:                 container    { Top-level wrapper for the segmented control and secondary panel }
+    modeList:             container    { Horizontal strip of mode option buttons (radiogroup) }
+    modeOption:           action       { Individual selectable mode button (one per available mode) }
+    modeIcon:             presentation { Icon representing the display mode (table, board, calendar, etc.) }
+    modeLabel:            text         { Short text label beneath or beside the mode icon }
+    secondaryOptions:     container    { Collapsible panel for mode-specific secondary configuration }
+    rowHeightSelector:    container    { Radio group for row height (Short / Medium / Tall / Extra Tall)  - table mode only }
+    rowHeightOption:      action       { Single row height choice button }
+    cardCoverPicker:      action       { Field selector for the card cover image  - gallery / board modes only }
+  }
+
+  states {
+    idle [initial] {
+      on SELECT_MODE -> selecting-mode;
+      on OPEN_SECONDARY -> configuring-secondary;
+    }
+
+    selecting-mode {
+      on MODE_CONFIRMED -> idle;
+      on OPEN_SECONDARY -> configuring-secondary;
+      entry [applyModeSelection];
+    }
+
+    configuring-secondary {
+      on CLOSE_SECONDARY -> idle;
+      on SELECT_MODE -> selecting-mode;
+      on SELECT_ROW_HEIGHT -> configuring-secondary;
+      on SELECT_CARD_COVER -> configuring-secondary;
+      on ESCAPE -> idle;
+      entry [expandSecondaryPanel];
+      exit [collapseSecondaryPanel];
+    }
+  }
+
+  accessibility {
+    role: radiogroup;
+    keyboard {
+      ArrowLeft -> SELECT_PREV_MODE;
+      ArrowRight -> SELECT_NEXT_MODE;
+      Enter -> MODE_CONFIRMED;
+      Space -> OPEN_SECONDARY;
+      Escape -> CLOSE_SECONDARY;
+    }
+    focus {
+      trap: false;
+      initial: modeOption;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "radiogroup";
+        aria-label: "Display mode";
+        data-state: state;
+      };
+      modeList -> {
+        role: "presentation";
+        aria-orientation: "horizontal";
+      };
+      modeOption -> {
+        role: "radio";
+        aria-checked: if self.id == ?currentMode then "true" else "false";
+        aria-label: concat(self.label, " view");
+        tabindex: if self.id == ?currentMode then "0" else "-1";
+      };
+      secondaryOptions -> {
+        role: "region";
+        aria-label: "Display options";
+        aria-hidden: if state != "configuring-secondary" then "true" else "false";
+      };
+      rowHeightSelector -> {
+        role: "radiogroup";
+        aria-label: "Row height";
+      };
+      rowHeightOption -> {
+        role: "radio";
+        aria-checked: if self.value == ?rowHeight then "true" else "false";
+        aria-label: concat(self.label, " row height");
+      };
+      cardCoverPicker -> {
+        role: "button";
+        aria-label: concat("Card cover field: ", ?cardCoverField);
+        aria-haspopup: "listbox";
+      };
+    }
+  }
+
+  props {
+    currentMode: String = "table"
+    availableModes: list { id: String, icon: String, label: String } = []
+    rowHeight: String = "medium"
+    cardCoverField: option String
+    onSelect: option String
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-current-mode: ?currentMode;
+    }
+
+    modeList -> {
+      data-part: "mode-list";
+    }
+
+    modeOption -> {
+      data-part: "mode-option";
+      data-mode: self.id;
+      data-active: if self.id == ?currentMode then "true" else "false";
+      tabindex: if self.id == ?currentMode then "0" else "-1";
+      onClick: send(SELECT_MODE, { mode: self.id });
+      onKeyDown: if key == "ArrowLeft" then send(SELECT_PREV_MODE) else if key == "ArrowRight" then send(SELECT_NEXT_MODE) else if key == "Enter" then send(MODE_CONFIRMED) else if key == "Space" then send(OPEN_SECONDARY) else noop;
+    }
+
+    modeIcon -> {
+      data-part: "mode-icon";
+      data-mode: self.id;
+    }
+
+    modeLabel -> {
+      data-part: "mode-label";
+      text: self.label;
+    }
+
+    secondaryOptions -> {
+      data-part: "secondary-options";
+      data-visible: if state == "configuring-secondary" then "true" else "false";
+      hidden: if state != "configuring-secondary" then true else false;
+    }
+
+    rowHeightSelector -> {
+      data-part: "row-height-selector";
+      data-visible: if ?currentMode == "table" or ?currentMode == "list" then "true" else "false";
+    }
+
+    rowHeightOption -> {
+      data-part: "row-height-option";
+      data-value: self.value;
+      data-active: if self.value == ?rowHeight then "true" else "false";
+      onClick: send(SELECT_ROW_HEIGHT, { height: self.value });
+    }
+
+    cardCoverPicker -> {
+      data-part: "card-cover-picker";
+      data-visible: if ?currentMode == "gallery" or ?currentMode == "board" then "true" else "false";
+      data-current-field: ?cardCoverField;
+      onClick: send(OPEN_COVER_PICKER);
+    }
+  }
+
+  affordance {
+    serves: single-choice;
+    specificity: 7;
+    when {
+      viewType: "display-mode-switcher";
+    }
+    bind {
+      currentMode: currentMode;
+      availableModes: availableModes;
+    }
+  }
+
+  invariant {
+    example "select board mode from table mode": {
+      after modeOption.click({ mode: "board" }) -> ok
+      then root -> { data-current-mode: "board" }
+      and root -> { data-state: "idle" }
+      and modeOption.board -> { data-active: "true" }
+      and modeOption.table -> { data-active: "false" }
+    }
+
+    example "open secondary options for table mode": {
+      after modeOption.keydown({ key: "Space", mode: "table" }) -> ok
+      then root -> { data-state: "configuring-secondary" }
+      and secondaryOptions -> { data-visible: "true" }
+      and rowHeightSelector -> { data-visible: "true" }
+    }
+
+    example "escape closes secondary options": {
+      after modeOption.keydown({ key: "Space", mode: "table" }) -> ok
+      then root -> { data-state: "configuring-secondary" }
+      then send(ESCAPE) -> ok
+      then root -> { data-state: "idle" }
+      and secondaryOptions -> { data-visible: "false" }
+    }
+
+    example "switch mode while configuring secondary resets to selecting-mode": {
+      after modeOption.keydown({ key: "Space", mode: "table" }) -> ok
+      then root -> { data-state: "configuring-secondary" }
+      then modeOption.click({ mode: "gallery" }) -> ok
+      then root -> { data-state: "selecting-mode" }
+    }
+
+    example "select row height in secondary panel": {
+      after modeOption.keydown({ key: "Space", mode: "table" }) -> ok
+      then rowHeightOption.click({ height: "tall" }) -> ok
+      then rowHeightOption.tall -> { data-active: "true" }
+      and root -> { data-state: "configuring-secondary" }
+    }
+
+    always "data-state on root reflects FSM": {
+      root -> { data-state: state }
+    }
+
+    always "exactly one modeOption is active": {
+      forall opt in modeOption:
+        opt -> { data-active: if opt.id == ?currentMode then "true" else "false" }
+    }
+
+    always "secondary options hidden when not configuring": {
+      if state != "configuring-secondary" then secondaryOptions -> { data-visible: "false" }
+    }
+
+    always "rowHeightSelector only visible for table or list mode": {
+      rowHeightSelector -> { data-visible: if ?currentMode == "table" or ?currentMode == "list" then "true" else "false" }
+    }
+
+    always "cardCoverPicker only visible for gallery or board mode": {
+      cardCoverPicker -> { data-visible: if ?currentMode == "gallery" or ?currentMode == "board" then "true" else "false" }
+    }
+
+    never "two modeOptions simultaneously marked active": {
+      exists o1 in modeOption:
+        exists o2 in modeOption:
+          o1 != o2 and o1 -> { data-active: "true" } and o2 -> { data-active: "true" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    action modeOption.click {
+      requires: state == "idle" or state == "configuring-secondary"
+      ensures ok: ?currentMode == self.id
+    }
+
+    action rowHeightOption.click {
+      requires: state == "configuring-secondary"
+      ensures ok: ?rowHeight == self.value
+    }
+
+    "SELECT_MODE calls PresentationSpec/set with the chosen mode identifier";
+    "SELECT_ROW_HEIGHT calls PresentationSpec/set with the new rowHeight value";
+    "SELECT_CARD_COVER calls PresentationSpec/set with the chosen cover field id";
+    "Roving tabindex on modeOption: active mode tab gets tabindex=0, all others get tabindex=-1";
+    "secondaryOptions panel content differs by currentMode: table/list shows rowHeightSelector, gallery/board shows cardCoverPicker, others show neither";
+    "availableModes prop drives which modeOption parts are rendered  - modes absent from the list are not shown";
+  }
+
+}

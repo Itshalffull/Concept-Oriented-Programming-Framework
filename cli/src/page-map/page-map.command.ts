@@ -20,6 +20,10 @@ pageMapCommand
   .requiredOption('--concept-binding <conceptBinding>', 'Concept Binding')
   .requiredOption('--affordance-serves <affordanceServes>', 'Affordance Serves')
   .requiredOption('--host-ref <hostRef>', 'Host Ref')
+  .requiredOption('--view-name <viewName>', 'View Name')
+  .requiredOption('--view-purpose <viewPurpose>', 'View Purpose')
+  .requiredOption('--view-purity <viewPurity>', 'View Purity')
+  .requiredOption('--view-invoked-actions <viewInvokedActions>', 'View Invoked Actions')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     try {
@@ -60,7 +64,7 @@ pageMapCommand
 
 pageMapCommand
   .command('find')
-  .description('Locate an element by label using fuzzy matching within the current inventory and return its identifier and machine reference for direct interaction .')
+  .description('Locate an element by label using fuzzy matching within the current inventory and return its identifier , machine reference for direct interaction , and any associated view metadata .')
   .requiredOption('--entry <entry>', 'Entry')
   .requiredOption('--label <label>', 'Label')
   .option('--json', 'Output as JSON')
@@ -140,8 +144,28 @@ pageMapCommand
   });
 
 pageMapCommand
+  .command('find-by-view')
+  .description('Return all PageMap entries whose viewName matches , as a JSON array . Enables Pilot to discover all interactive elements associated with a specific view .')
+  .requiredOption('--view-name <viewName>', 'View Name')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/PageMap', 'findByView', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
+  });
+
+pageMapCommand
   .command('list')
-  .description('Return a JSON array of all entries belonging to the given host . Returns an empty array if the host has no registered entries .')
+  .description('Return a JSON array of all entries belonging to the given host , including any view metadata fields ( viewName , viewPurpose , viewPurity , viewInvokedActions ) attached at registration time . Returns an empty array if the host has no registered entries .')
   .requiredOption('--host-ref <hostRef>', 'Host Ref')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
@@ -182,5 +206,5 @@ pageMapCommand
 export const pageMapCommandTree = {
   group: 'page-map',
   description: 'Maintain a labeled inventory of interactive elements within a hosted view , addressable by semantic label , role , or concept binding . Independently useful for accessibility auditing , integration testing , dev tools , and agent driven UI navigation',
-  commands: [{ action: 'register', command: 'register' }, { action: 'update', command: 'update' }, { action: 'find', command: 'find' }, { action: 'findByRole', command: 'find-by-role' }, { action: 'findByConcept', command: 'find-by-concept' }, { action: 'findByWidget', command: 'find-by-widget' }, { action: 'list', command: 'list' }, { action: 'clear', command: 'clear' }],
+  commands: [{ action: 'register', command: 'register' }, { action: 'update', command: 'update' }, { action: 'find', command: 'find' }, { action: 'findByRole', command: 'find-by-role' }, { action: 'findByConcept', command: 'find-by-concept' }, { action: 'findByWidget', command: 'find-by-widget' }, { action: 'findByView', command: 'find-by-view' }, { action: 'list', command: 'list' }, { action: 'clear', command: 'clear' }],
 };

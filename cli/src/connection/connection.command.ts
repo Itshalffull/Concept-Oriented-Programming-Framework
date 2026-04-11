@@ -32,7 +32,7 @@ connectionCommand
 
 connectionCommand
   .command('discover')
-  .description('Returns a JSON encoded discovery result at the requested depth : list yields concept names only , manifest adds actions , inputs , and variants for each concept , full adds syncs , affordances , and widgets ( requires Score to be available on the kernel ) .')
+  .description('Returns a JSON encoded discovery result at the requested depth : list yields concept names only , manifest adds actions , inputs , and variants for each concept , full adds syncs , affordances , widgets , and views with their purpose , purity , invoked actions , and invariant summaries ( requires Score to be available on the kernel ) .')
   .requiredOption('--connection <connection>', 'Connection')
   .requiredOption('--concept <concept>', 'Concept')
   .requiredOption('--depth <depth>', 'Depth')

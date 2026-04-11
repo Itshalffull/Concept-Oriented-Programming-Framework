@@ -1,0 +1,21 @@
+# Backfill denormalized relation data when denormalization is newly enabled.
+# Fires when a FieldDefinition update flips a denormalize.{field}.enabled
+# flag from false to true (either auto-decision or manual schema-admin toggle).
+# RelationResolver.backfill processes all existing entities with this schema,
+# writing dot-notation target fields onto each record.
+# See relation-resolver-plan.md §14.1.
+
+sync DenormEnableTriggersBackfill [eventual]
+  purpose: "Backfill denormalized relation fields across all existing entities when a relation FieldDefinition's denormalization config is enabled for the first time"
+when {
+  FieldDefinition/update: [ schema: ?schema;
+                             fieldId: ?field_id ] => [ ok: _ ]
+}
+where {
+  FieldDefinition/get: [ schema: ?schema; fieldId: ?field_id ] => [ ok: ?field ]
+  filter(?field.fieldType = "relation")
+  filter(?field.typeConfig.denormalize.enabled = "true")
+}
+then {
+  RelationResolver/backfill: [ schema: ?schema; field: ?field_id ]
+}

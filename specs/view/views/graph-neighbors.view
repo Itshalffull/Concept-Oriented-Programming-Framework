@@ -1,0 +1,32 @@
+view "graph-neighbors" {
+  shell: "graph-neighbors"
+
+  features {
+    projection
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ContentNode\",\"action\":\"list\"}"
+    }
+    projection: {
+      fields: "[{\"key\":\"node\",\"label\":\"Node\"},{\"key\":\"type\",\"label\":\"Type\"}]"
+    }
+    presentation: {
+      displayType: "graph",
+      hints: "{}"
+    }
+  }
+
+  purpose {
+    Graph visualization of directly connected entities in the
+    knowledge graph. Read-only.
+  }
+
+  invariants {
+    always "purity is read-only": {
+      purity = "read-only"
+    }
+  }
+}

@@ -1,0 +1,166 @@
+@version(1)
+widget group-popover {
+
+  purpose {
+    Floating popover panel for configuring how a data view groups its records
+    by a single field. The user picks a grouping field from all available
+    schema fields; once a field is selected three toggle controls appear: sort
+    within group (sort records inside each group by the group field natural
+    order), hide empty groups (suppress groups that contain zero records), and
+    default collapse (render all groups collapsed when the view first loads).
+    A remove button clears the current grouping entirely. Changes emit APPLY
+    so the parent can write back to GroupSpec. Intended to be opened by the
+    group toolbar button in view-editor-toolbar.
+  }
+
+  anatomy {
+    root:                   container    { Top-level popover panel wrapper }
+    groupFieldPicker:       container    { Slot that composes field-picker-dropdown for selecting the group-by field }
+    sortWithinGroupToggle:  action       { Toggle that enables ascending-order sorting of records within each group }
+    hideEmptyToggle:        action       { Toggle that hides groups containing zero records }
+    defaultCollapseToggle:  action       { Toggle that renders all groups in collapsed state on initial view load }
+    removeGroupButton:      action       { Button that clears the current group-by field and resets GroupSpec }
+  }
+
+  states {
+    closed [initial] {
+      on OPEN -> open;
+    }
+
+    open {
+      on FIELD_CHANGE -> open;
+      on TOGGLE_SORT_WITHIN -> open;
+      on TOGGLE_HIDE_EMPTY -> open;
+      on TOGGLE_DEFAULT_COLLAPSE -> open;
+      on REMOVE_GROUP -> open;
+      on APPLY -> closed;
+      on CLOSE -> closed;
+      on ESCAPE -> closed;
+      entry [positionPanel; focusGroupFieldPicker];
+      exit [returnFocusTrigger];
+    }
+  }
+
+  accessibility {
+    role: dialog;
+    keyboard {
+      Escape -> ESCAPE;
+      Tab -> FOCUS_NEXT;
+    }
+    focus {
+      trap: true;
+      initial: groupFieldPicker;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "dialog";
+        aria-label: "Group by";
+        aria-modal: "true";
+        data-state: if state == "closed" then "closed" else "open";
+      };
+      groupFieldPicker -> {
+        role: "group";
+        aria-label: "Group by field";
+      };
+      sortWithinGroupToggle -> {
+        role: "switch";
+        aria-label: "Sort within groups";
+        aria-checked: if self.checked then "true" else "false";
+      };
+      hideEmptyToggle -> {
+        role: "switch";
+        aria-label: "Hide empty groups";
+        aria-checked: if self.checked then "true" else "false";
+      };
+      defaultCollapseToggle -> {
+        role: "switch";
+        aria-label: "Collapse groups by default";
+        aria-checked: if self.checked then "true" else "false";
+      };
+      removeGroupButton -> {
+        role: "button";
+        aria-label: "Remove group by";
+      };
+    }
+  }
+
+  props {
+    open: Bool = false
+    schema: String = ""
+    currentGroup: option String
+    sortWithinGroup: Bool = false
+    hideEmpty: Bool = false
+    defaultCollapse: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: if state == "closed" then "closed" else "open";
+      hidden: if state == "closed" then true else false;
+    }
+
+    groupFieldPicker -> {
+      data-part: "group-field-picker";
+    }
+
+    sortWithinGroupToggle -> {
+      data-part: "sort-within-group-toggle";
+      data-checked: if ?sortWithinGroup then "true" else "false";
+      onClick: send(TOGGLE_SORT_WITHIN);
+      onKeyDown: if key == "Enter" or key == " " then send(TOGGLE_SORT_WITHIN) else noop;
+      hidden: if ?currentGroup == "" then true else false;
+    }
+
+    hideEmptyToggle -> {
+      data-part: "hide-empty-toggle";
+      data-checked: if ?hideEmpty then "true" else "false";
+      onClick: send(TOGGLE_HIDE_EMPTY);
+      onKeyDown: if key == "Enter" or key == " " then send(TOGGLE_HIDE_EMPTY) else noop;
+      hidden: if ?currentGroup == "" then true else false;
+    }
+
+    defaultCollapseToggle -> {
+      data-part: "default-collapse-toggle";
+      data-checked: if ?defaultCollapse then "true" else "false";
+      onClick: send(TOGGLE_DEFAULT_COLLAPSE);
+      onKeyDown: if key == "Enter" or key == " " then send(TOGGLE_DEFAULT_COLLAPSE) else noop;
+      hidden: if ?currentGroup == "" then true else false;
+    }
+
+    removeGroupButton -> {
+      data-part: "remove-group-button";
+      onClick: send(REMOVE_GROUP);
+      onKeyDown: if key == "Enter" then send(REMOVE_GROUP) else noop;
+      hidden: if ?currentGroup == "" then true else false;
+    }
+  }
+
+  compose {
+    groupFieldPicker: widget("field-picker-dropdown", { schema: ?schema; groupBy: "type"; selectedField: ?currentGroup })
+  }
+
+  invariant {
+    "OPEN event sets root data-state to open and removes the hidden attribute";
+    "CLOSE event sets root data-state to closed and adds the hidden attribute";
+    "Escape key in open state transitions to closed";
+    "when no group field is selected, sortWithinGroupToggle, hideEmptyToggle, defaultCollapseToggle, and removeGroupButton are all hidden";
+    "when a group field is selected via FIELD_CHANGE, all four toggle controls become visible";
+    "TOGGLE_SORT_WITHIN flips sortWithinGroupToggle data-checked between true and false on each invocation";
+    "TOGGLE_HIDE_EMPTY flips hideEmptyToggle data-checked between true and false on each invocation";
+    "TOGGLE_DEFAULT_COLLAPSE flips defaultCollapseToggle data-checked between true and false on each invocation";
+    "REMOVE_GROUP clears the current group field and hides sortWithinGroupToggle, hideEmptyToggle, defaultCollapseToggle, and removeGroupButton";
+    "APPLY transitions from open to closed";
+    "root data-state reflects the FSM state in every reachable state: closed, open";
+    "root is hidden when data-state is closed and visible when data-state is open";
+    "toggle aria-checked attributes match their respective data-checked attributes in all states";
+    "both states are reachable: closed is the initial state, open is reached via OPEN";
+    "APPLY carries the full updated GroupSpec JSON — groupField, sortWithinGroup, hideEmpty, defaultCollapse — as payload so the parent can write to GroupSpec without re-reading DOM";
+    "FIELD_CHANGE payload carries the new field key; if the field changes, sortWithinGroup, hideEmpty, and defaultCollapse reset to their prop defaults unless the parent provides a new currentGroup prop that preserves them";
+    "REMOVE_GROUP clears currentGroup to an empty string internally and resets all toggle states to false; APPLY with an empty groupField is how the parent knows to remove the group from GroupSpec";
+    "only a single group-by field is supported; to model multiple group levels the parent must compose multiple group-popover instances";
+    "focus is trapped inside the popover while open; on close, focus returns to the toolbar group button";
+  }
+
+}

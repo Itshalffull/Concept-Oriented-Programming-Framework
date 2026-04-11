@@ -1,0 +1,48 @@
+# Initialize the research-plan content-native schema.
+# Registers Schema fields and sets content-native Properties
+# so the general syncs in content-native-schema.sync auto-wire
+# page promotion, child schema application (research-question blocks),
+# and default block scaffolding via Template.
+# No compilation provider — PlanAndExecuteStrategy reads the block tree directly.
+
+sync ResearchPlanSchemaInit [eager]
+  purpose { Register the research-plan schema with childSchema Property. }
+when {
+  Schema/defineSchema: [ schema: "research-plan"; fields: "project_id,estimated_complexity,approval_status,approved_by,approved_at" ]
+    => ok()
+}
+then {
+  Property/set: [ entity: "research-plan"; key: "childSchema"; value: "research-question" ]
+}
+
+sync ResearchPlanDefaultTemplate [eager]
+  purpose { Set default template for research plan pages. }
+when {
+  Schema/defineSchema: [ schema: "research-plan"; fields: "project_id,estimated_complexity,approval_status,approved_by,approved_at" ]
+    => ok()
+}
+then {
+  Property/set: [ entity: "research-plan"; key: "defaultTemplate"; value: "standard-research-plan" ]
+}
+
+sync ResearchPlanDisplayWidget [eager]
+  purpose { Set display widget for research plan pages. }
+when {
+  Schema/defineSchema: [ schema: "research-plan"; fields: "project_id,estimated_complexity,approval_status,approved_by,approved_at" ]
+    => ok()
+}
+then {
+  Property/set: [ entity: "research-plan"; key: "displayWidget"; value: "schema-block-editor" ]
+}
+
+# Register the research-question child schema with isChildSchema marker
+
+sync ResearchQuestionSchemaInit [eager]
+  purpose { Register the research-question child schema. }
+when {
+  Schema/defineSchema: [ schema: "research-question"; fields: "strategy,priority,status,dependencies" ]
+    => ok()
+}
+then {
+  Property/set: [ entity: "research-question"; key: "isChildSchema"; value: "true" ]
+}

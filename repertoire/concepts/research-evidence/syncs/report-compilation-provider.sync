@@ -1,0 +1,28 @@
+# Register ResearchReportCompiler with PluginRegistry when the
+# research-report schema is defined so ContentCompiler dispatch routes
+# research-report page compilations to the claim-extraction and
+# citation-linking pipeline.
+
+sync RegisterResearchReportCompilationProvider [eager] [required]
+  purpose: "Register the ResearchReportCompiler as a content_compiler plugin when the research-report schema is initialised, enabling ContentCompiler to route compile requests for research-report pages to claim extraction and citation coverage measurement."
+when {
+  Schema/defineSchema: [schema: "research-report"; fields: ?fields]
+    => ok()
+}
+then {
+  PluginRegistry/register: [
+    type: "content_compiler";
+    name: "research-report";
+    metadata: "{\"provider\":\"ResearchReportCompiler\",\"outputConcept\":\"Claim\",\"walkStrategy\":\"outline_blocks\",\"extractsClaims\":true}"
+  ]
+}
+
+sync ResearchReportCompilationRoute [integration]
+  purpose: "Route research-report compile requests to the ResearchReportCompiler which walks outline blocks, extracts claims, links citations, and updates coverage metrics on the report page."
+when {
+  PluginRegistry/resolve: [plugin_type: "content_compiler"; plugin_id: "research-report"]
+    => []
+}
+then {
+  ContentCompiler/compile: [pageId: ""]
+}

@@ -1,0 +1,15 @@
+# Stamp active tenant namespace onto ContentStorage saves.
+# Ensures all writes are scoped to the correct tenant.
+
+sync TenantScopingOnSave [eventual]
+when {
+  ContentStorage/save: [ record: ?record; data: ?data ] => [ ok: _ ]
+}
+where {
+  VersionContext: { ?ctx context_stack: ?stack }
+  filter(?stack.length > 0)
+  bind(?stack[0] as ?activeNamespace)
+}
+then {
+  ContentStorage/save: [ record: ?record; data: ?data; namespace: ?activeNamespace ]
+}

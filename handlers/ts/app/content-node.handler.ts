@@ -149,7 +149,66 @@ const _contentNodeHandler: FunctionalConceptHandler = {
   stats(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'node', {}, 'items');
-    return completeFrom(p, 'ok', (bindings) => ({ items: JSON.stringify((bindings.items as Array<Record<string, unknown>>) || []) })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => {
+      const items = (bindings.items as Array<Record<string, unknown>>) || [];
+      const countWhere = (predicate: (item: Record<string, unknown>) => boolean) =>
+        items.filter(predicate).length;
+
+      const stats = [
+        {
+          label: 'Total Nodes',
+          value: items.length,
+          description: 'All content nodes currently stored in the shared pool.',
+        },
+        {
+          label: 'Concepts',
+          value: countWhere((item) => String(item.node ?? '').startsWith('concept:')),
+          description: 'Reflected concept entities available in the kernel.',
+        },
+        {
+          label: 'Widgets',
+          value: countWhere((item) => String(item.node ?? '').startsWith('widget:')),
+          description: 'Registered UI widgets available to render views and layouts.',
+        },
+        {
+          label: 'Syncs',
+          value: countWhere((item) => String(item.node ?? '').startsWith('sync:')),
+          description: 'Synchronization rules reflected into the content graph.',
+        },
+        {
+          label: 'Workflows',
+          value: countWhere((item) => String(item.node ?? '').startsWith('workflow:')),
+          description: 'Workflow definitions persisted in the content pool.',
+        },
+        {
+          label: 'Automation Rules',
+          value: countWhere((item) => String(item.node ?? '').startsWith('automation-rule:')),
+          description: 'Saved automation rules configured in this deployment.',
+        },
+        {
+          label: 'Version Spaces',
+          value: countWhere((item) => String(item.node ?? '').startsWith('version-space:')),
+          description: 'Named version spaces available for multiverse-style editing.',
+        },
+        {
+          label: 'Process Specs',
+          value: countWhere((item) => String(item.node ?? '').startsWith('process-spec:')),
+          description: 'Stored process specifications in the automation catalog.',
+        },
+        {
+          label: 'Process Runs',
+          value: countWhere((item) => String(item.node ?? '').startsWith('process-run:')),
+          description: 'Tracked executions of process specifications.',
+        },
+        {
+          label: 'Step Runs',
+          value: countWhere((item) => String(item.node ?? '').startsWith('step-run:')),
+          description: 'Individual step execution records across all process runs.',
+        },
+      ];
+
+      return { items: JSON.stringify(stats) };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   listBySchema(input: Record<string, unknown>) {

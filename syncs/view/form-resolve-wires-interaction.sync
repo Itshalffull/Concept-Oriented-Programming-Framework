@@ -1,0 +1,18 @@
+# FormSpec resolution triggered by InteractionSpec.
+# When an InteractionSpec is fetched and it declares a createForm config,
+# resolve the FormSpec for the schema referenced by that config so the
+# view layer has full form configuration available alongside interaction rules.
+
+sync FormResolveWiresInteraction [eager]
+  purpose: "Resolve the FormSpec for the schema declared in an InteractionSpec's createForm config so the view layer receives rich form configuration alongside interaction rules"
+when {
+  InteractionSpec/get: [ name: ?n ]
+    => ok(name: ?n; createForm: ?cf)
+}
+where {
+  guard(?cf != "")
+  bind(?cf.schema as ?schema)
+}
+then {
+  FormSpec/resolve: [ schema: ?schema; mode: "create" ]
+}

@@ -1,0 +1,61 @@
+derived MonadicExecution [M] {
+
+  purpose {
+    The monadic execution pipeline — StorageProgram DSL construction,
+    interpretation against storage backends, effect handling for
+    transport operations, functional handler registration, and
+    program analysis providers (purity, commutativity, parallelism,
+    dead branches, variant extraction, lens extraction).
+  }
+
+  composes {
+    StorageProgram [M]
+    ProgramInterpreter [M]
+    FunctionalHandler [M]
+    EffectHandler [M]
+    ProgramAnalysis [M]
+    ProgramCache [M]
+  }
+
+  syncs {
+    recommended: [
+      analyze-on-seal
+    ]
+  }
+
+  surface {
+    action buildProgram(concept: String, action: String) {
+      matches: StorageProgram/create(concept: concept, action: action)
+    }
+
+    action interpret(program: M, backend: String) {
+      matches: ProgramInterpreter/execute(program: program, backend: backend)
+    }
+
+    action registerHandler(concept: String) {
+      matches: FunctionalHandler/register(concept: concept)
+    }
+
+    action registerEffect(protocol: String, operation: String) {
+      matches: EffectHandler/register(protocol: protocol, operation: operation)
+    }
+
+    action analyze(program: M, analysis: String) {
+      matches: ProgramAnalysis/dispatch(program: program, analysis: analysis)
+    }
+
+    query getPurity(program: M) -> ProgramAnalysis/dispatch(program: program, analysis: "purity")
+    query getCached(program: M) -> ProgramCache/get(program: program)
+  }
+
+  principle {
+    after buildProgram(concept: "ContentNode", action: "save")
+    then interpret completes with variant and output
+    and  analyze(program: m, analysis: "purity") classifies as "read-write"
+  }
+
+  principle {
+    after registerHandler(concept: "ContentNode")
+    then registerEffect for each declared perform instruction
+  }
+}

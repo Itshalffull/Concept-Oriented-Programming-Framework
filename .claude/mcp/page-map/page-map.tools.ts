@@ -53,6 +53,46 @@ export const pageMapTools = [
         },
         "hostRef": {
           "type": "string"
+        },
+        "viewName": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "viewPurpose": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "viewPurity": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "viewInvokedActions": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -65,7 +105,11 @@ export const pageMapTools = [
         "validEvents",
         "conceptBinding",
         "affordanceServes",
-        "hostRef"
+        "hostRef",
+        "viewName",
+        "viewPurpose",
+        "viewPurity",
+        "viewInvokedActions"
       ]
     }
   },
@@ -97,7 +141,7 @@ export const pageMapTools = [
     "type": "resource",
     "name": "page_map_find",
     "uri": "urn:clef://page-maps/{entry}",
-    "description": "Find pagemap — Locate an element by label using fuzzy matching within the \n current inventory and return its identifier and machine reference \n for direct interaction ."
+    "description": "Find pagemap — Locate an element by label using fuzzy matching within the \n current inventory and return its identifier , machine reference \n for direct interaction , and any associated view metadata ."
   },
   {
     "type": "resource",
@@ -118,10 +162,16 @@ export const pageMapTools = [
     "description": "Find by widget pagemap — Return a JSON array of all entries whose widgetName matches the \n given widget spec name . Returns an empty array if no entries match ."
   },
   {
+    "type": "resource",
+    "name": "page_map_find_by_view",
+    "uri": "urn:clef://page-maps/{viewName}",
+    "description": "Find by view pagemap — Return all PageMap entries whose viewName matches , as a \n JSON array . Enables Pilot to discover all interactive \n elements associated with a specific view ."
+  },
+  {
     "type": "resource-template",
     "name": "page_map_list",
     "uriTemplate": "urn:clef://page-maps",
-    "description": "List pagemap — Return a JSON array of all entries belonging to the given host . \n Returns an empty array if the host has no registered entries ."
+    "description": "List pagemap — Return a JSON array of all entries belonging to the given host , \n including any view metadata fields ( viewName , viewPurpose , viewPurity , \n viewInvokedActions ) attached at registration time . \n Returns an empty array if the host has no registered entries ."
   },
   {
     "type": "tool",

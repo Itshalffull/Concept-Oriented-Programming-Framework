@@ -1,0 +1,14 @@
+# When content is captured in research mode, immediately trigger a
+# DataQuality validation against the source-credibility ruleset so
+# low-quality or adversarial sources are flagged before any snippets
+# or citations are built on top of them.
+
+sync CredibilityEvaluationOnCapture [eventual] [recommended]
+  purpose: "Run source-credibility quality validation on every research-mode capture so credibility tier is established before snippets are extracted or citations linked."
+when {
+  Capture/clip: [url: ?url; mode: "research"; metadata: ?meta]
+    => ok(itemId: ?item; content: ?content)
+}
+then {
+  DataQuality/validate: [item: ?item; rulesetId: "source-credibility"]
+}

@@ -1,0 +1,48 @@
+derived RuntimeInfrastructure [R] {
+
+  purpose {
+    Complete runtime infrastructure — monadic execution pipeline
+    (StorageProgram, interpreter, effects), storage and transport
+    adapters (in-memory, SQL, cloud, HTTP, WebSocket, serverless),
+    and application-level infrastructure primitives (cache, plugin
+    registry, event bus). The layer between concept handlers and
+    the physical world.
+  }
+
+  composes {
+    MonadicExecution [R]
+    AdapterInfrastructure [R]
+    InfrastructureCore [R]
+  }
+
+  syncs {
+    required: [
+      event-validation
+    ]
+    recommended: [
+      save-invalidates-cache,
+      schema-index-on-apply,
+      schema-index-on-remove,
+      schema-index-on-save
+    ]
+  }
+
+  surface {
+    action createProgram(concept: String, action: String) {
+      matches: MonadicExecution/buildProgram(concept: concept, action: action)
+    }
+
+    action ensureIndex(relation: String, field: String) {
+      matches: InfrastructureCore/registerPlugin(type: relation, name: field, metadata: "{}")
+    }
+
+    query getEffectHandlers(protocol: String) -> MonadicExecution/registerEffect(protocol: protocol, operation: "list")
+    query getCached(program: R) -> MonadicExecution/getCached(program: program)
+  }
+
+  principle {
+    after createProgram(concept: "ContentNode", action: "listBySchema")
+    then ensureIndex(relation: "membership", field: "schema") enables indexed queries
+    and  getCached(program: r) reflects optimized storage access
+  }
+}

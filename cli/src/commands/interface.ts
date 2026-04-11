@@ -27,7 +27,7 @@ import { apiSurfaceHandler as surfaceHandler } from '../../../handlers/ts/api-su
 import { createInMemoryStorage } from '../../../runtime/adapters/storage.js';
 import { PERFORM_HANDLER } from '../../../runtime/functional-compat.js';
 import type { ConceptManifest, ConceptAST, DerivedAST } from '../../../runtime/types.js';
-import { parseDerivedFile } from '../../../handlers/ts/framework/derived-parser.js';
+import { parseDerivedFile, derivedToManifest } from '../../../handlers/ts/framework/derived-parser.js';
 
 /** Recursively find files matching an extension under a directory. */
 function findFiles(dir: string, ext: string): string[] {
@@ -441,18 +441,29 @@ async function interfaceGenerate(
   // If the manifest explicitly lists concept file paths, use those.
   // Otherwise, scan concepts/ directory.
   let conceptFiles: string[] = [];
+  let inlineDerivedFiles: string[] = [];
 
   const manifestConcepts = (manifestYaml.concepts as string[] | undefined) || [];
   const explicitPaths = manifestConcepts.filter(c => c.endsWith('.concept'));
+  const inlineDerivedPaths = manifestConcepts.filter(c => c.endsWith('.derived'));
 
-  if (explicitPaths.length > 0) {
-    // Manifest lists explicit concept file paths
+  if (explicitPaths.length > 0 || inlineDerivedPaths.length > 0) {
+    // Manifest lists explicit file paths
     for (const p of explicitPaths) {
       const resolved = resolve(projectDir, p);
       if (existsSync(resolved)) {
         conceptFiles.push(resolved);
       } else {
         console.error(`  [WARN] Concept file not found: ${p}`);
+      }
+    }
+    // .derived files listed alongside concepts in the concepts: list
+    for (const p of inlineDerivedPaths) {
+      const resolved = resolve(projectDir, p);
+      if (existsSync(resolved)) {
+        inlineDerivedFiles.push(resolved);
+      } else {
+        console.error(`  [WARN] Derived concept file not found: ${p}`);
       }
     }
   } else {
@@ -463,7 +474,7 @@ async function interfaceGenerate(
     }
   }
 
-  if (conceptFiles.length === 0) {
+  if (conceptFiles.length === 0 && inlineDerivedFiles.length === 0) {
     console.error('No concept files found. Specify paths in manifest or add files to concepts/.');
     process.exit(1);
   }
@@ -504,56 +515,31 @@ async function interfaceGenerate(
     });
   }
 
-  // 2b. Parse derived concepts and synthesize ConceptManifests from surface actions/queries
-  const derivedPaths = (manifestYaml['derived-concepts'] as string[] | undefined) || [];
+  // 2b. Parse derived concepts and synthesize ConceptManifests from surface actions/queries.
+  // Derived concepts can be listed under the `derived-concepts:` key or inline
+  // in the `concepts:` list (any path ending in .derived).
+  const derivedPaths = [
+    ...((manifestYaml['derived-concepts'] as string[] | undefined) || []),
+  ];
+  // Merge inline .derived paths (already resolved above) into the processing list
+  const allDerivedResolved = new Set<string>();
   for (const dp of derivedPaths) {
-    const resolved = resolve(projectDir, dp);
+    allDerivedResolved.add(resolve(projectDir, dp));
+  }
+  for (const dp of inlineDerivedFiles) {
+    allDerivedResolved.add(dp);
+  }
+
+  for (const resolved of allDerivedResolved) {
     if (!existsSync(resolved)) {
-      console.error(`  [WARN] Derived concept file not found: ${dp}`);
+      console.error(`  [WARN] Derived concept file not found: ${relative(projectDir, resolved)}`);
       continue;
     }
     try {
       const derivedAst = parseDerivedFile(readFileSync(resolved, 'utf-8'));
-      // Synthesize a ConceptManifest from surface actions + queries
-      const actions: ConceptManifest['actions'] = [];
-      for (const sa of derivedAst.surface.actions) {
-        actions.push({
-          name: sa.name,
-          params: sa.params.map(p => ({
-            name: p.name,
-            type: p.typeExpr?.name || 'String',
-            required: !p.typeExpr?.name?.startsWith('option'),
-          })),
-          variants: [
-            { name: 'ok', description: `${sa.name} succeeded` },
-            { name: 'error', description: `${sa.name} failed` },
-          ],
-          description: `Surface action: ${sa.name}`,
-        });
-      }
-      for (const sq of derivedAst.surface.queries) {
-        actions.push({
-          name: sq.name,
-          params: sq.params.map(p => ({
-            name: p.name,
-            type: p.typeExpr?.name || 'String',
-            required: !p.typeExpr?.name?.startsWith('option'),
-          })),
-          variants: [
-            { name: 'ok', description: `${sq.name} query result` },
-          ],
-          description: `Surface query: ${sq.name}`,
-        });
-      }
-      const syntheticManifest: ConceptManifest = {
-        name: derivedAst.name,
-        typeParams: derivedAst.typeParams,
-        purpose: derivedAst.purpose || '',
-        stateRelations: [],
-        actions,
-        invariants: [],
-      };
-      console.log(`  [OK] ${derivedAst.name} (derived: ${actions.length} surface actions/queries)`);
+      const syntheticManifest = derivedToManifest(derivedAst);
+      const actionCount = syntheticManifest.actions.length;
+      console.log(`  [OK] ${derivedAst.name} (derived: ${actionCount} surface actions/queries)`);
       projections.push({
         conceptName: derivedAst.name,
         conceptManifest: JSON.stringify(syntheticManifest),

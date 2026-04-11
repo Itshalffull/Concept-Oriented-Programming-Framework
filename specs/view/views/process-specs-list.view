@@ -1,0 +1,54 @@
+view "process-specs-list" {
+  shell: "process-specs-list"
+
+  features {
+    filter
+    sort
+    projection
+    interaction
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ProcessSpec\",\"action\":\"list\"}"
+    }
+    filter: {
+      node: "{\"type\":\"true\"}"
+    }
+    sort: {
+      keys: "[]"
+    }
+    projection: {
+      fields: "[]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+    interaction: {
+      rowActions: "[{\"key\":\"edit\",\"concept\":\"ProcessSpec\",\"action\":\"update\",\"label\":\"Edit\"}]"
+    }
+  }
+
+  purpose {
+    Versioned process template definitions with step graphs and
+    routing edges. Read-write — supports inline create action.
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+
+    always "invokes only ProcessSpec actions": {
+      forall ia in invokedActions:
+      ia startsWith "ProcessSpec/"
+    }
+
+    always "filter fields exist in source": {
+      forall f in filterFields:
+      f in sourceFields
+    }
+  }
+}

@@ -1,0 +1,49 @@
+# ResearchProject — Content-Native Schema Definition
+# The top-level research investigation container. Budget and source policy
+# are properties on the page. No child blocks — the project page links to
+# its plan and report pages via Relations. The page body is the user's
+# query/brief — free text, no child schema needed.
+# General syncs in content-native-schema.sync auto-wire everything.
+
+name: research-project
+version: 1
+
+fields:
+  - name: deliverable_type
+    type: string
+    required: true
+    enum: [report, comparison, literature_review, fact_check, data_extraction]
+  - name: output_format
+    type: string
+    default: "structured_blocks"
+    enum: [markdown, structured_blocks, table]
+  - name: max_tokens
+    type: number
+  - name: max_search_calls
+    type: number
+  - name: max_duration_minutes
+    type: number
+  - name: tokens_used
+    type: number
+    default: 0
+  - name: search_calls_used
+    type: number
+    default: 0
+  - name: status
+    type: string
+    default: "draft"
+    enum: [draft, planning, executing, reviewing, completed, cancelled]
+  - name: require_credibility_tier
+    type: string
+    enum: [authoritative, reliable, mixed]
+  - name: process_run_id
+    type: string
+  - name: report_page_id
+    type: string
+  - name: plan_page_id
+    type: string
+
+contentNative:
+  displayWidget: schema-block-editor
+  # Project page body is the user's query/brief — free text, no child schema needed
+  # No compilationProvider — project is a container, not compiled content

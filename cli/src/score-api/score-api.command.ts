@@ -736,6 +736,105 @@ scoreApiCommand
   });
 
 scoreApiCommand
+  .command('list-views')
+  .description('Return all indexed ViewEntity entries as a JSON array , each containing name , shellRef , purposeText , and purity .')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ScoreApi', 'listViews', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
+  });
+
+scoreApiCommand
+  .command('get-view')
+  .description('Return the full ViewEntity record for the named view as JSON , including all analysis fields ( purity , invokedActions , projectedFields , filterFields , invariants ) .')
+  .requiredOption('--name <name>', 'Name')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ScoreApi', 'getView', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
+  });
+
+scoreApiCommand
+  .command('find-views-by-shell')
+  .description('Return all views referencing this ViewShell as a JSON array .')
+  .requiredOption('--shell-ref <shellRef>', 'Shell Ref')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ScoreApi', 'findViewsByShell', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
+  });
+
+scoreApiCommand
+  .command('find-views-by-purity')
+  .description('Return all views with the given purity classification .')
+  .requiredOption('--purity <purity>', 'Purity')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ScoreApi', 'findViewsByPurity', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
+  });
+
+scoreApiCommand
+  .command('find-views-by-invoked-action')
+  .description('Return all views whose invokedActions include the given concept action pair .')
+  .requiredOption('--action <action>', 'Action')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ScoreApi', 'findViewsByInvokedAction', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
+  });
+
+scoreApiCommand
   .command('status')
   .description('Get the current status of the Score index . Returns counts of indexed entities and the last indexing time .')
   .option('--json', 'Output as JSON')
@@ -756,7 +855,7 @@ scoreApiCommand
 
 scoreApiCommand
   .command('reindex')
-  .description('Force a full reindex of the project . Parses all files , extracts symbols , builds semantic graph , indexes handler implementations , widget implementations , theme implementations , computes analysis overlays , and generates embeddings . Returns counts and duration in milliseconds .')
+  .description('Force a full reindex of the project . Parses all files , extracts symbols , builds semantic graph , indexes handler implementations , widget implementations , theme implementations , view manifests , computes analysis overlays , and generates embeddings . Returns counts and duration in milliseconds .')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     try {
@@ -776,5 +875,5 @@ scoreApiCommand
 export const scoreApiCommandTree = {
   group: 'score-api',
   description: 'Unified facade over the five Score suites ( parse , symbol , semantic , analysis , discovery ) providing a single LLM friendly surface for querying any Clef project s structure , symbols , semantics , data flows , and search indexes . Every Clef app gets ScoreApi registered automatically LLMs can immediately ask questions about the codebase without configuration . Actions are designed for natural language invocation : parameter names read as English , results are structured for tool use consumption , and error variants include actionable suggestions',
-  commands: [{ action: 'listFiles', command: 'list-files' }, { action: 'getFileTree', command: 'get-file-tree' }, { action: 'getFileContent', command: 'get-file-content' }, { action: 'getDefinitions', command: 'get-definitions' }, { action: 'matchPattern', command: 'match-pattern' }, { action: 'findSymbol', command: 'find-symbol' }, { action: 'getReferences', command: 'get-references' }, { action: 'getScope', command: 'get-scope' }, { action: 'getRelationships', command: 'get-relationships' }, { action: 'listConcepts', command: 'list-concepts' }, { action: 'getConcept', command: 'get-concept' }, { action: 'getAction', command: 'get-action' }, { action: 'listSyncs', command: 'list-syncs' }, { action: 'getSync', command: 'get-sync' }, { action: 'getFlow', command: 'get-flow' }, { action: 'getHandler', command: 'get-handler' }, { action: 'getActionSource', command: 'get-action-source' }, { action: 'listHandlers', command: 'list-handlers' }, { action: 'implementationGaps', command: 'implementation-gaps' }, { action: 'resolveStackTrace', command: 'resolve-stack-trace' }, { action: 'getWidgetImpl', command: 'get-widget-impl' }, { action: 'getThemeImpl', command: 'get-theme-impl' }, { action: 'getDeployment', command: 'get-deployment' }, { action: 'getDeploymentTopology', command: 'get-deployment-topology' }, { action: 'getDeploymentHealth', command: 'get-deployment-health' }, { action: 'listSuites', command: 'list-suites' }, { action: 'getSuite', command: 'get-suite' }, { action: 'listInterfaces', command: 'list-interfaces' }, { action: 'getEndpoints', command: 'get-endpoints' }, { action: 'traceEndpoint', command: 'trace-endpoint' }, { action: 'getDependencies', command: 'get-dependencies' }, { action: 'getDependents', command: 'get-dependents' }, { action: 'getImpact', command: 'get-impact' }, { action: 'getDataFlow', command: 'get-data-flow' }, { action: 'search', command: 'search' }, { action: 'explain', command: 'explain' }, { action: 'status', command: 'status' }, { action: 'reindex', command: 'reindex' }],
+  commands: [{ action: 'listFiles', command: 'list-files' }, { action: 'getFileTree', command: 'get-file-tree' }, { action: 'getFileContent', command: 'get-file-content' }, { action: 'getDefinitions', command: 'get-definitions' }, { action: 'matchPattern', command: 'match-pattern' }, { action: 'findSymbol', command: 'find-symbol' }, { action: 'getReferences', command: 'get-references' }, { action: 'getScope', command: 'get-scope' }, { action: 'getRelationships', command: 'get-relationships' }, { action: 'listConcepts', command: 'list-concepts' }, { action: 'getConcept', command: 'get-concept' }, { action: 'getAction', command: 'get-action' }, { action: 'listSyncs', command: 'list-syncs' }, { action: 'getSync', command: 'get-sync' }, { action: 'getFlow', command: 'get-flow' }, { action: 'getHandler', command: 'get-handler' }, { action: 'getActionSource', command: 'get-action-source' }, { action: 'listHandlers', command: 'list-handlers' }, { action: 'implementationGaps', command: 'implementation-gaps' }, { action: 'resolveStackTrace', command: 'resolve-stack-trace' }, { action: 'getWidgetImpl', command: 'get-widget-impl' }, { action: 'getThemeImpl', command: 'get-theme-impl' }, { action: 'getDeployment', command: 'get-deployment' }, { action: 'getDeploymentTopology', command: 'get-deployment-topology' }, { action: 'getDeploymentHealth', command: 'get-deployment-health' }, { action: 'listSuites', command: 'list-suites' }, { action: 'getSuite', command: 'get-suite' }, { action: 'listInterfaces', command: 'list-interfaces' }, { action: 'getEndpoints', command: 'get-endpoints' }, { action: 'traceEndpoint', command: 'trace-endpoint' }, { action: 'getDependencies', command: 'get-dependencies' }, { action: 'getDependents', command: 'get-dependents' }, { action: 'getImpact', command: 'get-impact' }, { action: 'getDataFlow', command: 'get-data-flow' }, { action: 'search', command: 'search' }, { action: 'explain', command: 'explain' }, { action: 'listViews', command: 'list-views' }, { action: 'getView', command: 'get-view' }, { action: 'findViewsByShell', command: 'find-views-by-shell' }, { action: 'findViewsByPurity', command: 'find-views-by-purity' }, { action: 'findViewsByInvokedAction', command: 'find-views-by-invoked-action' }, { action: 'status', command: 'status' }, { action: 'reindex', command: 'reindex' }],
 };

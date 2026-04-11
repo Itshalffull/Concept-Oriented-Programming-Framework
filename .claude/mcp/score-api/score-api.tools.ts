@@ -276,6 +276,36 @@ export const scoreApiTools = [
     }
   },
   {
+    "type": "resource-template",
+    "name": "score_api_list_views",
+    "uriTemplate": "urn:clef://score-apis",
+    "description": "List views scoreapi — Return all indexed ViewEntity entries as a JSON array , each \n containing name , shellRef , purposeText , and purity ."
+  },
+  {
+    "type": "resource",
+    "name": "score_api_get_view",
+    "uri": "urn:clef://score-apis/{name}",
+    "description": "Get view scoreapi — Return the full ViewEntity record for the named view as JSON , \n including all analysis fields ( purity , invokedActions , \n projectedFields , filterFields , invariants ) ."
+  },
+  {
+    "type": "resource",
+    "name": "score_api_find_views_by_shell",
+    "uri": "urn:clef://score-apis/{shellRef}",
+    "description": "Find views by shell scoreapi — Return all views referencing this ViewShell as a JSON array ."
+  },
+  {
+    "type": "resource",
+    "name": "score_api_find_views_by_purity",
+    "uri": "urn:clef://score-apis/{purity}",
+    "description": "Find views by purity scoreapi — Return all views with the given purity classification ."
+  },
+  {
+    "type": "resource",
+    "name": "score_api_find_views_by_invoked_action",
+    "uri": "urn:clef://score-apis/{action}",
+    "description": "Find views by invoked action scoreapi — Return all views whose invokedActions include the given \n concept action pair ."
+  },
+  {
     "type": "tool",
     "name": "score_api_status",
     "description": "Status scoreapi — Get the current status of the Score index . Returns \n counts of indexed entities and the last indexing time .",
@@ -288,7 +318,7 @@ export const scoreApiTools = [
   {
     "type": "tool",
     "name": "score_api_reindex",
-    "description": "Reindex scoreapi — Force a full reindex of the project . Parses all files , \n extracts symbols , builds semantic graph , indexes handler \n implementations , widget implementations , theme implementations , \n computes analysis overlays , and generates embeddings . Returns \n counts and duration in milliseconds .",
+    "description": "Reindex scoreapi — Force a full reindex of the project . Parses all files , \n extracts symbols , builds semantic graph , indexes handler \n implementations , widget implementations , theme implementations , \n view manifests , computes analysis overlays , and generates \n embeddings . Returns counts and duration in milliseconds .",
     "inputSchema": {
       "type": "object",
       "properties": {},

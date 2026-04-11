@@ -1,0 +1,428 @@
+@version(1)
+widget typed-value-input {
+
+  purpose {
+    Field-type-aware value entry widget that morphs its rendered control based on
+    the type of the field being filtered. A text field renders a free-text input; a
+    number field renders a numeric stepper with optional min/max bounds; a date field
+    renders a calendar picker with relative-date presets (Last 7 days, This month,
+    Next quarter, etc.); a select field renders a single-select dropdown; a
+    multi-select field renders a tag-chip picker with autocomplete; a relation field
+    composes the reference-picker widget; and a boolean field renders a simple toggle.
+    When the active operator is "is empty" or "is not empty" the entire value input
+    is hidden — no value is required for unary operators. Intended for composition
+    inside filter-popover, filter-pill, and the stepwise notebook editor.
+  }
+
+  anatomy {
+    root:                 container     { Outer wrapper; switches data-field-type and data-state }
+    textInput:            interactive   { Free-text input rendered for text fields }
+    numberInput:          interactive   { Numeric input rendered for number fields }
+    numberStepper:        action        { Increment/decrement buttons flanking the number input }
+    datePickerInput:      interactive   { Date picker trigger input showing the selected date string }
+    dateRelativePresets:  container     { Panel listing relative-date preset options }
+    relativePreset:       action        { Single relative-date preset button (e.g. "Last 7 days") }
+    selectInput:          action        { Single-select trigger showing the chosen option label }
+    selectDropdown:       container     { Floating listbox of select options }
+    selectOption:         action        { Individual option row inside selectDropdown }
+    multiSelectInput:     interactive   { Tag-chip input area for multi-select fields }
+    multiSelectChip:      container     { Chip representing one chosen option in multi-select }
+    multiSelectRemove:    action        { Remove button inside a multiSelectChip }
+    relationPickerInput:  container     { Slot that composes the reference-picker widget }
+    booleanToggle:        action        { Toggle button for boolean fields }
+    emptyIndicator:       presentation  { Read-only indicator shown when operator is unary (is empty / is not empty) }
+  }
+
+  states {
+    idle [initial] {
+      on FOCUS -> focused;
+      on OPEN_SELECT -> selecting;
+      on OPEN_DATE_PRESETS -> date-relative-open;
+    }
+
+    focused {
+      on BLUR -> idle;
+      on OPEN_SELECT -> selecting;
+      on OPEN_DATE_PRESETS -> date-relative-open;
+      on CHANGE -> focused;
+      entry [emitValueChange];
+    }
+
+    selecting {
+      on SELECT_OPTION -> idle;
+      on CLOSE_SELECT -> idle;
+      on ESCAPE -> idle;
+      entry [positionSelectDropdown];
+      exit [closeSelectDropdown];
+    }
+
+    date-relative-open {
+      on SELECT_PRESET -> idle;
+      on CLOSE_PRESETS -> idle;
+      on ESCAPE -> idle;
+      entry [showRelativePresets];
+      exit [hideRelativePresets];
+    }
+  }
+
+  accessibility {
+    role: group;
+    keyboard {
+      ArrowDown -> OPEN_SELECT;
+      ArrowUp -> OPEN_SELECT;
+      Enter -> SELECT_OPTION;
+      Escape -> ESCAPE;
+      Tab -> BLUR;
+    }
+    focus {
+      trap: false;
+      initial: textInput;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: "Filter value";
+        data-field-type: ?fieldType;
+        data-state: state;
+      };
+      textInput -> {
+        role: "textbox";
+        aria-label: "Filter text value";
+        aria-required: "true";
+        aria-hidden: if ?fieldType != "text" then "true" else "false";
+      };
+      numberInput -> {
+        role: "spinbutton";
+        aria-label: "Filter number value";
+        aria-valuemin: if ?min != "" then ?min else "0";
+        aria-valuemax: if ?max != "" then ?max else "";
+        aria-hidden: if ?fieldType != "number" then "true" else "false";
+      };
+      numberStepper -> {
+        role: "button";
+        aria-label: "Adjust number value";
+      };
+      datePickerInput -> {
+        role: "combobox";
+        aria-label: "Filter date value";
+        aria-haspopup: "dialog";
+        aria-hidden: if ?fieldType != "date" then "true" else "false";
+      };
+      dateRelativePresets -> {
+        role: "listbox";
+        aria-label: "Relative date presets";
+        aria-hidden: if state != "date-relative-open" then "true" else "false";
+      };
+      relativePreset -> {
+        role: "option";
+        aria-label: self.label;
+        aria-selected: if self.isSelected then "true" else "false";
+      };
+      selectInput -> {
+        role: "combobox";
+        aria-label: "Filter select value";
+        aria-haspopup: "listbox";
+        aria-expanded: if state == "selecting" then "true" else "false";
+        aria-hidden: if ?fieldType != "select" then "true" else "false";
+      };
+      selectDropdown -> {
+        role: "listbox";
+        aria-label: "Select options";
+        aria-hidden: if state != "selecting" then "true" else "false";
+      };
+      selectOption -> {
+        role: "option";
+        aria-selected: if self.isSelected then "true" else "false";
+        aria-label: self.label;
+      };
+      multiSelectInput -> {
+        role: "combobox";
+        aria-label: "Filter multi-select values";
+        aria-haspopup: "listbox";
+        aria-multiselectable: "true";
+        aria-hidden: if ?fieldType != "multi-select" then "true" else "false";
+      };
+      multiSelectChip -> {
+        role: "option";
+        aria-label: self.label;
+        aria-selected: "true";
+      };
+      multiSelectRemove -> {
+        role: "button";
+        aria-label: concat("Remove ", self.label);
+      };
+      relationPickerInput -> {
+        role: "group";
+        aria-label: "Filter relation value";
+        aria-hidden: if ?fieldType != "relation" then "true" else "false";
+      };
+      booleanToggle -> {
+        role: "switch";
+        aria-label: "Filter boolean value";
+        aria-checked: if self.value then "true" else "false";
+        aria-hidden: if ?fieldType != "boolean" then "true" else "false";
+      };
+      emptyIndicator -> {
+        role: "status";
+        aria-label: "No value required for this operator";
+      };
+    }
+  }
+
+  props {
+    fieldType: String = "text"
+    value: option String
+    schema: option String
+    options: list { label: String; value: String } = []
+    min: option String
+    max: option String
+    relativePresets: list { label: String; value: String } = []
+    operatorIsUnary: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-field-type: ?fieldType;
+      data-operator-unary: if ?operatorIsUnary then "true" else "false";
+      hidden: if ?operatorIsUnary then true else false;
+    }
+
+    textInput -> {
+      data-part: "text-input";
+      hidden: if ?fieldType != "text" or ?operatorIsUnary then true else false;
+      value: ?value;
+      onInput: send(CHANGE, { value: self.value });
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+      onKeyDown: if key == "Escape" then send(ESCAPE) else noop;
+    }
+
+    numberInput -> {
+      data-part: "number-input";
+      hidden: if ?fieldType != "number" or ?operatorIsUnary then true else false;
+      value: ?value;
+      min: ?min;
+      max: ?max;
+      onInput: send(CHANGE, { value: self.value });
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+      onKeyDown: if key == "Escape" then send(ESCAPE) else noop;
+    }
+
+    numberStepper -> {
+      data-part: "number-stepper";
+      hidden: if ?fieldType != "number" or ?operatorIsUnary then true else false;
+      data-direction: self.direction;
+      onClick: send(CHANGE, { value: self.newValue });
+    }
+
+    datePickerInput -> {
+      data-part: "date-picker-input";
+      hidden: if ?fieldType != "date" or ?operatorIsUnary then true else false;
+      value: ?value;
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+      onClick: send(OPEN_DATE_PRESETS);
+      onKeyDown: if key == "Escape" then send(ESCAPE) else noop;
+    }
+
+    dateRelativePresets -> {
+      data-part: "date-relative-presets";
+      hidden: if state != "date-relative-open" then true else false;
+    }
+
+    relativePreset -> {
+      data-part: "relative-preset";
+      data-preset-value: self.value;
+      data-selected: if self.isSelected then "true" else "false";
+      onClick: send(SELECT_PRESET, { value: self.value });
+      onKeyDown: if key == "Enter" then send(SELECT_PRESET, { value: self.value }) else noop;
+    }
+
+    selectInput -> {
+      data-part: "select-input";
+      hidden: if ?fieldType != "select" or ?operatorIsUnary then true else false;
+      data-value: ?value;
+      onClick: send(OPEN_SELECT);
+      onKeyDown: if key == "Escape" then send(ESCAPE) else if key == "ArrowDown" then send(OPEN_SELECT) else noop;
+    }
+
+    selectDropdown -> {
+      data-part: "select-dropdown";
+      hidden: if state != "selecting" then true else false;
+    }
+
+    selectOption -> {
+      data-part: "select-option";
+      data-value: self.value;
+      data-selected: if self.isSelected then "true" else "false";
+      onClick: send(SELECT_OPTION, { value: self.value });
+      onKeyDown: if key == "Enter" then send(SELECT_OPTION, { value: self.value }) else noop;
+    }
+
+    multiSelectInput -> {
+      data-part: "multi-select-input";
+      hidden: if ?fieldType != "multi-select" or ?operatorIsUnary then true else false;
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+      onKeyDown: if key == "Escape" then send(ESCAPE) else noop;
+    }
+
+    multiSelectChip -> {
+      data-part: "multi-select-chip";
+      data-value: self.value;
+      aria-label: self.label;
+    }
+
+    multiSelectRemove -> {
+      data-part: "multi-select-remove";
+      data-value: self.value;
+      onClick: send(CHANGE, { removeValue: self.value });
+      onKeyDown: if key == "Enter" then send(CHANGE, { removeValue: self.value }) else noop;
+    }
+
+    relationPickerInput -> {
+      data-part: "relation-picker-input";
+      hidden: if ?fieldType != "relation" or ?operatorIsUnary then true else false;
+    }
+
+    booleanToggle -> {
+      data-part: "boolean-toggle";
+      hidden: if ?fieldType != "boolean" or ?operatorIsUnary then true else false;
+      data-checked: if self.value then "true" else "false";
+      onClick: send(CHANGE, { value: not self.value });
+      onKeyDown: if key == "Enter" then send(CHANGE, { value: not self.value }) else noop;
+    }
+
+    emptyIndicator -> {
+      data-part: "empty-indicator";
+      hidden: if not ?operatorIsUnary then true else false;
+    }
+  }
+
+  compose {
+    relationPickerInput: widget("reference-picker", { targetSchema: ?schema; cardinality: "single"; currentValue: ?value })
+  }
+
+  invariant {
+    example "text field renders text input only": {
+      after send(FOCUS) -> ok
+      then root -> { data-field-type: "text"; data-state: "focused" }
+      and textInput -> { hidden: false }
+      and numberInput -> { hidden: true }
+      and datePickerInput -> { hidden: true }
+      and selectInput -> { hidden: true }
+      and multiSelectInput -> { hidden: true }
+      and booleanToggle -> { hidden: true }
+    }
+
+    example "number field renders number input only": {
+      after send(FOCUS) -> ok
+      then root -> { data-field-type: "number" }
+      and numberInput -> { hidden: false }
+      and textInput -> { hidden: true }
+    }
+
+    example "unary operator hides entire input and shows empty indicator": {
+      after send(FOCUS) -> ok
+      then root -> { data-operator-unary: "true" }
+      and root -> { hidden: true }
+      and emptyIndicator -> { hidden: false }
+    }
+
+    example "date field opens relative presets panel": {
+      after send(OPEN_DATE_PRESETS) -> ok
+      then root -> { data-state: "date-relative-open" }
+      and dateRelativePresets -> { hidden: false }
+    }
+
+    example "selecting preset transitions back to idle": {
+      after send(OPEN_DATE_PRESETS) -> ok
+      then send(SELECT_PRESET, { value: "last-7-days" }) -> ok
+      then root -> { data-state: "idle" }
+      and dateRelativePresets -> { hidden: true }
+    }
+
+    example "select field opens dropdown on click": {
+      after send(OPEN_SELECT) -> ok
+      then root -> { data-state: "selecting" }
+      and selectDropdown -> { hidden: false }
+    }
+
+    example "choosing an option closes dropdown": {
+      after send(OPEN_SELECT) -> ok
+      then send(SELECT_OPTION, { value: "opt-a" }) -> ok
+      then root -> { data-state: "idle" }
+      and selectDropdown -> { hidden: true }
+    }
+
+    example "Escape from selecting returns to idle": {
+      after send(OPEN_SELECT) -> ok
+      then key(Escape) -> ok
+      then root -> { data-state: "idle" }
+      and selectDropdown -> { hidden: true }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        root -> { data-state: s.name }
+    }
+
+    always "exactly one input control visible per field type": {
+      if ?fieldType == "text" then textInput -> { hidden: false }
+      and if ?fieldType == "number" then numberInput -> { hidden: false }
+      and if ?fieldType == "date" then datePickerInput -> { hidden: false }
+      and if ?fieldType == "select" then selectInput -> { hidden: false }
+      and if ?fieldType == "multi-select" then multiSelectInput -> { hidden: false }
+      and if ?fieldType == "relation" then relationPickerInput -> { hidden: false }
+      and if ?fieldType == "boolean" then booleanToggle -> { hidden: false }
+    }
+
+    always "non-active controls are hidden": {
+      if ?fieldType != "text" then textInput -> { hidden: true }
+      and if ?fieldType != "number" then numberInput -> { hidden: true }
+      and if ?fieldType != "date" then datePickerInput -> { hidden: true }
+      and if ?fieldType != "select" then selectInput -> { hidden: true }
+      and if ?fieldType != "multi-select" then multiSelectInput -> { hidden: true }
+      and if ?fieldType != "relation" then relationPickerInput -> { hidden: true }
+      and if ?fieldType != "boolean" then booleanToggle -> { hidden: true }
+    }
+
+    always "emptyIndicator visible only when operatorIsUnary": {
+      if ?operatorIsUnary then emptyIndicator -> { hidden: false }
+      and if not ?operatorIsUnary then emptyIndicator -> { hidden: true }
+    }
+
+    always "selectDropdown hidden when not in selecting state": {
+      if state != "selecting" then selectDropdown -> { hidden: true }
+    }
+
+    always "dateRelativePresets hidden when not in date-relative-open state": {
+      if state != "date-relative-open" then dateRelativePresets -> { hidden: true }
+    }
+
+    never "multiple input controls visible simultaneously": {
+      exists p1 in [textInput, numberInput, datePickerInput, selectInput, multiSelectInput, relationPickerInput, booleanToggle]:
+        exists p2 in [textInput, numberInput, datePickerInput, selectInput, multiSelectInput, relationPickerInput, booleanToggle]:
+          p1 != p2 and p1 -> { hidden: false } and p2 -> { hidden: false }
+    }
+
+    never "value input visible when operatorIsUnary is true": {
+      ?operatorIsUnary and exists p in [textInput, numberInput, datePickerInput, selectInput, multiSelectInput, booleanToggle]:
+        p -> { hidden: false }
+    }
+
+    "CHANGE event must carry the new value as payload so parent filter-popover can update FilterSpec without reading DOM";
+    "relation field type delegates all selection state to the composed reference-picker; this widget only shows/hides the container";
+    "relativePresets list defaults include at minimum: last-7-days, this-month, last-30-days, next-7-days, next-quarter, this-year";
+    "number stepper step size defaults to 1 and is not configurable through this widget — precision control is handled by consumers setting min/max";
+    "multi-select autocomplete is provided by the multiSelectInput interactive control; chip removal fires CHANGE with removeValue payload";
+  }
+
+}

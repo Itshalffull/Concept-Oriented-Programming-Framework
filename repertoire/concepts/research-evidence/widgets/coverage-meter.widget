@@ -1,0 +1,167 @@
+@version(1)
+widget coverage-meter {
+
+  purpose {
+    Status-indicator widget showing per-report citation coverage as a gauge
+    with three counters: supported claims, partially supported claims, and
+    unsupported claims. Connects to Claim/listByReport and
+    Claim/listUnsupported. Used in the report header and review sidebar to
+    give authors an at-a-glance evidential health score for the document.
+  }
+
+  anatomy {
+    root:             container  { Coverage meter wrapper }
+    gauge:            container  { Arc or bar gauge visualizing the overall coverage percentage }
+    supportedCount:   text       { Count of fully supported claims }
+    partialCount:     text       { Count of partially supported claims }
+    unsupportedCount: text       { Count of unsupported or unverified claims }
+    percentageLabel:  text       { Overall coverage percentage label }
+    emptyMessage:     text       { Message shown when no claims have been extracted yet }
+  }
+
+  states {
+    loading [initial] {
+      on LOAD_COMPLETE -> loaded;
+      on LOAD_ERROR -> loaded;
+    }
+
+    loaded {
+      on REFRESH -> loading;
+    }
+
+    empty {
+      on REFRESH -> loading;
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      r -> REFRESH;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Citation coverage";
+        aria-busy: if state == "loading" then "true" else "false";
+      };
+      gauge -> {
+        role: "meter";
+        aria-label: "Overall citation coverage";
+        aria-valuemin: "0";
+        aria-valuemax: "100";
+        aria-valuenow: self.coveragePercent;
+        aria-valuetext: concat(self.coveragePercent, "% covered");
+      };
+      supportedCount -> {
+        role: "status";
+        aria-label: concat(self.count, " supported claims");
+      };
+      partialCount -> {
+        role: "status";
+        aria-label: concat(self.count, " partially supported claims");
+      };
+      unsupportedCount -> {
+        role: "status";
+        aria-label: concat(self.count, " unsupported claims");
+      };
+      emptyMessage -> {
+        role: "status";
+        aria-live: "polite";
+      };
+    }
+  }
+
+  props {
+    report_entity_id: String
+    showPercentage: Bool = true
+    showCounts: Bool = true
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      aria-busy: if state == "loading" then "true" else "false";
+    }
+    gauge -> {
+      data-part: "gauge";
+      data-visible: if state == "loaded" then "true" else "false";
+      data-coverage: self.coveragePercent;
+    }
+    supportedCount -> {
+      data-part: "supported-count";
+      data-visible: if state == "loaded" and ?showCounts then "true" else "false";
+      text: self.supportedCount;
+    }
+    partialCount -> {
+      data-part: "partial-count";
+      data-visible: if state == "loaded" and ?showCounts then "true" else "false";
+      text: self.partialCount;
+    }
+    unsupportedCount -> {
+      data-part: "unsupported-count";
+      data-visible: if state == "loaded" and ?showCounts then "true" else "false";
+      text: self.unsupportedCount;
+    }
+    percentageLabel -> {
+      data-part: "percentage-label";
+      data-visible: if state == "loaded" and ?showPercentage then "true" else "false";
+      text: concat(self.coveragePercent, "%");
+    }
+    emptyMessage -> {
+      data-part: "empty-message";
+      data-visible: if state == "empty" then "true" else "false";
+    }
+  }
+
+  affordance {
+    serves: status-indicator;
+    specificity: 20;
+    when {
+      concept: "Claim";
+      view: "coverage";
+    }
+    bind {
+      report_entity_id: report_entity_id;
+    }
+  }
+
+  invariant {
+    example "load_complete transitions to loaded": {
+      after transition(from: "loading", event: "LOAD_COMPLETE") -> ok
+      then root -> { data-state: "loaded" }
+      and gauge -> { data-visible: "true" }
+    }
+
+    example "refresh from loaded transitions to loading": {
+      after transition(from: "loaded", event: "REFRESH") -> ok
+      then root -> { data-state: "loading" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        root -> { data-state: s.name }
+    }
+
+    always "gauge aria-valuenow matches coverage": {
+      if state == "loaded" then gauge -> { data-coverage: self.coveragePercent }
+    }
+
+    never "counts visible in loading state": {
+      state == "loading" and supportedCount -> { data-visible: "true" }
+    }
+
+    "The sum of supported, partial, and unsupported counts must equal the total claim count";
+    "Coverage percentage must be recalculated whenever claims are added or updated";
+  }
+
+}

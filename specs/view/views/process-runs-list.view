@@ -1,0 +1,49 @@
+view "process-runs-list" {
+  shell: "process-runs-list"
+
+  features {
+    filter
+    sort
+    projection
+    interaction
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ProcessRun\",\"action\":\"list\"}"
+    }
+    filter: {
+      node: "{\"type\":\"true\"}"
+    }
+    sort: {
+      keys: "[]"
+    }
+    projection: {
+      fields: "[]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+    interaction: {
+      rowActions: "[{\"key\":\"view\",\"concept\":\"ProcessRun\",\"action\":\"get\",\"label\":\"View\"}]"
+    }
+  }
+
+  purpose {
+    Live and historical process execution instances. Read-write —
+    supports row-click navigation to run detail.
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+
+    always "filter fields exist in source": {
+      forall f in filterFields:
+      f in sourceFields
+    }
+  }
+}

@@ -1,0 +1,498 @@
+@version(1)
+widget form-builder {
+
+  purpose {
+    Visual design surface for assembling and configuring form definitions. The user
+    can arrange fields into named groups, configure multi-step sequences with tab-based
+    step navigation, set conditional visibility rules per field, mark fields required,
+    and trigger per-field configuration in a side panel. Fields are draggable for
+    reordering within and between groups. A live preview pane (toggled via previewToggle)
+    shows the form as it will render to end users. Changes are committed with an explicit
+    save action or discarded with cancel. Connects to FormSpec (layout, conditions, steps),
+    FieldDefinition (field catalogue), and Schema (form name and ownership).
+  }
+
+  anatomy {
+    root:               container    { Top-level wrapper enclosing the entire builder surface }
+    canvas:             container    { Scrollable editing area holding step tabs, groups, and field rows }
+    stepTabBar:         container    { Horizontal row of step tabs for multi-step forms }
+    stepTab:            action       { Clickable tab representing a single step; activates that step }
+    activeStepIndicator: presentation { Underline or highlight marking the currently active step tab }
+    addStepButton:      action       { Appends a new step to the form }
+    fieldList:          container    { Ordered list of field rows within the active step }
+    fieldRow:           container    { Single field entry: drag handle, label, type badge, indicators, actions }
+    fieldDragHandle:    action       { Grab point for keyboard and pointer drag-to-reorder of a field }
+    fieldLabel:         text         { Human-readable display label of the field }
+    fieldTypeBadge:     presentation { Colored badge showing the field type (e.g., "Text", "Select") }
+    conditionIndicator: presentation { Icon shown when the field has active conditional visibility rules }
+    requiredIndicator:  presentation { Asterisk or chip shown when the field is marked required }
+    fieldHelpText:      text         { Short hint text shown beneath the field label in preview }
+    fieldConfigButton:  action       { Opens the form-field-config side panel for this field }
+    fieldRemoveButton:  action       { Removes this field from the current step/group }
+    groupHeader:        container    { Header row for a field group: label, type indicator, collapse control }
+    groupLabel:         text         { Display name of the field group }
+    groupTypeIndicator: presentation { Badge showing the group container type (section, fieldset, tab, etc.) }
+    groupDropZone:      container    { Drop target inside a group that accepts dragged field rows }
+    addFieldButton:     action       { Opens the field-type-picker to add a new field to the active step }
+    addGroupButton:     action       { Adds a new field group container to the active step }
+    emptyState:         container    { Placeholder shown when the active step has no fields yet }
+    previewToggle:      action       { Toggles the live preview pane open or closed }
+    previewPane:        container    { Side panel showing the live rendered form preview }
+    saveButton:         action       { Commits all pending changes to the FormSpec }
+    discardButton:      action       { Discards unsaved changes and resets the builder }
+  }
+
+  states {
+    idle [initial] {
+      on START_DRAG_FIELD  -> dragging-field;
+      on OPEN_FIELD_CONFIG -> configuring-field;
+      on ADD_FIELD         -> adding-field;
+      on ADD_GROUP         -> adding-group;
+      on TOGGLE_PREVIEW    -> previewing;
+      on SAVE              -> saving;
+    }
+
+    dragging-field {
+      on DROP_FIELD    -> idle;
+      on CANCEL_DRAG   -> idle;
+      entry [setDragPayload; highlightGroupDropZones];
+      exit [clearDragPayload; clearDropZoneHighlights];
+    }
+
+    configuring-field {
+      on CLOSE_CONFIG  -> idle;
+      on SAVE          -> saving;
+      entry [openFieldConfigPanel; focusFieldConfigPanel];
+      exit [closeFieldConfigPanel];
+    }
+
+    adding-field {
+      on FIELD_TYPE_SELECTED -> idle;
+      on CANCEL_ADD          -> idle;
+      entry [openFieldTypePicker];
+      exit [closeFieldTypePicker];
+    }
+
+    adding-group {
+      on GROUP_TYPE_SELECTED -> idle;
+      on CANCEL_ADD_GROUP    -> idle;
+      entry [openGroupTypePicker];
+      exit [closeGroupTypePicker];
+    }
+
+    previewing {
+      on TOGGLE_PREVIEW    -> idle;
+      on OPEN_FIELD_CONFIG -> configuring-field;
+      on SAVE              -> saving;
+      entry [renderPreview];
+    }
+
+    saving {
+      on SAVE_COMPLETE -> idle;
+      on SAVE_ERROR    -> idle;
+      entry [disableAllControls];
+      exit [enableAllControls];
+    }
+  }
+
+  accessibility {
+    role: form;
+    keyboard {
+      Tab           -> FOCUS_NEXT;
+      Shift+Tab     -> FOCUS_PREV;
+      Enter         -> OPEN_FIELD_CONFIG;
+      Delete        -> REMOVE_SELECTED_FIELD;
+      ArrowUp       -> MOVE_FIELD_UP;
+      ArrowDown     -> MOVE_FIELD_DOWN;
+      Escape        -> CLOSE_CONFIG;
+    }
+    focus {
+      trap: false;
+      initial: addFieldButton;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "form";
+        aria-label: concat("Form builder: ", ?formName);
+        data-state: state;
+      };
+      canvas -> {
+        role: "region";
+        aria-label: "Form design canvas";
+        aria-live: "polite";
+      };
+      stepTabBar -> {
+        role: "tablist";
+        aria-label: "Form steps";
+        aria-orientation: "horizontal";
+      };
+      stepTab -> {
+        role: "tab";
+        aria-selected: if self.isActive then "true" else "false";
+        aria-controls: "field-list";
+      };
+      fieldList -> {
+        role: "list";
+        aria-label: "Fields in current step";
+        aria-live: "polite";
+      };
+      fieldRow -> {
+        role: "listitem";
+        aria-label: concat(self.fieldLabel, ", type: ", self.fieldType, if self.required then ", required" else "");
+      };
+      fieldDragHandle -> {
+        role: "button";
+        aria-label: concat("Drag to reorder field ", self.fieldLabel);
+        aria-roledescription: "drag handle";
+        aria-pressed: if state == "dragging-field" and self.isGrabbed then "true" else "false";
+      };
+      fieldConfigButton -> {
+        role: "button";
+        aria-label: concat("Configure field ", self.fieldLabel);
+        aria-haspopup: "dialog";
+      };
+      fieldRemoveButton -> {
+        role: "button";
+        aria-label: concat("Remove field ", self.fieldLabel);
+      };
+      addFieldButton -> {
+        role: "button";
+        aria-label: "Add field";
+        aria-haspopup: "dialog";
+      };
+      addGroupButton -> {
+        role: "button";
+        aria-label: "Add group";
+      };
+      addStepButton -> {
+        role: "button";
+        aria-label: "Add step";
+      };
+      previewToggle -> {
+        role: "button";
+        aria-label: if state == "previewing" then "Hide preview" else "Show preview";
+        aria-pressed: if state == "previewing" then "true" else "false";
+        aria-controls: "preview-pane";
+      };
+      previewPane -> {
+        role: "region";
+        aria-label: "Form preview";
+        aria-live: "polite";
+        aria-hidden: if state == "previewing" then "false" else "true";
+      };
+      emptyState -> {
+        aria-live: "polite";
+        aria-label: "No fields added yet";
+      };
+      saveButton -> {
+        role: "button";
+        aria-label: if state == "saving" then "Saving…" else "Save form";
+        aria-disabled: if state == "saving" then "true" else "false";
+        aria-busy: if state == "saving" then "true" else "false";
+      };
+      discardButton -> {
+        role: "button";
+        aria-label: "Discard changes";
+        aria-disabled: if state == "saving" then "true" else "false";
+      };
+      groupDropZone -> {
+        role: "listbox";
+        aria-label: concat("Drop zone: ", self.groupLabel);
+        aria-dropeffect: if state == "dragging-field" then "move" else "none";
+      };
+    }
+  }
+
+  props {
+    schemaId: String
+    formName: String = ""
+    mode: union "create" | "edit" | "both" = "both"
+    steps: list { stepId: String, label: String } = []
+    activeStepId: option String
+    groups: list { groupId: String, label: String, groupType: String, stepId: String } = []
+    fields: list { fieldId: String, label: String, fieldType: String, required: Bool, hasCondition: Bool, helpText: String, groupId: option String, stepId: String } = []
+    hasUnsavedChanges: Bool = false
+    readOnly: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-schema: ?schemaId;
+      data-mode: ?mode;
+      data-readonly: if ?readOnly then "true" else "false";
+    }
+
+    canvas -> {
+      data-part: "canvas";
+      data-state: state;
+      data-drag-active: if state == "dragging-field" then "true" else "false";
+    }
+
+    stepTabBar -> {
+      data-part: "step-tab-bar";
+    }
+
+    stepTab -> {
+      data-part: "step-tab";
+      data-step-id: self.stepId;
+      data-active: if self.stepId == ?activeStepId then "true" else "false";
+      onClick: send(SELECT_STEP, { stepId: self.stepId });
+      tabIndex: if self.isActive then "0" else "-1";
+    }
+
+    activeStepIndicator -> {
+      data-part: "active-step-indicator";
+      data-step-id: ?activeStepId;
+    }
+
+    addStepButton -> {
+      data-part: "add-step-button";
+      onClick: send(ADD_STEP);
+      disabled: if ?readOnly or state == "saving" then true else false;
+    }
+
+    fieldList -> {
+      data-part: "field-list";
+      data-empty: if ?fields.length == 0 then "true" else "false";
+    }
+
+    fieldRow -> {
+      data-part: "field-row";
+      data-field-id: self.fieldId;
+      data-field-type: self.fieldType;
+      data-required: if self.required then "true" else "false";
+      data-has-condition: if self.hasCondition then "true" else "false";
+      data-grabbing: if state == "dragging-field" and self.isGrabbed then "true" else "false";
+    }
+
+    fieldDragHandle -> {
+      data-part: "field-drag-handle";
+      onPointerDown: send(START_DRAG_FIELD, { fieldId: self.fieldId });
+      onKeyDown: if key == "Space" then send(START_DRAG_FIELD, { fieldId: self.fieldId }) else if key == "ArrowUp" then send(MOVE_FIELD_UP, { fieldId: self.fieldId }) else if key == "ArrowDown" then send(MOVE_FIELD_DOWN, { fieldId: self.fieldId }) else if key == "Escape" then send(CANCEL_DRAG) else noop;
+      tabIndex: "0";
+      disabled: if ?readOnly then true else false;
+    }
+
+    fieldLabel -> {
+      data-part: "field-label";
+    }
+
+    fieldTypeBadge -> {
+      data-part: "field-type-badge";
+      data-type: self.fieldType;
+    }
+
+    conditionIndicator -> {
+      data-part: "condition-indicator";
+      data-visible: if self.hasCondition then "true" else "false";
+      aria-hidden: if self.hasCondition then "false" else "true";
+    }
+
+    requiredIndicator -> {
+      data-part: "required-indicator";
+      data-visible: if self.required then "true" else "false";
+      aria-hidden: if self.required then "false" else "true";
+    }
+
+    fieldHelpText -> {
+      data-part: "field-help-text";
+      data-visible: if self.helpText != "" then "true" else "false";
+    }
+
+    fieldConfigButton -> {
+      data-part: "field-config-button";
+      onClick: send(OPEN_FIELD_CONFIG, { fieldId: self.fieldId });
+      disabled: if ?readOnly or state == "saving" then true else false;
+    }
+
+    fieldRemoveButton -> {
+      data-part: "field-remove-button";
+      onClick: send(REMOVE_FIELD, { fieldId: self.fieldId });
+      disabled: if ?readOnly or state == "saving" then true else false;
+    }
+
+    groupHeader -> {
+      data-part: "group-header";
+      data-group-id: self.groupId;
+    }
+
+    groupLabel -> {
+      data-part: "group-label";
+    }
+
+    groupTypeIndicator -> {
+      data-part: "group-type-indicator";
+      data-type: self.groupType;
+    }
+
+    groupDropZone -> {
+      data-part: "group-drop-zone";
+      data-group-id: self.groupId;
+      data-active: if state == "dragging-field" then "true" else "false";
+      onDrop: send(DROP_FIELD, { fieldId: self.draggedFieldId, toGroupId: self.groupId, position: self.dropPosition });
+    }
+
+    addFieldButton -> {
+      data-part: "add-field-button";
+      onClick: send(ADD_FIELD);
+      disabled: if ?readOnly or state == "saving" then true else false;
+    }
+
+    addGroupButton -> {
+      data-part: "add-group-button";
+      onClick: send(ADD_GROUP);
+      disabled: if ?readOnly or state == "saving" then true else false;
+    }
+
+    emptyState -> {
+      data-part: "empty-state";
+      data-visible: if ?fields.length == 0 then "true" else "false";
+    }
+
+    previewToggle -> {
+      data-part: "preview-toggle";
+      data-active: if state == "previewing" then "true" else "false";
+      onClick: send(TOGGLE_PREVIEW);
+    }
+
+    previewPane -> {
+      data-part: "preview-pane";
+      data-visible: if state == "previewing" then "true" else "false";
+      hidden: if state == "previewing" then false else true;
+    }
+
+    saveButton -> {
+      data-part: "save-button";
+      data-state: state;
+      disabled: if state == "saving" or ?readOnly then true else false;
+      onClick: if state != "saving" then send(SAVE) else noop;
+    }
+
+    discardButton -> {
+      data-part: "discard-button";
+      data-state: state;
+      disabled: if state == "saving" then true else false;
+      onClick: send(DISCARD);
+    }
+  }
+
+  affordance {
+    serves: form-design;
+    specificity: 10;
+    when { formEditing: true }
+  }
+
+  compose {
+    _fieldConfig:    widget("form-field-config", { formFieldConfig: none })
+    _preview:        widget("form-preview",       { formSpec: none, fieldDefinitions: [] })
+    _fieldTypePicker: widget("field-type-picker", { currentType: "" })
+  }
+
+  invariant {
+    example "drag field to reorder": {
+      after fieldDragHandle.pointerDown -> ok
+      then root -> { data-state: "dragging-field" }
+      and canvas -> { data-drag-active: "true" }
+      then groupDropZone.drop -> ok
+      then root -> { data-state: "idle" }
+      and canvas -> { data-drag-active: "false" }
+    }
+
+    example "open and close field config": {
+      after fieldConfigButton.click -> ok
+      then root -> { data-state: "configuring-field" }
+      then send(CLOSE_CONFIG) -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    example "add field via picker": {
+      after addFieldButton.click -> ok
+      then root -> { data-state: "adding-field" }
+      then send(FIELD_TYPE_SELECTED, { fieldType: "text" }) -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    example "cancel add field": {
+      after addFieldButton.click -> ok
+      then root -> { data-state: "adding-field" }
+      then send(CANCEL_ADD) -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    example "toggle preview on and off": {
+      after previewToggle.click -> ok
+      then root -> { data-state: "previewing" }
+      and previewPane -> { data-visible: "true" }
+      then previewToggle.click -> ok
+      then root -> { data-state: "idle" }
+      and previewPane -> { data-visible: "false" }
+    }
+
+    example "save commits changes": {
+      after saveButton.click -> ok
+      then root -> { data-state: "saving" }
+      and saveButton -> { aria-disabled: "true" }
+      then send(SAVE_COMPLETE) -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    always "data-state on root reflects FSM": {
+      root -> { data-state: state }
+    }
+
+    always "preview pane visible only while previewing": {
+      previewPane -> { data-visible: if state == "previewing" then "true" else "false" }
+    }
+
+    always "empty state tied to field count": {
+      emptyState -> { data-visible: if ?fields.length == 0 then "true" else "false" }
+    }
+
+    always "drop zones active only while dragging": {
+      groupDropZone -> { data-active: if state == "dragging-field" then "true" else "false" }
+    }
+
+    never "edit controls enabled while readonly": {
+      ?readOnly == true and (
+        fieldDragHandle -> { disabled: false } or
+        fieldRemoveButton -> { disabled: false } or
+        addFieldButton -> { disabled: false } or
+        addGroupButton -> { disabled: false }
+      )
+    }
+
+    never "save and discard enabled during saving": {
+      state == "saving" and saveButton -> { disabled: false }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    action saveButton.click {
+      requires: state != "saving"
+      ensures ok: state == "saving"
+    }
+
+    action fieldRemoveButton.click {
+      requires: state == "idle" and ?readOnly == false
+      ensures ok: state == "idle"
+    }
+
+    action groupDropZone.drop {
+      requires: state == "dragging-field"
+      ensures ok: state == "idle"
+    }
+
+    "conditionIndicator is visible only when the field row's hasCondition property is true";
+    "requiredIndicator is visible only when the field row's required property is true";
+    "Escape during dragging-field cancels the drag without reordering";
+    "OPEN_FIELD_CONFIG from previewing transitions to configuring-field, not back to idle first";
+    "stepTab aria-selected must be true only for the tab whose stepId matches activeStepId";
+    "A field may belong to at most one group and one step at a time";
+    "addStepButton is disabled during saving state";
+  }
+
+}

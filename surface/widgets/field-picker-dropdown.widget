@@ -1,0 +1,307 @@
+@version(1)
+widget field-picker-dropdown {
+
+  purpose {
+    Searchable, grouped field-selection dropdown for choosing which schema field to
+    filter, sort, or group by. Presents all fields from the provided schema as a
+    scrollable list, optionally grouped by field type or data source. Each field row
+    shows a type icon, field label, and field type label. A search input at the top
+    narrows the list by matching field name or type. When includeRelated is true,
+    fields from related entity schemas appear under a separate group. The selected
+    field is highlighted. Closing via selection, Escape, or outside-click fires
+    onChange carrying the chosen field key. Intended for use inside filter-popover,
+    sort-popover, group-popover, and the stepwise notebook editor wherever a field
+    must be chosen.
+  }
+
+  anatomy {
+    root:            container    { Outer wrapper; holds trigger and floating panel }
+    searchInput:     interactive  { Text input for filtering the field list by name or type }
+    fieldList:       container    { Scrollable list of field groups and options }
+    fieldGroup:      container    { One group section per type category or source grouping }
+    fieldGroupLabel: text         { Heading label for a group (e.g. "Text", "Number", "Relations") }
+    fieldOption:     action       { Selectable row for a single field }
+    fieldIcon:       presentation { Type-specific icon glyph for the field }
+    fieldLabel:      text         { Human-readable name of the field }
+    fieldTypeLabel:  text         { Short type descriptor shown alongside the label (e.g. "text", "date") }
+  }
+
+  states {
+    closed [initial] {
+      on OPEN -> open;
+    }
+
+    open {
+      on SEARCH -> searching;
+      on SELECT -> closed;
+      on CLOSE -> closed;
+      on ESCAPE -> closed;
+      entry [positionPanel; focusSearchInput];
+      exit [clearSearch; returnFocusTrigger];
+    }
+
+    searching {
+      on SEARCH -> searching;
+      on CLEAR_SEARCH -> open;
+      on SELECT -> closed;
+      on ESCAPE -> closed;
+      entry [filterFieldList];
+      exit [clearFilter];
+    }
+  }
+
+  accessibility {
+    role: combobox;
+    keyboard {
+      ArrowDown -> FOCUS_NEXT_OPTION;
+      ArrowUp -> FOCUS_PREV_OPTION;
+      Enter -> SELECT;
+      Escape -> ESCAPE;
+      Tab -> CLOSE;
+    }
+    focus {
+      trap: false;
+      initial: searchInput;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "combobox";
+        aria-expanded: if state == "open" or state == "searching" then "true" else "false";
+        aria-haspopup: "listbox";
+        aria-owns: "field-picker-list";
+        data-state: state;
+        data-group-by: ?groupBy;
+      };
+      searchInput -> {
+        role: "searchbox";
+        aria-label: "Search fields";
+        aria-autocomplete: "list";
+        aria-controls: "field-picker-list";
+        aria-busy: if state == "searching" then "true" else "false";
+      };
+      fieldList -> {
+        role: "listbox";
+        aria-label: "Available fields";
+        aria-multiselectable: "false";
+        aria-hidden: if state == "closed" then "true" else "false";
+      };
+      fieldGroup -> {
+        role: "group";
+        aria-label: self.groupName;
+        aria-hidden: if self.matchCount == 0 and state == "searching" then "true" else "false";
+      };
+      fieldGroupLabel -> {
+        role: "presentation";
+      };
+      fieldOption -> {
+        role: "option";
+        aria-selected: if self.key == ?selectedField then "true" else "false";
+        aria-label: concat(self.label, ", type: ", self.fieldType);
+        tabindex: if self.isFocused then "0" else "-1";
+      };
+      fieldIcon -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      fieldLabel -> {
+        role: "presentation";
+      };
+      fieldTypeLabel -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    schema: String = ""
+    selectedField: option String
+    groupBy: String = "type"
+    includeRelated: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-group-by: ?groupBy;
+      data-include-related: if ?includeRelated then "true" else "false";
+    }
+
+    searchInput -> {
+      data-part: "search-input";
+      hidden: if state == "closed" then true else false;
+      placeholder: "Search fields...";
+      onInput: send(SEARCH, { query: self.value });
+      onKeyDown: if key == "Escape" then send(ESCAPE) else noop;
+    }
+
+    fieldList -> {
+      data-part: "field-list";
+      hidden: if state == "closed" then true else false;
+    }
+
+    fieldGroup -> {
+      data-part: "field-group";
+      data-group-name: self.groupName;
+      hidden: if self.matchCount == 0 and state == "searching" then true else false;
+    }
+
+    fieldGroupLabel -> {
+      data-part: "field-group-label";
+      text: self.groupName;
+    }
+
+    fieldOption -> {
+      data-part: "field-option";
+      data-field-key: self.key;
+      data-field-type: self.fieldType;
+      data-selected: if self.key == ?selectedField then "true" else "false";
+      tabindex: if self.isFocused then "0" else "-1";
+      onClick: send(SELECT, { field: self.key });
+      onKeyDown: if key == "Enter" then send(SELECT, { field: self.key }) else if key == "Escape" then send(ESCAPE) else noop;
+    }
+
+    fieldIcon -> {
+      data-part: "field-icon";
+      data-field-type: self.fieldType;
+    }
+
+    fieldLabel -> {
+      data-part: "field-label";
+      text: self.label;
+    }
+
+    fieldTypeLabel -> {
+      data-part: "field-type-label";
+      text: self.fieldType;
+    }
+  }
+
+  affordance {
+    serves: single-choice;
+    specificity: 11;
+    when { viewType: "field-picker-dropdown" }
+    bind {
+      selectedField: selectedField;
+      schema: schema;
+    }
+  }
+
+  invariant {
+    example "opens and focuses search input": {
+      after send(OPEN) -> ok
+      then root -> { data-state: "open" }
+      and fieldList -> { hidden: false }
+      and searchInput -> { hidden: false }
+    }
+
+    example "typing transitions to searching and filters list": {
+      after send(OPEN) -> ok
+      then send(SEARCH, { query: "date" }) -> ok
+      then root -> { data-state: "searching" }
+      and searchInput -> { aria-busy: "true" }
+    }
+
+    example "clear search returns to open": {
+      after send(OPEN) -> ok
+      then send(SEARCH, { query: "date" }) -> ok
+      then send(CLEAR_SEARCH) -> ok
+      then root -> { data-state: "open" }
+    }
+
+    example "selecting a field closes the dropdown": {
+      after send(OPEN) -> ok
+      then send(SELECT, { field: "due-date" }) -> ok
+      then root -> { data-state: "closed" }
+      and fieldList -> { hidden: true }
+    }
+
+    example "Escape closes from open": {
+      after send(OPEN) -> ok
+      then key(Escape) -> ok
+      then root -> { data-state: "closed" }
+    }
+
+    example "Escape closes from searching": {
+      after send(OPEN) -> ok
+      then send(SEARCH, { query: "name" }) -> ok
+      then key(Escape) -> ok
+      then root -> { data-state: "closed" }
+    }
+
+    example "selected field option is marked selected": {
+      after send(OPEN) -> ok
+      then fieldOption -> { data-field-key: ?selectedField; data-selected: "true" }
+    }
+
+    example "groups with zero matches hidden in searching state": {
+      after send(OPEN) -> ok
+      then send(SEARCH, { query: "xyzzy-no-match" }) -> ok
+      then fieldGroup -> { hidden: true }
+    }
+
+    example "groupBy type renders groups named by field type": {
+      after send(OPEN) -> ok
+      then root -> { data-group-by: "type" }
+      and fieldGroupLabel -> { }
+    }
+
+    example "groupBy source renders groups named by data source": {
+      after send(OPEN) -> ok
+      then root -> { data-group-by: "source" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        root -> { data-state: s.name }
+    }
+
+    always "fieldList and searchInput hidden when closed": {
+      if state == "closed" then fieldList -> { hidden: true }
+      and if state == "closed" then searchInput -> { hidden: true }
+    }
+
+    always "aria-expanded true when open or searching": {
+      if state == "open" then root -> { aria-expanded: "true" }
+      and if state == "searching" then root -> { aria-expanded: "true" }
+      and if state == "closed" then root -> { aria-expanded: "false" }
+    }
+
+    always "exactly one option marked selected": {
+      if ?selectedField != "" then
+        exists o in fieldOptions:
+          o -> { data-field-key: ?selectedField; data-selected: "true" } and
+          forall o2 in fieldOptions:
+            if o2 != o then o2 -> { data-selected: "false" }
+    }
+
+    always "related fields group only visible when includeRelated is true": {
+      if not ?includeRelated then
+        forall g in fieldGroups:
+          if g -> { data-group-name: "Related" } then g -> { hidden: true }
+    }
+
+    never "multiple options selected simultaneously": {
+      exists o1 in fieldOptions:
+        exists o2 in fieldOptions:
+          o1 != o2 and o1 -> { data-selected: "true" } and o2 -> { data-selected: "true" }
+    }
+
+    never "empty search string causes searching state": {
+      state == "searching" and searchInput -> { value: "" }
+    }
+
+    "SELECT event carries the field key string as payload so parents (filter-popover, sort-popover, group-popover) can update their spec without reading DOM";
+    "field icon glyph selection by fieldType is delegated to the rendering adapter — the spec only binds data-field-type so the adapter can pick the correct glyph";
+    "when includeRelated is true, related entity fields appear in a group labelled by the related schema name (e.g. 'Task fields', 'Person fields'); this group is appended after the primary schema groups";
+    "groupBy=type groups fields into: Text, Number, Date, Select, Multi-select, Relation, Boolean, and (if present) Formula — matching the operator-dropdown type vocabulary";
+    "groupBy=source groups fields by the schema or relation source they originate from — primary schema fields first, related schema groups after";
+    "search matching is case-insensitive prefix-and-substring on both the field label and field type string";
+  }
+
+}

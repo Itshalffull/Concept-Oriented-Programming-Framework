@@ -802,6 +802,164 @@ describe('ScoreIndex functional handler', () => {
 
   });
 
+  describe('upsertView', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = scoreIndexHandler.upsertView({ name: "content-list", sourceFile: "specs/view/views/content-list.view", shellRef: "content-list", purposeText: "Browse all content.", purity: "read-only", invokedActions: "[]", projectedFields: "[\"id\",\"name\"]", filterFields: "[\"kind\"]", sortFields: "[\"name\"]", groupFields: "[]", invariantCount: "1", invariantNames: "[\"purity is read-only\"]", invariantsSerialized: "[]" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = scoreIndexHandler.upsertView({ name: "content-list", sourceFile: "specs/view/views/content-list.view", shellRef: "content-list", purposeText: "Browse all content.", purity: "read-only", invokedActions: "[]", projectedFields: "[\"id\",\"name\"]", filterFields: "[\"kind\"]", sortFields: "[\"name\"]", groupFields: "[]", invariantCount: "1", invariantNames: "[\"purity is read-only\"]", invariantsSerialized: "[]" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = scoreIndexHandler.upsertView({ name: "content-list", sourceFile: "specs/view/views/content-list.view", shellRef: "content-list", purposeText: "Browse all content.", purity: "read-only", invokedActions: "[]", projectedFields: "[\"id\",\"name\"]", filterFields: "[\"kind\"]", sortFields: "[\"name\"]", groupFields: "[]", invariantCount: "1", invariantNames: "[\"purity is read-only\"]", invariantsSerialized: "[]" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = scoreIndexHandler.upsertView({ name: "content-list", sourceFile: "specs/view/views/content-list.view", shellRef: "content-list", purposeText: "Browse all content.", purity: "read-only", invokedActions: "[]", projectedFields: "[\"id\",\"name\"]", filterFields: "[\"kind\"]", sortFields: "[\"name\"]", groupFields: "[]", invariantCount: "1", invariantNames: "[\"purity is read-only\"]", invariantsSerialized: "[]" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = scoreIndexHandler.upsertView({ name: "content-list", sourceFile: "specs/view/views/content-list.view", shellRef: "content-list", purposeText: "Browse all content.", purity: "read-only", invokedActions: "[]", projectedFields: "[\"id\",\"name\"]", filterFields: "[\"kind\"]", sortFields: "[\"name\"]", groupFields: "[]", invariantCount: "1", invariantNames: "[\"purity is read-only\"]", invariantsSerialized: "[]" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof scoreIndexHandler.upsertView !== 'function') return;
+      const result = await interpret(scoreIndexHandler.upsertView({ name: "content-list", sourceFile: "specs/view/views/content-list.view", shellRef: "content-list", purposeText: "Browse all content.", purity: "read-only", invokedActions: "[]", projectedFields: "[\"id\",\"name\"]", filterFields: "[\"kind\"]", sortFields: "[\"name\"]", groupFields: "[]", invariantCount: "1", invariantNames: "[\"purity is read-only\"]", invariantsSerialized: "[]" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "upsert_view" -> ok', async () => {
+      if (typeof scoreIndexHandler.upsertView !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_upsert_user = await interpret(scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" }), storage);
+      const _pool = Object.assign({}, (afterResult_upsert_user?.output ?? {}));
+      const _fixtureInput = { name: "content-list", sourceFile: "specs/view/views/content-list.view", shellRef: "content-list", purposeText: "Browse all content.", purity: "read-only", invokedActions: "[]", projectedFields: "[\"id\",\"name\"]", filterFields: "[\"kind\"]", sortFields: "[\"name\"]", groupFields: "[]", invariantCount: "1", invariantNames: "[\"purity is read-only\"]", invariantsSerialized: "[]" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(scoreIndexHandler.upsertView({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "upsert_view_empty" -> error', async () => {
+      if (typeof scoreIndexHandler.upsertView !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreIndexHandler.upsertView({ name: "" }), storage);
+      expect(result.variant).not.toBe('ok');
+    });
+
+  });
+
+  describe('removeView', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = scoreIndexHandler.removeView({ name: "content-list" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = scoreIndexHandler.removeView({ name: "content-list" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = scoreIndexHandler.removeView({ name: "content-list" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = scoreIndexHandler.removeView({ name: "content-list" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = scoreIndexHandler.removeView({ name: "content-list" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof scoreIndexHandler.removeView !== 'function') return;
+      const result = await interpret(scoreIndexHandler.removeView({ name: "content-list" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "remove_view" -> ok', async () => {
+      if (typeof scoreIndexHandler.removeView !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_upsert_user = await interpret(scoreIndexHandler.upsertConcept({ name: "User", purpose: "Manage user accounts", file: "/specs/user.concept" }), storage);
+      const afterResult_upsert_view = await interpret(scoreIndexHandler.upsertView({ name: "content-list", sourceFile: "specs/view/views/content-list.view", shellRef: "content-list", purposeText: "Browse all content.", purity: "read-only", invokedActions: "[]", projectedFields: "[\"id\",\"name\"]", filterFields: "[\"kind\"]", sortFields: "[\"name\"]", groupFields: "[]", invariantCount: "1", invariantNames: "[\"purity is read-only\"]", invariantsSerialized: "[]" }), storage);
+      const _pool = Object.assign({}, (afterResult_upsert_user?.output ?? {}), (afterResult_upsert_view?.output ?? {}));
+      const _fixtureInput = { name: "content-list" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(scoreIndexHandler.removeView({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "remove_view_missing" -> notfound', async () => {
+      if (typeof scoreIndexHandler.removeView !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(scoreIndexHandler.removeView({ name: "nonexistent-view" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
+    });
+
+  });
+
   describe('removeByFile', () => {
     it('builds a valid StorageProgram', () => {
       const program = scoreIndexHandler.removeByFile({ path: "/src/handler.ts" });
@@ -1063,6 +1221,8 @@ describe('ScoreIndex functional handler', () => {
               fc.record({ action: fc.constant('upsertDeployment'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), app: fc.string({ minLength: 1, maxLength: 50 }), runtimes: fc.string(), file: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('upsertSuiteManifest'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), version: fc.string({ minLength: 1, maxLength: 50 }), concepts: fc.string(), syncs: fc.string(), file: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('upsertInterface'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), targets: fc.string(), endpointCount: fc.integer({ min: 1, max: 1000 }), file: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('upsertView'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), sourceFile: fc.string({ minLength: 1, maxLength: 50 }), shellRef: fc.string({ minLength: 1, maxLength: 50 }), purposeText: fc.string({ minLength: 1, maxLength: 50 }), purity: fc.string({ minLength: 1, maxLength: 50 }), invokedActions: fc.string({ minLength: 1, maxLength: 50 }), projectedFields: fc.string({ minLength: 1, maxLength: 50 }), filterFields: fc.string({ minLength: 1, maxLength: 50 }), sortFields: fc.string({ minLength: 1, maxLength: 50 }), groupFields: fc.string({ minLength: 1, maxLength: 50 }), invariantCount: fc.integer({ min: 1, max: 1000 }), invariantNames: fc.string({ minLength: 1, maxLength: 50 }), invariantsSerialized: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('removeView'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('removeByFile'), input: fc.record({ path: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('clear'), input: fc.record({  }) }),
               fc.record({ action: fc.constant('stats'), input: fc.record({  }) }),
@@ -1105,6 +1265,8 @@ describe('ScoreIndex functional handler', () => {
               fc.record({ action: fc.constant('upsertDeployment'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), app: fc.string({ minLength: 1, maxLength: 50 }), runtimes: fc.string(), file: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('upsertSuiteManifest'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), version: fc.string({ minLength: 1, maxLength: 50 }), concepts: fc.string(), syncs: fc.string(), file: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('upsertInterface'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), targets: fc.string(), endpointCount: fc.integer({ min: 1, max: 1000 }), file: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('upsertView'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), sourceFile: fc.string({ minLength: 1, maxLength: 50 }), shellRef: fc.string({ minLength: 1, maxLength: 50 }), purposeText: fc.string({ minLength: 1, maxLength: 50 }), purity: fc.string({ minLength: 1, maxLength: 50 }), invokedActions: fc.string({ minLength: 1, maxLength: 50 }), projectedFields: fc.string({ minLength: 1, maxLength: 50 }), filterFields: fc.string({ minLength: 1, maxLength: 50 }), sortFields: fc.string({ minLength: 1, maxLength: 50 }), groupFields: fc.string({ minLength: 1, maxLength: 50 }), invariantCount: fc.integer({ min: 1, max: 1000 }), invariantNames: fc.string({ minLength: 1, maxLength: 50 }), invariantsSerialized: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('removeView'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('removeByFile'), input: fc.record({ path: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('clear'), input: fc.record({  }) }),
               fc.record({ action: fc.constant('stats'), input: fc.record({  }) }),

@@ -1,0 +1,40 @@
+view "backlinks" {
+  shell: "backlinks"
+
+  features {
+    sort
+    projection
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ContentNode\",\"action\":\"list\",\"params\":{\"type\":\"backlink\"}}"
+    }
+    sort: {
+      keys: "[]"
+    }
+    projection: {
+      fields: "[{\"key\":\"node\",\"label\":\"Source\"},{\"key\":\"type\",\"label\":\"Type\",\"formatter\":\"badge\"}]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+  }
+
+  purpose {
+    Entities that reference the current entity via formal links.
+    Sorted by relevance or recency. Read-only.
+  }
+
+  invariants {
+    always "purity is read-only": {
+      purity = "read-only"
+    }
+
+    always "no invoke instructions": {
+      invokeCount = 0
+    }
+  }
+}

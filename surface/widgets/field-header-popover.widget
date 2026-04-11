@@ -1,0 +1,274 @@
+@version(1)
+widget field-header-popover {
+
+  purpose {
+    Anchored popover that opens when the user clicks a column header in a
+    schema-aware table view. Provides Level 1 inline editing of a schema field:
+    rename, type change, select-option management, required toggle, default value,
+    plus sort, filter, duplicate, and delete actions. Deletion is gated behind a
+    usage warning when the field is referenced by views, filters, or mappings.
+    Links to the Level 2 drawer and Level 3 editor for deeper configuration.
+    Connects to FieldDefinition/rename, FieldDefinition/update, and
+    FieldDefinition/remove.
+  }
+
+  anatomy {
+    root:              container   { Popover root, anchored to the column header trigger }
+    nameInput:         interactive { Text input for renaming the field label }
+    typeSelector:      action      { Button that opens the type-picker sub-widget }
+    optionsList:       container   { Editable list of select/multi-select options }
+    optionItem:        container   { Single option row: color swatch, label, drag handle }
+    optionColor:       action      { Color chip for changing option color }
+    optionDragHandle:  action      { Drag handle for reordering select options }
+    addOptionButton:   action      { Adds a new blank option to the list }
+    requiredToggle:    interactive { Toggle for marking the field as required }
+    defaultValuePicker: interactive { Input for setting the field default value }
+    sortAction:        action      { Trigger ascending/descending sort on this column }
+    filterAction:      action      { Add a filter on this column }
+    duplicateAction:   action      { Duplicate this field }
+    deleteAction:      action      { Delete this field, with confirmation when in use }
+    usageWarning:      container   { Warning block listing places that use this field }
+    openDrawerLink:    action      { Link to open the Level 2 field-config-drawer }
+    openFullEditorLink: action     { Link to open the Level 3 schema detail editor }
+  }
+
+  states {
+    closed [initial] {
+      on OPEN -> open;
+    }
+
+    open {
+      on CLOSE -> closed;
+      on FOCUS_NAME -> editing-name;
+      on EDIT_OPTIONS -> editing-options;
+      on DELETE -> confirming-delete;
+      entry [positionPopover; focusNameInput];
+      exit [releaseAnchor];
+    }
+
+    editing-name {
+      on COMMIT_NAME -> open;
+      on CANCEL_NAME -> open;
+      on CLOSE -> closed;
+      entry [selectNameText];
+      exit [persistName];
+    }
+
+    editing-options {
+      on COMMIT_OPTIONS -> open;
+      on CANCEL_OPTIONS -> open;
+      on CLOSE -> closed;
+      entry [focusOptionList];
+    }
+
+    confirming-delete {
+      on CONFIRM_DELETE -> closed;
+      on CANCEL_DELETE -> open;
+      on CLOSE -> closed;
+      entry [loadUsageWarning];
+    }
+  }
+
+  accessibility {
+    role: dialog;
+    keyboard {
+      Escape -> CLOSE;
+      Tab -> FOCUS_NEXT_FIELD;
+      Enter -> COMMIT_NAME;
+    }
+    focus {
+      trap: true;
+      initial: nameInput;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "dialog";
+        aria-label: concat("Edit field: ", ?fieldLabel);
+        aria-modal: "true";
+        aria-expanded: if state == "closed" then "false" else "true";
+      };
+      nameInput -> {
+        role: "textbox";
+        aria-label: "Field name";
+        aria-required: "true";
+      };
+      typeSelector -> {
+        role: "button";
+        aria-label: concat("Field type: ", ?fieldType, ". Click to change.");
+        aria-haspopup: "listbox";
+      };
+      optionsList -> {
+        role: "list";
+        aria-label: "Select options";
+      };
+      optionItem -> {
+        role: "listitem";
+        aria-label: concat("Option: ", self.label);
+      };
+      optionDragHandle -> {
+        role: "button";
+        aria-label: concat("Reorder option ", self.label);
+        aria-roledescription: "drag handle";
+      };
+      addOptionButton -> {
+        role: "button";
+        aria-label: "Add option";
+      };
+      requiredToggle -> {
+        role: "switch";
+        aria-label: "Required";
+        aria-checked: if ?required then "true" else "false";
+      };
+      deleteAction -> {
+        role: "button";
+        aria-label: concat("Delete field ", ?fieldLabel);
+        aria-disabled: if state == "editing-name" or state == "editing-options" then "true" else "false";
+      };
+      usageWarning -> {
+        role: "alert";
+        aria-live: "polite";
+        aria-label: "This field is in use";
+        aria-hidden: if state != "confirming-delete" then "true" else "false";
+      };
+      openDrawerLink -> {
+        role: "link";
+        aria-label: "Open detailed field configuration";
+      };
+      openFullEditorLink -> {
+        role: "link";
+        aria-label: "Open full schema editor";
+      };
+    }
+  }
+
+  props {
+    schema: String
+    fieldId: String
+    fieldType: String = "text"
+    fieldLabel: String = ""
+    required: Bool = false
+    hasOptions: Bool = false
+    fieldInUse: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-field-type: ?fieldType;
+    }
+
+    nameInput -> {
+      data-part: "name-input";
+      value: ?fieldLabel;
+      onFocus: send(FOCUS_NAME);
+      onKeyDown: if key == "Enter" then send(COMMIT_NAME) else if key == "Escape" then send(CANCEL_NAME) else noop;
+      onBlur: send(COMMIT_NAME);
+    }
+
+    typeSelector -> {
+      data-part: "type-selector";
+      data-current-type: ?fieldType;
+      onClick: send(OPEN_TYPE_PICKER);
+    }
+
+    optionsList -> {
+      data-part: "options-list";
+      data-visible: if ?hasOptions then "true" else "false";
+    }
+
+    optionItem -> {
+      data-part: "option-item";
+      data-value: self.value;
+    }
+
+    optionColor -> {
+      data-part: "option-color";
+      data-color: self.color;
+      onClick: send(CHANGE_OPTION_COLOR, { value: self.value });
+    }
+
+    optionDragHandle -> {
+      data-part: "option-drag-handle";
+      aria-roledescription: "drag handle";
+    }
+
+    addOptionButton -> {
+      data-part: "add-option-button";
+      onClick: send(EDIT_OPTIONS);
+    }
+
+    requiredToggle -> {
+      data-part: "required-toggle";
+      data-checked: if ?required then "true" else "false";
+      onClick: send(TOGGLE_REQUIRED);
+    }
+
+    defaultValuePicker -> {
+      data-part: "default-value-picker";
+    }
+
+    sortAction -> {
+      data-part: "sort-action";
+      onClick: send(SORT_COLUMN);
+    }
+
+    filterAction -> {
+      data-part: "filter-action";
+      onClick: send(FILTER_COLUMN);
+    }
+
+    duplicateAction -> {
+      data-part: "duplicate-action";
+      onClick: send(DUPLICATE_FIELD);
+    }
+
+    deleteAction -> {
+      data-part: "delete-action";
+      disabled: if state == "editing-name" or state == "editing-options" then true else false;
+      onClick: send(DELETE);
+    }
+
+    usageWarning -> {
+      data-part: "usage-warning";
+      data-visible: if state == "confirming-delete" and ?fieldInUse then "true" else "false";
+      aria-hidden: if state != "confirming-delete" then "true" else "false";
+    }
+
+    openDrawerLink -> {
+      data-part: "open-drawer-link";
+      onClick: send(OPEN_DRAWER);
+    }
+
+    openFullEditorLink -> {
+      data-part: "open-full-editor-link";
+      onClick: send(OPEN_FULL_EDITOR);
+    }
+  }
+
+  compose {
+    typeSelector: widget("type-picker", { currentType: ?fieldType, showAdvanced: true })
+    nameInput:    widget("text-input", { value: ?fieldLabel, placeholder: "Field name" })
+  }
+
+  invariant {
+    "OPEN event transitions root from closed to open and focuses nameInput";
+    "CLOSE event from any non-closed state transitions root to closed";
+    "DELETE event from open transitions root to confirming-delete";
+    "usageWarning is visible only in confirming-delete state";
+    "CANCEL_DELETE event transitions root from confirming-delete back to open";
+    "FOCUS_NAME event transitions root from open to editing-name";
+    "COMMIT_NAME event transitions root from editing-name back to open and persists the new label";
+    "CANCEL_NAME event transitions root from editing-name back to open without saving";
+    "deleteAction is disabled while root is in editing-name or editing-options state";
+    "optionsList is visible only when hasOptions prop is true";
+    "All five states are reachable from the closed initial state";
+    "data-state on root always reflects the current FSM state name";
+    "nameInput auto-generates fieldId on first creation when fieldId is empty";
+    "Confirm delete must call FieldDefinition/remove; cancel must leave the field unchanged";
+    "openDrawerLink must emit OPEN_DRAWER with schema and fieldId as payload";
+    "Type change via typeSelector must call FieldDefinition/changeType and show data-loss warning when applicable";
+  }
+
+}

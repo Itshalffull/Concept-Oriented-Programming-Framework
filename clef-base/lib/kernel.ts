@@ -3,10 +3,16 @@ import { existsSync } from 'fs';
 import { bootKernel } from '../../handlers/ts/framework/kernel-boot.handler';
 import type { ConceptRegistration, RegEntry } from '../../handlers/ts/framework/kernel-boot.handler';
 import { createStorageFromEnv } from '../../runtime/adapters/upstash-storage';
-import { createInMemoryStorage } from '../../runtime/adapters/storage';
+import { createSQLiteStorage } from '../../runtime/adapters/sqlite-storage';
 import type { Kernel } from '../../runtime/self-hosted';
+import { versionContextHandler } from '../../handlers/ts/version-context.handler';
+import { workspaceHandler } from '../../handlers/ts/app/workspace.handler';
+import { mediaAssetHandler } from '../../handlers/ts/app/media-asset.handler';
+import { transcriptHandler } from '../../handlers/ts/media/transcript.handler';
+import { clipHandler } from '../../handlers/ts/media/clip.handler';
 
 import { REGISTRY_ENTRIES, SYNC_FILES } from '../../generated/kernel-registry';
+import { discoverFromFilesystem } from '../../handlers/ts/seed-data.handler';
 import { setEntityReflectorKernel } from '../../handlers/ts/app/entity-reflector.handler';
 import { setViewShellKernel } from '../../handlers/ts/view/view-shell.handler';
 import { bootstrapIdentity, getIdentityStorage } from './identity';
@@ -19,6 +25,39 @@ import {
 
 let _kernel: Kernel | null = null;
 let _seedPromise: Promise<void> | null = null;
+
+const SUPPLEMENTAL_REGISTRY_ENTRIES = [
+  {
+    uri: 'urn:clef/VersionContext',
+    handler: versionContextHandler,
+    storageName: 'version-context',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/Workspace',
+    handler: workspaceHandler,
+    storageName: 'workspace',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/MediaAsset',
+    handler: mediaAssetHandler,
+    storageName: 'media-asset',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/Transcript',
+    handler: transcriptHandler,
+    storageName: 'transcript',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/Clip',
+    handler: clipHandler,
+    storageName: 'clip',
+    storageType: 'standard' as const,
+  },
+];
 
 // process.cwd() is the clef-base/ dir when Next.js runs; __filename
 // resolves inside .next/server/ at runtime, so we can't use it.
@@ -37,13 +76,23 @@ const PROJECT_ROOT = existsSync(resolve(_cwd, 'clef-base'))
   : resolve(_cwd, '..');
 
 function makeStorage(conceptName: string) {
-  return createStorageFromEnv(`clef-base:${conceptName}`) ?? createInMemoryStorage();
+  return createStorageFromEnv(`clef-base:${conceptName}`) ?? createSQLiteStorage({
+    dbPath: resolve(CLEF_BASE_ROOT, '.clef', 'clef-base.db'),
+    namespace: conceptName,
+  });
 }
 
 export function getKernel(): Kernel {
   if (_kernel) return _kernel;
 
-  const concepts: ConceptRegistration[] = REGISTRY_ENTRIES.map(entry => ({
+  const registryEntries = [...REGISTRY_ENTRIES];
+  for (const entry of SUPPLEMENTAL_REGISTRY_ENTRIES) {
+    if (!registryEntries.some((existing) => existing.uri === entry.uri)) {
+      registryEntries.push(entry);
+    }
+  }
+
+  const concepts: ConceptRegistration[] = registryEntries.map(entry => ({
     uri: entry.uri,
     handler: entry.handler,
     storage: entry.storageType === 'identity'
@@ -96,9 +145,14 @@ export async function getActiveThemeDocumentState(defaultTheme = 'light'): Promi
   const themes = await kernel.queryConcept('urn:clef/Theme', 'theme');
   const themeId = pickActiveTheme(themes as ThemeRecord[], defaultTheme);
   const resolved = await kernel.invokeConcept('urn:clef/Theme', 'resolve', { theme: themeId });
-  const resolvedTokens = resolved.variant === 'ok' && typeof resolved.tokens === 'string'
-    ? JSON.parse(resolved.tokens as string) as Record<string, unknown>
-    : {};
+  let resolvedTokens: Record<string, unknown> = {};
+  if (resolved.variant === 'ok' && typeof resolved.tokens === 'string' && resolved.tokens.trim()) {
+    try {
+      resolvedTokens = JSON.parse(resolved.tokens as string) as Record<string, unknown>;
+    } catch {
+      resolvedTokens = {};
+    }
+  }
   return resolveThemeDocumentState(themes as ThemeRecord[], resolvedTokens, defaultTheme);
 }
 
@@ -113,9 +167,9 @@ function parseSeedEntries(raw: unknown): Array<Record<string, unknown>> {
 }
 
 async function applyDeclarativeSeeds(kernel: Kernel) {
-  const discovery = await kernel.invokeConcept('urn:clef/SeedData', 'discover', {
+  const discovery = await discoverFromFilesystem({
     base_path: resolve(CLEF_BASE_ROOT, 'seeds'),
-  });
+  }, makeStorage('seed-data'));
   if (discovery.variant !== 'ok') {
     throw new Error(String(discovery.message ?? 'Failed to discover seed data'));
   }
@@ -159,6 +213,35 @@ async function populateRuntimeRegistry(kernel: Kernel, registrations: RegEntry[]
   }
 }
 
+async function ensureBootstrapWorkspace(kernel: Kernel) {
+  try {
+    const existing = await kernel.invokeConcept('urn:clef/Workspace', 'list', { owner: 'system' });
+    if (existing.variant === 'ok') {
+      const workspaces = Array.isArray(existing.workspaces)
+        ? existing.workspaces
+        : typeof existing.workspaces === 'string' && existing.workspaces.trim()
+          ? JSON.parse(existing.workspaces as string) as unknown[]
+          : [];
+      if (workspaces.length > 0) {
+        return;
+      }
+    }
+
+    await kernel.invokeConcept('urn:clef/Workspace', 'create', {
+      workspace: 'default-admin',
+      name: 'Default Admin',
+      owner: 'system',
+      description: 'Standard admin workspace with content browser, concept sidebar, and system panel.',
+    }).catch(() => {});
+
+    await kernel.invokeConcept('urn:clef/Workspace', 'setDefault', {
+      workspace: 'default-admin',
+    }).catch(() => {});
+  } catch {
+    // Workspace bootstrap is best-effort and should not block shell boot.
+  }
+}
+
 async function seedData(kernel: Kernel, registrations: RegEntry[], loadedSyncs: string[]) {
   if (_seeded) return;
   _seeded = true;
@@ -181,6 +264,10 @@ async function seedData(kernel: Kernel, registrations: RegEntry[], loadedSyncs: 
 
   // Apply declarative seeds (Schema, View, ContentNode, etc.)
   await applyDeclarativeSeeds(kernel);
+
+  // Earlier broken boots could mark Workspace seeds as applied before the
+  // concept existed. Ensure the shell still has a default workspace.
+  await ensureBootstrapWorkspace(kernel);
 
   // Reflect entities — auto-creates ContentNode entries from RuntimeRegistry + FileCatalog
   await kernel.invokeConcept('urn:clef/EntityReflector', 'reflect', {}).catch(() => {

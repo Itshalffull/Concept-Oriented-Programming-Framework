@@ -13,40 +13,42 @@ allowed-tools: Read, Grep, Glob, Bash
 
 Establish and manage a session with a running Clef kernel instance , providing discovery , invocation , and observation of registered concepts . Transport agnostic : the same concept works over WebSocket , HTTP , IPC , or in process . Each connection carries a session identity that the kernel s existing auth concepts evaluate on every invocation
 
-## Commands
+## Design Principles
 
-### connect
-Kernel reached , handshake completed , session token issued , and the 
- full set of registered concept names discovered and stored . The 
- connection is now ready for invoke and observe calls .
+- **Concepts Stay Independent:** External API bindings go through transport adapters and EffectHandler. Concept handlers use perform() — they never know about the external API directly.
+- **Transport is Pluggable:** The same concept action can be served by different external APIs by swapping the transport adapter. No handler changes needed.
+- **Credentials are Managed:** API keys, tokens, and secrets are stored in the Credential concept and injected by the transport adapter at runtime.
 
-**Arguments:** `$0` **connection** (K), `$1` **endpoint** (string), `$2` **transportAdapter** (string), `$3` **credentials** (string?)
+## Step-by-Step Process
 
-### discover
-Returns a JSON encoded discovery result at the requested depth : 
- list yields concept names only , manifest adds actions , inputs , 
- and variants for each concept , full adds syncs , affordances , and 
- widgets ( requires Score to be available on the kernel ) .
+### Step 1: Analyze External API
 
-**Arguments:** `$0` **connection** (K), `$1` **concept** (string?), `$2` **depth** (string)
+Read an OpenAPI spec, GraphQL schema, or API documentation. Identify endpoints, types, operations, authentication, and rate limits.
 
-### invoke
-The action was executed on the kernel . variant is the completion 
- variant tag returned by the handler ( e . g . ok , notfound ) , 
- and output is the JSON encoded output fields of that completion .
+### Step 2: Map to Concepts
 
-**Arguments:** `$0` **connection** (K), `$1` **concept** (string), `$2` **action** (string), `$3` **input** (string)
+Map external API operations to existing concept actions. Create bindings: external endpoint → concept action, external type → concept state.
 
-### observe
-A completion stream subscription was opened . streamId identifies 
- this subscription ; completions matching the concept ( and optional 
- action ) will be delivered on this stream until unsubscribed or 
- the connection is closed .
+**Checklist:**
+- [ ] Each external endpoint maps to exactly one concept action?
+- [ ] Input/output types are compatible?
+- [ ] Error responses map to concept error variants?
+- [ ] Authentication/authorization handled at transport level?
 
-**Arguments:** `$0` **connection** (K), `$1` **concept** (string), `$2` **action** (string?)
+### Step 3: Configure Transport
 
-### disconnect
-The session token was invalidated , the transport was closed 
- cleanly , and the connection s status is now disconnected .
+Set up the transport adapter (HTTP, WebSocket, gRPC) with authentication, base URL, headers, and retry configuration.
 
-**Arguments:** `$0` **connection** (K)
+**Checklist:**
+- [ ] Base URL is configurable (not hardcoded)?
+- [ ] Authentication credentials stored in Credential concept?
+- [ ] Retry policy configured for transient failures?
+- [ ] Rate limiting respected?
+
+### Step 4: Generate Bindings
+
+Generate EffectHandler registrations and transport adapter configuration that bridges external APIs to concept perform() instructions.
+
+## References
+
+- [Inbound API binding guide](references/inbound-binding-guide.md)

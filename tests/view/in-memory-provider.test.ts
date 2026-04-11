@@ -505,6 +505,7 @@ describe('provider metadata', () => {
     expect(capabilities).toContain('group');
     expect(capabilities).toContain('project');
     expect(capabilities).toContain('limit');
-    expect(capabilities).toHaveLength(5);
+    expect(capabilities).toContain('offset');
+    expect(capabilities).toHaveLength(6);
   });
 });

@@ -1,6 +1,34 @@
 view "content-list-actions" {
   shell: "content-list"
 
+  features {
+    filter
+    sort
+    projection
+    interaction
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ContentNode\",\"action\":\"listBySchema\",\"params\":{\"schema\":\"Concept\"}}"
+    }
+    filter: {
+      node: "{\"type\":\"eq\",\"field\":\"kind\",\"value\":\"concept\"}"
+    }
+    sort: {
+      keys: "[{\"field\":\"name\",\"direction\":\"asc\"}]"
+    }
+    projection: {
+      fields: "[{\"key\":\"node\",\"label\":\"Name\"},{\"key\":\"schemas\",\"label\":\"Schemas\"},{\"key\":\"createdBy\",\"label\":\"Created By\"},{\"key\":\"createdAt\",\"label\":\"Created\"}]"
+    }
+
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+  }
+
   purpose {
     Content listing with inline create form. Read-write view
     dispatching ContentNode/create through the sync engine.

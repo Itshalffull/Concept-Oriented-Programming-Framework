@@ -1,16 +1,35 @@
 # @fixtures-added
-@version(1)
+@version(2)
 concept Namespace [N] {
-  purpose { Organize entities into hierarchical overlays via path separators, enabling scoped naming and navigation. }
+  purpose { Organize entities into hierarchical scopes via path separators, enabling scoped naming, navigation, and resolution. Providers (VersionSpace, tenant, kernel, schema) register nodes; resolve returns the node and provider for a given path. }
   state {
     nodes: set N;
     separator: N -> String;
     parent: N -> N;
-    path: N -> String
+    path: N -> String;
+    provider: N -> String
   }
   actions {
+    action register(node: N, path: String, provider: String) {
+      -> ok() { Register a node at the given path with the specified provider type. }
+      -> exists(message: String) { A node already exists at this path. }
+
+      fixture register_version_space { node: "vs-draft-v2", path: "draft-v2", provider: "VersionSpace" }
+      fixture register_tenant { node: "tenant-acme", path: "acme", provider: "tenant" }
+      fixture register_kernel_root { node: "kernel-abc123", path: "/", provider: "kernel" }
+      fixture register_duplicate { node: "vs-other", path: "draft-v2", provider: "VersionSpace" } after register_version_space -> exists
+    }
+
+    action resolve(path: String) {
+      -> ok(node: N, provider: String) { Returns the node at the given path plus who registered it. }
+      -> notfound(message: String) { No node exists at this path. }
+
+      fixture resolve_existing { path: "draft-v2" } after register_version_space
+      fixture resolve_missing { path: "nonexistent/path" } -> notfound
+    }
+
     action createNamespacedPage(node: N, path: String) {
-      -> ok() { Create a new node at the given hierarchical path. }
+      -> ok() { Create a new node at the given hierarchical path. Backward-compatible alias for register with provider "page". }
       -> ok(message: String) { A node already exists at this path. }
 
       fixture create_nested_page { node: "ns-alpha-1", path: "projects/alpha/docs" }

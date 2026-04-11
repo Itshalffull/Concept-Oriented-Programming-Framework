@@ -1,0 +1,34 @@
+view "research-plan" {
+  shell: "research-plan"
+
+  features {
+    projection
+    interaction
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ContentNode\",\"action\":\"list\"}"
+    }
+    projection: {
+      fields: "[]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+  }
+
+  purpose {
+    Plan outline with sub-questions, dependency arrows, plan approval
+    widget, and perspective assignments. Supports approve and reject
+    actions. Read-write.
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+  }
+}

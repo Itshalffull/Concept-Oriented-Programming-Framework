@@ -1,0 +1,22 @@
+# When a ResearchProject reaches completed status, promote the supported
+# claims from the final report into the agent's semantic memory tier so
+# findings persist beyond the project lifetime and can be recalled in
+# future research sessions.
+
+sync MemoryPromotionFromReport [eventual] [recommended]
+  purpose: "Promote verified findings from a completed research report into AgentMemory's semantic tier so key claims remain available for recall in future research sessions without re-running the investigation."
+when {
+  ResearchProject/transition: [project: ?proj; new_status: "completed"]
+    => ok(project: ?proj)
+}
+where {
+  ResearchProject: { ?proj report_entity_id: ?report }
+  guard(?report != "")
+}
+then {
+  AgentMemory/remember: [
+    content: ?report;
+    memory_type: "semantic";
+    metadata: concat("{\"project_id\":\"", ?proj, "\",\"source\":\"research_report\",\"memory_kind\":\"findings\"}")
+  ]
+}

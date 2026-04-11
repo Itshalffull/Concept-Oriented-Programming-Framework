@@ -58,6 +58,9 @@ targets:
       - SurfaceWidgetHandlerGen
       - ContentTypeScaffoldGen
       - ClefBase
+      - InfrastructureCore
+      - RuntimeInfrastructure
+      - InterfaceScaffoldGen
 
   openapi:
     name: clef-devtools
@@ -249,6 +252,8 @@ concepts:
 derived-concepts:
   - specs/surface/pilot.derived
   - clef-base/derived/clef-base.derived
+  - clef-base/derived/infrastructure-core.derived
+  - clef-base/derived/runtime-infrastructure.derived
 
 # ─── OUTPUT CONFIGURATION ────────────────────────────
 output:
@@ -3738,6 +3743,10 @@ workflows:
         rule: "Concept handlers use storage through the interface without knowing which backend is active. Swapping backends requires no handler changes."
       - title: "Relation-Key Namespace"
         rule: "Storage is organized by relation name and key. Each concept uses its own relation names, preventing cross-concept conflicts."
+      - title: "Secondary Indexes via ensureIndex"
+        rule: "Adapters may implement the optional ensureIndex(relation, field) method. When declared, the adapter maintains an inverted index (field value → key set) for O(1) lookup on find(). The in-memory adapter supports this natively. SQL adapters translate to CREATE INDEX. ensureIndex is called during kernel boot, not inside handlers."
+      - title: "FindOptions for Pagination"
+        rule: "find() accepts optional FindOptions: { limit?, offset?, sort? }. These are applied AFTER criteria filtering. With secondary indexes, the combined cost is O(log N + K) where K is the result set size, not O(N) full scan."
     references:
       - path: references/storage-adapter-guide.md
         label: "Storage adapter implementation guide"
@@ -3753,11 +3762,26 @@ workflows:
           interface ConceptStorage {
             put(relation: string, key: string, value: Record<string, unknown>): Promise<void>;
             get(relation: string, key: string): Promise<Record<string, unknown> | null>;
-            find(relation: string, criteria?: Record<string, unknown>): Promise<Record<string, unknown>[]>;
+            find(relation: string, criteria?: Record<string, unknown>, options?: FindOptions): Promise<Record<string, unknown>[]>;
             del(relation: string, key: string): Promise<void>;
             delMany(relation: string, criteria: Record<string, unknown>): Promise<number>;
+            ensureIndex?(relation: string, field: string): void;  // Optional secondary index
+          }
+
+          interface FindOptions {
+            limit?: number;
+            offset?: number;
+            sort?: { field: string; order: 'asc' | 'desc' };
           }
           ```
+
+          ## Secondary Indexes
+
+          Adapters may implement `ensureIndex(relation, field)` for fast lookups:
+          - In-memory: maintains `Map<value, Set<key>>` per indexed field
+          - SQL: translates to `CREATE INDEX IF NOT EXISTS`
+          - Called during kernel boot, not inside handlers
+          - `find()` uses index when criteria matches indexed field (O(1) vs O(N))
 
           ## Backend Comparison
 
@@ -3971,6 +3995,545 @@ workflows:
             }
           }
 
+  # ─── InterfaceScaffoldGen: bind-manifest-outbound ──
+  bind-manifest-outbound:
+    concept: InterfaceScaffoldGen
+    steps:
+      - action: analyze
+        title: "Analyze Interface Manifest"
+        prose: "Read the interface manifest and understand current targets, skills, agents, concept projections, and include lists."
+      - action: add-target
+        title: "Add or Modify a Target"
+        prose: "Add or modify a target section (REST, GraphQL, gRPC, CLI, MCP, skills, agents). Configure output directory, include list, copies, and target-specific options."
+      - action: add-skill
+        title: "Add or Modify a Skill"
+        prose: "Add or modify a skill definition with concept mapping, steps (action, title, prose), checklists, design-principles, and references (path, label, tier, inline content)."
+      - action: add-agent
+        title: "Add or Modify an Agent"
+        prose: "Add or modify an agent annotation with model, skills, tools, prompt, workflow, rules, and references."
+      - action: add-concept
+        title: "Add a Concept to the Manifest"
+        prose: "Add a concept or derived concept path to the concepts list. For derived concepts, add the .derived file path."
+      - action: regenerate
+        title: "Regenerate Output Files"
+        prose: "Run `npx tsx --tsconfig tsconfig.json scripts/regen-interface.ts` to produce updated output files from the manifest."
+    checklists:
+      add-skill:
+        - "Concept mapping exists?"
+        - "Steps have action + title + prose?"
+        - "Checklists reference step actions?"
+        - "References have path + label + content?"
+        - "Design principles have title + rule?"
+      add-agent:
+        - "Agent name matches a concept in the concepts list?"
+        - "Skills list includes the agent's primary skill?"
+        - "Tools include Read, Grep, Glob, Edit, Write, Bash?"
+        - "Prompt describes the agent's domain?"
+        - "Workflow has ordered steps?"
+        - "Rules are actionable constraints?"
+    design-principles:
+      - title: "Manifest is the single source of truth"
+        rule: "All generated files derive from the manifest. Never edit generated files directly."
+      - title: "Skills map to concepts"
+        rule: "Every skill has a `concept:` field linking it to a concept spec. The concept defines the domain; the skill defines the workflow."
+      - title: "Agents compose skills"
+        rule: "An agent's expertise comes from its skills list. An agent without skills is just a prompt."
+      - title: "References are inline"
+        rule: "Reference content lives in the manifest as inline YAML. The regen pipeline writes it to files."
+    references:
+      - path: references/interface-manifest-guide.md
+        label: "Interface manifest format reference"
+        tier: reference
+        content: |
+          # Interface Manifest Format Reference
+
+          Complete reference for authoring and editing Clef interface manifests
+          (`*.interface.yaml`). An interface manifest is the single source of
+          truth for all generated interfaces — skills, CLI commands, MCP tools,
+          REST APIs, GraphQL schemas, agent definitions, and project instructions.
+
+          ## Top-Level Structure
+
+          ```yaml
+          # Header
+          interface:
+            name: my-app          # Interface name (kebab-case)
+            version: 0.1.0        # Semver
+
+          # Generation targets
+          targets:
+            rest: { ... }
+            graphql: { ... }
+            cli: { ... }
+            mcp: { ... }
+            claude-skills: { ... }
+            claude-agents: { ... }
+            openapi: { ... }
+            asyncapi: { ... }
+            project-instructions: { ... }
+
+          # Concept specs to include
+          concepts:
+            - specs/my-concept.concept
+            - clef-base/derived/my-derived.derived
+
+          # Derived concepts (surface actions become tools/commands)
+          derived-concepts:
+            - specs/surface/pilot.derived
+
+          # Output configuration
+          output:
+            dir: ./generated/devtools
+            formatting:
+              typescript: prettier
+            clean: true
+
+          # Workflows (skill definitions)
+          workflows:
+            my-skill:
+              concept: MyConcept
+              steps: [...]
+
+          # Annotations (agent definitions, tool permissions)
+          annotations:
+            MyConcept:
+              concept:
+                tool-permissions: [...]
+
+          # Agent annotations (model, skills, tools, prompt, workflow, rules)
+          agent-annotations:
+            MyAgent:
+              model: sonnet
+              skills: [...]
+
+          # Project instructions (generated CLAUDE.md, AGENTS.md, GEMINI.md)
+          project-instructions:
+            content: |
+              # Project instructions content...
+          ```
+
+          ## Targets Section
+
+          Each target configures a generation output. All targets are optional.
+
+          ### claude-skills
+
+          ```yaml
+          claude-skills:
+            name: my-skills          # Skills collection name
+            grouping: per-concept    # One skill file per concept
+            outputDir: ./.claude/skills
+            copies:                  # Mirror output to other AI assistants
+              - ./.codex/skills
+              - ./.gemini/skills
+          ```
+
+          ### cli
+
+          ```yaml
+          cli:
+            name: my-cli             # CLI binary name
+            outputDir: ./cli/src     # Command files written here
+          ```
+
+          ### mcp
+
+          ```yaml
+          mcp:
+            name: my-mcp-server      # MCP server name
+            transport: stdio         # Transport type (stdio, http)
+            outputDir: ./.claude/mcp
+            description: >           # Shown in MCP client discovery
+              Description of the MCP server.
+            configOutputs:           # MCP client config files
+              - path: ./.mcp.json
+                format: claude-mcp-config
+              - path: ./.codex/config.toml
+                format: codex-mcp-config
+              - path: ./.gemini/settings.json
+                format: gemini-mcp-config
+              - path: ./.claude/settings.json
+                format: claude-settings-config
+          ```
+
+          ### claude-agents
+
+          ```yaml
+          claude-agents:
+            name: my-agents          # Agent collection name
+            outputDir: ./.claude/agents
+            copies:                  # Mirror output
+              - ./.codex/agents
+              - ./.gemini/agents
+            include:                 # Only generate agents for these concepts
+              - ConceptScaffoldGen
+              - SyncScaffoldGen
+          ```
+
+          ### rest
+
+          ```yaml
+          rest:
+            basePath: /api
+            framework: hono
+            versioning: url          # url | header | query
+          ```
+
+          ### graphql
+
+          ```yaml
+          graphql:
+            path: /graphql
+            relay: true              # Relay-style connections
+            subscriptions: true      # WebSocket subscriptions
+          ```
+
+          ### openapi
+
+          ```yaml
+          openapi:
+            name: my-api
+            outputDir: ./generated/specs
+            version: 0.2.0
+            description: >
+              OpenAPI 3.1 specification for my API.
+          ```
+
+          ### asyncapi
+
+          ```yaml
+          asyncapi:
+            name: my-events
+            outputDir: ./generated/specs
+            version: 0.2.0
+            description: >
+              AsyncAPI 3.0 specification for my events.
+          ```
+
+          ### project-instructions
+
+          ```yaml
+          project-instructions:
+            description: >
+              Generate project instruction files for AI coding assistants.
+            outputDir: ./
+            outputs:
+              - path: ./CLAUDE.md
+                format: markdown
+              - path: ./AGENTS.md
+                format: markdown
+              - path: ./GEMINI.md
+                format: markdown
+          ```
+
+          ## Concepts Section
+
+          Lists `.concept` and `.derived` file paths. Every concept listed here
+          becomes available for generation across all targets.
+
+          ```yaml
+          concepts:
+            # Framework concepts
+            - specs/framework/spec-parser.concept
+            - specs/framework/schema-gen.concept
+
+            # Repertoire concepts
+            - repertoire/concepts/identity/authentication.concept
+
+            # Derived concepts
+            - clef-base/derived/clef-base.derived
+
+            # Score entities
+            - score/semantic/concept-entity.concept
+
+            # View suite
+            - specs/view/query-program.concept
+          ```
+
+          Derived concepts are listed separately for surface action generation:
+
+          ```yaml
+          derived-concepts:
+            - specs/surface/pilot.derived
+            - clef-base/derived/clef-base.derived
+          ```
+
+          ## Workflows Section (Skills)
+
+          Each workflow defines a skill — a step-by-step guide for using a concept.
+          The key is the skill name (kebab-case), used as the slash command name.
+
+          ```yaml
+          workflows:
+            my-skill-name:
+              concept: ConceptName           # Links to a concept spec
+              steps:
+                - action: step-action-name   # Step identifier
+                  title: "Human-Readable Title"
+                  prose: "Detailed explanation of what to do in this step."
+                - action: next-step
+                  title: "Next Step"
+                  prose: "More instructions..."
+
+              checklists:                    # Keyed by step action names
+                step-action-name:
+                  - "First check item?"
+                  - "Second check item?"
+                next-step:
+                  - "Check for this step?"
+
+              design-principles:             # Named rules for the skill
+                - title: "Principle Name"
+                  rule: "Explanation of the principle."
+                - title: "Another Principle"
+                  rule: "Another rule."
+
+              references:                    # Inline reference documents
+                - path: references/my-guide.md
+                  label: "Guide title"
+                  tier: reference            # reference | tutorial | example
+                  content: |
+                    # Guide Content
+
+                    Full markdown content written inline.
+                    The regen pipeline writes this to the path.
+
+              validation-commands:           # Optional: commands to verify
+                - label: "Run tests"
+                  command: "npx vitest run tests/my.test.ts"
+
+              quick-reference:               # Optional: summary table
+                heading: "Quick Reference"
+                body: |
+                  | Input | Type | Purpose |
+                  |-------|------|---------|
+                  | name | String | The name |
+
+              related-workflows:             # Optional: cross-references
+                - name: other-skill
+                  description: "Related skill description"
+
+              anti-patterns:                 # Optional: what NOT to do
+                - title: "Bad Pattern"
+                  description: "Why it's bad."
+                  bad: |
+                    example of bad code
+                  good: |
+                    example of good code
+          ```
+
+          ## Annotations Section
+
+          Per-concept metadata for tool permissions, argument templates,
+          trigger descriptions, and companion documentation.
+
+          ```yaml
+          annotations:
+            ConceptName:
+              concept:
+                tool-permissions: [Read, Grep, Glob, Edit, Write, Bash]
+                argument-template: "$ARGUMENTS"
+                trigger-description: >
+                  When to invoke this skill.
+                intro-template: >
+                  What the skill does with $ARGUMENTS.
+                companion-docs:
+                  - path: examples/my-example.md
+                    label: "Example walkthrough"
+                    content: |
+                      # Example Content
+                      Inline markdown...
+                code-examples:
+                  - description: "Example usage"
+                    language: typescript
+                    code: |
+                      const result = await handler.doSomething();
+          ```
+
+          ## Agent Annotations Section
+
+          Configures agent definitions generated into `.claude/agents/`.
+
+          ```yaml
+          agent-annotations:
+            MyAgent:
+              model: sonnet                  # Model: sonnet | opus | haiku
+              skills:                        # Skills the agent can use
+                - create-concept
+                - create-sync
+              tools:                         # Tool permissions
+                - Read
+                - Grep
+                - Glob
+                - Edit
+                - Write
+                - Bash
+              prompt: >                      # Agent system prompt
+                You are an expert at designing concepts
+                following Jackson's methodology.
+              workflow:                       # Ordered workflow steps
+                - "Analyze the requirements"
+                - "Decompose into concepts"
+                - "Generate specs"
+                - "Validate with tests"
+              rules:                         # Constraints
+                - "Always check the repertoire first"
+                - "Never create concepts without purpose blocks"
+              references:                    # Optional agent-specific docs
+                - path: references/agent-guide.md
+                  label: "Agent guide"
+                  content: |
+                    # Agent-Specific Guide
+                    ...
+          ```
+
+          ## Regeneration
+
+          After editing the manifest, regenerate all output files:
+
+          ```bash
+          npx tsx --tsconfig tsconfig.json scripts/regen-interface.ts
+          ```
+
+          This reads the manifest and produces:
+          - `.claude/skills/*/SKILL.md` — skill files
+          - `.claude/agents/*.md` — agent files
+          - `.claude/mcp/*/` — MCP tool definitions
+          - `cli/src/*/` — CLI command files
+          - `CLAUDE.md`, `AGENTS.md`, `GEMINI.md` — project instructions
+          - `generated/specs/` — OpenAPI, AsyncAPI specs
+
+          Generated files have an `<!-- Auto-generated -->` header.
+          Never edit them directly — edit the manifest instead.
+    validation-commands:
+      - label: "Regenerate all interface output"
+        command: "npx tsx --tsconfig tsconfig.json scripts/regen-interface.ts"
+      - label: "Validate manifest YAML syntax"
+        command: "npx tsx cli/src/main.ts interface validate --manifest examples/devtools/devtools.interface.yaml"
+    quick-reference:
+      heading: "Quick Reference"
+      body: |
+        | Section | Key | Purpose |
+        |---------|-----|---------|
+        | interface | name, version | Manifest identity |
+        | targets | rest, graphql, cli, mcp, claude-skills, claude-agents, openapi, asyncapi, project-instructions | Generation outputs |
+        | concepts | list of .concept paths | Concepts to expose |
+        | derived-concepts | list of .derived paths | Derived concepts with surface actions |
+        | workflows | skill-name → steps, checklists, design-principles, references | Skill definitions |
+        | annotations | ConceptName → tool-permissions, trigger-description, companion-docs | Per-concept metadata |
+        | agent-annotations | AgentName → model, skills, tools, prompt, workflow, rules | Agent definitions |
+        | output | dir, formatting, clean | Output configuration |
+    related-workflows:
+      - name: create-interface
+        description: "Scaffold a new interface manifest from scratch"
+      - name: create-concept
+        description: "Create concept specs that the manifest exposes"
+      - name: create-sync
+        description: "Wire concepts together with sync rules"
+    anti-patterns:
+      - title: "Editing generated files directly"
+        description: "Changes are overwritten on next regen. Edit the manifest instead."
+        bad: |
+          # Editing .claude/skills/my-skill/SKILL.md directly
+          vim .claude/skills/my-skill/SKILL.md
+        good: |
+          # Edit the manifest, then regenerate
+          vim examples/devtools/devtools.interface.yaml
+          npx tsx --tsconfig tsconfig.json scripts/regen-interface.ts
+      - title: "Skills without concept mappings"
+        description: "A skill with no concept: field has no domain grounding."
+        bad: |
+          workflows:
+            my-skill:
+              steps:
+                - action: do-thing
+                  title: "Do Thing"
+                  prose: "Just do the thing."
+        good: |
+          workflows:
+            my-skill:
+              concept: MyConcept
+              steps:
+                - action: do-thing
+                  title: "Do Thing"
+                  prose: "Invoke MyConcept/doThing with..."
+      - title: "Agents without skills"
+        description: "An agent with no skills list is just a prompt — it has no structured expertise."
+        bad: |
+          agent-annotations:
+            MyAgent:
+              model: sonnet
+              prompt: "You are an expert."
+        good: |
+          agent-annotations:
+            MyAgent:
+              model: sonnet
+              skills: [create-concept, create-sync]
+              prompt: "You are an expert at concept design."
+
+
+  # ─── Connection: bind-manifest-inbound ──────────
+  bind-manifest-inbound:
+    concept: Connection
+    steps:
+      - action: analyze-api
+        title: "Analyze External API"
+        prose: "Read an OpenAPI spec, GraphQL schema, or API documentation. Identify endpoints, types, operations, authentication, and rate limits."
+      - action: map-to-concepts
+        title: "Map to Concepts"
+        prose: "Map external API operations to existing concept actions. Create bindings: external endpoint → concept action, external type → concept state."
+      - action: configure-transport
+        title: "Configure Transport"
+        prose: "Set up the transport adapter (HTTP, WebSocket, gRPC) with authentication, base URL, headers, and retry configuration."
+      - action: generate-bindings
+        title: "Generate Bindings"
+        prose: "Generate EffectHandler registrations and transport adapter configuration that bridges external APIs to concept perform() instructions."
+    checklists:
+      map-to-concepts:
+        - "Each external endpoint maps to exactly one concept action?"
+        - "Input/output types are compatible?"
+        - "Error responses map to concept error variants?"
+        - "Authentication/authorization handled at transport level?"
+      configure-transport:
+        - "Base URL is configurable (not hardcoded)?"
+        - "Authentication credentials stored in Credential concept?"
+        - "Retry policy configured for transient failures?"
+        - "Rate limiting respected?"
+    design-principles:
+      - title: "Concepts Stay Independent"
+        rule: "External API bindings go through transport adapters and EffectHandler. Concept handlers use perform() — they never know about the external API directly."
+      - title: "Transport is Pluggable"
+        rule: "The same concept action can be served by different external APIs by swapping the transport adapter. No handler changes needed."
+      - title: "Credentials are Managed"
+        rule: "API keys, tokens, and secrets are stored in the Credential concept and injected by the transport adapter at runtime."
+    references:
+      - path: references/inbound-binding-guide.md
+        label: "Inbound API binding guide"
+        tier: reference
+        content: |
+          # Inbound API Binding Guide
+
+          How to consume external APIs and bind them to existing concepts.
+
+          ## Architecture
+
+          ```
+          External API → Transport Adapter → EffectHandler → perform() → Handler
+          ```
+
+          The handler calls `perform('http', 'get', { url, headers })`.
+          The EffectHandler resolves 'http' to the registered transport adapter.
+          The transport adapter makes the HTTP call with credentials from Credential.
+
+          ## Steps
+
+          1. Analyze the external API (OpenAPI spec or docs)
+          2. Identify which concept actions map to which endpoints
+          3. Create a transport adapter for the protocol
+          4. Register EffectHandler mappings
+          5. Store credentials in Credential concept
+          6. Wire via deploy manifest
+
   # ─── SurfaceComponentScaffoldGen: create-widget ─
   create-widget:
     concept: SurfaceComponentScaffoldGen
@@ -4024,6 +4587,8 @@ workflows:
         rule: "The anatomy defines named parts (root, trigger, content, etc.) that both the machine and renderer reference. This is the only coupling point."
       - title: "Props API via connect()"
         rule: "The machine's connect() action transforms internal state into framework-neutral props objects — one per anatomy part."
+      - title: "Pagination Control Pattern"
+        rule: "For paginated views, use the pagination-control.widget pattern: parts (root, prevButton, nextButton, pageIndicator, pageSizeSelector, totalCount), states (idle, loading, firstPage, lastPage, disabled), connect to PaginationSpec/advance and PaginationSpec/retreat. See surface/pagination-control.widget for the reference implementation."
     references:
       - path: references/surface-component-guide.md
         label: "Clef Surface headless component architecture"
@@ -4874,12 +5439,18 @@ workflows:
       - action: limit
         title: "Limit Records"
         prose: "Append a Limit instruction truncating to at most N records."
+      - action: offset
+        title: "Offset (Skip) Records"
+        prose: "Append an Offset instruction skipping the first N records. Used with Limit for pagination: offset(20) + limit(10) returns records 20-29. Both offset and limit are kernel capabilities — pushed to backend (SQL OFFSET/LIMIT, API query params)."
       - action: pure
         title: "Terminate Program"
         prose: "Seal the program with a terminal variant and output binding. No further instructions may be appended. The program's terminated flag becomes true."
       - action: compose
         title: "Compose Programs"
         prose: "Monadic bind: chain two programs — run first, bind its output to bindAs, then continue with second. Inherits the union of both readFields."
+      - action: fixture
+        title: "Add .view Fixtures"
+        prose: "Add fixture blocks to the .view file declaring ViewShell + child spec data for testing invariants. Each fixture names a specType (dataSource, filter, sort, group, projection, presentation, interaction, pagination) with key-value fields. The test generator seeds mock storage from fixtures, then runs compileAndAnalyze to assert invariants."
     checklists:
       create:
         - "Does the view have a DataSourceSpec defining where data comes from?"
@@ -4906,6 +5477,12 @@ workflows:
         rule: "Sort composition is NOT commutative. compose(byName, byDate) means sort by name then break ties by date. This matches user mental models."
       - title: "Schema-Scoped Data Sources"
         rule: "When a view shows data from a single schema, ALWAYS use listBySchema in the DataSourceSpec instead of list + client-side schema filter. listBySchema does a server-side join returning pre-filtered, schema-enriched results in one query. Use list only when the view genuinely shows all content types with interactive schema toggles."
+      - title: "PaginationSpec for Paginated Views"
+        rule: "When a view needs pagination, include 'pagination' in the ViewShell features set and provide a PaginationSpec ref. The PaginationSpec manages mode (offset, cursor, keyset), page size, and position. compile-query injects offset+limit from PaginationSpec/evaluate. paginate-on-execute updates the spec's totalCount after query execution."
+      - title: "ViewShell Selective Features"
+        rule: "Views declare which specs they need via the features field: a JSON array of enabled feature names (filter, sort, group, projection, interaction, pagination). Always-on: dataSource, presentation. view-resolve.sync only fetches child specs for enabled features. .view files declare features in a features {} block."
+      - title: "Per-Schema Denormalized Relations"
+        rule: "schema-index-on-apply.sync maintains denormalized schema:{name} relations. listBySchema reads from these directly instead of joining membership + node tables. This eliminates the O(M+N) full-table join — a single find('schema:Article', {}, { limit: 50 }) suffices."
       - title: "Split Execution by sourceType"
         rule: "Filters are partitioned by sourceType for split execution: system + contextual push to backend, interactive + search run locally in-memory. This lets views fetch pre-filtered data from the kernel while keeping toggle filters responsive without round-trips. For E2EE (encrypted-local kind), ALL processing runs locally after client-side decrypt."
       - title: "Pushdown for Remote Sources"
@@ -4930,6 +5507,7 @@ workflows:
           | Group | `group` | keys, config (aggregation), bindAs | Partition and aggregate |
           | Project | `project` | fields (field[] JSON), bindAs | Select subset of fields |
           | Limit | `limit` | count, output | Truncate to N records |
+          | Offset | `offset` | count, output | Skip first N records (for pagination) |
           | Join | `join` | source, localField, foreignField, bindAs | Enrich via relation join |
           | Pure | `pure` | variant, output | Seal program (terminal) |
           | Compose | `compose` | first, second, bindAs | Monadic bind (chain) |
@@ -5003,6 +5581,357 @@ workflows:
           | filter-to-dsl | optional | Serializes FilterSpec → DSL string |
           | execute-remote-query | optional | Routes to RemoteQueryProvider |
           | compile-remote-query | optional | Compiles for remote data sources |
+      - path: references/view-grammar.md
+        label: ".view file grammar reference"
+        tier: reference
+        content: |
+          # .view File Grammar Reference
+
+          The `.view` file format is parsed by a recursive descent parser at `handlers/ts/framework/view-spec-parser.ts`. This document describes the complete grammar.
+
+          ## Top-Level Structure
+
+          ```
+          view "<name>" {
+            shell: "<view-shell-name>"
+
+            features {
+              <feature-name>
+              ...
+            }
+
+            fixture <name> {
+              <specType>: {
+                <key>: "<value>"
+                ...
+              }
+              ...
+            }
+
+            purpose {
+              <free-text description>
+            }
+
+            invariants {
+              <invariant blocks>
+            }
+          }
+          ```
+
+          A `.view` file is an assertion manifest over a compiled QueryProgram. It references a ViewShell by name, optionally restricts which features are active, declares fixtures for test data, and declares invariants that the compiled query must satisfy.
+
+          ## View Header
+
+          ```
+          view "<name>" {
+          ```
+
+          - `name` is a string literal identifying this view manifest (must be unique across the project)
+
+          ## Shell Reference
+
+          ```
+          shell: "<view-shell-name>"
+          ```
+
+          - Required. References a ViewShell by name. The ViewShell is compiled into a QueryProgram at test time.
+
+          ## Features Section
+
+          ```
+          features {
+            filter
+            sort
+            pagination
+            projection
+          }
+          ```
+
+          - Optional. Declares which ViewShell features are active for this view.
+          - When omitted, all features are enabled (backward-compatible default).
+          - When present, only the listed features are enabled; the ViewShell's child spec slots for disabled features are ignored during query compilation.
+          - Feature names may appear one per line or space/comma separated.
+          - **Valid feature names:** `filter`, `sort`, `group`, `projection`, `interaction`, `pagination`
+          - Two features are always-on and cannot appear in this block: `dataSource` and `presentation`.
+          - Invalid feature names produce a parse error with the line and column.
+
+          ### Features and ViewAnalysis
+
+          The `features` block affects the `ViewAnalysis` record available to invariants:
+
+          | Target | Type | Description |
+          |---|---|---|
+          | `enabledFeatures` | set String | Features listed in the block (or all features if block omitted) |
+          | `disabledFeatures` | set String | Features absent from the block |
+
+          When a feature is disabled, its corresponding field set in `ViewAnalysis` is always empty:
+          - `filter` disabled -> `filterFields = []`
+          - `sort` disabled -> `sortFields = []`
+          - `group` disabled -> `groupFields = []`
+          - `projection` disabled -> `projectedFields = []`
+          - `interaction` disabled -> `invokedActions = []`, `invokeCount = 0`
+
+          ## Fixture Section
+
+          ```
+          fixture <name> {
+            <specType>: {
+              <key>: "<value>"
+              ...
+            }
+            ...
+          }
+          ```
+
+          Fixtures declare ViewShell + child spec data for testing invariants. Each fixture is a named data state -- the test generator seeds mock storage from the fixture, then runs `compileAndAnalyze` and asserts the invariants against it.
+
+          - `<name>` is an identifier (e.g., `default`, `minimal`, `paginated`)
+          - Each `<specType>` block declares fields for a child spec record
+          - Valid spec types: `dataSource`, `filter`, `sort`, `group`, `projection`, `presentation`, `interaction`, `pagination`
+          - Values must be double-quoted strings (the tokenizer does not support single quotes)
+          - JSON values must use escaped double quotes: `"{\"field\":\"name\"}"`
+          - Multiple fixtures are allowed -- each creates an independent test scenario
+          - No `after` keyword (fixtures are data declarations, not action sequences)
+          - No `-> variant` (invariants handle assertions, not fixtures)
+
+          ### Spec Type Fields
+
+          | Spec Type | Common Fields |
+          |-----------|--------------|
+          | `dataSource` | `kind` ("concept-action", "remote-api"), `config` (JSON string) |
+          | `filter` | `node` (FilterNode JSON) |
+          | `sort` | `keys` (SortKey[] JSON) |
+          | `group` | `fields` (field names), `config` (aggregation JSON) |
+          | `projection` | `fields` (ProjectionField[] JSON) |
+          | `presentation` | `displayType` ("table", "card-grid", etc.), `hints` (JSON) |
+          | `interaction` | `createForm` (JSON), `rowClick` (JSON), `rowActions` (JSON) |
+          | `pagination` | `mode` ("offset", "cursor"), `pageSize` (number) |
+
+          ### Fixture Example
+
+          ```
+          fixture default {
+            dataSource: {
+              kind: "concept-action",
+              config: "{\"concept\":\"ContentNode\",\"action\":\"listBySchema\",\"params\":{\"schema\":\"Concept\"}}"
+            }
+            filter: {
+              node: "{\"type\":\"eq\",\"field\":\"kind\",\"value\":\"concept\"}"
+            }
+            sort: {
+              keys: "[{\"field\":\"name\",\"direction\":\"asc\"}]"
+            }
+            projection: {
+              fields: "[{\"key\":\"name\",\"label\":\"Name\"},{\"key\":\"kind\",\"label\":\"Kind\"}]"
+            }
+            presentation: {
+              displayType: "table",
+              hints: "{}"
+            }
+          }
+          ```
+
+          ### Test Generation from Fixtures
+
+          The `generate-view-tests.ts` script reads fixtures and generates `storage.put()` calls:
+          1. Each child spec becomes a record in the appropriate relation
+          2. A ViewShell record is created pointing to all child spec refs
+          3. `compileAndAnalyze(shellName, storage)` builds the QueryProgram
+          4. Each invariant assertion runs against the analysis result
+
+          Views without fixtures generate test stubs with a `// No fixture declared` comment.
+
+          ## Purpose Section
+
+          ```
+          purpose {
+            <free-text description of the view's intent and usage>
+          }
+          ```
+
+          - Optional. Free-text block describing what the view does.
+          - Parsed as all tokens between `{` and matching `}`, joined with spaces and whitespace-normalized.
+
+          ## Invariants Section
+
+          ```
+          invariants {
+            <invariant blocks>
+          }
+          ```
+
+          Contains one or more named invariant blocks.
+
+          ### `always` -- Universal property
+
+          ```
+          always "<name>": {
+            <assertion>
+          }
+          ```
+
+          Asserts that a property holds for every compiled QueryProgram from this view.
+
+          ### `never` -- Negated property
+
+          ```
+          never "<name>": {
+            <assertion>
+          }
+          ```
+
+          Asserts that a condition must never hold.
+
+          ### `example` -- Concrete test case
+
+          ```
+          example "<name>": {
+            after compile
+            then <assertion>
+            and  <assertion>
+          }
+          ```
+
+          A concrete test scenario. The `after compile` step triggers QueryProgram compilation. `then` and `and` steps assert properties of the compiled result.
+
+          ### `forall` -- Quantified property
+
+          ```
+          forall <var> in <collection>:
+          <assertion using var>
+          ```
+
+          Can appear as a top-level invariant or inline within `always`/`never` bodies.
+
+          ## Assertion Targets
+
+          View invariants operate on a `ViewAnalysis` record:
+
+          | Target | Type | Source |
+          |---|---|---|
+          | `purity` | String | QueryPurityProvider |
+          | `readFields` | set String | QueryPurityProvider |
+          | `invokedActions` | set String | QueryPurityProvider |
+          | `invocations` | set String | InvokeEffectProvider |
+          | `invokeCount` | Int | InvokeEffectProvider |
+          | `coveredVariants` | set String | QueryCompletionCoverage |
+          | `uncoveredVariants` | set String | QueryCompletionCoverage |
+          | `totalVariants` | Int | QueryCompletionCoverage |
+          | `coveredCount` | Int | QueryCompletionCoverage |
+          | `sourceFields` | set String | DataSourceSpec |
+          | `filterFields` | set String | FilterSpec (empty when filter disabled) |
+          | `sortFields` | set String | SortSpec (empty when sort disabled) |
+          | `groupFields` | set String | GroupSpec (empty when group disabled) |
+          | `projectedFields` | set String | ProjectionSpec (empty when projection disabled) |
+          | `enabledFeatures` | set String | Features active for this view |
+          | `disabledFeatures` | set String | Features absent from the `features {}` block |
+
+          ## Predicate Operators
+
+          ```
+          # Equality
+          purity = "read-only"
+          invokeCount = 0
+
+          # Inequality
+          invokedActions != {}
+          purity != "read-write"
+
+          # Set membership
+          "Task/escalate" in invokedActions
+          f in sourceFields
+
+          # Set emptiness
+          uncoveredVariants = []
+          invokedActions != {}
+
+          # Subset
+          projectedFields subset readFields
+
+          # String prefix
+          ia startsWith "Task/"
+
+          # Quantifiers
+          forall f in readFields: f in sourceFields
+          exists ia in invokedActions: ia startsWith "Admin/"
+
+          # Logical connectives
+          purity = "read-write" implies invokedActions != {}
+          purity = "read-only" and invokeCount = 0
+          ```
+
+          ## Comments
+
+          Both `#` and `//` styles are supported, matching the concept parser.
+
+          ## Complete Example
+
+          ```
+          view "task-board-actions" {
+            shell: "task-board"
+
+            features {
+              filter
+              sort
+              interaction
+            }
+
+            fixture default {
+              dataSource: {
+                kind: "concept-action",
+                config: "{\"concept\":\"Task\",\"action\":\"list\"}"
+              }
+              filter: {
+                node: "{\"type\":\"true\"}"
+              }
+              sort: {
+                keys: "[{\"field\":\"priority\",\"direction\":\"desc\"}]"
+              }
+              presentation: {
+                displayType: "board",
+                hints: "{}"
+              }
+              interaction: {
+                rowActions: "[{\"key\":\"escalate\",\"concept\":\"Task\",\"action\":\"escalate\"}]"
+              }
+            }
+
+            purpose {
+              Task board with bulk escalate and archive actions. Read-write
+              view dispatching through Task concept via the sync engine.
+            }
+
+            invariants {
+              always "purity is read-write": {
+                purity = "read-write"
+              }
+
+              always "invokes only Task concept": {
+                forall ia in invokedActions:
+                ia startsWith "Task/"
+              }
+
+              always "all invoke variants covered": {
+                uncoveredVariants = []
+              }
+
+              never "read-only purity with invokes": {
+                purity = "read-only" and invokedActions != {}
+              }
+            }
+          }
+          ```
+
+          ## Test Generation
+
+          `.view` files generate tests via `scripts/generate-view-tests.ts`:
+
+          ```bash
+          npx tsx scripts/generate-view-tests.ts              # all views
+          npx tsx scripts/generate-view-tests.ts --filter task # filter by name
+          ```
+
+          Generated tests go to `generated/tests/<view-name>.view.test.ts`.
     related-workflows:
       - name: functional-handler-builder
         description: "StorageProgram monad — the handler equivalent's instruction grammar"
@@ -7672,6 +8601,29 @@ project-instructions:
       - Good: "Async Gate Convention & Pattern Validation Tests", "See Architecture doc Sections 16.11, 16.12"
     - Comments should reference architecture doc section numbers (e.g., "Section 16.12") not phase numbers.
 
+    ### Collaboration Style
+    - When I push back on a position that knowledgeable experts would defend, answer as a smart expert who would still argue back. Lead with the counterarguments rather than with the agreement. Give a detailed response/steelman of the strongest arguments against my position and don't needlessly soften or walk back them.
+
+    ### Building Workflow
+    Follow this flow for all non-trivial work:
+
+    1. **Research / Discussion** — Explore the problem space. Audit existing code. Ask clarifying questions. Understand constraints before designing.
+    2. **PRD** — Write a plan document in `docs/plans/`. Include: problem statement, design, deliverables, concept changes, syncs, widgets, views, seeds, clef-base integration checklist, and kanban card table.
+    3. **VK Cards** — Create Vibe Kanban cards for each deliverable unit. Edit the PRD to reference card IDs (MAG-NNN) in the kanban table.
+    4. **Blocking Relationships** — Set up card dependencies so the execution order is clear. Independent cards can run in parallel.
+    5. **Execute via Specialized Agents** — Assign each unblocked card to the appropriate specialized agent type:
+       - `concept-scaffold-gen` — new .concept specs + handlers
+       - `handler-scaffold-gen` — handler modifications
+       - `sync-scaffold-gen` — .sync files
+       - `surface-component-scaffold-gen` — .widget specs
+       - `clef-base` — seeds, views, layouts, destinations, clef-base integration
+       - `general-purpose` — tests, parser changes, infrastructure, anything without a matching agent
+       - If no agent type matches, note the gap and track creating that agent/skill as a follow-up card.
+    6. **Commit Per Card** — When a card's agent completes, commit JUST that card's work in a separate commit. Never batch multiple cards into one commit.
+    7. **Update Card + PRD** — Put the commit hash in the PRD's kanban table AND mark the VK card as Done.
+    8. **Assign Next** — Check what's newly unblocked and launch the next batch of agents.
+    9. **Repeat** steps 5–8 until all cards are Done.
+
     ### Generated Files — Never Edit Directly
     - **CLAUDE.md**, **AGENTS.md**, **GEMINI.md** are generated from `examples/devtools/devtools.interface.yaml` → `project-instructions` section. Edit the manifest, then regenerate.
     - **`.claude/agents/*.md`** are generated from `examples/devtools/devtools.interface.yaml` → `agents` section. Edit the manifest, then regenerate.
@@ -8852,3 +9804,112 @@ agent-annotations:
       - "**PluginRegistry for extensibility** — any provider pattern must use PluginRegistry dispatch"
       - "**Entity lifecycle is free** — ContentStorage/save automatically triggers cache/search/alias/provenance via syncs"
       - "**Derived concept parser constraints** — surface queries MUST be single-line (no newline before ->). Principle blocks MUST use after/then/and syntax, NOT prose-style quoted strings"
+
+  InfrastructureCore:
+    model: sonnet
+    skills:
+      - create-concept
+      - create-sync
+      - create-implementation
+      - spec-parser
+      - score-api
+    tools: Read, Grep, Glob, Edit, Write, Bash, mcp__vibe_kanban
+    prompt: |
+      You are a Clef InfrastructureCore agent managing platform infrastructure
+      primitives: PluginRegistry, Cache, ConfigSync, Pathauto, EventBus,
+      Validator, EntityReflector, and FileCatalog.
+
+      These concepts underpin every Clef Base feature. PluginRegistry handles
+      extension discovery and registration. Cache provides tag-based caching.
+      ConfigSync synchronizes configuration across runtimes. EventBus provides
+      pub/sub messaging. Validator runs declarative input validation rules.
+      EntityReflector bridges entities to the content system. FileCatalog
+      discovers file-system artifacts.
+    workflow:
+      - "**Understand the infrastructure need** — which infrastructure primitive is involved?"
+      - "**Check existing plugins** — use ScoreApi to find related concepts and syncs"
+      - "**Use infrastructure concepts** — leverage PluginRegistry for extensibility, Cache for performance, EventBus for messaging"
+      - "**Wire via syncs** — all cross-concept coordination goes through syncs"
+      - "**Test** — run conformance tests"
+    rules:
+      - "**PluginRegistry is the extension point** — all provider/plugin patterns must use PluginRegistry"
+      - "**Cache invalidation via syncs** — wire cache invalidation to entity lifecycle syncs"
+      - "**EventBus for pub/sub** — use EventBus for loose coupling between infrastructure services"
+      - "**Validator for declarative rules** — use Validator concept for complex validation, simple checks stay in handlers"
+
+  RuntimeInfrastructure:
+    model: sonnet
+    skills:
+      - runtime-infrastructure
+      - create-storage-adapter
+      - create-transport-adapter
+      - create-implementation
+      - effect-handler
+      - storage-program
+      - program-interpreter
+      - score-api
+    tools: Read, Grep, Glob, Edit, Write, Bash, mcp__vibe_kanban
+    prompt: |
+      You are a Clef runtime infrastructure specialist. You work on the
+      execution layer between concept handlers and physical backends —
+      storage adapters, transport adapters, StorageProgram DSL, interpreter,
+      effect system, secondary indexes, and infrastructure primitives.
+
+      Key derived concepts: RuntimeInfrastructure (root), MonadicExecution,
+      AdapterInfrastructure, InfrastructureCore.
+    workflow:
+      - "**Identify the layer** — storage adapter, interpreter, DSL, transport, or infrastructure?"
+      - "**Read current code** — understand before modifying"
+      - "**Check interface compat** — new methods must be optional"
+      - "**Implement** — follow the pattern for the affected layer"
+      - "**Update adapters** — in-memory adapter at minimum"
+      - "**Test** — storage/interpreter/integration tests"
+    rules:
+      - "**Interface methods are optional** — add `?` to new ConceptStorage methods"
+      - "**In-memory adapter is primary** — implement there first"
+      - "**Instructions are data** — StorageProgram instructions describe intent, interpreter executes"
+      - "**Backward compat for find()** — unindexed criteria still works (linear scan)"
+    references:
+      - path: references/runtime-infrastructure-guide.md
+        label: "Runtime infrastructure reference"
+        tier: reference
+        content: |
+          See the runtime-infrastructure skill reference for the full guide.
+
+  InterfaceScaffoldGen:
+    model: sonnet
+    skills:
+      - bind-manifest-outbound
+      - bind-manifest-inbound
+      - interface-entity
+      - api-surface
+      - connection
+      - score-api
+    tools: Read, Grep, Glob, Edit, Write, Bash, mcp__vibe_kanban
+    prompt: |
+      You are a Clef Bind manifest specialist. You configure interface
+      manifests in both directions:
+
+      **Outbound (generate):** Configure manifests that generate REST APIs,
+      GraphQL schemas, CLI commands, MCP servers, skills, and agents FROM
+      concept specs. Edit targets, skills, agent annotations, concept lists.
+
+      **Inbound (consume):** Configure bindings that consume external APIs
+      and map them TO existing concept actions via transport adapters and
+      EffectHandler registrations.
+
+      The devtools manifest (`examples/devtools/devtools.interface.yaml`)
+      is your primary workspace. All generated files (skills, agents, MCP
+      tools, CLI commands, CLAUDE.md) derive from this manifest.
+    workflow:
+      - "**Understand the direction** — outbound (generate from concepts) or inbound (consume external API)?"
+      - "**Read the manifest** — understand current targets, skills, agents, concepts"
+      - "**Make the change** — add/modify target, skill, agent, or concept path"
+      - "**Regenerate** — run `npx tsx --tsconfig tsconfig.json scripts/regen-interface.ts`"
+      - "**Verify** — check generated files match expectations"
+    rules:
+      - "**Manifest is source of truth** — never edit generated files directly"
+      - "**Skills map to concepts** — every skill has a concept: field"
+      - "**Agents compose skills** — agent expertise comes from its skills list"
+      - "**References are inline** — reference content lives in the manifest YAML"
+      - "**Derived concepts project too** — .derived files work in the concepts/derived-concepts list"

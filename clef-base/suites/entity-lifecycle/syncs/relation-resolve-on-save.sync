@@ -1,0 +1,13 @@
+# Trigger relation field denormalization when any entity is saved.
+# RelationResolver.resolve is a no-op (no_relations) for entities that have
+# no schemas with relation FieldDefinitions, so this is safe to fire broadly.
+# See relation-resolver-plan.md §4.1.
+
+sync RelationResolveOnSave [eventual]
+  purpose: "Resolve denormalized relation fields when an entity is saved, writing dot-notation target field values onto the source entity record"
+when {
+  ContentStorage/save: [ id: ?id ] => [ ok: _ ]
+}
+then {
+  RelationResolver/resolve: [ entity: ?id ]
+}

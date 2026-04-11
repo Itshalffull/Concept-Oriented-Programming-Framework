@@ -14,6 +14,8 @@
 export { createInMemoryStorage } from './adapters/storage.js';
 export { createFileStorage, compactAll } from './adapters/file-storage.js';
 export type { FileStorageOptions } from './adapters/file-storage.js';
+export { createSQLiteStorage } from './adapters/sqlite-storage.js';
+export type { SQLiteStorageConfig } from './adapters/sqlite-storage.js';
 export { createStorageFactory, resolveStorageConfig } from './adapters/storage-factory.js';
 export type { StorageFactoryConfig, StorageBackend, ResolvedStorageConfig } from './adapters/storage-factory.js';
 

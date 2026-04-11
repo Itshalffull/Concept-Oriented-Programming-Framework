@@ -1,0 +1,317 @@
+@version(1)
+widget taxonomy-picker {
+
+  purpose {
+    Hierarchical entity picker for TaxonomyTerm relation fields. Displays a
+    vocabulary's term tree with expandable/collapsible nodes. Supports live
+    search that filters terms by name and auto-expands matching paths.
+    Breadcrumb navigation allows the user to orient within deep vocabularies.
+    The selected term is shown as a compact badge; selecting a new term
+    replaces the current one (single cardinality) or adds to the set
+    (multiple cardinality). Used inside inline-cell-editor and
+    field-config-drawer wherever a field has fieldType "relation" with
+    target "TaxonomyTerm".
+  }
+
+  anatomy {
+    root:           container     { Picker root; wraps trigger/selected display and floating panel }
+    searchInput:    interactive   { Text field for live filtering of terms by name }
+    breadcrumb:     container     { Path trail showing the user's current tree depth context }
+    termTree:       container     { Scrollable hierarchical term list }
+    termNode:       container     { Container for a single term and its children }
+    termLabel:      action        { Clickable term name that selects the term }
+    termChildren:   container     { Container for child terms rendered under their parent }
+    expandToggle:   action        { Button that shows or hides a term's children }
+    selectedDisplay: container    { Compact badge or chip list of the current selection }
+  }
+
+  states {
+    closed [initial] {
+      on OPEN -> open;
+    }
+
+    open {
+      on CLOSE -> closed;
+      on SEARCH -> searching;
+      on SELECT_TERM -> selected;
+      on EXPAND_TERM -> browsing;
+      entry [loadVocabularyRoots; positionPanel];
+      exit [clearSearchInput];
+    }
+
+    browsing {
+      on SEARCH -> searching;
+      on SELECT_TERM -> selected;
+      on EXPAND_TERM -> browsing;
+      on COLLAPSE_TERM -> browsing;
+      on NAVIGATE_UP -> browsing;
+      on CLOSE -> closed;
+    }
+
+    searching {
+      on TYPE -> searching;
+      on CLEAR_SEARCH -> open;
+      on SELECT_TERM -> selected;
+      on CLOSE -> closed;
+      entry [filterTermTree];
+      exit [resetTermTree];
+    }
+
+    selected {
+      on OPEN -> open;
+      on CLEAR -> closed;
+      entry [emitValueChange];
+    }
+  }
+
+  accessibility {
+    role: tree;
+    keyboard {
+      ArrowDown -> FOCUS_NEXT_TERM;
+      ArrowUp -> FOCUS_PREV_TERM;
+      ArrowRight -> EXPAND_TERM;
+      ArrowLeft -> COLLAPSE_TERM;
+      Enter -> SELECT_TERM;
+      Escape -> CLOSE;
+      Home -> FOCUS_FIRST_TERM;
+      End -> FOCUS_LAST_TERM;
+    }
+    focus {
+      trap: false;
+      initial: searchInput;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "combobox";
+        aria-expanded: if state == "open" or state == "browsing" or state == "searching" then "true" else "false";
+        aria-haspopup: "tree";
+        aria-label: concat(?vocabulary, " taxonomy picker");
+        data-state: state;
+      };
+      searchInput -> {
+        role: "searchbox";
+        aria-label: concat("Search ", ?vocabulary, " terms");
+        aria-autocomplete: "tree";
+        aria-busy: if state == "searching" then "true" else "false";
+      };
+      breadcrumb -> {
+        role: "navigation";
+        aria-label: concat(?vocabulary, " breadcrumb");
+      };
+      termTree -> {
+        role: "tree";
+        aria-label: concat(?vocabulary, " terms");
+        aria-multiselectable: if ?cardinality == "multiple" then "true" else "false";
+      };
+      termNode -> {
+        role: "treeitem";
+        aria-expanded: if self.hasChildren then (if self.expanded then "true" else "false") else "false";
+        aria-selected: if self.isSelected then "true" else "false";
+        aria-level: self.depth;
+        aria-setsize: self.siblingCount;
+        aria-posinset: self.positionInParent;
+        tabindex: if self.isFocused then "0" else "-1";
+      };
+      termLabel -> {
+        role: "none";
+        aria-label: self.termName;
+      };
+      expandToggle -> {
+        role: "button";
+        aria-label: if self.expanded then concat("Collapse ", self.termName) else concat("Expand ", self.termName);
+        aria-hidden: if not self.hasChildren then "true" else "false";
+      };
+      selectedDisplay -> {
+        role: "group";
+        aria-label: "Selected taxonomy terms";
+        aria-live: "polite";
+      };
+    }
+  }
+
+  props {
+    schema: String
+    fieldId: String
+    vocabulary: String
+    cardinality: String = "single"
+    currentValue: option String
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-vocabulary: ?vocabulary;
+      data-cardinality: ?cardinality;
+    }
+
+    searchInput -> {
+      data-part: "search-input";
+      placeholder: concat("Search ", ?vocabulary, "…");
+      hidden: if state == "closed" or state == "selected" then true else false;
+      onInput: send(SEARCH, { query: self.value });
+      onFocus: if state == "closed" or state == "selected" then send(OPEN) else noop;
+      onKeyDown: if key == "Escape" then send(CLOSE) else noop;
+    }
+
+    breadcrumb -> {
+      data-part: "breadcrumb";
+      hidden: if state == "closed" or state == "selected" then true else false;
+    }
+
+    termTree -> {
+      data-part: "term-tree";
+      hidden: if state == "closed" or state == "selected" then true else false;
+      data-filtered: if state == "searching" then "true" else "false";
+    }
+
+    termNode -> {
+      data-part: "term-node";
+      data-term-id: self.termId;
+      data-depth: self.depth;
+      data-expanded: if self.expanded then "true" else "false";
+      data-selected: if self.isSelected then "true" else "false";
+      data-has-children: if self.hasChildren then "true" else "false";
+      tabindex: if self.isFocused then "0" else "-1";
+      onKeyDown: if key == "ArrowRight" then send(EXPAND_TERM, { termId: self.termId })
+                 else if key == "ArrowLeft" then send(COLLAPSE_TERM, { termId: self.termId })
+                 else if key == "Enter" then send(SELECT_TERM, { termId: self.termId })
+                 else noop;
+    }
+
+    termLabel -> {
+      data-part: "term-label";
+      text: self.termName;
+      onClick: send(SELECT_TERM, { termId: self.termId });
+    }
+
+    termChildren -> {
+      data-part: "term-children";
+      data-parent-id: self.parentId;
+      hidden: if not self.parentExpanded then true else false;
+    }
+
+    expandToggle -> {
+      data-part: "expand-toggle";
+      data-term-id: self.termId;
+      data-expanded: if self.expanded then "true" else "false";
+      hidden: if not self.hasChildren then true else false;
+      onClick: if self.expanded then send(COLLAPSE_TERM, { termId: self.termId }) else send(EXPAND_TERM, { termId: self.termId });
+      onKeyDown: if key == "Enter" or key == "Space" then (if self.expanded then send(COLLAPSE_TERM, { termId: self.termId }) else send(EXPAND_TERM, { termId: self.termId })) else noop;
+    }
+
+    selectedDisplay -> {
+      data-part: "selected-display";
+      hidden: if state != "selected" then true else false;
+      onClick: send(OPEN);
+    }
+  }
+
+  affordance {
+    serves: single-choice;
+    specificity: 12;
+    when { viewType: "taxonomy-picker"; fieldType: "relation"; target: "TaxonomyTerm" }
+    bind {
+      currentValue: currentValue;
+      vocabulary: vocabulary;
+    }
+  }
+
+  invariant {
+    example "open shows vocabulary roots": {
+      after selectedDisplay.click -> ok
+      then root -> { data-state: "open" }
+      and termTree -> { hidden: false }
+      and searchInput -> { hidden: false }
+    }
+
+    example "typing switches to searching state": {
+      after send(OPEN) -> ok
+      then send(SEARCH, { query: "sci" }) -> ok
+      then root -> { data-state: "searching" }
+      and termTree -> { data-filtered: "true" }
+      and searchInput -> { aria-busy: "true" }
+    }
+
+    example "clear search returns to open": {
+      after send(OPEN) -> ok
+      then send(SEARCH, { query: "sci" }) -> ok
+      then send(CLEAR_SEARCH) -> ok
+      then root -> { data-state: "open" }
+      and termTree -> { data-filtered: "false" }
+    }
+
+    example "selecting a term transitions to selected": {
+      after send(OPEN) -> ok
+      then send(SELECT_TERM, { termId: "term-42" }) -> ok
+      then root -> { data-state: "selected" }
+      and termTree -> { hidden: true }
+      and selectedDisplay -> { hidden: false }
+    }
+
+    example "expand toggle expands children": {
+      after send(OPEN) -> ok
+      then send(EXPAND_TERM, { termId: "term-root" }) -> ok
+      then root -> { data-state: "browsing" }
+      and termNode -> { data-term-id: "term-root"; data-expanded: "true" }
+    }
+
+    example "collapse hides children": {
+      after send(OPEN) -> ok
+      then send(EXPAND_TERM, { termId: "term-root" }) -> ok
+      then send(COLLAPSE_TERM, { termId: "term-root" }) -> ok
+      then termNode -> { data-term-id: "term-root"; data-expanded: "false" }
+    }
+
+    example "Escape closes panel": {
+      after send(OPEN) -> ok
+      then key(Escape) -> ok
+      then root -> { data-state: "closed" }
+      and termTree -> { hidden: true }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        root -> { data-state: s.name }
+    }
+
+    always "term tree hidden when closed or selected": {
+      if state == "closed" then termTree -> { hidden: true }
+      and if state == "selected" then termTree -> { hidden: true }
+    }
+
+    always "selectedDisplay visible only in selected state": {
+      if state == "selected" then selectedDisplay -> { hidden: false }
+      and if state != "selected" then selectedDisplay -> { hidden: true }
+    }
+
+    always "aria-expanded on root true when panel is open": {
+      if state == "open" then root -> { aria-expanded: "true" }
+      and if state == "browsing" then root -> { aria-expanded: "true" }
+      and if state == "searching" then root -> { aria-expanded: "true" }
+      and if state == "closed" then root -> { aria-expanded: "false" }
+      and if state == "selected" then root -> { aria-expanded: "false" }
+    }
+
+    never "expandToggle visible on a leaf term": {
+      exists t in termNodes:
+        t -> { data-has-children: "false" } and expandToggle -> { hidden: false }
+    }
+
+    never "searching and browsing states active simultaneously": {
+      state == "searching" and state == "browsing"
+    }
+
+    "SELECT_TERM must call FieldDefinition/update with the selected termId on the relation field";
+    "vocabulary roots are loaded on OPEN via ContentNode/listBySchema filtered to vocabulary";
+    "child terms are loaded lazily on EXPAND_TERM if not already fetched";
+    "search filters the term tree client-side when result count is small (< 500 terms), else queries the server";
+    "breadcrumb updates on EXPAND_TERM and NAVIGATE_UP to reflect the current depth context";
+    "cardinality multiple allows additive selection without closing the panel";
+  }
+
+}

@@ -1,0 +1,21 @@
+# When a Citation's verification assessment is recorded, propagate the
+# verification status and support score back to the Claim it supports
+# so per-claim coverage metrics stay current.
+
+sync CitationVerifiedUpdatesClaim [eager] [required]
+  purpose: "Propagate a Citation's verified support score and status back to its parent Claim so claim-level verification state reflects the latest citation assessment."
+when {
+  Citation/verify: [citation: ?citation; support_score: ?score; verification_method: ?method]
+    => ok(citation: ?citation)
+}
+where {
+  Citation: { ?citation claim_id: ?claim; verification_status: ?vstatus }
+}
+then {
+  Claim/updateVerification: [
+    claim: ?claim;
+    status: ?vstatus;
+    support_score: ?score;
+    verified_by: "citation-verifier"
+  ]
+}

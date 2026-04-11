@@ -1,0 +1,185 @@
+@version(1)
+widget span-to-snippet {
+
+  purpose {
+    Inline-action widget that converts a text-span highlight in a block editor
+    into a Snippet reference linked to the originating entity. Users select
+    text in the editor; the widget overlays the selection, prompts confirmation,
+    and dispatches TextSpan/create followed by Snippet/create. Used as the
+    citation-authoring primitive in the research report editor.
+  }
+
+  anatomy {
+    root:             container  { Anchor wrapper positioned at the selection site }
+    highlightOverlay: container  { Visual overlay drawn over the selected text range }
+    snippetBadge:     container  { Compact badge showing the snippet citation key once linked }
+    confirmButton:    action     { Confirm creation of the snippet from the current selection }
+    cancelButton:     action     { Dismiss the overlay without creating a snippet }
+  }
+
+  states {
+    idle [initial] {
+      on SELECT -> selecting;
+    }
+
+    selecting {
+      on CONFIRM -> confirming;
+      on CANCEL -> idle;
+      entry [showHighlightOverlay; focusConfirmButton];
+      exit [clearHighlightOverlay];
+    }
+
+    confirming {
+      on LINK_COMPLETE -> linked;
+      on LINK_ERROR -> selecting;
+      entry [disableConfirmButton; showLinkingSpinner];
+      exit [enableConfirmButton; hideLinkingSpinner];
+    }
+
+    linked {
+      on RESET -> idle;
+      entry [showSnippetBadge];
+    }
+  }
+
+  accessibility {
+    role: group;
+    keyboard {
+      Enter -> CONFIRM;
+      Escape -> CANCEL;
+    }
+    focus {
+      trap: false;
+      initial: confirmButton;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: "Create snippet from selection";
+      };
+      highlightOverlay -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      snippetBadge -> {
+        role: "status";
+        aria-label: "Snippet linked";
+        aria-live: "polite";
+      };
+      confirmButton -> {
+        role: "button";
+        aria-label: "Confirm snippet";
+        aria-disabled: if state == "confirming" then "true" else "false";
+      };
+      cancelButton -> {
+        role: "button";
+        aria-label: "Cancel snippet creation";
+      };
+    }
+  }
+
+  props {
+    entity_id: String
+    block_id: String
+    offset_start: Int = 0
+    offset_end: Int = 0
+    citation_key: String = ""
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+    }
+    highlightOverlay -> {
+      data-part: "highlight-overlay";
+      data-visible: if state == "selecting" or state == "confirming" then "true" else "false";
+      aria-hidden: "true";
+    }
+    snippetBadge -> {
+      data-part: "snippet-badge";
+      data-visible: if state == "linked" then "true" else "false";
+      text: ?citation_key;
+    }
+    confirmButton -> {
+      data-part: "confirm-button";
+      disabled: if state == "confirming" then true else false;
+      data-loading: if state == "confirming" then "true" else "false";
+      onClick: send(CONFIRM);
+      aria-disabled: if state == "confirming" then "true" else "false";
+    }
+    cancelButton -> {
+      data-part: "cancel-button";
+      onClick: send(CANCEL);
+    }
+  }
+
+  affordance {
+    serves: inline-action;
+    specificity: 20;
+    when {
+      concept: "Snippet";
+      trigger: "selection";
+    }
+    bind {
+      entity_id: entity_id;
+      block_id: block_id;
+      offset_start: offset_start;
+      offset_end: offset_end;
+    }
+  }
+
+  invariant {
+    example "select transitions idle to selecting": {
+      after transition(from: "idle", event: "SELECT") -> ok
+      then root -> { data-state: "selecting" }
+      and highlightOverlay -> { data-visible: "true" }
+    }
+
+    example "confirm transitions selecting to confirming": {
+      after transition(from: "selecting", event: "CONFIRM") -> ok
+      then root -> { data-state: "confirming" }
+      and confirmButton -> { data-loading: "true" }
+    }
+
+    example "link_complete transitions confirming to linked": {
+      after transition(from: "confirming", event: "LINK_COMPLETE") -> ok
+      then root -> { data-state: "linked" }
+      and snippetBadge -> { data-visible: "true" }
+    }
+
+    example "cancel from selecting returns to idle": {
+      after transition(from: "selecting", event: "CANCEL") -> ok
+      then root -> { data-state: "idle" }
+      and highlightOverlay -> { data-visible: "false" }
+    }
+
+    example "link_error returns to selecting": {
+      after transition(from: "confirming", event: "LINK_ERROR") -> ok
+      then root -> { data-state: "selecting" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        root -> { data-state: s.name }
+    }
+
+    never "snippet badge visible before linked": {
+      state != "linked" and snippetBadge -> { data-visible: "true" }
+    }
+
+    never "confirm button active during confirming": {
+      state == "confirming" and confirmButton -> { disabled: "false" }
+    }
+
+    action confirmButton.click {
+      requires: state == "selecting"
+      ensures ok: state == "confirming"
+    }
+  }
+
+}

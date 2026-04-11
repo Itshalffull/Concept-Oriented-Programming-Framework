@@ -161,6 +161,28 @@ queryProgramCommand
   });
 
 queryProgramCommand
+  .command('offset')
+  .description('Append an Offset instruction that skips the first count records in the current record set . A count of zero skips nothing . The remaining set is bound to output .')
+  .requiredOption('--program <program>', 'Program')
+  .requiredOption('--count <count>', 'Count')
+  .requiredOption('--output <output>', 'Output')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/QueryProgram', 'offset', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
+  });
+
+queryProgramCommand
   .command('pure')
   .description('Terminate the program with a return value consisting of a variant tag and output binding . No further instructions may be appended after pure . The program s terminated flag is set to true .')
   .requiredOption('--program <program>', 'Program')
@@ -329,5 +351,5 @@ queryProgramCommand
 export const queryProgramCommandTree = {
   group: 'query-program',
   description: 'Build sequences of query instructions as inspectable , composable data . A QueryProgram describes what a view intends to fetch and transform without executing side effects . Programs capture scan , filter , sort , group , project , limit , and pure termination steps as an ordered instruction list . Programs can be analyzed for the fields they read , composed via monadic bind , and handed to an interpreter or optimizer',
-  commands: [{ action: 'create', command: 'create' }, { action: 'scan', command: 'scan' }, { action: 'filter', command: 'filter' }, { action: 'sort', command: 'sort' }, { action: 'group', command: 'group' }, { action: 'project', command: 'project' }, { action: 'limit', command: 'limit' }, { action: 'pure', command: 'pure' }, { action: 'join', command: 'join' }, { action: 'compose', command: 'compose' }, { action: 'invoke', command: 'invoke' }, { action: 'match', command: 'match' }, { action: 'traverseInvoke', command: 'traverse-invoke' }, { action: 'traverse', command: 'traverse' }],
+  commands: [{ action: 'create', command: 'create' }, { action: 'scan', command: 'scan' }, { action: 'filter', command: 'filter' }, { action: 'sort', command: 'sort' }, { action: 'group', command: 'group' }, { action: 'project', command: 'project' }, { action: 'limit', command: 'limit' }, { action: 'offset', command: 'offset' }, { action: 'pure', command: 'pure' }, { action: 'join', command: 'join' }, { action: 'compose', command: 'compose' }, { action: 'invoke', command: 'invoke' }, { action: 'match', command: 'match' }, { action: 'traverseInvoke', command: 'traverse-invoke' }, { action: 'traverse', command: 'traverse' }],
 };

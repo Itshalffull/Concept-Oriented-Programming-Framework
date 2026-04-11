@@ -11,11 +11,26 @@ How to implement ConceptStorage adapters for different backends.
 interface ConceptStorage {
   put(relation: string, key: string, value: Record<string, unknown>): Promise<void>;
   get(relation: string, key: string): Promise<Record<string, unknown> | null>;
-  find(relation: string, criteria?: Record<string, unknown>): Promise<Record<string, unknown>[]>;
+  find(relation: string, criteria?: Record<string, unknown>, options?: FindOptions): Promise<Record<string, unknown>[]>;
   del(relation: string, key: string): Promise<void>;
   delMany(relation: string, criteria: Record<string, unknown>): Promise<number>;
+  ensureIndex?(relation: string, field: string): void;  // Optional secondary index
+}
+
+interface FindOptions {
+  limit?: number;
+  offset?: number;
+  sort?: { field: string; order: 'asc' | 'desc' };
 }
 ```
+
+## Secondary Indexes
+
+Adapters may implement `ensureIndex(relation, field)` for fast lookups:
+- In-memory: maintains `Map<value, Set<key>>` per indexed field
+- SQL: translates to `CREATE INDEX IF NOT EXISTS`
+- Called during kernel boot, not inside handlers
+- `find()` uses index when criteria matches indexed field (O(1) vs O(N))
 
 ## Backend Comparison
 

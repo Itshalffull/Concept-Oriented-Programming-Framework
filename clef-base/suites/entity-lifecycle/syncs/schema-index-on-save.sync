@@ -1,0 +1,26 @@
+# Per-schema denormalized relation refresh on node save.
+# When a node's content changes, refreshes all per-schema relations the
+# node belongs to so listBySchema always returns up-to-date field values.
+#
+# Fan-out behavior: getSchemasFor returns a set; the sync engine fires
+# once per schema in that set, binding ?schema to each value in turn.
+# If the sync engine delivers the set as a single opaque value, the then
+# clause writes to "schema:?schemas" as a batch key — the handler for
+# ContentStorage/save is expected to iterate over the set when the
+# relation key contains a set binding.
+
+sync SchemaIndexOnSave [eventual]
+  purpose: "Keep per-schema denormalized relations current when a node's fields change, so listBySchema always reflects the latest node data"
+when {
+  ContentStorage/save: [ id: ?id ] => [ ok: _ ]
+}
+where {
+  Schema/getSchemasFor: [ entity_id: ?id ] => [ ok: ?schemas ]
+  guard(?schemas != "")
+}
+then {
+  ContentNode/get: [ node: ?id ] => [ ok: ?nodeData ]
+}
+then {
+  ContentStorage/save: [ relation: "schema:?schemas"; key: ?id; data: ?nodeData ]
+}

@@ -20,6 +20,7 @@ import { join, resolve } from 'node:path';
 import type { ConceptStorage } from '../types.js';
 import { createInMemoryStorage } from './storage.js';
 import { createFileStorage } from './file-storage.js';
+import { createSQLiteStorage } from './sqlite-storage.js';
 
 /** Storage backend type selection. */
 export type StorageBackend =
@@ -159,6 +160,13 @@ function createStorageForBackend(
     // The factory creates them lazily when the deploy config is available.
     // For now, fall back to file storage with a warning.
     case 'sqlite':
+      return createSQLiteStorage({
+        dbPath: resolved.dataDir.endsWith('.db')
+          ? resolved.dataDir
+          : join(resolved.dataDir, 'clef.db'),
+        namespace: sanitizeNamespace(name),
+      });
+
     case 'postgresql':
     case 'dynamodb':
     case 'redis':

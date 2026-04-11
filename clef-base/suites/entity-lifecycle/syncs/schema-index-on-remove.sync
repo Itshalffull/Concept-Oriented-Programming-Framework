@@ -1,0 +1,12 @@
+# Per-schema denormalized relation cleanup on schema removal.
+# When a schema is removed from a node, deletes the node's entry from
+# the schema:{name} relation to keep the materialized view consistent.
+
+sync SchemaIndexOnRemove [eventual]
+  purpose: "Remove a node's entry from the per-schema denormalized relation when its schema membership is revoked"
+when {
+  Schema/removeFrom: [ entity_id: ?id; schema: ?schema ] => [ ok: _ ]
+}
+then {
+  ContentStorage/remove: [ relation: "schema:?schema"; key: ?id ]
+}

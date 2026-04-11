@@ -1,0 +1,33 @@
+view "concept-graph" {
+  shell: "concept-graph"
+
+  features {
+    projection
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ContentNode\",\"action\":\"list\"}"
+    }
+    projection: {
+      fields: "[{\"key\":\"node\",\"label\":\"Node\"},{\"key\":\"schemas\",\"label\":\"Schemas\"},{\"key\":\"content\",\"label\":\"Content\"}]"
+    }
+    presentation: {
+      displayType: "canvas",
+      hints: "{}"
+    }
+  }
+
+  purpose {
+    Force-directed concept dependency graph showing system topology
+    with concepts, schemas, syncs, suites, and their relationships.
+    Read-only graph visualization.
+  }
+
+  invariants {
+    always "purity is read-only": {
+      purity = "read-only"
+    }
+  }
+}

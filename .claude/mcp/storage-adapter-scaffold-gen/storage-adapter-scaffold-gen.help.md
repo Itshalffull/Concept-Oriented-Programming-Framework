@@ -11,6 +11,8 @@ Scaffold a **{input}** storage adapter implementing the ConceptStorage interface
 - **Interface Compliance:** Every adapter must implement all five ConceptStorage methods — put, get, find, del, delMany. No optional methods.
 - **Backend Transparency:** Concept handlers use storage through the interface without knowing which backend is active. Swapping backends requires no handler changes.
 - **Relation-Key Namespace:** Storage is organized by relation name and key. Each concept uses its own relation names, preventing cross-concept conflicts.
+- **Secondary Indexes via ensureIndex:** Adapters may implement the optional ensureIndex(relation, field) method. When declared, the adapter maintains an inverted index (field value → key set) for O(1) lookup on find(). The in-memory adapter supports this natively. SQL adapters translate to CREATE INDEX. ensureIndex is called during kernel boot, not inside handlers.
+- **FindOptions for Pagination:** find() accepts optional FindOptions: { limit?, offset?, sort? }. These are applied AFTER criteria filtering. With secondary indexes, the combined cost is O(log N + K) where K is the result set size, not O(N) full scan.
 **generate:**
 - [ ] Backend is valid (sqlite, postgresql, redis, dynamodb, memory)?
 - [ ] Adapter class implements ConceptStorage interface?

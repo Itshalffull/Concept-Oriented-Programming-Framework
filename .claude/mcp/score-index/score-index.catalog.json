@@ -80,6 +80,22 @@
     "alwaysLoaded": false
   },
   {
+    "name": "score_index_upsert_view",
+    "briefDescription": "Insert or update the view entry in the index .",
+    "category": "ScoreIndex",
+    "concept": "ScoreIndex",
+    "action": "upsertView",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "score_index_remove_view",
+    "briefDescription": "Remove the view entry from the index .",
+    "category": "ScoreIndex",
+    "concept": "ScoreIndex",
+    "action": "removeView",
+    "alwaysLoaded": false
+  },
+  {
     "name": "score_index_remove_by_file",
     "briefDescription": "Remove all index entries associated with a file .",
     "category": "ScoreIndex",

@@ -1,0 +1,52 @@
+# Inject relation join instructions into a compiled QueryProgram when the
+# resolved ViewShell has the "relation" feature enabled. For each path in the
+# RelationSpec:
+#   - denormalized + not-lazy  → project dot-notation key directly (no join)
+#   - not-denormalized + lazy  → add to projection metadata as { resolve: "lazy" }
+#   - not-denormalized + not-lazy → inject QueryProgram/join (forward) or
+#     QueryProgram/reverseJoin (reverse) instruction
+# See relation-resolver-plan.md §4.4, §3 (resolution rules), §14.3.
+
+sync CompileQueryWithRelations [eager]
+  purpose: "Inject join or reverseJoin instructions into the QueryProgram for each non-denormalized, non-lazy relation path declared in the ViewShell's RelationSpec"
+when {
+  ViewShell/resolve: [ name: ?name ]
+    => ok(view: ?view)
+}
+where {
+  ViewShell: { ?view dataSource: ?dataSource; filter: ?filter; sort: ?sort; projection: ?projection; relation: ?relation; features: ?features }
+  guard(?features contains "relation")
+  guard(?relation != "")
+  DataSourceSpec/get: [ name: ?dataSource ]
+    => ok(source: _; kind: _; config: ?sourceConfig; parameters: _)
+  FilterSpec/get: [ name: ?filter ]
+    => ok(filter: _; tree: ?filterTree; sourceType: _; fieldRefs: _)
+  SortSpec/get: [ name: ?sort ]
+    => ok(sort: _; keys: ?sortKeys)
+  ProjectionSpec/get: [ name: ?projection ]
+    => ok(projection: _; fields: ?projectionFields)
+  RelationSpec/get: [ name: ?relation ]
+    => ok(paths: ?relationPaths)
+  bind(uuid() as ?program)
+}
+then {
+  QueryProgram/create: [ program: ?program ]
+}
+then {
+  QueryProgram/scan: [ program: ?program; source: ?sourceConfig; bindAs: "records" ]
+}
+then {
+  QueryProgram/join: [ program: ?program; paths: ?relationPaths; bindAs: "with_relations" ]
+}
+then {
+  QueryProgram/filter: [ program: ?program; node: ?filterTree; bindAs: "filtered" ]
+}
+then {
+  QueryProgram/sort: [ program: ?program; keys: ?sortKeys; bindAs: "sorted" ]
+}
+then {
+  QueryProgram/project: [ program: ?program; fields: ?projectionFields; bindAs: "projected" ]
+}
+then {
+  QueryProgram/pure: [ program: ?program; variant: "ok"; output: "projected" ]
+}

@@ -1,0 +1,19 @@
+# Snippet anchor resolution through namespace and qualifier chain.
+# When a snippet carries namespace or qualifier metadata in its source
+# ref (e.g. [[contract@v3]] inline text selection), resolution routes
+# through the full namespace/qualifier chain before verifying the anchor.
+
+sync SnippetResolvesQualified [eager]
+  purpose: "Route snippet anchor resolution through the namespace and qualifier chain when the source ref contains version or branch addressing"
+when {
+  Snippet/resolve: [ snippetId: ?snippetId; sourceRef: ?sourceRef ]
+    => [ ok: _ ]
+}
+where {
+  any(?sourceRef contains "@"; ?sourceRef contains "://")
+  Namespace/parse: [ ref: ?sourceRef ]
+    => [ ok(namespace: ?namespace, qualifier: ?qualifier, entityId: ?entityId) ]
+}
+then {
+  Namespace/resolve: [ path: ?namespace; entityId: ?entityId; qualifier: ?qualifier ]
+}

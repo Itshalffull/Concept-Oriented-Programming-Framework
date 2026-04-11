@@ -12,4 +12,4 @@ export async function handlePageMapSkill(
   return JSON.stringify(result.body, null, 2);
 }
 
-export const pageMapSkillCommands = ['register', 'update', 'find', 'findByRole', 'findByConcept', 'findByWidget', 'list', 'clear'];
+export const pageMapSkillCommands = ['register', 'update', 'find', 'findByRole', 'findByConcept', 'findByWidget', 'findByView', 'list', 'clear'];

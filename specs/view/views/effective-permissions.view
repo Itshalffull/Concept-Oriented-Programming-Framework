@@ -1,0 +1,50 @@
+view "effective-permissions" {
+  shell: "effective-permissions"
+
+  features {
+    filter
+    sort
+    projection
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"Authorization\",\"action\":\"listEffective\",\"params\":{\"subject\":\"{{subjectId}}\"}}"
+    }
+    filter: {
+      node: "{\"type\":\"eq\",\"field\":\"resource\",\"value\":\"all\"}"
+    }
+    sort: {
+      keys: "[{\"field\":\"resource\",\"direction\":\"asc\"}]"
+    }
+    projection: {
+      fields: "[{\"key\":\"subject\",\"label\":\"Subject\"},{\"key\":\"resource\",\"label\":\"Resource\"},{\"key\":\"permission\",\"label\":\"Permission\"},{\"key\":\"source\",\"label\":\"Source\"},{\"key\":\"inherited\",\"label\":\"Inherited\"}]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+  }
+
+  purpose {
+    Computed effective permissions for a subject across all
+    resources, resolving role inheritance and policy overrides.
+    Filterable by subject and resource. Read-only.
+  }
+
+  invariants {
+    always "purity is read-only": {
+      purity = "read-only"
+    }
+
+    always "no invoke instructions": {
+      invokeCount = 0
+    }
+
+    always "filter fields exist in source": {
+      forall f in filterFields:
+      f in sourceFields
+    }
+  }
+}

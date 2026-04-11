@@ -34,7 +34,7 @@ describe('PageMap functional handler', () => {
 
   describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main" });
+      const program = pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main", viewName: null, viewPurity: null, viewInvokedActions: null });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -42,21 +42,21 @@ describe('PageMap functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main" });
+      const program = pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main", viewName: null, viewPurity: null, viewInvokedActions: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main" });
+      const program = pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main", viewName: null, viewPurity: null, viewInvokedActions: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main" });
+      const program = pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main", viewName: null, viewPurity: null, viewInvokedActions: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -69,7 +69,7 @@ describe('PageMap functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main" });
+      const program = pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main", viewName: null, viewPurity: null, viewInvokedActions: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -77,7 +77,7 @@ describe('PageMap functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof pageMapHandler.register !== 'function') return;
-      const result = await interpret(pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main" }), storage);
+      const result = await interpret(pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main", viewName: null, viewPurity: null, viewInvokedActions: null }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -87,30 +87,37 @@ describe('PageMap functional handler', () => {
     it('fixture "register_ok" -> ok', async () => {
       if (typeof pageMapHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main" }), storage);
+      const result = await interpret(pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main", viewName: null, viewPurity: null, viewInvokedActions: null }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_form" -> ok', async () => {
       if (typeof pageMapHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(pageMapHandler.register({ entry: "entry-create-form-1", label: "New Task Form", role: "form", machineRef: "machine-create-form-1", widgetName: "create-form", currentState: "empty", validEvents: "[\"submit\",\"reset\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main" }), storage);
+      const result = await interpret(pageMapHandler.register({ entry: "entry-create-form-1", label: "New Task Form", role: "form", machineRef: "machine-create-form-1", widgetName: "create-form", currentState: "empty", validEvents: "[\"submit\",\"reset\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main", viewName: null, viewPurity: null, viewInvokedActions: null }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "register_no_binding" -> ok', async () => {
       if (typeof pageMapHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(pageMapHandler.register({ entry: "entry-nav-1", label: "Navigation Bar", role: "navigation", machineRef: "machine-nav-1", widgetName: "nav-bar", currentState: "idle", validEvents: "[]", conceptBinding: null, affordanceServes: null, hostRef: "host-main" }), storage);
+      const result = await interpret(pageMapHandler.register({ entry: "entry-nav-1", label: "Navigation Bar", role: "navigation", machineRef: "machine-nav-1", widgetName: "nav-bar", currentState: "idle", validEvents: "[]", conceptBinding: null, affordanceServes: null, hostRef: "host-main", viewName: null, viewPurity: null, viewInvokedActions: null }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_with_view" -> ok', async () => {
+      if (typeof pageMapHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pageMapHandler.register({ entry: "entry-content-list-1", label: "Content List", role: "table", machineRef: "machine-content-list-1", widgetName: "content-list", currentState: "idle", validEvents: "[\"load\",\"sort\"]", conceptBinding: "ContentNode", affordanceServes: "list", hostRef: "host-main", viewName: "content-list", viewPurity: "read-only", viewInvokedActions: "[]" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "duplicate_label" -> duplicate', async () => {
       if (typeof pageMapHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_register_ok = await interpret(pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main" }), storage);
+      const afterResult_register_ok = await interpret(pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main", viewName: null, viewPurity: null, viewInvokedActions: null }), storage);
       const _pool = Object.assign({}, (afterResult_register_ok?.output ?? {}));
-      const _fixtureInput = { entry: "entry-task-card-2", label: "Create Task", role: "button", machineRef: "machine-task-card-2", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main" } as Record<string, unknown>;
+      const _fixtureInput = { entry: "entry-task-card-2", label: "Create Task", role: "button", machineRef: "machine-task-card-2", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main", viewName: null, viewPurity: null, viewInvokedActions: null } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
           const cur = _fixtureInput[k];
@@ -126,21 +133,21 @@ describe('PageMap functional handler', () => {
     it('fixture "empty_label" -> error', async () => {
       if (typeof pageMapHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(pageMapHandler.register({ entry: "entry-bad", label: "", role: "button", machineRef: "machine-bad", widgetName: "task-card", currentState: "idle", validEvents: "[]", conceptBinding: null, affordanceServes: null, hostRef: "host-main" }), storage);
+      const result = await interpret(pageMapHandler.register({ entry: "entry-bad", label: "", role: "button", machineRef: "machine-bad", widgetName: "task-card", currentState: "idle", validEvents: "[]", conceptBinding: null, affordanceServes: null, hostRef: "host-main", viewName: null, viewPurity: null, viewInvokedActions: null }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
     it('fixture "empty_role" -> error', async () => {
       if (typeof pageMapHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(pageMapHandler.register({ entry: "entry-bad2", label: "Some Label", role: "", machineRef: "machine-bad2", widgetName: "task-card", currentState: "idle", validEvents: "[]", conceptBinding: null, affordanceServes: null, hostRef: "host-main" }), storage);
+      const result = await interpret(pageMapHandler.register({ entry: "entry-bad2", label: "Some Label", role: "", machineRef: "machine-bad2", widgetName: "task-card", currentState: "idle", validEvents: "[]", conceptBinding: null, affordanceServes: null, hostRef: "host-main", viewName: null, viewPurity: null, viewInvokedActions: null }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
     it('fixture "empty_machineRef" -> error', async () => {
       if (typeof pageMapHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(pageMapHandler.register({ entry: "entry-bad3", label: "Another Label", role: "button", machineRef: "", widgetName: "task-card", currentState: "idle", validEvents: "[]", conceptBinding: null, affordanceServes: null, hostRef: "host-main" }), storage);
+      const result = await interpret(pageMapHandler.register({ entry: "entry-bad3", label: "Another Label", role: "button", machineRef: "", widgetName: "task-card", currentState: "idle", validEvents: "[]", conceptBinding: null, affordanceServes: null, hostRef: "host-main", viewName: null, viewPurity: null, viewInvokedActions: null }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -201,7 +208,7 @@ describe('PageMap functional handler', () => {
     it('fixture "update_ok" -> ok', async () => {
       if (typeof pageMapHandler.update !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_register_ok = await interpret(pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main" }), storage);
+      const afterResult_register_ok = await interpret(pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main", viewName: null, viewPurity: null, viewInvokedActions: null }), storage);
       const result = await interpret(pageMapHandler.update({ entry: afterResult_register_ok?.output?.["entry"], currentState: "active", validEvents: "[\"click\",\"blur\"]" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -271,7 +278,7 @@ describe('PageMap functional handler', () => {
     it('fixture "find_ok" -> ok', async () => {
       if (typeof pageMapHandler.find !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_register_ok = await interpret(pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main" }), storage);
+      const afterResult_register_ok = await interpret(pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main", viewName: null, viewPurity: null, viewInvokedActions: null }), storage);
       const _pool = Object.assign({}, (afterResult_register_ok?.output ?? {}));
       const _fixtureInput = { entry: "entry-task-card-1", label: "Create Task" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
@@ -350,7 +357,7 @@ describe('PageMap functional handler', () => {
     it('fixture "find_by_role_ok" -> ok', async () => {
       if (typeof pageMapHandler.findByRole !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_register_ok = await interpret(pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main" }), storage);
+      const afterResult_register_ok = await interpret(pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main", viewName: null, viewPurity: null, viewInvokedActions: null }), storage);
       const _pool = Object.assign({}, (afterResult_register_ok?.output ?? {}));
       const _fixtureInput = { role: "button" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
@@ -367,7 +374,7 @@ describe('PageMap functional handler', () => {
     it('fixture "find_by_role_empty" -> ok', async () => {
       if (typeof pageMapHandler.findByRole !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_register_ok = await interpret(pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main" }), storage);
+      const afterResult_register_ok = await interpret(pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main", viewName: null, viewPurity: null, viewInvokedActions: null }), storage);
       const _pool = Object.assign({}, (afterResult_register_ok?.output ?? {}));
       const _fixtureInput = { role: "dialog" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
@@ -438,7 +445,7 @@ describe('PageMap functional handler', () => {
     it('fixture "find_by_concept_ok" -> ok', async () => {
       if (typeof pageMapHandler.findByConcept !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_register_ok = await interpret(pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main" }), storage);
+      const afterResult_register_ok = await interpret(pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main", viewName: null, viewPurity: null, viewInvokedActions: null }), storage);
       const _pool = Object.assign({}, (afterResult_register_ok?.output ?? {}));
       const _fixtureInput = { concept: "Task" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
@@ -455,7 +462,7 @@ describe('PageMap functional handler', () => {
     it('fixture "find_by_concept_empty" -> ok', async () => {
       if (typeof pageMapHandler.findByConcept !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_register_ok = await interpret(pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main" }), storage);
+      const afterResult_register_ok = await interpret(pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main", viewName: null, viewPurity: null, viewInvokedActions: null }), storage);
       const _pool = Object.assign({}, (afterResult_register_ok?.output ?? {}));
       const _fixtureInput = { concept: "Label" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
@@ -526,7 +533,7 @@ describe('PageMap functional handler', () => {
     it('fixture "find_by_widget_ok" -> ok', async () => {
       if (typeof pageMapHandler.findByWidget !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_register_ok = await interpret(pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main" }), storage);
+      const afterResult_register_ok = await interpret(pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main", viewName: null, viewPurity: null, viewInvokedActions: null }), storage);
       const _pool = Object.assign({}, (afterResult_register_ok?.output ?? {}));
       const _fixtureInput = { widgetName: "task-card" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
@@ -543,7 +550,7 @@ describe('PageMap functional handler', () => {
     it('fixture "find_by_widget_empty" -> ok', async () => {
       if (typeof pageMapHandler.findByWidget !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_register_ok = await interpret(pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main" }), storage);
+      const afterResult_register_ok = await interpret(pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main", viewName: null, viewPurity: null, viewInvokedActions: null }), storage);
       const _pool = Object.assign({}, (afterResult_register_ok?.output ?? {}));
       const _fixtureInput = { widgetName: "sidebar" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
@@ -555,6 +562,85 @@ describe('PageMap functional handler', () => {
       }
       const result = await interpret(pageMapHandler.findByWidget({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('findByView', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = pageMapHandler.findByView({ viewName: "content-list" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = pageMapHandler.findByView({ viewName: "content-list" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = pageMapHandler.findByView({ viewName: "content-list" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = pageMapHandler.findByView({ viewName: "content-list" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = pageMapHandler.findByView({ viewName: "content-list" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof pageMapHandler.findByView !== 'function') return;
+      const result = await interpret(pageMapHandler.findByView({ viewName: "content-list" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "find_by_view" -> ok', async () => {
+      if (typeof pageMapHandler.findByView !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_register_with_view = await interpret(pageMapHandler.register({ entry: "entry-content-list-1", label: "Content List", role: "table", machineRef: "machine-content-list-1", widgetName: "content-list", currentState: "idle", validEvents: "[\"load\",\"sort\"]", conceptBinding: "ContentNode", affordanceServes: "list", hostRef: "host-main", viewName: "content-list", viewPurity: "read-only", viewInvokedActions: "[]" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_with_view?.output ?? {}));
+      const _fixtureInput = { viewName: "content-list" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(pageMapHandler.findByView({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "find_by_view_missing" -> notfound', async () => {
+      if (typeof pageMapHandler.findByView !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(pageMapHandler.findByView({ viewName: "nonexistent" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
     });
 
   });
@@ -614,7 +700,7 @@ describe('PageMap functional handler', () => {
     it('fixture "list_ok" -> ok', async () => {
       if (typeof pageMapHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_register_ok = await interpret(pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main" }), storage);
+      const afterResult_register_ok = await interpret(pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main", viewName: null, viewPurity: null, viewInvokedActions: null }), storage);
       const _pool = Object.assign({}, (afterResult_register_ok?.output ?? {}));
       const _fixtureInput = { hostRef: "host-main" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
@@ -631,7 +717,7 @@ describe('PageMap functional handler', () => {
     it('fixture "list_empty" -> ok', async () => {
       if (typeof pageMapHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_register_ok = await interpret(pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main" }), storage);
+      const afterResult_register_ok = await interpret(pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main", viewName: null, viewPurity: null, viewInvokedActions: null }), storage);
       const _pool = Object.assign({}, (afterResult_register_ok?.output ?? {}));
       const _fixtureInput = { hostRef: "host-other" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
@@ -702,7 +788,7 @@ describe('PageMap functional handler', () => {
     it('fixture "clear_ok" -> ok', async () => {
       if (typeof pageMapHandler.clear !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_register_ok = await interpret(pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main" }), storage);
+      const afterResult_register_ok = await interpret(pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main", viewName: null, viewPurity: null, viewInvokedActions: null }), storage);
       const _pool = Object.assign({}, (afterResult_register_ok?.output ?? {}));
       const _fixtureInput = { hostRef: "host-main" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
@@ -719,7 +805,7 @@ describe('PageMap functional handler', () => {
     it('fixture "clear_empty" -> ok', async () => {
       if (typeof pageMapHandler.clear !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_register_ok = await interpret(pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main" }), storage);
+      const afterResult_register_ok = await interpret(pageMapHandler.register({ entry: "entry-task-card-1", label: "Create Task", role: "button", machineRef: "machine-task-card-1", widgetName: "task-card", currentState: "idle", validEvents: "[\"click\",\"focus\"]", conceptBinding: "Task", affordanceServes: "create", hostRef: "host-main", viewName: null, viewPurity: null, viewInvokedActions: null }), storage);
       const _pool = Object.assign({}, (afterResult_register_ok?.output ?? {}));
       const _fixtureInput = { hostRef: "host-other" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
@@ -816,12 +902,13 @@ describe('PageMap functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ entry: fc.string(), label: fc.string({ minLength: 1, maxLength: 50 }), role: fc.string({ minLength: 1, maxLength: 50 }), machineRef: fc.string({ minLength: 1, maxLength: 50 }), widgetName: fc.string({ minLength: 1, maxLength: 50 }), currentState: fc.string({ minLength: 1, maxLength: 50 }), validEvents: fc.string({ minLength: 1, maxLength: 50 }), conceptBinding: fc.string(), affordanceServes: fc.string(), hostRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ entry: fc.string(), label: fc.string({ minLength: 1, maxLength: 50 }), role: fc.string({ minLength: 1, maxLength: 50 }), machineRef: fc.string({ minLength: 1, maxLength: 50 }), widgetName: fc.string({ minLength: 1, maxLength: 50 }), currentState: fc.string({ minLength: 1, maxLength: 50 }), validEvents: fc.string({ minLength: 1, maxLength: 50 }), conceptBinding: fc.string(), affordanceServes: fc.string(), hostRef: fc.string({ minLength: 1, maxLength: 50 }), viewName: fc.string(), viewPurpose: fc.string(), viewPurity: fc.string(), viewInvokedActions: fc.string() }) }),
               fc.record({ action: fc.constant('update'), input: fc.record({ entry: fc.string(), currentState: fc.string({ minLength: 1, maxLength: 50 }), validEvents: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('find'), input: fc.record({ entry: fc.string(), label: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('findByRole'), input: fc.record({ role: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('findByConcept'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('findByWidget'), input: fc.record({ widgetName: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByView'), input: fc.record({ viewName: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({ hostRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('clear'), input: fc.record({ hostRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
@@ -853,12 +940,13 @@ describe('PageMap functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ entry: fc.string(), label: fc.string({ minLength: 1, maxLength: 50 }), role: fc.string({ minLength: 1, maxLength: 50 }), machineRef: fc.string({ minLength: 1, maxLength: 50 }), widgetName: fc.string({ minLength: 1, maxLength: 50 }), currentState: fc.string({ minLength: 1, maxLength: 50 }), validEvents: fc.string({ minLength: 1, maxLength: 50 }), conceptBinding: fc.string(), affordanceServes: fc.string(), hostRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ entry: fc.string(), label: fc.string({ minLength: 1, maxLength: 50 }), role: fc.string({ minLength: 1, maxLength: 50 }), machineRef: fc.string({ minLength: 1, maxLength: 50 }), widgetName: fc.string({ minLength: 1, maxLength: 50 }), currentState: fc.string({ minLength: 1, maxLength: 50 }), validEvents: fc.string({ minLength: 1, maxLength: 50 }), conceptBinding: fc.string(), affordanceServes: fc.string(), hostRef: fc.string({ minLength: 1, maxLength: 50 }), viewName: fc.string(), viewPurpose: fc.string(), viewPurity: fc.string(), viewInvokedActions: fc.string() }) }),
               fc.record({ action: fc.constant('update'), input: fc.record({ entry: fc.string(), currentState: fc.string({ minLength: 1, maxLength: 50 }), validEvents: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('find'), input: fc.record({ entry: fc.string(), label: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('findByRole'), input: fc.record({ role: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('findByConcept'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('findByWidget'), input: fc.record({ widgetName: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByView'), input: fc.record({ viewName: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({ hostRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('clear'), input: fc.record({ hostRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
@@ -890,12 +978,13 @@ describe('PageMap functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ entry: fc.string(), label: fc.string({ minLength: 1, maxLength: 50 }), role: fc.string({ minLength: 1, maxLength: 50 }), machineRef: fc.string({ minLength: 1, maxLength: 50 }), widgetName: fc.string({ minLength: 1, maxLength: 50 }), currentState: fc.string({ minLength: 1, maxLength: 50 }), validEvents: fc.string({ minLength: 1, maxLength: 50 }), conceptBinding: fc.string(), affordanceServes: fc.string(), hostRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ entry: fc.string(), label: fc.string({ minLength: 1, maxLength: 50 }), role: fc.string({ minLength: 1, maxLength: 50 }), machineRef: fc.string({ minLength: 1, maxLength: 50 }), widgetName: fc.string({ minLength: 1, maxLength: 50 }), currentState: fc.string({ minLength: 1, maxLength: 50 }), validEvents: fc.string({ minLength: 1, maxLength: 50 }), conceptBinding: fc.string(), affordanceServes: fc.string(), hostRef: fc.string({ minLength: 1, maxLength: 50 }), viewName: fc.string(), viewPurpose: fc.string(), viewPurity: fc.string(), viewInvokedActions: fc.string() }) }),
               fc.record({ action: fc.constant('update'), input: fc.record({ entry: fc.string(), currentState: fc.string({ minLength: 1, maxLength: 50 }), validEvents: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('find'), input: fc.record({ entry: fc.string(), label: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('findByRole'), input: fc.record({ role: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('findByConcept'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('findByWidget'), input: fc.record({ widgetName: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByView'), input: fc.record({ viewName: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({ hostRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('clear'), input: fc.record({ hostRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
@@ -927,12 +1016,13 @@ describe('PageMap functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('register'), input: fc.record({ entry: fc.string(), label: fc.string({ minLength: 1, maxLength: 50 }), role: fc.string({ minLength: 1, maxLength: 50 }), machineRef: fc.string({ minLength: 1, maxLength: 50 }), widgetName: fc.string({ minLength: 1, maxLength: 50 }), currentState: fc.string({ minLength: 1, maxLength: 50 }), validEvents: fc.string({ minLength: 1, maxLength: 50 }), conceptBinding: fc.string(), affordanceServes: fc.string(), hostRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ entry: fc.string(), label: fc.string({ minLength: 1, maxLength: 50 }), role: fc.string({ minLength: 1, maxLength: 50 }), machineRef: fc.string({ minLength: 1, maxLength: 50 }), widgetName: fc.string({ minLength: 1, maxLength: 50 }), currentState: fc.string({ minLength: 1, maxLength: 50 }), validEvents: fc.string({ minLength: 1, maxLength: 50 }), conceptBinding: fc.string(), affordanceServes: fc.string(), hostRef: fc.string({ minLength: 1, maxLength: 50 }), viewName: fc.string(), viewPurpose: fc.string(), viewPurity: fc.string(), viewInvokedActions: fc.string() }) }),
               fc.record({ action: fc.constant('update'), input: fc.record({ entry: fc.string(), currentState: fc.string({ minLength: 1, maxLength: 50 }), validEvents: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('find'), input: fc.record({ entry: fc.string(), label: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('findByRole'), input: fc.record({ role: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('findByConcept'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('findByWidget'), input: fc.record({ widgetName: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByView'), input: fc.record({ viewName: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({ hostRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('clear'), input: fc.record({ hostRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
@@ -952,6 +1042,44 @@ describe('PageMap functional handler', () => {
                   expect(typeof result.variant).toBe('string');
                 }
                 // Never: duplicate labels in same host
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('always: view entries have consistent purity', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('register'), input: fc.record({ entry: fc.string(), label: fc.string({ minLength: 1, maxLength: 50 }), role: fc.string({ minLength: 1, maxLength: 50 }), machineRef: fc.string({ minLength: 1, maxLength: 50 }), widgetName: fc.string({ minLength: 1, maxLength: 50 }), currentState: fc.string({ minLength: 1, maxLength: 50 }), validEvents: fc.string({ minLength: 1, maxLength: 50 }), conceptBinding: fc.string(), affordanceServes: fc.string(), hostRef: fc.string({ minLength: 1, maxLength: 50 }), viewName: fc.string(), viewPurpose: fc.string(), viewPurity: fc.string(), viewInvokedActions: fc.string() }) }),
+              fc.record({ action: fc.constant('update'), input: fc.record({ entry: fc.string(), currentState: fc.string({ minLength: 1, maxLength: 50 }), validEvents: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('find'), input: fc.record({ entry: fc.string(), label: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByRole'), input: fc.record({ role: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByConcept'), input: fc.record({ concept: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByWidget'), input: fc.record({ widgetName: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('findByView'), input: fc.record({ viewName: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('list'), input: fc.record({ hostRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('clear'), input: fc.record({ hostRef: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = pageMapHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(pageMapHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
               }
             }
           },

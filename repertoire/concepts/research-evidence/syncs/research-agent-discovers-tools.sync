@@ -1,0 +1,41 @@
+# When a ResearchProject is created, register the research-specific tool
+# bindings so any AgentSession spawned for this project can discover
+# capture, search, and citation tools through the standard ToolBinding
+# registry without hardcoding tool availability per session.
+
+sync ResearchAgentDiscoversTools [eventual] [integration]
+  purpose: "Register research-specific tool bindings (capture, search, snippet selection) when a ResearchProject is created so agent sessions spawned for research steps can discover and invoke them via the standard ToolBinding registry."
+when {
+  ResearchProject/create: [
+    query: ?query;
+    deliverable_type: ?dtype;
+    constraints: ?constraints;
+    perspectives: ?perspectives;
+    budget: ?budget
+  ]
+    => ok(project: ?proj)
+}
+then {
+  ToolBinding/register: [
+    name: "capture_source";
+    schema: "{\"url\":\"string\",\"mode\":\"string\",\"metadata\":\"string\"}";
+    tool_type: "concept_action";
+    target: "Capture/clip"
+  ]
+}
+then {
+  ToolBinding/register: [
+    name: "search_index";
+    schema: "{\"query\":\"string\",\"k\":\"number\"}";
+    tool_type: "concept_action";
+    target: "SearchIndex/query"
+  ]
+}
+then {
+  ToolBinding/register: [
+    name: "create_citation";
+    schema: "{\"claim_id\":\"string\",\"snippet_id\":\"string\",\"citation_key\":\"string\"}";
+    tool_type: "concept_action";
+    target: "Citation/link"
+  ]
+}

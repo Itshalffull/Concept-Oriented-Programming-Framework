@@ -1,0 +1,21 @@
+# When an AgentSession is spawned for a research project context,
+# recall relevant semantic memories from prior research so the agent
+# can build on past findings rather than rediscovering them from scratch.
+
+sync AgentMemoryRecallsEntries [eventual] [integration]
+  purpose: "Prime a new research AgentSession with relevant findings from prior completed projects by recalling semantic memories before the session's first step executes."
+when {
+  AgentSession/spawn: [personaPageId: ?persona; strategy: ?strategy; tools: ?tools; context: ?ctx]
+    => ok(session: ?session; agentLoopId: ?loop; conversationId: ?conv)
+}
+where {
+  Property: { ?persona key: "schema"; value: "agent-persona" }
+  guard(?ctx != "")
+}
+then {
+  AgentMemory/recall: [
+    query: ?ctx;
+    memory_type: "semantic";
+    k: 10
+  ]
+}

@@ -1,0 +1,35 @@
+# Register SchemaUsage entries when a ViewShell is created.
+# Tracks every field referenced in projection, filter, and sort specs
+# so FieldDefinition/remove can warn before destructive schema changes.
+# See §2.1 of the schema-editor-plan.md.
+
+sync FieldUsageOnViewCreate [eventual]
+  purpose: "Record each field used in a view's projection, filter, and sort so field-removal safety checks have accurate usage data"
+when {
+  ViewShell/create: [ id: ?view_id;
+                      schema: ?schema;
+                      projection: ?projection;
+                      filter: ?filter;
+                      sort: ?sort ] => [ ok: _ ]
+}
+where {
+  bind(?schema as ?schema_name)
+}
+then {
+  SchemaUsage/register: [ field: ?projection;
+                          usageType: "view";
+                          usageRef: ?view_id;
+                          usageLabel: "ViewShell projection" ]
+}
+then {
+  SchemaUsage/register: [ field: ?filter;
+                          usageType: "filter";
+                          usageRef: ?view_id;
+                          usageLabel: "ViewShell filter" ]
+}
+then {
+  SchemaUsage/register: [ field: ?sort;
+                          usageType: "sort";
+                          usageRef: ?view_id;
+                          usageLabel: "ViewShell sort" ]
+}

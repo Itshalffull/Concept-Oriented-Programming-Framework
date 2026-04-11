@@ -1,0 +1,65 @@
+derived ResearchNotebook [N] {
+
+  purpose {
+    Maintain a curated, provenance-linked knowledge store that combines
+    approved semantic memories derived from research findings with the
+    original captured sources and snippet evidence that ground them. Every
+    notebook entry carries a full lineage chain — from the memory fact back
+    through provenance records to the captured artifact — enabling future
+    research sessions to cite and re-evaluate prior knowledge.
+  }
+
+  composes {
+    AgentMemory [N]
+    Provenance [N]
+    Capture [N]
+    Snippet [N]
+  }
+
+  syncs {
+    required: [
+      memory-promotion-from-report,
+      agent-memory-recalls-entries
+    ]
+    recommended: [
+      source-indexes-for-retrieval
+    ]
+  }
+
+  surface {
+    action promoteToMemory(content: String, memory_type: String, metadata: String) {
+      matches: AgentMemory/remember(content: content, memory_type: memory_type, metadata: metadata)
+    }
+
+    action anchorMemoryToSource(url: String, mode: String) {
+      matches: Capture/clip(url: url, mode: mode)
+    }
+
+    action recordLineage(provenance: N, source: String, transformation: String) {
+      matches: Provenance/record(provenance: provenance, source: source, transformation: transformation)
+    }
+
+    query notebookEntries(query: String, limit: Int) -> AgentMemory/recall(query: query, memory_type: "semantic", k: limit)
+
+    query provenanceChainForEntry(provenance: N) -> Provenance/getChain(provenance: provenance)
+
+    query capturedSources() -> Capture/list()
+  }
+
+  principle {
+    after anchorMemoryToSource(url: "https://arxiv.org/abs/2501.00001", mode: "clip")
+    then recordLineage(provenance: ctx, source: ctx, transformation: "clip-and-excerpt")
+    then promoteToMemory(content: "LLMs achieve 95% accuracy on factual QA tasks",
+                         memory_type: "semantic",
+                         metadata: "{\"confidence\":0.92,\"tier\":\"semantic\"}")
+    then notebookEntries(query: "LLM accuracy", limit: n) includes the promoted fact
+    and  provenanceChainForEntry(provenance: ctx) traces back to the captured arxiv source
+  }
+
+  principle {
+    after promoteToMemory(content: "Cloud GPU costs declined 40% since 2022",
+                          memory_type: "semantic",
+                          metadata: "{\"confidence\":0.85,\"tier\":\"semantic\"}")
+    then notebookEntries(query: "GPU cost trends", limit: n) returns the promoted memory entry
+  }
+}

@@ -202,7 +202,9 @@ export const ClefProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const response = await invoke('DestinationCatalog', 'list', {});
     const records = Array.isArray(response.destinations)
       ? response.destinations as Destination[]
-      : [];
+      : typeof response.destinations === 'string'
+        ? JSON.parse(response.destinations) as Destination[]
+        : [];
     setDestinations(records);
     return records;
   }, [invoke]);

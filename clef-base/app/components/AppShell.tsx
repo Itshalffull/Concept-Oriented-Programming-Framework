@@ -21,7 +21,7 @@ export const AppShell: React.FC<{ children: React.ReactNode; sessionUser?: strin
   sessionUser = '',
 }) => {
   const { groupedDestinations, navigator, shell, theme } = useClef();
-  const { isInSpace, currentSpace, spaceStack } = useActiveSpace('current-user');
+  const { isInSpace, currentSpace, spaceStack } = useActiveSpace(sessionUser || 'current-user');
 
   // Map grouped destinations → Sidebar groups
   const sidebarGroups: SidebarGroup[] = groupedDestinations.map(g => ({

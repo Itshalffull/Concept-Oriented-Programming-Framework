@@ -1,0 +1,190 @@
+@version(1)
+widget source-capture {
+
+  purpose {
+    Action-trigger widget for clipping a web page or PDF selection into a
+    Source content node and associated Snippet. Accepts a URL and optional
+    selected text, dispatches to Capture/clip, and provides visual feedback
+    through capturing and captured states. Used in browser extension panels
+    and research workspace sidebars to rapidly ingest evidence sources.
+  }
+
+  anatomy {
+    root:             container  { Outermost capture panel wrapper }
+    urlInput:         interactive { Text field for the source URL or document path }
+    selectionPreview: container  { Read-only preview of the selected text or page excerpt }
+    captureButton:    action     { Primary action button to trigger the clip operation }
+    feedbackBanner:   container  { Status message shown after capture completes or fails }
+  }
+
+  states {
+    idle [initial] {
+      on CAPTURE -> capturing;
+    }
+
+    capturing {
+      on CAPTURE_COMPLETE -> captured;
+      on CAPTURE_ERROR -> error;
+      entry [disableCaptureButton; showLoadingIndicator];
+      exit [enableCaptureButton; hideLoadingIndicator];
+    }
+
+    captured {
+      on RESET -> idle;
+      entry [showSuccessBanner];
+    }
+
+    error {
+      on RETRY -> capturing;
+      on RESET -> idle;
+      entry [showErrorBanner];
+      exit [clearErrorBanner];
+    }
+  }
+
+  accessibility {
+    role: form;
+    keyboard {
+      Enter -> CAPTURE;
+      Escape -> RESET;
+    }
+    focus {
+      trap: false;
+      initial: urlInput;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "form";
+        aria-label: "Capture source";
+        aria-busy: if state == "capturing" then "true" else "false";
+      };
+      urlInput -> {
+        role: "textbox";
+        aria-label: "Source URL";
+        aria-required: "true";
+        aria-disabled: if state == "capturing" then "true" else "false";
+      };
+      selectionPreview -> {
+        role: "region";
+        aria-label: "Selected text preview";
+        aria-live: "polite";
+      };
+      captureButton -> {
+        role: "button";
+        aria-label: "Capture source";
+        aria-disabled: if state == "capturing" then "true" else "false";
+        aria-busy: if state == "capturing" then "true" else "false";
+      };
+      feedbackBanner -> {
+        role: "status";
+        aria-live: "polite";
+        aria-atomic: "true";
+      };
+    }
+  }
+
+  props {
+    uri: String = ""
+    selection_text: String = ""
+    locator: String = ""
+    autoCapture: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      aria-busy: if state == "capturing" then "true" else "false";
+    }
+    urlInput -> {
+      data-part: "url-input";
+      value: ?uri;
+      disabled: if state == "capturing" then true else false;
+      aria-disabled: if state == "capturing" then "true" else "false";
+      onKeyDown: if key == "Enter" then send(CAPTURE) else noop;
+    }
+    selectionPreview -> {
+      data-part: "selection-preview";
+      data-empty: if ?selection_text == "" then "true" else "false";
+      text: ?selection_text;
+    }
+    captureButton -> {
+      data-part: "capture-button";
+      disabled: if state == "capturing" then true else false;
+      data-loading: if state == "capturing" then "true" else "false";
+      onClick: send(CAPTURE);
+      aria-disabled: if state == "capturing" then "true" else "false";
+    }
+    feedbackBanner -> {
+      data-part: "feedback-banner";
+      data-visible: if state == "captured" or state == "error" then "true" else "false";
+      data-variant: if state == "captured" then "success" else if state == "error" then "error" else "none";
+    }
+  }
+
+  affordance {
+    serves: action-trigger;
+    specificity: 20;
+    when {
+      concept: "Capture";
+      action: "clip";
+    }
+    bind {
+      uri: uri;
+      selection_text: selection_text;
+    }
+  }
+
+  invariant {
+    example "capture transitions idle to capturing": {
+      after transition(from: "idle", event: "CAPTURE") -> ok
+      then root -> { data-state: "capturing" }
+      and captureButton -> { data-loading: "true" }
+    }
+
+    example "capture_complete transitions to captured": {
+      after transition(from: "capturing", event: "CAPTURE_COMPLETE") -> ok
+      then root -> { data-state: "captured" }
+      and feedbackBanner -> { data-visible: "true"; data-variant: "success" }
+    }
+
+    example "capture_error transitions to error": {
+      after transition(from: "capturing", event: "CAPTURE_ERROR") -> ok
+      then root -> { data-state: "error" }
+      and feedbackBanner -> { data-visible: "true"; data-variant: "error" }
+    }
+
+    example "reset from captured returns to idle": {
+      after transition(from: "captured", event: "RESET") -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    example "retry from error transitions to capturing": {
+      after transition(from: "error", event: "RETRY") -> ok
+      then root -> { data-state: "capturing" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        root -> { data-state: s.name }
+    }
+
+    never "capture button enabled during capturing": {
+      state == "capturing" and captureButton -> { disabled: "false" }
+    }
+
+    never "feedback banner visible in idle": {
+      state == "idle" and feedbackBanner -> { data-visible: "true" }
+    }
+
+    action captureButton.click {
+      requires: state == "idle"
+      ensures ok: state == "capturing"
+    }
+  }
+
+}

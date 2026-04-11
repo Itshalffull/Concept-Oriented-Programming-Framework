@@ -1,0 +1,29 @@
+view "deployment-overview" {
+  shell: "deployment-overview"
+
+  features {
+    projection
+  }
+
+  fixture default {
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+  }
+
+  purpose {
+    Version spaces acting as deployment environments — deploy
+    (promote) or rollback (archive) spaces.
+  }
+
+  invariants {
+    always "purity is read-only": {
+      purity = "read-only"
+    }
+
+    always "no invoke instructions": {
+      invokeCount = 0
+    }
+  }
+}

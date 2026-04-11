@@ -1,0 +1,202 @@
+@version(1)
+widget run-timeline {
+
+  purpose {
+    Timeline widget presenting the chronological sequence of orchestrator
+    steps for a process run. Each step node shows its status icon, label,
+    duration, tool call count, and retry indicator. The timeline transitions
+    to active when the run is in progress, animates as steps advance, and
+    renders in a completed or failed terminal state. Used in the research
+    progress panel and process run detail pages to give users visibility
+    into execution history.
+  }
+
+  anatomy {
+    root:            container  { Timeline outer wrapper }
+    timelineTrack:   container  { Horizontal or vertical track connecting step nodes }
+    stepNode:        container  { Individual step unit on the track }
+    stepIcon:        container  { Status icon for the step (pending/active/done/failed) }
+    stepLabel:       text       { Human-readable step name }
+    durationLabel:   text       { Step execution duration }
+    toolCallBadge:   container  { Count badge for tool calls made during the step }
+    retryIndicator:  container  { Badge showing retry count when step was retried }
+  }
+
+  states {
+    loading [initial] {
+      on LOAD_COMPLETE -> active;
+      on LOAD_COMPLETE_DONE -> completed;
+      on LOAD_COMPLETE_FAILED -> failed;
+    }
+
+    active {
+      on STEP_ADVANCE -> active;
+      on RUN_COMPLETE -> completed;
+      on RUN_FAIL -> failed;
+      entry [startStepAnimation];
+      exit [stopStepAnimation];
+    }
+
+    completed {
+      on RESET -> loading;
+    }
+
+    failed {
+      on RESET -> loading;
+    }
+  }
+
+  accessibility {
+    role: list;
+    keyboard {
+      ArrowRight -> FOCUS_NEXT_STEP;
+      ArrowLeft -> FOCUS_PREV_STEP;
+      Home -> FOCUS_FIRST_STEP;
+      End -> FOCUS_LAST_STEP;
+    }
+    focus {
+      trap: false;
+      initial: stepNode;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "list";
+        aria-label: "Process run timeline";
+        aria-busy: if state == "loading" or state == "active" then "true" else "false";
+      };
+      stepNode -> {
+        role: "listitem";
+        aria-label: concat(self.label, " — ", self.status, if self.duration then concat(", ", self.duration) else "");
+        aria-current: if self.isActive then "step" else none;
+        tabindex: if self.isFocused then "0" else "-1";
+      };
+      stepIcon -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      toolCallBadge -> {
+        role: "status";
+        aria-label: concat(self.count, " tool calls");
+      };
+      retryIndicator -> {
+        role: "status";
+        aria-label: concat("Retried ", self.count, " times");
+      };
+    }
+  }
+
+  props {
+    process_run_id: String
+    orientation: union "horizontal" | "vertical" = "horizontal"
+    showDuration: Bool = true
+    showToolCalls: Bool = true
+    showRetries: Bool = true
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-orientation: ?orientation;
+      aria-busy: if state == "loading" or state == "active" then "true" else "false";
+    }
+    timelineTrack -> {
+      data-part: "timeline-track";
+      data-orientation: ?orientation;
+    }
+    stepNode -> {
+      data-part: "step-node";
+      data-status: self.status;
+      data-active: if self.isActive then "true" else "false";
+      tabindex: if self.isFocused then "0" else "-1";
+      aria-current: if self.isActive then "step" else none;
+    }
+    stepIcon -> {
+      data-part: "step-icon";
+      data-status: self.status;
+      aria-hidden: "true";
+    }
+    stepLabel -> {
+      data-part: "step-label";
+      text: self.label;
+    }
+    durationLabel -> {
+      data-part: "duration-label";
+      data-visible: if ?showDuration and self.duration then "true" else "false";
+      text: self.duration;
+    }
+    toolCallBadge -> {
+      data-part: "tool-call-badge";
+      data-visible: if ?showToolCalls and self.toolCallCount > 0 then "true" else "false";
+      data-count: self.toolCallCount;
+    }
+    retryIndicator -> {
+      data-part: "retry-indicator";
+      data-visible: if ?showRetries and self.retryCount > 0 then "true" else "false";
+      data-count: self.retryCount;
+    }
+  }
+
+  affordance {
+    serves: timeline;
+    specificity: 20;
+    when {
+      concept: "ProcessRun";
+      view: "steps";
+    }
+    bind {
+      process_run_id: process_run_id;
+    }
+  }
+
+  invariant {
+    example "load_complete transitions to active": {
+      after transition(from: "loading", event: "LOAD_COMPLETE") -> ok
+      then root -> { data-state: "active" }
+    }
+
+    example "run_complete transitions active to completed": {
+      after transition(from: "active", event: "RUN_COMPLETE") -> ok
+      then root -> { data-state: "completed" }
+    }
+
+    example "run_fail transitions active to failed": {
+      after transition(from: "active", event: "RUN_FAIL") -> ok
+      then root -> { data-state: "failed" }
+    }
+
+    example "step_advance stays in active": {
+      after transition(from: "active", event: "STEP_ADVANCE") -> ok
+      then root -> { data-state: "active" }
+    }
+
+    example "reset from completed returns to loading": {
+      after transition(from: "completed", event: "RESET") -> ok
+      then root -> { data-state: "loading" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        root -> { data-state: s.name }
+    }
+
+    always "active step node has aria-current=step": {
+      forall n in stepNode:
+        if n.isActive then n -> { aria-current: "step" }
+    }
+
+    never "multiple step nodes marked active simultaneously": {
+      exists n1 in stepNode:
+        exists n2 in stepNode:
+          n1 != n2 and n1.isActive == true and n2.isActive == true
+    }
+
+    "Duration labels must show elapsed time for completed steps and running time for the active step";
+    "Tool call badges must only appear when the step made at least one tool call";
+  }
+
+}

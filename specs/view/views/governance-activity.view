@@ -1,0 +1,50 @@
+view "governance-activity" {
+  shell: "governance-activity"
+
+  features {
+    filter
+    sort
+    projection
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ContentNode\",\"action\":\"listBySchema\",\"params\":{\"schema\":\"GovernanceEvent\"}}"
+    }
+    filter: {
+      node: "{\"type\":\"eq\",\"field\":\"eventType\",\"value\":\"all\"}"
+    }
+    sort: {
+      keys: "[{\"field\":\"timestamp\",\"direction\":\"desc\"}]"
+    }
+    projection: {
+      fields: "[{\"key\":\"node\",\"label\":\"Event\"},{\"key\":\"eventType\",\"label\":\"Type\"},{\"key\":\"actor\",\"label\":\"Actor\"},{\"key\":\"target\",\"label\":\"Target\"},{\"key\":\"timestamp\",\"label\":\"Time\"}]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+  }
+
+  purpose {
+    Governance audit trail showing proposal votes, role changes,
+    and policy updates. Filterable by event type and date range.
+    Read-only — no inline write actions.
+  }
+
+  invariants {
+    always "purity is read-only": {
+      purity = "read-only"
+    }
+
+    always "no invoke instructions": {
+      invokeCount = 0
+    }
+
+    always "filter fields exist in source": {
+      forall f in filterFields:
+      f in sourceFields
+    }
+  }
+}

@@ -1,0 +1,38 @@
+view "schemas-list" {
+  shell: "schemas-list"
+
+  features {
+    filter
+    sort
+    projection
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"Schema\",\"action\":\"list\"}"
+    }
+    filter: {
+      node: "{\"type\":\"true\"}"
+    }
+    sort: {
+      keys: "[{\"field\":\"name\",\"direction\":\"asc\"}]"
+    }
+    projection: {
+      fields: "[]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+  }
+
+  purpose {
+    Browse composable data shapes applied to ContentNodes. A ContentNode's identity is the set of Schemas applied to it.
+  }
+
+  invariants {
+    always "purity is read-only": { purity = "read-only" }
+    always "no invoke instructions": { invokeCount = 0 }
+  }
+}

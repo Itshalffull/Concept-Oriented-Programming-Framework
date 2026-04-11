@@ -1,0 +1,62 @@
+derived CitationVerification [V] {
+
+  purpose {
+    Apply two-round quality checking to all citations in a research report —
+    first verifying claim support via NLI scoring, then detecting intermediate
+    hallucinations via a judge model — and gate report publication on achieving
+    the minimum quality threshold. The emergent guarantee: only reports whose
+    citations survive both verification rounds reach readers.
+  }
+
+  composes {
+    Citation [V]
+    EvaluationRun [V]
+    QualityGate [V]
+  }
+
+  syncs {
+    required: [
+      evaluation-gates-report-publish
+    ]
+    recommended: [
+      citation-verified-updates-claim
+    ]
+  }
+
+  surface {
+    action verifyAll(run: V, subject: String, evaluator_type: String) {
+      matches: EvaluationRun/run(run: run, subject: subject, evaluator_type: evaluator_type)
+    }
+
+    action gateOnQuality(gate: V, subject: String) {
+      matches: QualityGate/evaluate(gate: gate, subject: subject)
+    }
+
+    action overrideCitation(citation: V, verification_status: String, reason: String) {
+      matches: Citation/override(citation: citation, verification_status: verification_status, reason: reason)
+    }
+
+    query verificationSummary(subject: String) -> EvaluationRun/getSummary(subject: subject)
+
+    query gateStatus(gate: V) -> QualityGate/getStatus(gate: gate)
+
+    query citationsByStatus(claim_id: String) -> Citation/listByClaim(claim_id: claim_id)
+  }
+
+  principle {
+    after verifyAll(run: r, subject: "report-1", evaluator_type: "nli_cascade")
+    then verificationSummary(subject: "report-1") shows round-1 NLI results
+    and  verifyAll(run: r2, subject: "report-1", evaluator_type: "llm_judge")
+    then verificationSummary(subject: "report-1") shows round-2 hallucination results
+    and  gateOnQuality(gate: ctx, subject: "report-1")
+    then gateStatus(gate: ctx) reflects pass or fail based on coverage threshold
+  }
+
+  principle {
+    after verifyAll(run: r3, subject: "report-2", evaluator_type: "nli_cascade")
+    then citationsByStatus(claim_id: "report-2") lists citations below support threshold
+    and  overrideCitation(citation: ctx, verification_status: "manual_override",
+                          reason: "Domain expert confirmed relevance despite low NLI score")
+    then citationsByStatus(claim_id: "report-2") reflects the override
+  }
+}

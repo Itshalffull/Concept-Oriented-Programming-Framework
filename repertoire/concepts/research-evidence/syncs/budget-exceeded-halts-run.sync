@@ -1,0 +1,17 @@
+# When a ResearchProject's budget is exceeded, suspend the associated
+# ProcessRun so the research workflow stops consuming resources until
+# a human reviews and adjusts the budget or cancels the project.
+
+sync BudgetExceededHaltsRun [eager] [required]
+  purpose: "Suspend the process run when a ResearchProject budget limit is crossed, preventing runaway token or search-call consumption."
+when {
+  ResearchProject/updateBudgetUsage: [project: ?proj; tokens_delta: ?td; search_calls_delta: ?sd]
+    => budget_exceeded(resource: ?resource; limit: ?limit; current: ?current)
+}
+where {
+  ResearchProject: { ?proj process_run_id: ?run }
+  guard(?run != "")
+}
+then {
+  ProcessRun/suspend: [run: ?run]
+}

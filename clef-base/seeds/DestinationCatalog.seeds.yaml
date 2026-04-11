@@ -143,3 +143,10 @@ entries:
     href: /admin/workspaces
     icon: "▣"
     group: Surface
+  - destination: forms
+    name: forms
+    targetConcept: FormSpec
+    targetView: list
+    href: /admin/forms
+    icon: "form"
+    group: Design Tools

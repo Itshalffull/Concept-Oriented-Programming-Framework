@@ -1,0 +1,405 @@
+@version(1)
+widget view-tab-bar {
+
+  purpose {
+    Horizontal tab strip showing the saved views for a schema or data source. Each tab
+    displays a mode icon, the view name, and an unsaved-changes dot when the current
+    interactive state differs from the saved configuration. A trailing add-view button
+    creates a new view. A kebab menu button on each tab (or a right-click context menu)
+    opens a management popover with rename, duplicate, copy config, delete, lock, and
+    share actions. Views carry one of three collaboration modes: collaborative (shared,
+    editable by all), personal (private to the current user), and locked (visible to all
+    but read-only). Renaming is done with an inline input that replaces the tab name in
+    place.
+  }
+
+  anatomy {
+    root:             container    { Top-level wrapper for the tab strip }
+    tabList:          container    { Scrollable horizontal list of view tabs }
+    viewTab:          action       { Individual tab button for a saved view }
+    viewTabIcon:      presentation { Icon representing the view display mode type }
+    viewTabName:      text         { Display name of the saved view }
+    viewTabUnsavedDot: presentation { Dot indicator shown when the view has unsaved changes }
+    addViewButton:    action       { Button that creates a new blank view }
+    viewMenuButton:   action       { Kebab button on a tab that opens the view management popover }
+    viewMenuPopover:  container    { Floating popover panel with view management options }
+    renameOption:     action       { Popover item  - triggers inline rename of the view }
+    duplicateOption:  action       { Popover item  - duplicates the view with a new name }
+    copyConfigOption: action       { Popover item  - copies the view configuration to the clipboard }
+    deleteOption:     action       { Popover item  - deletes the view after confirmation }
+    lockOption:       action       { Popover item  - toggles view lock state (locked/collaborative) }
+    shareOption:      action       { Popover item  - changes view from personal to collaborative }
+    renameInput:      interactive  { Inline text input that replaces viewTabName during rename }
+  }
+
+  states {
+    idle [initial] {
+      on SELECT_TAB -> idle;
+      on OPEN_MENU -> menu-open;
+      on START_RENAME -> renaming;
+      on ADD_VIEW -> adding;
+    }
+
+    menu-open {
+      on CLOSE_MENU -> idle;
+      on START_RENAME -> renaming;
+      on CONFIRM_DUPLICATE -> idle;
+      on CONFIRM_DELETE -> idle;
+      on TOGGLE_LOCK -> idle;
+      on MAKE_SHARED -> idle;
+      on COPY_CONFIG -> idle;
+      on ESCAPE -> idle;
+      entry [positionPopover];
+      exit [closePopover];
+    }
+
+    renaming {
+      on CONFIRM_RENAME -> idle;
+      on CANCEL_RENAME -> idle;
+      on ESCAPE -> idle;
+      entry [focusRenameInput];
+      exit [blurRenameInput];
+    }
+
+    adding {
+      on ADD_CONFIRMED -> idle;
+      on CANCEL_ADD -> idle;
+      on ESCAPE -> idle;
+      entry [createNewView];
+    }
+  }
+
+  accessibility {
+    role: tablist;
+    keyboard {
+      ArrowLeft -> FOCUS_PREV_TAB;
+      ArrowRight -> FOCUS_NEXT_TAB;
+      Home -> FOCUS_FIRST_TAB;
+      End -> FOCUS_LAST_TAB;
+      Enter -> SELECT_TAB;
+      Space -> SELECT_TAB;
+      F2 -> START_RENAME;
+      Escape -> CANCEL_RENAME;
+      ContextMenu -> OPEN_MENU;
+    }
+    focus {
+      trap: false;
+      initial: viewTab;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "navigation";
+        aria-label: "Views";
+        data-state: state;
+      };
+      tabList -> {
+        role: "tablist";
+        aria-label: "Saved views";
+        aria-orientation: "horizontal";
+      };
+      viewTab -> {
+        role: "tab";
+        aria-selected: if self.id == ?activeViewId then "true" else "false";
+        aria-label: concat(self.name, if self.hasUnsaved then ", unsaved changes" else "", if self.isLocked then ", locked" else "", if self.isPersonal then ", personal view" else "");
+        tabindex: if self.id == ?activeViewId then "0" else "-1";
+      };
+      viewTabUnsavedDot -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      addViewButton -> {
+        role: "button";
+        aria-label: "Add new view";
+        aria-haspopup: "dialog";
+      };
+      viewMenuButton -> {
+        role: "button";
+        aria-label: concat("View options for ", self.name);
+        aria-haspopup: "menu";
+        aria-expanded: if state == "menu-open" and self.id == ?activeViewId then "true" else "false";
+      };
+      viewMenuPopover -> {
+        role: "menu";
+        aria-label: concat("Options for ", self.name);
+        aria-hidden: if state != "menu-open" then "true" else "false";
+      };
+      renameOption -> {
+        role: "menuitem";
+        aria-label: "Rename view";
+      };
+      duplicateOption -> {
+        role: "menuitem";
+        aria-label: "Duplicate view";
+      };
+      copyConfigOption -> {
+        role: "menuitem";
+        aria-label: "Copy view configuration";
+      };
+      deleteOption -> {
+        role: "menuitem";
+        aria-label: "Delete view";
+      };
+      lockOption -> {
+        role: "menuitemcheckbox";
+        aria-checked: if self.isLocked then "true" else "false";
+        aria-label: if self.isLocked then "Unlock view" else "Lock view";
+      };
+      shareOption -> {
+        role: "menuitem";
+        aria-label: "Share view with everyone";
+        aria-disabled: if not self.isPersonal then "true" else "false";
+      };
+      renameInput -> {
+        role: "textbox";
+        aria-label: "View name";
+        aria-multiline: "false";
+      };
+    }
+  }
+
+  props {
+    views: list { id: String, name: String, type: String, mode: String, isActive: Bool, hasUnsaved: Bool, isLocked: Bool, isPersonal: Bool } = []
+    activeViewId: String = ""
+    onSelect: option String
+    onAdd: option String
+    onRename: option String
+    onDuplicate: option String
+    onDelete: option String
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+    }
+
+    tabList -> {
+      data-part: "tab-list";
+    }
+
+    viewTab -> {
+      data-part: "view-tab";
+      data-view-id: self.id;
+      data-mode: self.mode;
+      data-active: if self.id == ?activeViewId then "true" else "false";
+      data-unsaved: if self.hasUnsaved then "true" else "false";
+      data-locked: if self.isLocked then "true" else "false";
+      data-personal: if self.isPersonal then "true" else "false";
+      tabindex: if self.id == ?activeViewId then "0" else "-1";
+      onClick: send(SELECT_TAB, { viewId: self.id });
+      onKeyDown: if key == "ArrowLeft" then send(FOCUS_PREV_TAB) else if key == "ArrowRight" then send(FOCUS_NEXT_TAB) else if key == "Home" then send(FOCUS_FIRST_TAB) else if key == "End" then send(FOCUS_LAST_TAB) else if key == "F2" then send(START_RENAME, { viewId: self.id }) else if key == "ContextMenu" then send(OPEN_MENU, { viewId: self.id }) else noop;
+      onContextMenu: send(OPEN_MENU, { viewId: self.id });
+    }
+
+    viewTabIcon -> {
+      data-part: "view-tab-icon";
+      data-mode: self.mode;
+    }
+
+    viewTabName -> {
+      data-part: "view-tab-name";
+      text: self.name;
+      hidden: if state == "renaming" and self.id == ?activeViewId then true else false;
+    }
+
+    viewTabUnsavedDot -> {
+      data-part: "view-tab-unsaved-dot";
+      data-visible: if self.hasUnsaved then "true" else "false";
+      hidden: if not self.hasUnsaved then true else false;
+    }
+
+    addViewButton -> {
+      data-part: "add-view-button";
+      onClick: send(ADD_VIEW);
+    }
+
+    viewMenuButton -> {
+      data-part: "view-menu-button";
+      data-view-id: self.id;
+      onClick: send(OPEN_MENU, { viewId: self.id });
+      onKeyDown: if key == "Enter" or key == "Space" then send(OPEN_MENU, { viewId: self.id }) else if key == "Escape" then send(CLOSE_MENU) else noop;
+    }
+
+    viewMenuPopover -> {
+      data-part: "view-menu-popover";
+      data-visible: if state == "menu-open" then "true" else "false";
+      hidden: if state != "menu-open" then true else false;
+    }
+
+    renameOption -> {
+      data-part: "rename-option";
+      onClick: send(START_RENAME, { viewId: ?activeViewId });
+      onKeyDown: if key == "Enter" or key == "Space" then send(START_RENAME, { viewId: ?activeViewId }) else noop;
+    }
+
+    duplicateOption -> {
+      data-part: "duplicate-option";
+      onClick: send(CONFIRM_DUPLICATE, { viewId: ?activeViewId });
+    }
+
+    copyConfigOption -> {
+      data-part: "copy-config-option";
+      onClick: send(COPY_CONFIG, { viewId: ?activeViewId });
+    }
+
+    deleteOption -> {
+      data-part: "delete-option";
+      onClick: send(CONFIRM_DELETE, { viewId: ?activeViewId });
+      data-disabled: if self.isLocked then "true" else "false";
+      disabled: if self.isLocked then true else false;
+    }
+
+    lockOption -> {
+      data-part: "lock-option";
+      data-locked: if self.isLocked then "true" else "false";
+      onClick: send(TOGGLE_LOCK, { viewId: ?activeViewId });
+    }
+
+    shareOption -> {
+      data-part: "share-option";
+      data-disabled: if not self.isPersonal then "true" else "false";
+      disabled: if not self.isPersonal then true else false;
+      onClick: if self.isPersonal then send(MAKE_SHARED, { viewId: ?activeViewId }) else noop;
+    }
+
+    renameInput -> {
+      data-part: "rename-input";
+      hidden: if state != "renaming" then true else false;
+      onKeyDown: if key == "Enter" then send(CONFIRM_RENAME, { name: self.value }) else if key == "Escape" then send(CANCEL_RENAME) else noop;
+      onBlur: send(CANCEL_RENAME);
+    }
+  }
+
+  invariant {
+    example "select a view tab": {
+      after viewTab.click({ viewId: "view-2" }) -> ok
+      then root -> { data-state: "idle" }
+      and viewTab.view-2 -> { data-active: "true" }
+      and viewTab.view-1 -> { data-active: "false" }
+    }
+
+    example "open menu then rename": {
+      after viewMenuButton.click({ viewId: "view-1" }) -> ok
+      then root -> { data-state: "menu-open" }
+      and viewMenuPopover -> { data-visible: "true" }
+      then renameOption.click -> ok
+      then root -> { data-state: "renaming" }
+      and renameInput -> { hidden: false }
+      and viewTabName -> { hidden: true }
+      then renameInput.keydown({ key: "Enter", value: "My Renamed View" }) -> ok
+      then root -> { data-state: "idle" }
+      and viewTabName -> { hidden: false }
+    }
+
+    example "escape closes menu": {
+      after viewMenuButton.click({ viewId: "view-1" }) -> ok
+      then root -> { data-state: "menu-open" }
+      then send(ESCAPE) -> ok
+      then root -> { data-state: "idle" }
+      and viewMenuPopover -> { data-visible: "false" }
+    }
+
+    example "escape cancels rename": {
+      after viewTab.keydown({ key: "F2", viewId: "view-1" }) -> ok
+      then root -> { data-state: "renaming" }
+      then renameInput.keydown({ key: "Escape" }) -> ok
+      then root -> { data-state: "idle" }
+      and viewTabName -> { hidden: false }
+    }
+
+    example "duplicate view from menu": {
+      after viewMenuButton.click({ viewId: "view-1" }) -> ok
+      then root -> { data-state: "menu-open" }
+      then duplicateOption.click -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    example "unsaved dot visible when view has unsaved changes": {
+      after viewTab -> { data-unsaved: "true" }
+      then viewTabUnsavedDot -> { data-visible: "true" }
+    }
+
+    example "share option disabled for collaborative view": {
+      after viewMenuButton.click({ viewId: "view-collab" }) -> ok
+      then shareOption -> { data-disabled: "true" }
+    }
+
+    example "delete option disabled for locked view": {
+      after viewMenuButton.click({ viewId: "view-locked" }) -> ok
+      then deleteOption -> { data-disabled: "true" }
+    }
+
+    always "data-state on root reflects FSM": {
+      root -> { data-state: state }
+    }
+
+    always "exactly one viewTab is active": {
+      forall tab in viewTab:
+        tab -> { data-active: if tab.id == ?activeViewId then "true" else "false" }
+    }
+
+    always "viewMenuPopover visible only in menu-open state": {
+      viewMenuPopover -> { data-visible: if state == "menu-open" then "true" else "false" }
+    }
+
+    always "renameInput visible only in renaming state": {
+      renameInput -> { hidden: if state != "renaming" then true else false }
+    }
+
+    always "unsaved dot matches view hasUnsaved flag": {
+      forall tab in viewTab:
+        tab.viewTabUnsavedDot -> { data-visible: if tab.hasUnsaved then "true" else "false" }
+    }
+
+    never "two viewTabs simultaneously active": {
+      exists t1 in viewTab:
+        exists t2 in viewTab:
+          t1 != t2 and t1 -> { data-active: "true" } and t2 -> { data-active: "true" }
+    }
+
+    never "menu open and renaming simultaneously": {
+      state == "menu-open" and state == "renaming"
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    action viewTab.click {
+      requires: state == "idle"
+      ensures ok: ?activeViewId == self.id
+    }
+
+    action viewMenuButton.click {
+      requires: state == "idle"
+      ensures ok: state == "menu-open"
+    }
+
+    action renameOption.click {
+      requires: state == "menu-open"
+      ensures ok: state == "renaming"
+    }
+
+    action renameInput.enter {
+      requires: state == "renaming"
+      ensures ok: state == "idle"
+      ensures ok: ViewShell/rename called with { viewId: ?activeViewId, name: self.value }
+    }
+
+    "SELECT_TAB calls ViewShell/activate with the selected viewId";
+    "CONFIRM_RENAME calls ViewShell/rename with the new name and closes the renameInput";
+    "CONFIRM_DUPLICATE calls ViewShell/duplicate with the active viewId";
+    "CONFIRM_DELETE calls ViewShell/remove with the active viewId; disabled when isLocked is true";
+    "TOGGLE_LOCK calls ViewShell/setLocked toggling between locked and collaborative modes";
+    "MAKE_SHARED calls ViewShell/makeShared converting a personal view to collaborative";
+    "COPY_CONFIG serializes the view configuration to the clipboard as JSON";
+    "ADD_VIEW calls ViewShell/create and immediately enters renaming state for the new view";
+    "Right-click on viewTab dispatches OPEN_MENU for the same view as the kebab button";
+    "Roving tabindex on viewTab: active view tab gets tabindex=0, all others get tabindex=-1";
+    "Locked views show a lock icon in the viewTabIcon or as a data-locked attribute; delete and share options are disabled";
+    "Personal views are only visible to the current user  - they render with data-personal=true on viewTab";
+    "viewTabIcon data-mode attribute maps to the view type icon (table, board, calendar, timeline, gallery, list, graph)";
+    "When renaming, the renameInput replaces the viewTabName within the same tab  - the tab keeps its position in tabList";
+  }
+
+}

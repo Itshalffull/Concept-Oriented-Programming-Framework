@@ -1,0 +1,195 @@
+@version(1)
+widget citation-inspector {
+
+  purpose {
+    Detail-popover widget that surfaces the full evidential context of a
+    citation: the snippet excerpt, source title, retrieval timestamp,
+    credibility badge, and support score. Appears when the user activates
+    an inline citation marker in a report block. Connects to Citation/get
+    and Snippet/resolve to load data on demand.
+  }
+
+  anatomy {
+    root:             container  { Floating popover container anchored to the citation marker }
+    header:           container  { Top bar with citation key and close button }
+    excerptBlock:     container  { Formatted display of the snippet text excerpt }
+    credibilityBadge: container  { Trust-tier indicator for the source }
+    supportScoreBar:  container  { Visual bar representing the citation support score 0–1 }
+    sourceLink:       action     { Clickable link to the original source page }
+    timestampLabel:   text       { Source retrieval timestamp }
+    closeButton:      action     { Dismiss the popover }
+    errorMessage:     text       { Error description shown in the error state }
+  }
+
+  states {
+    loading [initial] {
+      on LOAD_COMPLETE -> loaded;
+      on LOAD_ERROR -> error;
+      entry [fetchCitationData];
+    }
+
+    loaded {
+      on CLOSE -> loading;
+      on OPEN_SOURCE -> loaded;
+    }
+
+    error {
+      on RETRY -> loading;
+      on CLOSE -> loading;
+    }
+  }
+
+  accessibility {
+    role: dialog;
+    keyboard {
+      Escape -> CLOSE;
+      Tab -> FOCUS_NEXT;
+    }
+    focus {
+      trap: true;
+      initial: header;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "dialog";
+        aria-label: "Citation details";
+        aria-modal: "true";
+        aria-busy: if state == "loading" then "true" else "false";
+      };
+      header -> {
+        role: "heading";
+        aria-level: "2";
+      };
+      excerptBlock -> {
+        role: "region";
+        aria-label: "Source excerpt";
+      };
+      credibilityBadge -> {
+        role: "status";
+        aria-label: concat("Source credibility: ", self.tier);
+      };
+      supportScoreBar -> {
+        role: "meter";
+        aria-label: "Support score";
+        aria-valuemin: "0";
+        aria-valuemax: "1";
+        aria-valuenow: self.score;
+      };
+      sourceLink -> {
+        role: "link";
+        aria-label: concat("Open source: ", self.title);
+      };
+      closeButton -> {
+        role: "button";
+        aria-label: "Close citation inspector";
+      };
+      errorMessage -> {
+        role: "alert";
+        aria-live: "assertive";
+      };
+    }
+  }
+
+  props {
+    citation_id: String
+    open: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      aria-busy: if state == "loading" then "true" else "false";
+      hidden: if not ?open then true else false;
+    }
+    header -> {
+      data-part: "header";
+    }
+    excerptBlock -> {
+      data-part: "excerpt-block";
+      data-visible: if state == "loaded" then "true" else "false";
+    }
+    credibilityBadge -> {
+      data-part: "credibility-badge";
+      data-visible: if state == "loaded" then "true" else "false";
+      data-tier: self.tier;
+    }
+    supportScoreBar -> {
+      data-part: "support-score-bar";
+      data-visible: if state == "loaded" then "true" else "false";
+      data-score: self.score;
+    }
+    sourceLink -> {
+      data-part: "source-link";
+      data-visible: if state == "loaded" then "true" else "false";
+      onClick: send(OPEN_SOURCE);
+    }
+    timestampLabel -> {
+      data-part: "timestamp-label";
+      data-visible: if state == "loaded" then "true" else "false";
+      text: self.retrieved_at;
+    }
+    closeButton -> {
+      data-part: "close-button";
+      onClick: send(CLOSE);
+      onKeyDown: if key == "Escape" then send(CLOSE) else noop;
+    }
+    errorMessage -> {
+      data-part: "error-message";
+      data-visible: if state == "error" then "true" else "false";
+      text: self.errorText;
+    }
+  }
+
+  affordance {
+    serves: detail-popover;
+    specificity: 25;
+    when {
+      concept: "Citation";
+    }
+    bind {
+      citation_id: citation_id;
+    }
+  }
+
+  invariant {
+    example "load_complete transitions loading to loaded": {
+      after transition(from: "loading", event: "LOAD_COMPLETE") -> ok
+      then root -> { data-state: "loaded" }
+      and excerptBlock -> { data-visible: "true" }
+    }
+
+    example "load_error transitions loading to error": {
+      after transition(from: "loading", event: "LOAD_ERROR") -> ok
+      then root -> { data-state: "error" }
+      and errorMessage -> { data-visible: "true" }
+    }
+
+    example "retry transitions error to loading": {
+      after transition(from: "error", event: "RETRY") -> ok
+      then root -> { data-state: "loading" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        root -> { data-state: s.name }
+    }
+
+    always "excerpt hidden when not loaded": {
+      if state != "loaded" then excerptBlock -> { data-visible: "false" }
+    }
+
+    never "error message visible when loaded": {
+      state == "loaded" and errorMessage -> { data-visible: "true" }
+    }
+
+    "Focus must be trapped inside the popover while open";
+    "Support score bar aria-valuenow must reflect the loaded citation support score";
+    "Close button must always be reachable by keyboard regardless of load state";
+  }
+
+}

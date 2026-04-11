@@ -1,0 +1,57 @@
+view "agent-library" {
+  shell: "agent-library"
+
+  features {
+    filter
+    sort
+    projection
+    interaction
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ContentNode\",\"action\":\"listBySchema\",\"params\":{\"schema\":\"AgentPersona\"}}"
+    }
+    filter: {
+      node: "{\"type\":\"eq\",\"field\":\"capability\",\"value\":\"all\"}"
+    }
+    sort: {
+      keys: "[{\"field\":\"name\",\"direction\":\"asc\"}]"
+    }
+    projection: {
+      fields: "[{\"key\":\"node\",\"label\":\"Agent\"},{\"key\":\"name\",\"label\":\"Name\"},{\"key\":\"capability\",\"label\":\"Capability\"},{\"key\":\"status\",\"label\":\"Status\"}]"
+    }
+
+    presentation: {
+      displayType: "card-grid",
+      hints: "{}"
+    }
+  }
+
+  purpose {
+    Browse and manage agent persona cards with filtering by
+    capability and status. Read-write — supports creating and
+    editing agent personas inline.
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+
+    always "invokes only ContentNode actions": {
+      forall ia in invokedActions:
+      ia startsWith "ContentNode/"
+    }
+
+    always "all invoke variants covered": {
+      uncoveredVariants = []
+    }
+
+    always "filter fields exist in source": {
+      forall f in filterFields:
+      f in sourceFields
+    }
+  }
+}

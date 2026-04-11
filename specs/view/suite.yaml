@@ -101,15 +101,6 @@ syncs:
     - path: ../../syncs/view/compile-remote-query.sync
       description: "Compiles QueryPrograms for remote data sources and routes to remote executor"
 
-    - path: ../../syncs/view/execute-invoke.sync
-      description: "Dispatches invoke instructions from QueryExecution to Connection/invoke"
-
-    - path: ../../syncs/view/invoke-complete.sync
-      description: "Feeds Connection/invoke completion back to QueryExecution/resumeAfterInvoke"
-
-    - path: ../../syncs/view/analyze-on-seal.sync
-      description: "Triggers static analysis providers when a QueryProgram is sealed"
-
   # --- Remote query execution provider ---
 
   RemoteQueryProvider:
@@ -117,35 +108,3 @@ syncs:
     params:
       R: { as: provider, description: "Remote query execution provider" }
     recommended: true
-
-  # --- Static analysis providers ---
-
-  InvokeEffectProvider:
-    spec: ./providers/invoke-effect-provider.concept
-    params:
-      T: { as: invoke-effect, description: "Invoke effect analysis result" }
-    recommended: true
-
-  QueryPurityProvider:
-    spec: ./providers/query-purity-provider.concept
-    params:
-      R: { as: purity, description: "Query purity analysis result" }
-    recommended: true
-
-  QueryCompletionCoverage:
-    spec: ./providers/query-completion-coverage.concept
-    params:
-      C: { as: coverage, description: "Query completion coverage result" }
-    recommended: true
-
-  # --- View invariant manifests ---
-
-views:
-  - path: ./views/content-list.view
-    description: "Content listing view — read-only, schema-filtered"
-
-  - path: ./views/content-list-actions.view
-    description: "Content listing with inline create — read-write"
-
-  - path: ./views/simple-list.view
-    description: "Minimal data listing — read-only, no filtering"

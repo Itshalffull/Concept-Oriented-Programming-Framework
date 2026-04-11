@@ -3,12 +3,19 @@ suite:
   version: 0.1.0
   description: >
     Cross-cutting lifecycle behaviors for all persistent entities.
-    Contains zero concepts — only syncs that fire on ContentStorage
-    completions. Seven syncs cover cache invalidation, search indexing,
-    URL alias generation, provenance tracking, backlink reindexing,
-    cascade deletion, and date-field references to daily notes.
+    Syncs fire on ContentStorage completions for cache invalidation,
+    search indexing, URL alias generation, provenance tracking, backlink
+    reindexing, cascade deletion, date-field references to daily notes,
+    and schema field lifecycle management (usage tracking, template
+    application, form/placement updates).
 
-concepts: {}
+concepts:
+  - name: FieldDefinition
+    description: "Typed field within a schema — atomic unit of content structure"
+  - name: SchemaTemplate
+    description: "Pre-built schema starting points for one-click content model creation"
+  - name: SchemaUsage
+    description: "Tracks where schema fields are referenced for safe destructive operations"
 
 syncs:
   recommended:
@@ -32,6 +39,24 @@ syncs:
 
     - path: ./syncs/date-fields-reference-daily-notes.sync
       description: "DateTime property values create references to daily note pages"
+
+    - path: ./syncs/field-usage-on-view-create.sync
+      description: "Register SchemaUsage when a view references a field"
+
+    - path: ./syncs/field-usage-on-mapping-create.sync
+      description: "Register SchemaUsage when a component mapping references a field"
+
+    - path: ./syncs/field-removal-checks-usage.sync
+      description: "Block field removal when SchemaUsage records exist"
+
+    - path: ./syncs/schema-template-creates-fields.sync
+      description: "Create FieldDefinition records when a SchemaTemplate is applied"
+
+    - path: ./syncs/field-create-updates-form.sync
+      description: "Update FormBuilder placement when a field is created"
+
+    - path: ./syncs/field-reorder-updates-placements.sync
+      description: "Update FieldPlacement sort orders when a field is reordered"
 
 uses:
   - suite: foundation

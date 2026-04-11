@@ -1,0 +1,18 @@
+# Backlink reindexing with namespace metadata from Reference.
+# When a reference carries namespace or qualifier metadata (e.g. from
+# [[draft-v2://article-1@v3]] wikilink syntax), the backlink record
+# receives that metadata so the backlinks panel can show per-branch context.
+
+sync BacklinkReindexWithNamespace [eventual]
+  purpose: "Propagate namespace and qualifier metadata from a Reference addition into the Backlink index so per-branch backlink context is preserved"
+when {
+  Reference/addRef: [ source: ?source; target: ?target; origin: ?origin ]
+    => [ ok(source: ?source, target: ?target) ]
+}
+where {
+  bind(?origin as ?metadata)
+  guard(?metadata != null)
+}
+then {
+  Backlink/reindex: [ source_id: ?source; metadata: ?metadata ]
+}

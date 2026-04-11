@@ -1,32 +1,110 @@
-# View resolution flow — when a ViewShell resolves, fan out to fetch all child specs in parallel
+# View resolution flow — when a ViewShell resolves, fan out to fetch child specs.
+# Always-on specs (dataSource, presentation) are fetched unconditionally.
+# Optional specs are fetched only when their feature is listed in the features field.
+# Views without a features field (empty string) default to all features enabled.
 
-sync ViewResolve [eager]
-  purpose: "Fan out to fetch all child spec configs in parallel once a ViewShell has been resolved to its constituent ref names."
+sync ViewResolveAlwaysOn [eager]
+  purpose: "Fetch the always-on child specs — DataSourceSpec and PresentationSpec — for any resolved ViewShell, since every view must have a data source and a display mode regardless of its features set."
 when {
   ViewShell/resolve: [ name: ?name ]
     => [ view: ?view ]
 }
 where {
-  ViewShell: { ?view dataSource: ?dataSource; filter: ?filter; sort: ?sort; group: ?group; projection: ?projection; presentation: ?presentation; interaction: ?interaction }
+  ViewShell: { ?view dataSource: ?dataSource; presentation: ?presentation }
 }
 then {
   DataSourceSpec/get: [ name: ?dataSource ]
 }
 then {
+  PresentationSpec/get: [ name: ?presentation ]
+}
+
+sync ViewResolveFilter [eager]
+  purpose: "Fetch the FilterSpec for a resolved ViewShell when the filter feature is enabled. Views that declare features without listing 'filter' skip this fetch entirely."
+when {
+  ViewShell/resolve: [ name: ?name ]
+    => [ view: ?view ]
+}
+where {
+  ViewShell: { ?view filter: ?filter; features: ?features }
+  guard(?features = "" or ?features contains "filter")
+  guard(?filter != "")
+}
+then {
   FilterSpec/get: [ name: ?filter ]
+}
+
+sync ViewResolveSort [eager]
+  purpose: "Fetch the SortSpec for a resolved ViewShell when the sort feature is enabled. Views that declare features without listing 'sort' skip this fetch entirely."
+when {
+  ViewShell/resolve: [ name: ?name ]
+    => [ view: ?view ]
+}
+where {
+  ViewShell: { ?view sort: ?sort; features: ?features }
+  guard(?features = "" or ?features contains "sort")
+  guard(?sort != "")
 }
 then {
   SortSpec/get: [ name: ?sort ]
 }
+
+sync ViewResolveGroup [eager]
+  purpose: "Fetch the GroupSpec for a resolved ViewShell when the group feature is enabled. Views that declare features without listing 'group' skip this fetch entirely."
+when {
+  ViewShell/resolve: [ name: ?name ]
+    => [ view: ?view ]
+}
+where {
+  ViewShell: { ?view group: ?group; features: ?features }
+  guard(?features = "" or ?features contains "group")
+  guard(?group != "")
+}
 then {
   GroupSpec/get: [ name: ?group ]
+}
+
+sync ViewResolveProjection [eager]
+  purpose: "Fetch the ProjectionSpec for a resolved ViewShell when the projection feature is enabled. Views that declare features without listing 'projection' skip this fetch entirely."
+when {
+  ViewShell/resolve: [ name: ?name ]
+    => [ view: ?view ]
+}
+where {
+  ViewShell: { ?view projection: ?projection; features: ?features }
+  guard(?features = "" or ?features contains "projection")
+  guard(?projection != "")
 }
 then {
   ProjectionSpec/get: [ name: ?projection ]
 }
-then {
-  PresentationSpec/get: [ name: ?presentation ]
+
+sync ViewResolveInteraction [eager]
+  purpose: "Fetch the InteractionSpec for a resolved ViewShell when the interaction feature is enabled. Views that declare features without listing 'interaction' skip this fetch entirely."
+when {
+  ViewShell/resolve: [ name: ?name ]
+    => [ view: ?view ]
+}
+where {
+  ViewShell: { ?view interaction: ?interaction; features: ?features }
+  guard(?features = "" or ?features contains "interaction")
+  guard(?interaction != "")
 }
 then {
   InteractionSpec/get: [ name: ?interaction ]
+}
+
+sync ViewResolvePagination [eager]
+  purpose: "Fetch the PaginationSpec for a resolved ViewShell when the pagination feature is enabled. Only views that explicitly list 'pagination' in their features set trigger this fetch."
+when {
+  ViewShell/resolve: [ name: ?name ]
+    => [ view: ?view ]
+}
+where {
+  ViewShell: { ?view pagination: ?pagination; features: ?features }
+  guard(?features contains "pagination")
+  guard(?pagination != "")
+}
+then {
+  PaginationSpec/get: [ name: ?pagination ]
 }

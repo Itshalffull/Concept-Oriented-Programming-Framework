@@ -90,3 +90,15 @@ entries:
 
   - name: snippet-backlinks-fields
     fields: '[{"key":"node","label":"Referencing Entity"},{"key":"type","label":"Reference Type","formatter":"badge"}]'
+
+  - name: branch-compare-fields
+    fields: '[{"key":"entity","label":"Entity"},{"key":"operation","label":"Change","formatter":"badge"},{"key":"fields","label":"Fields Changed"},{"key":"source","label":"Source Branch"},{"key":"target","label":"Target Branch"}]'
+
+  - name: entity-history-fields
+    fields: '[{"key":"versionId","label":"Revision"},{"key":"createdAt","label":"Date","formatter":"relative-date"},{"key":"author","label":"Author"},{"key":"summary","label":"Summary","formatter":"truncate"}]'
+
+  - name: form-list-fields
+    fields: '[{"key":"name","label":"Form Name"},{"key":"schema","label":"Schema","formatter":"badge"},{"key":"mode","label":"Mode","formatter":"badge"}]'
+
+  - name: form-editor-fields
+    fields: '[]'

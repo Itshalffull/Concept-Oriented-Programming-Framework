@@ -1,0 +1,54 @@
+view "automations-rules-list" {
+  shell: "automations-rules-list"
+
+  features {
+    filter
+    sort
+    projection
+    interaction
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"AutomationRule\",\"action\":\"list\"}"
+    }
+    filter: {
+      node: "{\"type\":\"true\"}"
+    }
+    sort: {
+      keys: "[]"
+    }
+    projection: {
+      fields: "[{\"key\":\"rule\",\"label\":\"Rule\"},{\"key\":\"trigger\",\"label\":\"Trigger\"},{\"key\":\"conditions\",\"label\":\"Conditions\"},{\"key\":\"enabled\",\"label\":\"Enabled\",\"formatter\":\"boolean-badge\"}]"
+    }
+    presentation: {
+      displayType: "table",
+      hints: "{}"
+    }
+    interaction: {
+      rowActions: "[{\"key\":\"edit\",\"concept\":\"AutomationRule\",\"action\":\"update\",\"label\":\"Edit\"}]"
+    }
+  }
+
+  purpose {
+    All automation rules configured in the system as a sortable
+    table. Read-write — supports create action.
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+
+    always "invokes only AutomationRule actions": {
+      forall ia in invokedActions:
+      ia startsWith "AutomationRule/"
+    }
+
+    always "filter fields exist in source": {
+      forall f in filterFields:
+      f in sourceFields
+    }
+  }
+}
