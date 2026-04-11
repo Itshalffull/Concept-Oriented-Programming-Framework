@@ -1,0 +1,14 @@
+# Run Validator constraints against an ActionBinding's input before execution proceeds
+
+sync PreflightValidation [eager]
+  purpose: "When ActionBinding/invoke fires, run Validator/validate on the input context so that registered constraints are checked before the target action executes"
+when {
+  ActionBinding/invoke: [ binding: ?b; context: ?ctx ]
+    => []
+}
+where {
+  ActionBinding: { ?b target: ?target; parameterMap: ?pm }
+}
+then {
+  Validator/validate: [ validator: ?target; data: ?ctx ]
+}

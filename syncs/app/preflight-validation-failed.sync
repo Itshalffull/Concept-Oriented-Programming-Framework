@@ -1,0 +1,13 @@
+# Short-circuit ActionBinding with the invalid variant when Validator reports constraint violations
+
+sync PreflightValidationFailed [eager]
+  purpose: "When Validator/validate returns valid: false, complete the pending ActionBinding with the invalid variant so the caller receives violations instead of a partial execution"
+when {
+  ActionBinding/invoke: [ binding: ?b ]
+    => []
+  Validator/validate: [ validator: ?target ]
+    => ok(valid: false; errors: ?e)
+}
+then {
+  ActionBinding/complete: [ binding: ?b; variant: "invalid"; violations: ?e ]
+}
