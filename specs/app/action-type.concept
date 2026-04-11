@@ -1,0 +1,134 @@
+@version(1)
+@category("ui-core")
+@visibility("public")
+concept ActionType [T] {
+
+  purpose {
+    Classify action interactions by semantic purpose, independent of any concrete
+    widget. Determines whether an action is a one-shot invocation, a commit that
+    finalizes pending input, or a fire-and-forget background trigger. Produces a
+    type string that Affordance matches on — the action-domain counterpart to
+    Interactor, which classifies field interactions.
+  }
+
+  state {
+    types: set T
+    identity {
+      name: T -> String
+      properties: T -> String
+    }
+  }
+
+  actions {
+    action define(actionType: T, name: String, properties: String) {
+      -> ok(actionType: T) {
+        Register a new action type with the given name and classification
+        properties. The actionType becomes available for classify() to match on.
+      }
+      -> duplicate(message: String) {
+        An action type with this identifier already exists.
+      }
+
+      fixture define_invoke {
+        actionType: "invoke"
+        name: "invoke"
+        properties: "{\"semantics\": \"one-shot\", \"reversibility\": \"irreversible\", \"async\": false}"
+      }
+      fixture define_commit {
+        actionType: "commit"
+        name: "commit"
+        properties: "{\"semantics\": \"finalize\", \"reversibility\": \"irreversible\", \"async\": false}"
+      }
+      fixture define_trigger {
+        actionType: "trigger"
+        name: "trigger"
+        properties: "{\"semantics\": \"fire-and-forget\", \"reversibility\": \"irreversible\", \"async\": true}"
+      }
+      fixture define_duplicate {
+        actionType: "invoke"
+        name: "invoke"
+        properties: "{}"
+      } after define_invoke -> duplicate
+    }
+
+    action classify(target: String, variants: String, context: String) {
+      -> ok(actionType: T, confidence: Float) {
+        Determine the action type by examining the target action's variant set
+        and surrounding context. Returns the best-matching type and a confidence
+        score between 0.0 and 1.0. Defaults to invoke when no stronger signal
+        is present.
+      }
+      -> ambiguous(actionType: T, candidates: String) {
+        Multiple action types match the variant set and context with equal
+        confidence. The candidates field is a JSON array of type/confidence pairs.
+      }
+
+      fixture classify_button {
+        target: "Task/complete"
+        variants: "[\"ok\",\"error\"]"
+        context: "{}"
+      } after define_invoke
+      fixture classify_form_submit {
+        target: "Invoice/submit"
+        variants: "[\"ok\",\"error\",\"invalid\"]"
+        context: "{\"formFlow\": true}"
+      } after define_commit
+      fixture classify_background {
+        target: "Report/generate"
+        variants: "[\"ok\",\"error\"]"
+        context: "{\"async\": true}"
+      } after define_trigger
+    }
+
+    action get(actionType: T) {
+      -> ok(actionType: T, name: String, properties: String) {
+        Return the name and classification properties for the given action type.
+      }
+      -> notfound(message: String) {
+        No action type exists with this identifier.
+      }
+
+      fixture get_ok { actionType: $define_invoke.actionType } after define_invoke
+      fixture get_missing { actionType: "nonexistent" } -> notfound
+    }
+
+    action list() {
+      -> ok(actionTypes: String) {
+        Return all registered action types as a JSON array with their names
+        and property summaries.
+      }
+
+      fixture list_all {} after define_invoke
+    }
+  }
+
+  example "define then get": {
+    after define(actionType: t, name: "invoke",
+      properties: "{\"semantics\": \"one-shot\", \"async\": false}") -> ok(actionType: t)
+    then get(actionType: t) -> ok(name: "invoke")
+  }
+
+  example "define duplicate rejected": {
+    after define(actionType: t, name: "commit",
+      properties: "{\"semantics\": \"finalize\"}") -> ok(actionType: t)
+    then define(actionType: t, name: "commit",
+      properties: "{}") -> duplicate(message: _)
+  }
+
+  always "registered types have names": {
+    forall t in types: name(t) != none
+  }
+
+  never "orphaned type properties": {
+    exists t in types: properties(t) = none
+  }
+
+  action define {
+    requires: name != ""
+    ensures ok: actionType in types
+  }
+
+  action get {
+    requires: actionType in types
+  }
+}
