@@ -1,0 +1,16 @@
+# Validate ActionBinding parameter map references against the view's projected fields (PRD §4.12)
+
+sync ValidateActionParams [eager]
+  purpose: "Verify that an ActionBinding's parameter map references fields that exist in the view's projected columns, catching mismatches at configuration time rather than at click time."
+when {
+  InteractionSpec/addRowAction: [ name: ?specName; binding: ?bindingId ]
+    => ok(interaction: ?i)
+}
+where {
+  ViewShell: { ?v interaction: ?specName; projection: ?projName }
+}
+then {
+  ProjectionSpec/validate: [
+    projection: ?projName;
+    binding: ?bindingId ]
+}

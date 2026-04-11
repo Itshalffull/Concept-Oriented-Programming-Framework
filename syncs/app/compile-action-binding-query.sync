@@ -1,0 +1,22 @@
+# Build an invoke-bearing QueryProgram from an ActionBinding configuration
+
+sync CompileActionBindingQuery [eager]
+  purpose: "Build an invoke-bearing QueryProgram from an ActionBinding, wiring the target concept action into the query pipeline for inline edits, bulk ops, and optimistic creates."
+when {
+  ActionBinding/bind: [ binding: ?b; target: ?target; parameterMap: ?pm ]
+    => ok(binding: ?b)
+}
+where {
+  ActionBinding: { ?b target: ?target }
+}
+then {
+  QueryProgram/create: [ program: ?b ]
+}
+then {
+  QueryProgram/invoke: [
+    program: ?b;
+    concept: ?target;
+    action: ?target;
+    input: ?pm;
+    bindAs: "result" ]
+}
