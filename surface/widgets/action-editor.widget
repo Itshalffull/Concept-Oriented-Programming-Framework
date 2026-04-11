@@ -1,0 +1,393 @@
+@version(1)
+widget action-editor {
+
+  purpose {
+    Progressive disclosure action configuration editor used in ViewEditor,
+    SlotSourceEditor, page editor, and block editor. Starts as a minimal
+    single-action binder — concept picker, action picker, and parameter
+    mapper — then reveals a multi-step ProcessSpec editor when the builder
+    taps "+ Add another step". A "Convert to Workflow" escape hatch
+    transitions the editor to a workflow-reference mode for full automation
+    complexity. A preview panel alongside shows a variant simulation of the
+    configured action chain. Complexity is exposed on demand: the simplest
+    case requires only two selections; power users can compose arbitrarily
+    deep chains without a separate tool.
+  }
+
+  anatomy {
+    root:             container    { Top-level wrapper enclosing the entire editor surface }
+    header:           container    { Title row with a human-readable label and the current mode badge }
+    modeIndicator:    text         { Badge text showing the active editor mode: single, multi, or workflow }
+    conceptPicker:    interactive  { Dropdown for selecting the target concept from all registered concepts }
+    actionPicker:     interactive  { Dropdown for selecting an action filtered to the chosen concept }
+    parameterList:    container    { Vertical list of parameter binding rows for the selected action }
+    parameterRow:     container    { Single parameter binding: name label on the left, value picker on the right }
+    paramName:        text         { Read-only parameter name drawn from the action signature }
+    paramValue:       interactive  { Dropdown or expression editor for binding the parameter to a context value }
+    addStepButton:    action       { "+ Add another step" — reveals multi-step mode and appends a new step card }
+    stepList:         container    { Ordered list of step cards; hidden while mode is single-action }
+    stepCard:         container    { One step in the chain: its own concept/action/param editors and optional controls }
+    stepCondition:    interactive  { Optional "only when" condition expression for this step }
+    stepErrorHandler: interactive  { Optional error recovery action selector for this step }
+    convertButton:    action       { "Convert to Workflow" — transitions the editor to workflow-reference mode }
+    previewPanel:     container    { Side panel showing a variant simulation of the configured action or chain }
+  }
+
+  states {
+    singleAction [initial] {
+      on ADD_STEP  -> multiStep;
+      on SUBMIT    -> idle;
+      on EDIT      -> singleAction;
+      entry [hideStepList; hideConvertButton];
+    }
+
+    multiStep {
+      on REMOVE_LAST_STEP -> singleAction;
+      on CONVERT          -> workflow;
+      on SUBMIT           -> idle;
+      on EDIT             -> multiStep;
+      entry [showStepList; showConvertButton];
+      exit [clearTransientHighlights];
+    }
+
+    workflow {
+      on SUBMIT -> idle;
+      on EDIT   -> workflow;
+      entry [showWorkflowPicker; hideStepList; hideConvertButton];
+      exit [clearWorkflowPicker];
+    }
+
+    idle {
+      on EDIT -> singleAction;
+    }
+  }
+
+  accessibility {
+    role: form;
+    keyboard {
+      Tab       -> FOCUS_NEXT;
+      Shift+Tab -> FOCUS_PREV;
+      Enter     -> SUBMIT;
+      Escape    -> CANCEL;
+    }
+    focus {
+      trap: false;
+      initial: conceptPicker;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "form";
+        aria-label: "Action editor";
+        aria-live: "polite";
+      };
+      header -> {
+        role: "group";
+        aria-label: "Editor header";
+      };
+      modeIndicator -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: concat("Editor mode: ", state);
+      };
+      conceptPicker -> {
+        role: "combobox";
+        aria-label: "Select concept";
+        aria-required: "true";
+        aria-expanded: if state == "singleAction" or state == "multiStep" then "false" else "false";
+      };
+      actionPicker -> {
+        role: "combobox";
+        aria-label: "Select action";
+        aria-required: "true";
+        aria-disabled: if ?concept == "" then "true" else "false";
+      };
+      parameterList -> {
+        role: "list";
+        aria-label: "Action parameters";
+      };
+      parameterRow -> {
+        role: "listitem";
+        aria-label: concat("Parameter: ", self.paramName);
+      };
+      paramName -> {
+        role: "term";
+        aria-label: concat("Parameter name: ", self.paramName);
+      };
+      paramValue -> {
+        role: "combobox";
+        aria-label: concat("Value for ", self.paramName);
+      };
+      addStepButton -> {
+        role: "button";
+        aria-label: "Add another step";
+        aria-expanded: if state == "multiStep" then "true" else "false";
+        aria-controls: "step-list";
+      };
+      stepList -> {
+        role: "list";
+        aria-label: "Action steps";
+        aria-hidden: if state == "singleAction" or state == "idle" then "true" else "false";
+      };
+      stepCard -> {
+        role: "listitem";
+        aria-label: concat("Step ", self.stepIndex);
+      };
+      stepCondition -> {
+        role: "textbox";
+        aria-label: concat("Condition for step ", self.stepIndex);
+        aria-multiline: "false";
+      };
+      stepErrorHandler -> {
+        role: "combobox";
+        aria-label: concat("Error handler for step ", self.stepIndex);
+      };
+      convertButton -> {
+        role: "button";
+        aria-label: "Convert to Workflow";
+        aria-hidden: if state == "singleAction" or state == "idle" then "true" else "false";
+      };
+      previewPanel -> {
+        role: "region";
+        aria-label: "Action preview";
+        aria-live: "polite";
+      };
+    }
+  }
+
+  props {
+    concept: option String
+    action: option String
+    params: option String
+    mode: union "single" | "multi" | "workflow" = "single"
+    steps: list { stepId: String, concept: String, action: String, params: String, condition: option String, errorHandler: option String } = []
+    workflowRef: option String
+    readOnly: Bool = false
+    showPreview: Bool = true
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-mode: if state == "singleAction" then "single" else if state == "multiStep" then "multi" else if state == "workflow" then "workflow" else "idle";
+      data-readonly: if ?readOnly then "true" else "false";
+    }
+
+    header -> {
+      data-part: "header";
+    }
+
+    modeIndicator -> {
+      data-part: "mode-indicator";
+      data-mode: if state == "singleAction" then "single" else if state == "multiStep" then "multi" else if state == "workflow" then "workflow" else "idle";
+    }
+
+    conceptPicker -> {
+      data-part: "concept-picker";
+      disabled: if ?readOnly or state == "idle" then true else false;
+      value: ?concept;
+      onChange: send(EDIT);
+    }
+
+    actionPicker -> {
+      data-part: "action-picker";
+      disabled: if ?readOnly or state == "idle" or ?concept == "" then true else false;
+      value: ?action;
+      onChange: send(EDIT);
+    }
+
+    parameterList -> {
+      data-part: "parameter-list";
+    }
+
+    parameterRow -> {
+      data-part: "parameter-row";
+      data-param: self.paramName;
+    }
+
+    paramName -> {
+      data-part: "param-name";
+    }
+
+    paramValue -> {
+      data-part: "param-value";
+      data-param: self.paramName;
+      disabled: if ?readOnly or state == "idle" then true else false;
+      onChange: send(EDIT);
+    }
+
+    addStepButton -> {
+      data-part: "add-step-button";
+      data-visible: if state == "singleAction" or state == "multiStep" then "true" else "false";
+      disabled: if ?readOnly or state == "idle" or state == "workflow" then true else false;
+      onClick: send(ADD_STEP);
+      hidden: if state == "workflow" or state == "idle" then true else false;
+    }
+
+    stepList -> {
+      data-part: "step-list";
+      data-visible: if state == "multiStep" then "true" else "false";
+      hidden: if state == "singleAction" or state == "idle" then true else false;
+    }
+
+    stepCard -> {
+      data-part: "step-card";
+      data-step-id: self.stepId;
+      data-step-index: self.stepIndex;
+    }
+
+    stepCondition -> {
+      data-part: "step-condition";
+      data-step-id: self.stepId;
+      disabled: if ?readOnly then true else false;
+      onChange: send(EDIT);
+    }
+
+    stepErrorHandler -> {
+      data-part: "step-error-handler";
+      data-step-id: self.stepId;
+      disabled: if ?readOnly then true else false;
+      onChange: send(EDIT);
+    }
+
+    convertButton -> {
+      data-part: "convert-button";
+      data-visible: if state == "multiStep" then "true" else "false";
+      disabled: if ?readOnly or state != "multiStep" then true else false;
+      onClick: send(CONVERT);
+      hidden: if state != "multiStep" then true else false;
+    }
+
+    previewPanel -> {
+      data-part: "preview-panel";
+      data-visible: if ?showPreview then "true" else "false";
+      hidden: if ?showPreview == false then true else false;
+    }
+  }
+
+  affordance {
+    serves: action-binding;
+    specificity: 9;
+    when {
+      feature: "action-editor";
+    }
+    bind {
+      concept: concept;
+      action: action;
+      params: params;
+      mode: mode;
+    }
+  }
+
+  invariant {
+    example "select concept then action reveals params": {
+      after conceptPicker.change -> ok
+      then send(EDIT) -> ok
+      and conceptPicker -> { data-part: "concept-picker" }
+      then actionPicker.change -> ok
+      then parameterList -> { data-part: "parameter-list" }
+    }
+
+    example "add step transitions to multiStep": {
+      after addStepButton.click -> ok
+      then root -> { data-state: "multiStep" }
+      and root -> { data-mode: "multi" }
+      and stepList -> { data-visible: "true" }
+      and convertButton -> { data-visible: "true" }
+    }
+
+    example "remove last step returns to singleAction": {
+      after addStepButton.click -> ok
+      then root -> { data-state: "multiStep" }
+      then send(REMOVE_LAST_STEP) -> ok
+      then root -> { data-state: "singleAction" }
+      and root -> { data-mode: "single" }
+      and stepList -> { hidden: true }
+    }
+
+    example "convert to workflow": {
+      after addStepButton.click -> ok
+      then root -> { data-state: "multiStep" }
+      then convertButton.click -> ok
+      then root -> { data-state: "workflow" }
+      and root -> { data-mode: "workflow" }
+      and stepList -> { hidden: true }
+      and convertButton -> { hidden: true }
+    }
+
+    example "submit from singleAction reaches idle": {
+      after send(SUBMIT) -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    example "edit from idle returns to singleAction": {
+      after send(SUBMIT) -> ok
+      then root -> { data-state: "idle" }
+      then send(EDIT) -> ok
+      then root -> { data-state: "singleAction" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      root -> { data-state: state }
+    }
+
+    always "stepList hidden in singleAction and idle": {
+      if state == "singleAction" or state == "idle" then stepList -> { hidden: true }
+    }
+
+    always "convertButton hidden outside multiStep": {
+      if state != "multiStep" then convertButton -> { hidden: true }
+    }
+
+    always "addStepButton hidden in workflow and idle": {
+      if state == "workflow" or state == "idle" then addStepButton -> { hidden: true }
+    }
+
+    always "actionPicker disabled until concept selected": {
+      if ?concept == "" then actionPicker -> { aria-disabled: "true" }
+    }
+
+    always "mode badge reflects current state": {
+      modeIndicator -> { data-mode: if state == "singleAction" then "single" else if state == "multiStep" then "multi" else if state == "workflow" then "workflow" else "idle" }
+    }
+
+    never "edit controls enabled while readOnly": {
+      ?readOnly == true and (
+        conceptPicker -> { disabled: false } or
+        actionPicker -> { disabled: false } or
+        paramValue -> { disabled: false } or
+        addStepButton -> { disabled: false }
+      )
+    }
+
+    never "convertButton enabled outside multiStep": {
+      state != "multiStep" and convertButton -> { disabled: false }
+    }
+
+    action addStepButton.click {
+      requires: state == "singleAction" or state == "multiStep"
+      ensures ok: state == "multiStep"
+    }
+
+    action convertButton.click {
+      requires: state == "multiStep"
+      ensures ok: state == "workflow"
+    }
+
+    action send(REMOVE_LAST_STEP) {
+      requires: state == "multiStep"
+      ensures ok: state == "singleAction"
+    }
+
+    "previewPanel updates variant simulation whenever concept, action, params, or steps change";
+    "stepCondition accepts any valid expression string; validation is deferred to ProcessSpec/compile";
+    "stepErrorHandler options are scoped to the same concept as the step's chosen action";
+    "params prop is a JSON-encoded map of paramName to contextPath; malformed JSON is surfaced as a validation error in paramValue";
+    "In workflow mode the stepList and individual param editors are replaced by a workflowRef picker";
+  }
+
+}
