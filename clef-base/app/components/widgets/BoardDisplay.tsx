@@ -8,7 +8,7 @@
  * is used as the group-by field by default, or the first field if none.
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useCallback, useRef } from 'react';
 import type { FieldConfig } from './TableDisplay';
 import { resolveRowAction, type RowActionConfig } from '../../../lib/row-actions';
 
@@ -23,6 +23,114 @@ interface BoardDisplayProps {
   /** Custom item renderer — when provided, replaces default card content with DisplayMode rendering */
   renderItem?: (row: Record<string, unknown>, onClick?: () => void) => React.ReactNode;
 }
+
+// ─── BoardCardActionButtons ───────────────────────────────────────────────
+// Per-card action buttons with pending/error state management.
+
+const BoardCardActionButtons: React.FC<{
+  row: Record<string, unknown>;
+  rowActions: RowActionConfig[];
+  onRowAction?: (action: RowActionConfig, row: Record<string, unknown>) => void;
+}> = ({ row, rowActions, onRowAction }) => {
+  const [pending, setPending] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [errorAction, setErrorAction] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleAction = useCallback(async (e: React.MouseEvent, action: RowActionConfig) => {
+    e.stopPropagation();
+    if (pending) return;
+
+    setPending(action.key);
+    setError(null);
+    setErrorAction(null);
+    setSuccess(null);
+
+    try {
+      const result = onRowAction?.(action, row) as unknown;
+      if (result instanceof Promise) {
+        const resolved = await result as { variant?: string; message?: string } | undefined;
+        if (resolved && resolved.variant && resolved.variant !== 'ok') {
+          setError(resolved.message ?? `Action failed: ${resolved.variant}`);
+          setErrorAction(action.key);
+          setPending(null);
+          return;
+        }
+      }
+      setPending(null);
+      setSuccess(action.key);
+      if (successTimerRef.current) clearTimeout(successTimerRef.current);
+      successTimerRef.current = setTimeout(() => setSuccess(null), 1500);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Action failed');
+      setErrorAction(action.key);
+      setPending(null);
+    }
+  }, [pending, onRowAction, row]);
+
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', gap: 2,
+      borderTop: '1px solid var(--palette-outline-variant)',
+      paddingTop: 4, marginTop: 4,
+    }}>
+      <div style={{ display: 'flex', gap: 4 }}>
+        {rowActions.map(action => {
+          const { visible, label } = resolveRowAction(action, row);
+          if (!visible) return null;
+          const isPending = pending === action.key;
+          const isSuccess = success === action.key;
+          return (
+            <button
+              key={action.key}
+              onClick={(e) => handleAction(e, action)}
+              disabled={!!pending}
+              style={{
+                padding: '2px 6px', fontSize: '10px',
+                background: isSuccess
+                  ? 'transparent'
+                  : action.variant === 'filled' ? 'var(--palette-primary)' : 'transparent',
+                color: isSuccess
+                  ? 'var(--palette-success, #2e7d32)'
+                  : action.variant === 'filled' ? 'var(--palette-on-primary)' : 'var(--palette-primary)',
+                border: action.variant === 'outlined' ? '1px solid var(--palette-primary)' : 'none',
+                borderRadius: 3, cursor: pending ? 'not-allowed' : 'pointer',
+                opacity: pending && !isPending ? 0.5 : 1,
+              }}
+            >
+              {isPending ? '...' : isSuccess ? 'Done' : label}
+            </button>
+          );
+        })}
+      </div>
+      {error && (
+        <div style={{
+          fontSize: '10px',
+          color: 'var(--palette-error, #d32f2f)',
+          display: 'flex', gap: 4, alignItems: 'center',
+        }}>
+          <span>{error}</span>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              const action = rowActions.find(a => a.key === errorAction);
+              if (action) handleAction(e, action);
+            }}
+            style={{
+              fontSize: '10px', padding: '0 2px',
+              background: 'none', border: 'none',
+              color: 'var(--palette-error, #d32f2f)',
+              cursor: 'pointer', textDecoration: 'underline',
+            }}
+          >
+            Retry
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
 
 function formatValue(value: unknown): string {
   if (value === null || value === undefined) return '';
@@ -185,34 +293,11 @@ export const BoardDisplay: React.FC<BoardDisplayProps> = ({
 
                 {/* Row actions */}
                 {rowActions && rowActions.length > 0 && (
-                  <div style={{
-                    display: 'flex', gap: 4, marginTop: 4,
-                    borderTop: '1px solid var(--palette-outline-variant)',
-                    paddingTop: 4,
-                  }}>
-                    {rowActions.map(action => {
-                      const { visible, label } = resolveRowAction(action, row);
-                      if (!visible) return null;
-                      return (
-                        <button
-                          key={action.key}
-                          onClick={e => {
-                            e.stopPropagation();
-                            onRowAction?.(action, row);
-                          }}
-                          style={{
-                            padding: '2px 6px', fontSize: '10px',
-                            background: action.variant === 'filled' ? 'var(--palette-primary)' : 'transparent',
-                            color: action.variant === 'filled' ? 'var(--palette-on-primary)' : 'var(--palette-primary)',
-                            border: action.variant === 'outlined' ? '1px solid var(--palette-primary)' : 'none',
-                            borderRadius: 3, cursor: 'pointer',
-                          }}
-                        >
-                          {label}
-                        </button>
-                      );
-                    })}
-                  </div>
+                  <BoardCardActionButtons
+                    row={row}
+                    rowActions={rowActions}
+                    onRowAction={onRowAction}
+                  />
                 )}
               </div>
             ))}

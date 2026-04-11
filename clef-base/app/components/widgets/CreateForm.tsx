@@ -39,6 +39,7 @@ export const CreateForm: React.FC<CreateFormProps> = ({
   const [values, setValues] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorVariant, setErrorVariant] = useState<string | null>(null);
 
   // FormSpec resolution state — only relevant when schemaId is provided
   const [formSpecResolved, setFormSpecResolved] = useState<boolean | null>(null);
@@ -71,6 +72,7 @@ export const CreateForm: React.FC<CreateFormProps> = ({
     e.preventDefault();
     setSubmitting(true);
     setError(null);
+    setErrorVariant(null);
     try {
       const result = await invoke(concept, action, values);
       if (result.variant === 'ok') {
@@ -78,7 +80,8 @@ export const CreateForm: React.FC<CreateFormProps> = ({
         onCreated();
         onClose();
       } else {
-        setError(result.message as string ?? `Failed: ${result.variant}`);
+        setErrorVariant(result.variant as string);
+        setError(result.message as string ?? `Action returned: ${result.variant}`);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
@@ -161,6 +164,9 @@ export const CreateForm: React.FC<CreateFormProps> = ({
                 marginBottom: 'var(--spacing-md)',
                 fontSize: 'var(--typography-body-sm-size)',
               }}>
+                {errorVariant && errorVariant !== 'error' && (
+                  <span style={{ fontWeight: 600, marginRight: 4 }}>[{errorVariant}]</span>
+                )}
                 {error}
               </div>
             )}

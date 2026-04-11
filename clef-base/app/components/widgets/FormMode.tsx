@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { FieldWidget } from './FieldWidget';
 import { FormRenderer } from './FormRenderer';
 
@@ -31,6 +31,8 @@ export const FormMode: React.FC<FormModeProps> = ({ entity, fields, onSave, onCa
   const [values, setValues] = useState<Record<string, unknown>>({ ...entity });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleChange = useCallback((name: string, value: unknown) => {
     setValues(prev => ({ ...prev, [name]: value }));
@@ -39,6 +41,7 @@ export const FormMode: React.FC<FormModeProps> = ({ entity, fields, onSave, onCa
   const handleSave = useCallback(async () => {
     setSaving(true);
     setError(null);
+    setSuccess(false);
     try {
       // Compute changed fields
       const changes: Record<string, unknown> = {};
@@ -49,6 +52,9 @@ export const FormMode: React.FC<FormModeProps> = ({ entity, fields, onSave, onCa
         }
       }
       await onSave(changes);
+      setSuccess(true);
+      if (successTimerRef.current) clearTimeout(successTimerRef.current);
+      successTimerRef.current = setTimeout(() => setSuccess(false), 2000);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Save failed');
     } finally {
@@ -146,7 +152,16 @@ export const FormMode: React.FC<FormModeProps> = ({ entity, fields, onSave, onCa
         })}
       </div>
 
-      <div style={{ display: 'flex', gap: 'var(--spacing-sm)', justifyContent: 'flex-end', marginTop: 'var(--spacing-xl)' }}>
+      <div style={{ display: 'flex', gap: 'var(--spacing-sm)', justifyContent: 'flex-end', marginTop: 'var(--spacing-xl)', alignItems: 'center' }}>
+        {success && (
+          <span style={{
+            fontSize: 'var(--typography-body-sm-size)',
+            color: 'var(--palette-success, #2e7d32)',
+            marginRight: 'var(--spacing-sm)',
+          }}>
+            Saved
+          </span>
+        )}
         <button data-part="button" data-variant="outlined" onClick={onCancel} disabled={saving}>
           Cancel
         </button>

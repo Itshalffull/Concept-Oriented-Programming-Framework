@@ -21,6 +21,7 @@ export const QuickCapture: React.FC = () => {
   const [body, setBody] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorVariant, setErrorVariant] = useState<string | null>(null);
   const titleRef = useRef<HTMLInputElement>(null);
 
   const openForm = useCallback(() => {
@@ -66,6 +67,7 @@ export const QuickCapture: React.FC = () => {
 
     setSubmitting(true);
     setError(null);
+    setErrorVariant(null);
 
     const nodeId = `qc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
@@ -83,7 +85,8 @@ export const QuickCapture: React.FC = () => {
         setBody('');
         router.push(`/admin/content/${encodeURIComponent(nodeId)}`);
       } else {
-        setError((result.message as string) ?? `Failed: ${result.variant}`);
+        setErrorVariant(result.variant as string);
+        setError((result.message as string) ?? `Action returned: ${result.variant}`);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
@@ -175,6 +178,9 @@ export const QuickCapture: React.FC = () => {
                 marginBottom: 'var(--spacing-md, 16px)',
                 fontSize: 'var(--typography-body-sm-size, 0.875rem)',
               }}>
+                {errorVariant && errorVariant !== 'error' && (
+                  <span style={{ fontWeight: 600, marginRight: 4 }}>[{errorVariant}]</span>
+                )}
                 {error}
               </div>
             )}

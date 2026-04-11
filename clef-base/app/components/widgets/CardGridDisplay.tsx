@@ -5,7 +5,7 @@
  * Display type component: receives data + field config from ViewRenderer.
  */
 
-import React from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { Card } from './Card';
 import { Badge } from './Badge';
 import type { FieldConfig } from './TableDisplay';
@@ -20,6 +20,102 @@ interface CardGridDisplayProps {
   /** Custom item renderer — when provided, replaces default card content with DisplayMode rendering */
   renderItem?: (row: Record<string, unknown>, onClick?: () => void) => React.ReactNode;
 }
+
+// ─── CardRowActionButtons ─────────────────────────────────────────────────
+// Per-card action buttons with pending/error state management.
+
+const CardRowActionButtons: React.FC<{
+  row: Record<string, unknown>;
+  rowActions: RowActionConfig[];
+  onRowAction?: (action: RowActionConfig, row: Record<string, unknown>) => void;
+  stopPropagation?: boolean;
+}> = ({ row, rowActions, onRowAction, stopPropagation = true }) => {
+  const [pending, setPending] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [errorAction, setErrorAction] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleAction = useCallback(async (e: React.MouseEvent, action: RowActionConfig) => {
+    if (stopPropagation) e.stopPropagation();
+    if (pending) return;
+
+    setPending(action.key);
+    setError(null);
+    setErrorAction(null);
+    setSuccess(null);
+
+    try {
+      const result = onRowAction?.(action, row) as unknown;
+      if (result instanceof Promise) {
+        const resolved = await result as { variant?: string; message?: string } | undefined;
+        if (resolved && resolved.variant && resolved.variant !== 'ok') {
+          setError(resolved.message ?? `Action failed: ${resolved.variant}`);
+          setErrorAction(action.key);
+          setPending(null);
+          return;
+        }
+      }
+      setPending(null);
+      setSuccess(action.key);
+      if (successTimerRef.current) clearTimeout(successTimerRef.current);
+      successTimerRef.current = setTimeout(() => setSuccess(null), 1500);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Action failed');
+      setErrorAction(action.key);
+      setPending(null);
+    }
+  }, [pending, onRowAction, row, stopPropagation]);
+
+  return (
+    <div>
+      <div style={{ display: 'flex', gap: 'var(--spacing-xs)' }}>
+        {rowActions.map(action => {
+          const { visible, label } = resolveRowAction(action, row);
+          if (!visible) return null;
+          const isPending = pending === action.key;
+          const isSuccess = success === action.key;
+          return (
+            <button
+              key={action.key}
+              data-part="button"
+              data-variant={isSuccess ? 'ghost' : (action.variant ?? 'ghost')}
+              disabled={!!pending}
+              onClick={(e) => handleAction(e, action)}
+              style={isSuccess ? { color: 'var(--palette-success, #2e7d32)' } : undefined}
+            >
+              {isPending ? '...' : isSuccess ? 'Done' : label}
+            </button>
+          );
+        })}
+      </div>
+      {error && errorAction && (
+        <div style={{
+          fontSize: 'var(--typography-body-sm-size, 0.75rem)',
+          color: 'var(--palette-error, #d32f2f)',
+          marginTop: 4,
+          display: 'flex',
+          gap: 4,
+          alignItems: 'center',
+        }}>
+          <span>{error}</span>
+          <button
+            data-part="button"
+            data-variant="ghost"
+            style={{ fontSize: 'inherit', padding: '0 2px', color: 'inherit' }}
+            onClick={(e) => {
+              e.stopPropagation();
+              const action = rowActions.find(a => a.key === errorAction);
+              if (action) handleAction(e, action);
+            }}
+          >
+            Retry
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
 
 function formatCardValue(value: unknown, formatter?: string): React.ReactNode {
   if (value === null || value === undefined) return null;
@@ -64,24 +160,12 @@ export const CardGridDisplay: React.FC<CardGridDisplayProps> = ({ data, fields, 
             >
               {renderItem(row, onRowClick ? () => onRowClick(row) : undefined)}
               {rowActions && rowActions.length > 0 && (
-                <div
-                  style={{ display: 'flex', gap: 'var(--spacing-xs)', marginTop: 'var(--spacing-sm)' }}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {rowActions.map(action => {
-                    const { visible, label } = resolveRowAction(action, row);
-                    if (!visible) return null;
-                    return (
-                      <button
-                        key={action.key}
-                        data-part="button"
-                        data-variant={action.variant ?? 'ghost'}
-                        onClick={() => onRowAction?.(action, row)}
-                      >
-                        {label}
-                      </button>
-                    );
-                  })}
+                <div style={{ marginTop: 'var(--spacing-sm)' }} onClick={(e) => e.stopPropagation()}>
+                  <CardRowActionButtons
+                    row={row}
+                    rowActions={rowActions}
+                    onRowAction={onRowAction}
+                  />
                 </div>
               )}
             </Card>
@@ -115,24 +199,12 @@ export const CardGridDisplay: React.FC<CardGridDisplayProps> = ({ data, fields, 
               })}
             </div>
             {rowActions && rowActions.length > 0 && (
-              <div
-                style={{ display: 'flex', gap: 'var(--spacing-xs)', marginTop: 'var(--spacing-sm)' }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                {rowActions.map(action => {
-                  const { visible, label } = resolveRowAction(action, row);
-                  if (!visible) return null;
-                  return (
-                    <button
-                      key={action.key}
-                      data-part="button"
-                      data-variant={action.variant ?? 'ghost'}
-                      onClick={() => onRowAction?.(action, row)}
-                    >
-                      {label}
-                    </button>
-                  );
-                })}
+              <div style={{ marginTop: 'var(--spacing-sm)' }} onClick={(e) => e.stopPropagation()}>
+                <CardRowActionButtons
+                  row={row}
+                  rowActions={rowActions}
+                  onRowAction={onRowAction}
+                />
               </div>
             )}
           </Card>

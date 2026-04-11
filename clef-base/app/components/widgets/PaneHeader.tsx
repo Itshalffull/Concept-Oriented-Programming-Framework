@@ -6,7 +6,7 @@
  * Section 5.11.1
  */
 
-import React, { useReducer, useCallback } from 'react';
+import React, { useReducer, useCallback, useState, useRef } from 'react';
 
 // ---------------------------------------------------------------------------
 // FSM — drag machine (idle | focused | dragging) x size machine (normal | minimized | maximized)
@@ -139,6 +139,15 @@ export const PaneHeader: React.FC<PaneHeaderProps> = ({
   style,
 }) => {
   const [fsm, dispatch] = useReducer(fsmReducer, initialFSM);
+  // Flash state: tracks which button was last activated for brief visual feedback
+  const [flashedButton, setFlashedButton] = useState<string | null>(null);
+  const flashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const flashButton = useCallback((key: string) => {
+    setFlashedButton(key);
+    if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+    flashTimerRef.current = setTimeout(() => setFlashedButton(null), 600);
+  }, []);
 
   const handleDragStart = useCallback(
     (e: React.PointerEvent) => {
@@ -294,9 +303,9 @@ export const PaneHeader: React.FC<PaneHeaderProps> = ({
           data-part="pin-button"
           data-pinned={pinned ? 'true' : 'false'}
           disabled={disabled}
-          onClick={() => { dispatch('TOGGLE_PIN'); onTogglePin?.(); }}
+          onClick={() => { dispatch('TOGGLE_PIN'); onTogglePin?.(); flashButton('pin'); }}
           style={{
-            background: 'none',
+            background: flashedButton === 'pin' ? 'var(--palette-primary-container, rgba(103,80,164,0.12))' : 'none',
             border: 'none',
             cursor: disabled ? 'not-allowed' : 'pointer',
             color: pinned ? 'var(--palette-primary)' : 'var(--palette-on-surface-variant)',
@@ -305,6 +314,7 @@ export const PaneHeader: React.FC<PaneHeaderProps> = ({
             fontSize: '0.8rem',
             lineHeight: 1,
             opacity: disabled ? 0.4 : 1,
+            transition: 'background 0.15s',
           }}
         >
           📌
@@ -320,9 +330,9 @@ export const PaneHeader: React.FC<PaneHeaderProps> = ({
             data-part="minimize-button"
             data-state={fsm.size}
             disabled={disabled || fsm.size === 'minimized'}
-            onClick={handleMinimize}
+            onClick={() => { handleMinimize(); flashButton('minimize'); }}
             style={{
-              background: 'none',
+              background: flashedButton === 'minimize' ? 'var(--palette-primary-container, rgba(103,80,164,0.12))' : 'none',
               border: 'none',
               cursor: disabled || fsm.size === 'minimized' ? 'not-allowed' : 'pointer',
               color: 'var(--palette-on-surface-variant)',
@@ -331,6 +341,7 @@ export const PaneHeader: React.FC<PaneHeaderProps> = ({
               fontSize: '0.8rem',
               lineHeight: 1,
               opacity: disabled || fsm.size === 'minimized' ? 0.4 : 1,
+              transition: 'background 0.15s',
             }}
           >
             −
@@ -351,9 +362,9 @@ export const PaneHeader: React.FC<PaneHeaderProps> = ({
             data-part="maximize-button"
             data-state={fsm.size}
             disabled={disabled}
-            onClick={handleMaximize}
+            onClick={() => { handleMaximize(); flashButton('maximize'); }}
             style={{
-              background: 'none',
+              background: flashedButton === 'maximize' ? 'var(--palette-primary-container, rgba(103,80,164,0.12))' : 'none',
               border: 'none',
               cursor: disabled ? 'not-allowed' : 'pointer',
               color: 'var(--palette-on-surface-variant)',
@@ -362,6 +373,7 @@ export const PaneHeader: React.FC<PaneHeaderProps> = ({
               fontSize: '0.8rem',
               lineHeight: 1,
               opacity: disabled ? 0.4 : 1,
+              transition: 'background 0.15s',
             }}
           >
             {fsm.size === 'maximized' ? '⊡' : '□'}
@@ -377,9 +389,9 @@ export const PaneHeader: React.FC<PaneHeaderProps> = ({
             aria-haspopup="menu"
             data-part="menu-button"
             disabled={disabled}
-            onClick={() => { dispatch('OPEN_MENU'); onOpenMenu?.(); }}
+            onClick={() => { dispatch('OPEN_MENU'); onOpenMenu?.(); flashButton('menu'); }}
             style={{
-              background: 'none',
+              background: flashedButton === 'menu' ? 'var(--palette-primary-container, rgba(103,80,164,0.12))' : 'none',
               border: 'none',
               cursor: disabled ? 'not-allowed' : 'pointer',
               color: 'var(--palette-on-surface-variant)',
@@ -388,6 +400,7 @@ export const PaneHeader: React.FC<PaneHeaderProps> = ({
               fontSize: '0.8rem',
               lineHeight: 1,
               opacity: disabled ? 0.4 : 1,
+              transition: 'background 0.15s',
             }}
           >
             ⋯
@@ -402,9 +415,9 @@ export const PaneHeader: React.FC<PaneHeaderProps> = ({
             aria-label={`Close pane: ${title}`}
             data-part="close-button"
             disabled={disabled}
-            onClick={() => { dispatch('CLOSE'); onClose?.(); }}
+            onClick={() => { dispatch('CLOSE'); onClose?.(); flashButton('close'); }}
             style={{
-              background: 'none',
+              background: flashedButton === 'close' ? 'var(--palette-error-container, rgba(211,47,47,0.12))' : 'none',
               border: 'none',
               cursor: disabled ? 'not-allowed' : 'pointer',
               color: 'var(--palette-on-surface-variant)',
@@ -413,6 +426,7 @@ export const PaneHeader: React.FC<PaneHeaderProps> = ({
               fontSize: '0.8rem',
               lineHeight: 1,
               opacity: disabled ? 0.4 : 1,
+              transition: 'background 0.15s',
             }}
           >
             ✕

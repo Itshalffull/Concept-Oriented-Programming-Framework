@@ -9,7 +9,7 @@
  * the field value and item count.
  */
 
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback, useRef } from 'react';
 import { DataTable, type ColumnDef } from './DataTable';
 import { Badge } from './Badge';
 import { resolveRowAction, type RowActionConfig } from '../../../lib/row-actions';
@@ -272,6 +272,105 @@ const BulkActionToolbar: React.FC<{
   </div>
 );
 
+// ─── RowActionButtons ─────────────────────────────────────────────────────
+// Per-row action buttons with pending/error state management.
+
+interface RowActionState {
+  pending: string | null;   // action key currently in-flight
+  error: string | null;     // last error message
+  errorAction: string | null; // which action produced the error
+  success: string | null;   // action key that last succeeded (auto-clears)
+}
+
+const RowActionButtons: React.FC<{
+  row: Record<string, unknown>;
+  rowIndex: number;
+  rowActions: RowActionConfig[];
+  onRowAction?: (action: RowActionConfig, row: Record<string, unknown>) => void;
+}> = ({ row, rowIndex: _rowIndex, rowActions, onRowAction }) => {
+  const [state, setState] = useState<RowActionState>({
+    pending: null, error: null, errorAction: null, success: null,
+  });
+  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleAction = useCallback(async (e: React.MouseEvent, action: RowActionConfig) => {
+    e.stopPropagation();
+    if (state.pending) return;
+
+    setState(s => ({ ...s, pending: action.key, error: null, errorAction: null, success: null }));
+
+    try {
+      // onRowAction may be async (caller wraps useKernelInvoke)
+      const result = onRowAction?.(action, row) as unknown;
+      if (result instanceof Promise) {
+        const resolved = await result as { variant?: string; message?: string } | undefined;
+        if (resolved && resolved.variant && resolved.variant !== 'ok') {
+          const msg = resolved.message ?? `Action failed: ${resolved.variant}`;
+          setState(s => ({ ...s, pending: null, error: msg, errorAction: action.key }));
+          return;
+        }
+      }
+      setState(s => ({ ...s, pending: null, success: action.key }));
+      if (successTimerRef.current) clearTimeout(successTimerRef.current);
+      successTimerRef.current = setTimeout(() => {
+        setState(s => ({ ...s, success: null }));
+      }, 1500);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Action failed';
+      setState(s => ({ ...s, pending: null, error: msg, errorAction: action.key }));
+    }
+  }, [state.pending, onRowAction, row]);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'flex-start' }}>
+      <div style={{ display: 'flex', gap: 'var(--spacing-xs)' }}>
+        {rowActions.map(action => {
+          const { visible, label } = resolveRowAction(action, row);
+          if (!visible) return null;
+          const isPending = state.pending === action.key;
+          const isSuccess = state.success === action.key;
+          return (
+            <button
+              key={action.key}
+              data-part="button"
+              data-variant={isSuccess ? 'ghost' : (action.variant ?? 'ghost')}
+              disabled={!!state.pending}
+              onClick={(e) => handleAction(e, action)}
+              style={isSuccess ? { color: 'var(--palette-success, #2e7d32)' } : undefined}
+            >
+              {isPending ? '...' : isSuccess ? 'Done' : label}
+            </button>
+          );
+        })}
+      </div>
+      {state.error && state.errorAction && (
+        <div style={{
+          fontSize: 'var(--typography-body-sm-size, 0.75rem)',
+          color: 'var(--palette-error, #d32f2f)',
+          marginTop: 2,
+          display: 'flex',
+          gap: 4,
+          alignItems: 'center',
+        }}>
+          <span>{state.error}</span>
+          <button
+            data-part="button"
+            data-variant="ghost"
+            style={{ fontSize: 'inherit', padding: '0 2px', color: 'inherit' }}
+            onClick={(e) => {
+              e.stopPropagation();
+              const action = rowActions.find(a => a.key === state.errorAction);
+              if (action) handleAction(e, action);
+            }}
+          >
+            Retry
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ─── TableDisplay ─────────────────────────────────────────────────────────
 
 export const TableDisplay: React.FC<TableDisplayProps> = ({
@@ -359,23 +458,13 @@ export const TableDisplay: React.FC<TableDisplayProps> = ({
       key: '__actions',
       label: '',
       sortable: false,
-      render: (_val, row) => (
-        <div style={{ display: 'flex', gap: 'var(--spacing-xs)' }}>
-          {rowActions.map(action => {
-            const { visible, label } = resolveRowAction(action, row);
-            if (!visible) return null;
-            return (
-              <button
-                key={action.key}
-                data-part="button"
-                data-variant={action.variant ?? 'ghost'}
-                onClick={(e) => { e.stopPropagation(); onRowAction?.(action, row); }}
-              >
-                {label}
-              </button>
-            );
-          })}
-        </div>
+      render: (_val, row, index) => (
+        <RowActionButtons
+          row={row}
+          rowIndex={index ?? 0}
+          rowActions={rowActions}
+          onRowAction={onRowAction}
+        />
       ),
     });
   }
