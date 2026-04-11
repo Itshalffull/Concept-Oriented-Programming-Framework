@@ -1,0 +1,17 @@
+# Classify a resolved ActionBinding into an ActionType for downstream widget resolution
+
+sync ClassifyActionBinding [eager]
+  purpose: "When an ActionBinding is successfully bound, classify its target into an ActionType so the affordance pipeline knows which widget to surface"
+when {
+  ActionBinding/bind: [ binding: ?b; target: ?target; parameterMap: ?pm ]
+    => ok(binding: ?b)
+}
+where {
+  ActionBinding: { ?b target: ?target }
+}
+then {
+  ActionType/classify: [
+    target: ?target;
+    variants: "[]";
+    context: ?pm ]
+}

@@ -1,0 +1,16 @@
+# Feed a classified ActionType into Affordance matching to resolve the correct widget
+
+sync ResolveActionWidget [eager]
+  purpose: "When an ActionType classification completes, pass the resolved type name into Affordance/match so the WidgetResolver can select the correct interactive widget"
+when {
+  ActionType/classify: [ target: ?target ]
+    => ok(actionType: ?at; confidence: ?conf)
+}
+where {
+  ActionType: { ?at name: ?typeName }
+}
+then {
+  Affordance/match: [
+    interactor: ?typeName;
+    context: ?target ]
+}
