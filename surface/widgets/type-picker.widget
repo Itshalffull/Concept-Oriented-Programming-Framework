@@ -1,8 +1,14 @@
-@version(1)
+@version(2)
+@canonical-implementation(field-type-picker)
 widget type-picker {
 
   purpose {
-    Grouped, searchable, icon-driven field type picker popover for selecting or
+    CONSOLIDATED with field-type-picker.widget — both cover the same grouped,
+    icon-driven type selection UI. field-type-picker is the canonical spec.
+    This spec adds schema-editor-specific details: the Relations category
+    presets and change-type highlighting mode.
+
+    Original: Grouped, searchable, icon-driven field type picker popover for selecting or
     changing a schema field type. Organises the full type catalogue into five
     named categories — Basic, Content, Relations, Advanced, and Meta — with
     icon, label, and short description per option. The Relations category

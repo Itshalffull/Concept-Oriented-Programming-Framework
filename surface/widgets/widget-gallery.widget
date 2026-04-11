@@ -1,8 +1,15 @@
-@version(1)
+@version(2)
+@canonical-implementation(form-field-config)
 widget widget-gallery {
 
   purpose {
-    Visual gallery of available edit widgets for a given field type, displayed
+    Visual gallery of available edit widgets for a given field type. The
+    Appearance tab in form-field-config.widget / FormBuilder.tsx now serves
+    as the canonical surface for widget selection. This standalone spec
+    is retained for use cases where the gallery appears outside the
+    form builder (e.g., display-mode-editor).
+
+    Original: Visual gallery of available edit widgets for a given field type, displayed
     as a grid of cards with thumbnail previews, widget names, and short
     descriptions. Filters the available widget list to those compatible with
     the current field type by calling Interactor/classify. The currently

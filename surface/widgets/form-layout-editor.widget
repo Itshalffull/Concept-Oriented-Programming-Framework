@@ -1,8 +1,13 @@
-@version(1)
+@version(2)
+@superseded-by(form-builder)
 widget form-layout-editor {
 
   purpose {
-    Drag-and-drop editor for arranging schema fields into groups, tabs, sections,
+    SUPERSEDED by form-builder.widget + FormBuilder.tsx — the form builder provides
+    the canonical drag-and-drop field arrangement surface with groups, steps,
+    conditional visibility, and live preview. This spec is retained for reference only.
+
+    Original purpose: Drag-and-drop editor for arranging schema fields into groups, tabs, sections,
     and sidebars — controlling the edit form layout that content editors see. The
     Form Layout tab of the Level 3 full schema editor. The canvas on the left shows
     groups and placed field slots; the unplaced-fields panel on the right shows fields

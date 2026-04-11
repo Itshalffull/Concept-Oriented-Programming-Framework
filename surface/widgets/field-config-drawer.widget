@@ -1,8 +1,16 @@
-@version(1)
+@version(2)
+@canonical-implementation(form-field-config)
 widget field-config-drawer {
 
   purpose {
-    Side drawer that slides in from the right to provide per-field advanced
+    Side drawer for per-field advanced configuration. The canonical React
+    implementation is form-field-config.widget (implemented as the config panel
+    inside FormBuilder.tsx). This spec adds drawer-specific behavior: opening
+    from column header popovers or table row gear icons, slide-in animation,
+    and focus trapping. The three-tab structure (Settings, Validations,
+    Appearance) is shared with form-field-config.
+
+    Original: Side drawer that slides in from the right to provide per-field advanced
     configuration across three tabs: Settings (label, description, required,
     unique, default value, cardinality), Validations (visual rule list for
     composing per-field validation constraints), and Appearance (widget gallery

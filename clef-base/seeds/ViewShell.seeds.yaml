@@ -344,3 +344,25 @@ entries:
     projection: entity-history-fields
     presentation: timeline-default
     interaction: navigate-content-node
+
+  - name: form-list
+    title: Forms
+    description: Browse all form specifications. Each FormSpec targets a schema and defines field arrangement, groups, and steps.
+    dataSource: form-spec-list-source
+    filter: identity-filter
+    sort: natural-order
+    group: ''
+    projection: form-list-fields
+    presentation: table-default
+    interaction: form-list-controls
+
+  - name: form-editor
+    title: Form Editor
+    description: Visual form builder for a specific schema — drag-and-drop field arrangement, group management, step configuration, and live preview.
+    dataSource: form-spec-get-source
+    filter: identity-filter
+    sort: natural-order
+    group: ''
+    projection: form-editor-fields
+    presentation: form-editor-presentation
+    interaction: form-editor-controls

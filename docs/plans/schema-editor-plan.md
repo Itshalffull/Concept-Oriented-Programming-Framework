@@ -810,8 +810,27 @@ Update `clef-base/derived/content-platform.derived` or create `clef-base/derived
 | **MAG-560** Level 1 View: schema-table + InteractionSpec + Seeds | §3.1, §9.1, §9.2, §9.8 | ~~MAG-556~~, ~~MAG-559~~ | MAG-564 | high | `873fd2e9` |
 | **MAG-561** Level 2 Widgets: field-config-drawer, validation-rule-builder, widget-gallery | §4, §9.7 | ~~MAG-556~~, ~~MAG-559~~ | MAG-564 | medium | `75339b49` |
 | **MAG-562** Level 3 Widgets: schema-fields-editor, form-layout-editor, display-mode-editor | §5.2–5.4, §9.7 | ~~MAG-556~~ | MAG-563 | medium | `f25a0ada` |
-| **MAG-563** Level 3 Views + Layouts + Destinations + Templates + Seeds | §5.1, §5.5, §6, §7, §9.1–9.3, §9.8 | MAG-557, MAG-562 | MAG-564 | medium | |
-| **MAG-564** Integration Tests + Derived Concept + Suite Update | §9.9–9.11 | MAG-556–563 | — | medium | |
+| **MAG-563** ✅ Level 3 Views + Routes + Seeds — consolidated with Form Builder PRD | §5.1, §5.5, §6, §7 | MAG-557, MAG-562 | MAG-564 | medium | (consolidated) |
+| **MAG-564** ✅ React implementations for schema editor widgets — consolidated with Form Builder PRD | §9.9–9.11 | MAG-556–563 | — | medium | (consolidated) |
+
+### Consolidation Note (2026-04-10)
+
+The Form Builder PRD (MAG-601–615) implemented overlapping functionality:
+- `form-layout-editor.widget` → superseded by `form-builder.widget` + `FormBuilder.tsx`
+- `field-config-drawer.widget` → canonical impl is `form-field-config.widget` / FormBuilder config panel
+- `type-picker.widget` → consolidated with `field-type-picker.widget`
+- `widget-gallery.widget` → absorbed into form-field-config Appearance tab
+- Validation engine, conditional visibility, FormSpec concept, FormRenderer, FieldWidget 19 types — all from Form Builder PRD
+
+Remaining unique schema editor widgets got React implementations:
+- `FieldHeaderPopover.tsx` — Level 1 column header editing
+- `SchemaFieldsEditor.tsx` — Level 3 full field list CRUD
+- `DisplayModeEditor.tsx` — per-display-mode formatter assignment
+- `InlineCellEditor.tsx` — type-dispatched table cell editing
+- `FieldTypePicker.tsx` — grouped icon-driven type selector
+
+Route `/admin/schemas/{schemaId}` now renders SchemaFieldsEditor.
+Schemas-list row click navigates to `/admin/schemas/{schema}`.
 
 ---
 

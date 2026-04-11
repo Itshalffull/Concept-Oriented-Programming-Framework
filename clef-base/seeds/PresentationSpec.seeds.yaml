@@ -70,3 +70,8 @@ entries:
     displayType: timeline
     hints: '{"orientation":"vertical","compact":true}'
     displayModePolicy: bypass
+
+  - name: form-editor-presentation
+    displayType: detail
+    hints: '{"editorMode":"form-builder"}'
+    displayModePolicy: bypass

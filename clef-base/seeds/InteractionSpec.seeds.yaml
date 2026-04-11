@@ -14,7 +14,7 @@ entries:
   # schemas-list
   - name: schemas-list-controls
     createForm: '{"concept":"Schema","action":"defineSchema","fields":[{"name":"schema","label":"Schema Name","required":true},{"name":"fields","label":"Fields (comma-separated)","required":true}]}'
-    rowClick: '{"navigateTo":"/content/schema:{schema}"}'
+    rowClick: '{"navigateTo":"/admin/schemas/{schema}"}'
     rowActions: '[]'
     pickerMode: false
   # workflows-list
@@ -118,4 +118,16 @@ entries:
     createForm: 'null'
     rowClick: '{"action":"navigate","destination":"entity-detail"}'
     rowActions: '[]'
+    pickerMode: false
+  # form-list
+  - name: form-list-controls
+    createForm: '{}'
+    rowClick: '{"navigateTo":"/admin/forms/{schema}"}'
+    rowActions: '[]'
+    pickerMode: false
+  # form-editor
+  - name: form-editor-controls
+    createForm: '{}'
+    rowClick: '{}'
+    rowActions: '[{"key":"save","label":"Save","concept":"FormSpec","action":"update"}]'
     pickerMode: false
