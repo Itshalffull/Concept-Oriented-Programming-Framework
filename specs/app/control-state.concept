@@ -1,0 +1,129 @@
+@version(1)
+@category("app")
+@visibility("public")
+concept ControlState [K] {
+
+  purpose {
+    Hold reactive UI state for interactive controls such as sliders, dropdowns,
+    date pickers, and toggles so that other concepts can read current values
+    for use in filters, parameter bindings, and display logic. Not responsible
+    for triggering actions — only for maintaining and exposing interactive state.
+  }
+
+  state {
+    controls: set K
+    value: K -> String
+    defaultValue: K -> String
+    controlType: K -> String
+    options: K -> option String
+    personal: K -> Bool
+  }
+
+  actions {
+    action create(control: K, controlType: String, defaultValue: String, options: option String, personal: Bool) {
+      -> ok(control: K) {
+        Register the control with its type, default value, optional options payload,
+        and personalization flag. The current value is initialized to the default value.
+      }
+      -> duplicate(message: String) {
+        A control with this identifier already exists and was not re-created.
+      }
+      fixture create_slider { control: "vol-slider", controlType: "slider", defaultValue: "50", options: none, personal: false }
+      fixture create_select { control: "theme-select", controlType: "select", defaultValue: "light", options: "[\"light\",\"dark\",\"system\"]", personal: true }
+      fixture create_toggle { control: "show-grid", controlType: "toggle", defaultValue: "false", options: none, personal: false }
+      fixture create_date { control: "range-start", controlType: "date", defaultValue: "2024-01-01", options: none, personal: false }
+      fixture create_duplicate { control: "vol-slider", controlType: "slider", defaultValue: "50", options: none, personal: false } -> duplicate
+    }
+
+    action set(control: K, value: String) {
+      -> ok(previous: String, current: String) {
+        Update the control's current value and return both the previous and new values
+        so callers can react to state transitions.
+      }
+      -> invalid(violations: String) {
+        The provided value is not valid for the control's type or constraints.
+      }
+      -> notfound(message: String) {
+        No control exists with the given identifier.
+      }
+      fixture set_ok { control: $create_slider.control, value: "75" } after create_slider
+      fixture set_select_ok { control: $create_select.control, value: "dark" } after create_select
+      fixture set_notfound { control: "nonexistent-ctrl", value: "42" } -> notfound
+      fixture set_empty_value { control: $create_toggle.control, value: "" } after create_toggle -> invalid
+    }
+
+    action reset(control: K) {
+      -> ok(value: String) {
+        Restore the control's current value to its registered default value and return
+        that default.
+      }
+      -> notfound(message: String) {
+        No control exists with the given identifier.
+      }
+      fixture reset_ok { control: $create_slider.control } after create_slider
+      fixture reset_notfound { control: "nonexistent-ctrl" } -> notfound
+    }
+
+    action get(control: K) {
+      -> ok(value: String, controlType: String, options: option String) {
+        Return the control's current value, its type, and its options payload
+        for use in filter bindings and display logic.
+      }
+      -> notfound(message: String) {
+        No control exists with the given identifier.
+      }
+      fixture get_ok { control: $create_slider.control } after create_slider
+      fixture get_after_set { control: $create_select.control } after create_select, set_select_ok
+      fixture get_notfound { control: "nonexistent-ctrl" } -> notfound
+    }
+
+    action list() {
+      -> ok(controls: String) {
+        Return a JSON-serialized array of all registered control identifiers and
+        their current state, suitable for iterating over all interactive state.
+      }
+      fixture list_ok {}
+      fixture list_after_create { } after create_slider, create_select
+    }
+
+    action remove(control: K) {
+      -> ok() {
+        Deregister the control and discard all stored state for it.
+      }
+      -> notfound(message: String) {
+        No control exists with the given identifier.
+      }
+      fixture remove_ok { control: $create_slider.control } after create_slider
+      fixture remove_notfound { control: "nonexistent-ctrl" } -> notfound
+    }
+  }
+
+  example "set then get returns new value": {
+    after create(control: k, controlType: "slider", defaultValue: "0", options: none, personal: false) -> ok(control: k)
+    and   set(control: k, value: "80") -> ok(previous: "0", current: "80")
+    then  get(control: k) -> ok(value: "80", controlType: "slider", options: none)
+  }
+
+  example "reset restores default": {
+    after create(control: k, controlType: "text", defaultValue: "hello", options: none, personal: false) -> ok(control: k)
+    and   set(control: k, value: "world") -> ok(previous: "hello", current: "world")
+    and   reset(control: k) -> ok(value: "hello")
+    then  get(control: k) -> ok(value: "hello", controlType: "text", options: none)
+  }
+
+  example "duplicate create is rejected": {
+    after create(control: k, controlType: "toggle", defaultValue: "false", options: none, personal: false) -> ok(control: k)
+    then  create(control: k, controlType: "toggle", defaultValue: "true", options: none, personal: true) -> duplicate(message: m)
+  }
+
+  never "orphaned value": {
+    exists k in controls:
+    k.value = none
+  }
+
+  never "orphaned type": {
+    exists k in controls:
+    k.controlType = none
+  }
+
+}
