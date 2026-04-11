@@ -86,6 +86,19 @@ interface ControlsConfig {
   rowClick?: {
     navigateTo: string;
   };
+  rowActions?: Array<{
+    key: string;
+    label: string;
+    concept: string;
+    action: string;
+    params?: Record<string, string>;
+  }>;
+  bulkActions?: Array<{
+    key: string;
+    label: string;
+    concept: string;
+    action: string;
+  }>;
 }
 
 interface ViewEditorProps {
@@ -659,107 +672,271 @@ const ControlsConfigurator: React.FC<{
     }
   }, [controls, onChange]);
 
+  const addRowAction = useCallback(() => {
+    const newAction = { key: `row-action-${Date.now()}`, label: '', concept: '', action: '' };
+    onChange({ ...controls, rowActions: [...(controls.rowActions ?? []), newAction] });
+  }, [controls, onChange]);
+
+  const updateRowAction = useCallback((index: number, field: string, value: string) => {
+    const updated = (controls.rowActions ?? []).map((a, i) =>
+      i === index ? { ...a, [field]: value } : a
+    );
+    onChange({ ...controls, rowActions: updated });
+  }, [controls, onChange]);
+
+  const removeRowAction = useCallback((index: number) => {
+    const updated = (controls.rowActions ?? []).filter((_, i) => i !== index);
+    onChange({ ...controls, rowActions: updated });
+  }, [controls, onChange]);
+
+  const addBulkAction = useCallback(() => {
+    const newAction = { key: `bulk-action-${Date.now()}`, label: '', concept: '', action: '' };
+    onChange({ ...controls, bulkActions: [...(controls.bulkActions ?? []), newAction] });
+  }, [controls, onChange]);
+
+  const updateBulkAction = useCallback((index: number, field: string, value: string) => {
+    const updated = (controls.bulkActions ?? []).map((a, i) =>
+      i === index ? { ...a, [field]: value } : a
+    );
+    onChange({ ...controls, bulkActions: updated });
+  }, [controls, onChange]);
+
+  const removeBulkAction = useCallback((index: number) => {
+    const updated = (controls.bulkActions ?? []).filter((_, i) => i !== index);
+    onChange({ ...controls, bulkActions: updated });
+  }, [controls, onChange]);
+
+  const actionRowStyle: React.CSSProperties = {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr 1fr auto',
+    gap: 'var(--spacing-sm)',
+    alignItems: 'end',
+    marginBottom: 'var(--spacing-sm)',
+  };
+
+  const removeButtonStyle: React.CSSProperties = {
+    padding: '0 var(--spacing-sm)',
+    height: '32px',
+    border: '1px solid var(--palette-outline)',
+    borderRadius: 'var(--radius-sm)',
+    background: 'transparent',
+    color: 'var(--palette-on-surface-variant)',
+    cursor: 'pointer',
+    fontSize: 'var(--typography-body-sm-size)',
+  };
+
+  const addButtonStyle: React.CSSProperties = {
+    marginTop: 'var(--spacing-sm)',
+    padding: 'var(--spacing-xs) var(--spacing-sm)',
+    border: '1px dashed var(--palette-outline)',
+    borderRadius: 'var(--radius-sm)',
+    background: 'transparent',
+    color: 'var(--palette-primary)',
+    cursor: 'pointer',
+    fontSize: 'var(--typography-body-sm-size)',
+    width: '100%',
+  };
+
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-lg)' }}>
-      {/* Create button */}
-      <div>
-        <h4 style={{ margin: '0 0 var(--spacing-sm) 0', fontSize: 'var(--typography-label-md-size)', fontWeight: 'var(--typography-label-md-weight)' as unknown as number }}>
-          Create Button
-        </h4>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-sm)' }}>
-          <input
-            type="checkbox"
-            checked={!!controls.create}
-            onChange={(e) => {
-              if (e.target.checked) {
-                onChange({ ...controls, create: { concept: '', action: 'create', fields: [] } });
-              } else {
-                const { create: _, ...rest } = controls;
-                onChange(rest);
-              }
-            }}
-          />
-          <span style={{ fontSize: 'var(--typography-body-sm-size)' }}>Enable create button</span>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
+      {/* Top row: Create Button + Row Click */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-lg)' }}>
+        {/* Create button */}
+        <div>
+          <h4 style={{ margin: '0 0 var(--spacing-sm) 0', fontSize: 'var(--typography-label-md-size)', fontWeight: 'var(--typography-label-md-weight)' as unknown as number }}>
+            Create Button
+          </h4>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-sm)' }}>
+            <input
+              type="checkbox"
+              checked={!!controls.create}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  onChange({ ...controls, create: { concept: '', action: 'create', fields: [] } });
+                } else {
+                  const { create: _, ...rest } = controls;
+                  onChange(rest);
+                }
+              }}
+            />
+            <span style={{ fontSize: 'var(--typography-body-sm-size)' }}>Enable create button</span>
+          </div>
+          {controls.create && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
+              <div>
+                <label style={{ ...labelStyle, fontSize: 'var(--typography-label-sm-size)' }}>Concept</label>
+                <input
+                  type="text"
+                  value={controls.create.concept}
+                  onChange={(e) => onChange({ ...controls, create: { ...controls.create!, concept: e.target.value } })}
+                  placeholder="e.g. ContentNode"
+                  style={{ ...inputStyle, fontSize: 'var(--typography-body-sm-size)' }}
+                />
+              </div>
+              <div>
+                <label style={{ ...labelStyle, fontSize: 'var(--typography-label-sm-size)' }}>Action</label>
+                <input
+                  type="text"
+                  value={controls.create.action}
+                  onChange={(e) => onChange({ ...controls, create: { ...controls.create!, action: e.target.value } })}
+                  placeholder="e.g. create"
+                  style={{ ...inputStyle, fontSize: 'var(--typography-body-sm-size)' }}
+                />
+              </div>
+              <div>
+                <label style={{ ...labelStyle, fontSize: 'var(--typography-label-sm-size)' }}>
+                  Fields <span style={{ fontWeight: 'normal', color: 'var(--palette-on-surface-variant)' }}>(JSON array)</span>
+                </label>
+                <textarea
+                  value={createFieldsText}
+                  onChange={(e) => handleCreateFieldsChange(e.target.value)}
+                  rows={4}
+                  style={{
+                    ...inputStyle,
+                    fontFamily: 'var(--typography-font-family-mono)',
+                    fontSize: 'var(--typography-code-sm-size)',
+                    resize: 'vertical',
+                  }}
+                />
+                {fieldsError && (
+                  <span style={{ color: 'var(--palette-error)', fontSize: 'var(--typography-body-sm-size)' }}>{fieldsError}</span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
-        {controls.create && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
-            <div>
-              <label style={{ ...labelStyle, fontSize: 'var(--typography-label-sm-size)' }}>Concept</label>
-              <input
-                type="text"
-                value={controls.create.concept}
-                onChange={(e) => onChange({ ...controls, create: { ...controls.create!, concept: e.target.value } })}
-                placeholder="e.g. ContentNode"
-                style={{ ...inputStyle, fontSize: 'var(--typography-body-sm-size)' }}
-              />
-            </div>
-            <div>
-              <label style={{ ...labelStyle, fontSize: 'var(--typography-label-sm-size)' }}>Action</label>
-              <input
-                type="text"
-                value={controls.create.action}
-                onChange={(e) => onChange({ ...controls, create: { ...controls.create!, action: e.target.value } })}
-                placeholder="e.g. create"
-                style={{ ...inputStyle, fontSize: 'var(--typography-body-sm-size)' }}
-              />
-            </div>
+
+        {/* Row click */}
+        <div>
+          <h4 style={{ margin: '0 0 var(--spacing-sm) 0', fontSize: 'var(--typography-label-md-size)', fontWeight: 'var(--typography-label-md-weight)' as unknown as number }}>
+            Row Click
+          </h4>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-sm)' }}>
+            <input
+              type="checkbox"
+              checked={!!controls.rowClick}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  onChange({ ...controls, rowClick: { navigateTo: '' } });
+                } else {
+                  const { rowClick: _, ...rest } = controls;
+                  onChange(rest);
+                }
+              }}
+            />
+            <span style={{ fontSize: 'var(--typography-body-sm-size)' }}>Enable row click navigation</span>
+          </div>
+          {controls.rowClick && (
             <div>
               <label style={{ ...labelStyle, fontSize: 'var(--typography-label-sm-size)' }}>
-                Fields <span style={{ fontWeight: 'normal', color: 'var(--palette-on-surface-variant)' }}>(JSON array)</span>
+                Navigate to <span style={{ fontWeight: 'normal', color: 'var(--palette-on-surface-variant)' }}>(use {'{field}'} for row values)</span>
               </label>
-              <textarea
-                value={createFieldsText}
-                onChange={(e) => handleCreateFieldsChange(e.target.value)}
-                rows={4}
-                style={{
-                  ...inputStyle,
-                  fontFamily: 'var(--typography-font-family-mono)',
-                  fontSize: 'var(--typography-code-sm-size)',
-                  resize: 'vertical',
-                }}
+              <input
+                type="text"
+                value={controls.rowClick.navigateTo}
+                onChange={(e) => onChange({ ...controls, rowClick: { navigateTo: e.target.value } })}
+                placeholder="/content/{node}"
+                style={inputStyle}
               />
-              {fieldsError && (
-                <span style={{ color: 'var(--palette-error)', fontSize: 'var(--typography-body-sm-size)' }}>{fieldsError}</span>
-              )}
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      {/* Row click */}
+      {/* Row Actions */}
       <div>
         <h4 style={{ margin: '0 0 var(--spacing-sm) 0', fontSize: 'var(--typography-label-md-size)', fontWeight: 'var(--typography-label-md-weight)' as unknown as number }}>
-          Row Click
+          Row Actions
         </h4>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-sm)' }}>
-          <input
-            type="checkbox"
-            checked={!!controls.rowClick}
-            onChange={(e) => {
-              if (e.target.checked) {
-                onChange({ ...controls, rowClick: { navigateTo: '' } });
-              } else {
-                const { rowClick: _, ...rest } = controls;
-                onChange(rest);
-              }
-            }}
-          />
-          <span style={{ fontSize: 'var(--typography-body-sm-size)' }}>Enable row click navigation</span>
-        </div>
-        {controls.rowClick && (
-          <div>
-            <label style={{ ...labelStyle, fontSize: 'var(--typography-label-sm-size)' }}>
-              Navigate to <span style={{ fontWeight: 'normal', color: 'var(--palette-on-surface-variant)' }}>(use {'{field}'} for row values)</span>
-            </label>
-            <input
-              type="text"
-              value={controls.rowClick.navigateTo}
-              onChange={(e) => onChange({ ...controls, rowClick: { navigateTo: e.target.value } })}
-              placeholder="/content/{node}"
-              style={inputStyle}
-            />
+        {(controls.rowActions ?? []).length > 0 && (
+          <div style={{ marginBottom: 'var(--spacing-xs)' }}>
+            <div style={{ ...actionRowStyle, marginBottom: 'var(--spacing-xs)' }}>
+              <label style={{ ...labelStyle, fontSize: 'var(--typography-label-sm-size)', marginBottom: 0 }}>Label</label>
+              <label style={{ ...labelStyle, fontSize: 'var(--typography-label-sm-size)', marginBottom: 0 }}>Concept</label>
+              <label style={{ ...labelStyle, fontSize: 'var(--typography-label-sm-size)', marginBottom: 0 }}>Action</label>
+              <span />
+            </div>
+            {(controls.rowActions ?? []).map((ra, i) => (
+              <div key={ra.key} style={actionRowStyle}>
+                <input
+                  type="text"
+                  value={ra.label}
+                  onChange={(e) => updateRowAction(i, 'label', e.target.value)}
+                  placeholder="e.g. Archive"
+                  style={{ ...inputStyle, fontSize: 'var(--typography-body-sm-size)' }}
+                />
+                <input
+                  type="text"
+                  value={ra.concept}
+                  onChange={(e) => updateRowAction(i, 'concept', e.target.value)}
+                  placeholder="e.g. ContentNode"
+                  style={{ ...inputStyle, fontSize: 'var(--typography-body-sm-size)' }}
+                />
+                <input
+                  type="text"
+                  value={ra.action}
+                  onChange={(e) => updateRowAction(i, 'action', e.target.value)}
+                  placeholder="e.g. archive"
+                  style={{ ...inputStyle, fontSize: 'var(--typography-body-sm-size)' }}
+                />
+                <button onClick={() => removeRowAction(i)} style={removeButtonStyle}>
+                  Remove
+                </button>
+              </div>
+            ))}
           </div>
         )}
+        <button onClick={addRowAction} style={addButtonStyle}>
+          + Add Row Action
+        </button>
+      </div>
+
+      {/* Bulk Actions */}
+      <div>
+        <h4 style={{ margin: '0 0 var(--spacing-sm) 0', fontSize: 'var(--typography-label-md-size)', fontWeight: 'var(--typography-label-md-weight)' as unknown as number }}>
+          Bulk Actions
+        </h4>
+        {(controls.bulkActions ?? []).length > 0 && (
+          <div style={{ marginBottom: 'var(--spacing-xs)' }}>
+            <div style={{ ...actionRowStyle, marginBottom: 'var(--spacing-xs)' }}>
+              <label style={{ ...labelStyle, fontSize: 'var(--typography-label-sm-size)', marginBottom: 0 }}>Label</label>
+              <label style={{ ...labelStyle, fontSize: 'var(--typography-label-sm-size)', marginBottom: 0 }}>Concept</label>
+              <label style={{ ...labelStyle, fontSize: 'var(--typography-label-sm-size)', marginBottom: 0 }}>Action</label>
+              <span />
+            </div>
+            {(controls.bulkActions ?? []).map((ba, i) => (
+              <div key={ba.key} style={actionRowStyle}>
+                <input
+                  type="text"
+                  value={ba.label}
+                  onChange={(e) => updateBulkAction(i, 'label', e.target.value)}
+                  placeholder="e.g. Delete Selected"
+                  style={{ ...inputStyle, fontSize: 'var(--typography-body-sm-size)' }}
+                />
+                <input
+                  type="text"
+                  value={ba.concept}
+                  onChange={(e) => updateBulkAction(i, 'concept', e.target.value)}
+                  placeholder="e.g. ContentNode"
+                  style={{ ...inputStyle, fontSize: 'var(--typography-body-sm-size)' }}
+                />
+                <input
+                  type="text"
+                  value={ba.action}
+                  onChange={(e) => updateBulkAction(i, 'action', e.target.value)}
+                  placeholder="e.g. delete"
+                  style={{ ...inputStyle, fontSize: 'var(--typography-body-sm-size)' }}
+                />
+                <button onClick={() => removeBulkAction(i)} style={removeButtonStyle}>
+                  Remove
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        <button onClick={addBulkAction} style={addButtonStyle}>
+          + Add Bulk Action
+        </button>
       </div>
     </div>
   );
