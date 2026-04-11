@@ -1,0 +1,147 @@
+@version(1)
+@category("app")
+@visibility("public")
+concept Undo [D] {
+
+  purpose {
+    Present ephemeral time-limited undo offers using the toast pattern.
+    After an action completes, an offer is created with a TTL. The user
+    may execute, dismiss, or allow the offer to expire. Exactly one of
+    those three outcomes terminates each offer's lifecycle.
+  }
+
+  state {
+    offers: set D
+    entry: D -> String
+    ttl: D -> Int
+    status: D -> "offered" | "executed" | "dismissed" | "expired"
+    createdAt: D -> Int
+  }
+
+  actions {
+    action offer(undo: D, entry: String, ttl: Int) {
+      -> ok(undo: D) {
+        Create a new undo offer for the given stack entry reference.
+        The offer starts in the "offered" status and will accept execute,
+        dismiss, or expire until one of them fires.
+      }
+      -> irreversible(message: String) {
+        The entry has no reversal action — the action that produced it
+        cannot be undone, so no offer is appropriate.
+      }
+      -> duplicate(message: String) {
+        An offer with this identifier already exists.
+      }
+      -> invalid(message: String) {
+        ttl is not a positive integer or entry is empty.
+      }
+
+      fixture offer_ok {
+        undo: "offer-1"
+        entry: "{\"action\":\"Task/complete\",\"params\":\"{}\",\"reversalAction\":\"Task/reopen\"}"
+        ttl: 5000
+      }
+      fixture offer_irreversible {
+        undo: "offer-2"
+        entry: "{\"action\":\"Notification/send\",\"params\":\"{}\",\"reversalAction\":\"\"}"
+        ttl: 5000
+      } -> irreversible
+      fixture offer_duplicate {
+        undo: "offer-1"
+        entry: "{\"action\":\"Task/complete\",\"params\":\"{}\",\"reversalAction\":\"Task/reopen\"}"
+        ttl: 5000
+      } -> duplicate
+      fixture offer_zero_ttl {
+        undo: "offer-bad"
+        entry: "{\"action\":\"Task/complete\",\"params\":\"{}\",\"reversalAction\":\"Task/reopen\"}"
+        ttl: 0
+      } -> invalid
+      fixture offer_empty_entry {
+        undo: "offer-bad2"
+        entry: ""
+        ttl: 5000
+      } -> invalid
+    }
+
+    action execute(undo: D) {
+      -> ok(undo: D) {
+        Mark the offer as "executed" and signal the caller to invoke
+        the reversal action via UndoStack. The offer is now terminal.
+      }
+      -> expired(message: String) {
+        The offer's TTL has elapsed since it was created, so execution
+        is no longer allowed.
+      }
+      -> notfound(message: String) {
+        No offer exists with this identifier.
+      }
+
+      fixture execute_ok { undo: $offer_ok.undo } after offer_ok
+      fixture execute_missing { undo: "nonexistent" } -> notfound
+    }
+
+    action dismiss(undo: D) {
+      -> ok() {
+        Mark the offer as "dismissed". The user explicitly declined
+        to undo; the offer is terminal.
+      }
+      -> notfound(message: String) {
+        No offer exists with this identifier.
+      }
+
+      fixture dismiss_ok { undo: $offer_ok.undo } after offer_ok
+      fixture dismiss_missing { undo: "nonexistent" } -> notfound
+    }
+
+    action expire(undo: D) {
+      -> ok() {
+        Mark the offer as "expired" after the TTL elapses. Called by
+        a timer or scheduler, not directly by the user.
+      }
+      -> notfound(message: String) {
+        No offer exists with this identifier.
+      }
+
+      fixture expire_ok { undo: $offer_ok.undo } after offer_ok
+      fixture expire_missing { undo: "nonexistent" } -> notfound
+    }
+
+    action get(undo: D) {
+      -> ok(entry: String, ttl: Int, status: String) {
+        Return the entry reference, TTL, and current status for the offer.
+      }
+      -> notfound(message: String) {
+        No offer exists with this identifier.
+      }
+
+      fixture get_ok { undo: $offer_ok.undo } after offer_ok
+      fixture get_missing { undo: "nonexistent" } -> notfound
+    }
+  }
+
+  example "offer then execute marks executed": {
+    after offer(undo: d, entry: "{\"action\":\"Task/complete\",\"params\":\"{}\",\"reversalAction\":\"Task/reopen\"}", ttl: 5000) -> ok(undo: d)
+    after execute(undo: d) -> ok(undo: d)
+    then get(undo: d) -> ok(status: "executed")
+  }
+
+  example "offer then dismiss marks dismissed": {
+    after offer(undo: d, entry: "{\"action\":\"Task/complete\",\"params\":\"{}\",\"reversalAction\":\"Task/reopen\"}", ttl: 5000) -> ok(undo: d)
+    after dismiss(undo: d) -> ok()
+    then get(undo: d) -> ok(status: "dismissed")
+  }
+
+  example "offer then expire marks expired": {
+    after offer(undo: d, entry: "{\"action\":\"Task/complete\",\"params\":\"{}\",\"reversalAction\":\"Task/reopen\"}", ttl: 5000) -> ok(undo: d)
+    after expire(undo: d) -> ok()
+    then get(undo: d) -> ok(status: "expired")
+  }
+
+  always "offers have valid status": {
+    forall d in offers: d.status in {"offered", "executed", "dismissed", "expired"}
+  }
+
+  never "offer without entry": {
+    exists d in offers: d.entry = none
+  }
+}

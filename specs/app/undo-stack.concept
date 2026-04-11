@@ -1,0 +1,175 @@
+@version(1)
+@category("app")
+@visibility("public")
+concept UndoStack [U] {
+
+  purpose {
+    Maintain an ordered history of reversible user-initiated actions to
+    support Cmd+Z and Cmd+Shift+Z undo/redo. Receives entries only from
+    ActionBinding completions — sync effects are never placed on the stack.
+    Truncates the redo branch when a new entry is pushed after an undo.
+  }
+
+  state {
+    stacks: set U
+    entries: U -> String
+    position: U -> Int
+    maxSize: U -> Int
+  }
+
+  actions {
+    action push(stack: U, action: String, params: String, result: String,
+                trace: String, reversalAction: String) {
+      -> ok(entry: String) {
+        Add the new entry to the stack at the current position, advance the
+        position, and truncate any redo branch that existed beyond the
+        previous position. Returns the serialized entry that was stored.
+      }
+      -> full(dropped: String) {
+        The stack reached maxSize, so the oldest entry was dropped to make
+        room for the new one. Returns the serialized entry that was dropped.
+      }
+      -> notfound(message: String) {
+        No stack exists with this identifier.
+      }
+
+      fixture push_ok {
+        stack: $register_ok.stack
+        action: "Task/complete"
+        params: "{\"taskId\": \"t1\"}"
+        result: "{\"task\": \"t1\"}"
+        trace: "trace-001"
+        reversalAction: "Task/reopen"
+      } after register_ok
+      fixture push_no_reversal {
+        stack: $register_ok.stack
+        action: "Notification/send"
+        params: "{}"
+        result: "{}"
+        trace: "trace-002"
+        reversalAction: ""
+      } after register_ok
+      fixture push_missing_stack {
+        stack: "nonexistent"
+        action: "Task/complete"
+        params: "{}"
+        result: "{}"
+        trace: "trace-003"
+        reversalAction: "Task/reopen"
+      } -> notfound
+    }
+
+    action undo(stack: U) {
+      -> ok(reversalAction: String, params: String) {
+        Move the position back one step and return the reversal action and
+        original params from the entry at that position, so the caller can
+        invoke the reversal.
+      }
+      -> empty(message: String) {
+        There are no entries at or before the current position — nothing
+        left to undo.
+      }
+      -> notfound(message: String) {
+        No stack exists with this identifier.
+      }
+
+      fixture undo_ok { stack: $register_ok.stack } after push_ok
+      fixture undo_empty { stack: $register_stack_empty.stack } after register_stack_empty -> empty
+      fixture undo_missing { stack: "nonexistent" } -> notfound
+    }
+
+    action redo(stack: U) {
+      -> ok(action: String, params: String) {
+        Move the position forward one step and return the original action
+        and params from the entry that was re-applied.
+      }
+      -> empty(message: String) {
+        The position is already at the top of the stack — there is nothing
+        ahead to redo.
+      }
+      -> notfound(message: String) {
+        No stack exists with this identifier.
+      }
+
+      fixture redo_ok { stack: $register_ok.stack } after undo_ok
+      fixture redo_empty { stack: $register_ok.stack } after push_ok -> empty
+      fixture redo_missing { stack: "nonexistent" } -> notfound
+    }
+
+    action clear(stack: U) {
+      -> ok() {
+        Remove all entries from the stack and reset the position to zero.
+      }
+      -> notfound(message: String) {
+        No stack exists with this identifier.
+      }
+
+      fixture clear_ok { stack: $register_ok.stack } after push_ok
+      fixture clear_missing { stack: "nonexistent" } -> notfound
+    }
+
+    action get(stack: U) {
+      -> ok(entries: String, position: Int) {
+        Return the full serialized entry list and the current position index
+        for the given stack.
+      }
+      -> notfound(message: String) {
+        No stack exists with this identifier.
+      }
+
+      fixture get_ok { stack: $register_ok.stack } after push_ok
+      fixture get_missing { stack: "nonexistent" } -> notfound
+    }
+
+    action create(stack: U, maxSize: Int) {
+      -> ok(stack: U) {
+        Create a new empty undo stack with the given maximum entry capacity.
+      }
+      -> duplicate(message: String) {
+        A stack with this identifier already exists.
+      }
+      -> invalid(message: String) {
+        maxSize is not a positive integer.
+      }
+
+      fixture register_ok { stack: "stack-1", maxSize: 50 }
+      fixture register_stack_empty { stack: "stack-empty", maxSize: 10 }
+      fixture register_duplicate { stack: "stack-1", maxSize: 50 } -> duplicate
+      fixture register_zero_size { stack: "stack-zero", maxSize: 0 } -> invalid
+    }
+  }
+
+  example "push then undo returns reversal": {
+    after create(stack: s, maxSize: 10) -> ok(stack: s)
+    after push(stack: s, action: "Task/complete", params: "{\"id\":\"t1\"}",
+               result: "{}", trace: "tr1", reversalAction: "Task/reopen") -> ok(entry: _)
+    then undo(stack: s) -> ok(reversalAction: "Task/reopen", params: "{\"id\":\"t1\"}")
+  }
+
+  example "push A B C undo undo redo returns B": {
+    after create(stack: s, maxSize: 10) -> ok(stack: s)
+    after push(stack: s, action: "A/do", params: "{\"n\":1}", result: "{}", trace: "t1", reversalAction: "A/undo") -> ok(entry: _)
+    after push(stack: s, action: "B/do", params: "{\"n\":2}", result: "{}", trace: "t2", reversalAction: "B/undo") -> ok(entry: _)
+    after push(stack: s, action: "C/do", params: "{\"n\":3}", result: "{}", trace: "t3", reversalAction: "C/undo") -> ok(entry: _)
+    after undo(stack: s) -> ok(reversalAction: "C/undo", params: _)
+    after undo(stack: s) -> ok(reversalAction: "B/undo", params: _)
+    then redo(stack: s) -> ok(action: "B/do", params: "{\"n\":2}")
+  }
+
+  example "push after undo truncates redo branch": {
+    after create(stack: s, maxSize: 10) -> ok(stack: s)
+    after push(stack: s, action: "A/do", params: "{\"n\":1}", result: "{}", trace: "t1", reversalAction: "A/undo") -> ok(entry: _)
+    after push(stack: s, action: "B/do", params: "{\"n\":2}", result: "{}", trace: "t2", reversalAction: "B/undo") -> ok(entry: _)
+    after undo(stack: s) -> ok(reversalAction: "B/undo", params: _)
+    after push(stack: s, action: "C/do", params: "{\"n\":3}", result: "{}", trace: "t3", reversalAction: "C/undo") -> ok(entry: _)
+    then redo(stack: s) -> empty(message: _)
+  }
+
+  always "position bounded by entry count": {
+    forall u in stacks: u.position >= 0
+  }
+
+  never "stack without registered maxSize": {
+    exists u in stacks: u.maxSize = none
+  }
+}
