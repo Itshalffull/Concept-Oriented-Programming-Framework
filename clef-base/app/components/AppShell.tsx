@@ -9,10 +9,10 @@
  * not hardcoded.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Sidebar, type SidebarGroup } from './widgets/Sidebar';
 import { QuickCapture } from './QuickCapture';
-import { useClef } from '../../lib/clef-provider';
+import { useClef, useKernelInvoke } from '../../lib/clef-provider';
 import { useActiveSpace } from '../../lib/use-active-space';
 import { logoutAdminAction } from '../admin/actions';
 
@@ -22,6 +22,36 @@ export const AppShell: React.FC<{ children: React.ReactNode; sessionUser?: strin
 }) => {
   const { groupedDestinations, navigator, shell, theme } = useClef();
   const { isInSpace, currentSpace, spaceStack } = useActiveSpace(sessionUser || 'current-user');
+  const invoke = useKernelInvoke();
+  const [leaveConfirming, setLeaveConfirming] = useState(false);
+  const [leavePending, setLeavePending] = useState(false);
+  const [leaveError, setLeaveError] = useState<string | null>(null);
+
+  const handleLeave = async () => {
+    if (!currentSpace) return;
+    if (!leaveConfirming) {
+      setLeaveConfirming(true);
+      return;
+    }
+    setLeavePending(true);
+    setLeaveError(null);
+    try {
+      const result = await invoke('VersionSpace', 'leave', { space: currentSpace.id });
+      if (result && (result as Record<string, unknown>).variant !== 'ok') {
+        const msg = (result as Record<string, unknown>).message as string | undefined;
+        setLeaveError(msg ?? 'Failed to leave space.');
+        setLeaveConfirming(false);
+      } else {
+        // Navigate to home on success
+        window.location.href = '/';
+      }
+    } catch (err) {
+      setLeaveError(err instanceof Error ? err.message : 'Failed to leave space.');
+      setLeaveConfirming(false);
+    } finally {
+      setLeavePending(false);
+    }
+  };
 
   // Map grouped destinations → Sidebar groups
   const sidebarGroups: SidebarGroup[] = groupedDestinations.map(g => ({
@@ -95,22 +125,45 @@ export const AppShell: React.FC<{ children: React.ReactNode; sessionUser?: strin
               </span>
             )}
           </div>
-          <button
-            onClick={() => {
-              // Placeholder: would call VersionSpace/leave
-            }}
-            style={{
-              background: 'none',
-              border: '1px solid var(--palette-neutral-300, #ccc)',
-              borderRadius: 4,
-              padding: '2px 10px',
-              fontSize: 12,
-              cursor: 'pointer',
-              color: 'var(--palette-neutral-700, #555)',
-            }}
-          >
-            Leave
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {leaveError && (
+              <span style={{ fontSize: 11, color: 'var(--palette-error, #c00)' }}>
+                {leaveError}
+              </span>
+            )}
+            {leaveConfirming && !leavePending && (
+              <button
+                onClick={() => setLeaveConfirming(false)}
+                style={{
+                  background: 'none',
+                  border: '1px solid var(--palette-neutral-300, #ccc)',
+                  borderRadius: 4,
+                  padding: '2px 8px',
+                  fontSize: 12,
+                  cursor: 'pointer',
+                  color: 'var(--palette-neutral-700, #555)',
+                }}
+              >
+                Cancel
+              </button>
+            )}
+            <button
+              onClick={handleLeave}
+              disabled={leavePending}
+              style={{
+                background: leaveConfirming ? 'var(--palette-error, #c00)' : 'none',
+                border: `1px solid ${leaveConfirming ? 'var(--palette-error, #c00)' : 'var(--palette-neutral-300, #ccc)'}`,
+                borderRadius: 4,
+                padding: '2px 10px',
+                fontSize: 12,
+                cursor: leavePending ? 'wait' : 'pointer',
+                color: leaveConfirming ? '#fff' : 'var(--palette-neutral-700, #555)',
+                opacity: leavePending ? 0.6 : 1,
+              }}
+            >
+              {leavePending ? '…' : leaveConfirming ? 'Confirm leave' : 'Leave'}
+            </button>
+          </div>
         </div>
       )}
       <Sidebar

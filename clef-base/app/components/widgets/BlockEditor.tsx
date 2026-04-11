@@ -17,7 +17,7 @@
  */
 
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { useNavigator } from '../../../lib/clef-provider';
+import { useNavigator, useKernelInvoke } from '../../../lib/clef-provider';
 import { useConceptQuery } from '../../../lib/use-concept-query';
 import { useTextSelection, type TextSelectionState } from '../../../lib/use-text-selection';
 import { useEntitySpans, type SpanFragment } from '../../../lib/use-entity-spans';
@@ -930,6 +930,31 @@ const ControlBlock: React.FC<{
   const action = (block.meta?.action as string) ?? '';
   const variant = (block.meta?.variant as string) ?? 'filled';
   const [configOpen, setConfigOpen] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [invokeError, setInvokeError] = useState<string | null>(null);
+  const [invokeSuccess, setInvokeSuccess] = useState(false);
+  const invoke = useKernelInvoke();
+
+  const handleInvoke = async () => {
+    if (!concept || !action || pending) return;
+    setPending(true);
+    setInvokeError(null);
+    setInvokeSuccess(false);
+    try {
+      const result = await invoke(concept, action, {});
+      if (result && (result as Record<string, unknown>).variant !== 'ok') {
+        const msg = (result as Record<string, unknown>).message as string | undefined;
+        setInvokeError(msg ?? 'Action returned an error.');
+      } else {
+        setInvokeSuccess(true);
+        setTimeout(() => setInvokeSuccess(false), 2000);
+      }
+    } catch (err) {
+      setInvokeError(err instanceof Error ? err.message : 'Invocation failed.');
+    } finally {
+      setPending(false);
+    }
+  };
 
   return (
     <div style={{ padding: 'var(--spacing-xs) 0' }}>
@@ -937,23 +962,25 @@ const ControlBlock: React.FC<{
         <button
           data-part="button"
           data-variant={variant}
+          disabled={pending || !concept || !action}
           style={{
-            padding: '6px 16px', fontSize: '13px', cursor: 'pointer',
+            padding: '6px 16px', fontSize: '13px', cursor: pending ? 'wait' : 'pointer',
             borderRadius: 'var(--radius-sm)',
             background: variant === 'filled' ? 'var(--palette-primary)' : 'transparent',
             color: variant === 'filled' ? 'var(--palette-on-primary)' : 'var(--palette-primary)',
             border: variant === 'outlined' ? '1px solid var(--palette-primary)' : 'none',
             fontWeight: 500,
+            opacity: pending || !concept || !action ? 0.6 : 1,
           }}
-          onClick={() => {
-            if (concept && action) {
-              // Action invocation would go through kernel
-              console.log(`Control: invoke ${concept}/${action}`);
-            }
-          }}
+          onClick={handleInvoke}
         >
-          {label}
+          {pending ? '…' : invokeSuccess ? '✓' : label}
         </button>
+        {invokeError && (
+          <span style={{ fontSize: '12px', color: 'var(--palette-error, #c00)', maxWidth: 240 }}>
+            {invokeError}
+          </span>
+        )}
         {!readOnly && (
           <button
             onClick={() => setConfigOpen(!configOpen)}
