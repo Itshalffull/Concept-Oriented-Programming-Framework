@@ -437,63 +437,33 @@ function renderAssertionInLoop(
  * Render a complete vitest test file for a ViewSpec.
  */
 /**
- * Default child spec data for features not explicitly declared in the fixture.
- * The features block in the .view file is the source of truth — the fixture
- * only needs to customize specs it cares about. Missing specs for enabled
- * features get these sensible defaults.
- */
-const DEFAULT_SPEC_DATA: Record<string, Record<string, string>> = {
-  dataSource: { kind: 'concept-action', config: '{"concept":"ContentNode","action":"list"}' },
-  filter: { node: '{"type":"true"}' },
-  sort: { keys: '[]' },
-  group: { fields: '[]', config: '{}' },
-  projection: { fields: '[]' },
-  presentation: { displayType: 'table', hints: '{}' },
-  interaction: { rowActions: '[{"key":"edit","concept":"ContentNode","action":"update","label":"Edit"}]' },
-  pagination: { mode: 'offset', pageSize: '25' },
-};
-
-/** Map from spec type to storage relation name. */
-const SPEC_RELATIONS: Record<string, string> = {
-  dataSource: 'source',
-  filter: 'filter',
-  sort: 'sort',
-  group: 'group',
-  projection: 'projection',
-  presentation: 'presentation',
-  interaction: 'interaction',
-  pagination: 'pagination',
-};
-
-/**
  * Generate storage seeding code from a ViewFixture.
  * Creates a ViewShell record and child spec records in mock storage.
- *
- * The features list (from the .view file's features block) determines which
- * specs are seeded. For each enabled feature, the fixture's spec data is used
- * if present; otherwise a sensible default is generated. dataSource and
- * presentation are always seeded (always-on features).
  */
 function renderFixtureSeeding(fixture: ViewFixture, shellName: string, features: string[] | undefined): string {
   const lines: string[] = [];
+
+  // Build child spec ref names from the fixture
   const specRefs: Record<string, string> = {};
+  const SPEC_RELATIONS: Record<string, string> = {
+    dataSource: 'source',
+    filter: 'filter',
+    sort: 'sort',
+    group: 'group',
+    projection: 'projection',
+    presentation: 'presentation',
+    interaction: 'interaction',
+    pagination: 'pagination',
+  };
 
-  // Determine which spec types to seed: always-on + enabled features
-  const alwaysOn = ['dataSource', 'presentation'];
-  const enabledFeatures = features ?? ['filter', 'sort', 'group', 'projection', 'interaction', 'pagination'];
-  const specTypesToSeed = new Set([...alwaysOn, ...enabledFeatures]);
-
-  // Seed each spec type: use fixture data if present, else default
-  for (const specType of specTypesToSeed) {
+  for (const [specType, fields] of Object.entries(fixture.specs)) {
     const refName = `${shellName}-${specType}`;
     specRefs[specType] = refName;
     const relation = SPEC_RELATIONS[specType] || specType;
-    const fixtureData = fixture.specs[specType as keyof typeof fixture.specs];
-    const fields = fixtureData ?? DEFAULT_SPEC_DATA[specType] ?? {};
     lines.push(`    await storage.put(${JSON.stringify(relation)}, ${JSON.stringify(refName)}, ${JSON.stringify({ name: refName, ...fields })});`);
   }
 
-  // Build ViewShell record with refs for all seeded specs
+  // Build ViewShell record
   const shellRecord: Record<string, string> = {
     name: shellName,
     title: shellName,

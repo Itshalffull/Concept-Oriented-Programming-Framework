@@ -157,6 +157,76 @@ The `generate-view-tests.ts` script reads fixtures and generates `storage.put()`
 
 Views without fixtures generate test stubs with a `// No fixture declared` comment.
 
+## Fixture Section
+
+```
+fixture <name> {
+  <specType>: {
+    <key>: "<value>"
+    ...
+  }
+  ...
+}
+```
+
+Fixtures declare ViewShell + child spec data for testing invariants. Each fixture is a named data state — the test generator seeds mock storage from the fixture, then runs `compileAndAnalyze` and asserts the invariants against it.
+
+- `<name>` is an identifier (e.g., `default`, `minimal`, `paginated`)
+- Each `<specType>` block declares fields for a child spec record
+- Valid spec types: `dataSource`, `filter`, `sort`, `group`, `projection`, `presentation`, `interaction`, `pagination`
+- Values must be double-quoted strings (the tokenizer does not support single quotes)
+- JSON values must use escaped double quotes: `"{\"field\":\"name\"}"`
+- Multiple fixtures are allowed — each creates an independent test scenario
+- No `after` keyword (fixtures are data declarations, not action sequences)
+- No `-> variant` (invariants handle assertions, not fixtures)
+
+### Spec Type Fields
+
+| Spec Type | Common Fields |
+|-----------|--------------|
+| `dataSource` | `kind` ("concept-action", "remote-api"), `config` (JSON string) |
+| `filter` | `node` (FilterNode JSON) |
+| `sort` | `keys` (SortKey[] JSON) |
+| `group` | `fields` (field names), `config` (aggregation JSON) |
+| `projection` | `fields` (ProjectionField[] JSON) |
+| `presentation` | `displayType` ("table", "card-grid", etc.), `hints` (JSON) |
+| `interaction` | `createForm` (JSON), `rowClick` (JSON), `rowActions` (JSON) |
+| `pagination` | `mode` ("offset", "cursor"), `pageSize` (number) |
+
+### Example
+
+```
+fixture default {
+  dataSource: {
+    kind: "concept-action",
+    config: "{\"concept\":\"ContentNode\",\"action\":\"listBySchema\",\"params\":{\"schema\":\"Concept\"}}"
+  }
+  filter: {
+    node: "{\"type\":\"eq\",\"field\":\"kind\",\"value\":\"concept\"}"
+  }
+  sort: {
+    keys: "[{\"field\":\"name\",\"direction\":\"asc\"}]"
+  }
+  projection: {
+    fields: "[{\"key\":\"name\",\"label\":\"Name\"},{\"key\":\"kind\",\"label\":\"Kind\"}]"
+  }
+  presentation: {
+    displayType: "table",
+    hints: "{}"
+  }
+}
+```
+
+### Test Generation
+
+The `generate-view-tests.ts` script reads fixtures and generates `storage.put()` calls:
+1. Each child spec becomes a record in the appropriate relation
+2. A ViewShell record is created pointing to all child spec refs
+3. `compileAndAnalyze(shellName, storage)` builds the QueryProgram
+4. Each invariant assertion runs against the analysis result
+
+Views without fixtures generate test stubs with a `// No fixture declared` comment.
+
 ## Purpose Section
 
 ```
