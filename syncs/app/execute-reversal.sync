@@ -1,0 +1,13 @@
+# Invoke the reversal action once UndoStack resolves which action to reverse
+
+sync ExecuteReversal [eager]
+  purpose: "Re-invoke ActionBinding with the reversal action and original params when an undo is confirmed"
+when {
+  UndoStack/undo: [ stack: ?s ]
+    => ok(reversalAction: ?rev; params: ?p)
+}
+then {
+  ActionBinding/invoke: [
+    binding: ?rev;
+    context: ?p ]
+}

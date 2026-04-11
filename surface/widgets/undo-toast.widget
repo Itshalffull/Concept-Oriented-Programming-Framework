@@ -1,0 +1,128 @@
+@version(1)
+widget undo-toast {
+
+  purpose {
+    Transient snackbar/toast that offers the user a chance to undo the most recent
+    reversible action. Appears automatically when Undo/offer fires and disappears
+    after the configured ttl expires, or immediately when the user taps Undo or
+    Dismiss. Communicates status non-modally via aria-live so screen readers
+    announce it without interrupting the current focus.
+  }
+
+  anatomy {
+    root:          container     { Top-level toast host; positions message and actions }
+    message:       text          { Human-readable description of the action that was just performed }
+    undoButton:    action        { Tappable label that triggers the undo reversal }
+    dismissButton: action        { Icon or text button that silently closes the toast }
+    timer:         presentation  { Visual progress indicator for the remaining ttl }
+  }
+
+  states {
+    hidden [initial] {
+      on SHOW -> visible;
+    }
+
+    visible {
+      on UNDO    -> hidden;
+      on DISMISS -> hidden;
+      on EXPIRE  -> hidden;
+    }
+  }
+
+  accessibility {
+    role: status;
+    aria {
+      root -> {
+        role: "status";
+        aria-live: "polite";
+        aria-atomic: "true";
+        aria-label: ?message;
+      };
+      undoButton -> {
+        role: "button";
+        aria-label: ?actionLabel;
+      };
+      dismissButton -> {
+        role: "button";
+        aria-label: "Dismiss";
+      };
+      timer -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    message:     String
+    ttl:         Int    = 5000
+    actionLabel: String = "Undo"
+  }
+
+  connect {
+    root -> {
+      data-part:  "root";
+      data-state: state;
+      hidden: if state == "hidden" then true else false;
+    }
+
+    message -> {
+      data-part: "message";
+      text: ?message;
+    }
+
+    undoButton -> {
+      data-part: "undo-button";
+      onClick: send(UNDO);
+    }
+
+    dismissButton -> {
+      data-part: "dismiss-button";
+      onClick: send(DISMISS);
+    }
+
+    timer -> {
+      data-part: "timer";
+      data-ttl: ?ttl;
+    }
+  }
+
+  affordance {
+    serves: toast;
+    specificity: 7;
+    when {
+      feature: "undo";
+    }
+    bind {
+      message: actionDescription;
+    }
+  }
+
+  invariant {
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        s.name != ""
+    }
+
+    always "toast hidden when not visible": {
+      if state == "hidden" then state != "visible"
+    }
+
+    never "both states active simultaneously": {
+      state == "hidden" and state == "visible"
+    }
+
+    "SHOW event must transition root from hidden to visible state";
+    "UNDO event must transition root to hidden and trigger undo execution";
+    "DISMISS event must transition root to hidden without triggering undo";
+    "EXPIRE event must transition root to hidden after ttl elapses";
+    "aria-live polite must be set on root so announcements are non-interruptive";
+    "undoButton must dispatch UNDO on click";
+    "dismissButton must dispatch DISMISS on click";
+    "timer data-ttl must reflect the ttl prop";
+  }
+
+}

@@ -1,0 +1,21 @@
+# Push a stack entry when a reversible ActionBinding invocation completes ok
+
+sync PushUndoOnReversible [eager]
+  purpose: "Record a completed reversible action on the UndoStack so it can be replayed in reverse"
+when {
+  ActionBinding/invoke: [ binding: ?b; context: ?ctx ]
+    => ok(result: ?r; trace: ?t)
+}
+where {
+  ActionBinding: { ?b target: ?target; reversalAction: ?rev }
+  # guard: only push when a reversal action is declared (not "none")
+  filter(?rev != "none")
+}
+then {
+  UndoStack/push: [
+    action: ?target;
+    params: ?ctx;
+    result: ?r;
+    trace: ?t;
+    reversalAction: ?rev ]
+}

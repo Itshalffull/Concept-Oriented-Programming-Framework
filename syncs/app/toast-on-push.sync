@@ -1,0 +1,11 @@
+# Show an undo toast whenever a new entry lands on the UndoStack
+
+sync ToastOnPush [eager]
+  purpose: "Offer the user an undo toast immediately after an undoable action is pushed onto the stack"
+when {
+  UndoStack/push: [ action: ?a; params: ?p ]
+    => ok(entry: ?entry)
+}
+then {
+  Undo/offer: [ entry: ?entry; ttl: 5000 ]
+}

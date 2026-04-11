@@ -1,0 +1,14 @@
+# Forward an undo execution from the Undo toast concept to UndoStack
+
+sync UndoToastExecutes [eager]
+  purpose: "Delegate to UndoStack/undo when the user taps Undo in the toast, passing the matching stack entry"
+when {
+  Undo/execute: [ undo: ?d ]
+    => ok(undo: ?d)
+}
+where {
+  Undo: { ?d entry: ?entry }
+}
+then {
+  UndoStack/undo: [ stack: ?entry ]
+}
