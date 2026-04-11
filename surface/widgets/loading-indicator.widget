@@ -1,0 +1,124 @@
+@version(1)
+widget loading-indicator {
+
+  purpose {
+    Loading feedback widget rendered as a button overlay when ActionBinding
+    enters the pending state. Displays an animated spinner alongside an
+    optional label to communicate that an async operation is in progress.
+    Announces its active state to assistive technology via aria-busy and a
+    polite live region, and respects reduced-motion preferences for the
+    spinner animation.
+  }
+
+  anatomy {
+    root:    container     { Wrapper that overlays or replaces the triggering button }
+    spinner: presentation  { Animated spinner conveying ongoing activity }
+    label:   text          { Text label describing what is loading }
+  }
+
+  states {
+    hidden [initial] {
+      on START -> active;
+    }
+
+    active {
+      on STOP -> hidden;
+      entry [startSpinner; setAriaBusy];
+      exit [stopSpinner; clearAriaBusy];
+    }
+  }
+
+  accessibility {
+    role: status;
+    keyboard { }
+    focus {
+      trap: false;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: ?label;
+        aria-busy: if state == "active" then "true" else "false";
+      };
+      spinner -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      label -> {
+        role: "none";
+      };
+    }
+  }
+
+  props {
+    label: String = "Loading..."
+    overlay: Bool = true
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-overlay: if ?overlay then "true" else "false";
+      role: "status";
+      aria-live: "polite";
+      aria-label: ?label;
+      aria-busy: if state == "active" then "true" else "false";
+      hidden: if state == "hidden" then true else false;
+    }
+
+    spinner -> {
+      data-part: "spinner";
+      aria-hidden: "true";
+      data-active: if state == "active" then "true" else "false";
+    }
+
+    label -> {
+      data-part: "label";
+      text: ?label;
+    }
+  }
+
+  affordance {
+    serves: entity-inline;
+    specificity: 6;
+    when {
+      feature: "loading";
+    }
+    bind {
+      label: loadingMessage;
+      overlay: overlayMode;
+    }
+  }
+
+  invariant {
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        s.name != ""
+    }
+
+    always "widget hidden when not active": {
+      if state == "hidden" then state != "active"
+    }
+
+    never "aria-busy true and hidden simultaneously": {
+      state == "hidden" and state == "active"
+    }
+
+    "START event must transition root from hidden to active state";
+    "STOP event must transition root from active to hidden state";
+    "aria-busy must be true on root while in active state";
+    "aria-busy must be false on root while in hidden state";
+    "spinner must carry aria-hidden=true at all times";
+    "aria-label on root must reflect the label prop value";
+    "spinner animation must respect prefers-reduced-motion media query";
+    "widget must not capture keyboard focus in any state";
+    "data-overlay must reflect the overlay prop on root";
+  }
+
+}

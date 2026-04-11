@@ -1,0 +1,147 @@
+@version(1)
+widget inline-error {
+
+  purpose {
+    Inline error feedback rendered near the triggering button when an
+    ActionBinding returns an error variant. Displays a descriptive error
+    message alongside an icon, and optionally offers a retry button so the
+    user can attempt the action again without navigating away. Emits an
+    accessible live-region announcement so assistive technology users receive
+    the error without requiring focus movement.
+  }
+
+  anatomy {
+    root:          container     { Wrapper for all error content; anchors near the triggering element }
+    icon:          presentation  { Decorative error icon indicating failure }
+    message:       text          { Human-readable description of the error }
+    retryButton:   action        { Button that re-triggers the failed action }
+    dismissButton: action        { Button that clears the error and hides the widget }
+  }
+
+  states {
+    hidden [initial] {
+      on SHOW -> visible;
+    }
+
+    visible {
+      on DISMISS -> hidden;
+      on RETRY -> hidden;
+    }
+  }
+
+  accessibility {
+    role: alert;
+    keyboard {
+      Escape -> DISMISS;
+    }
+    focus {
+      trap: false;
+      initial: retryButton;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "alert";
+        aria-live: "polite";
+        aria-atomic: "true";
+        aria-label: ?message;
+      };
+      icon -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      message -> {
+        role: "none";
+      };
+      retryButton -> {
+        role: "button";
+        aria-label: "Retry";
+      };
+      dismissButton -> {
+        role: "button";
+        aria-label: "Dismiss error";
+      };
+    }
+  }
+
+  props {
+    message: String
+    retryable: Bool = false
+    variant: String = "error"
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-variant: ?variant;
+      role: "alert";
+      aria-live: "polite";
+      aria-atomic: "true";
+      hidden: if state == "hidden" then true else false;
+    }
+
+    icon -> {
+      data-part: "icon";
+      aria-hidden: "true";
+    }
+
+    message -> {
+      data-part: "message";
+      text: ?message;
+    }
+
+    retryButton -> {
+      data-part: "retry-button";
+      data-visible: if ?retryable then "true" else "false";
+      hidden: if ?retryable then false else true;
+      onClick: send(RETRY);
+    }
+
+    dismissButton -> {
+      data-part: "dismiss-button";
+      onClick: send(DISMISS);
+    }
+  }
+
+  affordance {
+    serves: entity-inline;
+    specificity: 7;
+    when {
+      feature: "error-feedback";
+    }
+    bind {
+      message: errorMessage;
+      retryable: canRetry;
+    }
+  }
+
+  invariant {
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        s.name != ""
+    }
+
+    always "widget hidden when in hidden state": {
+      if state == "hidden" then state != "visible"
+    }
+
+    never "both states active simultaneously": {
+      state == "hidden" and state == "visible"
+    }
+
+    "SHOW event must transition root to visible state and announce message via aria-live";
+    "DISMISS event must transition root to hidden state";
+    "RETRY event must transition root to hidden state and re-invoke the failed action";
+    "retryButton must be unreachable by keyboard and pointer when retryable is false";
+    "retryButton must be keyboard-accessible when retryable is true";
+    "icon must carry aria-hidden=true at all times so it is not announced";
+    "Escape key must dispatch DISMISS and clear the error";
+    "aria-live region must announce message on SHOW without requiring focus movement";
+    "data-variant must reflect the variant prop value on root";
+  }
+
+}

@@ -1,0 +1,169 @@
+@version(1)
+widget confirmation-dialog {
+
+  purpose {
+    Modal confirmation dialog rendered when ActionBinding enters the confirming
+    state. Presents the action label, a descriptive confirmation message, and
+    confirm and cancel buttons so the user can explicitly approve or abort a
+    potentially consequential action. Traps keyboard focus until the user
+    responds. Supports a destructive mode that visually emphasises the danger
+    of confirmation.
+  }
+
+  anatomy {
+    root:          container  { Top-level dialog host; positions backdrop and dialog }
+    backdrop:      container  { Full-viewport overlay behind the dialog panel }
+    dialog:        container  { Visible dialog panel holding all content }
+    title:         text       { Short label identifying the action being confirmed }
+    message:       text       { Descriptive text explaining consequences of confirming }
+    confirmButton: action     { Button that commits the action and dismisses the dialog }
+    cancelButton:  action     { Button that aborts the action and dismisses the dialog }
+  }
+
+  states {
+    hidden [initial] {
+      on SHOW -> visible;
+    }
+
+    visible {
+      on CONFIRM -> hidden;
+      on CANCEL -> hidden;
+      on DISMISS -> hidden;
+      entry [trapFocus; preventScroll];
+      exit [releaseFocus; restoreScroll];
+    }
+  }
+
+  accessibility {
+    role: dialog;
+    modal: true;
+    keyboard {
+      Escape -> CANCEL;
+      Enter -> CONFIRM;
+    }
+    focus {
+      trap: true;
+      initial: confirmButton;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "dialog";
+        aria-modal: "true";
+        aria-label: ?title;
+        aria-describedby: message;
+      };
+      backdrop -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      dialog -> {
+        role: "document";
+      };
+      confirmButton -> {
+        role: "button";
+        aria-label: ?confirmLabel;
+      };
+      cancelButton -> {
+        role: "button";
+        aria-label: ?cancelLabel;
+      };
+    }
+  }
+
+  props {
+    title: String
+    message: String
+    confirmLabel: String = "Confirm"
+    cancelLabel: String = "Cancel"
+    destructive: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-destructive: if ?destructive then "true" else "false";
+      hidden: if state == "hidden" then true else false;
+    }
+
+    backdrop -> {
+      data-part: "backdrop";
+      aria-hidden: "true";
+      onClick: send(DISMISS);
+    }
+
+    dialog -> {
+      data-part: "dialog";
+      role: "dialog";
+      aria-modal: "true";
+      aria-label: ?title;
+      aria-describedby: "confirmation-dialog-message";
+    }
+
+    title -> {
+      data-part: "title";
+      id: "confirmation-dialog-title";
+      text: ?title;
+    }
+
+    message -> {
+      data-part: "message";
+      id: "confirmation-dialog-message";
+      text: ?message;
+    }
+
+    confirmButton -> {
+      data-part: "confirm-button";
+      data-destructive: if ?destructive then "true" else "false";
+      onClick: send(CONFIRM);
+    }
+
+    cancelButton -> {
+      data-part: "cancel-button";
+      onClick: send(CANCEL);
+    }
+  }
+
+  affordance {
+    serves: overlay;
+    specificity: 9;
+    when {
+      feature: "confirmation";
+    }
+    bind {
+      title: actionLabel;
+      message: confirmationMessage;
+    }
+  }
+
+  invariant {
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        s.name != ""
+    }
+
+    always "dialog hidden when not visible": {
+      if state == "hidden" then state != "visible"
+    }
+
+    never "both states active simultaneously": {
+      state == "hidden" and state == "visible"
+    }
+
+    "SHOW event must transition root from hidden to visible state";
+    "CONFIRM event must dismiss the dialog and execute the bound action";
+    "CANCEL event must dismiss the dialog without executing the action";
+    "DISMISS event dispatched by backdrop click must close the dialog";
+    "Escape key must dispatch CANCEL and close the dialog";
+    "Enter key must dispatch CONFIRM when confirmButton holds focus";
+    "Focus must be trapped inside dialog while in visible state";
+    "confirmButton must receive initial focus when dialog becomes visible";
+    "destructive prop must set data-destructive=true on root and confirmButton";
+    "aria-modal must be true on dialog part while visible";
+  }
+
+}
