@@ -54,9 +54,22 @@
       "Bash(git diff:*)",
       "Bash(grep:*)",
       "Bash(npx tsc:*)",
-      "Bash(rm -f .claude/agents/references/runtime-infrastructure-guide.md)",
-      "Bash(rmdir .claude/agents/references)",
-      "mcp__vibe_kanban__create_issue"
+      "Bash(sed -i \"/alias vk='npx vibe-kanban/d\" ~/.bashrc)",
+      "Bash(echo \"alias vk='PORT=38983 npx vibe-kanban@latest'\")",
+      "Bash(cp .claude/agents/concept-parameter-update.md .codex/agents/concept-parameter-update.md)",
+      "Bash(cp .claude/agents/concept-parameter-update.md .gemini/agents/concept-parameter-update.md)",
+      "Bash(cp .claude/agents/test-generation.md .codex/agents/test-generation.md)",
+      "Bash(cp .claude/agents/test-generation.md .gemini/agents/test-generation.md)",
+      "Bash(cp .claude/agents/seed-data.md .codex/agents/seed-data.md)",
+      "Bash(cp .claude/agents/concept-parameter-update.md .codex/agents/)",
+      "Bash(cp .claude/agents/concept-parameter-update.md .gemini/agents/)",
+      "Bash(cp .claude/agents/test-generation.md .codex/agents/)",
+      "Bash(cp .claude/agents/test-generation.md .gemini/agents/)",
+      "Bash(cp .claude/agents/seed-data.md .codex/agents/)"
     ]
-  }
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "clef-devtools"
+  ]
 }

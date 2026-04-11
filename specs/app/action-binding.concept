@@ -1,0 +1,259 @@
+# @fixtures-added
+@version(1)
+@category("ui-core")
+@visibility("public")
+concept ActionBinding [B] {
+
+  purpose {
+    Bind a user interaction to a concept action invocation. Resolves
+    parameters from placement context, evaluates preconditions, manages
+    confirmation for irreversible actions, delegates to transport for
+    execution, and maps result variants to UI states. Every invocation
+    produces a FlowTrace entry regardless of outcome.
+  }
+
+  state {
+    bindings: set B
+    definition {
+      target: B -> String
+      parameterMap: B -> String
+      label: B -> option String
+      icon: B -> option String
+      buttonVariant: B -> option String
+    }
+    policies {
+      precondition: B -> option String
+      confirmWhen: B -> option String
+      executionPolicy: B -> String
+      retryPolicy: B -> option String
+    }
+    execution {
+      status: B -> String
+      lastTrace: B -> option String
+      pendingConfirmation: B -> option String
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action bind(binding: B, target: String, parameterMap: String,
+                precondition: option String, confirmWhen: option String,
+                executionPolicy: String, retryPolicy: option String,
+                label: option String, icon: option String,
+                buttonVariant: option String) {
+      -> ok(binding: B) {
+        Create an action binding wiring a UI trigger to a concept action.
+        Target is a concept/action reference (e.g., "Task/complete").
+        ParameterMap is a JSON object mapping action param names to context
+        expressions. ExecutionPolicy is "optimistic", "pessimistic", or "auto".
+      }
+      -> invalid(message: String) {
+        Target is empty, parameterMap is not valid JSON, or executionPolicy
+        is not one of the allowed values.
+      }
+      -> duplicate(message: String) {
+        A binding with this identifier already exists.
+      }
+
+      fixture bind_simple {
+        binding: "task-complete-btn"
+        target: "Task/complete"
+        parameterMap: "{\"taskId\": \"row.id\"}"
+        executionPolicy: "auto"
+      }
+      fixture bind_with_confirm {
+        binding: "invoice-void-btn"
+        target: "Invoice/void"
+        parameterMap: "{\"invoiceId\": \"row.id\"}"
+        confirmWhen: "true"
+        executionPolicy: "pessimistic"
+        label: "Void Invoice"
+        icon: "x-circle"
+        buttonVariant: "destructive"
+      }
+      fixture bind_empty_target {
+        binding: "bad-btn"
+        target: ""
+        parameterMap: "{}"
+        executionPolicy: "auto"
+      } -> invalid
+      fixture bind_bad_policy {
+        binding: "bad-policy"
+        target: "Task/complete"
+        parameterMap: "{}"
+        executionPolicy: "invalid-policy"
+      } -> invalid
+      fixture bind_bad_json {
+        binding: "bad-json"
+        target: "Task/complete"
+        parameterMap: "not-json"
+        executionPolicy: "auto"
+      } -> invalid
+    }
+
+    action get(binding: B) {
+      -> ok(binding: B, target: String, parameterMap: String,
+            precondition: option String, confirmWhen: option String,
+            executionPolicy: String, retryPolicy: option String,
+            label: option String, icon: option String,
+            buttonVariant: option String, status: String) {
+        Return the full binding configuration and current execution status.
+      }
+      -> notfound(message: String) {
+        No binding exists with this identifier.
+      }
+
+      fixture get_existing { binding: $bind_simple.binding } after bind_simple
+      fixture get_missing { binding: "nonexistent" } -> notfound
+    }
+
+    action invoke(binding: B, context: String) {
+      -> ok(result: String, trace: String) {
+        Resolve parameters against context, check precondition, and execute
+        the target action via transport. Returns the action result and a
+        FlowTrace identifier. If executionPolicy is "auto", the system
+        derives optimistic vs pessimistic from the target action's variant set.
+      }
+      -> error(variant: String, message: String, trace: String) {
+        The target action returned a non-ok variant. The variant field contains
+        the specific error variant tag, message contains the error detail.
+      }
+      -> invalid(violations: String, trace: String) {
+        Pre-flight validation failed. Violations is a JSON array of field-level
+        errors from the Validator concept. The target action was not attempted.
+      }
+      -> unauthorized(reason: String) {
+        The binding's precondition evaluated to false for the given context,
+        or the user lacks permission to invoke the target action.
+      }
+      -> confirming(binding: B, message: String) {
+        The binding requires confirmation before executing. The message is
+        auto-generated for irreversible actions (target declares reversal: none)
+        or derived from the confirmWhen expression. Caller must follow up with
+        confirm or cancel.
+      }
+
+      fixture invoke_simple {
+        binding: $bind_simple.binding
+        context: "{\"row\": {\"id\": \"task-1\"}}"
+      } after bind_simple
+      fixture invoke_needs_confirm {
+        binding: $bind_with_confirm.binding
+        context: "{\"row\": {\"id\": \"inv-1\"}}"
+      } after bind_with_confirm -> confirming
+      fixture invoke_missing {
+        binding: "nonexistent"
+        context: "{}"
+      } -> notfound
+    }
+
+    action confirm(binding: B) {
+      -> ok(result: String, trace: String) {
+        User confirmed the pending action. Execute the target action and
+        return the result. Clears the pendingConfirmation state.
+      }
+      -> error(variant: String, message: String, trace: String) {
+        The target action was executed after confirmation but returned a
+        non-ok variant.
+      }
+      -> expired(message: String) {
+        The confirmation window has expired or no confirmation was pending.
+      }
+      -> notfound(message: String) {
+        No binding exists with this identifier.
+      }
+
+      fixture confirm_pending {
+        binding: $bind_with_confirm.binding
+      } after invoke_needs_confirm
+      fixture confirm_not_pending {
+        binding: $bind_simple.binding
+      } after bind_simple -> expired
+    }
+
+    action cancel(binding: B) {
+      -> ok() {
+        Cancel the pending confirmation. Clears the pendingConfirmation
+        state and returns the binding to idle status.
+      }
+      -> notfound(message: String) {
+        No binding exists with this identifier.
+      }
+
+      fixture cancel_pending {
+        binding: $bind_with_confirm.binding
+      } after invoke_needs_confirm
+      fixture cancel_missing {
+        binding: "nonexistent"
+      } -> notfound
+    }
+
+    action list() {
+      -> ok(bindings: String) {
+        Return all registered action bindings as a JSON array.
+      }
+
+      fixture list_all {} after bind_simple
+    }
+
+    action remove(binding: B) {
+      -> ok() {
+        Remove the action binding. Any pending confirmation is cancelled.
+      }
+      -> notfound(message: String) {
+        No binding exists with this identifier.
+      }
+
+      fixture remove_existing { binding: $bind_simple.binding } after bind_simple
+      fixture remove_missing { binding: "nonexistent" } -> notfound
+    }
+  }
+
+  example "bind then invoke": {
+    after bind(binding: b, target: "Task/complete",
+      parameterMap: "{\"taskId\": \"row.id\"}",
+      executionPolicy: "auto") -> ok(binding: b)
+    then invoke(binding: b, context: "{\"row\": {\"id\": \"task-1\"}}") -> ok(result: _, trace: _)
+  }
+
+  example "bind with confirm then invoke returns confirming": {
+    after bind(binding: b, target: "Invoice/void",
+      parameterMap: "{\"invoiceId\": \"row.id\"}",
+      confirmWhen: "true",
+      executionPolicy: "pessimistic") -> ok(binding: b)
+    then invoke(binding: b, context: "{\"row\": {\"id\": \"inv-1\"}}") -> confirming(binding: b, message: _)
+  }
+
+  example "bind then get returns config": {
+    after bind(binding: b, target: "Task/complete",
+      parameterMap: "{\"taskId\": \"row.id\"}",
+      executionPolicy: "auto") -> ok(binding: b)
+    then get(binding: b) -> ok(target: "Task/complete", executionPolicy: "auto")
+  }
+
+  always "bindings have required fields": {
+    forall b in bindings:
+      b.target != none and b.executionPolicy != none
+  }
+
+  never "orphaned binding": {
+    exists b in bindings:
+      b.target = none
+  }
+
+  action bind {
+    requires: target != ""
+    ensures ok: binding in bindings
+  }
+
+  action invoke {
+    requires: binding in bindings
+  }
+
+  action confirm {
+    requires: binding in bindings
+  }
+}

@@ -364,7 +364,7 @@ describe('SyncedContent functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('createReference'), input: fc.record({ ref: fc.string(), original: fc.string() }) }),
+              fc.record({ action: fc.constant('createReference'), input: fc.record({ ref: fc.string(), original: fc.string(), sourceNamespace: fc.string() }) }),
               fc.record({ action: fc.constant('editOriginal'), input: fc.record({ original: fc.string(), content: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('deleteReference'), input: fc.record({ ref: fc.string() }) }),
               fc.record({ action: fc.constant('convertToIndependent'), input: fc.record({ ref: fc.string() }) }),
@@ -397,7 +397,7 @@ describe('SyncedContent functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('createReference'), input: fc.record({ ref: fc.string(), original: fc.string() }) }),
+              fc.record({ action: fc.constant('createReference'), input: fc.record({ ref: fc.string(), original: fc.string(), sourceNamespace: fc.string() }) }),
               fc.record({ action: fc.constant('editOriginal'), input: fc.record({ original: fc.string(), content: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('deleteReference'), input: fc.record({ ref: fc.string() }) }),
               fc.record({ action: fc.constant('convertToIndependent'), input: fc.record({ ref: fc.string() }) }),
@@ -445,7 +445,7 @@ describe('SyncedContent functional handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ ref: fc.string(), original: fc.string() }),
+          fc.record({ ref: fc.string(), original: fc.string(), sourceNamespace: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
             const result = await safeInvoke(async () => {

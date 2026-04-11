@@ -58,6 +58,8 @@ function resolvedTypeToRust(t: ResolvedType): string {
       const fields = t.fields.map(f => `${snakeCase(f.name)}: ${resolvedTypeToRust(f.type)}`);
       return `{ ${fields.join(', ')} }`;
     }
+    case 'enum':
+      return 'String';
   }
 }
 

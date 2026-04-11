@@ -72,6 +72,8 @@ function typeExprToResolvedType(t: TypeExpr): ResolvedType {
           optional: false,
         })),
       };
+    case 'enum':
+      return { kind: 'enum', values: t.values };
     default: {
       const _exhaustive: never = t;
       throw new Error(`Unknown TypeExpr kind: ${(t as { kind: string }).kind}`);
@@ -292,6 +294,8 @@ function resolvedTypeToJsonSchema(t: ResolvedType): Record<string, unknown> {
       }
       return { type: 'object', properties, required };
     }
+    case 'enum':
+      return { type: 'string', enum: t.values };
     default: {
       const _exhaustive: never = t;
       throw new Error(`Unknown ResolvedType kind: ${(t as { kind: string }).kind}`);
@@ -387,6 +391,8 @@ function resolvedTypeToGraphQL(t: ResolvedType): string {
       return 'JSON';
     case 'record':
       return 'JSON';
+    case 'enum':
+      return 'String';
     default: {
       const _exhaustive: never = t;
       throw new Error(`Unknown ResolvedType kind: ${(t as { kind: string }).kind}`);

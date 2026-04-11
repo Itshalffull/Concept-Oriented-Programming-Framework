@@ -553,7 +553,8 @@ export type ResolvedType =
   | { kind: 'list'; inner: ResolvedType }
   | { kind: 'option'; inner: ResolvedType }
   | { kind: 'map'; keyType: ResolvedType; inner: ResolvedType }
-  | { kind: 'record'; fields: FieldSchema[] };
+  | { kind: 'record'; fields: FieldSchema[] }
+  | { kind: 'enum'; values: string[] };
 
 export interface FixtureSchema {
   name: string;

@@ -1,6 +1,6 @@
 ---
 name: projection
-description: Enrich ConceptManifests with interface generation metadata . Reads concept specs ( via ConceptManifest from SchemaGen ) and interface annotations ( from app . interface . yaml ) , produces generation ready projections with resource mappings , trait bindings , cross concept type graphs , and opaque enrichment content . Enrichment is stored as a single JSON string targets interpret keys they recognize ( workflows , annotations , command tree , action mappings ) and ignore the rest . One projection per concept per generation run
+description: Bidirectional interface mapping between concepts and external APIs . Forward ( outbound ) : enrich ConceptManifests with interface generation metadata for producing REST GraphQL CLI MCP endpoints . Reverse ( inbound ) : map external API endpoints back to concept actions for consuming third party APIs as concept backends . The same Projection data structure serves both directions the mapping between concept actions and API endpoints is inherently bidirectional
 argument-hint: [command] [manifest] [annotations]
 allowed-tools: Read, Grep, Glob, Bash
 ---
@@ -11,7 +11,7 @@ allowed-tools: Read, Grep, Glob, Bash
 
 # Projection
 
-Enrich ConceptManifests with interface generation metadata . Reads concept specs ( via ConceptManifest from SchemaGen ) and interface annotations ( from app . interface . yaml ) , produces generation ready projections with resource mappings , trait bindings , cross concept type graphs , and opaque enrichment content . Enrichment is stored as a single JSON string targets interpret keys they recognize ( workflows , annotations , command tree , action mappings ) and ignore the rest . One projection per concept per generation run
+Bidirectional interface mapping between concepts and external APIs . Forward ( outbound ) : enrich ConceptManifests with interface generation metadata for producing REST GraphQL CLI MCP endpoints . Reverse ( inbound ) : map external API endpoints back to concept actions for consuming third party APIs as concept backends . The same Projection data structure serves both directions the mapping between concept actions and API endpoints is inherently bidirectional
 
 ## Commands
 
@@ -45,3 +45,29 @@ Auto derive REST resource mappings from state relations
  to resource { id } action name .
 
 **Arguments:** `$0` **projection** (P)
+
+### ingest
+Create a reverse Projection from an ingest manifest . Parses 
+ the manifest s action mappings for the specified source and 
+ concept , stores them as actionMappings . Sets direction to 
+ reverse and externalSource to the source name . This is the 
+ inverse of project ( ) instead of enriching a concept for API 
+ generation , it maps an external API back to a concept .
+
+**Arguments:** `$0` **manifest** (string), `$1` **source** (string), `$2` **concept** (string)
+
+### resolveForward
+Given a concept action invocation , resolve the external API 
+ call from the Projection s action mappings . Applies request 
+ field transforms to produce the API request body . Returns 
+ the HTTP method , path , serialized body , and auth headers .
+
+**Arguments:** `$0` **projection** (P), `$1` **action** (string), `$2` **input** (string)
+
+### resolveReverse
+Given an incoming API call ( method , path , body ) , resolve 
+ which concept action it maps to . Applies response field 
+ transforms to produce the concept action input . Used for 
+ webhook routing and inbound API bridging .
+
+**Arguments:** `$0` **projection** (P), `$1` **method** (string), `$2` **path** (string), `$3` **body** (string)

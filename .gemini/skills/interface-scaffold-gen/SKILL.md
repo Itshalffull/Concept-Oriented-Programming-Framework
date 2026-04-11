@@ -1,6 +1,6 @@
 ---
 name: interface-scaffold-gen
-description: Generate interface manifest ( interface . yaml ) scaffolds with target configurations , SDK settings , spec output options , and per concept overrides
+description: Generate interface manifest ( interface . yaml ) scaffolds with target configurations , SDK settings , spec output options , and per concept overrides . Supports the dual manifest Bind architecture where a single application is represented by two manifests : a config manifest ( developer facing admin concepts ) and a content manifest ( user facing content concepts ) , each with its own target configuration and auth policy
 argument-hint: --name <interface-name>
 allowed-tools: Read, Write, Bash
 ---

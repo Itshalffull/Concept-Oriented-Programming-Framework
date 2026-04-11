@@ -203,23 +203,6 @@ describe('EventBus functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "subscribe_namespaced" -> ok', async () => {
-      if (typeof eventBusHandler.subscribe !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_valid_register_event = await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_register_event?.output ?? {}));
-      const _fixtureInput = { event: "user.created", handler: "tenantHandler", priority: "5", namespace: "tenant:acme" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(eventBusHandler.subscribe({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
-    });
-
   });
 
   describe('unsubscribe', () => {
@@ -387,23 +370,6 @@ describe('EventBus functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "dispatch_namespaced" -> ok', async () => {
-      if (typeof eventBusHandler.dispatch !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_valid_register_event = await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_register_event?.output ?? {}));
-      const _fixtureInput = { event: "user.created", data: "{\"userId\":\"u-789\"}", namespace: "tenant:acme" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(eventBusHandler.dispatch({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
-    });
-
   });
 
   describe('dispatchAsync', () => {
@@ -481,23 +447,6 @@ describe('EventBus functional handler', () => {
       const afterResult_valid_register_event = await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
       const _pool = Object.assign({}, (afterResult_valid_register_event?.output ?? {}));
       const _fixtureInput = { event: "user.login", data: "{}" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(eventBusHandler.dispatchAsync({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
-    });
-
-    it('fixture "dispatch_async_namespaced" -> ok', async () => {
-      if (typeof eventBusHandler.dispatchAsync !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_valid_register_event = await interpret(eventBusHandler.registerEventType({ name: "user.created", schema: "{\"type\":\"object\",\"properties\":{\"userId\":{\"type\":\"string\"}}}" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_register_event?.output ?? {}));
-      const _fixtureInput = { event: "user.created", data: "{\"userId\":\"u-999\"}", namespace: "tenant:beta" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
           const cur = _fixtureInput[k];
@@ -626,20 +575,6 @@ describe('EventBus functional handler', () => {
       expect(thenResult1.variant).toBe("ok");
     });
 
-    it("namespace-scoped dispatch reaches only matching subscribers", async () => {
-      const storage = createInMemoryStorage();
-      const registerEventTypeResult0 = await interpret(eventBusHandler.registerEventType({ name: "order.placed", schema: "{}" }), storage);
-      expect(registerEventTypeResult0.variant).toBe("ok");
-      const thenResult0 = await interpret(eventBusHandler.subscribe({ event: "order.placed", handler: "globalHandler", priority: 10 }), storage);
-      expect(thenResult0.variant).toBe("ok");
-      const thenResult1 = await interpret(eventBusHandler.subscribe({ event: "order.placed", handler: "acmeHandler", priority: 5, namespace: "tenant:acme" }), storage);
-      expect(thenResult1.variant).toBe("ok");
-      const thenResult2 = await interpret(eventBusHandler.subscribe({ event: "order.placed", handler: "betaHandler", priority: 5, namespace: "tenant:beta" }), storage);
-      expect(thenResult2.variant).toBe("ok");
-      const thenResult3 = await interpret(eventBusHandler.dispatch({ event: "test-e", data: "{}", namespace: "tenant:acme" }), storage);
-      expect(thenResult3.variant).toBe("ok");
-    });
-
   });
 
   describe('state invariants (stateful PBT)', () => {
@@ -706,42 +641,6 @@ describe('EventBus functional handler', () => {
                   expect(typeof result.variant).toBe('string');
                 }
                 // Never: orphaned-history
-              }
-            }
-          },
-        ),
-        { numRuns: 50 },
-      );
-    });
-
-    it('never: cross-namespace delivery', async () => {
-      await fc.assert(
-        fc.asyncProperty(
-          fc.array(
-            fc.oneof(
-              fc.record({ action: fc.constant('registerEventType'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), schema: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('subscribe'), input: fc.record({ event: fc.string({ minLength: 1, maxLength: 50 }), handler: fc.string({ minLength: 1, maxLength: 50 }), priority: fc.integer({ min: 1, max: 1000 }), namespace: fc.string() }) }),
-              fc.record({ action: fc.constant('unsubscribe'), input: fc.record({ subscriptionId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('dispatch'), input: fc.record({ event: fc.string(), data: fc.string({ minLength: 1, maxLength: 50 }), namespace: fc.string() }) }),
-              fc.record({ action: fc.constant('dispatchAsync'), input: fc.record({ event: fc.string(), data: fc.string({ minLength: 1, maxLength: 50 }), namespace: fc.string() }) }),
-              fc.record({ action: fc.constant('getHistory'), input: fc.record({ event: fc.string({ minLength: 1, maxLength: 50 }), limit: fc.integer({ min: 1, max: 1000 }) }) }),
-            ),
-            { minLength: 1, maxLength: 5 },
-          ),
-          async (actionSequence) => {
-            const storage = createInMemoryStorage();
-            for (const step of actionSequence) {
-              const actionFn = eventBusHandler[step.action];
-              if (typeof actionFn === 'function') {
-                const result = await safeInvoke(async () => {
-                  const program = actionFn.call(eventBusHandler, step.input as Record<string, unknown>);
-                  return interpret(program, storage);
-                });
-                // Every action should return a result with a variant
-                if (result?.variant !== undefined) {
-                  expect(typeof result.variant).toBe('string');
-                }
-                // Never: cross-namespace delivery
               }
             }
           },

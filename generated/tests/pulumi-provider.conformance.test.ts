@@ -6,7 +6,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import fc from 'fast-check';
-import { pulumiProviderHandler } from '../../handlers/ts/deploy/pulumi-provider.handler.js';
+import { pulumiProviderHandler } from '../../handlers/ts/app/pulumi-provider.handler.js';
 import {
   classifyPurity,
   extractCompletionVariants,

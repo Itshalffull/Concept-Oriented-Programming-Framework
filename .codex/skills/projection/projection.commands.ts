@@ -12,4 +12,4 @@ export async function handleProjectionSkill(
   return JSON.stringify(result.body, null, 2);
 }
 
-export const projectionSkillCommands = ['project', 'validate', 'diff', 'inferResources'];
+export const projectionSkillCommands = ['project', 'validate', 'diff', 'inferResources', 'ingest', 'resolveForward', 'resolveReverse'];
