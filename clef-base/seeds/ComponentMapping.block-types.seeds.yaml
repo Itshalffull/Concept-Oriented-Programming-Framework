@@ -1,21 +1,23 @@
-# ComponentMapping block-types seeds — widget-to-schema bindings for block-editor display modes.
-# Each mapping registers a block widget as the renderer for a given (schema, display_mode) pair,
-# declares in which block-editor contexts the block is insertable, and provides the insertion
-# catalog metadata (section, icon, label).
+# ComponentMapping seeds for block editor block types.
+# Each entry registers a (schema x display_mode) -> widget_id mapping for the
+# block editor so that the ComponentMapping resolver can look up the correct
+# widget when rendering a block of a given schema type.
+#
+# insertable: true means the block type appears in the slash-menu / block picker.
+# section: menu section label in the block inserter.
+# icon: icon token for the block picker entry.
+# label: human-readable label for the block picker entry.
 
 concept: ComponentMapping
 action: create
 entries:
-  # Paragraph block — plain text paragraph in block editors
-  - name: paragraph-block-mapping
-    widget_id: paragraph-block
-    schema: paragraph
+  # Heading block -- renders h1-h6 heading content with level selector
+  - id: heading-block-mapping
+    name: heading-block-mapping
+    widget_id: heading-block
+    schema: heading
     display_mode: block-editor
     insertable: true
-    block_editor_context:
-      - markdown
-      - wiki
-      - notebook
     section: "Basic"
-    icon: "text"
-    label: "Paragraph"
+    icon: "heading"
+    label: "Heading"

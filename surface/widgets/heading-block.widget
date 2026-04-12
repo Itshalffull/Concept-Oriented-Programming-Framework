@@ -1,0 +1,229 @@
+@version(1)
+widget heading-block {
+
+  purpose {
+    Editable heading block for the Clef block editor. Renders an HTML heading
+    at levels 1 through 6, driven by the level prop which maps directly to the
+    typography token typography.scale.h{level}. A level badge in the inspector
+    rail shows the current heading level (h1-h6) at a glance. The block supports
+    inline rich-text editing when focused, keyboard-driven level cycling via Tab,
+    immediate paragraph conversion via Backspace at start-of-line, and direct
+    level selection via Ctrl+1 through Ctrl+6. Pressing Enter inserts a new
+    paragraph block below rather than a new heading, following standard
+    document-editing conventions. Focus state drives the surrounding selection
+    ring and toolbar visibility without any framework-specific coupling.
+  }
+
+  anatomy {
+    root:           container    { Outer wrapper carrying data-state, data-block-id, and data-level for CSS and test selectors }
+    headingContent: interactive  { Contenteditable heading element; aria-level and role=heading are bound here }
+    levelBadge:     presentation { Inspector-rail badge showing the current level label (h1 through h6); display: none in non-inspector contexts }
+  }
+
+  states {
+    edit {
+      idle [initial] {
+        on FOCUS  -> focused;
+      }
+      focused {
+        on EDIT   -> editing;
+        on BLUR   -> idle;
+      }
+      editing {
+        on BLUR              -> idle;
+        on LEVEL_PICKER_OPEN -> levelPickerOpen;
+        entry [mountInlineToolbar];
+        exit  [unmountInlineToolbar];
+      }
+      levelPickerOpen {
+        on LEVEL_PICKER_CLOSE -> editing;
+        on LEVEL_SELECT       -> editing;
+        entry [openLevelPicker];
+        exit  [closeLevelPicker];
+      }
+    }
+  }
+
+  accessibility {
+    role: heading;
+    keyboard {
+      Enter         -> CONFIRM_BLOCK;
+      Tab           -> CYCLE_LEVEL;
+      Backspace     -> CONVERT_TO_PARAGRAPH;
+      Control+1     -> SET_LEVEL_1;
+      Control+2     -> SET_LEVEL_2;
+      Control+3     -> SET_LEVEL_3;
+      Control+4     -> SET_LEVEL_4;
+      Control+5     -> SET_LEVEL_5;
+      Control+6     -> SET_LEVEL_6;
+    }
+    focus {
+      trap: false;
+      initial: headingContent;
+      roving: false;
+      returnOnClose: false;
+    }
+    aria {
+      headingContent -> {
+        role: "heading";
+        aria-level: ?level;
+        aria-label: if ?content == "" then "Heading level {?level}" else ?content;
+        aria-multiline: "false";
+        contenteditable: if state.edit == "editing" then "true" else "false";
+      };
+      levelBadge -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    blockId:  String = ""
+    content:  String = ""
+    level:    Int    = 2
+    focused:  Bool   = false
+  }
+
+  connect {
+    root -> {
+      data-part:     "root";
+      data-state:    state.edit;
+      data-block-id: ?blockId;
+      data-level:    ?level;
+      onFocus:       send(FOCUS);
+      onBlur:        send(BLUR);
+    }
+
+    headingContent -> {
+      data-part:        "heading-content";
+      role:             "heading";
+      aria-level:       ?level;
+      contenteditable:  if state.edit == "editing" then "true" else "false";
+      text:             ?content;
+      onFocus:          send(EDIT);
+      onBlur:           send(BLUR);
+      onKeyDown-Enter:  send(CONFIRM_BLOCK);
+      onKeyDown-Tab:    send(CYCLE_LEVEL);
+    }
+
+    levelBadge -> {
+      data-part:  "level-badge";
+      data-level: ?level;
+      text:       if ?level == 1 then "h1" else if ?level == 2 then "h2" else if ?level == 3 then "h3" else if ?level == 4 then "h4" else if ?level == 5 then "h5" else "h6";
+    }
+  }
+
+  affordance {
+    serves: block-editor-block;
+    specificity: 8;
+    when schema = "heading";
+    bind {
+      blockId: node;
+      content: textContent;
+      level:   headingLevel;
+    }
+  }
+
+  invariant {
+    example "focus event moves idle to focused": {
+      after FOCUS() -> ok
+      then state.edit = "focused"
+    }
+
+    example "edit event in focused state moves to editing": {
+      after EDIT() -> ok
+      then state.edit = "editing"
+    }
+
+    example "blur from editing returns to idle": {
+      after BLUR() -> ok
+      then state.edit = "idle"
+    }
+
+    example "level-picker-open from editing transitions to levelPickerOpen": {
+      after LEVEL_PICKER_OPEN() -> ok
+      then state.edit = "levelPickerOpen"
+    }
+
+    example "level-picker-close from levelPickerOpen returns to editing": {
+      after LEVEL_PICKER_CLOSE() -> ok
+      then state.edit = "editing"
+    }
+
+    example "root data-state reflects edit FSM in idle": {
+      after render(focused: false) -> ok
+      then root.dataState = "idle"
+    }
+
+    example "root data-level reflects level prop at level 1": {
+      after render(level: 1) -> ok
+      then root.dataLevel = 1
+    }
+
+    example "root data-level reflects level prop at level 6": {
+      after render(level: 6) -> ok
+      then root.dataLevel = 6
+    }
+
+    example "levelBadge text is h1 when level is 1": {
+      after render(level: 1) -> ok
+      then levelBadge.text = "h1"
+    }
+
+    example "levelBadge text is h6 when level is 6": {
+      after render(level: 6) -> ok
+      then levelBadge.text = "h6"
+    }
+
+    example "headingContent contenteditable true only in editing state": {
+      after EDIT() -> ok
+      then headingContent.contenteditable = "true"
+    }
+
+    example "headingContent aria-level matches level prop at level 3": {
+      after render(level: 3) -> ok
+      then headingContent.ariaLevel = 3
+    }
+
+    forall "all six heading levels produce correct levelBadge label": {
+      given lv in { 1, 2, 3, 4, 5, 6 }
+      then levelBadge.text = "h{lv}"
+    }
+
+    forall "all six heading levels bind correct data-level on root": {
+      given lv in { 1, 2, 3, 4, 5, 6 }
+      then root.dataLevel = lv
+    }
+
+    always "root data-state reflects edit FSM": {
+      root.dataState = state.edit
+    }
+
+    always "headingContent aria-level equals level prop": {
+      headingContent.ariaLevel = level
+    }
+
+    always "root data-level equals level prop": {
+      root.dataLevel = level
+    }
+
+    always "headingContent role is heading": {
+      headingContent.role = "heading"
+    }
+
+    never "contenteditable true outside editing state": {
+      state.edit != "editing" and headingContent.contenteditable = "true"
+    }
+
+    never "level set to zero or negative": {
+      level = 0 and headingContent.ariaLevel = 0
+    }
+
+    action headingContent {
+      requires: state.edit = "idle"
+      ensures ok: state.edit = "focused"
+    }
+  }
+
+}

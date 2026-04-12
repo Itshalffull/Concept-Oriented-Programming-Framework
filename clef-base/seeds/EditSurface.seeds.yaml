@@ -25,3 +25,33 @@ entries:
     compile_action_ref: null
     compile_bundle_ref: null
     compile_status_field: null
+
+  # Heading block editor surface
+  # Toolbar: inline-toolbar (shared mark toolbar)
+  # Command bindings: bold/italic/code mark toggles, heading-level-picker, link-toggle
+  # Input rules: markdown-heading-2 seeded in P1.12; heading-1/3/4/5/6 are anticipatory
+  # Panel widgets: anchor-link-panel is anticipatory (ships in Phase 2/3)
+  - id: heading-block-editor
+    schema_ref: heading
+    context: block-editor
+    toolbar_widget: inline-toolbar
+    command_bindings:
+      - bold-toggle
+      - italic-toggle
+      - code-toggle
+      - heading-level-picker
+      - link-toggle
+    panel_widgets:
+      - anchor-link-panel
+    context_menu_bindings: []
+    input_rule_refs:
+      - markdown-heading-1
+      - markdown-heading-2
+      - markdown-heading-3
+      - markdown-heading-4
+      - markdown-heading-5
+      - markdown-heading-6
+    picker_refs: []
+    compile_action_ref: null
+    compile_bundle_ref: null
+    compile_status_field: null
