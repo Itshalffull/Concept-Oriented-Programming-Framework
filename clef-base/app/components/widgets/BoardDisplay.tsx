@@ -23,6 +23,16 @@ interface BoardDisplayProps {
   groupBy?: string;
   /** Custom item renderer — when provided, replaces default card content with DisplayMode rendering */
   renderItem?: (row: Record<string, unknown>, onClick?: () => void) => React.ReactNode;
+  /**
+   * Called when a card is dropped onto a different column.
+   * Receives the row's ID (value of the first field, or `id` field if present)
+   * and the new group value (the target column key).
+   *
+   * TODO: views wire onCardMove via ActionBinding based on their grouping field.
+   *
+   * When undefined, dragging is disabled and a visual indicator is shown.
+   */
+  onCardMove?: (rowId: string, newGroupValue: string) => void;
 }
 
 // ─── BoardCardActionButtons ───────────────────────────────────────────────
@@ -152,9 +162,18 @@ function formatValue(value: unknown): string {
   return String(value);
 }
 
+/** Derive a stable string ID for a row. Prefers an `id` field, then the first field value. */
+function rowId(row: Record<string, unknown>, fields: FieldConfig[]): string {
+  if (row.id !== undefined && row.id !== null) return String(row.id);
+  const firstKey = fields[0]?.key;
+  return firstKey ? String(row[firstKey] ?? '') : '';
+}
+
 export const BoardDisplay: React.FC<BoardDisplayProps> = ({
-  data, fields, onRowClick, rowActions, onRowAction, groupBy, renderItem,
+  data, fields, onRowClick, rowActions, onRowAction, groupBy, renderItem, onCardMove,
 }) => {
+  // Track which column is the current drag-over target for visual feedback
+  const [dragOverCol, setDragOverCol] = useState<string | null>(null);
   // Determine the grouping field
   const groupField = useMemo(() => {
     if (groupBy) return groupBy;
@@ -194,6 +213,7 @@ export const BoardDisplay: React.FC<BoardDisplayProps> = ({
 
   return (
     <div style={{
+      position: 'relative',
       display: 'flex',
       gap: 'var(--spacing-md)',
       overflowX: 'auto',
@@ -203,14 +223,37 @@ export const BoardDisplay: React.FC<BoardDisplayProps> = ({
       {columns.map(col => (
         <div
           key={col.key}
+          data-drag-over={dragOverCol === col.key ? 'true' : undefined}
+          onDragOver={onCardMove ? (e) => {
+            e.preventDefault();
+            setDragOverCol(col.key);
+          } : undefined}
+          onDragLeave={onCardMove ? (e) => {
+            // Only clear when leaving the column entirely (not entering a child element)
+            if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+              setDragOverCol(null);
+            }
+          } : undefined}
+          onDrop={onCardMove ? (e) => {
+            e.preventDefault();
+            setDragOverCol(null);
+            const id = e.dataTransfer.getData('text/plain');
+            if (id) onCardMove(id, col.key);
+          } : undefined}
           style={{
             minWidth: 220,
             maxWidth: 320,
             flex: '1 0 220px',
-            background: 'var(--palette-surface-variant)',
+            background: dragOverCol === col.key
+              ? 'var(--palette-primary-container, rgba(var(--palette-primary-rgb, 103,80,164), 0.12))'
+              : 'var(--palette-surface-variant)',
             borderRadius: 'var(--radius-md)',
             display: 'flex',
             flexDirection: 'column',
+            outline: dragOverCol === col.key
+              ? '2px dashed var(--palette-primary, #6750A4)'
+              : 'none',
+            transition: 'background 0.15s, outline 0.15s',
           }}
         >
           {/* Column header */}
@@ -246,17 +289,25 @@ export const BoardDisplay: React.FC<BoardDisplayProps> = ({
             {col.rows.map((row, i) => (
               <div
                 key={i}
+                draggable={onCardMove ? true : false}
+                onDragStart={onCardMove ? (e) => {
+                  e.dataTransfer.effectAllowed = 'move';
+                  e.dataTransfer.setData('text/plain', rowId(row, fields));
+                } : undefined}
+                onDragEnd={onCardMove ? () => setDragOverCol(null) : undefined}
                 onClick={() => onRowClick?.(row)}
+                title={!onCardMove ? 'Drag-to-move is not configured for this view' : undefined}
                 style={{
                   background: 'var(--palette-surface)',
                   border: '1px solid var(--palette-outline-variant)',
                   borderRadius: 'var(--radius-sm)',
                   padding: 'var(--spacing-sm)',
-                  cursor: onRowClick ? 'pointer' : 'default',
-                  transition: 'box-shadow 0.15s',
+                  cursor: onCardMove ? 'grab' : onRowClick ? 'pointer' : 'default',
+                  transition: 'box-shadow 0.15s, opacity 0.15s',
+                  opacity: onCardMove ? 1 : 0.85,
                 }}
                 onMouseEnter={e => {
-                  if (onRowClick) {
+                  if (onRowClick || onCardMove) {
                     (e.currentTarget as HTMLElement).style.boxShadow =
                       'var(--elevation-1, 0 1px 3px rgba(0,0,0,0.1))';
                   }
@@ -318,6 +369,21 @@ export const BoardDisplay: React.FC<BoardDisplayProps> = ({
           </div>
         </div>
       ))}
+      {/* Visual indicator shown when drag-to-move is not wired up */}
+      {!onCardMove && (
+        <div style={{
+          position: 'absolute',
+          bottom: 6,
+          right: 8,
+          fontSize: '10px',
+          color: 'var(--palette-on-surface-variant)',
+          opacity: 0.45,
+          pointerEvents: 'none',
+          userSelect: 'none',
+        }}>
+          drag-to-move not available
+        </div>
+      )}
     </div>
   );
 };
