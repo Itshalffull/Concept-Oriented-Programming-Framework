@@ -1,18 +1,14 @@
 # Step I/O visibility gating — MAG-681, docs/plans/automation-ui-prd.md §5.2-11.
 #
-# Gates StepRun/get reads on the caller's role vs the step's declared visibility.
+# Gates StepRun/getIO reads on the caller's role vs the step's declared visibility.
+# StepRun/getIO is the dedicated action returning (input, output, status); keeping
+# the gate here instead of on StepRun/get means callers can always retrieve step
+# metadata (run_ref, step_key, status, attempt) without permission, while raw
+# I/O payloads remain behind the visibility policy.
 #
-# API Gap (1): StepRun/get returns (step, run_ref, step_key, status, attempt)
-# but does NOT include input or output in its completion output, even though those
-# fields exist on the StepRun state record. There is no StepRun/getIO action.
-# These syncs gate on StepRun/get as the nearest available read surface; a proper
-# StepRun/getIO action returning (step, input, output) should be added to StepRun.
-#
-# API Gap (2): ProcessSpec steps have no first-class visibility field — only
-# config: Bytes. The visibility level ("all" | role string) must currently be
-# encoded inside the config or added as a named field on the step record. These
-# syncs read the declared visibility from Authorization state keyed by step; if no
-# entry exists the default is "all" (open access — all callers can read).
+# ProcessSpec steps have no first-class visibility field — only config: Bytes.
+# The visibility level ("all" | role string) is read from Authorization state keyed
+# by step; if no entry exists the default is "all" (open access — all callers can read).
 #
 # Note: The sync parser does not support not() conditions. The denial path is
 # expressed as a second sync that binds ?caller_roles from Authorization state
@@ -20,12 +16,14 @@
 
 # Allowed path — caller role satisfies the step's visibility policy.
 sync StepIOVisibilityAllowed [eager]
-  purpose: "When a step is read and the caller's role satisfies the step's declared visibility policy (or no policy restricts the step), confirm the read is permitted."
+  purpose: "When a step's I/O is requested and the caller's role satisfies the step's declared visibility policy (or no policy restricts the step), confirm the read is permitted and forward the payload to the caller."
 when {
-  StepRun/get: [ step: ?step ]
-    => ok(step: ?step; run_ref: ?run_ref; step_key: ?step_key; status: ?status; attempt: ?attempt)
+  StepRun/getIO: [ step: ?step ]
+    => ok(input: ?input; output: ?output; status: ?status)
 }
 where {
+  // Bind the step's key so we can look up the visibility policy.
+  StepRun: { ?step step_key: ?step_key }
   // Bind caller roles from Authorization state keyed by step identity.
   Authorization: { ?step userRoles: ?caller_roles }
   // Bind declared visibility; default to "all" (open access) when unset.
@@ -33,19 +31,19 @@ where {
   guard(?step_visibility = "all" or ?caller_roles contains ?step_visibility)
 }
 then {
-  // GAP: StepRun/getIO does not exist. Once added, invoke it here to expose
-  // (step, input, output) to the authorized caller.
-  StepRun/get: [ step: ?step ]
+  StepRun/getIO: [ step: ?step ]
 }
 
 # Denied path — step has a restricted visibility and the caller's role does not match.
 sync StepIOVisibilityDenied [eager]
-  purpose: "When a step carries a restricted visibility policy and the caller's role does not satisfy it, fail the step read with an access-denied error so the caller receives a structured denial rather than silently empty I/O fields."
+  purpose: "When a step's I/O is requested but the caller's role does not satisfy the step's declared visibility policy, fail the request with an access-denied error so the caller receives a structured denial rather than silently empty payloads."
 when {
-  StepRun/get: [ step: ?step ]
-    => ok(step: ?step; run_ref: ?run_ref; step_key: ?step_key; status: ?status; attempt: ?attempt)
+  StepRun/getIO: [ step: ?step ]
+    => ok(input: ?input; output: ?output; status: ?status)
 }
 where {
+  // Bind the step's key so we can look up the visibility policy.
+  StepRun: { ?step step_key: ?step_key }
   // Bind caller roles from Authorization state.
   Authorization: { ?step userRoles: ?caller_roles }
   // Bind the declared visibility for this step key.

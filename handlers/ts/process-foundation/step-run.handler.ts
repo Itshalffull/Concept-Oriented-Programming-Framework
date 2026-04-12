@@ -224,6 +224,114 @@ const _handler: FunctionalConceptHandler = {
       (b) => complete(b, 'not_found', { step: stepId }),
     ) as StorageProgram<Result>;
   },
+
+  seed(input: Record<string, unknown>) {
+    const runRef = input.run_ref as string;
+    const stepKey = input.step_key as string;
+    const stepType = input.step_type as string;
+    const inputData = input.input as string;
+    const outputData = input.output as string;
+
+    if (!runRef || runRef.trim() === '') {
+      return complete(createProgram(), 'error', { message: 'run_ref is required' }) as StorageProgram<Result>;
+    }
+    if (!stepKey || stepKey.trim() === '') {
+      return complete(createProgram(), 'error', { message: 'step_key is required' }) as StorageProgram<Result>;
+    }
+
+    const compositeKey = `${runRef}:${stepKey}`;
+
+    // Step 1: duplicate guard — check for existing step-run-index entry.
+    let p = createProgram();
+    p = get(p, 'step-run-index', compositeKey, '_seedIdx');
+    return branch(p, '_seedIdx',
+      // Duplicate: entry already exists — return existing step without overwriting.
+      (b) => completeFrom(b, 'duplicate', (bindings) => {
+        const idx = bindings._seedIdx as Record<string, unknown>;
+        return { step: idx.step_id as string };
+      }),
+      // Not a duplicate: proceed to parent-run status check.
+      (b) => {
+        let b2 = get(b, 'process-run', runRef, '_parentRun');
+        // Step 2: parent_run_active guard.
+        // Branch on whether parent run record is present.
+        return branch(b2, '_parentRun',
+          // Parent run exists — check its status.
+          (bb) => branch(bb,
+            (bindings) => {
+              const rec = bindings._parentRun as Record<string, unknown>;
+              const st = rec.status as string;
+              return st !== 'draft' && st !== 'starting';
+            },
+            // Active/terminal run — reject with parent_run_active.
+            (bb2) => completeFrom(bb2, 'parent_run_active', (bindings) => {
+              const rec = bindings._parentRun as Record<string, unknown>;
+              return { message: `parent run is in status '${rec.status as string}'; seeding requires draft or starting` };
+            }),
+            // Draft or starting — write the seeded completed step.
+            (bb2) => {
+              const id = nextId();
+              const now = new Date().toISOString();
+              let bb3 = put(bb2, 'step-run', id, {
+                id,
+                run_ref: runRef,
+                step_key: stepKey,
+                step_type: stepType,
+                status: 'completed',
+                attempt: 1,
+                input: inputData,
+                output: outputData,
+                error: null,
+                started_at: now,
+                ended_at: now,
+              });
+              bb3 = put(bb3, 'step-run-index', compositeKey, { step_id: id, status: 'completed' });
+              return complete(bb3, 'ok', { step: id });
+            },
+          ),
+          // Parent run not found — treat as draft; seeding is allowed.
+          (bb) => {
+            const id = nextId();
+            const now = new Date().toISOString();
+            let bb2 = put(bb, 'step-run', id, {
+              id,
+              run_ref: runRef,
+              step_key: stepKey,
+              step_type: stepType,
+              status: 'completed',
+              attempt: 1,
+              input: inputData,
+              output: outputData,
+              error: null,
+              started_at: now,
+              ended_at: now,
+            });
+            bb2 = put(bb2, 'step-run-index', compositeKey, { step_id: id, status: 'completed' });
+            return complete(bb2, 'ok', { step: id });
+          },
+        );
+      },
+    ) as StorageProgram<Result>;
+  },
+
+  getIO(input: Record<string, unknown>) {
+    const stepId = input.step as string;
+    let p = createProgram();
+    p = get(p, 'step-run', stepId, 'existing');
+    return branch(p, 'existing',
+      (b) => {
+        return completeFrom(b, 'ok', (bindings) => {
+          const rec = bindings.existing as Record<string, unknown>;
+          return {
+            input: (rec.input ?? '') as string,
+            output: (rec.output ?? '') as string,
+            status: rec.status as string,
+          };
+        });
+      },
+      (b) => complete(b, 'notfound', { message: `No step run found with id: ${stepId}` }),
+    ) as StorageProgram<Result>;
+  },
 };
 
 export const stepRunHandler = autoInterpret(_handler);

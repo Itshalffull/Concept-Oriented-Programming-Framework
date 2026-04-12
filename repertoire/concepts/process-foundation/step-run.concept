@@ -82,6 +82,45 @@ concept StepRun [S] {
         No step run with this identifier exists.
       }
     }
+
+    action seed(run_ref: String, step_key: String, step_type: String, input: Bytes, output: Bytes) {
+      -> ok(step: S) {
+        Pre-populates a completed StepRun record for replay purposes. The run must
+        be in draft or starting status; the step is recorded as completed with the
+        provided input and output so selective redrive can resume after this step.
+      }
+      -> duplicate(step: S) {
+        A StepRun with this run_ref+step_key already exists. Returns the existing
+        step without overwriting it.
+      }
+      -> parent_run_active(message: String) {
+        The parent ProcessRun is already executing (status is active, completed,
+        failed, or cancelled). Pre-seeding is only allowed while the run is in
+        draft or starting status.
+      }
+      -> error(message: String) {
+        run_ref or step_key is empty, or a storage error occurred.
+      }
+      fixture seed_ok { run_ref: "run-42", step_key: "fetch-user", step_type: "automation", input: "eyJpZCI6IjEifQ==", output: "eyJ1c2VyIjoiYWxpY2UifQ==" }
+      fixture seed_duplicate { run_ref: "run-42", step_key: "fetch-user", step_type: "automation", input: "eyJpZCI6IjEifQ==", output: "eyJ1c2VyIjoiYWxpY2UifQ==" } -> duplicate
+      fixture seed_empty_run_ref { run_ref: "", step_key: "fetch-user", step_type: "automation", input: "e30=", output: "e30=" } -> error
+    }
+
+    action getIO(step: S) {
+      -> ok(input: Bytes, output: Bytes, status: String) {
+        Returns the raw input and output payloads for the step along with its
+        current status. Kept separate from get so permission gates
+        (StepIOVisibility) can attach exclusively to this action.
+      }
+      -> notfound(message: String) {
+        No step run with this identifier exists.
+      }
+      -> error(message: String) {
+        A storage error occurred retrieving the step record.
+      }
+      fixture getio_ok { step: $seed_ok.step } after seed_ok
+      fixture getio_missing { step: "nonexistent-step" } -> notfound
+    }
   }
 
   example "start then complete": {
