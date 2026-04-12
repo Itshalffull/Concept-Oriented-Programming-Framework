@@ -1,0 +1,112 @@
+@version(1)
+@category("quality")
+@visibility("public")
+concept ActionCoverage [C] {
+
+  purpose {
+    Report gaps in ActionBinding coverage — concept actions with no UI trigger,
+    widget action parts with no binding in ComponentMapping, and stale bindings
+    targeting nonexistent actions. Answers the question: "which concept actions
+    have no button?"
+  }
+
+  state {
+    reports: set C
+    results {
+      timestamp: C -> String
+      unboundActions: C -> String
+      unboundWidgetParts: C -> String
+      staleBindings: C -> String
+      coverage: C -> String
+    }
+  }
+
+  actions {
+    action analyze(report: C, registeredActions: String, registeredParts: String) {
+      -> ok(report: C, unboundActions: String, unboundWidgetParts: String, staleBindings: String, coverage: String) {
+        Scan all ActionBinding records, compare against the provided lists of registered
+        concept actions and widget action parts. Compute unbound actions (no binding targets
+        them), unbound widget parts (no binding maps to them), and stale bindings (target
+        references a concept/action pair absent from registeredActions). Return a coverage
+        summary with percentages.
+      }
+      -> error(message: String) {
+        registeredActions or registeredParts is not valid JSON, or the report identifier
+        is empty.
+      }
+
+      fixture analyze_ok {
+        report: "cov-1"
+        registeredActions: "[{\"concept\":\"Task\",\"action\":\"complete\"},{\"concept\":\"Task\",\"action\":\"create\"}]"
+        registeredParts: "[{\"widget\":\"TaskCard\",\"actionPart\":\"completeButton\"}]"
+      }
+      fixture analyze_empty {
+        report: "cov-empty"
+        registeredActions: "[]"
+        registeredParts: "[]"
+      }
+      fixture analyze_bad_actions {
+        report: "cov-bad"
+        registeredActions: "not-json"
+        registeredParts: "[]"
+      } -> error
+      fixture analyze_bad_parts {
+        report: "cov-bad2"
+        registeredActions: "[]"
+        registeredParts: "not-json"
+      } -> error
+      fixture analyze_empty_report {
+        report: ""
+        registeredActions: "[]"
+        registeredParts: "[]"
+      } -> error
+    }
+
+    action get(report: C) {
+      -> ok(report: C, unboundActions: String, unboundWidgetParts: String, staleBindings: String, coverage: String, timestamp: String) {
+        Return the stored coverage analysis result with the timestamp of when it was computed.
+      }
+      -> notfound(message: String) {
+        No coverage report exists with this identifier.
+      }
+
+      fixture get_ok { report: $analyze_ok.report } after analyze_ok
+      fixture get_missing { report: "nonexistent" } -> notfound
+    }
+
+    action list() {
+      -> ok(reports: String) {
+        Return all coverage report identifiers as a JSON array of strings.
+      }
+
+      fixture list_all {} after analyze_ok
+    }
+  }
+
+  example "analyze then retrieve": {
+    after analyze(report: c,
+      registeredActions: "[{\"concept\":\"Task\",\"action\":\"complete\"}]",
+      registeredParts: "[{\"widget\":\"TaskCard\",\"actionPart\":\"completeButton\"}]") -> ok(report: c)
+    then get(report: c) -> ok(report: c, timestamp: _)
+  }
+
+  example "empty registry yields full unbound list": {
+    after analyze(report: c2, registeredActions: "[]", registeredParts: "[]") -> ok(unboundActions: ua)
+    then get(report: c2) -> ok(unboundActions: ua)
+  }
+
+  never "orphan report data": {
+    exists c in reports:
+      timestamp(c) = none
+  }
+
+  always "coverage fields populated after analyze": {
+    forall c in reports:
+      c.unboundActions != none and c.coverage != none
+  }
+
+  action analyze {
+    requires: report != ""
+    ensures ok: report in reports
+  }
+}
