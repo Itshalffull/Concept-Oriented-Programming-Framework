@@ -1,0 +1,44 @@
+derived FormBuilderEditor [T] {
+
+  purpose {
+    Page-level block editor for form schemas. Repositions FormBuilder on top
+    of the recursive-views (Outline + block-schema) pattern: each form field
+    is an Outline child node whose block schema is a form-field-schema type
+    (text, textarea, select, checkbox, date, number). Creating a form
+    allocates both a FormSpec and a root Outline node; adding a field inserts
+    a child block with the field-type schema plus fieldType metadata so the
+    existing FormBuilder field-config widgets can render inline. The
+    composition proves that FormBuilder is a specialized block editor — not a
+    parallel structure — and that any block-capable surface can host it.
+  }
+
+  composes {
+    Outline [T]
+    FormSpec [T]
+  }
+
+  syncs {
+    required: [
+      form-field-blocks-registered,
+      form-preview-attached
+    ]
+  }
+
+  surface {
+    action create(formName: String) {
+      matches: FormSpec/create
+    }
+
+    action addField(form: String, fieldType: String) {
+      matches: Outline/create(parent: form, schema: "form-field", metadata: fieldType)
+    }
+
+    query formFields(form: String) -> Outline/getChildren(node: form)
+  }
+
+  principle {
+    after create(formName: "Survey") -> ok(id: f)
+    then addField(form: f, fieldType: "text") -> ok
+    then formFields(form: f) returns [text-field]
+  }
+}

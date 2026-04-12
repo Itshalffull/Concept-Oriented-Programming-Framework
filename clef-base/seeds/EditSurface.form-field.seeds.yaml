@@ -1,0 +1,130 @@
+# EditSurface seeds — form-field block-type editor surfaces (MAG-745).
+# Each entry registers the editing surface for a form-field-schema type
+# inside a block-editor context. command_bindings reference existing
+# FormBuilder field-config actions; no new FormBuilder logic is added —
+# this is the composition layer that routes the block-editor surface to
+# the FormBuilder widgets already seeded by MAG-601.
+
+concept: EditSurface
+action: register
+entries:
+  # text field — single-line plain text input
+  - id: form-field-text-block-editor
+    schema_ref: form-field-text
+    context: block-editor
+    toolbar_widget: inline-toolbar
+    command_bindings:
+      - form-field-config-label
+      - form-field-config-placeholder
+      - form-field-config-required
+      - form-field-config-validation
+    panel_widgets:
+      - form-field-config-panel
+    context_menu_bindings:
+      - form-field-remove
+    input_rule_refs: []
+    picker_refs: []
+    compile_action_ref: null
+    compile_bundle_ref: null
+    compile_status_field: null
+
+  # textarea field — multi-line plain text input
+  - id: form-field-textarea-block-editor
+    schema_ref: form-field-textarea
+    context: block-editor
+    toolbar_widget: inline-toolbar
+    command_bindings:
+      - form-field-config-label
+      - form-field-config-placeholder
+      - form-field-config-required
+      - form-field-config-rows
+    panel_widgets:
+      - form-field-config-panel
+    context_menu_bindings:
+      - form-field-remove
+    input_rule_refs: []
+    picker_refs: []
+    compile_action_ref: null
+    compile_bundle_ref: null
+    compile_status_field: null
+
+  # select field — single-choice dropdown
+  - id: form-field-select-block-editor
+    schema_ref: form-field-select
+    context: block-editor
+    toolbar_widget: inline-toolbar
+    command_bindings:
+      - form-field-config-label
+      - form-field-config-required
+      - form-field-config-options
+    panel_widgets:
+      - form-field-config-panel
+      - form-field-options-panel
+    context_menu_bindings:
+      - form-field-remove
+    input_rule_refs: []
+    picker_refs: []
+    compile_action_ref: null
+    compile_bundle_ref: null
+    compile_status_field: null
+
+  # checkbox field — boolean toggle
+  - id: form-field-checkbox-block-editor
+    schema_ref: form-field-checkbox
+    context: block-editor
+    toolbar_widget: inline-toolbar
+    command_bindings:
+      - form-field-config-label
+      - form-field-config-required
+      - form-field-config-default-checked
+    panel_widgets:
+      - form-field-config-panel
+    context_menu_bindings:
+      - form-field-remove
+    input_rule_refs: []
+    picker_refs: []
+    compile_action_ref: null
+    compile_bundle_ref: null
+    compile_status_field: null
+
+  # date field — calendar date picker
+  - id: form-field-date-block-editor
+    schema_ref: form-field-date
+    context: block-editor
+    toolbar_widget: inline-toolbar
+    command_bindings:
+      - form-field-config-label
+      - form-field-config-required
+      - form-field-config-date-format
+      - form-field-config-min-date
+      - form-field-config-max-date
+    panel_widgets:
+      - form-field-config-panel
+    context_menu_bindings:
+      - form-field-remove
+    input_rule_refs: []
+    picker_refs: []
+    compile_action_ref: null
+    compile_bundle_ref: null
+    compile_status_field: null
+
+  # number field — numeric input with optional range validation
+  - id: form-field-number-block-editor
+    schema_ref: form-field-number
+    context: block-editor
+    toolbar_widget: inline-toolbar
+    command_bindings:
+      - form-field-config-label
+      - form-field-config-required
+      - form-field-config-min
+      - form-field-config-max
+      - form-field-config-step
+    panel_widgets:
+      - form-field-config-panel
+    context_menu_bindings:
+      - form-field-remove
+    input_rule_refs: []
+    picker_refs: []
+    compile_action_ref: null
+    compile_bundle_ref: null
+    compile_status_field: null

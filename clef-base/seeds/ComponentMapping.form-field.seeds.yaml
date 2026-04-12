@@ -1,0 +1,115 @@
+# ComponentMapping seeds — form-field block-type widget bindings (MAG-745).
+# Each mapping wires a form-field-schema type to the corresponding
+# FormBuilder field-config widget already registered by MAG-601.
+# display_mode is "block-editor" for all form-field block types
+# because they appear inside the FormBuilderEditor Outline tree.
+
+concept: ComponentMapping
+action: create
+entries:
+  # text field block — FormBuilder single-line text widget
+  - name: form-field-text-block
+    widget_id: form-field-text-widget
+    schema: form-field-text
+    display_mode: block-editor
+
+  # textarea field block — FormBuilder multi-line text widget
+  - name: form-field-textarea-block
+    widget_id: form-field-textarea-widget
+    schema: form-field-textarea
+    display_mode: block-editor
+
+  # select field block — FormBuilder dropdown widget
+  - name: form-field-select-block
+    widget_id: form-field-select-widget
+    schema: form-field-select
+    display_mode: block-editor
+
+  # checkbox field block — FormBuilder boolean toggle widget
+  - name: form-field-checkbox-block
+    widget_id: form-field-checkbox-widget
+    schema: form-field-checkbox
+    display_mode: block-editor
+
+  # date field block — FormBuilder date picker widget
+  - name: form-field-date-block
+    widget_id: form-field-date-widget
+    schema: form-field-date
+    display_mode: block-editor
+
+  # number field block — FormBuilder numeric input widget
+  - name: form-field-number-block
+    widget_id: form-field-number-widget
+    schema: form-field-number
+    display_mode: block-editor
+
+---
+# Bind slots for each form-field mapping
+concept: ComponentMapping
+action: bindSlot
+entries:
+  # form-field-text-block — label + placeholder + required flag
+  - mapping: form-field-text-block
+    slot_name: label
+    sources: ["entity_field:label"]
+  - mapping: form-field-text-block
+    slot_name: placeholder
+    sources: ["entity_field:placeholder"]
+  - mapping: form-field-text-block
+    slot_name: required
+    sources: ["entity_field:required"]
+
+  # form-field-textarea-block — label + placeholder + rows
+  - mapping: form-field-textarea-block
+    slot_name: label
+    sources: ["entity_field:label"]
+  - mapping: form-field-textarea-block
+    slot_name: placeholder
+    sources: ["entity_field:placeholder"]
+  - mapping: form-field-textarea-block
+    slot_name: rows
+    sources: ["entity_field:rows"]
+
+  # form-field-select-block — label + options list + required flag
+  - mapping: form-field-select-block
+    slot_name: label
+    sources: ["entity_field:label"]
+  - mapping: form-field-select-block
+    slot_name: options
+    sources: ["entity_field:options"]
+  - mapping: form-field-select-block
+    slot_name: required
+    sources: ["entity_field:required"]
+
+  # form-field-checkbox-block — label + default_checked
+  - mapping: form-field-checkbox-block
+    slot_name: label
+    sources: ["entity_field:label"]
+  - mapping: form-field-checkbox-block
+    slot_name: default_checked
+    sources: ["entity_field:defaultChecked"]
+
+  # form-field-date-block — label + format + required flag
+  - mapping: form-field-date-block
+    slot_name: label
+    sources: ["entity_field:label"]
+  - mapping: form-field-date-block
+    slot_name: date_format
+    sources: ["entity_field:dateFormat"]
+  - mapping: form-field-date-block
+    slot_name: required
+    sources: ["entity_field:required"]
+
+  # form-field-number-block — label + min + max + step
+  - mapping: form-field-number-block
+    slot_name: label
+    sources: ["entity_field:label"]
+  - mapping: form-field-number-block
+    slot_name: min
+    sources: ["entity_field:min"]
+  - mapping: form-field-number-block
+    slot_name: max
+    sources: ["entity_field:max"]
+  - mapping: form-field-number-block
+    slot_name: step
+    sources: ["entity_field:step"]
