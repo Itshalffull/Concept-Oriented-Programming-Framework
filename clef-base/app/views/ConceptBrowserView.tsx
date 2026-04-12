@@ -34,6 +34,7 @@ export const ConceptBrowserView: React.FC = () => {
   const [previewPackage, setPreviewPackage] = useState<InstalledPackage | null>(null);
   const [previewDetails, setPreviewDetails] = useState<Record<string, unknown> | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [actionPending, setActionPending] = useState<string | null>(null);
   const invoke = useKernelInvoke();
 
   const loadInstalled = useCallback(async () => {
@@ -93,6 +94,8 @@ export const ConceptBrowserView: React.FC = () => {
   }, [invoke]);
 
   const handleInstall = useCallback(async (pkg: InstalledPackage) => {
+    setActionPending(`install:${pkg.name}`);
+    setStatusMessage(null);
     try {
       const result = await invoke('ConceptBrowser', 'install', {
         package_name: pkg.name,
@@ -107,13 +110,19 @@ export const ConceptBrowserView: React.FC = () => {
             entry.name === pkg.name ? { ...entry, status: 'installed' } : entry,
           ),
         );
+      } else {
+        setStatusMessage(String(result.message ?? `Install failed for ${pkg.name}.`));
       }
-    } catch {
-      setStatusMessage(`Install failed for ${pkg.name}.`);
+    } catch (err) {
+      setStatusMessage(err instanceof Error ? err.message : `Install failed for ${pkg.name}.`);
+    } finally {
+      setActionPending(null);
     }
   }, [invoke, loadInstalled]);
 
   const handleRemove = useCallback(async (pkg: InstalledPackage) => {
+    setActionPending(`remove:${pkg.name}`);
+    setStatusMessage(null);
     try {
       const result = await invoke('ConceptBrowser', 'remove', { package_name: pkg.name });
       if (result.variant === 'ok') {
@@ -121,9 +130,13 @@ export const ConceptBrowserView: React.FC = () => {
         setStatusMessage(`Removed ${pkg.name}.`);
       } else if (result.variant === 'depended_upon') {
         setStatusMessage(`${pkg.name} is still required by: ${String((result.dependents as string[]).join(', '))}`);
+      } else {
+        setStatusMessage(String(result.message ?? `Remove failed for ${pkg.name}.`));
       }
-    } catch {
-      setStatusMessage(`Remove failed for ${pkg.name}.`);
+    } catch (err) {
+      setStatusMessage(err instanceof Error ? err.message : `Remove failed for ${pkg.name}.`);
+    } finally {
+      setActionPending(null);
     }
   }, [invoke, loadInstalled]);
 
@@ -266,8 +279,9 @@ export const ConceptBrowserView: React.FC = () => {
                       data-part="button"
                       data-variant="filled"
                       onClick={() => handleInstall(pkg)}
+                      disabled={actionPending != null}
                     >
-                      {pkg.status === 'installed' ? 'Reinstall' : 'Install'}
+                      {actionPending === `install:${pkg.name}` ? 'Installing...' : pkg.status === 'installed' ? 'Reinstall' : 'Install'}
                     </button>
                   </div>
                 </Card>
@@ -341,8 +355,9 @@ export const ConceptBrowserView: React.FC = () => {
               data-part="button"
               data-variant="outlined"
               onClick={() => handleRemove(pkg)}
+              disabled={actionPending != null}
             >
-              Remove {pkg.name}
+              {actionPending === `remove:${pkg.name}` ? 'Removing...' : `Remove ${pkg.name}`}
             </button>
           ))}
         </div>

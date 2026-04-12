@@ -217,6 +217,9 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
   const [filtersInitialized, setFiltersInitialized] = useState(false);
   const [resolvedLayout, setResolvedLayout] = useState<string | null>(null);
   const [resolvedWidget, setResolvedWidget] = useState<string | null>(null);
+  const [actionPending, setActionPending] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [actionSuccess, setActionSuccess] = useState<string | null>(null);
 
   // Toolbar state — advanced filter conditions, sort keys, group, and field visibility
   // managed by ViewEditorToolbar. Separate from the toggle-group activeFilters system.
@@ -795,25 +798,53 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
     // Find matching row action config to get concept/action/params mapping
     const rowActionDef = controls.rowActions?.find(a => a.key === actionKey);
     if (rowActionDef) {
-      for (const row of selectedRows) {
-        const params: Record<string, unknown> = {};
-        for (const [paramKey, rowField] of Object.entries(rowActionDef.params)) {
-          params[paramKey] = row[rowField];
+      setActionPending(true);
+      setActionError(null);
+      setActionSuccess(null);
+      try {
+        for (const row of selectedRows) {
+          const params: Record<string, unknown> = {};
+          for (const [paramKey, rowField] of Object.entries(rowActionDef.params)) {
+            params[paramKey] = row[rowField];
+          }
+          const result = await invoke(rowActionDef.concept, rowActionDef.action, params);
+          if (result.variant !== 'ok') {
+            setActionError(String(result.message ?? `${rowActionDef.action} failed`));
+            return;
+          }
         }
-        await invoke(rowActionDef.concept, rowActionDef.action, params);
+        setActionSuccess(`${bulkDef.label ?? actionKey} completed`);
+        refetch();
+      } catch (err) {
+        setActionError(err instanceof Error ? err.message : `${actionKey} failed`);
+      } finally {
+        setActionPending(false);
       }
-      refetch();
     }
   }, [controls.bulk?.actions, controls.rowActions, invoke, refetch]);
 
   // Row action handler — invoke a concept action with params mapped from the row
   const handleRowAction = useCallback(async (action: RowActionConfig, row: Record<string, unknown>) => {
+    setActionPending(true);
+    setActionError(null);
+    setActionSuccess(null);
     const params: Record<string, unknown> = {};
     for (const [paramKey, rowField] of Object.entries(action.params)) {
       params[paramKey] = row[rowField];
     }
-    await invoke(action.concept, action.action, params);
-    refetch();
+    try {
+      const result = await invoke(action.concept, action.action, params);
+      if (result.variant !== 'ok') {
+        setActionError(String(result.message ?? `${action.action} failed`));
+        return;
+      }
+      setActionSuccess(`${action.label ?? action.action} completed`);
+      refetch();
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : `${action.action} failed`);
+    } finally {
+      setActionPending(false);
+    }
   }, [invoke, refetch]);
 
   // Hide view if contextual filters can't be resolved
@@ -972,12 +1003,24 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
                 const entity = displayData[0] as Record<string, unknown>;
                 const node = entity.node as string;
                 if (node) {
-                  if (field === 'content') {
-                    await invoke('ContentNode', 'update', { node, content: value });
-                  } else if (field === 'metadata') {
-                    await invoke('ContentNode', 'setMetadata', { node, metadata: value });
+                  setActionError(null);
+                  try {
+                    let result: Record<string, unknown>;
+                    if (field === 'content') {
+                      result = await invoke('ContentNode', 'update', { node, content: value });
+                    } else if (field === 'metadata') {
+                      result = await invoke('ContentNode', 'setMetadata', { node, metadata: value });
+                    } else {
+                      return;
+                    }
+                    if (result.variant !== 'ok') {
+                      setActionError(String(result.message ?? `${field} save failed`));
+                      return;
+                    }
+                    refetch();
+                  } catch (err) {
+                    setActionError(err instanceof Error ? err.message : `${field} save failed`);
                   }
-                  refetch();
                 }
               }
             }}
@@ -995,8 +1038,17 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
                 const entity = displayData[0] as Record<string, unknown>;
                 const node = entity.node as string;
                 if (node) {
-                  await invoke('ContentNode', 'update', { node, content: value });
-                  refetch();
+                  setActionError(null);
+                  try {
+                    const result = await invoke('ContentNode', 'update', { node, content: value });
+                    if (result.variant !== 'ok') {
+                      setActionError(String(result.message ?? 'Content save failed'));
+                      return;
+                    }
+                    refetch();
+                  } catch (err) {
+                    setActionError(err instanceof Error ? err.message : 'Content save failed');
+                  }
                 }
               }
             }}
@@ -1178,6 +1230,23 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
           }}
           hasUnsavedChanges={false}
         />
+      )}
+
+      {/* Action feedback — row/bulk action pending, error, success states */}
+      {actionPending && (
+        <div style={{ marginBottom: 'var(--spacing-sm)', padding: 'var(--spacing-xs) var(--spacing-md)', borderRadius: 'var(--radius-sm)', background: 'var(--palette-surface-variant)', color: 'var(--palette-on-surface-variant)', fontSize: 'var(--typography-body-sm-size)' }}>
+          Working...
+        </div>
+      )}
+      {actionError && (
+        <div style={{ marginBottom: 'var(--spacing-sm)', padding: 'var(--spacing-xs) var(--spacing-md)', borderRadius: 'var(--radius-sm)', background: 'var(--palette-error-container)', color: 'var(--palette-on-error-container)', fontSize: 'var(--typography-body-sm-size)' }}>
+          {actionError}
+        </div>
+      )}
+      {actionSuccess && !actionPending && (
+        <div style={{ marginBottom: 'var(--spacing-sm)', padding: 'var(--spacing-xs) var(--spacing-md)', borderRadius: 'var(--radius-sm)', background: 'var(--palette-primary-container)', color: 'var(--palette-on-primary-container)', fontSize: 'var(--typography-body-sm-size)' }}>
+          {actionSuccess}
+        </div>
       )}
 
       {/* Legacy toggle-group filters — shown only when no toolbar-managed filter conditions */}
