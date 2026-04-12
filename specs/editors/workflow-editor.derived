@@ -1,0 +1,54 @@
+derived WorkflowEditor [T] {
+
+  purpose {
+    Page-level editor for workflow ContentNodes. Pre-configures
+    MarkdownEditor with the "workflow" schema overlay, wires
+    ContentCompiler so that saving triggers re-compilation into a
+    ProcessSpec, and surfaces a process-run consumers panel showing
+    ProcessRuns that were started from this workflow's compiled spec.
+    Declares the formal concept shape for the existing FlowBuilderView
+    (MAG-689): a flowchart preview widget renders the compiled graph
+    inline when embedded at page-level, and a backlinks panel surfaces
+    all nodes referencing this workflow via Reference.
+  }
+
+  composes {
+    MarkdownEditor [T]
+    ContentCompiler [T]
+    ProcessRun
+    Reference
+  }
+
+  syncs {
+    required: [
+      workflow-compile-on-save,
+      workflow-graph-preview-attached
+    ]
+  }
+
+  surface {
+    action create(workflowName: String) {
+      entry: ContentNode/create
+      triggers: [
+        MarkdownEditor/create
+      ]
+    }
+
+    action compile(page: String) {
+      matches: ContentCompiler/compile(schemaHint: "workflow")
+    }
+
+    action startRun(spec: String, inputs: String) {
+      matches: ProcessRun/start
+    }
+
+    query runs(page: String) -> ProcessRun/listBySpec(spec_ref: page)
+    query compilationStatus(page: String) -> ContentCompiler/listByPage(pageId: page)
+  }
+
+  principle {
+    after create(workflowName: "Approval flow") -> ok(id: p)
+    then compile(page: p) -> ok(compilation: c)
+    then startRun(spec: c, inputs: "{}") -> ok(run: r)
+  }
+}

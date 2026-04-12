@@ -208,6 +208,35 @@ entries:
     output_preview_ref: prompt-assembly-preview
     consumers_panel_ref: persona-consumers-panel
 
+  # Workflow page-level editor surface (MAG-747)
+  # Formalises the FlowBuilderView (MAG-689) as a declarative EditSurface seed.
+  # compile_action_ref: workflow-compile triggers ContentCompiler/compile(schemaHint:"workflow").
+  # status_decoration_ref: persona-status-badge is reused as the generic compile-status
+  #   decoration until a dedicated compile-status-badge widget is created (follow-up card).
+  # output_preview_ref: flowchart-editor embeds the MAG-689 FlowchartEditor widget as an
+  #   inline graph preview when the surface is rendered at page-level.
+  # consumers_panel_ref: backlinks-panel (MAG-741) filtered to "runs-spec" relation kind
+  #   surfaces ProcessRuns that reference this workflow's compiled ProcessSpec.
+  - id: workflow-page-editor
+    schema_ref: workflow
+    context: page-level
+    toolbar_widget: inline-toolbar
+    command_bindings:
+      - workflow-compile
+      - workflow-start-run
+    panel_widgets:
+      - flowchart-editor
+      - backlinks-panel
+    context_menu_bindings: []
+    input_rule_refs: []
+    picker_refs: []
+    compile_action_ref: workflow-compile
+    compile_bundle_ref: null
+    compile_status_field: null
+    status_decoration_ref: persona-status-badge
+    output_preview_ref: flowchart-editor
+    consumers_panel_ref: backlinks-panel
+
   # Generic wiki-page page-level editor surface (MAG-741)
   # Any content page authored as a wiki page gets a backlinks panel
   # showing all other pages that link to it via wikilink, mention, or embed.
@@ -226,6 +255,36 @@ entries:
     compile_action_ref: null
     compile_bundle_ref: null
     compile_status_field: null
+
+  # Filter-draft page-level editor surface (MAG-748)
+  # Toolbar: inline-toolbar (shared mark toolbar) + compile-status-badge
+  # Command bindings: filter-draft-compile (invoke ContentCompiler/compile),
+  #   filter-draft-install (register compiled FilterNode as a FilterSpec and
+  #   apply it to the target ViewShell via ViewShell/update).
+  # Panel widgets: filter-preview (output_preview_ref, renders compiled
+  #   FilterNode as read-only pill chain), backlinks-panel filtered to
+  #   Reference kind="uses-filter" (consumers_panel_ref, lists views that
+  #   have installed this draft as their active filter).
+  # Block schemas: predicate-group, predicate, operator-value (seed-only;
+  #   registered by filter-draft-block-schemas-registered.sync).
+  - id: filter-draft-page-editor
+    schema_ref: filter-draft
+    context: page-level
+    toolbar_widget: inline-toolbar
+    command_bindings:
+      - filter-draft-compile
+      - filter-draft-install
+    panel_widgets:
+      - filter-preview
+      - backlinks-panel
+    context_menu_bindings: []
+    input_rule_refs: []
+    picker_refs: []
+    compile_action_ref: filter-draft-compile
+    compile_bundle_ref: null
+    compile_status_field: null
+    output_preview_ref: filter-preview
+    consumers_panel_ref: backlinks-panel
 
   # View-embed block editor surface (MAG-731)
   # Toolbar: inline-toolbar (shared mark toolbar)
