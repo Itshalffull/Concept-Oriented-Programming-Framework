@@ -1,0 +1,264 @@
+@version(1)
+widget data-mapping {
+
+  purpose {
+    Field pill picker for mapping upstream step outputs to the current
+    automation step's inputs. Renders available upstream fields as
+    draggable pills with live sample values and type-compatibility badges.
+    The user selects a field by clicking a pill, typing a path expression,
+    or dragging a pill onto the input slot. A type-mismatch badge appears
+    whenever the bound field's type does not match the expected input type.
+    All selections dispatch events — the widget never writes bindings
+    directly.
+  }
+
+  anatomy {
+    root:           container    { Top-level wrapper for the field mapping widget }
+    inputField:     interactive  { Combobox input showing the current binding path expression; accepts typed paths and acts as the drop target }
+    pillList:       container    { Scrollable list of available upstream field pills }
+    pill:           action       { Draggable chip representing one upstream field; carries path, type, source step, and sample value }
+    pillDragGhost:  presentation { Floating visual clone rendered while a pill is being dragged }
+    samplePreview:  text         { Inline preview of the sample value for the currently focused or hovered pill }
+    typeHint:       text         { Displays the expected type of the current input slot }
+    errorBadge:     presentation { Badge shown when the bound field's type mismatches the expected type }
+  }
+
+  states {
+    mode {
+      idle [initial] {
+        on OPEN_PICKER -> pickingField;
+        on START_DRAG -> draggingPill;
+      }
+
+      pickingField {
+        on CLOSE_PICKER -> idle;
+        on PICK_FIELD -> idle;
+        on ESCAPE -> idle;
+        on BIND -> idle;
+        entry [focusInputField; populatePillList];
+        exit [clearHighlight];
+      }
+
+      draggingPill {
+        on DROP -> idle;
+        on CANCEL_DRAG -> idle;
+        on BIND -> idle;
+        entry [showDragGhost];
+        exit [hideDragGhost];
+      }
+
+      invalidBinding {
+        on PICK_FIELD -> idle;
+        on CLEAR_BINDING -> idle;
+        on OPEN_PICKER -> pickingField;
+        entry [showErrorBadge];
+        exit [hideErrorBadge];
+      }
+    }
+  }
+
+  accessibility {
+    role: combobox;
+    keyboard {
+      ArrowDown -> NAVIGATE_NEXT;
+      ArrowUp -> NAVIGATE_PREV;
+      Enter -> PICK_FIELD;
+      Escape -> ESCAPE;
+      Space -> DRAG_TOGGLE;
+    }
+    focus {
+      trap: false;
+      initial: inputField;
+      roving: true;
+      returnOnClose: inputField;
+    }
+    aria {
+      inputField -> {
+        role: "combobox";
+        aria-haspopup: "listbox";
+        aria-expanded: if state.mode == "pickingField" then "true" else "false";
+        aria-controls: pillList;
+        aria-label: "Field binding input";
+        aria-autocomplete: "list";
+      };
+      pillList -> {
+        role: "listbox";
+        aria-label: "Available upstream fields";
+        hidden: if state.mode == "pickingField" then false else true;
+      };
+      pill -> {
+        role: "option";
+        aria-selected: "false";
+        aria-label: self.fieldPath;
+        aria-grabbed: if state.mode == "draggingPill" then "true" else "false";
+        aria-describedby: samplePreview;
+      };
+      typeHint -> {
+        role: "note";
+        aria-live: "polite";
+        aria-label: "Expected type";
+      };
+      errorBadge -> {
+        role: "alert";
+        aria-live: "assertive";
+        aria-label: "Type mismatch";
+        aria-atomic: "true";
+      };
+      samplePreview -> {
+        role: "note";
+        aria-live: "polite";
+        aria-label: "Sample value preview";
+      };
+    }
+  }
+
+  props {
+    availableFields: list { path: String, type: String, sampleValue: String, sourceStepId: String }
+    currentBinding: option String
+    expectedType: option String
+    sampleData: option String
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.mode;
+    }
+
+    inputField -> {
+      data-part: "input-field";
+      role: "combobox";
+      aria-expanded: if state.mode == "pickingField" then "true" else "false";
+      aria-haspopup: "listbox";
+      aria-controls: pillList;
+      value: ?currentBinding;
+      placeholder: "Type or drop a field path";
+      onFocus: send(OPEN_PICKER);
+      onInput: send(PICK_FIELD);
+      onKeyDown-Escape: send(ESCAPE);
+      onDrop: send(BIND);
+    }
+
+    pillList -> {
+      data-part: "pill-list";
+      role: "listbox";
+      hidden: if state.mode == "pickingField" then false else true;
+      aria-label: "Available upstream fields";
+    }
+
+    pill -> {
+      data-part: "pill";
+      data-field-path: self.path;
+      data-field-type: self.type;
+      data-source-step: self.sourceStepId;
+      data-type-match: if ?expectedType == "" then "unknown" else if self.type == ?expectedType then "ok" else "mismatch";
+      role: "option";
+      draggable: true;
+      onClick: send(BIND);
+      onDragStart: send(START_DRAG);
+      onDragEnd: send(CANCEL_DRAG);
+      onKeyDown-Space: send(DRAG_TOGGLE);
+      onKeyDown-Enter: send(BIND);
+    }
+
+    pillDragGhost -> {
+      data-part: "pill-drag-ghost";
+      visible: if state.mode == "draggingPill" then true else false;
+      aria-hidden: "true";
+    }
+
+    samplePreview -> {
+      data-part: "sample-preview";
+      text: ?sampleData;
+      aria-live: "polite";
+    }
+
+    typeHint -> {
+      data-part: "type-hint";
+      text: ?expectedType;
+      aria-live: "polite";
+    }
+
+    errorBadge -> {
+      data-part: "error-badge";
+      visible: if state.mode == "invalidBinding" then true else false;
+      aria-live: "assertive";
+    }
+  }
+
+  affordance {
+    serves: field-binding;
+    specificity: 9;
+    when {
+      context: "automation-step-input";
+    }
+    bind {
+      availableFields: upstreamOutputSchema;
+      currentBinding: currentBinding;
+      expectedType: inputSlotType;
+    }
+  }
+
+  invariant {
+    example "picking a pill sets currentBinding to that path": {
+      after pill.click -> ok
+      then root -> { data-state: "idle" }
+      and inputField -> { value: self.path }
+    }
+
+    always "type mismatch renders errorBadge": {
+      if state.mode == "invalidBinding" then errorBadge -> { visible: true }
+    }
+
+    never "pill renders without data-field-type": {
+      exists p in pillList.children:
+        p -> { data-field-type: "" }
+    }
+
+    example "dropdown opens on inputField focus": {
+      after inputField.focus -> ok
+      then root -> { data-state: "pickingField" }
+      and pillList -> { hidden: false }
+    }
+
+    example "Escape closes picker and returns focus": {
+      after inputField.keydown("Escape") -> ok
+      then root -> { data-state: "idle" }
+      and pillList -> { hidden: true }
+    }
+
+    example "drag starts on pill dragstart": {
+      after pill.dragstart -> ok
+      then root -> { data-state: "draggingPill" }
+      and pillDragGhost -> { visible: true }
+    }
+
+    example "drop on inputField dispatches BIND": {
+      after inputField.drop -> ok
+      then root -> { data-state: "idle" }
+      and pillDragGhost -> { visible: false }
+    }
+
+    always "errorBadge hidden in idle state": {
+      if state.mode == "idle" then errorBadge -> { visible: false }
+    }
+
+    always "pillDragGhost hidden when not dragging": {
+      if state.mode != "draggingPill" then pillDragGhost -> { visible: false }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM mode": {
+      forall s in states:
+        root -> { data-state: s.name }
+    }
+
+    "pill data-type-match must be ok, mismatch, or unknown — never absent";
+    "keyboard Space on focused pill starts drag pickup sequence, second Space drops";
+    "ArrowDown and ArrowUp navigate focus through pillList using roving tabindex";
+    "typing in inputField dispatches PICK_FIELD with the typed path expression";
+  }
+
+}
