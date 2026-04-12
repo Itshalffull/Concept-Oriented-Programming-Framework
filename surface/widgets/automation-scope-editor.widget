@@ -1,0 +1,668 @@
+@version(1)
+widget automation-scope-editor {
+
+  purpose {
+    Admin-only governance surface for managing the AutomationScope allowlist and
+    denylist that gates which concept action references user-authored syncs may
+    invoke at runtime. Displays two lists — allowed action_refs and denied
+    action_refs — each row annotated with a live usage count showing how many
+    existing user syncs reference that action_ref, and a breaking-change impact
+    badge that fires an impact-preview calculation BEFORE any save is committed.
+    Progressive disclosure keeps the deny list collapsed by default (allow list
+    is the 80% case) and surfaces YAML import/export behind an Advanced expander.
+    Backed by AutomationScope/configure, AutomationScope/add_rule,
+    AutomationScope/remove_rule, and AutomationScope/list_rules.
+  }
+
+  requires @1 {
+    fields {
+      rules: list;
+      mode: String;
+      active: Bool;
+    }
+    actions {
+      configure();
+      add_rule();
+      remove_rule();
+      list_rules();
+    }
+  }
+
+  anatomy {
+    root:                  container     { Top-level admin wrapper for the full scope editor }
+    modeToggle:            action        { Segmented control switching scope mode between "allowlist" and "denylist" }
+    modeLabel:             text          { Descriptive label below the mode toggle explaining current gate behaviour }
+    allowSection:          container     { Expanded-by-default section containing the allowed action_ref list }
+    allowSectionHeading:   text          { "Allowed actions" heading with rule count badge }
+    allowRuleList:         container     { Ordered list of currently allowed action_ref rules }
+    allowRuleRow:          container     { Single row: action_ref pattern, category badge, usage count chip, remove button }
+    allowRulePattern:      text          { Glob pattern string displayed for an allowed rule }
+    allowCategoryBadge:    presentation  { Coloured chip showing the rule's category (e.g. "content") }
+    allowUsageCount:       presentation  { Live count of user syncs that reference this action_ref }
+    allowRemoveButton:     action        { Removes this rule from the allowed list }
+    addAllowedInput:       interactive   { Text input for typing a new allowed action_ref glob pattern }
+    addAllowedCategoryInput: interactive { Text input for the category of the new allowed rule }
+    addAllowedButton:      action        { Submits the new allowed rule }
+    denySection:           container     { Collapsed-by-default section containing the denied action_ref list }
+    denySectionToggle:     action        { Expander trigger showing/hiding the deny list }
+    denySectionHeading:    text          { "Denied actions" heading with rule count badge }
+    denyRuleList:          container     { Ordered list of currently denied action_ref rules }
+    denyRuleRow:           container     { Single row: action_ref pattern, category badge, usage count chip, remove button }
+    denyRulePattern:       text          { Glob pattern string displayed for a denied rule }
+    denyCategoryBadge:     presentation  { Coloured chip showing the rule's category }
+    denyUsageCount:        presentation  { Live count of user syncs that reference this denied action_ref }
+    denyRemoveButton:      action        { Removes this rule from the denied list }
+    addDeniedInput:        interactive   { Text input for typing a new denied action_ref glob pattern }
+    addDeniedCategoryInput: interactive  { Text input for the category of the new denied rule }
+    addDeniedButton:       action        { Submits the new denied rule }
+    impactPreviewPanel:    container     { Inline panel showing breaking-change impact before a destructive save }
+    impactSummary:         text          { Human-readable summary: "N user syncs will break if this rule is removed" }
+    impactSyncList:        container     { Scrollable list of affected sync identifiers in the impact preview }
+    impactConfirmButton:   action        { Proceeds with the remove after the user has seen the impact }
+    impactCancelButton:    action        { Cancels the remove and dismisses the impact preview }
+    advancedExpander:      action        { Expander trigger for the Advanced section (YAML import/export) }
+    advancedSection:       container     { Advanced panel containing YAML import/export controls }
+    yamlExportButton:      action        { Downloads the full scope rule set as a YAML file }
+    yamlImportButton:      action        { Opens the YAML import panel }
+    yamlImportPanel:       container     { Panel for pasting or uploading a YAML rule set }
+    yamlImportInput:       interactive   { Textarea for pasting YAML }
+    yamlImportConfirmButton: action      { Applies the pasted YAML to the scope }
+    yamlImportCancelButton:  action      { Dismisses the YAML import panel without changes }
+    emptyAllowState:       container     { Shown when the allowed list is empty }
+    emptyDenyState:        container     { Shown when the denied list is empty }
+    saveBar:               container     { Sticky bottom bar with save and discard buttons }
+    saveButton:            action        { Persists pending rule changes via AutomationScope actions }
+    discardButton:         action        { Reverts all unsaved edits }
+  }
+
+  states {
+    idle [initial] {
+      on ADD_ALLOWED_RULE     -> adding-allowed;
+      on ADD_DENIED_RULE      -> adding-denied;
+      on REMOVE_ALLOWED_RULE  -> previewing-impact;
+      on REMOVE_DENIED_RULE   -> previewing-impact;
+      on TOGGLE_DENY_SECTION  -> idle;
+      on TOGGLE_ADVANCED      -> idle;
+      on IMPORT_YAML          -> importing-yaml;
+      on EXPORT_YAML          -> exporting-yaml;
+      on SET_MODE             -> idle;
+    }
+
+    adding-allowed {
+      on CONFIRM_ADD_ALLOWED  -> saving;
+      on CANCEL_ADD_ALLOWED   -> idle;
+      entry [focusAddAllowedInput];
+    }
+
+    adding-denied {
+      on CONFIRM_ADD_DENIED   -> saving;
+      on CANCEL_ADD_DENIED    -> idle;
+      entry [focusAddDeniedInput];
+    }
+
+    previewing-impact {
+      on CONFIRM_REMOVE       -> saving;
+      on CANCEL_REMOVE        -> idle;
+      entry [loadImpactPreview; showImpactPanel];
+      exit [hideImpactPanel];
+    }
+
+    saving {
+      on SAVE_SUCCESS         -> idle;
+      on SAVE_ERROR           -> idle;
+      entry [disableSaveBar];
+      exit [enableSaveBar];
+    }
+
+    importing-yaml {
+      on YAML_IMPORT_CONFIRMED -> saving;
+      on CANCEL_YAML_IMPORT    -> idle;
+      entry [showYamlImportPanel];
+      exit [hideYamlImportPanel];
+    }
+
+    exporting-yaml {
+      on EXPORT_DONE          -> idle;
+      entry [triggerYamlDownload];
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      Escape      -> CANCEL_REMOVE;
+      ArrowUp     -> FOCUS_PREV_RULE;
+      ArrowDown   -> FOCUS_NEXT_RULE;
+      Delete      -> REMOVE_ALLOWED_RULE;
+      Enter       -> CONFIRM_ADD_ALLOWED;
+    }
+    focus {
+      trap: false;
+      initial: modeToggle;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Automation Scope Editor";
+        data-state: state;
+      };
+      modeToggle -> {
+        role: "group";
+        aria-label: "Scope mode";
+      };
+      allowSection -> {
+        role: "region";
+        aria-label: "Allowed actions";
+      };
+      allowRuleList -> {
+        role: "list";
+        aria-label: "Allowed action rules";
+        aria-live: "polite";
+      };
+      allowRuleRow -> {
+        role: "listitem";
+        aria-label: concat(self.action_pattern, ", category: ", self.category, ", used by ", self.usageCount, " syncs");
+      };
+      allowRemoveButton -> {
+        role: "button";
+        aria-label: concat("Remove allowed rule: ", self.action_pattern);
+      };
+      addAllowedInput -> {
+        role: "textbox";
+        aria-label: "New allowed action pattern (glob)";
+        aria-required: "true";
+      };
+      addAllowedCategoryInput -> {
+        role: "textbox";
+        aria-label: "Category for new allowed rule";
+        aria-required: "true";
+      };
+      addAllowedButton -> {
+        role: "button";
+        aria-label: "Add allowed action rule";
+        aria-disabled: if state == "saving" then "true" else "false";
+      };
+      denySection -> {
+        role: "region";
+        aria-label: "Denied actions";
+        aria-expanded: if ?denySectionOpen then "true" else "false";
+      };
+      denySectionToggle -> {
+        role: "button";
+        aria-expanded: if ?denySectionOpen then "true" else "false";
+        aria-controls: "denySection";
+        aria-label: "Toggle denied actions section";
+      };
+      denyRuleList -> {
+        role: "list";
+        aria-label: "Denied action rules";
+        aria-live: "polite";
+      };
+      denyRuleRow -> {
+        role: "listitem";
+        aria-label: concat(self.action_pattern, ", category: ", self.category, ", used by ", self.usageCount, " syncs");
+      };
+      denyRemoveButton -> {
+        role: "button";
+        aria-label: concat("Remove denied rule: ", self.action_pattern);
+      };
+      addDeniedInput -> {
+        role: "textbox";
+        aria-label: "New denied action pattern (glob)";
+        aria-required: "true";
+      };
+      addDeniedCategoryInput -> {
+        role: "textbox";
+        aria-label: "Category for new denied rule";
+        aria-required: "true";
+      };
+      addDeniedButton -> {
+        role: "button";
+        aria-label: "Add denied action rule";
+        aria-disabled: if state == "saving" then "true" else "false";
+      };
+      impactPreviewPanel -> {
+        role: "alertdialog";
+        aria-label: "Breaking-change impact preview";
+        aria-modal: "false";
+        aria-live: "assertive";
+        aria-hidden: if state != "previewing-impact" then "true" else "false";
+      };
+      impactConfirmButton -> {
+        role: "button";
+        aria-label: "Confirm removal — I understand the impact";
+      };
+      impactCancelButton -> {
+        role: "button";
+        aria-label: "Cancel — keep this rule";
+      };
+      advancedExpander -> {
+        role: "button";
+        aria-expanded: if ?advancedOpen then "true" else "false";
+        aria-controls: "advancedSection";
+        aria-label: "Toggle advanced options (YAML import / export)";
+      };
+      advancedSection -> {
+        role: "region";
+        aria-label: "Advanced";
+        aria-hidden: if ?advancedOpen then "false" else "true";
+      };
+      yamlExportButton -> {
+        role: "button";
+        aria-label: "Export scope rules as YAML";
+      };
+      yamlImportButton -> {
+        role: "button";
+        aria-label: "Import scope rules from YAML";
+      };
+      yamlImportPanel -> {
+        role: "region";
+        aria-label: "YAML import";
+        aria-hidden: if state != "importing-yaml" then "true" else "false";
+      };
+      yamlImportInput -> {
+        role: "textbox";
+        aria-label: "Paste YAML rule definitions";
+        aria-multiline: "true";
+      };
+      saveButton -> {
+        role: "button";
+        aria-label: "Save scope changes";
+        aria-disabled: if state == "saving" then "true" else "false";
+      };
+      discardButton -> {
+        role: "button";
+        aria-label: "Discard unsaved changes";
+        aria-disabled: if state == "saving" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    scopeId:        String
+    mode:           union "allowlist" | "denylist" = "allowlist"
+    allowedRules:   list { action_pattern: String, category: String, usageCount: Int } = []
+    deniedRules:    list { action_pattern: String, category: String, usageCount: Int } = []
+    denySectionOpen: Bool = false
+    advancedOpen:   Bool = false
+    readOnly:       Bool = false
+    impactThreshold: Int = 0
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-mode: ?mode;
+      data-readonly: if ?readOnly then "true" else "false";
+    }
+
+    modeToggle -> {
+      data-part: "mode-toggle";
+      data-active: ?mode;
+      onChange: send(SET_MODE);
+      disabled: if ?readOnly or state == "saving" then true else false;
+    }
+
+    modeLabel -> {
+      data-part: "mode-label";
+    }
+
+    allowSection -> {
+      data-part: "allow-section";
+      data-empty: if ?allowedRules.length == 0 then "true" else "false";
+    }
+
+    allowSectionHeading -> {
+      data-part: "allow-section-heading";
+    }
+
+    allowRuleList -> {
+      data-part: "allow-rule-list";
+    }
+
+    allowRuleRow -> {
+      data-part: "allow-rule-row";
+      data-pattern: self.action_pattern;
+      data-category: self.category;
+    }
+
+    allowRulePattern -> {
+      data-part: "allow-rule-pattern";
+    }
+
+    allowCategoryBadge -> {
+      data-part: "allow-category-badge";
+      data-category: self.category;
+    }
+
+    allowUsageCount -> {
+      data-part: "allow-usage-count";
+      data-count: self.usageCount;
+      data-breaking: if self.usageCount > ?impactThreshold then "true" else "false";
+    }
+
+    allowRemoveButton -> {
+      data-part: "allow-remove-button";
+      onClick: send(REMOVE_ALLOWED_RULE, { action_pattern: self.action_pattern });
+      disabled: if ?readOnly or state == "saving" then true else false;
+    }
+
+    addAllowedInput -> {
+      data-part: "add-allowed-input";
+      aria-label: "New allowed action pattern";
+      onKeyDown: if key == "Enter" then send(CONFIRM_ADD_ALLOWED) else if key == "Escape" then send(CANCEL_ADD_ALLOWED) else noop;
+    }
+
+    addAllowedCategoryInput -> {
+      data-part: "add-allowed-category-input";
+      onKeyDown: if key == "Enter" then send(CONFIRM_ADD_ALLOWED) else if key == "Escape" then send(CANCEL_ADD_ALLOWED) else noop;
+    }
+
+    addAllowedButton -> {
+      data-part: "add-allowed-button";
+      onClick: send(ADD_ALLOWED_RULE);
+      disabled: if ?readOnly or state == "saving" then true else false;
+    }
+
+    denySection -> {
+      data-part: "deny-section";
+      data-open: if ?denySectionOpen then "true" else "false";
+      data-empty: if ?deniedRules.length == 0 then "true" else "false";
+      hidden: if ?denySectionOpen then false else true;
+    }
+
+    denySectionToggle -> {
+      data-part: "deny-section-toggle";
+      onClick: send(TOGGLE_DENY_SECTION);
+      aria-expanded: if ?denySectionOpen then "true" else "false";
+    }
+
+    denySectionHeading -> {
+      data-part: "deny-section-heading";
+    }
+
+    denyRuleList -> {
+      data-part: "deny-rule-list";
+    }
+
+    denyRuleRow -> {
+      data-part: "deny-rule-row";
+      data-pattern: self.action_pattern;
+      data-category: self.category;
+    }
+
+    denyRulePattern -> {
+      data-part: "deny-rule-pattern";
+    }
+
+    denyCategoryBadge -> {
+      data-part: "deny-category-badge";
+      data-category: self.category;
+    }
+
+    denyUsageCount -> {
+      data-part: "deny-usage-count";
+      data-count: self.usageCount;
+      data-breaking: if self.usageCount > ?impactThreshold then "true" else "false";
+    }
+
+    denyRemoveButton -> {
+      data-part: "deny-remove-button";
+      onClick: send(REMOVE_DENIED_RULE, { action_pattern: self.action_pattern });
+      disabled: if ?readOnly or state == "saving" then true else false;
+    }
+
+    addDeniedInput -> {
+      data-part: "add-denied-input";
+      onKeyDown: if key == "Enter" then send(CONFIRM_ADD_DENIED) else if key == "Escape" then send(CANCEL_ADD_DENIED) else noop;
+    }
+
+    addDeniedCategoryInput -> {
+      data-part: "add-denied-category-input";
+      onKeyDown: if key == "Enter" then send(CONFIRM_ADD_DENIED) else if key == "Escape" then send(CANCEL_ADD_DENIED) else noop;
+    }
+
+    addDeniedButton -> {
+      data-part: "add-denied-button";
+      onClick: send(ADD_DENIED_RULE);
+      disabled: if ?readOnly or state == "saving" then true else false;
+    }
+
+    impactPreviewPanel -> {
+      data-part: "impact-preview-panel";
+      data-visible: if state == "previewing-impact" then "true" else "false";
+    }
+
+    impactSummary -> {
+      data-part: "impact-summary";
+    }
+
+    impactSyncList -> {
+      data-part: "impact-sync-list";
+    }
+
+    impactConfirmButton -> {
+      data-part: "impact-confirm-button";
+      onClick: send(CONFIRM_REMOVE);
+    }
+
+    impactCancelButton -> {
+      data-part: "impact-cancel-button";
+      onClick: send(CANCEL_REMOVE);
+      onKeyDown: if key == "Escape" then send(CANCEL_REMOVE) else noop;
+    }
+
+    advancedExpander -> {
+      data-part: "advanced-expander";
+      onClick: send(TOGGLE_ADVANCED);
+      aria-expanded: if ?advancedOpen then "true" else "false";
+    }
+
+    advancedSection -> {
+      data-part: "advanced-section";
+      data-open: if ?advancedOpen then "true" else "false";
+      hidden: if ?advancedOpen then false else true;
+    }
+
+    yamlExportButton -> {
+      data-part: "yaml-export-button";
+      onClick: send(EXPORT_YAML);
+      disabled: if state == "saving" then true else false;
+    }
+
+    yamlImportButton -> {
+      data-part: "yaml-import-button";
+      onClick: send(IMPORT_YAML);
+      disabled: if ?readOnly or state == "saving" then true else false;
+    }
+
+    yamlImportPanel -> {
+      data-part: "yaml-import-panel";
+      data-visible: if state == "importing-yaml" then "true" else "false";
+    }
+
+    yamlImportInput -> {
+      data-part: "yaml-import-input";
+      onKeyDown: if key == "Escape" then send(CANCEL_YAML_IMPORT) else noop;
+    }
+
+    yamlImportConfirmButton -> {
+      data-part: "yaml-import-confirm-button";
+      onClick: send(YAML_IMPORT_CONFIRMED);
+    }
+
+    yamlImportCancelButton -> {
+      data-part: "yaml-import-cancel-button";
+      onClick: send(CANCEL_YAML_IMPORT);
+    }
+
+    emptyAllowState -> {
+      data-part: "empty-allow-state";
+      data-visible: if ?allowedRules.length == 0 then "true" else "false";
+    }
+
+    emptyDenyState -> {
+      data-part: "empty-deny-state";
+      data-visible: if ?deniedRules.length == 0 then "true" else "false";
+    }
+
+    saveBar -> {
+      data-part: "save-bar";
+      data-saving: if state == "saving" then "true" else "false";
+    }
+
+    saveButton -> {
+      data-part: "save-button";
+      onClick: send(CONFIRM_ADD_ALLOWED);
+      disabled: if ?readOnly or state == "saving" then true else false;
+    }
+
+    discardButton -> {
+      data-part: "discard-button";
+      onClick: send(CANCEL_ADD_ALLOWED);
+      disabled: if state == "saving" then true else false;
+    }
+  }
+
+  affordance {
+    serves: group-section;
+    specificity: 9;
+    when {
+      concept: "AutomationScope";
+      adminOnly: true;
+    }
+    bind {
+      mode: mode;
+      allowedRules: rules;
+    }
+  }
+
+  invariant {
+    example "add allowed rule flow": {
+      after addAllowedButton.click -> ok
+      then root -> { data-state: "adding-allowed" }
+      then send(CONFIRM_ADD_ALLOWED, { action_pattern: "Content/*", category: "content" }) -> ok
+      then root -> { data-state: "saving" }
+      then send(SAVE_SUCCESS) -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    example "remove rule triggers impact preview before save": {
+      after allowRemoveButton.click -> ok
+      then root -> { data-state: "previewing-impact" }
+      and impactPreviewPanel -> { data-visible: "true" }
+      then impactCancelButton.click -> ok
+      then root -> { data-state: "idle" }
+      and impactPreviewPanel -> { data-visible: "false" }
+    }
+
+    example "remove rule confirmed after impact preview": {
+      after allowRemoveButton.click -> ok
+      then root -> { data-state: "previewing-impact" }
+      and impactPreviewPanel -> { data-visible: "true" }
+      then impactConfirmButton.click -> ok
+      then root -> { data-state: "saving" }
+      then send(SAVE_SUCCESS) -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    example "deny section collapsed by default then expanded": {
+      after root -> { data-state: "idle" }
+      and denySection -> { data-open: "false" }
+      then denySectionToggle.click -> ok
+      and denySection -> { data-open: "true" }
+    }
+
+    example "advanced section collapsed by default then expanded": {
+      after root -> { data-state: "idle" }
+      and advancedSection -> { data-open: "false" }
+      then advancedExpander.click -> ok
+      and advancedSection -> { data-open: "true" }
+    }
+
+    example "YAML import flow": {
+      after yamlImportButton.click -> ok
+      then root -> { data-state: "importing-yaml" }
+      and yamlImportPanel -> { data-visible: "true" }
+      then yamlImportCancelButton.click -> ok
+      then root -> { data-state: "idle" }
+      and yamlImportPanel -> { data-visible: "false" }
+    }
+
+    example "YAML export flow": {
+      after yamlExportButton.click -> ok
+      then root -> { data-state: "exporting-yaml" }
+      then send(EXPORT_DONE) -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    example "mode toggle changes mode": {
+      after send(SET_MODE, { mode: "denylist" }) -> ok
+      then root -> { data-mode: "denylist" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      root -> { data-state: state }
+    }
+
+    always "impactPreviewPanel visible only in previewing-impact": {
+      impactPreviewPanel -> { data-visible: if state == "previewing-impact" then "true" else "false" }
+    }
+
+    always "denySection visibility matches denySectionOpen prop": {
+      denySection -> { data-open: if ?denySectionOpen then "true" else "false" }
+    }
+
+    always "advancedSection visibility matches advancedOpen prop": {
+      advancedSection -> { data-open: if ?advancedOpen then "true" else "false" }
+    }
+
+    never "save proceeds without impact preview when rule has usageCount > 0": {
+      state == "saving" and impactPreviewPanel -> { data-visible: "false" } and self.usageCount > 0
+    }
+
+    never "save or add button enabled while readOnly": {
+      ?readOnly == true and saveButton -> { disabled: false }
+    }
+
+    never "impact preview skipped on remove": {
+      state != "previewing-impact" and send(REMOVE_ALLOWED_RULE) occurs
+    }
+
+    action allowRemoveButton.click {
+      requires: state == "idle"
+      ensures ok: state == "previewing-impact"
+    }
+
+    action impactConfirmButton.click {
+      requires: state == "previewing-impact"
+      ensures ok: state == "saving"
+    }
+
+    action impactCancelButton.click {
+      requires: state == "previewing-impact"
+      ensures ok: state == "idle"
+    }
+
+    action addAllowedButton.click {
+      requires: state == "idle"
+      ensures ok: state == "adding-allowed"
+    }
+
+    "allowUsageCount and denyUsageCount chips derive from a live query — not from props — so they reflect current sync references without a manual refresh";
+    "REMOVE_ALLOWED_RULE and REMOVE_DENIED_RULE must call AutomationScope/remove_rule after CONFIRM_REMOVE, never before";
+    "CONFIRM_ADD_ALLOWED must call AutomationScope/add_rule with action_pattern and category from addAllowedInput and addAllowedCategoryInput";
+    "YAML_IMPORT_CONFIRMED parses yamlImportInput content, validates each entry as { action_pattern, category }, and calls AutomationScope/add_rule per entry";
+    "EXPORT_YAML calls AutomationScope/list_rules, serialises to YAML, and triggers a browser download";
+    "SET_MODE calls AutomationScope/configure — which clears all existing rules when mode changes — and must show a confirmation prompt when rules exist";
+    "readOnly prop is enforced via ActionBinding role gate in seeds; this widget enforces it additionally on every interactive part";
+    "impactSyncList must render identifiers (name + trigger) of each affected user sync so the admin can assess blast radius before confirming";
+    "Escape key from yamlImportInput and impactCancelButton must fire the cancel transition regardless of mouse position";
+  }
+
+}
