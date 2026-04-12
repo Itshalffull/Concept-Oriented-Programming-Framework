@@ -71,6 +71,19 @@ concept Comment [C] {
       fixture valid_delete { comment: "c1" } after valid_add
       fixture delete_missing { comment: "nonexistent" } -> notfound
     }
+
+    action listByEntity(entity: String) {
+      -> ok(comments: list C) {
+        Returns all comments attached to the specified entity, ordered by threadPath
+        lexicographically so the result preserves depth-first tree traversal order.
+      }
+      reversal: none
+
+      fixture list_empty { entity: "no-such-entity" }
+      fixture list_single { entity: "doc-42" } after valid_add
+      fixture list_thread { entity: "doc-42" } after valid_reply
+      fixture list_deep { entity: "doc-42" } after valid_reply
+    }
   }
 
   example "addComment-then-reply": {

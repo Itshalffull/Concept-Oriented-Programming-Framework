@@ -3,7 +3,7 @@
 // Comment Concept Implementation (Content Kit - Threaded Discussion)
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, del, branch, complete, completeFrom,
+  createProgram, get as spGet, find, put, putFrom, del, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -70,19 +70,27 @@ const _commentHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = spGet(p, 'comment', parent, 'parentRecord');
-    p = branch(p, 'parentRecord',
+    p = mapBindings(p, (bindings) => {
+      const parentRec = bindings.parentRecord as Record<string, unknown> | null | undefined;
+      if (!parentRec) return null;
+      const parentThreadPath = (parentRec.threadPath as string) || `/${parent}`;
+      return {
+        comment,
+        entity: (parentRec.entity as string) || '',
+        content,
+        author,
+        parent,
+        threadPath: `${parentThreadPath}/${comment}`,
+        published: false,
+      };
+    }, '_replyRecord');
+    return branch(p, 'parentRecord',
       (b) => {
-        let b2 = put(b, 'comment', comment, {
-          comment, entity: '', content, author,
-          parent,
-          threadPath: `/${parent}/${comment}`,
-          published: false,
-        });
+        let b2 = putFrom(b, 'comment', comment, (bindings) => bindings._replyRecord as Record<string, unknown>);
         return complete(b2, 'ok', { comment });
       },
       (b) => complete(b, 'error', { message: `parent not found: ${parent}` }),
-    );
-    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    ) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   publish(input: Record<string, unknown>) {
@@ -113,6 +121,27 @@ const _commentHandler: FunctionalConceptHandler = {
       (b) => complete(b, 'notfound', { message: 'Comment not found' }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
+  listByEntity(input: Record<string, unknown>) {
+    const entity = input.entity as string;
+
+    let p = createProgram();
+    p = find(p, 'comment', { entity }, 'allComments');
+    p = mapBindings(p, (bindings) => {
+      const all = (bindings.allComments as Array<Record<string, unknown>>) || [];
+      return all
+        .slice()
+        .sort((a, b) => {
+          const pa = (a.threadPath as string) || '';
+          const pb = (b.threadPath as string) || '';
+          return pa < pb ? -1 : pa > pb ? 1 : 0;
+        })
+        .map((r) => r.comment as string);
+    }, 'sortedComments');
+    return completeFrom(p, 'ok', (bindings) => ({
+      comments: bindings.sortedComments as string[],
+    })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   delete(input: Record<string, unknown>) {

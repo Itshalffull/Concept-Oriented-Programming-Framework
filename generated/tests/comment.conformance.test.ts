@@ -426,6 +426,109 @@ describe('Comment functional handler', () => {
 
   });
 
+  describe('listByEntity', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = commentHandler.listByEntity({ entity: "doc-42" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = commentHandler.listByEntity({ entity: "doc-42" });
+      if (!program?.instructions) return;
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = commentHandler.listByEntity({ entity: "doc-42" });
+      if (!program?.instructions) return;
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = commentHandler.listByEntity({ entity: "doc-42" });
+      if (!program?.instructions) return;
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = commentHandler.listByEntity({ entity: "doc-42" });
+      if (!program?.instructions) return;
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof commentHandler.listByEntity !== 'function') return;
+      const result = await interpret(commentHandler.listByEntity({ entity: "doc-42" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "list_empty" -> ok (empty list)', async () => {
+      if (typeof commentHandler.listByEntity !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(commentHandler.listByEntity({ entity: "no-such-entity" }), storage);
+      expect(result.variant).toBe('ok');
+      expect(Array.isArray(result.output?.comments ?? result.comments ?? [])).toBe(true);
+      const comments = result.output?.comments ?? result.comments ?? [];
+      expect(comments.length).toBe(0);
+    });
+
+    it('fixture "list_single" -> ok (single top-level comment)', async () => {
+      if (typeof commentHandler.listByEntity !== 'function') return;
+      const storage = createInMemoryStorage();
+      await interpret(commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" }), storage);
+      const result = await interpret(commentHandler.listByEntity({ entity: "doc-42" }), storage);
+      expect(result.variant).toBe('ok');
+      const comments = result.output?.comments ?? result.comments ?? [];
+      expect(comments.length).toBe(1);
+    });
+
+    it('fixture "list_thread" -> ok (multi-comment thread in threadPath order)', async () => {
+      if (typeof commentHandler.listByEntity !== 'function') return;
+      const storage = createInMemoryStorage();
+      await interpret(commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Hello", author: "alice" }), storage);
+      await interpret(commentHandler.reply({ comment: "r1", parent: "c1", content: "Thanks!", author: "bob" }), storage);
+      const result = await interpret(commentHandler.listByEntity({ entity: "doc-42" }), storage);
+      expect(result.variant).toBe('ok');
+      const comments = result.output?.comments ?? result.comments ?? [];
+      expect(comments.length).toBe(2);
+    });
+
+    it('fixture "list_deep" -> ok (deep reply chain preserves DFS order)', async () => {
+      if (typeof commentHandler.listByEntity !== 'function') return;
+      const storage = createInMemoryStorage();
+      await interpret(commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Root", author: "alice" }), storage);
+      await interpret(commentHandler.reply({ comment: "r1", parent: "c1", content: "Reply L2", author: "bob" }), storage);
+      await interpret(commentHandler.reply({ comment: "r2", parent: "r1", content: "Reply L3", author: "carol" }), storage);
+      const result = await interpret(commentHandler.listByEntity({ entity: "doc-42" }), storage);
+      expect(result.variant).toBe('ok');
+      const comments = result.output?.comments ?? result.comments ?? [];
+      expect(comments.length).toBe(3);
+      // threadPath lexicographic order: /c1 < /c1/r1 < /c1/r1/r2
+      const idx_c1 = comments.indexOf('c1');
+      const idx_r1 = comments.indexOf('r1');
+      const idx_r2 = comments.indexOf('r2');
+      expect(idx_c1).toBeLessThan(idx_r1);
+      expect(idx_r1).toBeLessThan(idx_r2);
+    });
+
+  });
+
   describe('register()', () => {
     it('declares concept name', async () => {
       if (typeof commentHandler.register !== 'function') return;

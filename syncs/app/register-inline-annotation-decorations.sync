@@ -1,0 +1,101 @@
+# InlineAnnotation decoration RenderTransforms — one token-remap entry per annotation kind.
+# Each sync registers a RenderTransform that applies the palette annotation colour +
+# text-decoration for its kind so theme switches automatically restyle annotations.
+
+sync RegisterAnnotationComment [eager]
+  purpose: "Register a token-remap RenderTransform for comment annotations so highlighted spans receive the palette annotation colour and an underline decoration."
+when {
+  PluginRegistry/register: [ type: "render-transform-provider"; name: ?name ]
+    => ok(plugin: ?plugin)
+}
+then {
+  RenderTransform/register: [
+    name: "annotation-comment";
+    kind: "token-remap";
+    spec: "{\"scope\":\"[data-annotation-kind=\\\"comment\\\"]\",\"mappings\":{\"color\":\"palette.annotation.comment\",\"text-decoration\":\"underline\"}}"
+  ]
+}
+
+sync RegisterAnnotationAiSuggestion [eager]
+  purpose: "Register a token-remap RenderTransform for AI-suggestion annotations so highlighted spans receive the palette annotation colour and a dotted underline."
+when {
+  PluginRegistry/register: [ type: "render-transform-provider"; name: ?name ]
+    => ok(plugin: ?plugin)
+}
+then {
+  RenderTransform/register: [
+    name: "annotation-ai-suggestion";
+    kind: "token-remap";
+    spec: "{\"scope\":\"[data-annotation-kind=\\\"ai-suggestion\\\"]\",\"mappings\":{\"color\":\"palette.annotation.ai\",\"text-decoration\":\"underline dotted\"}}"
+  ]
+}
+
+sync RegisterAnnotationInsert [eager]
+  purpose: "Register a token-remap RenderTransform for insert annotations so highlighted spans receive the palette insertion background colour."
+when {
+  PluginRegistry/register: [ type: "render-transform-provider"; name: ?name ]
+    => ok(plugin: ?plugin)
+}
+then {
+  RenderTransform/register: [
+    name: "annotation-insert";
+    kind: "token-remap";
+    spec: "{\"scope\":\"[data-annotation-kind=\\\"insert\\\"]\",\"mappings\":{\"background-color\":\"palette.annotation.insert\"}}"
+  ]
+}
+
+sync RegisterAnnotationDelete [eager]
+  purpose: "Register a token-remap RenderTransform for delete annotations so highlighted spans receive the palette deletion colour and a strikethrough decoration."
+when {
+  PluginRegistry/register: [ type: "render-transform-provider"; name: ?name ]
+    => ok(plugin: ?plugin)
+}
+then {
+  RenderTransform/register: [
+    name: "annotation-delete";
+    kind: "token-remap";
+    spec: "{\"scope\":\"[data-annotation-kind=\\\"delete\\\"]\",\"mappings\":{\"color\":\"palette.annotation.delete\",\"text-decoration\":\"line-through\"}}"
+  ]
+}
+
+sync RegisterAnnotationSpelling [eager]
+  purpose: "Register a token-remap RenderTransform for spelling annotations so misspelled spans receive the palette spelling colour and a wavy underline."
+when {
+  PluginRegistry/register: [ type: "render-transform-provider"; name: ?name ]
+    => ok(plugin: ?plugin)
+}
+then {
+  RenderTransform/register: [
+    name: "annotation-spelling";
+    kind: "token-remap";
+    spec: "{\"scope\":\"[data-annotation-kind=\\\"spelling\\\"]\",\"mappings\":{\"color\":\"palette.annotation.spelling\",\"text-decoration\":\"underline wavy\"}}"
+  ]
+}
+
+sync RegisterAnnotationGrammar [eager]
+  purpose: "Register a token-remap RenderTransform for grammar annotations so flagged spans receive the palette grammar colour and a wavy underline."
+when {
+  PluginRegistry/register: [ type: "render-transform-provider"; name: ?name ]
+    => ok(plugin: ?plugin)
+}
+then {
+  RenderTransform/register: [
+    name: "annotation-grammar";
+    kind: "token-remap";
+    spec: "{\"scope\":\"[data-annotation-kind=\\\"grammar\\\"]\",\"mappings\":{\"color\":\"palette.annotation.grammar\",\"text-decoration\":\"underline wavy\"}}"
+  ]
+}
+
+sync RegisterAnnotationDefinition [eager]
+  purpose: "Register a token-remap RenderTransform for definition annotations so term spans receive the palette definition colour and a dotted underline that reveals on hover."
+when {
+  PluginRegistry/register: [ type: "render-transform-provider"; name: ?name ]
+    => ok(plugin: ?plugin)
+}
+then {
+  RenderTransform/register: [
+    name: "annotation-definition";
+    kind: "token-remap";
+    spec: "{\"scope\":\"[data-annotation-kind=\\\"definition\\\"]\",\"mappings\":{\"color\":\"palette.annotation.definition\",\"text-decoration\":\"underline dotted\"}}"
+  ]
+}

@@ -1,0 +1,63 @@
+# Comment-gutter flags for block-level schemas.
+# These three Properties drive the inline annotation gutter:
+#   isCommentable     — whether this block type supports inline comments
+#   commentScope      — "both" (inline + block) or "block" (block-level only)
+#   commentGutterPosition — where the gutter icon appears ("right" | "left")
+
+concept: Property
+action: set
+entries:
+  # === paragraph ===
+  - entity: paragraph
+    key: isCommentable
+    value: "true"
+  - entity: paragraph
+    key: commentScope
+    value: both
+  - entity: paragraph
+    key: commentGutterPosition
+    value: right
+
+  # === heading ===
+  - entity: heading
+    key: isCommentable
+    value: "true"
+  - entity: heading
+    key: commentScope
+    value: both
+  - entity: heading
+    key: commentGutterPosition
+    value: right
+
+  # === quote ===
+  - entity: quote
+    key: isCommentable
+    value: "true"
+  - entity: quote
+    key: commentScope
+    value: both
+  - entity: quote
+    key: commentGutterPosition
+    value: right
+
+  # === callout ===
+  - entity: callout
+    key: isCommentable
+    value: "true"
+  - entity: callout
+    key: commentScope
+    value: both
+  - entity: callout
+    key: commentGutterPosition
+    value: right
+
+  # === image ===
+  - entity: image
+    key: isCommentable
+    value: "true"
+  - entity: image
+    key: commentScope
+    value: block
+  - entity: image
+    key: commentGutterPosition
+    value: right
