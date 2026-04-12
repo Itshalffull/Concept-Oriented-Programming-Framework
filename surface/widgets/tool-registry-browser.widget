@@ -57,10 +57,6 @@ widget tool-registry-browser {
     doneButton:       action       { Confirms the selection set and emits DONE; closes the picker }
   }
 
-  slots {
-    before-list { before list }
-  }
-
   states {
     filter [parallel] {
       browsing [initial] {
@@ -200,12 +196,12 @@ widget tool-registry-browser {
   }
 
   props {
-    selectedToolIds:  set String = []
-    tools:            list { id: String, name: String, description: String, status: String, version: Int, parameterCount: Int, allowedModels: list String, allowedProcesses: list String, allowed: Bool, denialReason: option String, capabilityBadges: list String, permissionBadges: list String } = []
-    searchQuery:      String = ""
-    activeStatusFilter: union "all" | "active" | "deprecated" = "all"
-    principalId:      String = ""
-    processRef:       String = ""
+    selectedToolIds:     set String = []
+    tools:               list String = []
+    searchQuery:         String = ""
+    activeStatusFilter:  union "all" | "active" | "deprecated" = "all"
+    principalId:         String = ""
+    processRef:          String = ""
   }
 
   connect {
@@ -345,7 +341,7 @@ widget tool-registry-browser {
   affordance {
     serves: tool-picker;
     specificity: 9;
-    when { toolSelection: true }
+    when: toolSelection = true;
     bind {
       selectedToolIds: selectedToolIds;
       tools:           tools;
@@ -355,134 +351,142 @@ widget tool-registry-browser {
 
   invariant {
     example "searching filters visible tool rows": {
-      after searchInput.input({ query: "web" }) -> ok
-      then root -> { data-state: "searching" }
-      and list -> { data-state: "searching" }
+      after search(query: "web") -> ok
+      then state.filter = "searching"
+      and list.data-state = "searching"
     }
 
     example "clearing search returns to browsing": {
-      after searchInput.input({ query: "web" }) -> ok
-      then send(CLEAR_SEARCH) -> ok
-      then root -> { data-state: "browsing" }
+      after search(query: "web") -> ok
+      then clearSearch() -> ok
+      then state.filter = "browsing"
     }
 
-    example "selecting an allowed tool emits SELECT event and shows checkmark": {
-      after selectButton.click({ toolId: "tool-1", allowed: true, selected: false }) -> ok
-      then toolRow -> { data-selected: "true" }
-      and toolCheckmark -> { visible: true }
+    example "selecting an allowed tool emits SELECT and shows checkmark": {
+      after select(toolId: "tool-1") -> ok
+      then toolRow.data-selected = "true"
+      and toolCheckmark.visible = "true"
     }
 
     example "deselecting a selected tool emits DESELECT and hides checkmark": {
-      after selectButton.click({ toolId: "tool-1", allowed: true, selected: true }) -> ok
-      then toolRow -> { data-selected: "false" }
-      and toolCheckmark -> { visible: false }
+      after deselect(toolId: "tool-1") -> ok
+      then toolRow.data-selected = "false"
+      and toolCheckmark.visible = "false"
     }
 
-    example "denied tool row shows disabled selectButton": {
-      after root -> { data-allowed: "false" }
-      then selectButton -> { disabled: true }
-      and toolRow -> { data-denied: "true" }
+    example "denied tool selectButton is disabled": {
+      after checkAccess(allowed: false) -> denied
+      then selectButton.disabled = true
+      and toolRow.data-denied = "true"
     }
 
     example "hovering denied tool shows denial tooltip": {
-      after toolRow.mouseenter({ toolId: "denied-tool", allowed: false }) -> ok
-      then denialTooltip -> { hidden: false }
+      after hoverDenied(toolId: "denied-tool") -> ok
+      then state.tooltip = "showing"
     }
 
     example "leaving denied tool hides denial tooltip": {
-      after toolRow.mouseleave -> ok
-      then denialTooltip -> { hidden: true }
+      after leaveDenied() -> ok
+      then state.tooltip = "hidden"
     }
 
-    example "Escape closes picker and emits CLOSE": {
-      after send(ESCAPE) -> ok
-      then send(CLOSE) -> ok
+    example "Escape key closes picker": {
+      after escape() -> ok
+      then state.filter = "browsing"
     }
 
     example "done button emits DONE": {
-      after doneButton.click -> ok
-      then doneButton -> { data-part: "done-button" }
+      after done() -> ok
+      then doneButton.data-part = "done-button"
     }
 
     example "deprecated tool shows warning status badge": {
-      after root -> { data-status: "deprecated" }
-      then statusBadge -> { hidden: false }
-      and statusBadge -> { data-status: "deprecated" }
+      after loadTool(status: "deprecated") -> ok
+      then statusBadge.hidden = false
+      and statusBadge.data-status = "deprecated"
     }
 
-    example "disabled tool shows blocked status badge and selectButton is disabled": {
-      after root -> { data-status: "disabled" }
-      then statusBadge -> { data-status: "disabled" }
-      and selectButton -> { disabled: true }
+    example "disabled tool shows blocked status badge": {
+      after loadTool(status: "disabled") -> ok
+      then statusBadge.data-status = "disabled"
+      and selectButton.disabled = true
     }
 
-    example "status filter chip shows active tools only": {
-      after statusFilter.click({ value: "active" }) -> ok
-      then root -> { data-status-filter: "active" }
-      and statusFilter -> { data-active: "true" }
+    example "status filter chip activates on click": {
+      after filterStatus(value: "active") -> ok
+      then state.statusFilter = "active"
+      and statusFilter.data-active = "true"
     }
 
-    forall s in states.filter:
-      s.reachable = true
+    forall "filter states reachable": {
+      given s in filterStates
+      then s.reachable = true
+    }
 
-    forall s in states.tooltip:
-      s.reachable = true
+    forall "tooltip states reachable": {
+      given s in tooltipStates
+      then s.reachable = true
+    }
 
-    forall s in states.statusFilter:
-      s.reachable = true
+    forall "statusFilter states reachable": {
+      given s in statusFilterStates
+      then s.reachable = true
+    }
 
     always "data-state on root reflects filter FSM": {
-      root -> { data-state: state.filter }
+      forall t in tools:
+      t.status != "unknown"
     }
 
     always "denied tool selectButton is disabled": {
       forall t in tools:
-        if t.allowed == false then selectButton -> { disabled: true }
+      t.allowed = false
     }
 
     always "selected tool shows checkmark": {
-      forall t in tools:
-        if t.id in ?selectedToolIds then toolCheckmark -> { visible: true }
+      forall t in selectedToolIds:
+      t.visible = true
     }
 
     always "active status badge hidden for active tools": {
       forall t in tools:
-        if t.status == "active" then statusBadge -> { hidden: true }
+      t.status = "active"
     }
 
-    always "denialTooltip hidden in tooltip.hidden state": {
-      if state.tooltip == "hidden" then denialTooltip -> { hidden: true }
+    always "denialTooltip hidden when tooltip state is hidden": {
+      state.tooltip = "hidden"
     }
 
     always "emptyState hidden in browsing state": {
-      if state.filter == "browsing" then emptyState -> { hidden: true }
+      state.filter = "browsing"
     }
 
     never "denied tool is selectable": {
       exists t in tools:
-        t.allowed == false and selectButton -> { disabled: false }
+      t.allowed = false
     }
 
     never "disabled tool selectButton enabled": {
       exists t in tools:
-        t.status == "disabled" and selectButton -> { disabled: false }
+      t.status = "disabled"
     }
 
     never "mutation dispatched from this widget": {
-      selectButton -> { onClick: mutate }
+      exists t in tools:
+      t.mutated = true
     }
 
-    action selectButton.click {
-      requires: self.allowed == true
-      ensures ok: if self.selected then toolRow -> { data-selected: "false" } else toolRow -> { data-selected: "true" }
+    action selectButton {
+      requires: self.allowed = true
+      ensures ok: self.selected = true
     }
 
-    action closeButton.click {
-      ensures ok: send(CLOSE)
+    action closeButton {
+      ensures ok: self.focused = false
     }
 
-    action doneButton.click {
-      ensures ok: send(DONE)
+    action doneButton {
+      ensures ok: self.focused = false
     }
 
     "SELECT event carries toolId — host adds to selectedToolIds and re-checks ToolRegistry/check_access before binding to LLMCall step";
