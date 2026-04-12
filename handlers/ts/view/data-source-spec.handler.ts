@@ -44,6 +44,8 @@ const VALID_KINDS = new Set([
   'remote-api',
   'search-index',
   'inline',
+  // Resolves to children of a parent ContentNode ordered by Outline position. Config: {parentRef: String}.
+  'outline-children',
 ]);
 
 // --- Handler ---
@@ -58,7 +60,15 @@ const _handler: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
     const name = (input.name as string) ?? '';
     const kind = (input.kind as string) ?? '';
-    const config = (input.config as string) ?? '';
+    // config may arrive as a pre-parsed object (from test generators) or as a
+    // JSON string (from production callers). Normalize to string for storage.
+    const rawConfig = input.config;
+    const config: string =
+      typeof rawConfig === 'string'
+        ? rawConfig
+        : rawConfig != null
+          ? JSON.stringify(rawConfig)
+          : '';
 
     // Validate name
     if (!name || name.trim() === '') {
@@ -74,7 +84,7 @@ const _handler: FunctionalConceptHandler = {
       }) as StorageProgram<Result>;
     }
 
-    // Validate config is parseable JSON
+    // Validate config is parseable JSON (string form)
     let parsedConfig: unknown;
     try {
       parsedConfig = JSON.parse(config);
@@ -83,7 +93,7 @@ const _handler: FunctionalConceptHandler = {
         message: 'config must be valid JSON',
       }) as StorageProgram<Result>;
     }
-    void parsedConfig; // config is valid; we store the original string
+    void parsedConfig; // config is valid; we store the normalized string
 
     const parameters = extractTemplateVars(config);
 
@@ -134,16 +144,20 @@ const _handler: FunctionalConceptHandler = {
 
   bind(input: Record<string, unknown>) {
     const name = (input.name as string) ?? '';
-    const bindingsJson = (input.bindings as string) ?? '';
-
-    // Validate bindings is parseable JSON before any storage ops
+    // bindings may arrive as a pre-parsed object or as a JSON string.
+    const rawBindings = input.bindings;
     let bindingsMap: Record<string, string>;
-    try {
-      bindingsMap = JSON.parse(bindingsJson) as Record<string, string>;
-    } catch {
-      return complete(createProgram(), 'error', {
-        message: 'bindings must be valid JSON',
-      }) as StorageProgram<Result>;
+    if (rawBindings !== null && typeof rawBindings === 'object') {
+      bindingsMap = rawBindings as Record<string, string>;
+    } else {
+      const bindingsJson = typeof rawBindings === 'string' ? rawBindings : '';
+      try {
+        bindingsMap = JSON.parse(bindingsJson) as Record<string, string>;
+      } catch {
+        return complete(createProgram(), 'error', {
+          message: 'bindings must be valid JSON',
+        }) as StorageProgram<Result>;
+      }
     }
 
     // Capture for use in mapBindings closure

@@ -105,6 +105,13 @@ describe('PresentationSpec functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
+    it('fixture "create_blocks_presentation" -> ok', async () => {
+      if (typeof presentationSpecHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(presentationSpecHandler.create({ name: "default-blocks", displayType: "blocks", hints: {}, displayModePolicy: "bypass", defaultDisplayMode: "" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
     it('fixture "create_duplicate" -> duplicate', async () => {
       if (typeof presentationSpecHandler.create !== 'function') return;
       const storage = createInMemoryStorage();

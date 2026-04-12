@@ -39,6 +39,7 @@ concept DataSourceSpec [D] {
       }
       fixture create_content_source { name: "content-list-source", kind: "concept-action", config: '{"concept":"ContentNode","action":"list"}' }
       fixture create_inline { name: "inline-data", kind: "inline", config: '{"data":[{"id":"1"}]}' }
+      fixture create_outline_children_source { name: "outline-children-source", kind: "outline-children", config: '{"parentRef":"page-123"}' }
       fixture create_duplicate { name: "content-list-source", kind: "inline", config: '{}' } after create_content_source -> duplicate
       fixture create_empty_name { name: "", kind: "concept-action", config: '{}' } -> error
     }

@@ -1,0 +1,12 @@
+# DataSourceSpec seed for the "outline-children" kind.
+# Resolves to children of a parent ContentNode ordered by Outline position.
+# Config: {parentRef: String} — the parentRef template variable is bound at
+# view-resolve time to the entity whose block children are being displayed.
+# Per MAG-724 (block-editor-recursive-views-prd.md §5.3).
+
+concept: DataSourceSpec
+action: create
+entries:
+  - name: outline-children-source
+    kind: outline-children
+    config: '{"parentRef":"{{parentRef}}"}'

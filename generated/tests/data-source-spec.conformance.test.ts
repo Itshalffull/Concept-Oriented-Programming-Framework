@@ -98,6 +98,13 @@ describe('DataSourceSpec functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
+    it('fixture "create_outline_children_source" -> ok', async () => {
+      if (typeof dataSourceSpecHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(dataSourceSpecHandler.create({ name: "outline-children-source", kind: "outline-children", config: {"parentRef":"page-123"} }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
     it('fixture "create_duplicate" -> duplicate', async () => {
       if (typeof dataSourceSpecHandler.create !== 'function') return;
       const storage = createInMemoryStorage();

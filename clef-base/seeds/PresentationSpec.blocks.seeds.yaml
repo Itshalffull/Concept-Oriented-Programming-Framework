@@ -1,0 +1,13 @@
+# PresentationSpec seed for the "blocks" display type.
+# Recursive ViewShell mount per child — used by the block editor so that
+# each child ContentNode is rendered by its own nested ViewShell instance.
+# Per MAG-724 (block-editor-recursive-views-prd.md §5.2).
+
+concept: PresentationSpec
+action: create
+entries:
+  - name: default-blocks
+    displayType: blocks
+    hints: '{}'
+    displayModePolicy: bypass
+    defaultDisplayMode: ""

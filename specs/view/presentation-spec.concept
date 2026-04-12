@@ -48,6 +48,7 @@ concept PresentationSpec [P] {
       fixture create_table { name: "content-table", displayType: "table", hints: '{}', displayModePolicy: "use", defaultDisplayMode: "table-row" }
       fixture create_card_grid { name: "themes-cards", displayType: "card-grid", hints: '{}', displayModePolicy: "use", defaultDisplayMode: "card" }
       fixture create_graph { name: "concept-graph", displayType: "graph", hints: '{}', displayModePolicy: "bypass", defaultDisplayMode: "" }
+      fixture create_blocks_presentation { name: "default-blocks", displayType: "blocks", hints: '{}', displayModePolicy: "bypass", defaultDisplayMode: "" }
       fixture create_duplicate { name: "content-table", displayType: "table", hints: '{}', displayModePolicy: "use", defaultDisplayMode: "" } after create_table -> duplicate
       fixture create_empty_name { name: "", displayType: "table", hints: '{}', displayModePolicy: "use", defaultDisplayMode: "" } -> error
     }
