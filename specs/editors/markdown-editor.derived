@@ -1,0 +1,52 @@
+derived MarkdownEditor [T] {
+
+  purpose {
+    Canvas pre-configured with markdown block vocabulary: paragraph,
+    heading (h1-h6), image. Text marks via bold / italic / code
+    RenderTransforms. Markdown-style InputRules for prefix shortcuts
+    (## heading, - list soon, etc.). ContentSerializer produces markdown
+    on export. Gives a user editing any ContentNode a familiar markdown
+    writing surface without structured-schema overhead.
+  }
+
+  composes {
+    Outline [T]
+    ComponentMapping [T]
+    EditSurface [T]
+    InputRule [T]
+    RenderTransform [T]
+    ContentCompiler [T]
+  }
+
+  syncs {
+    required: [
+      markdown-blocks-registered,
+      markdown-marks-registered,
+      markdown-input-rules-registered,
+      markdown-serializer-registered
+    ]
+  }
+
+  surface {
+    action create(rootNodeId: String, pageName: String) {
+      matches: Outline/create
+    }
+
+    action compile(page: String) {
+      matches: ContentCompiler/compile(schemaHint: "markdown")
+    }
+
+    action insertBlock(parentId: String, position: Int, schema: String) {
+      matches: Outline/addChild
+    }
+
+    query rootChildren(page: String) -> Outline/children(parent: page)
+    query compilationStatus(page: String) -> ContentCompiler/listByPage(pageId: page)
+  }
+
+  principle {
+    after create(rootNodeId: r, pageName: n)
+    then insertBlock(parentId: r, position: "0", schema: "paragraph") -> ok
+    then rootChildren(page: r) returns first child with schema paragraph
+  }
+}
