@@ -79,70 +79,39 @@ export const AppShell: React.FC<{ children: React.ReactNode; sessionUser?: strin
       style={{ paddingTop: isInSpace ? 32 : 0 }}
     >
       {isInSpace && currentSpace && (
-        <div
-          className="space-indicator-bar"
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 32,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '0 16px',
-            backgroundColor: 'var(--palette-neutral-100, #f0f0f0)',
-            borderBottom: '1px solid var(--palette-neutral-200, #ddd)',
-            zIndex: 1000,
-            fontSize: 13,
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div className="space-indicator-bar">
+          <div className="space-indicator-bar__context">
             <span
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: '50%',
-                backgroundColor: currentSpace.color ?? 'var(--palette-primary-500, #4f46e5)',
-                display: 'inline-block',
-                flexShrink: 0,
-              }}
+              className="space-indicator-bar__dot"
+              style={{ backgroundColor: currentSpace.color ?? 'var(--palette-primary)' }}
             />
             {spaceStack.length > 1 ? (
-              <span style={{ color: 'var(--palette-neutral-700, #555)' }}>
+              <span className="space-indicator-bar__crumbs">
                 {spaceStack.map((s, i) => (
                   <React.Fragment key={s.id}>
-                    {i > 0 && <span style={{ margin: '0 4px', opacity: 0.5 }}>/</span>}
-                    <span style={{ fontWeight: i === spaceStack.length - 1 ? 600 : 400 }}>
+                    {i > 0 && <span className="space-indicator-bar__separator">/</span>}
+                    <span
+                      className="space-indicator-bar__crumb"
+                      data-current={i === spaceStack.length - 1 ? 'true' : 'false'}
+                    >
                       {s.name}
                     </span>
                   </React.Fragment>
                 ))}
               </span>
             ) : (
-              <span style={{ fontWeight: 600, color: 'var(--palette-neutral-700, #555)' }}>
-                {currentSpace.name}
-              </span>
+              <span className="space-indicator-bar__crumb" data-current="true">{currentSpace.name}</span>
             )}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div className="space-indicator-bar__actions">
             {leaveError && (
-              <span style={{ fontSize: 11, color: 'var(--palette-error, #c00)' }}>
-                {leaveError}
-              </span>
+              <span className="space-indicator-bar__error">{leaveError}</span>
             )}
             {leaveConfirming && !leavePending && (
               <button
                 onClick={() => setLeaveConfirming(false)}
-                style={{
-                  background: 'none',
-                  border: '1px solid var(--palette-neutral-300, #ccc)',
-                  borderRadius: 4,
-                  padding: '2px 8px',
-                  fontSize: 12,
-                  cursor: 'pointer',
-                  color: 'var(--palette-neutral-700, #555)',
-                }}
+                className="space-indicator-bar__button"
+                data-variant="quiet"
               >
                 Cancel
               </button>
@@ -150,16 +119,8 @@ export const AppShell: React.FC<{ children: React.ReactNode; sessionUser?: strin
             <button
               onClick={handleLeave}
               disabled={leavePending}
-              style={{
-                background: leaveConfirming ? 'var(--palette-error, #c00)' : 'none',
-                border: `1px solid ${leaveConfirming ? 'var(--palette-error, #c00)' : 'var(--palette-neutral-300, #ccc)'}`,
-                borderRadius: 4,
-                padding: '2px 10px',
-                fontSize: 12,
-                cursor: leavePending ? 'wait' : 'pointer',
-                color: leaveConfirming ? '#fff' : 'var(--palette-neutral-700, #555)',
-                opacity: leavePending ? 0.6 : 1,
-              }}
+              className="space-indicator-bar__button"
+              data-variant={leaveConfirming ? 'destructive' : 'quiet'}
             >
               {leavePending ? '…' : leaveConfirming ? 'Confirm leave' : 'Leave'}
             </button>

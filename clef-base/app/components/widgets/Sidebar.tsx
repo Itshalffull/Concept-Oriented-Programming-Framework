@@ -59,26 +59,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
     >
       <div data-part="header" data-state={collapsed ? 'collapsed' : 'expanded'}>
         {collapsed ? (
-          <span style={{ fontSize: '1.25rem', fontWeight: 700 }}>C</span>
+          <span data-part="brand-mark">C</span>
         ) : (
-          header ?? <span style={{ fontSize: '1.1rem', fontWeight: 700 }}>Clef Base</span>
+          header ?? <span data-part="brand-name">Clef Base</span>
         )}
         {collapsible && (
           <button
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             aria-expanded={!collapsed}
+            data-part="toggle"
             data-state={collapsed ? 'collapsed' : 'expanded'}
             onClick={handleToggle}
-            style={{
-              marginLeft: 'auto',
-              background: 'none',
-              border: 'none',
-              color: 'inherit',
-              cursor: 'pointer',
-              padding: '4px',
-              fontSize: '1rem',
-              opacity: 0.6,
-            }}
             type="button"
           >
             {collapsed ? '→' : '←'}
@@ -117,7 +108,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   )}
                   {!collapsed && <span data-part="item-label">{item.label}</span>}
                   {!collapsed && item.badge && (
-                    <span data-part="badge" data-variant="secondary" style={{ marginLeft: 'auto' }}>
+                    <span data-part="badge" data-variant="secondary">
                       {item.badge}
                     </span>
                   )}

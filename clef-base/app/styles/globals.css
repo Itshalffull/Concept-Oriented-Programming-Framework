@@ -262,6 +262,106 @@ a:active { color: var(--palette-primary-active); }
   white-space: nowrap;
 }
 
+.space-indicator-bar {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  padding: 0 var(--spacing-lg);
+  background: color-mix(in srgb, var(--palette-surface) 72%, var(--palette-surface-variant) 28%);
+  border-bottom: 1px solid var(--palette-outline-variant);
+  color: var(--palette-on-surface);
+  z-index: 1000;
+  font-size: var(--typography-label-sm-size);
+  backdrop-filter: blur(14px);
+}
+
+.space-indicator-bar__context,
+.space-indicator-bar__actions {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: var(--spacing-sm);
+}
+
+.space-indicator-bar__dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  display: inline-block;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--palette-surface) 72%, transparent);
+}
+
+.space-indicator-bar__crumbs {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  color: var(--palette-on-surface-variant);
+}
+
+.space-indicator-bar__separator {
+  margin: 0 var(--spacing-xs);
+  opacity: 0.55;
+}
+
+.space-indicator-bar__crumb {
+  color: inherit;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.space-indicator-bar__crumb[data-current="true"] {
+  color: var(--palette-on-surface);
+  font-weight: 650;
+}
+
+.space-indicator-bar__error {
+  color: var(--palette-error);
+  font-size: var(--typography-caption-size);
+}
+
+.space-indicator-bar__button {
+  appearance: none;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--palette-outline);
+  background: transparent;
+  color: var(--palette-on-surface-variant);
+  min-height: 1.75rem;
+  padding: 0 var(--spacing-sm);
+  font: inherit;
+  cursor: pointer;
+  transition:
+    background var(--motion-duration-fast) var(--motion-easing-default),
+    color var(--motion-duration-fast) var(--motion-easing-default),
+    border-color var(--motion-duration-fast) var(--motion-easing-default),
+    opacity var(--motion-duration-fast) var(--motion-easing-default);
+}
+
+.space-indicator-bar__button:hover:not(:disabled) {
+  background: var(--palette-hover-state-layer);
+  color: var(--palette-on-surface);
+}
+
+.space-indicator-bar__button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.space-indicator-bar__button[data-variant="destructive"] {
+  background: var(--palette-error);
+  border-color: var(--palette-error);
+  color: var(--palette-on-error);
+}
+
+.space-indicator-bar__button[data-variant="destructive"]:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--palette-error) 90%, black);
+  border-color: color-mix(in srgb, var(--palette-error) 90%, black);
+}
+
 [data-part="sidebar"] [role="link"]:hover {
   background: var(--palette-hover-state-layer);
   color: var(--palette-on-surface);
@@ -285,6 +385,46 @@ a:active { color: var(--palette-primary-active); }
 
 [data-part="sidebar"] [role="link"][data-active="true"] [data-part="item-icon"] {
   opacity: 1;
+}
+
+[data-part="sidebar"] [data-part="brand-mark"] {
+  font-size: var(--typography-heading-sm-size);
+  font-weight: 700;
+  line-height: 1;
+}
+
+[data-part="sidebar"] [data-part="brand-name"] {
+  font-size: var(--typography-title-sm-size);
+  font-weight: var(--typography-title-sm-weight);
+  color: var(--palette-on-surface);
+}
+
+[data-part="sidebar"] [data-part="toggle"] {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--palette-on-surface-variant);
+  cursor: pointer;
+  transition:
+    background var(--motion-duration-fast) var(--motion-easing-default),
+    color var(--motion-duration-fast) var(--motion-easing-default),
+    border-color var(--motion-duration-fast) var(--motion-easing-default);
+}
+
+[data-part="sidebar"] [data-part="toggle"]:hover {
+  background: var(--palette-hover-state-layer);
+  color: var(--palette-on-surface);
+  border-color: var(--palette-outline-variant);
+}
+
+[data-part="sidebar"] [role="link"] [data-part="badge"] {
+  margin-left: auto;
 }
 
 /* ─── Stat Card Widget Styles ─── */
