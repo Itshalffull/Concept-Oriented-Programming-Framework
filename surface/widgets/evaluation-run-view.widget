@@ -1,0 +1,657 @@
+@version(1)
+widget evaluation-run-view {
+
+  purpose {
+    Detail view for a single EvaluationRun result. Presents run metadata (step
+    reference, evaluator type, overall pass-fail status, score, threshold,
+    evaluated-at timestamp) alongside a structured assertion breakdown. Failing
+    assertions surface at the top in an explicit failure summary so errors are
+    never buried; users see what went wrong before scrolling to passing items.
+    Progressive disclosure governs depth: the default tab shows a pass-fail
+    summary with per-assertion chips; an Output tab exposes raw input and
+    evaluated output bytes; a Metrics tab lists all logged numeric metrics.
+    Expected versus actual output is rendered by the embedded diff-view widget.
+    A "Rerun" action clones the stored input and re-invokes EvaluationRun.run_eval
+    so replay is always one click away. Governance-aware: raw input and output in the
+    Output tab is role-gated via a visibility prop so prod data is not exposed
+    to roles without clearance.
+  }
+
+  requires @1 {
+    fields {
+      step_ref:       String;
+      evaluator_type: String;
+      status:         String;
+      input:          String;
+      score:          option String;
+      threshold:      option String;
+      metrics:        list;
+      feedback:       option String;
+      evaluated_at:   option String;
+    }
+    actions {
+      run_eval(step_ref: String, evaluator_type: String, input: String, threshold: String);
+      get_result(eval: String);
+    }
+  }
+
+  anatomy {
+    root:                container     { Top-level wrapper for the full evaluation run detail view }
+    header:              container     { Run identification area: step ref, evaluator type, status badge, rerun button }
+    stepRefLabel:        text          { Human-readable step reference identifier (e.g. "my-flow / llm-summarize") }
+    evaluatorTypeLabel:  text          { Evaluator strategy label (schema | rubric | llm_judge | regex | custom) }
+    statusBadge:         container     { Pass or fail or pending or running indicator chip }
+    statusText:          text          { Textual status within the badge }
+    scoreDisplay:        container     { Numeric score vs threshold display (e.g. "0.82 / 0.80") }
+    scoreValue:          text          { Actual score value }
+    thresholdValue:      text          { Required threshold value }
+    evaluatedAtLabel:    text          { Timestamp when the run completed }
+    rerunButton:         action        { Clones the stored input and dispatches a new EvaluationRun.run_eval }
+    tabList:             container     { Tab strip: Summary | Output | Metrics }
+    tab:                 action        { Individual tab button }
+    tabPanel:            container     { Container that hosts the active tab panel content }
+    failureSummary:      container     { Prominent section listing only the failing assertions; hidden when all pass }
+    failureBanner:       container     { Alert banner shown at top when status is failed; summarises failure count }
+    failureCount:        text          { Number of failed assertions within the banner }
+    assertionList:       container     { Full ordered list of all assertion result items }
+    assertionItem:       container     { One row representing a single assertion result }
+    assertionLabel:      text          { Human-readable name or description of the assertion }
+    assertionStatusIcon: presentation  { Pass (check) or fail (x) icon for the assertion item }
+    assertionExpander:   action        { Toggle to expand the assertion item and reveal expected vs actual detail }
+    assertionDetail:     container     { Expanded area showing expected value, actual value, and inline diff }
+    expectedLabel:       text          { "Expected" heading label within the assertion detail }
+    expectedValue:       text          { The expected output or value the assertion checked against }
+    actualLabel:         text          { "Actual" heading label within the assertion detail }
+    actualValue:         text          { The actual output value produced by the step }
+    outputPanel:         container     { Raw input and output tab panel; visibility is role-gated }
+    outputGate:          container     { Wrapper that renders an access-denied message when visibility is blocked }
+    outputGateMessage:   text          { Reason text shown when the user lacks clearance to see raw output }
+    rawInputLabel:       text          { "Input" section heading within the output panel }
+    rawInputDisplay:     container     { Scrollable display of the raw input bytes sent to the evaluator }
+    rawOutputLabel:      text          { "Output" section heading within the output panel }
+    rawOutputDisplay:    container     { Scrollable display of the raw output bytes returned by the step }
+    diffPanel:           container     { Inline diff rendered between expected and actual within the output tab }
+    metricsPanel:        container     { Metrics tab panel listing all logged numeric metrics }
+    metricsList:         container     { Ordered list of metric rows }
+    metricsItem:         container     { One row: metric name and numeric value }
+    metricsName:         text          { Name of the metric (e.g. "precision", "recall", "latency_ms") }
+    metricsValue:        text          { Numeric metric value formatted to two decimal places }
+    emptyMetrics:        container     { Shown in metrics panel when no metrics have been logged }
+    feedbackBlock:       container     { Free-text feedback section below the assertion list; hidden when empty }
+    feedbackLabel:       text          { "Feedback" heading }
+    feedbackText:        text          { Evaluator feedback prose }
+    loadingState:        container     { Skeleton placeholder shown while fetching run data }
+    errorState:          container     { Error message shown when run data cannot be fetched }
+    errorMessage:        text          { Human-readable fetch error description }
+  }
+
+  states {
+    loading [initial] {
+      on LOADED        -> summary;
+      on LOAD_ERROR    -> error;
+      entry [fetchRun];
+    }
+
+    summary {
+      on SELECT_TAB    -> summary;
+      on EXPAND_ASSERTION -> summary;
+      on COLLAPSE_ASSERTION -> summary;
+      on RERUN         -> rerunning;
+      on SHOW_OUTPUT   -> output;
+      on SHOW_METRICS  -> metrics;
+      entry [renderSummary];
+    }
+
+    output {
+      on SELECT_TAB       -> output;
+      on SHOW_SUMMARY     -> summary;
+      on SHOW_METRICS     -> metrics;
+      on RERUN            -> rerunning;
+    }
+
+    metrics {
+      on SELECT_TAB       -> metrics;
+      on SHOW_SUMMARY     -> summary;
+      on SHOW_OUTPUT      -> output;
+      on RERUN            -> rerunning;
+    }
+
+    rerunning {
+      on RERUN_COMPLETE   -> summary;
+      on RERUN_ERROR      -> summary;
+      entry [dispatchRerun];
+    }
+
+    error {
+      on RETRY            -> loading;
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      ArrowLeft  -> SHOW_SUMMARY;
+      ArrowRight -> SHOW_OUTPUT;
+      Tab        -> FOCUS_NEXT;
+      Enter      -> EXPAND_ASSERTION;
+      Space      -> EXPAND_ASSERTION;
+      Escape     -> COLLAPSE_ASSERTION;
+    }
+    focus {
+      trap: false;
+      initial: tabList;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: concat("Evaluation run for ", ?stepRef);
+        aria-busy: if state == "loading" or state == "rerunning" then "true" else "false";
+        data-state: state;
+        data-status: ?runStatus;
+      };
+      tabList -> {
+        role: "tablist";
+        aria-label: "Evaluation run sections";
+        aria-orientation: "horizontal";
+      };
+      tab -> {
+        role: "tab";
+        aria-selected: if self.id == ?activeTab then "true" else "false";
+        aria-controls: concat("panel-", self.id);
+        tabindex: if self.id == ?activeTab then "0" else "-1";
+      };
+      tabPanel -> {
+        role: "tabpanel";
+        aria-labelledby: concat("tab-", ?activeTab);
+      };
+      failureBanner -> {
+        role: "alert";
+        aria-live: "assertive";
+        aria-label: concat(?failedCount, " assertion(s) failed");
+      };
+      statusBadge -> {
+        role: "status";
+        aria-label: concat("Run status: ", ?runStatus);
+      };
+      rerunButton -> {
+        role: "button";
+        aria-label: "Re-run this evaluation with the same input";
+        aria-disabled: if state == "rerunning" then "true" else "false";
+      };
+      assertionExpander -> {
+        role: "button";
+        aria-expanded: if self.expanded then "true" else "false";
+        aria-controls: concat("detail-", self.id);
+        aria-label: concat(self.label, ": ", if self.passed then "passed" else "failed");
+      };
+      assertionDetail -> {
+        role: "region";
+        aria-label: concat("Detail for assertion: ", self.label);
+      };
+      assertionList -> {
+        role: "list";
+        aria-label: "All assertions";
+      };
+      assertionItem -> {
+        role: "listitem";
+      };
+      outputGate -> {
+        role: "alert";
+        aria-live: "polite";
+        aria-label: "Access restricted";
+      };
+    }
+  }
+
+  props {
+    evalId:        String = ""
+    stepRef:       String = ""
+    runStatus:     String = "pending"
+    score:         option String
+    threshold:     option String
+    evaluatorType: String = ""
+    evaluatedAt:   option String
+    feedback:      option String
+    assertions:    list = []
+    metrics:       list = []
+    rawInput:      option String
+    rawOutput:     option String
+    activeTab:     String = "summary"
+    failedCount:   Int = 0
+    outputVisible: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part:    "root";
+      data-state:   state;
+      data-status:  ?runStatus;
+      data-eval-id: ?evalId;
+    }
+
+    header -> {
+      data-part: "header";
+    }
+
+    stepRefLabel -> {
+      data-part: "step-ref-label";
+      text: ?stepRef;
+    }
+
+    evaluatorTypeLabel -> {
+      data-part: "evaluator-type-label";
+      text: ?evaluatorType;
+    }
+
+    statusBadge -> {
+      data-part:   "status-badge";
+      data-status: ?runStatus;
+    }
+
+    statusText -> {
+      data-part: "status-text";
+      text: ?runStatus;
+    }
+
+    scoreDisplay -> {
+      data-part: "score-display";
+      hidden: if state == "loading" or state == "error" then true else false;
+    }
+
+    scoreValue -> {
+      data-part: "score-value";
+      text: ?score;
+    }
+
+    thresholdValue -> {
+      data-part: "threshold-value";
+      text: ?threshold;
+    }
+
+    evaluatedAtLabel -> {
+      data-part: "evaluated-at-label";
+      text: ?evaluatedAt;
+    }
+
+    rerunButton -> {
+      data-part: "rerun-button";
+      disabled: if state == "rerunning" or state == "loading" then true else false;
+      data-loading: if state == "rerunning" then "true" else "false";
+      onClick: send(RERUN, { evalId: ?evalId });
+      onKeyDown: if key == "Enter" or key == "Space" then send(RERUN, { evalId: ?evalId }) else noop;
+    }
+
+    tabList -> {
+      data-part: "tab-list";
+    }
+
+    tab -> {
+      data-part:     "tab";
+      data-tab-id:   self.id;
+      data-selected: if self.id == ?activeTab then "true" else "false";
+      tabindex: if self.id == ?activeTab then "0" else "-1";
+      onClick: send(SELECT_TAB, { tabId: self.id });
+      onKeyDown: if key == "ArrowLeft" then send(SHOW_SUMMARY) else if key == "ArrowRight" then send(SHOW_OUTPUT) else if key == "Enter" or key == "Space" then send(SELECT_TAB, { tabId: self.id }) else noop;
+    }
+
+    tabPanel -> {
+      data-part:    "tab-panel";
+      data-tab-id:  ?activeTab;
+    }
+
+    failureBanner -> {
+      data-part: "failure-banner";
+      hidden: if ?runStatus != "failed" then true else false;
+      data-count: ?failedCount;
+    }
+
+    failureCount -> {
+      data-part: "failure-count";
+      text: ?failedCount;
+    }
+
+    failureSummary -> {
+      data-part: "failure-summary";
+      hidden: if ?runStatus != "failed" then true else false;
+    }
+
+    assertionList -> {
+      data-part: "assertion-list";
+      hidden: if state == "loading" or state == "error" then true else false;
+    }
+
+    assertionItem -> {
+      data-part:   "assertion-item";
+      data-id:     self.id;
+      data-passed: if self.passed then "true" else "false";
+    }
+
+    assertionLabel -> {
+      data-part: "assertion-label";
+      text: self.label;
+    }
+
+    assertionStatusIcon -> {
+      data-part:   "assertion-status-icon";
+      data-passed: if self.passed then "true" else "false";
+    }
+
+    assertionExpander -> {
+      data-part:     "assertion-expander";
+      data-expanded: if self.expanded then "true" else "false";
+      data-passed:   if self.passed then "true" else "false";
+      onClick: send(EXPAND_ASSERTION, { assertionId: self.id });
+      onKeyDown: if key == "Enter" or key == "Space" then send(EXPAND_ASSERTION, { assertionId: self.id }) else if key == "Escape" then send(COLLAPSE_ASSERTION, { assertionId: self.id }) else noop;
+    }
+
+    assertionDetail -> {
+      data-part: "assertion-detail";
+      data-id:   self.id;
+      hidden: if not self.expanded then true else false;
+    }
+
+    expectedLabel -> {
+      data-part: "expected-label";
+      text: "Expected";
+    }
+
+    expectedValue -> {
+      data-part: "expected-value";
+      text: self.expected;
+    }
+
+    actualLabel -> {
+      data-part: "actual-label";
+      text: "Actual";
+    }
+
+    actualValue -> {
+      data-part: "actual-value";
+      text: self.actual;
+    }
+
+    outputPanel -> {
+      data-part: "output-panel";
+      hidden: if ?activeTab != "output" then true else false;
+    }
+
+    outputGate -> {
+      data-part:    "output-gate";
+      data-visible: if ?outputVisible then "true" else "false";
+      hidden: if ?outputVisible then true else false;
+    }
+
+    outputGateMessage -> {
+      data-part: "output-gate-message";
+      text: "Raw input and output are restricted to authorised roles.";
+    }
+
+    rawInputLabel -> {
+      data-part: "raw-input-label";
+      text: "Input";
+      hidden: if not ?outputVisible then true else false;
+    }
+
+    rawInputDisplay -> {
+      data-part: "raw-input-display";
+      hidden: if not ?outputVisible then true else false;
+    }
+
+    rawOutputLabel -> {
+      data-part: "raw-output-label";
+      text: "Output";
+      hidden: if not ?outputVisible then true else false;
+    }
+
+    rawOutputDisplay -> {
+      data-part: "raw-output-display";
+      hidden: if not ?outputVisible then true else false;
+    }
+
+    diffPanel -> {
+      data-part: "diff-panel";
+      hidden: if not ?outputVisible or ?activeTab != "output" then true else false;
+    }
+
+    metricsPanel -> {
+      data-part: "metrics-panel";
+      hidden: if ?activeTab != "metrics" then true else false;
+    }
+
+    metricsList -> {
+      data-part: "metrics-list";
+    }
+
+    metricsItem -> {
+      data-part:       "metrics-item";
+      data-metric-name: self.name;
+    }
+
+    metricsName -> {
+      data-part: "metrics-name";
+      text: self.name;
+    }
+
+    metricsValue -> {
+      data-part: "metrics-value";
+      text: self.value;
+    }
+
+    emptyMetrics -> {
+      data-part: "empty-metrics";
+      hidden: if ?metrics.length > 0 then true else false;
+    }
+
+    feedbackBlock -> {
+      data-part: "feedback-block";
+      hidden: if ?feedback == none then true else false;
+    }
+
+    feedbackLabel -> {
+      data-part: "feedback-label";
+      text: "Feedback";
+    }
+
+    feedbackText -> {
+      data-part: "feedback-text";
+      text: ?feedback;
+    }
+
+    loadingState -> {
+      data-part: "loading-state";
+      hidden: if state != "loading" then true else false;
+    }
+
+    errorState -> {
+      data-part: "error-state";
+      hidden: if state != "error" then true else false;
+    }
+
+    errorMessage -> {
+      data-part: "error-message";
+      text: "Failed to load evaluation run. Check that the run identifier is valid.";
+    }
+  }
+
+  affordance {
+    serves: group-section;
+    specificity: 8;
+    when { viewType: "evaluation-run-detail" }
+    bind {
+      evalId:        evalId;
+      stepRef:       step_ref;
+      runStatus:     status;
+      score:         score;
+      threshold:     threshold;
+      evaluatorType: evaluator_type;
+      evaluatedAt:   evaluated_at;
+      feedback:      feedback;
+      metrics:       metrics;
+    }
+  }
+
+  compose {
+    _diff: widget("diff-view", { leftRef: ?expectedBaseline, rightRef: ?evalId })
+  }
+
+  invariant {
+    example "loaded run shows summary tab by default": {
+      after send(LOADED) -> ok
+      then root -> { data-state: "summary" }
+      and root -> { data-active-tab: "summary" }
+      and tab.summary -> { data-selected: "true" }
+    }
+
+    example "failed run shows failure banner and failure summary": {
+      after send(LOADED) -> ok
+      and root -> { data-status: "failed" }
+      then failureBanner -> { hidden: false }
+      and failureSummary -> { hidden: false }
+    }
+
+    example "passed run hides failure banner and failure summary": {
+      after send(LOADED) -> ok
+      and root -> { data-status: "passed" }
+      then failureBanner -> { hidden: true }
+      and failureSummary -> { hidden: true }
+    }
+
+    example "switch to output tab shows output panel": {
+      after send(LOADED) -> ok
+      then tab.output.click -> ok
+      then root -> { data-state: "output" }
+      and outputPanel -> { hidden: false }
+      and metricsPanel -> { hidden: true }
+    }
+
+    example "output tab with role-gated visibility blocked": {
+      after send(LOADED) -> ok
+      and root -> { data-output-visible: "false" }
+      then tab.output.click -> ok
+      then outputGate -> { hidden: false }
+      and rawInputDisplay -> { hidden: true }
+      and rawOutputDisplay -> { hidden: true }
+    }
+
+    example "output tab with visibility granted shows raw io": {
+      after send(LOADED) -> ok
+      and root -> { data-output-visible: "true" }
+      then tab.output.click -> ok
+      then outputGate -> { hidden: true }
+      and rawInputDisplay -> { hidden: false }
+      and rawOutputDisplay -> { hidden: false }
+    }
+
+    example "switch to metrics tab shows metrics panel": {
+      after send(LOADED) -> ok
+      then tab.metrics.click -> ok
+      then root -> { data-state: "metrics" }
+      and metricsPanel -> { hidden: false }
+      and outputPanel -> { hidden: true }
+    }
+
+    example "expand assertion reveals detail": {
+      after send(LOADED) -> ok
+      then assertionExpander.click({ assertionId: "assert-0" }) -> ok
+      then assertionDetail -> { hidden: false }
+    }
+
+    example "rerun button triggers rerunning state": {
+      after send(LOADED) -> ok
+      then rerunButton.click -> ok
+      then root -> { data-state: "rerunning" }
+      and rerunButton -> { disabled: true }
+    }
+
+    example "rerun completes and returns to summary": {
+      after send(LOADED) -> ok
+      then rerunButton.click -> ok
+      then send(RERUN_COMPLETE) -> ok
+      then root -> { data-state: "summary" }
+      and rerunButton -> { disabled: false }
+    }
+
+    example "load error shows error state": {
+      after send(LOAD_ERROR) -> ok
+      then root -> { data-state: "error" }
+      and errorState -> { hidden: false }
+      and assertionList -> { hidden: true }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      root -> { data-state: state }
+    }
+
+    always "exactly one tab is selected": {
+      forall t in tab:
+        t -> { data-selected: if t.id == ?activeTab then "true" else "false" }
+    }
+
+    always "failure banner hidden unless run failed": {
+      if ?runStatus != "failed" then failureBanner -> { hidden: true }
+    }
+
+    always "rerunButton disabled while rerunning or loading": {
+      if state == "rerunning" then rerunButton -> { disabled: true }
+      and if state == "loading" then rerunButton -> { disabled: true }
+    }
+
+    always "assertionList hidden during loading or error": {
+      if state == "loading" then assertionList -> { hidden: true }
+      and if state == "error" then assertionList -> { hidden: true }
+    }
+
+    always "outputGate hidden when outputVisible is true": {
+      if ?outputVisible then outputGate -> { hidden: true }
+    }
+
+    always "rawInputDisplay hidden when not outputVisible": {
+      if not ?outputVisible then rawInputDisplay -> { hidden: true }
+    }
+
+    always "rawOutputDisplay hidden when not outputVisible": {
+      if not ?outputVisible then rawOutputDisplay -> { hidden: true }
+    }
+
+    never "failureBanner and failureSummary shown on passing run": {
+      ?runStatus == "passed" and failureBanner -> { hidden: false }
+    }
+
+    never "two tabs simultaneously selected": {
+      exists t1 in tab:
+        exists t2 in tab:
+          t1 != t2 and t1 -> { data-selected: "true" } and t2 -> { data-selected: "true" }
+    }
+
+    never "raw io visible without outputVisible prop": {
+      not ?outputVisible and rawInputDisplay -> { hidden: false }
+    }
+
+    never "rerunButton enabled while rerunning": {
+      state == "rerunning" and rerunButton -> { disabled: false }
+    }
+
+    action rerunButton.click {
+      requires: state == "summary" or state == "output" or state == "metrics"
+      ensures ok: state == "rerunning"
+      ensures ok: rerunButton -> { disabled: true }
+    }
+
+    action assertionExpander.click {
+      requires: state == "summary"
+      ensures ok: assertionDetail -> { hidden: false }
+    }
+
+    "LOADED is dispatched after EvaluationRun/get_result returns the full run record for evalId";
+    "RERUN dispatches EvaluationRun/run_eval with the stored input bytes cloned from the original run; ReuseEvalRunInput sync fires on RERUN_COMPLETE";
+    "SELECT_TAB with tabId summary transitions to summary state; with output transitions to output state; with metrics transitions to metrics state";
+    "outputVisible prop is resolved at the view layer against the caller's role claims using the StepIOVisibility governance pattern from MAG-681";
+    "failedCount is derived from the count of assertions where passed == false; the view layer computes this from the assertions list prop";
+    "The embedded diff-view widget receives leftRef = expectedBaseline and rightRef = evalId to render expected-vs-actual output diff in the output tab";
+  }
+
+}
