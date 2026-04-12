@@ -462,6 +462,9 @@ const ViewEmbedBlock: React.FC<{
 
 // ─── Entity Embed Block ──────────────────────────────────────────────────
 
+/** Validation state for the entity ID input (§MAG-669). */
+type EntityIdValidationState = 'idle' | 'checking' | 'valid' | 'invalid';
+
 const EntityEmbedBlock: React.FC<{
   block: Block;
   onMetaChange: (id: string, key: string, value: unknown) => void;
@@ -471,6 +474,81 @@ const EntityEmbedBlock: React.FC<{
   const [picking, setPicking] = useState(false);
   const ViewRenderer = React.lazy(() => import('../ViewRenderer'));
 
+  // ── Manual ID entry + validation state (§MAG-669) ───────────────────────
+  const [manualInput, setManualInput] = useState('');
+  const [validationState, setValidationState] = useState<EntityIdValidationState>('idle');
+  const [resolvedTitle, setResolvedTitle] = useState<string | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const invoke = useKernelInvoke();
+
+  // Validate the manually-entered entity ID by invoking ContentNode/get.
+  // Debounced 300 ms to avoid hammering the kernel on every keystroke.
+  const validateEntityId = useCallback(async (id: string) => {
+    if (!id.trim()) {
+      setValidationState('idle');
+      setResolvedTitle(null);
+      return;
+    }
+    setValidationState('checking');
+    setResolvedTitle(null);
+    try {
+      const result = await invoke('ContentNode', 'get', { node: id.trim() });
+      const r = result as Record<string, unknown>;
+      if (r.variant === 'ok') {
+        setValidationState('valid');
+        setResolvedTitle((r.name as string | undefined) ?? null);
+      } else {
+        setValidationState('invalid');
+      }
+    } catch {
+      setValidationState('invalid');
+    }
+  }, [invoke]);
+
+  const handleManualInputChange = useCallback((value: string) => {
+    setManualInput(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!value.trim()) {
+      setValidationState('idle');
+      setResolvedTitle(null);
+      return;
+    }
+    debounceRef.current = setTimeout(() => {
+      void validateEntityId(value);
+    }, 300);
+  }, [validateEntityId]);
+
+  // Validate the already-stored entityId on first render / when it changes so
+  // the header badge is accurate even when the block was created via the picker.
+  const [storedIdValidation, setStoredIdValidation] = useState<EntityIdValidationState>('idle');
+  const [storedIdTitle, setStoredIdTitle] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!entityId) {
+      setStoredIdValidation('idle');
+      setStoredIdTitle(null);
+      return;
+    }
+    setStoredIdValidation('checking');
+    void (async () => {
+      try {
+        const result = await invoke('ContentNode', 'get', { node: entityId });
+        const r = result as Record<string, unknown>;
+        if (r.variant === 'ok') {
+          setStoredIdValidation('valid');
+          setStoredIdTitle((r.name as string | undefined) ?? null);
+        } else {
+          setStoredIdValidation('invalid');
+        }
+      } catch {
+        setStoredIdValidation('invalid');
+      }
+    })();
+  // Run once when entityId changes.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entityId]);
+
+  // ── Display-mode resolution ───────────────────────────────────────────────
   const displayMode = (block.meta?.display_mode as string) ?? 'detail';
   // Normalize mode name to DisplayMode mode_id (e.g. 'content' → 'content-body')
   const canonicalModeId = normalizeDisplayModeId(displayMode);
@@ -483,6 +561,7 @@ const EntityEmbedBlock: React.FC<{
   );
   const resolvedEmbedLayout = resolveLayoutFromMode(embedModeConfig ?? null, canonicalModeId, 'detail');
 
+  // ── No entityId yet — show picker and manual entry ───────────────────────
   if (!entityId) {
     return (
       <div style={{
@@ -511,6 +590,78 @@ const EntityEmbedBlock: React.FC<{
             </button>
           )}
         </div>
+
+        {/* Manual ID entry with inline validation feedback (§MAG-669) */}
+        {!readOnly && !picking && (
+          <div style={{ marginBottom: 6 }}>
+            <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+              <input
+                type="text"
+                value={manualInput}
+                onChange={e => handleManualInputChange(e.target.value)}
+                placeholder="Or type an entity ID..."
+                style={{
+                  flex: 1,
+                  fontSize: '11px',
+                  padding: '3px 6px',
+                  background: 'var(--palette-surface)',
+                  border: validationState === 'invalid'
+                    ? '1px solid #ef4444'
+                    : '1px solid var(--palette-outline-variant)',
+                  borderRadius: 'var(--radius-sm)',
+                  color: 'var(--palette-on-surface)',
+                  outline: 'none',
+                }}
+              />
+              <button
+                disabled={validationState !== 'valid'}
+                onClick={() => {
+                  if (validationState === 'valid' && manualInput.trim()) {
+                    onMetaChange(block.id, 'entityId', manualInput.trim());
+                    setManualInput('');
+                    setValidationState('idle');
+                    setResolvedTitle(null);
+                  }
+                }}
+                style={{
+                  padding: '3px 8px',
+                  fontSize: '11px',
+                  cursor: validationState === 'valid' ? 'pointer' : 'not-allowed',
+                  background: validationState === 'valid'
+                    ? 'var(--palette-primary)'
+                    : 'var(--palette-outline-variant)',
+                  color: validationState === 'valid'
+                    ? 'var(--palette-on-primary)'
+                    : 'var(--palette-on-surface-variant)',
+                  border: 'none',
+                  borderRadius: 'var(--radius-sm)',
+                  opacity: validationState === 'valid' ? 1 : 0.5,
+                }}
+              >
+                Apply
+              </button>
+            </div>
+            {validationState === 'checking' && (
+              <div style={{ fontSize: '10px', color: 'var(--palette-on-surface-variant)', marginTop: 2 }}>
+                ...
+              </div>
+            )}
+            {validationState === 'valid' && (
+              <div style={{ fontSize: '10px', color: '#16a34a', marginTop: 2, display: 'flex', alignItems: 'center', gap: 3 }}>
+                <span>&#10003;</span>
+                <span style={{ color: 'var(--palette-on-surface-variant)' }}>
+                  {resolvedTitle ?? manualInput.trim()}
+                </span>
+              </div>
+            )}
+            {validationState === 'invalid' && (
+              <div style={{ fontSize: '10px', color: '#ef4444', marginTop: 2 }}>
+                Entity not found
+              </div>
+            )}
+          </div>
+        )}
+
         {picking && (
           <div style={{
             border: '1px solid var(--palette-outline-variant)',
@@ -533,9 +684,12 @@ const EntityEmbedBlock: React.FC<{
     );
   }
 
+  // ── entityId set — show header with validation badge, then rendered entity ─
   return (
     <div style={{
-      border: '1px solid var(--palette-outline-variant)',
+      border: storedIdValidation === 'invalid'
+        ? '1px solid #ef4444'
+        : '1px solid var(--palette-outline-variant)',
       borderRadius: 'var(--radius-sm)',
       overflow: 'hidden',
     }}>
@@ -545,14 +699,34 @@ const EntityEmbedBlock: React.FC<{
         background: 'var(--palette-surface-variant)',
         fontSize: '11px', color: 'var(--palette-on-surface-variant)',
       }}>
-        <span style={{ fontFamily: 'var(--typography-font-family-mono)' }}>
-          {entityId}
-        </span>
-        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+        {/* ID label + inline validation feedback (§MAG-669) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, overflow: 'hidden' }}>
+          <span style={{ fontFamily: 'var(--typography-font-family-mono)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {entityId}
+          </span>
+          {storedIdValidation === 'checking' && (
+            <span style={{ opacity: 0.6, flexShrink: 0 }}>...</span>
+          )}
+          {storedIdValidation === 'valid' && (
+            <span style={{ color: '#16a34a', display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
+              <span>&#10003;</span>
+              {storedIdTitle && (
+                <span style={{ color: 'var(--palette-on-surface-variant)', fontFamily: 'inherit' }}>
+                  {storedIdTitle}
+                </span>
+              )}
+            </span>
+          )}
+          {storedIdValidation === 'invalid' && (
+            <span style={{ color: '#ef4444', flexShrink: 0 }}>Entity not found</span>
+          )}
+        </div>
+        <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
           {!readOnly && (
             <>
               <select
                 value={displayMode}
+                disabled={storedIdValidation === 'invalid'}
                 onChange={e => onMetaChange(block.id, 'display_mode', e.target.value)}
                 style={{
                   fontSize: '10px', padding: '0 4px',
@@ -560,6 +734,8 @@ const EntityEmbedBlock: React.FC<{
                   border: '1px solid var(--palette-outline-variant)',
                   borderRadius: 3,
                   color: 'var(--palette-on-surface-variant)',
+                  opacity: storedIdValidation === 'invalid' ? 0.4 : 1,
+                  cursor: storedIdValidation === 'invalid' ? 'not-allowed' : 'pointer',
                 }}
               >
                 <option value="detail">Detail</option>
@@ -580,15 +756,26 @@ const EntityEmbedBlock: React.FC<{
           )}
         </div>
       </div>
-      {/* Render the entity through ViewRenderer with layout driven by DisplayMode/get */}
-      <React.Suspense fallback={<div style={{ padding: 8 }}>Loading entity...</div>}>
-        <ViewRenderer
-          viewId="entity-properties"
-          context={{ entityId }}
-          inlineLayout={resolvedEmbedLayout}
-          compact
-        />
-      </React.Suspense>
+      {/* Only render the entity when the stored ID resolves to a valid entity (§MAG-669).
+          When invalid, show an error message in place of the ViewRenderer. */}
+      {storedIdValidation !== 'invalid' ? (
+        <React.Suspense fallback={<div style={{ padding: 8 }}>Loading entity...</div>}>
+          <ViewRenderer
+            viewId="entity-properties"
+            context={{ entityId }}
+            inlineLayout={resolvedEmbedLayout}
+            compact
+          />
+        </React.Suspense>
+      ) : (
+        <div style={{
+          padding: 'var(--spacing-sm) var(--spacing-md)',
+          fontSize: '12px',
+          color: '#ef4444',
+        }}>
+          Entity not found. Remove this block or update the entity ID.
+        </div>
+      )}
     </div>
   );
 };
