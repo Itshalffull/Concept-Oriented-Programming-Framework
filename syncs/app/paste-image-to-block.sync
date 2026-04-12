@@ -2,18 +2,24 @@
 # insert a new child block in the focused document's Outline referencing the asset.
 # This completes the InputRule -> ActionBinding -> MediaAsset/createMedia -> Outline/create
 # dispatch chain for paste-image handling (PRD §2.4, §3; MAG-720).
+#
+# Context shape expected in MediaAsset/createMedia.context:
+#   { "focusedDocId": "<doc-id>", "cursorPosition": <int> }
+# ?focusedDocId from the context field is used as the parent node for Outline/create
+# so the image block is inserted in the correct document at the paste site.
 
 sync PasteImageToBlock [eager]
   purpose: "When a clipboard image is uploaded and MediaAsset/createMedia completes successfully, insert a new Outline child block at the current cursor position so the image appears inline in the document"
 when {
   MediaAsset/createMedia: [ asset: ?asset; source: "local-fs" ]
-    => ok(asset: ?asset)
+    => ok(asset: ?asset; context: ?context)
 }
 where {
   bind(?asset as ?node)
+  json(?context, "focusedDocId") as ?focusedDocId
 }
 then {
   Outline/create: [
     node: ?node;
-    parent: ?asset ]
+    parent: ?focusedDocId ]
 }

@@ -14,6 +14,10 @@ const _mediaAssetHandler: FunctionalConceptHandler = {
     const asset = input.asset as string;
     const source = input.source as string;
     const file = input.file as string;
+    // context is opaque Bytes (stored as a string); callers pass JSON such as
+    // {"focusedDocId":"doc-123","cursorPosition":42} for paste/drop dispatch syncs.
+    // MediaAsset does not interpret the value — it stores and echoes it unchanged.
+    const context = (input.context as string) ?? '';
 
     let p = createProgram();
     p = spGet(p, 'mediaAsset', asset, 'existing');
@@ -25,12 +29,13 @@ const _mediaAssetHandler: FunctionalConceptHandler = {
           asset,
           sourcePlugin: source,
           originalFile: file,
+          context,
           metadata: '',
           thumbnail: '',
           createdAt: now,
           updatedAt: now,
         });
-        return complete(b2, 'ok', { asset });
+        return complete(b2, 'ok', { asset, context });
       },
     );
 

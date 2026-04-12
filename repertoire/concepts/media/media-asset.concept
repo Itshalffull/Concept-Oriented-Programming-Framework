@@ -11,22 +11,26 @@ concept MediaAsset [M] {
     sourcePlugin: M -> String;
     metadata: M -> String;
     thumbnail: M -> String;
-    originalFile: M -> String
+    originalFile: M -> String;
+    context: M -> Bytes
   }
 
   actions {
-    action createMedia(asset: M, source: String, file: String) {
-      -> ok(asset: M) {
+    action createMedia(asset: M, source: String, file: String, context: Bytes) {
+      -> ok(asset: M, context: Bytes) {
         Media asset created, wrapping the underlying file with the
         specified source plugin for format-specific operations.
+        The context value is opaque to MediaAsset — it is stored as-is
+        and echoed back in the ok completion for dispatch syncs to read.
       }
       -> error(message: String) {
         Creation failed due to an unsupported source type or duplicate asset identity.
       }
 
-      fixture create_image { asset: "img-001", source: "local-fs", file: "photo.jpg" }
-      fixture create_video { asset: "vid-001", source: "s3", file: "recording.mp4" }
-      fixture create_duplicate { asset: "img-001", source: "local-fs", file: "photo.jpg" } -> error
+      fixture create_image { asset: "img-001", source: "local-fs", file: "photo.jpg", context: "" }
+      fixture create_video { asset: "vid-001", source: "s3", file: "recording.mp4", context: "" }
+      fixture create_with_context { asset: "img-002", source: "local-fs", file: "paste.png", context: "{\"focusedDocId\":\"doc-123\",\"cursorPosition\":42}" }
+      fixture create_duplicate { asset: "img-001", source: "local-fs", file: "photo.jpg", context: "" } -> error
     }
 
     action extractMetadata(asset: M) {
@@ -70,7 +74,7 @@ concept MediaAsset [M] {
   }
 
   example "createMedia then extractMetadata": {
-    after createMedia(asset: a, source: s, file: f) -> ok(asset: a)
+    after createMedia(asset: a, source: s, file: f, context: c) -> ok(asset: a, context: c)
     then extractMetadata(asset: a) -> ok(metadata: m)
     and getMedia(asset: a) -> ok(asset: a, metadata: m, thumbnail: _)
   }
@@ -88,7 +92,7 @@ concept MediaAsset [M] {
 
   action createMedia {
     requires: source != ""
-    ensures ok: asset != none
+    ensures ok: asset != none and context != none
   }
 
   action extractMetadata {

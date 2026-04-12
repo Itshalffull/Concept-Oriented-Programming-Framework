@@ -34,7 +34,7 @@ describe('MediaAsset functional handler', () => {
 
   describe('createMedia', () => {
     it('builds a valid StorageProgram', () => {
-      const program = mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg" });
+      const program = mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg", context: "" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -42,21 +42,21 @@ describe('MediaAsset functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg" });
+      const program = mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg", context: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg" });
+      const program = mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg", context: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg" });
+      const program = mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg", context: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -69,7 +69,7 @@ describe('MediaAsset functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg" });
+      const program = mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg", context: "" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -77,7 +77,7 @@ describe('MediaAsset functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof mediaAssetHandler.createMedia !== 'function') return;
-      const result = await interpret(mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg" }), storage);
+      const result = await interpret(mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg", context: "" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -87,23 +87,30 @@ describe('MediaAsset functional handler', () => {
     it('fixture "create_image" -> ok', async () => {
       if (typeof mediaAssetHandler.createMedia !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg" }), storage);
+      const result = await interpret(mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg", context: "" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_video" -> ok', async () => {
       if (typeof mediaAssetHandler.createMedia !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(mediaAssetHandler.createMedia({ asset: "vid-001", source: "s3", file: "recording.mp4" }), storage);
+      const result = await interpret(mediaAssetHandler.createMedia({ asset: "vid-001", source: "s3", file: "recording.mp4", context: "" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_with_context" -> ok', async () => {
+      if (typeof mediaAssetHandler.createMedia !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(mediaAssetHandler.createMedia({ asset: "img-002", source: "local-fs", file: "paste.png", context: "{\"focusedDocId\":\"doc-123\",\"cursorPosition\":42}" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_duplicate" -> error', async () => {
       if (typeof mediaAssetHandler.createMedia !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_create_image = await interpret(mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg" }), storage);
+      const afterResult_create_image = await interpret(mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg", context: "" }), storage);
       const _pool = Object.assign({}, (afterResult_create_image?.output ?? {}));
-      const _fixtureInput = { asset: "img-001", source: "local-fs", file: "photo.jpg" } as Record<string, unknown>;
+      const _fixtureInput = { asset: "img-001", source: "local-fs", file: "photo.jpg", context: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
           const cur = _fixtureInput[k];
@@ -172,7 +179,7 @@ describe('MediaAsset functional handler', () => {
     it('fixture "extract_existing" -> ok', async () => {
       if (typeof mediaAssetHandler.extractMetadata !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_create_image = await interpret(mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg" }), storage);
+      const afterResult_create_image = await interpret(mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg", context: "" }), storage);
       const result = await interpret(mediaAssetHandler.extractMetadata({ asset: afterResult_create_image?.output?.["asset"] }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -242,7 +249,7 @@ describe('MediaAsset functional handler', () => {
     it('fixture "thumb_existing" -> ok', async () => {
       if (typeof mediaAssetHandler.generateThumbnail !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_create_image = await interpret(mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg" }), storage);
+      const afterResult_create_image = await interpret(mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg", context: "" }), storage);
       const result = await interpret(mediaAssetHandler.generateThumbnail({ asset: afterResult_create_image?.output?.["asset"] }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -312,7 +319,7 @@ describe('MediaAsset functional handler', () => {
     it('fixture "get_existing" -> ok', async () => {
       if (typeof mediaAssetHandler.getMedia !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_create_image = await interpret(mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg" }), storage);
+      const afterResult_create_image = await interpret(mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg", context: "" }), storage);
       const result = await interpret(mediaAssetHandler.getMedia({ asset: afterResult_create_image?.output?.["asset"] }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -346,10 +353,12 @@ describe('MediaAsset functional handler', () => {
   describe('invariant examples', () => {
     it("createMedia then extractMetadata", async () => {
       const storage = createInMemoryStorage();
-      const createMediaResult0 = await interpret(mediaAssetHandler.createMedia({ asset: "test-a", source: "test-s", file: "test-f" }), storage);
+      const createMediaResult0 = await interpret(mediaAssetHandler.createMedia({ asset: "test-a", source: "test-s", file: "test-f", context: "test-c" }), storage);
       expect(createMediaResult0.variant).toBe("ok");
       let asset = createMediaResult0.output["asset"];
       let a = asset;
+      let context = createMediaResult0.output["context"];
+      let c = context;
       const thenResult0 = await interpret(mediaAssetHandler.extractMetadata({ asset: a }), storage);
       expect(thenResult0.variant).toBe("ok");
       const thenResult1 = await interpret(mediaAssetHandler.getMedia({ asset: a }), storage);
@@ -364,7 +373,7 @@ describe('MediaAsset functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('createMedia'), input: fc.record({ asset: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), file: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('createMedia'), input: fc.record({ asset: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), file: fc.string({ minLength: 1, maxLength: 50 }), context: fc.string() }) }),
               fc.record({ action: fc.constant('extractMetadata'), input: fc.record({ asset: fc.string() }) }),
               fc.record({ action: fc.constant('generateThumbnail'), input: fc.record({ asset: fc.string() }) }),
               fc.record({ action: fc.constant('getMedia'), input: fc.record({ asset: fc.string() }) }),
@@ -397,7 +406,7 @@ describe('MediaAsset functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('createMedia'), input: fc.record({ asset: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), file: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('createMedia'), input: fc.record({ asset: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), file: fc.string({ minLength: 1, maxLength: 50 }), context: fc.string() }) }),
               fc.record({ action: fc.constant('extractMetadata'), input: fc.record({ asset: fc.string() }) }),
               fc.record({ action: fc.constant('generateThumbnail'), input: fc.record({ asset: fc.string() }) }),
               fc.record({ action: fc.constant('getMedia'), input: fc.record({ asset: fc.string() }) }),
@@ -445,7 +454,7 @@ describe('MediaAsset functional handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ asset: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), file: fc.string({ minLength: 1, maxLength: 50 }) }),
+          fc.record({ asset: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), file: fc.string({ minLength: 1, maxLength: 50 }), context: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
             const result = await safeInvoke(async () => {
