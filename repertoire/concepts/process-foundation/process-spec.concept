@@ -41,6 +41,9 @@ concept ProcessSpec [P] {
       -> invalid(message: String) {
         Steps or edges contain structural errors.
       }
+      fixture create_ok { name: "onboard", steps: "[{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" }
+      fixture create_invalid_steps { name: "onboard", steps: "not-json", edges: "[]" } -> invalid
+      fixture create_empty_name { name: "", steps: "[{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" } -> invalid
     }
 
     action publish(spec: P) {
@@ -54,6 +57,8 @@ concept ProcessSpec [P] {
       -> ok(spec: P) {
         Spec is already in active status.
       }
+      fixture publish_ok { spec: $create_ok.spec } after create_ok
+      fixture publish_notfound { spec: "nonexistent-spec" } -> not_found
     }
 
     action deprecate(spec: P) {
@@ -64,6 +69,8 @@ concept ProcessSpec [P] {
       -> not_found(spec: P) {
         No spec with this identifier exists.
       }
+      fixture deprecate_ok { spec: $publish_ok.spec } after publish_ok
+      fixture deprecate_notfound { spec: "nonexistent-spec" } -> not_found
     }
 
     action update(spec: P, steps: Bytes, edges: Bytes) {
@@ -77,6 +84,8 @@ concept ProcessSpec [P] {
       -> invalid(message: String) {
         New steps or edges contain structural errors.
       }
+      fixture update_ok { spec: $create_ok.spec, steps: "[{\"key\":\"s2\",\"step_type\":\"automation\",\"config\":\"{}\"}]", edges: "[]" } after create_ok
+      fixture update_invalid { spec: $create_ok.spec, steps: "not-json", edges: "[]" } after create_ok -> invalid
     }
 
     action get(spec: P) {
@@ -86,14 +95,138 @@ concept ProcessSpec [P] {
       -> not_found(spec: P) {
         No spec with this identifier exists.
       }
+      fixture get_ok { spec: $create_ok.spec } after create_ok
+      fixture get_notfound { spec: "nonexistent-spec" } -> not_found
+    }
+
+    action addStep(spec: P, step: Bytes, index: Int) {
+      -> ok(spec: P) {
+        Inserts the new step at the given index (0-based) in the steps list.
+        If index is beyond the current length, appends the step.
+        Only allowed when status is draft.
+      }
+      -> notfound(message: String) {
+        No spec with this identifier exists.
+      }
+      -> locked(message: String) {
+        Spec is active or deprecated. Only draft specs may be modified.
+      }
+      -> error(message: String) {
+        The step payload is not valid JSON, missing required fields, or duplicates an existing step key.
+      }
+      reversal: removeStep
+      fixture addStep_ok { spec: $create_ok.spec, step: "{\"key\":\"s2\",\"step_type\":\"automation\",\"config\":\"{}\"}", index: 1 } after create_ok
+      fixture addStep_notfound { spec: "nonexistent-spec", step: "{\"key\":\"s2\",\"step_type\":\"automation\",\"config\":\"{}\"}", index: 0 } -> notfound
+      fixture addStep_locked { spec: $publish_ok.spec, step: "{\"key\":\"s2\",\"step_type\":\"automation\",\"config\":\"{}\"}", index: 0 } after publish_ok -> locked
+      fixture addStep_bad_json { spec: $create_ok.spec, step: "not-json", index: 0 } after create_ok -> error
+    }
+
+    action removeStep(spec: P, stepKey: String) {
+      -> ok(spec: P) {
+        Removes the step with the given key from the steps list.
+        Also removes any edges referencing the removed step key.
+        Only allowed when status is draft.
+      }
+      -> notfound(message: String) {
+        No spec with this identifier exists, or no step with stepKey exists.
+      }
+      -> locked(message: String) {
+        Spec is active or deprecated. Only draft specs may be modified.
+      }
+      -> error(message: String) {
+        Internal error decoding the stored steps.
+      }
+      reversal: addStep
+      fixture removeStep_ok { spec: $addStep_ok.spec, stepKey: "s2" } after addStep_ok
+      fixture removeStep_notfound_spec { spec: "nonexistent-spec", stepKey: "s1" } -> notfound
+      fixture removeStep_locked { spec: $publish_ok.spec, stepKey: "s1" } after publish_ok -> locked
+      fixture removeStep_notfound_step { spec: $create_ok.spec, stepKey: "no-such-step" } after create_ok -> notfound
+    }
+
+    action moveStep(spec: P, stepKey: String, toIndex: Int) {
+      -> ok(spec: P) {
+        Moves the step identified by stepKey to the given index position.
+        If toIndex is beyond the current length, the step is appended.
+        Only allowed when status is draft.
+      }
+      -> notfound(message: String) {
+        No spec with this identifier exists, or no step with stepKey exists.
+      }
+      -> locked(message: String) {
+        Spec is active or deprecated. Only draft specs may be modified.
+      }
+      -> error(message: String) {
+        Internal error decoding the stored steps.
+      }
+      reversal: moveStep
+      fixture moveStep_ok { spec: $addStep_ok.spec, stepKey: "s2", toIndex: 0 } after addStep_ok
+      fixture moveStep_notfound_spec { spec: "nonexistent-spec", stepKey: "s1", toIndex: 0 } -> notfound
+      fixture moveStep_locked { spec: $publish_ok.spec, stepKey: "s1", toIndex: 0 } after publish_ok -> locked
+      fixture moveStep_notfound_step { spec: $create_ok.spec, stepKey: "no-such-step", toIndex: 0 } after create_ok -> notfound
+    }
+
+    action addEdge(spec: P, fromKey: String, toKey: String, kind: String) {
+      -> ok(spec: P) {
+        Appends a new edge from fromKey to toKey with the given kind.
+        Both step keys must exist. kind must be one of: default, branch, catch.
+        Only allowed when status is draft.
+      }
+      -> notfound(message: String) {
+        No spec with this identifier exists, or fromKey/toKey does not reference an existing step.
+      }
+      -> locked(message: String) {
+        Spec is active or deprecated. Only draft specs may be modified.
+      }
+      -> invalid_kind(message: String) {
+        kind is not one of the allowed values: default, branch, catch.
+      }
+      -> error(message: String) {
+        Internal error decoding the stored steps or edges.
+      }
+      reversal: removeEdge
+      fixture addEdge_ok { spec: $addStep_ok.spec, fromKey: "s1", toKey: "s2", kind: "default" } after addStep_ok
+      fixture addEdge_notfound_spec { spec: "nonexistent-spec", fromKey: "s1", toKey: "s2", kind: "default" } -> notfound
+      fixture addEdge_locked { spec: $publish_ok.spec, fromKey: "s1", toKey: "s1", kind: "default" } after publish_ok -> locked
+      fixture addEdge_invalid_kind { spec: $create_ok.spec, fromKey: "s1", toKey: "s1", kind: "invalid-kind" } after create_ok -> invalid_kind
+      fixture addEdge_notfound_step { spec: $create_ok.spec, fromKey: "s1", toKey: "no-such-step", kind: "default" } after create_ok -> notfound
+    }
+
+    action removeEdge(spec: P, fromKey: String, toKey: String) {
+      -> ok(spec: P) {
+        Removes the edge between fromKey and toKey.
+        If no such edge exists, the action still returns ok (idempotent).
+        Only allowed when status is draft.
+      }
+      -> notfound(message: String) {
+        No spec with this identifier exists.
+      }
+      -> locked(message: String) {
+        Spec is active or deprecated. Only draft specs may be modified.
+      }
+      -> error(message: String) {
+        Internal error decoding the stored edges.
+      }
+      reversal: addEdge
+      fixture removeEdge_ok { spec: $addEdge_ok.spec, fromKey: "s1", toKey: "s2" } after addEdge_ok
+      fixture removeEdge_notfound { spec: "nonexistent-spec", fromKey: "s1", toKey: "s2" } -> notfound
+      fixture removeEdge_locked { spec: $publish_ok.spec, fromKey: "s1", toKey: "s2" } after publish_ok -> locked
     }
   }
 
   example "create then get": {
-    after create(name: "onboard", steps: s, edges: e) -> ok(spec: x)
-    then get(spec: x) -> ok(spec: x, name: "onboard", version: 1, status: "draft", steps: s, edges: e)
+    after create(name: "onboard", steps: "[{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]") -> ok(spec: x)
+    then get(spec: x) -> ok(spec: x, name: "onboard", version: 1, status: "draft")
   }
 
+  example "addStep notfound": {
+    after addStep(spec: "nonexistent", step: "{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}", index: 0) -> notfound(message: m)
+    then addStep(spec: "nonexistent", step: "{\"key\":\"s2\",\"step_type\":\"human\",\"config\":\"{}\"}", index: 0) -> notfound(message: m2)
+  }
+
+  example "addEdge invalid kind": {
+    after create(name: "flow2", steps: "[{\"key\":\"a\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]") -> ok(spec: y)
+    then addEdge(spec: y, fromKey: "a", toKey: "a", kind: "bad") -> invalid_kind(message: m)
+  }
 
   always "specs have required fields": {
     forall p in specs:
@@ -115,6 +248,31 @@ concept ProcessSpec [P] {
   }
 
   action deprecate {
+    ensures ok: spec != none
+  }
+
+  action addStep {
+    requires: step != ""
+    ensures ok: spec != none
+  }
+
+  action removeStep {
+    requires: stepKey != ""
+    ensures ok: spec != none
+  }
+
+  action moveStep {
+    requires: stepKey != ""
+    ensures ok: spec != none
+  }
+
+  action addEdge {
+    requires: fromKey != "" && toKey != ""
+    ensures ok: spec != none
+  }
+
+  action removeEdge {
+    requires: fromKey != "" && toKey != ""
     ensures ok: spec != none
   }
 }
