@@ -1,0 +1,212 @@
+@version(1)
+widget paragraph-block {
+
+  purpose {
+    Single-paragraph block editor unit for use inside a recursive block editor.
+    Renders a contenteditable text region that carries inline formatting marks.
+    The FSM models four edit states: idle (unfocused), focused (caret placed but
+    not yet changed), editing (content being mutated), and selecting-text (mouse
+    or keyboard selection in progress). Keyboard contracts enforce block-boundary
+    editing semantics: Enter splits (creates a new sibling block), Backspace at
+    the start of the block joins with the previous sibling, Tab indents the block,
+    and Shift+Tab outdents it. readOnly prop disables all mutations and removes
+    contenteditable. The widget is intentionally free of visual styles so any
+    theme can realise typography tokens without touching widget code.
+  }
+
+  anatomy {
+    root: container { Outer wrapper; carries data-state, data-block-id, and data-focused for CSS and test selectors }
+    body: interactive { The contenteditable text region; single-paragraph span that accepts inline marks }
+  }
+
+  states {
+    edit {
+      idle [initial] {
+        on FOCUS -> focused;
+      }
+      focused {
+        on INPUT     -> editing;
+        on BLUR      -> idle;
+        on SELECT    -> selecting-text;
+        on ESCAPE    -> idle;
+      }
+      editing {
+        on BLUR      -> idle;
+        on SELECT    -> selecting-text;
+        on ESCAPE    -> focused;
+        entry [markDirty];
+        exit [flushContent];
+      }
+      selecting-text {
+        on BLUR           -> idle;
+        on SELECTION_DONE -> focused;
+        on ESCAPE         -> focused;
+      }
+    }
+  }
+
+  accessibility {
+    role: textbox;
+    keyboard {
+      Enter      -> ENTER_BLOCK;
+      Backspace  -> BACKSPACE_BLOCK;
+      Tab        -> INDENT_BLOCK;
+      Shift+Tab  -> OUTDENT_BLOCK;
+      Escape     -> ESCAPE;
+    }
+    focus {
+      trap: false;
+      initial: body;
+      roving: false;
+      returnOnClose: false;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: "paragraph";
+      };
+      body -> {
+        role: "textbox";
+        aria-multiline: "false";
+        aria-label: "paragraph";
+        aria-readonly: if ?readOnly then "true" else "false";
+        aria-placeholder: "Type to start writing";
+      };
+    }
+  }
+
+  props {
+    blockId: String = ""
+    content: String = ""
+    focused: Bool = false
+    readOnly: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.edit;
+      data-block-id: ?blockId;
+      data-focused: if ?focused then "true" else "false";
+    }
+
+    body -> {
+      data-part: "body";
+      contenteditable: if ?readOnly then "false" else "true";
+      data-block-id: ?blockId;
+      text: ?content;
+      onFocus:      send(FOCUS);
+      onBlur:       send(BLUR);
+      onInput:      send(INPUT);
+      onMouseDown:  send(SELECT);
+      onKeyDown-Enter:      send(ENTER_BLOCK);
+      onKeyDown-Backspace:  send(BACKSPACE_BLOCK);
+      onKeyDown-Tab:        send(INDENT_BLOCK);
+      onKeyDown-Escape:     send(ESCAPE);
+    }
+  }
+
+  affordance {
+    serves: text-input;
+    specificity: 6;
+    when concept = "ContentNode";
+    bind {
+      content: bodyText;
+      blockId: nodeId;
+    }
+  }
+
+  invariant {
+    example "focus event transitions from idle to focused": {
+      after FOCUS() -> ok
+      then state.edit = "focused"
+    }
+
+    example "input event transitions focused to editing": {
+      after INPUT() -> ok
+      then state.edit = "editing"
+    }
+
+    example "blur from any state returns to idle": {
+      after BLUR() -> ok
+      then state.edit = "idle"
+    }
+
+    example "escape from editing returns to focused": {
+      after ESCAPE() -> ok
+      then state.edit = "focused"
+    }
+
+    example "select event transitions to selecting-text": {
+      after SELECT() -> ok
+      then state.edit = "selecting-text"
+    }
+
+    example "selection-done transitions back to focused": {
+      after SELECTION_DONE() -> ok
+      then state.edit = "focused"
+    }
+
+    example "readOnly true disables contenteditable on body": {
+      after render(readOnly: true) -> ok
+      then body.contenteditable = "false"
+    }
+
+    example "readOnly false enables contenteditable on body": {
+      after render(readOnly: false) -> ok
+      then body.contenteditable = "true"
+    }
+
+    example "readOnly prop sets aria-readonly on body": {
+      after render(readOnly: true) -> ok
+      then body.ariaReadonly = "true"
+    }
+
+    example "focused prop binds data-focused true on root": {
+      after render(focused: true) -> ok
+      then root.dataFocused = "true"
+    }
+
+    example "blockId prop binds data-block-id on root": {
+      after render(blockId: "block-123") -> ok
+      then root.dataBlockId = "block-123"
+    }
+
+    example "blockId prop binds data-block-id on body": {
+      after render(blockId: "block-123") -> ok
+      then body.dataBlockId = "block-123"
+    }
+
+    always "root data-state reflects edit FSM": {
+      root.dataState = state.edit
+    }
+
+    always "body aria-readonly is true when readOnly": {
+      readOnly = true
+    }
+
+    never "contenteditable true when readOnly is true": {
+      readOnly = true and body.contenteditable = "true"
+    }
+
+    never "idle state directly reaches editing without focused": {
+      state.edit = "editing" and body.focused = false
+    }
+
+    action body {
+      requires: readOnly = false and state.edit = "focused"
+      ensures ok: state.edit = "editing"
+    }
+
+    action body {
+      requires: state.edit = "idle"
+      ensures ok: state.edit = "focused"
+    }
+
+    forall "all edit states are reachable from initial": {
+      given s in { "idle", "focused", "editing", "selecting-text" }
+      then s.reachable = true
+    }
+  }
+
+}

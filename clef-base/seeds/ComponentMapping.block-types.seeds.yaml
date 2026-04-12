@@ -1,0 +1,21 @@
+# ComponentMapping block-types seeds — widget-to-schema bindings for block-editor display modes.
+# Each mapping registers a block widget as the renderer for a given (schema, display_mode) pair,
+# declares in which block-editor contexts the block is insertable, and provides the insertion
+# catalog metadata (section, icon, label).
+
+concept: ComponentMapping
+action: create
+entries:
+  # Paragraph block — plain text paragraph in block editors
+  - name: paragraph-block-mapping
+    widget_id: paragraph-block
+    schema: paragraph
+    display_mode: block-editor
+    insertable: true
+    block_editor_context:
+      - markdown
+      - wiki
+      - notebook
+    section: "Basic"
+    icon: "text"
+    label: "Paragraph"

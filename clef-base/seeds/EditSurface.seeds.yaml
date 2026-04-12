@@ -1,0 +1,27 @@
+# EditSurface seeds — block-type editor surface registrations.
+# Each entry declares the editing surface for a given (schema, context) pair,
+# wiring toolbar widget, command bindings, input rules, and panel widgets.
+
+concept: EditSurface
+action: register
+entries:
+  # Paragraph block editor surface
+  # Toolbar: inline-toolbar (shared mark toolbar)
+  # Command bindings: bold-toggle, italic-toggle, code-toggle (seeded in P1.10)
+  # Input rules: markdown-heading-2 (seeded in P1.12)
+  - id: paragraph-block-editor
+    schema_ref: paragraph
+    context: block-editor
+    toolbar_widget: inline-toolbar
+    command_bindings:
+      - bold-toggle
+      - italic-toggle
+      - code-toggle
+    panel_widgets: []
+    context_menu_bindings: []
+    input_rule_refs:
+      - markdown-heading-2
+    picker_refs: []
+    compile_action_ref: null
+    compile_bundle_ref: null
+    compile_status_field: null
