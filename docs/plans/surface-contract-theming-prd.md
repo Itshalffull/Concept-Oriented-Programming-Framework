@@ -1030,7 +1030,7 @@ Includes:
 | Card | Deliverable | Section | Depends On | Unblocks | Priority | Commit |
 |---|---|---|---|---|---|---|
 | MAG-658 | Surface contract core model | §15.1 | — | MAG-659, MAG-660, MAG-661, MAG-663 | high | `479c19a0` |
-| MAG-659 | Surface lens binding model | §15.2 | MAG-658 | MAG-660, MAG-662 | high | |
+| MAG-659 | Surface lens binding model | §15.2 | MAG-658 | MAG-660, MAG-662 | high | `9ef45777` |
 | MAG-660 | Theme realizer abstraction + CSS MVP | §15.3 | MAG-658, MAG-659 | MAG-662, MAG-663 | high | |
 | MAG-661 | Resolver integration for contract awareness | §15.4 | MAG-658 | — | medium | |
 | MAG-662 | `clef-base` pilot integration | §15.5 | MAG-659, MAG-660 | — | high | |

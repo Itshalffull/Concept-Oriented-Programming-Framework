@@ -40,6 +40,10 @@ concepts:
     spec: specs/surface/surface-lens.concept
     params:
       L: { as: SurfaceLensId, description: "Surface lens identifier" }
+  ThemeRealizer:
+    spec: specs/surface/theme-realizer.concept
+    params:
+      R: { as: ThemeRealizerId, description: "Theme realizer identifier" }
   TransformExtractionProvider:
     spec: specs/surface/providers/transform-extraction-provider.concept
     params:

@@ -1,0 +1,204 @@
+# @fixtures-added
+concept ThemeRealizer [R] {
+
+  purpose {
+    Register and execute theme realization pipelines that compile
+    surface contracts into target-specific styling artifacts such
+    as CSS, XAML resources, or SwiftUI modifiers.
+  }
+
+  state {
+    realizers: set R
+    target: R -> String
+    outputKinds: R -> list String
+    contractSupport: R -> list String
+    capabilities: R -> list String
+    description: R -> String
+  }
+
+  actions {
+    action register(
+      realizer: R,
+      target: String,
+      outputKinds: list String,
+      contractSupport: list String,
+      capabilities: list String,
+      description: String
+    ) {
+      -> ok(realizer: R) {
+        Register a theme realizer for a target platform with its
+        supported output kinds and contract capability set.
+      }
+      -> duplicate(realizer: R) {
+        A theme realizer is already registered with this identifier.
+      }
+      -> error(message: String) {
+        The realizer registration is missing required fields such
+        as target, outputs, or description.
+      }
+
+      fixture css_realizer {
+        realizer: "realizer-css",
+        target: "web-css",
+        outputKinds: ["ContractManifest", "ContractCss"],
+        contractSupport: ["field-control", "floating-panel", "menu-item"],
+        capabilities: ["density-variants", "state-selectors"],
+        description: "Generate contract CSS and manifest output for web targets."
+      }
+      fixture swiftui_realizer {
+        realizer: "realizer-swiftui",
+        target: "swiftui",
+        outputKinds: ["ContractManifest", "SwiftUiStyles"],
+        contractSupport: ["field-control", "page-section"],
+        capabilities: ["environment-keys", "state-modifiers"],
+        description: "Generate SwiftUI modifier and environment bindings."
+      }
+      fixture duplicate_realizer {
+        realizer: "realizer-css",
+        target: "web-css",
+        outputKinds: ["ContractManifest"],
+        contractSupport: ["field-control"],
+        capabilities: ["density-variants"],
+        description: "Duplicate registration should fail."
+      } after css_realizer -> duplicate
+      fixture missing_target {
+        realizer: "broken-realizer",
+        target: "",
+        outputKinds: ["ContractManifest"],
+        contractSupport: ["field-control"],
+        capabilities: ["state-selectors"],
+        description: "Missing target should fail."
+      } -> error
+    }
+
+    action realize(
+      realizer: R,
+      theme: String,
+      contracts: String,
+      lenses: String,
+      context: String
+    ) {
+      -> ok(realizer: R, output: String, manifest: String) {
+        Execute the target realizer to produce platform-specific
+        styling artifacts from the active theme, surface contracts,
+        and resolved lens bindings.
+      }
+      -> notfound(message: String) {
+        No theme realizer exists with this identifier.
+      }
+      -> error(message: String) {
+        The theme or contract data could not be parsed or realized.
+      }
+
+      fixture realize_css {
+        realizer: "realizer-css",
+        theme: "{\"id\":\"light\"}",
+        contracts: "{\"contracts\":[]}",
+        lenses: "{\"lenses\":[]}",
+        context: "{\"density\":\"compact\"}"
+      } after css_realizer
+      fixture realize_unknown {
+        realizer: "missing-realizer",
+        theme: "{}",
+        contracts: "{}",
+        lenses: "{}",
+        context: "{}"
+      } after css_realizer -> notfound
+    }
+
+    action get(realizer: R) {
+      -> ok(
+        realizer: R,
+        target: String,
+        outputKinds: list String,
+        contractSupport: list String,
+        capabilities: list String,
+        description: String
+      ) {
+        Return the stored registration details for a theme realizer.
+      }
+      -> notfound(message: String) {
+        No theme realizer exists with this identifier.
+      }
+
+      fixture existing_realizer { realizer: $css_realizer.realizer } after css_realizer
+      fixture unknown_realizer { realizer: "missing-realizer" } -> notfound
+    }
+
+    action listTargets() {
+      -> ok(targets: list String) {
+        Return all registered realizer target identifiers.
+      }
+
+      fixture valid {} after css_realizer
+    }
+  }
+
+  example "register then realize succeeds": {
+    after register(
+      realizer: r,
+      target: "web-css",
+      outputKinds: ["ContractManifest", "ContractCss"],
+      contractSupport: ["field-control"],
+      capabilities: ["density-variants"],
+      description: "Generate contract CSS and manifest output."
+    ) -> ok(realizer: r)
+    then realize(realizer: r, theme: "t1", contracts: "c1", lenses: "l1", context: "ctx") -> ok(realizer: r, output: o, manifest: m)
+  }
+
+  example "duplicate register returns duplicate": {
+    after register(
+      realizer: r,
+      target: "web-css",
+      outputKinds: ["ContractManifest"],
+      contractSupport: ["field-control"],
+      capabilities: ["density-variants"],
+      description: "Generate contract manifest output."
+    ) -> ok(realizer: r)
+    then register(
+      realizer: r,
+      target: "web-css",
+      outputKinds: ["ContractManifest"],
+      contractSupport: ["field-control"],
+      capabilities: ["density-variants"],
+      description: "Generate contract manifest output."
+    ) -> duplicate(realizer: r)
+  }
+
+  always "registered realizers have targets" {
+    forall r in realizers:
+    target(r) != none
+  }
+
+  always "registered realizers declare outputs" {
+    forall r in realizers:
+    outputKinds(r) != []
+  }
+
+  action register {
+    requires: target != ""
+    requires: outputKinds != []
+    requires: description != ""
+    ensures ok: realizer in realizers
+    ensures ok: target(realizer) == target
+    ensures duplicate: realizers' == realizers
+  }
+
+  action realize {
+    requires: realizer in realizers
+    requires: theme != ""
+    requires: contracts != ""
+    requires: lenses != ""
+    ensures notfound: realizers' == realizers
+  }
+
+  action get {
+    requires: realizer != ""
+    ensures ok: realizer in realizers
+    ensures notfound: realizers' == realizers
+  }
+
+  action listTargets {
+    ensures ok: true
+  }
+}
