@@ -44,18 +44,18 @@ export const ScoreView: React.FC = () => {
   }, []);
 
   return (
-    <div>
-      <div className="page-header">
+    <div className="view-shell">
+      <div className="view-page-header">
         <h1>Score</h1>
         <Badge variant="info">code-as-data</Badge>
       </div>
 
-      <p style={{ color: 'var(--palette-on-surface-variant)', marginBottom: 'var(--spacing-lg)' }}>
+      <p className="view-page-copy">
         Score provides semantic analysis of the Clef application: concept dependencies,
         sync chains, handler coverage, and data flow paths.
       </p>
 
-      <div data-part="tabs" style={{ marginBottom: 'var(--spacing-lg)' }}>
+      <div className="view-tabs" data-part="tabs">
         <button data-part="tab" data-active={activeTab === 'impact' ? 'true' : 'false'} onClick={() => setActiveTab('impact')}>
           Concept Graph
         </button>
@@ -68,19 +68,19 @@ export const ScoreView: React.FC = () => {
       </div>
 
       {activeTab === 'impact' && (
-        <div className="score-panel">
-          <div className="score-panel__header">
-            <h2 className="section__title">Concept Dependency Graph</h2>
+        <div className="view-panel score-panel">
+          <div className="view-panel__header">
+            <h2 className="view-section-title">Concept Dependency Graph</h2>
             <Badge variant="secondary">{concepts.length} concepts</Badge>
           </div>
-          <p style={{ color: 'var(--palette-on-surface-variant)', marginBottom: 'var(--spacing-md)', fontSize: 'var(--typography-body-sm-size)' }}>
+          <p className="view-page-copy" style={{ marginBottom: 'var(--spacing-md)', fontSize: 'var(--typography-body-sm-size)' }}>
             Resolved from <code>score-impact-panel.uischema</code> via score-graph display mode.
           </p>
           {loading ? (
-            <div style={{ padding: 'var(--spacing-lg)', color: 'var(--palette-on-surface-variant)' }}>Loading...</div>
+            <div className="view-loading">Loading...</div>
           ) : (
             <Card variant="filled">
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 'var(--spacing-sm)' }}>
+              <div className="view-card-grid view-card-grid--tiles">
                 {concepts.map((concept) => (
                   <div
                     key={concept}
@@ -106,12 +106,12 @@ export const ScoreView: React.FC = () => {
       )}
 
       {activeTab === 'trace' && (
-        <div className="score-panel">
-          <div className="score-panel__header">
-            <h2 className="section__title">Flow Traces</h2>
+        <div className="view-panel score-panel">
+          <div className="view-panel__header">
+            <h2 className="view-section-title">Flow Traces</h2>
             <Badge variant="secondary">score-trace-panel</Badge>
           </div>
-          <p style={{ color: 'var(--palette-on-surface-variant)', marginBottom: 'var(--spacing-md)', fontSize: 'var(--typography-body-sm-size)' }}>
+          <p className="view-page-copy" style={{ marginBottom: 'var(--spacing-md)', fontSize: 'var(--typography-body-sm-size)' }}>
             Resolved from <code>score-trace-panel.uischema</code> via score-graph display mode.
           </p>
           <EmptyState
@@ -122,11 +122,11 @@ export const ScoreView: React.FC = () => {
       )}
 
       {activeTab === 'schemas' && (
-        <div className="score-panel">
-          <div className="score-panel__header">
-            <h2 className="section__title">Schema Browser</h2>
+        <div className="view-panel score-panel">
+          <div className="view-panel__header">
+            <h2 className="view-section-title">Schema Browser</h2>
           </div>
-          <p style={{ color: 'var(--palette-on-surface-variant)', marginBottom: 'var(--spacing-md)', fontSize: 'var(--typography-body-sm-size)' }}>
+          <p className="view-page-copy" style={{ marginBottom: 'var(--spacing-md)', fontSize: 'var(--typography-body-sm-size)' }}>
             Browse all Schema definitions — concept-mapped and admin-created.
           </p>
           <EmptyState

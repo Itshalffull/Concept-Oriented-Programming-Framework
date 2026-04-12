@@ -168,27 +168,26 @@ export const DisplayModesView: React.FC<DisplayModesViewProps> = ({ modeKey }) =
   };
 
   if (loading) {
-    return <div style={{ padding: 'var(--spacing-lg)', color: 'var(--palette-on-surface-variant)' }}>Loading...</div>;
+    return <div className="view-shell"><div className="view-loading">Loading...</div></div>;
   }
 
   if (!dm || dm.variant === 'notfound') {
     return (
-      <Card variant="outlined">
-        <p>Display mode &quot;{modeKey}&quot; not found.</p>
-        <button data-part="button" data-variant="outlined" onClick={() => navigateToHref('/display-modes')}>
-          Back to Display Modes
-        </button>
-      </Card>
+      <div className="view-shell">
+        <Card variant="outlined" className="view-panel">
+          <p>Display mode &quot;{modeKey}&quot; not found.</p>
+          <button data-part="button" data-variant="outlined" onClick={() => navigateToHref('/display-modes')}>
+            Back to Display Modes
+          </button>
+        </Card>
+      </div>
     );
   }
 
   return (
-    <div>
+    <div className="view-shell">
       {/* Breadcrumb */}
-      <div style={{
-        display: 'flex', gap: 8, alignItems: 'center', marginBottom: 'var(--spacing-md)',
-        fontSize: '12px', color: 'var(--palette-on-surface-variant)',
-      }}>
+      <div className="view-breadcrumb">
         <span
           style={{ cursor: 'pointer', textDecoration: 'underline' }}
           onClick={() => navigateToHref('/display-modes')}
@@ -200,13 +199,13 @@ export const DisplayModesView: React.FC<DisplayModesViewProps> = ({ modeKey }) =
       </div>
 
       {/* Mode metadata */}
-      <Card variant="outlined">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 'var(--spacing-sm)' }}>
+      <Card variant="outlined" className="view-panel">
+        <div className="view-section-header" style={{ marginBottom: 0, paddingBottom: 0, borderBottom: 0 }}>
           <div>
             <h2 style={{ margin: 0, fontSize: 'var(--typography-title-lg-size)', color: 'var(--palette-on-surface)' }}>
               {String(dm.name ?? modeKey)}
             </h2>
-            <div style={{ display: 'flex', gap: 4, marginTop: 4, flexWrap: 'wrap' }}>
+            <div className="view-chip-row" style={{ marginTop: 4 }}>
               <Badge variant="info">{String(dm.schema)}</Badge>
               <Badge variant="secondary">{String(dm.mode_id)}</Badge>
             </div>
@@ -216,17 +215,10 @@ export const DisplayModesView: React.FC<DisplayModesViewProps> = ({ modeKey }) =
 
       {/* Save error */}
       {saveError && (
-        <div style={{
+        <div className="view-status-banner" style={{
           marginTop: 'var(--spacing-sm)',
-          padding: '6px 12px',
           background: 'var(--palette-error-container)',
           color: 'var(--palette-on-error-container)',
-          borderRadius: 'var(--radius-sm)',
-          fontSize: '12px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: 8,
         }}>
           <span>{saveError}</span>
           <button type="button" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: 13, lineHeight: 1 }} onClick={() => setSaveError(null)} aria-label="Dismiss">×</button>
@@ -234,13 +226,13 @@ export const DisplayModesView: React.FC<DisplayModesViewProps> = ({ modeKey }) =
       )}
 
       {/* Strategy editor */}
-      <div style={{ marginTop: 'var(--spacing-md)' }}>
-        <h3 style={{ fontSize: 'var(--typography-title-md-size)', color: 'var(--palette-on-surface)', marginBottom: 'var(--spacing-sm)' }}>
+      <section className="view-section">
+        <h3 className="view-section-title" style={{ fontSize: 'var(--typography-title-md-size)' }}>
           Rendering Strategy
         </h3>
 
         {/* Strategy tabs */}
-        <div style={{ display: 'flex', gap: 6, marginBottom: 'var(--spacing-md)' }}>
+        <div className="view-tabs">
           <button style={tabStyle(tab === 'component')} onClick={() => setTab('component')}>
             Component Mapping
           </button>
@@ -254,11 +246,11 @@ export const DisplayModesView: React.FC<DisplayModesViewProps> = ({ modeKey }) =
 
         {/* Component Mapping tab */}
         {tab === 'component' && (
-          <Card variant="outlined">
-            <p style={{ fontSize: '12px', color: 'var(--palette-on-surface-variant)', margin: '0 0 var(--spacing-sm)' }}>
+          <Card variant="outlined" className="view-panel">
+            <p className="view-page-copy" style={{ fontSize: '12px', marginBottom: 'var(--spacing-sm)' }}>
               Full widget takeover. One ComponentMapping renders the entire entity.
             </p>
-            <div style={{ display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'center' }}>
+            <div className="view-toolbar">
               <input
                 style={inputStyle}
                 placeholder="Mapping ID (e.g. card-default)"
@@ -286,11 +278,11 @@ export const DisplayModesView: React.FC<DisplayModesViewProps> = ({ modeKey }) =
 
         {/* Layout tab */}
         {tab === 'layout' && (
-          <Card variant="outlined">
-            <p style={{ fontSize: '12px', color: 'var(--palette-on-surface-variant)', margin: '0 0 var(--spacing-sm)' }}>
+          <Card variant="outlined" className="view-panel">
+            <p className="view-page-copy" style={{ fontSize: '12px', marginBottom: 'var(--spacing-sm)' }}>
               Spatial composition. A Layout arranges FieldPlacements and ComponentMappings in areas.
             </p>
-            <div style={{ display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'center' }}>
+            <div className="view-toolbar">
               <input
                 style={inputStyle}
                 placeholder="Layout ID"
@@ -312,12 +304,12 @@ export const DisplayModesView: React.FC<DisplayModesViewProps> = ({ modeKey }) =
 
         {/* Flat Fields tab */}
         {tab === 'flat' && (
-          <Card variant="outlined">
-            <p style={{ fontSize: '12px', color: 'var(--palette-on-surface-variant)', margin: '0 0 var(--spacing-sm)' }}>
+          <Card variant="outlined" className="view-panel">
+            <p className="view-page-copy" style={{ fontSize: '12px', marginBottom: 'var(--spacing-sm)' }}>
               Ordered list of FieldPlacement IDs. Simple vertical stack of field renderings.
             </p>
             {placements.length > 0 && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 'var(--spacing-sm)' }}>
+              <div className="view-chip-row" style={{ marginBottom: 'var(--spacing-sm)' }}>
                 {placements.map((p, i) => (
                   <span
                     key={`${p}-${i}`}
@@ -341,7 +333,7 @@ export const DisplayModesView: React.FC<DisplayModesViewProps> = ({ modeKey }) =
                 ))}
               </div>
             )}
-            <div style={{ display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'center' }}>
+            <div className="view-toolbar">
               <input
                 style={inputStyle}
                 placeholder="Placement ID (e.g. fp-node-heading)"
@@ -360,7 +352,7 @@ export const DisplayModesView: React.FC<DisplayModesViewProps> = ({ modeKey }) =
         )}
 
         {/* Clear strategy */}
-        <div style={{ marginTop: 'var(--spacing-md)', display: 'flex', justifyContent: 'flex-end' }}>
+        <div className="view-toolbar view-toolbar--end">
           <button
             style={{
               padding: '6px 14px', fontSize: '12px',
@@ -376,7 +368,7 @@ export const DisplayModesView: React.FC<DisplayModesViewProps> = ({ modeKey }) =
             {saving ? '...' : 'Clear Strategy'}
           </button>
         </div>
-      </div>
+      </section>
     </div>
   );
 };

@@ -191,10 +191,10 @@ export const ContentView: React.FC = () => {
   ];
 
   return (
-    <div>
-      <div className="page-header">
+    <div className="view-shell">
+      <div className="view-page-header">
         <h1>Content</h1>
-        <div style={{ display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'center' }}>
+        <div className="view-toolbar">
           <Badge variant="info">{items.length}{data && items.length !== data.length ? `/${data.length}` : ''} items</Badge>
           <button data-part="button" data-variant="filled" onClick={() => setShowCreate(true)}>
             Create Content
@@ -202,14 +202,14 @@ export const ContentView: React.FC = () => {
         </div>
       </div>
 
-      <p style={{ color: 'var(--palette-on-surface-variant)', marginBottom: 'var(--spacing-md)' }}>
+      <p className="view-page-copy">
         Browse all content entities in the system. Every entity is a ContentNode — identity comes from applied Schemas.
       </p>
 
       {/* Schema filter toggles with AND/OR mode */}
       {availableSchemas.length > 0 && (
-        <div style={{ marginBottom: 'var(--spacing-md)' }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
+        <div className="view-section">
+          <div className="view-chip-row">
             <button
               data-part="filter-toggle"
               onClick={toggleAll}
@@ -263,7 +263,7 @@ export const ContentView: React.FC = () => {
         </div>
       )}
 
-      <div data-part="search-input" style={{ marginBottom: 'var(--spacing-lg)', maxWidth: '500px' }}>
+      <div className="view-field-shell view-field-shell--md" data-part="search-input">
         <input
           type="text"
           placeholder="Filter by name, schema, or content..."
@@ -274,7 +274,7 @@ export const ContentView: React.FC = () => {
 
       <Card variant="outlined" padding="none">
         {loading ? (
-          <div style={{ padding: 'var(--spacing-lg)', color: 'var(--palette-on-surface-variant)' }}>Loading...</div>
+          <div className="view-loading">Loading...</div>
         ) : items.length === 0 ? (
           <EmptyState
             title="No content found"

@@ -85,11 +85,11 @@ export const DashboardView: React.FC = () => {
 
   if (loading) {
     return (
-      <div>
-        <div className="page-header">
+      <div className="view-shell">
+        <div className="view-page-header">
           <h1>Dashboard</h1>
         </div>
-        <p style={{ color: 'var(--palette-on-surface-variant)' }}>Loading...</p>
+        <p className="view-loading">Loading...</p>
       </div>
     );
   }
@@ -132,15 +132,18 @@ export const DashboardView: React.FC = () => {
   ];
 
   return (
-    <div data-host-id={host?.id} data-host-status={host?.status}>
-      <div className="page-header">
+    <div className="view-shell" data-host-id={host?.id} data-host-status={host?.status}>
+      <div className="view-page-header">
         <h1>Dashboard</h1>
         <Badge variant="success">{state?.health?.status ?? 'unknown'}</Badge>
       </div>
 
       {/* Stat cards — live KPIs */}
-      <div className="section">
-        <div className="card-grid card-grid--stats">
+      <section className="view-section">
+        <div className="view-section-header">
+          <h2 className="view-section-title">Live KPIs</h2>
+        </div>
+        <div className="view-card-grid view-card-grid--stats">
           <StatCard
             label="Registered Concepts"
             value={String(state?.concepts.length ?? 0)}
@@ -173,29 +176,29 @@ export const DashboardView: React.FC = () => {
             description="Across all suites"
           />
         </div>
-      </div>
+      </section>
 
       {/* Schema membership stats */}
       {schemaStats && schemaStats.length > 0 && (
-        <div className="section">
-          <div className="section__header">
-            <h2 className="section__title">Entities by Schema</h2>
+        <section className="view-section">
+          <div className="view-section-header">
+            <h2 className="view-section-title">Entities by Schema</h2>
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-lg)' }}>
+          <div className="view-card-grid view-card-grid--tiles">
             {schemaStats.map(({ schema, count }) => (
-              <Card key={schema} variant="outlined" style={{ padding: 'var(--spacing-sm) var(--spacing-md)', minWidth: '120px' }}>
-                <div style={{ fontWeight: 600, fontSize: '20px' }}>{count}</div>
-                <div style={{ fontSize: '12px', color: 'var(--palette-on-surface-variant)' }}>{schema}</div>
+              <Card key={schema} variant="outlined" padding="sm" className="view-metric-card">
+                <div className="view-metric-value">{count}</div>
+                <div className="view-metric-label">{schema}</div>
               </Card>
             ))}
           </div>
-        </div>
+        </section>
       )}
 
       {/* Registered concepts — data-table view */}
-      <div className="section">
-        <div className="section__header">
-          <h2 className="section__title">Registered Concepts</h2>
+      <section className="view-section">
+        <div className="view-section-header">
+          <h2 className="view-section-title">Registered Concepts</h2>
           <Badge variant="info">{state?.concepts.length ?? 0}</Badge>
         </div>
         <Card variant="outlined" padding="none">
@@ -206,7 +209,7 @@ export const DashboardView: React.FC = () => {
             ariaLabel="Registered concepts"
           />
         </Card>
-      </div>
+      </section>
     </div>
   );
 };

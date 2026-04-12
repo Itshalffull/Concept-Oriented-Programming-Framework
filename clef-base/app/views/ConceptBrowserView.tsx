@@ -119,24 +119,24 @@ export const ConceptBrowserView: React.FC = () => {
   );
 
   return (
-    <div>
-      <div className="page-header">
+    <div className="view-shell">
+      <div className="view-page-header">
         <h1>Concept Browser</h1>
       </div>
 
-      <p style={{ color: 'var(--palette-on-surface-variant)', marginBottom: 'var(--spacing-md)' }}>
+      <p className="view-page-copy">
         Package discovery and installation runs through the `ConceptBrowser` concept.
         Preview computes schema, sync, provider, and widget impact before install.
       </p>
 
       {statusMessage && (
-        <Card variant="filled" style={{ marginBottom: 'var(--spacing-md)' }}>
-          <span style={{ color: 'var(--palette-on-surface)' }}>{statusMessage}</span>
+        <Card variant="filled" className="view-status-banner view-status-banner--filled">
+          <span>{statusMessage}</span>
         </Card>
       )}
 
       {/* Tabs */}
-      <div data-part="tabs" style={{ marginBottom: 'var(--spacing-lg)' }}>
+      <div className="view-tabs" data-part="tabs">
         <button
           data-part="tab"
           data-active={activeTab === 'installed' ? 'true' : 'false'}
@@ -154,7 +154,7 @@ export const ConceptBrowserView: React.FC = () => {
       </div>
 
       {/* Search */}
-      <div data-part="search-input" style={{ marginBottom: 'var(--spacing-md)', maxWidth: '400px' }}>
+      <div className="view-field-shell view-field-shell--sm" data-part="search-input">
         <input
           type="text"
           placeholder={activeTab === 'installed' ? 'Filter installed suites...' : 'Search registry...'}
@@ -167,7 +167,7 @@ export const ConceptBrowserView: React.FC = () => {
       {activeTab === 'installed' && (
         <Card variant="outlined" padding="none">
           {loading ? (
-            <div style={{ padding: 'var(--spacing-lg)', color: 'var(--palette-on-surface-variant)' }}>
+            <div className="view-loading">
               Loading...
             </div>
           ) : filtered.length === 0 ? (
@@ -205,23 +205,23 @@ export const ConceptBrowserView: React.FC = () => {
           ) : (
             <div className="card-grid">
               {browseResults.map((pkg) => (
-                <Card key={pkg.id ?? pkg.name} variant="outlined">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-sm)' }}>
+                <Card key={pkg.id ?? pkg.name} variant="outlined" className="view-panel">
+                  <div className="view-toolbar" style={{ marginBottom: 'var(--spacing-sm)' }}>
                     <strong>{pkg.name}</strong>
                     <Badge variant={pkg.status === 'installed' ? 'success' : 'warning'}>
                       {pkg.status}
                     </Badge>
                     {pkg.registry && <Badge variant="secondary">{pkg.registry}</Badge>}
                   </div>
-                  <p style={{ color: 'var(--palette-on-surface-variant)', marginBottom: 'var(--spacing-sm)' }}>
+                  <p className="view-page-copy" style={{ marginBottom: 'var(--spacing-sm)' }}>
                     {pkg.description ?? 'No description available.'}
                   </p>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-md)' }}>
+                  <div className="view-chip-row" style={{ marginBottom: 'var(--spacing-md)' }}>
                     <Badge variant="info">{pkg.concepts} concepts</Badge>
                     <Badge variant="secondary">{pkg.syncs} syncs</Badge>
                     <Badge variant="secondary">v{pkg.version}</Badge>
                   </div>
-                  <div style={{ display: 'flex', gap: 'var(--spacing-sm)', flexWrap: 'wrap' }}>
+                  <div className="view-toolbar">
                     <button
                       data-part="button"
                       data-variant="outlined"
@@ -254,11 +254,11 @@ export const ConceptBrowserView: React.FC = () => {
       )}
 
       {previewPackage && previewDetails && (
-        <Card variant="outlined" style={{ marginTop: 'var(--spacing-xl)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--spacing-md)', flexWrap: 'wrap', marginBottom: 'var(--spacing-md)' }}>
+        <Card variant="outlined" className="view-panel" style={{ marginTop: 'var(--spacing-xl)' }}>
+          <div className="view-section-header">
             <div>
               <h2 style={{ margin: 0 }}>{previewPackage.name}</h2>
-              <p style={{ color: 'var(--palette-on-surface-variant)', margin: '4px 0 0' }}>
+              <p className="view-page-copy" style={{ marginTop: 4 }}>
                 Previewing install impact for v{previewPackage.version}
               </p>
             </div>
@@ -274,7 +274,7 @@ export const ConceptBrowserView: React.FC = () => {
             </button>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 'var(--spacing-md)' }}>
+          <div className="view-card-grid view-card-grid--tiles">
             <div>
               <strong>Schemas</strong>
               <div style={{ marginTop: 'var(--spacing-xs)' }}>
@@ -310,7 +310,7 @@ export const ConceptBrowserView: React.FC = () => {
       )}
 
       {activeTab === 'installed' && filtered.length > 0 && (
-        <div style={{ marginTop: 'var(--spacing-lg)', display: 'flex', gap: 'var(--spacing-sm)', flexWrap: 'wrap' }}>
+        <div className="view-toolbar" style={{ marginTop: 'var(--spacing-lg)' }}>
           {filtered.map((pkg) => (
             <ActionButton
               key={`remove-${pkg.id}`}
