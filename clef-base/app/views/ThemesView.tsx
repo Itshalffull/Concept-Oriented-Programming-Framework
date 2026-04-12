@@ -5,7 +5,7 @@
  * Generated CSS is produced by ThemeParser -> ThemeGen pipeline
  */
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useConceptQuery } from '../../lib/use-concept-query';
 import { useNavigator } from '../../lib/clef-provider';
 import { Card } from '../components/widgets/Card';
@@ -13,6 +13,7 @@ import { Badge } from '../components/widgets/Badge';
 import { EmptyState } from '../components/widgets/EmptyState';
 import { CreateForm } from '../components/widgets/CreateForm';
 import { ActionButton } from '../components/widgets/ActionButton';
+import { ThemePreviewPanel, getThemePreviewMeta } from '../components/widgets/ThemePreviewPanel';
 import { getThemeId, isThemeActive, type ThemeRecord } from '../../lib/theme-selection';
 
 const createFields = [
@@ -20,29 +21,6 @@ const createFields = [
   { name: 'name', label: 'Display Name', required: true, placeholder: 'e.g. Ocean Theme' },
   { name: 'overrides', label: 'Overrides (JSON)', type: 'textarea' as const, placeholder: '{ "palette-primary": "oklch(0.6 0.15 250)" }' },
 ];
-
-const palettePreview = [
-  { token: '--palette-primary', label: 'Primary' },
-  { token: '--palette-secondary', label: 'Secondary' },
-  { token: '--palette-tertiary', label: 'Tertiary' },
-  { token: '--palette-surface', label: 'Surface' },
-  { token: '--palette-background', label: 'Background' },
-  { token: '--palette-error', label: 'Error' },
-  { token: '--palette-warning', label: 'Warning' },
-  { token: '--palette-success', label: 'Success' },
-  { token: '--palette-info', label: 'Info' },
-];
-
-function countOverrides(row: Record<string, unknown>): number {
-  try {
-    const overrides = row.overrides;
-    if (typeof overrides === 'object' && overrides !== null) return Object.keys(overrides).length;
-    if (typeof overrides === 'string') return Object.keys(JSON.parse(overrides)).length;
-  } catch {
-    // fall through
-  }
-  return 0;
-}
 
 export const ThemesView: React.FC = () => {
   const [createOpen, setCreateOpen] = useState(false);
@@ -55,9 +33,18 @@ export const ThemesView: React.FC = () => {
     return getThemeId(left).localeCompare(getThemeId(right));
   });
   const activeCount = rows.filter((theme) => isThemeActive(theme)).length;
+  const activeTheme = rows.find((theme) => isThemeActive(theme)) ?? rows[0] ?? null;
+  const themeSummary = useMemo(() => {
+    return rows.map((theme) => ({
+      id: getThemeId(theme),
+      name: String(theme.name ?? getThemeId(theme) ?? 'untitled'),
+      active: isThemeActive(theme),
+      meta: getThemePreviewMeta(theme),
+    }));
+  }, [rows]);
 
   return (
-    <div>
+    <div className="themes-view">
       <div className="page-header">
         <h1>Themes</h1>
         <button data-part="button" data-variant="filled" onClick={() => setCreateOpen(true)}>
@@ -65,13 +52,37 @@ export const ThemesView: React.FC = () => {
         </button>
       </div>
 
-      <p style={{ color: 'var(--palette-on-surface-variant)', marginBottom: 'var(--spacing-lg)' }}>
-        Design system themes generated through the ThemeParser/ThemeGen pipeline from
-        <code> .theme</code> and expressive theme sources. One theme is always active, and
-        activating a theme here immediately applies it across the shell.
-      </p>
+      <section className="themes-view__hero">
+        <div>
+          <p className="themes-view__lede">
+            Design system themes generated through the ThemeParser/ThemeGen pipeline from
+            <code> .theme</code> and expressive theme sources. Compare palette, shell tone,
+            density, and type hierarchy without leaving this page.
+          </p>
+          <div className="themes-view__summary">
+            <Badge variant="primary">{rows.length} themes</Badge>
+            <Badge variant="success">{activeCount} active</Badge>
+            {activeTheme ? <Badge variant="info">Current: {String(activeTheme.name ?? getThemeId(activeTheme))}</Badge> : null}
+          </div>
+        </div>
+        <Card variant="outlined" className="themes-view__scorecard">
+          <div className="themes-view__scorecard-grid">
+            <div>
+              <span>Density modes</span>
+              <strong>{new Set(themeSummary.map((item) => item.meta.density ?? 'default')).size}</strong>
+            </div>
+            <div>
+              <span>Motifs</span>
+              <strong>{new Set(themeSummary.map((item) => item.meta.motif ?? 'default')).size}</strong>
+            </div>
+            <div>
+              <span>Profiles</span>
+              <strong>{new Set(themeSummary.map((item) => item.meta.styleProfile ?? 'standard')).size}</strong>
+            </div>
+          </div>
+        </Card>
+      </section>
 
-      {/* Theme cards */}
       {loading ? (
         <div style={{ padding: 'var(--spacing-lg)', color: 'var(--palette-on-surface-variant)' }}>Loading...</div>
       ) : rows.length === 0 ? (
@@ -82,81 +93,56 @@ export const ThemesView: React.FC = () => {
           />
         </Card>
       ) : (
-        <div className="card-grid" style={{ marginBottom: 'var(--spacing-2xl)' }}>
+        <div className="themes-view__grid">
           {rows.map((theme) => {
             const themeId = getThemeId(theme);
             const name = String(theme.name ?? themeId ?? 'untitled');
-            const base = theme.extends ?? theme.base ?? null;
             const active = isThemeActive(theme);
-            const overrides = countOverrides(theme);
             return (
-              <Card
+              <ThemePreviewPanel
                 key={themeId || name}
-                variant={active ? 'filled' : 'outlined'}
-                style={{ outline: active ? `2px solid var(--palette-primary)` : undefined }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-sm)' }}>
-                  <strong style={{ fontSize: 'var(--typography-heading-sm-size)' }}>{name}</strong>
-                  {base && <Badge variant="secondary">extends {String(base)}</Badge>}
-                  {active ? (
-                    <Badge variant="success">active</Badge>
-                  ) : (
-                    <Badge variant="warning">inactive</Badge>
-                  )}
-                </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-sm)' }}>
-                  <Badge variant="info">{overrides} overrides</Badge>
-                </div>
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: 'var(--spacing-sm)',
-                    marginTop: 'var(--spacing-md)',
-                  }}
-                  onClick={(event) => event.stopPropagation()}
-                >
+                theme={theme}
+                onOpenDetails={() => navigateToHref(`/content/${themeId || name}`)}
+                onActivateToggle={() => (
                   <ActionButton
-                    binding={active ? "theme-deactivate" : "theme-activate"}
+                    binding={active ? 'theme-deactivate' : 'theme-activate'}
                     context={{ id: themeId }}
-                    label={active ? "Deactivate" : "Activate"}
-                    buttonVariant={active ? "ghost" : "primary"}
+                    label={active ? 'Deactivate' : 'Activate'}
+                    buttonVariant={active ? 'ghost' : 'primary'}
                     disabled={active && activeCount <= 1}
                     onSuccess={() => refetch()}
                   />
-                  <button
-                    data-part="button"
-                    data-variant="ghost"
-                    onClick={() => navigateToHref(`/content/${themeId || name}`)}
-                  >
-                    Details
-                  </button>
-                </div>
-              </Card>
+                )}
+              />
             );
           })}
         </div>
       )}
 
-      {/* Active palette preview */}
       <div className="section">
         <div className="section__header">
-          <h2 className="section__title">Active Palette Preview</h2>
+          <h2 className="section__title">Theme QA Checklist</h2>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 'var(--spacing-sm)' }}>
-          {palettePreview.map(({ token, label }) => (
-            <div key={token} style={{ textAlign: 'center' }}>
-              <div style={{
-                width: '100%',
-                height: 48,
-                borderRadius: 'var(--radius-md)',
-                background: `var(${token})`,
-                border: '1px solid var(--palette-outline-variant)',
-                marginBottom: 'var(--spacing-xs)',
-              }} />
-              <small style={{ color: 'var(--palette-on-surface-variant)' }}>{label}</small>
+        <Card variant="outlined" className="themes-view__checklist">
+          <div className="themes-view__checklist-grid">
+            <div>
+              <strong>Shell</strong>
+              <p>Check whether motif and density change the navigation rhythm meaningfully.</p>
             </div>
-          ))}
-        </div>
+            <div>
+              <strong>Typography</strong>
+              <p>Look for hierarchy, tone, and readability differences, not just font swaps.</p>
+            </div>
+            <div>
+              <strong>Components</strong>
+              <p>Ensure cards, badges, controls, and surfaces still feel like the same product.</p>
+            </div>
+            <div>
+              <strong>Contrast</strong>
+              <p>Verify emphasis stays legible across primary, status, and surface treatments.</p>
+            </div>
+          </div>
+        </Card>
       </div>
 
       <CreateForm
