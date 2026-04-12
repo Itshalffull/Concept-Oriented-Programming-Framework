@@ -1,0 +1,202 @@
+@version(1)
+widget block-slot {
+
+  purpose {
+    Generic per-block renderer that resolves a (schema, displayMode) pair to a
+    concrete widget implementation via a ComponentMapping query at render time.
+    Acts as the host-side slot into which any block-type-specific widget is
+    mounted. While resolution is pending the slot shows nothing; on error it
+    falls back to a plain-content renderer. The focused prop tracks whether
+    the containing block editor has focus on this slot, enabling coordinated
+    cursor and toolbar state without each resolved widget managing focus itself.
+  }
+
+  anatomy {
+    root:            container     { Top-level wrapper carrying resolution status and focus state }
+    loadingIndicator: presentation { Shown only while resolution is in progress }
+    errorMessage:    text          { Shown when ComponentMapping resolution fails }
+    resolvedWidget:  widget        { Slot where the resolved widget mounts after ComponentMapping returns }
+  }
+
+  states {
+    status {
+      unresolved [initial] {
+        on RESOLVE_START -> resolving;
+      }
+      resolving {
+        on RESOLVE_SUCCESS -> resolved;
+        on RESOLVE_ERROR   -> error;
+        entry [startResolution];
+      }
+      resolved {
+        on RESET -> unresolved;
+      }
+      error {
+        on RETRY -> resolving;
+        on RESET -> unresolved;
+        entry [logResolutionError];
+      }
+    }
+
+    focus [parallel] {
+      blurred [initial] {
+        on FOCUS_BLOCK  -> focused;
+      }
+      focused {
+        on BLUR_BLOCK -> blurred;
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      Escape -> BLUR_BLOCK;
+    }
+    focus {
+      trap: false;
+      initial: resolvedWidget;
+      roving: false;
+      returnOnClose: false;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Block slot";
+        aria-busy: if state.status = "resolving" then "true" else "false";
+      };
+      loadingIndicator -> {
+        role: "status";
+        aria-label: "Resolving block widget";
+        aria-live: "polite";
+      };
+      errorMessage -> {
+        role: "alert";
+        aria-live: "assertive";
+      };
+      resolvedWidget -> {
+        aria-label: "Rendered block";
+      };
+    }
+  }
+
+  props {
+    blockId: String
+    schema: String
+    displayMode: String = "block-editor"
+    focused: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-status: state.status;
+      data-focused: if ?focused then "true" else "false";
+      data-block-id: ?blockId;
+      data-schema: ?schema;
+      data-display-mode: ?displayMode;
+      data-state: state.status;
+    }
+
+    loadingIndicator -> {
+      data-part: "loading-indicator";
+      hidden: if state.status != "resolving" then true else false;
+    }
+
+    errorMessage -> {
+      data-part: "error-message";
+      hidden: if state.status != "error" then true else false;
+    }
+
+    resolvedWidget -> {
+      data-part: "resolved-widget";
+      hidden: if state.status != "resolved" then true else false;
+    }
+  }
+
+  affordance {
+    serves: block-renderer;
+    specificity: 7;
+    when componentMappingAvailable = true;
+    bind {
+      blockId: blockId;
+      schema: schema;
+      displayMode: displayMode;
+    }
+  }
+
+  compose {
+    resolvedWidget: widget("component-mapping-slot", { schema: ?schema, displayMode: ?displayMode })
+    _loadingSpinner: widget("loading-indicator", { active: if state.status = "resolving" then true else false })
+  }
+
+  invariant {
+    example "resolution lifecycle unresolved to resolved": {
+      after resolve(schema: "text", displayMode: "block-editor") -> ok
+      then state.status = "resolved"
+      and resolvedWidget.hidden = false
+    }
+
+    example "resolution error transitions to error state": {
+      after resolve(schema: "unknown", displayMode: "block-editor") -> error
+      then state.status = "error"
+      and errorMessage.hidden = false
+    }
+
+    example "retry from error restarts resolving": {
+      after retry() -> ok
+      then state.status = "resolving"
+    }
+
+    example "focus event sets focus machine to focused": {
+      after focusBlock(blockId: "b1") -> ok
+      then state.focus = "focused"
+      and root.dataFocused = "true"
+    }
+
+    example "blur event returns focus machine to blurred": {
+      after blurBlock(blockId: "b1") -> ok
+      then state.focus = "blurred"
+      and root.dataFocused = "false"
+    }
+
+    always "data-state on root reflects status FSM": {
+      root.dataState = state.status
+    }
+
+    always "data-schema reflects schema prop": {
+      root.dataSchema = schema
+    }
+
+    always "data-block-id reflects blockId prop": {
+      root.dataBlockId = blockId
+    }
+
+    never "resolvedWidget rendered in unresolved state": {
+      state.status = "unresolved" and resolvedWidget.hidden = false
+    }
+
+    never "resolvedWidget rendered in resolving state": {
+      state.status = "resolving" and resolvedWidget.hidden = false
+    }
+
+    never "resolvedWidget rendered in error state": {
+      state.status = "error" and resolvedWidget.hidden = false
+    }
+
+    never "loadingIndicator shown outside resolving state": {
+      state.status != "resolving" and loadingIndicator.hidden = false
+    }
+
+    action resolvedWidget {
+      requires: state.status = "resolved"
+      ensures ok: focused = true
+    }
+
+    forall "all status states reachable": {
+      given s in statusStates
+      then s.reachable = true
+    }
+  }
+
+}

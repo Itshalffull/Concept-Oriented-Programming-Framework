@@ -1,0 +1,251 @@
+@version(1)
+widget slash-menu {
+
+  purpose {
+    Slash-triggered insertion and command menu that appears when the user types
+    "/" in a block editor context. Entries are populated from ComponentMapping
+    (insertable = true) and ActionBinding (slash_command = true), and are grouped
+    into labelled sections. The user can filter entries by typing a query string,
+    navigate the list with arrow keys, and confirm selection with Enter to either
+    insert a new block via ComponentMapping or execute a command via ActionBinding.
+    Escape always dismisses the menu without action. Focus remains in the host
+    editor while the menu is open; the menu itself uses aria-activedescendant to
+    track the highlighted entry without stealing focus.
+  }
+
+  anatomy {
+    root:           container   { Top-level menu panel, shown when interaction is open }
+    searchInput:    interactive { Text field where the user types to filter entries }
+    sectionList:    container   { Ordered list of all visible sections }
+    sectionHeader:  text        { Label above each section group }
+    entryList:      container   { List of filterable entries within one section }
+    entry:          action      { Individual insertable or command entry }
+    entryIcon:      presentation { Icon associated with an entry }
+    entryLabel:     text        { Human-readable entry name }
+    entryShortcut:  text        { Optional keyboard shortcut label for the entry }
+  }
+
+  states {
+    interaction {
+      closed [initial] {
+        on OPEN -> open;
+      }
+      open {
+        on ESCAPE       -> closed;
+        on FILTER       -> filtering;
+        on SELECT_ENTRY -> selecting;
+        entry [populateEntries];
+        exit [clearQuery];
+      }
+      filtering {
+        on ESCAPE       -> closed;
+        on SELECT_ENTRY -> selecting;
+        on CLEAR_FILTER -> open;
+        entry [filterEntries];
+      }
+      selecting {
+        on DISPATCH_SUCCESS -> closed;
+        on DISPATCH_FAILURE -> open;
+        entry [dispatchEntryAction];
+      }
+    }
+
+    navigation [parallel] {
+      inactive [initial] {
+        on NAVIGATE_NEXT -> navigating;
+        on NAVIGATE_PREV -> navigating;
+      }
+      navigating {
+        on NAVIGATE_NEXT -> navigating;
+        on NAVIGATE_PREV -> navigating;
+        on SELECT_ENTRY  -> inactive;
+        on ESCAPE        -> inactive;
+        entry [updateActiveIndex];
+      }
+    }
+  }
+
+  accessibility {
+    role: menu;
+    keyboard {
+      ArrowDown -> NAVIGATE_NEXT;
+      ArrowUp   -> NAVIGATE_PREV;
+      Enter     -> SELECT_ENTRY;
+      Escape    -> ESCAPE;
+    }
+    focus {
+      trap: false;
+      initial: searchInput;
+      roving: false;
+      returnOnClose: false;
+    }
+    aria {
+      root -> {
+        role: "menu";
+        aria-label: "Insert or command menu";
+        aria-activedescendant: entry;
+      };
+      searchInput -> {
+        role: "searchbox";
+        aria-label: "Filter entries";
+        aria-autocomplete: "list";
+        aria-controls: sectionList;
+      };
+      sectionList -> {
+        role: "group";
+        aria-label: "Menu sections";
+      };
+      sectionHeader -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      entry -> {
+        role: "menuitem";
+        aria-label: "Menu entry";
+      };
+    }
+  }
+
+  props {
+    query: String = ""
+    activeIndex: Int = 0
+    sections: list SlashMenuSection
+    open: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.interaction;
+      hidden: if state.interaction = "closed" then true else false;
+      role: "menu";
+      aria-label: "Slash menu";
+    }
+
+    searchInput -> {
+      data-part: "search-input";
+      value: ?query;
+      onInput: send(FILTER);
+      placeholder: "Type to filter...";
+      aria-autocomplete: "list";
+    }
+
+    sectionList -> {
+      data-part: "section-list";
+      role: "group";
+    }
+
+    sectionHeader -> {
+      data-part: "section-header";
+    }
+
+    entryList -> {
+      data-part: "entry-list";
+      role: "group";
+    }
+
+    entry -> {
+      data-part: "entry";
+      data-active: if self.index = ?activeIndex then "true" else "false";
+      role: "menuitem";
+      aria-label: self.label;
+      onClick: send(SELECT_ENTRY);
+      tabindex: "-1";
+    }
+
+    entryIcon -> {
+      data-part: "entry-icon";
+      aria-hidden: "true";
+    }
+
+    entryLabel -> {
+      data-part: "entry-label";
+      text: self.label;
+    }
+
+    entryShortcut -> {
+      data-part: "entry-shortcut";
+      aria-label: "Shortcut";
+      text: self.shortcut;
+    }
+  }
+
+  affordance {
+    serves: command-menu;
+    specificity: 9;
+    when slashTriggered = true;
+    bind {
+      query: slashQuery;
+      sections: slashMenuSections;
+    }
+  }
+
+  invariant {
+    example "open transitions from closed to open": {
+      after open() -> ok
+      then state.interaction = "open"
+      and root.hidden = false
+    }
+
+    example "typing query transitions open to filtering": {
+      after filter(query: "he") -> ok
+      then state.interaction = "filtering"
+    }
+
+    example "select entry dispatches action and closes": {
+      after selectEntry(index: 0) -> ok
+      then state.interaction = "closed"
+    }
+
+    example "escape closes from open state": {
+      after escape() -> ok
+      then state.interaction = "closed"
+    }
+
+    example "escape closes from filtering state": {
+      after escape() -> ok
+      then state.interaction = "closed"
+    }
+
+    example "navigate next increments active index": {
+      after navigateNext() -> ok
+      then state.navigation = "navigating"
+    }
+
+    always "menu hidden when closed": {
+      state.interaction = "closed"
+    }
+
+    always "data-state on root reflects interaction FSM": {
+      root.dataState = state.interaction
+    }
+
+    never "entry visible without source in ComponentMapping or ActionBinding": {
+      entry.dataSource = "none" and entry.hidden = false
+    }
+
+    never "menu open when no sections available": {
+      sections.length = 0 and state.interaction = "open"
+    }
+
+    never "root visible while interaction is closed": {
+      state.interaction = "closed" and root.hidden = false
+    }
+
+    action entry {
+      requires: state.interaction = "open" or state.interaction = "filtering"
+      ensures ok: state.interaction = "selecting"
+    }
+
+    forall "all interaction states reachable": {
+      given s in interactionStates
+      then s.reachable = true
+    }
+
+    forall "all entries have a backing source": {
+      given e in entries
+      then e.source != "none"
+    }
+  }
+
+}

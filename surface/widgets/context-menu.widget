@@ -1,0 +1,228 @@
+@version(1)
+widget context-menu {
+
+  purpose {
+    Right-click or block-handle triggered context menu populated from
+    ActionBinding entries with context_menu = true. Items are ordered by
+    ActionBinding priority and may include icons, labels, and keyboard
+    shortcut hints. A submenu state is available for nested item groups.
+    The menu dismisses on Escape, on click-outside, or after an item is
+    activated. Position is driven by the triggering pointer or block handle
+    coordinates and is adjusted by a positioner to stay within the viewport.
+    The widget never opens without an explicit triggering context such as a
+    right-click event or a block handle activation.
+  }
+
+  anatomy {
+    root:          container    { Top-level menu panel positioned at trigger coordinates }
+    item:          action       { Individual menu item backed by an ActionBinding }
+    itemIcon:      presentation { Optional icon for the menu item }
+    itemLabel:     text         { Human-readable label for the menu item }
+    itemShortcut:  text         { Optional shortcut hint displayed at the trailing edge }
+    separator:     presentation { Visual rule separating groups of items }
+  }
+
+  states {
+    visibility {
+      hidden [initial] {
+        on OPEN    -> visible;
+      }
+      visible {
+        on CLOSE         -> hidden;
+        on ESCAPE        -> hidden;
+        on CLICK_OUTSIDE -> hidden;
+        on OPEN_SUBMENU  -> submenu-open;
+        entry [positionMenu];
+        exit [clearTriggerContext];
+      }
+      submenu-open {
+        on CLOSE_SUBMENU -> visible;
+        on CLOSE         -> hidden;
+        on ESCAPE        -> visible;
+        entry [positionSubmenu];
+      }
+    }
+
+    focus [parallel] {
+      idle [initial] {
+        on FOCUS_FIRST -> itemFocused;
+      }
+      itemFocused {
+        on NAVIGATE_NEXT -> itemFocused;
+        on NAVIGATE_PREV -> itemFocused;
+        on CLOSE         -> idle;
+        entry [setActiveItem];
+      }
+    }
+  }
+
+  accessibility {
+    role: menu;
+    keyboard {
+      ArrowDown -> NAVIGATE_NEXT;
+      ArrowUp   -> NAVIGATE_PREV;
+      Enter     -> ACTIVATE_ITEM;
+      Escape    -> ESCAPE;
+      Home      -> FOCUS_FIRST;
+      End       -> FOCUS_LAST;
+    }
+    focus {
+      trap: false;
+      initial: item;
+      roving: true;
+      returnOnClose: false;
+    }
+    aria {
+      root -> {
+        role: "menu";
+        aria-label: "Context menu";
+      };
+      item -> {
+        role: "menuitem";
+        aria-label: self.label;
+        aria-disabled: if self.disabled then "true" else "false";
+        aria-keyshortcuts: self.shortcut;
+        aria-haspopup: if self.hasSubmenu then "menu" else "false";
+      };
+      separator -> {
+        role: "separator";
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    bindings: list String
+    position: ContextMenuPosition
+    triggerContext: option String
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.visibility;
+      hidden: if state.visibility = "hidden" then true else false;
+      role: "menu";
+      aria-label: "Context menu";
+    }
+
+    item -> {
+      data-part: "item";
+      data-binding: self.bindingId;
+      data-disabled: if self.disabled then "true" else "false";
+      aria-label: self.label;
+      aria-disabled: if self.disabled then "true" else "false";
+      disabled: if self.disabled then true else false;
+      tabindex: if self.active then "0" else "-1";
+      onClick: send(ACTIVATE_ITEM);
+      onKeyDown: send(ACTIVATE_ITEM);
+    }
+
+    itemIcon -> {
+      data-part: "item-icon";
+      aria-hidden: "true";
+    }
+
+    itemLabel -> {
+      data-part: "item-label";
+      text: self.label;
+    }
+
+    itemShortcut -> {
+      data-part: "item-shortcut";
+      aria-hidden: "true";
+      text: self.shortcut;
+    }
+
+    separator -> {
+      data-part: "separator";
+      role: "separator";
+      aria-hidden: "true";
+    }
+  }
+
+  affordance {
+    serves: context-menu;
+    specificity: 9;
+    when contextMenuTriggered = true;
+    bind {
+      bindings: contextMenuBindings;
+      position: triggerPosition;
+    }
+  }
+
+  compose {
+    _portal: widget("portal", { target: "body" })
+    _positioner: widget("positioner", { x: self.position.x, y: self.position.y })
+  }
+
+  invariant {
+    example "right-click opens context menu": {
+      after open(x: 100, y: 200) -> ok
+      then state.visibility = "visible"
+      and root.hidden = false
+    }
+
+    example "escape closes visible menu": {
+      after escape() -> ok
+      then state.visibility = "hidden"
+      and root.hidden = true
+    }
+
+    example "click outside closes menu": {
+      after clickOutside() -> ok
+      then state.visibility = "hidden"
+    }
+
+    example "opening submenu transitions to submenu-open": {
+      after openSubmenu(itemId: "i1") -> ok
+      then state.visibility = "submenu-open"
+    }
+
+    example "escape from submenu-open returns to visible": {
+      after escape() -> ok
+      then state.visibility = "visible"
+    }
+
+    example "activating item closes menu": {
+      after activateItem(bindingId: "copy") -> ok
+      then state.visibility = "hidden"
+    }
+
+    always "data-state on root reflects visibility FSM": {
+      root.dataState = state.visibility
+    }
+
+    always "menu only opens with trigger context": {
+      triggerContext != "none"
+    }
+
+    never "menu opens without triggering context": {
+      triggerContext = "none" and state.visibility = "visible"
+    }
+
+    never "item rendered without context_menu backing": {
+      item.hasContextMenu = false and item.hidden = false
+    }
+
+    never "root visible while visibility is hidden": {
+      state.visibility = "hidden" and root.hidden = false
+    }
+
+    action item {
+      requires: state.visibility = "visible"
+      ensures ok: state.visibility = "hidden"
+    }
+
+    forall "all visibility states reachable": {
+      given s in visibilityStates
+      then s.reachable = true
+    }
+
+    forall "all items backed by context_menu binding": {
+      given i in items
+      then i.hasContextMenu = true
+    }
+  }
+
+}

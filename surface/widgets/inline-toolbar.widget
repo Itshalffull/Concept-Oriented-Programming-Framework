@@ -1,0 +1,186 @@
+@version(1)
+widget inline-toolbar {
+
+  purpose {
+    Floating inline selection toolbar that appears when the user has an active
+    text or block selection in the block editor. Buttons are populated from
+    ActionBinding entries with toolbar_command = true, and from the optional
+    toolbar_widget override declared on the active EditSurface. Buttons are
+    grouped with optional dividers between groups. The toolbar is dismissed by
+    pressing Escape or by clearing the selection. Arrow keys provide lateral
+    navigation between buttons following the ARIA toolbar pattern. Visibility
+    is purely driven by the selectionActive prop and the presence of at least
+    one active binding; it never floats when there is nothing to act on.
+  }
+
+  anatomy {
+    root:    container    { Floating toolbar wrapper carrying visibility state }
+    group:   container    { Logical grouping of related toolbar buttons }
+    button:  action       { Individual command button backed by an ActionBinding }
+    divider: presentation { Visual separator between groups }
+  }
+
+  states {
+    visibility {
+      hidden [initial] {
+        on SHOW -> visible;
+      }
+      visible {
+        on HIDE    -> hidden;
+        on DISMISS -> dismissing;
+        entry [positionToolbar];
+      }
+      dismissing {
+        on DISMISS_DONE -> hidden;
+        entry [clearSelection];
+      }
+    }
+  }
+
+  accessibility {
+    role: toolbar;
+    keyboard {
+      ArrowRight -> FOCUS_NEXT_BUTTON;
+      ArrowLeft  -> FOCUS_PREV_BUTTON;
+      Home       -> FOCUS_FIRST_BUTTON;
+      End        -> FOCUS_LAST_BUTTON;
+      Escape     -> DISMISS;
+    }
+    focus {
+      trap: false;
+      initial: button;
+      roving: true;
+      returnOnClose: false;
+    }
+    aria {
+      root -> {
+        role: "toolbar";
+        aria-label: "Inline formatting toolbar";
+      };
+      button -> {
+        role: "button";
+        aria-label: self.label;
+        aria-pressed: if self.active then "true" else "false";
+        aria-disabled: if self.disabled then "true" else "false";
+      };
+      divider -> {
+        role: "separator";
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    activeBindings: list String
+    selectionActive: Bool
+    editSurfaceOverride: option String
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.visibility;
+      data-visible: if state.visibility = "visible" then "true" else "false";
+      data-binding-count: self.activeBindings.length;
+      hidden: if state.visibility = "hidden" then true else false;
+      role: "toolbar";
+      aria-label: "Inline formatting toolbar";
+    }
+
+    group -> {
+      data-part: "group";
+      role: "group";
+    }
+
+    button -> {
+      data-part: "button";
+      data-binding: self.bindingId;
+      data-active: if self.active then "true" else "false";
+      aria-label: self.label;
+      aria-pressed: if self.active then "true" else "false";
+      disabled: if self.disabled then true else false;
+      onClick: send(EXECUTE_BINDING);
+    }
+
+    divider -> {
+      data-part: "divider";
+      role: "separator";
+      aria-hidden: "true";
+    }
+  }
+
+  affordance {
+    serves: selection-toolbar;
+    specificity: 8;
+    when selectionActive = true;
+    bind {
+      activeBindings: toolbarBindings;
+      editSurfaceOverride: editSurface.toolbar_widget;
+    }
+  }
+
+  invariant {
+    example "toolbar shows when selection becomes active": {
+      after show() -> ok
+      then state.visibility = "visible"
+      and root.dataVisible = "true"
+    }
+
+    example "escape dismisses toolbar": {
+      after dismiss() -> ok
+      then state.visibility = "dismissing"
+    }
+
+    example "dismiss done returns to hidden": {
+      after dismissDone() -> ok
+      then state.visibility = "hidden"
+      and root.hidden = true
+    }
+
+    example "toolbar stays hidden when selectionActive is false": {
+      after hide() -> ok
+      then state.visibility = "hidden"
+    }
+
+    example "button click executes bound action": {
+      after executeBinding(bindingId: "bold") -> ok
+      then state.visibility = "visible"
+    }
+
+    always "data-state on root reflects visibility FSM": {
+      root.dataState = state.visibility
+    }
+
+    always "toolbar hidden when no selection": {
+      selectionActive = false
+    }
+
+    never "toolbar visible when selectionActive is false": {
+      selectionActive = false and state.visibility = "visible"
+    }
+
+    never "toolbar visible when no active bindings": {
+      activeBindings.length = 0 and state.visibility = "visible"
+    }
+
+    never "button rendered without toolbar_command backing": {
+      button.hasToolbarCommand = false and button.hidden = false
+    }
+
+    action button {
+      requires: state.visibility = "visible" and selectionActive = true
+      ensures ok: state.visibility = "visible"
+    }
+
+    forall "all visibility states reachable": {
+      given s in visibilityStates
+      then s.reachable = true
+    }
+
+    forall "all buttons backed by active binding": {
+      given b in buttons
+      then b.bindingId != "none"
+    }
+  }
+
+}
