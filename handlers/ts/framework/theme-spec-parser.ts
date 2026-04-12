@@ -302,6 +302,16 @@ class ThemeSpecParser {
               !this.match('SEMICOLON') &&
               !this.match('RBRACE') &&
               !this.match('EOF') &&
+              // Stop on object separators before the next nested key
+              !(
+                this.peek().type === 'COMMA' &&
+                (
+                  (this.tokens[this.pos + 1]?.type === 'IDENT' ||
+                    this.tokens[this.pos + 1]?.type === 'KEYWORD' ||
+                    this.tokens[this.pos + 1]?.type === 'INT_LIT') &&
+                  this.tokens[this.pos + 2]?.type === 'COLON'
+                )
+              ) &&
               // Stop if next token looks like a new key (ident followed by colon)
               !(
                 (this.peek().type === 'IDENT' || this.peek().type === 'KEYWORD' || this.peek().type === 'INT_LIT') &&
@@ -310,7 +320,7 @@ class ThemeSpecParser {
             ) {
               valueParts.push(this.advance().value);
             }
-            tokens[key] = valueParts.join(' ');
+            tokens[key] = this.formatValue(valueParts);
           }
         }
 
@@ -322,6 +332,32 @@ class ThemeSpecParser {
 
     if (this.match('RBRACE')) this.advance();
     return tokens;
+  }
+
+  private formatValue(parts: string[]): string {
+    let result = '';
+    for (const part of parts) {
+      if (part === ',') {
+        result = result.trimEnd() + ',';
+        continue;
+      }
+      if (part === ')') {
+        result = result.trimEnd() + ')';
+        continue;
+      }
+      if (part === '(') {
+        result = result.trimEnd() + '(';
+        continue;
+      }
+
+      if (!result || result.endsWith('(')) {
+        result += part;
+      } else {
+        result += ` ${part}`;
+      }
+    }
+
+    return result.trim();
   }
 }
 

@@ -58,28 +58,22 @@ function flattenManifest(manifest: ReturnType<typeof parseThemeFile>): Record<st
 
   // Motion tokens
   for (const [key, value] of Object.entries(manifest.motion)) {
-    if (typeof value === 'string') {
-      flat[`motion-${key}`] = value;
-    } else {
-      flat[`motion-${key}`] = String(value);
-    }
+    flat[`motion-${key}`] = typeof value === 'string' ? value : String(value);
   }
 
   // Elevation tokens
   for (const [key, value] of Object.entries(manifest.elevation)) {
-    if (typeof value === 'string') {
-      flat[`elevation-${key}`] = value;
-    } else {
-      flat[`elevation-${key}`] = String(value);
-    }
+    const tokenKey = key.startsWith('elevation-') ? key : `elevation-${key}`;
+    flat[tokenKey] = typeof value === 'string' ? value : String(value);
   }
 
   // Radius tokens
   for (const [key, value] of Object.entries(manifest.radius)) {
-    flat[`radius-${key}`] = value;
+    const tokenKey = key.startsWith('radius-') ? key : `radius-${key}`;
+    flat[tokenKey] = value;
   }
 
-  return flat;
+  return normalizeFlatTokens(flat);
 }
 
 async function main() {
@@ -180,7 +174,7 @@ function mapExpressiveTokens(
     'color.foreground': ['palette-on-background', 'palette-on-surface', 'palette-on-surface-variant'],
     'typography.body': ['typography-body-md-size', 'typography-body-sm-size'],
     'typography.heading': ['typography-heading-md-size', 'typography-heading-sm-size'],
-    'radius.md': ['radius-md', 'radius-radius-button', 'radius-radius-input'],
+    'radius.md': ['radius-md', 'radius-button', 'radius-input'],
   };
 
   for (const [source, targets] of Object.entries(directMap)) {
@@ -199,8 +193,8 @@ function mapExpressiveTokens(
   const shape = raw.shape as Record<string, unknown> | undefined;
   if (typeof shape?.radius === 'string' && shape.radius.trim()) {
     mapped['radius-md'] = shape.radius;
-    mapped['radius-radius-button'] = shape.radius;
-    mapped['radius-radius-input'] = shape.radius;
+    mapped['radius-button'] = shape.radius;
+    mapped['radius-input'] = shape.radius;
   }
 
   if (tokens['density.multiplier']) {
@@ -209,7 +203,43 @@ function mapExpressiveTokens(
       : '20px';
   }
 
-  return mapped;
+  return normalizeFlatTokens(mapped);
+}
+
+function normalizeFlatTokens(tokens: Record<string, string>): Record<string, string> {
+  const normalized = { ...tokens };
+
+  for (const [key, value] of Object.entries(tokens)) {
+    let next = value.trim();
+
+    if (key.startsWith('elevation-level-')) {
+      next = next.replace(/\bshadow\b/g, 'var(--palette-shadow)');
+    }
+
+    if (key.startsWith('elevation-') && /^level-[\w-]+$/.test(next)) {
+      next = `var(--elevation-${next})`;
+    }
+
+    if (key.startsWith('radius-') && /^[\w-]+$/.test(next) && tokens[`radius-${next}`]) {
+      next = `var(--radius-${next})`;
+    }
+
+    if (key.startsWith('motion-transition-') && key.endsWith('.duration') && tokens[`motion-${next}`]) {
+      next = `var(--motion-${next})`;
+    }
+
+    if (key.startsWith('motion-transition-') && key.endsWith('.easing') && tokens[`motion-${next}`]) {
+      next = `var(--motion-${next})`;
+    }
+
+    if (key.startsWith('typography-') && key.endsWith('.family') && tokens[`typography-${next}`]) {
+      next = `var(--typography-${next})`;
+    }
+
+    normalized[key] = next;
+  }
+
+  return normalized;
 }
 
 main().catch(console.error);

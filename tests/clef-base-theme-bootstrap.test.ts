@@ -10,5 +10,12 @@ describe('clef-base theme bootstrap', () => {
     expect(seeds).toContain('theme: signal');
     expect(css).toContain('[data-theme="editorial"]');
     expect(css).toContain('[data-theme="signal"]');
+    expect(css).not.toContain(',;');
+    expect(css).toContain('--motion-easing-default: cubic-bezier(0.2, 0, 0, 1);');
+    expect(css).toContain('--elevation-level-1: 0 1px 2px 0 var(--palette-shadow);');
+    expect(css).toContain('--elevation-card: var(--elevation-level-1);');
+    expect(css).toContain('--radius-card: var(--radius-lg);');
+    expect(css).not.toContain('--radius-radius-card: lg;');
+    expect(css).not.toContain('--elevation-elevation-card: level-1;');
   });
 });

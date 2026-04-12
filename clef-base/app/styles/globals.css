@@ -296,7 +296,7 @@ a:active { color: var(--palette-primary-active); }
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xs);
-  box-shadow: var(--elevation-elevation-card);
+  box-shadow: var(--elevation-card);
 }
 
 [data-part="stat-card"] [data-part="label"] {
@@ -338,7 +338,7 @@ a:active { color: var(--palette-primary-active); }
 
 [data-part="card"][data-variant="elevated"] {
   background: var(--palette-surface);
-  box-shadow: var(--elevation-elevation-card);
+  box-shadow: var(--elevation-card);
 }
 
 [data-part="card"][data-variant="filled"] {
@@ -352,7 +352,7 @@ a:active { color: var(--palette-primary-active); }
 
 [data-part="card"][data-clickable="true"] { cursor: pointer; }
 [data-part="card"][data-clickable="true"]:hover {
-  box-shadow: var(--elevation-elevation-dropdown);
+  box-shadow: var(--elevation-dropdown);
 }
 
 [data-part="card"] [data-part="header"] {
@@ -384,7 +384,7 @@ a:active { color: var(--palette-primary-active); }
   border: 1px solid var(--palette-outline-variant);
   border-radius: var(--radius-card);
   background: color-mix(in srgb, var(--palette-surface) 92%, transparent);
-  box-shadow: var(--elevation-elevation-card);
+  box-shadow: var(--elevation-card);
 }
 
 .setup-article {
@@ -888,7 +888,7 @@ button, [data-part="button"] {
 }
 
 [data-part="plugin-card"]:hover {
-  box-shadow: var(--elevation-elevation-dropdown);
+  box-shadow: var(--elevation-dropdown);
 }
 
 [data-part="plugin-card"] [data-part="title"] {
