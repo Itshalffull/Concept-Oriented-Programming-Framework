@@ -1,0 +1,500 @@
+@version(1)
+widget tool-registry-browser {
+
+  purpose {
+    Searchable picker for ToolRegistry-registered tools, composed inside the
+    llm-step-config widget's tool-picker overlay and usable standalone wherever
+    a tool selection is needed. Displays tools as a filterable list with capability
+    badges (the tool's parameter count and schema version) and permission badges
+    (allowed_models and allowed_processes scope). Governance-aware: tools the
+    current run-as principal cannot invoke are rendered as disabled rows with an
+    inline denial-reason tooltip rather than hidden, so the full registry is
+    always visible and authors understand what access they lack. A search input
+    filters by tool name and description. The widget emits SELECT, DESELECT, and
+    CLOSE events only — no mutations happen here. Already-selected tools are
+    shown with a checkmark and a deselect affordance so the picker doubles as a
+    review surface. Deprecated tools are surfaced with a warning badge; disabled
+    tools render with a blocked badge and are not selectable.
+  }
+
+  requires @1 {
+    fields {
+      tools: set;
+      name: String;
+      description: String;
+      status: String;
+      allowed_models: list;
+      allowed_processes: list;
+      schema: String;
+    }
+    actions {
+      list_active();
+      check_access();
+    }
+  }
+
+  anatomy {
+    root:             container    { Outermost wrapper for the tool registry browser }
+    header:           container    { Top bar with the heading and close button }
+    headingText:      text         { "Select tools" heading label }
+    closeButton:      action       { Button that emits CLOSE and returns focus to the opener }
+    searchInput:      interactive  { Text input for filtering tools by name or description }
+    filterRow:        container    { Row hosting the search input and optional status-filter chips }
+    statusFilter:     action       { Chip button for filtering by tool status (all / active / deprecated) }
+    list:             container    { Scrollable list of tool rows }
+    toolRow:          container    { One row per tool; includes all badges, checkmark, and select/deselect button }
+    toolCheckmark:    presentation { Filled checkmark icon shown when the tool is currently selected }
+    toolName:         text         { Primary name of the tool }
+    toolDescription:  text         { One-line description of what the tool does }
+    capabilityBadge:  text         { Badge showing parameter count or schema version (structural capability signal) }
+    permissionBadge:  text         { Badge showing access scope (model whitelist or process whitelist) }
+    statusBadge:      text         { Badge indicating tool status: active (implicit, no badge), deprecated (warning), disabled (blocked) }
+    denialTooltip:    container    { Tooltip content shown when a tool is not accessible to the principal; explains reason }
+    selectButton:     action       { Per-row action button: "Select" when not selected, "Remove" when selected, disabled+blocked icon when access denied }
+    emptyState:       container    { Shown when the filtered list is empty }
+    footer:           container    { Footer row with selected-count summary and Done button }
+    selectedCount:    text         { "N selected" summary label }
+    doneButton:       action       { Confirms the selection set and emits DONE; closes the picker }
+  }
+
+  slots {
+    before-list { before list }
+  }
+
+  states {
+    filter [parallel] {
+      browsing [initial] {
+        on SEARCH        -> searching;
+        on FILTER_STATUS -> browsing;
+      }
+
+      searching {
+        on CLEAR_SEARCH  -> browsing;
+        on SEARCH        -> searching;
+        entry [applySearchFilter];
+        exit  [clearSearchHighlight];
+      }
+    }
+
+    tooltip [parallel] {
+      hidden [initial] {
+        on SHOW_DENIAL_TOOLTIP -> showing;
+      }
+
+      showing {
+        on HIDE_DENIAL_TOOLTIP -> hidden;
+        on ESCAPE              -> hidden;
+        entry [positionDenialTooltip];
+      }
+    }
+
+    statusFilter [parallel] {
+      all [initial] {
+        on FILTER_STATUS_ACTIVE     -> active;
+        on FILTER_STATUS_DEPRECATED -> deprecated;
+      }
+
+      active {
+        on FILTER_STATUS_ALL        -> all;
+        on FILTER_STATUS_DEPRECATED -> deprecated;
+        entry [applyStatusFilter];
+      }
+
+      deprecated {
+        on FILTER_STATUS_ALL        -> all;
+        on FILTER_STATUS_ACTIVE     -> active;
+        entry [applyStatusFilter];
+      }
+    }
+  }
+
+  accessibility {
+    role: dialog;
+    keyboard {
+      Escape       -> CLOSE;
+      ArrowDown    -> FOCUS_NEXT_ROW;
+      ArrowUp      -> FOCUS_PREV_ROW;
+      Enter        -> SELECT_FOCUSED;
+      Space        -> SELECT_FOCUSED;
+      Tab          -> FOCUS_NEXT;
+      Shift+Tab    -> FOCUS_PREV;
+      Home         -> FOCUS_FIRST_ROW;
+      End          -> FOCUS_LAST_ROW;
+    }
+    focus {
+      trap: false;
+      initial: searchInput;
+      roving: true;
+      returnOnClose: closeButton;
+    }
+    aria {
+      root -> {
+        role: "dialog";
+        aria-label: "Tool registry browser";
+        aria-modal: "false";
+        data-state: state.filter;
+      };
+      headingText -> {
+        role: "heading";
+        aria-level: "2";
+        id: "tool-picker-heading";
+      };
+      closeButton -> {
+        role: "button";
+        aria-label: "Close tool picker";
+      };
+      searchInput -> {
+        role: "searchbox";
+        aria-label: "Search tools";
+        aria-controls: "tool-list";
+        aria-autocomplete: "list";
+      };
+      statusFilter -> {
+        role: "button";
+        aria-pressed: if self.value == state.statusFilter then "true" else "false";
+        aria-label: concat("Filter by status: ", self.value);
+      };
+      list -> {
+        role: "listbox";
+        aria-label: "Registered tools";
+        aria-multiselectable: "true";
+        aria-live: "polite";
+        aria-atomic: "false";
+        id: "tool-list";
+        aria-labelledby: "tool-picker-heading";
+      };
+      toolRow -> {
+        role: "option";
+        aria-selected: if self.id in ?selectedToolIds then "true" else "false";
+        aria-disabled: if self.allowed == false then "true" else "false";
+        aria-describedby: concat(self.id, "-desc");
+      };
+      toolDescription -> {
+        id: concat(self.id, "-desc");
+        aria-live: "off";
+      };
+      denialTooltip -> {
+        role: "tooltip";
+        aria-live: "assertive";
+        aria-atomic: "true";
+      };
+      selectButton -> {
+        role: "button";
+        aria-label: if self.selected then concat("Remove tool: ", self.name) else if self.allowed then concat("Select tool: ", self.name) else concat("Access denied: ", self.name);
+        aria-disabled: if self.allowed == false then "true" else "false";
+      };
+      emptyState -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: "No tools match the current filter";
+      };
+      selectedCount -> {
+        aria-live: "polite";
+        aria-atomic: "true";
+      };
+      doneButton -> {
+        role: "button";
+        aria-label: "Confirm tool selection and close";
+      };
+    }
+  }
+
+  props {
+    selectedToolIds:  set String = []
+    tools:            list { id: String, name: String, description: String, status: String, version: Int, parameterCount: Int, allowedModels: list String, allowedProcesses: list String, allowed: Bool, denialReason: option String, capabilityBadges: list String, permissionBadges: list String } = []
+    searchQuery:      String = ""
+    activeStatusFilter: union "all" | "active" | "deprecated" = "all"
+    principalId:      String = ""
+    processRef:       String = ""
+  }
+
+  connect {
+    root -> {
+      data-part:           "root";
+      data-state:          state.filter;
+      data-status-filter:  state.statusFilter;
+      data-tooltip:        state.tooltip;
+    }
+
+    header -> {
+      data-part: "header";
+    }
+
+    headingText -> {
+      data-part: "heading-text";
+    }
+
+    closeButton -> {
+      data-part:   "close-button";
+      onClick:     send(CLOSE);
+      onKeyDown:   if key == "Escape" then send(CLOSE) else noop;
+    }
+
+    searchInput -> {
+      data-part:   "search-input";
+      value:       ?searchQuery;
+      placeholder: "Search tools…";
+      onInput:     send(SEARCH, { query: self.value });
+      onKeyDown:   if key == "Escape" then send(CLEAR_SEARCH) else noop;
+    }
+
+    filterRow -> {
+      data-part: "filter-row";
+    }
+
+    statusFilter -> {
+      data-part:     "status-filter";
+      data-value:    self.value;
+      data-active:   if self.value == state.statusFilter then "true" else "false";
+      onClick:       send(concat("FILTER_STATUS_", self.value));
+      onKeyDown:     if key == "Enter" or key == "Space" then send(concat("FILTER_STATUS_", self.value)) else noop;
+    }
+
+    list -> {
+      data-part:   "list";
+      data-state:  state.filter;
+    }
+
+    toolRow -> {
+      data-part:         "tool-row";
+      data-tool-id:      self.id;
+      data-status:       self.status;
+      data-selected:     if self.id in ?selectedToolIds then "true" else "false";
+      data-allowed:      if self.allowed then "true" else "false";
+      data-denied:       if self.allowed == false then "true" else "false";
+      tabIndex:          if self.allowed then "0" else "-1";
+      onMouseEnter:      if self.allowed == false then send(SHOW_DENIAL_TOOLTIP, { toolId: self.id }) else noop;
+      onMouseLeave:      send(HIDE_DENIAL_TOOLTIP);
+      onFocus:           if self.allowed == false then send(SHOW_DENIAL_TOOLTIP, { toolId: self.id }) else noop;
+      onBlur:            send(HIDE_DENIAL_TOOLTIP);
+    }
+
+    toolCheckmark -> {
+      data-part:   "tool-checkmark";
+      data-tool-id: self.id;
+      visible:     if self.id in ?selectedToolIds then true else false;
+      aria-hidden: "true";
+    }
+
+    toolName -> {
+      data-part:   "tool-name";
+      data-tool-id: self.id;
+    }
+
+    toolDescription -> {
+      data-part:    "tool-description";
+      data-tool-id: self.id;
+    }
+
+    capabilityBadge -> {
+      data-part:    "capability-badge";
+      data-tool-id: self.id;
+      aria-hidden:  "true";
+    }
+
+    permissionBadge -> {
+      data-part:    "permission-badge";
+      data-tool-id: self.id;
+      aria-hidden:  "true";
+    }
+
+    statusBadge -> {
+      data-part:    "status-badge";
+      data-tool-id: self.id;
+      data-status:  self.status;
+      hidden:       if self.status == "active" then true else false;
+    }
+
+    denialTooltip -> {
+      data-part:   "denial-tooltip";
+      data-state:  state.tooltip;
+      hidden:      if state.tooltip == "hidden" then true else false;
+    }
+
+    selectButton -> {
+      data-part:     "select-button";
+      data-tool-id:  self.id;
+      data-selected: if self.id in ?selectedToolIds then "true" else "false";
+      data-allowed:  if self.allowed then "true" else "false";
+      disabled:      if self.allowed == false then true else false;
+      onClick:       if self.allowed then if self.id in ?selectedToolIds then send(DESELECT, { toolId: self.id }) else send(SELECT, { toolId: self.id }) else noop;
+      onKeyDown:     if key == "Enter" or key == "Space" then if self.allowed then if self.id in ?selectedToolIds then send(DESELECT, { toolId: self.id }) else send(SELECT, { toolId: self.id }) else noop else noop;
+    }
+
+    emptyState -> {
+      data-part:   "empty-state";
+      data-state:  state.filter;
+      hidden:      if state.filter == "browsing" then true else false;
+    }
+
+    footer -> {
+      data-part: "footer";
+    }
+
+    selectedCount -> {
+      data-part: "selected-count";
+    }
+
+    doneButton -> {
+      data-part:   "done-button";
+      onClick:     send(DONE);
+      onKeyDown:   if key == "Enter" or key == "Space" then send(DONE) else noop;
+    }
+  }
+
+  affordance {
+    serves: tool-picker;
+    specificity: 9;
+    when { toolSelection: true }
+    bind {
+      selectedToolIds: selectedToolIds;
+      tools:           tools;
+      principalId:     principalId;
+    }
+  }
+
+  invariant {
+    example "searching filters visible tool rows": {
+      after searchInput.input({ query: "web" }) -> ok
+      then root -> { data-state: "searching" }
+      and list -> { data-state: "searching" }
+    }
+
+    example "clearing search returns to browsing": {
+      after searchInput.input({ query: "web" }) -> ok
+      then send(CLEAR_SEARCH) -> ok
+      then root -> { data-state: "browsing" }
+    }
+
+    example "selecting an allowed tool emits SELECT event and shows checkmark": {
+      after selectButton.click({ toolId: "tool-1", allowed: true, selected: false }) -> ok
+      then toolRow -> { data-selected: "true" }
+      and toolCheckmark -> { visible: true }
+    }
+
+    example "deselecting a selected tool emits DESELECT and hides checkmark": {
+      after selectButton.click({ toolId: "tool-1", allowed: true, selected: true }) -> ok
+      then toolRow -> { data-selected: "false" }
+      and toolCheckmark -> { visible: false }
+    }
+
+    example "denied tool row shows disabled selectButton": {
+      after root -> { data-allowed: "false" }
+      then selectButton -> { disabled: true }
+      and toolRow -> { data-denied: "true" }
+    }
+
+    example "hovering denied tool shows denial tooltip": {
+      after toolRow.mouseenter({ toolId: "denied-tool", allowed: false }) -> ok
+      then denialTooltip -> { hidden: false }
+    }
+
+    example "leaving denied tool hides denial tooltip": {
+      after toolRow.mouseleave -> ok
+      then denialTooltip -> { hidden: true }
+    }
+
+    example "Escape closes picker and emits CLOSE": {
+      after send(ESCAPE) -> ok
+      then send(CLOSE) -> ok
+    }
+
+    example "done button emits DONE": {
+      after doneButton.click -> ok
+      then doneButton -> { data-part: "done-button" }
+    }
+
+    example "deprecated tool shows warning status badge": {
+      after root -> { data-status: "deprecated" }
+      then statusBadge -> { hidden: false }
+      and statusBadge -> { data-status: "deprecated" }
+    }
+
+    example "disabled tool shows blocked status badge and selectButton is disabled": {
+      after root -> { data-status: "disabled" }
+      then statusBadge -> { data-status: "disabled" }
+      and selectButton -> { disabled: true }
+    }
+
+    example "status filter chip shows active tools only": {
+      after statusFilter.click({ value: "active" }) -> ok
+      then root -> { data-status-filter: "active" }
+      and statusFilter -> { data-active: "true" }
+    }
+
+    forall s in states.filter:
+      s.reachable = true
+
+    forall s in states.tooltip:
+      s.reachable = true
+
+    forall s in states.statusFilter:
+      s.reachable = true
+
+    always "data-state on root reflects filter FSM": {
+      root -> { data-state: state.filter }
+    }
+
+    always "denied tool selectButton is disabled": {
+      forall t in tools:
+        if t.allowed == false then selectButton -> { disabled: true }
+    }
+
+    always "selected tool shows checkmark": {
+      forall t in tools:
+        if t.id in ?selectedToolIds then toolCheckmark -> { visible: true }
+    }
+
+    always "active status badge hidden for active tools": {
+      forall t in tools:
+        if t.status == "active" then statusBadge -> { hidden: true }
+    }
+
+    always "denialTooltip hidden in tooltip.hidden state": {
+      if state.tooltip == "hidden" then denialTooltip -> { hidden: true }
+    }
+
+    always "emptyState hidden in browsing state": {
+      if state.filter == "browsing" then emptyState -> { hidden: true }
+    }
+
+    never "denied tool is selectable": {
+      exists t in tools:
+        t.allowed == false and selectButton -> { disabled: false }
+    }
+
+    never "disabled tool selectButton enabled": {
+      exists t in tools:
+        t.status == "disabled" and selectButton -> { disabled: false }
+    }
+
+    never "mutation dispatched from this widget": {
+      selectButton -> { onClick: mutate }
+    }
+
+    action selectButton.click {
+      requires: self.allowed == true
+      ensures ok: if self.selected then toolRow -> { data-selected: "false" } else toolRow -> { data-selected: "true" }
+    }
+
+    action closeButton.click {
+      ensures ok: send(CLOSE)
+    }
+
+    action doneButton.click {
+      ensures ok: send(DONE)
+    }
+
+    "SELECT event carries toolId — host adds to selectedToolIds and re-checks ToolRegistry/check_access before binding to LLMCall step";
+    "DESELECT event carries toolId — host removes from selectedToolIds and rebinds the LLMCall tools list";
+    "DONE event carries the full selectedToolIds set snapshot — host commits the selection to the llm-step-config form state";
+    "CLOSE event carries no payload — host dismisses the overlay and returns focus to toolPickerTrigger in llm-step-config";
+    "SEARCH carries the raw query string — filtering is applied by the host's view layer against tool name and description fields";
+    "Governance rule: denied tools are shown (not hidden) with reason so authors understand access requirements; this is intentional";
+    "capabilityBadges and permissionBadges are provided by the host from ToolRegistry state; this widget renders them as opaque strings";
+    "Deprecated tools remain selectable (with warning) because existing step configs must continue to function";
+    "aria-modal is false because the picker is inline inside the step inspector — the inspector tab strip remains keyboard-accessible";
+    "Roving tabindex over toolRow items; Tab/Shift+Tab move between search, filter chips, list, and done button";
+  }
+
+}

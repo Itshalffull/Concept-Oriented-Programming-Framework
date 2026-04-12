@@ -1,0 +1,631 @@
+@version(1)
+widget llm-step-config {
+
+  purpose {
+    Configuration tab for LLM-call steps inside the Flow Builder step inspector,
+    backed by process-llm/llm-call and process-llm/tool-registry. Presents two
+    disclosure levels: the simple tier shows model selector and user-prompt template;
+    the advanced tier (toggled by the user) reveals system prompt, temperature,
+    max tokens, and stop sequences. A prompt-preview pane substitutes real upstream
+    step outputs from the live sample-data stream so users see the rendered prompt
+    before saving — never an abstract template string. The tools multi-select opens
+    an inline tool-registry-browser picker that shows only tools the run-as principal
+    is authorized to invoke; unauthorized tools are displayed as disabled entries with
+    a denial reason tooltip. An error-variant routing row lets authors map specific
+    LLM error variants (invalid, rejected, repair-exhausted) to named Error-tab
+    branches, satisfying first-class error requirements. All mutations are emitted as
+    discrete events; no concept state is written directly by this widget.
+  }
+
+  requires @1 {
+    fields {
+      model: String;
+      system_prompt: String;
+      user_prompt: String;
+      tools: list;
+      status: String;
+      attempt_count: Int;
+      max_attempts: Int;
+    }
+    actions {
+      request();
+    }
+  }
+
+  anatomy {
+    root:               container    { Outermost wrapper scoped to one llm-call step configuration }
+    simpleSection:      container    { Always-visible tier: model selector + user-prompt template field }
+    modelSelector:      interactive  { Dropdown/combobox for choosing the LLM model }
+    modelOption:        action       { Individual model option inside the model selector }
+    userPromptField:    interactive  { Multiline text area for the user-prompt template; accepts data-mapping pill drops }
+    pillDropZone:       container    { Drop-target overlay rendered above the userPromptField for data-mapping pill drops }
+    promptPreview:      container    { Read-only pane rendering the live-interpolated prompt with sample upstream values }
+    promptPreviewText:  text         { Rendered text content of the resolved prompt preview }
+    promptPreviewBadge: text         { Summary badge showing substituted-field count and any unresolved tokens }
+    advancedToggle:     action       { Expander button that reveals the advanced configuration section }
+    advancedSection:    container    { Progressive-disclosure panel: system prompt, temperature, max tokens, stop sequences }
+    systemPromptField:  interactive  { Multiline text area for the optional system prompt }
+    temperatureSlider:  interactive  { Range input mapping to LLMCall temperature (0.0 – 2.0) }
+    temperatureValue:   text         { Numeric readout mirroring the current slider value }
+    maxTokensInput:     interactive  { Numeric input for the max_tokens cap }
+    stopSequencesInput: interactive  { Comma-delimited text input for stop-sequence tokens }
+    toolsSection:       container    { Tools multi-select section anchored below the prompt fields }
+    toolsLabel:         text         { Heading for the tools multi-select row }
+    toolsMultiSelect:   interactive  { Multi-select control listing selected tool names with remove chips }
+    toolPickerTrigger:  action       { Button that opens the embedded tool-registry-browser }
+    toolChip:           action       { Removable chip representing a selected tool }
+    toolPickerOverlay:  container    { Inline overlay hosting the composed tool-registry-browser }
+    errorRoutingSection: container  { Section for mapping LLM error variants to Error-tab branches }
+    errorRoutingLabel:  text         { Heading for the error-variant routing table }
+    errorVariantRow:    container    { One row per mappable LLM error variant (invalid / rejected / repair-exhausted) }
+    errorVariantName:   text         { Read-only label for the variant name in an error-routing row }
+    errorBranchSelect:  interactive  { Dropdown selecting the Error-tab branch to route to for that variant }
+    saveButton:         action       { Commits all changes; disabled while picker is open }
+    cancelButton:       action       { Discards changes and resets to saved state }
+  }
+
+  slots {
+    data-mapping-pills  { inside userPromptField }
+    tool-picker-content { inside toolPickerOverlay }
+  }
+
+  states {
+    disclosure [parallel] {
+      simple [initial] {
+        on TOGGLE_ADVANCED -> advanced;
+      }
+
+      advanced {
+        on TOGGLE_ADVANCED -> simple;
+        entry [openAdvancedSection];
+        exit  [closeAdvancedSection];
+      }
+    }
+
+    toolPicker [parallel] {
+      closed [initial] {
+        on OPEN_TOOL_PICKER -> open;
+      }
+
+      open {
+        on CLOSE_TOOL_PICKER -> closed;
+        on TOOL_SELECTED     -> closed;
+        on ESCAPE            -> closed;
+        entry [positionToolPickerOverlay];
+        exit  [clearToolPickerFocus];
+      }
+    }
+
+    promptPreview [parallel] {
+      idle [initial] {
+        on SAMPLE_DATA_UPDATED -> resolving;
+        on PROMPT_CHANGED      -> resolving;
+      }
+
+      resolving {
+        on PREVIEW_READY       -> showing;
+        on PREVIEW_ERROR       -> showing;
+        entry [interpolatePromptWithSampleData];
+      }
+
+      showing {
+        on PROMPT_CHANGED      -> resolving;
+        on SAMPLE_DATA_UPDATED -> resolving;
+      }
+    }
+
+    form [parallel] {
+      pristine [initial] {
+        on EDIT -> dirty;
+      }
+
+      dirty {
+        on SAVE   -> pristine;
+        on CANCEL -> pristine;
+        entry [enableSaveButton];
+      }
+    }
+  }
+
+  accessibility {
+    role: form;
+    keyboard {
+      Escape       -> CLOSE_TOOL_PICKER;
+      Tab          -> FOCUS_NEXT;
+      Shift+Tab    -> FOCUS_PREV;
+      Enter        -> SAVE;
+    }
+    focus {
+      trap: false;
+      initial: modelSelector;
+      roving: false;
+      returnOnClose: toolPickerTrigger;
+    }
+    aria {
+      root -> {
+        role: "form";
+        aria-label: "LLM step configuration";
+        data-state: state.disclosure;
+      };
+      modelSelector -> {
+        role: "combobox";
+        aria-label: "Model";
+        aria-required: "true";
+        aria-haspopup: "listbox";
+      };
+      modelOption -> {
+        role: "option";
+        aria-selected: if self.id == ?selectedModel then "true" else "false";
+      };
+      userPromptField -> {
+        role: "textbox";
+        aria-label: "User prompt template";
+        aria-multiline: "true";
+        aria-required: "true";
+        aria-describedby: promptPreviewBadge;
+        aria-dropeffect: "copy";
+      };
+      promptPreview -> {
+        role: "region";
+        aria-label: "Prompt preview with sample values";
+        aria-live: "polite";
+        aria-atomic: "false";
+        aria-busy: if state.promptPreview == "resolving" then "true" else "false";
+      };
+      advancedToggle -> {
+        role: "button";
+        aria-expanded: if state.disclosure == "advanced" then "true" else "false";
+        aria-controls: "advanced-section";
+        aria-label: "Toggle advanced LLM settings";
+      };
+      advancedSection -> {
+        role: "group";
+        aria-label: "Advanced LLM settings";
+        aria-hidden: if state.disclosure == "simple" then "true" else "false";
+      };
+      systemPromptField -> {
+        role: "textbox";
+        aria-label: "System prompt";
+        aria-multiline: "true";
+      };
+      temperatureSlider -> {
+        role: "slider";
+        aria-label: "Temperature";
+        aria-valuemin: "0";
+        aria-valuemax: "2";
+        aria-valuenow: ?temperature;
+        aria-valuetext: concat("Temperature ", ?temperature);
+      };
+      maxTokensInput -> {
+        role: "spinbutton";
+        aria-label: "Max tokens";
+        aria-valuemin: "1";
+      };
+      stopSequencesInput -> {
+        role: "textbox";
+        aria-label: "Stop sequences (comma-delimited)";
+      };
+      toolsMultiSelect -> {
+        role: "listbox";
+        aria-label: "Selected tools";
+        aria-multiselectable: "true";
+        aria-describedby: toolsLabel;
+      };
+      toolChip -> {
+        role: "option";
+        aria-selected: "true";
+        aria-label: concat("Remove tool: ", self.name);
+      };
+      toolPickerTrigger -> {
+        role: "button";
+        aria-label: "Browse tool registry";
+        aria-haspopup: "dialog";
+        aria-expanded: if state.toolPicker == "open" then "true" else "false";
+        aria-controls: "tool-picker-overlay";
+      };
+      toolPickerOverlay -> {
+        role: "dialog";
+        aria-label: "Tool registry browser";
+        aria-modal: "false";
+        aria-hidden: if state.toolPicker == "closed" then "true" else "false";
+      };
+      errorRoutingSection -> {
+        role: "group";
+        aria-label: "LLM error variant routing";
+        aria-describedby: errorRoutingLabel;
+      };
+      errorBranchSelect -> {
+        role: "combobox";
+        aria-label: concat("Route ", self.variant, " to error branch");
+        aria-haspopup: "listbox";
+      };
+      saveButton -> {
+        role: "button";
+        aria-label: "Save LLM step configuration";
+        aria-disabled: if state.form == "pristine" then "true" else "false";
+      };
+      cancelButton -> {
+        role: "button";
+        aria-label: "Cancel changes";
+      };
+    }
+  }
+
+  props {
+    stepId:            String = ""
+    selectedModel:     String = ""
+    availableModels:   list { id: String, label: String, provider: String } = []
+    userPrompt:        String = ""
+    systemPrompt:      option String
+    temperature:       String = "1.0"
+    maxTokens:         option Int
+    stopSequences:     list String = []
+    selectedToolIds:   set String = []
+    availableTools:    list { id: String, name: String, description: String, status: String, allowed: Bool, denialReason: option String, capabilityBadges: list String, permissionBadges: list String }
+    sampleData:        option { upstreamStepOutputs: list { stepId: String, fieldPath: String, sampleValue: String, type: String } }
+    errorVariantRoutes: list { variant: String, branchId: option String } = []
+    availableBranches: list { id: String, label: String } = []
+    processRef:        String = ""
+    principalId:       String = ""
+  }
+
+  connect {
+    root -> {
+      data-part:      "root";
+      data-state:     state.disclosure;
+      data-tool-picker: state.toolPicker;
+      data-form:      state.form;
+      data-step-id:   ?stepId;
+    }
+
+    simpleSection -> {
+      data-part: "simple-section";
+    }
+
+    modelSelector -> {
+      data-part:   "model-selector";
+      value:       ?selectedModel;
+      onInput:     send(EDIT, { field: "model", value: self.value });
+      onKeyDown:   if key == "Escape" then send(CANCEL) else noop;
+    }
+
+    modelOption -> {
+      data-part:          "model-option";
+      data-model-id:      self.id;
+      data-provider:      self.provider;
+      data-selected:      if self.id == ?selectedModel then "true" else "false";
+      onClick:            send(EDIT, { field: "model", value: self.id });
+    }
+
+    userPromptField -> {
+      data-part:    "user-prompt-field";
+      value:        ?userPrompt;
+      onInput:      send(PROMPT_CHANGED, { value: self.value });
+      onFocus:      send(EDIT, { field: "userPrompt" });
+      onDrop:       send(EDIT, { field: "userPrompt", droppedPill: self.droppedData });
+    }
+
+    pillDropZone -> {
+      data-part:   "pill-drop-zone";
+      data-state:  state.toolPicker;
+    }
+
+    promptPreview -> {
+      data-part:   "prompt-preview";
+      data-state:  state.promptPreview;
+      aria-busy:   if state.promptPreview == "resolving" then "true" else "false";
+    }
+
+    promptPreviewText -> {
+      data-part:   "prompt-preview-text";
+      aria-live:   "polite";
+    }
+
+    promptPreviewBadge -> {
+      data-part:   "prompt-preview-badge";
+      aria-live:   "polite";
+    }
+
+    advancedToggle -> {
+      data-part:     "advanced-toggle";
+      data-expanded: if state.disclosure == "advanced" then "true" else "false";
+      onClick:       send(TOGGLE_ADVANCED);
+    }
+
+    advancedSection -> {
+      data-part:   "advanced-section";
+      data-state:  state.disclosure;
+      hidden:      if state.disclosure == "simple" then true else false;
+    }
+
+    systemPromptField -> {
+      data-part:   "system-prompt-field";
+      value:       ?systemPrompt;
+      disabled:    if state.disclosure == "simple" then true else false;
+      onInput:     send(EDIT, { field: "systemPrompt", value: self.value });
+    }
+
+    temperatureSlider -> {
+      data-part:   "temperature-slider";
+      value:       ?temperature;
+      min:         "0";
+      max:         "2";
+      step:        "0.1";
+      disabled:    if state.disclosure == "simple" then true else false;
+      onInput:     send(EDIT, { field: "temperature", value: self.value });
+    }
+
+    temperatureValue -> {
+      data-part:   "temperature-value";
+      text:        ?temperature;
+    }
+
+    maxTokensInput -> {
+      data-part:   "max-tokens-input";
+      value:       ?maxTokens;
+      min:         "1";
+      disabled:    if state.disclosure == "simple" then true else false;
+      onInput:     send(EDIT, { field: "maxTokens", value: self.value });
+    }
+
+    stopSequencesInput -> {
+      data-part:   "stop-sequences-input";
+      value:       ?stopSequences;
+      disabled:    if state.disclosure == "simple" then true else false;
+      placeholder: "Enter stop sequences, comma-delimited";
+      onInput:     send(EDIT, { field: "stopSequences", value: self.value });
+    }
+
+    toolsSection -> {
+      data-part:   "tools-section";
+    }
+
+    toolsLabel -> {
+      data-part:   "tools-label";
+      id:          "tools-label";
+    }
+
+    toolsMultiSelect -> {
+      data-part:             "tools-multi-select";
+      data-selected-count:   ?selectedToolIds;
+    }
+
+    toolPickerTrigger -> {
+      data-part:    "tool-picker-trigger";
+      data-state:   state.toolPicker;
+      aria-expanded: if state.toolPicker == "open" then "true" else "false";
+      onClick:      send(OPEN_TOOL_PICKER);
+      onKeyDown:    if key == "Enter" or key == "Space" then send(OPEN_TOOL_PICKER) else if key == "Escape" then send(CLOSE_TOOL_PICKER) else noop;
+    }
+
+    toolChip -> {
+      data-part:      "tool-chip";
+      data-tool-id:   self.id;
+      data-tool-name: self.name;
+      onClick:        send(REMOVE_TOOL, { toolId: self.id });
+      onKeyDown:      if key == "Delete" or key == "Backspace" then send(REMOVE_TOOL, { toolId: self.id }) else noop;
+    }
+
+    toolPickerOverlay -> {
+      data-part:   "tool-picker-overlay";
+      data-state:  state.toolPicker;
+      hidden:      if state.toolPicker == "closed" then true else false;
+    }
+
+    errorRoutingSection -> {
+      data-part:   "error-routing-section";
+    }
+
+    errorRoutingLabel -> {
+      data-part:   "error-routing-label";
+      id:          "error-routing-label";
+    }
+
+    errorVariantRow -> {
+      data-part:      "error-variant-row";
+      data-variant:   self.variant;
+      data-branch-id: self.branchId;
+    }
+
+    errorVariantName -> {
+      data-part:    "error-variant-name";
+      data-variant: self.variant;
+    }
+
+    errorBranchSelect -> {
+      data-part:    "error-branch-select";
+      data-variant: self.variant;
+      value:        self.branchId;
+      onInput:      send(EDIT, { field: "errorRoute", variant: self.variant, branchId: self.value });
+    }
+
+    saveButton -> {
+      data-part:   "save-button";
+      data-state:  state.form;
+      disabled:    if state.form == "pristine" then true else false;
+      onClick:     send(SAVE);
+    }
+
+    cancelButton -> {
+      data-part:   "cancel-button";
+      onClick:     send(CANCEL);
+    }
+  }
+
+  affordance {
+    serves: llm-step-configuration;
+    specificity: 10;
+    when { stepKind: "llm-call" }
+    bind {
+      stepId:             stepId;
+      selectedModel:      model;
+      userPrompt:         user_prompt;
+      systemPrompt:       system_prompt;
+      selectedToolIds:    tools;
+    }
+  }
+
+  compose {
+    _dataMapping:    widget("data-mapping",          { availableFields: ?sampleData.upstreamStepOutputs })
+    _toolPicker:     widget("tool-registry-browser", { selectedToolIds: ?selectedToolIds, principalId: ?principalId, processRef: ?processRef })
+    _errorBranch:    widget("error-branch",          { parentStepId: ?stepId })
+  }
+
+  invariant {
+    example "simple tier shows model and user-prompt only": {
+      after root -> { data-state: "simple" }
+      then advancedSection -> { hidden: true }
+      and systemPromptField -> { disabled: true }
+      and temperatureSlider -> { disabled: true }
+      and maxTokensInput -> { disabled: true }
+      and stopSequencesInput -> { disabled: true }
+    }
+
+    example "toggle advanced reveals system prompt, temperature, max tokens, stop sequences": {
+      after advancedToggle.click -> ok
+      then root -> { data-state: "advanced" }
+      and advancedSection -> { hidden: false }
+      and systemPromptField -> { disabled: false }
+      and temperatureSlider -> { disabled: false }
+      and maxTokensInput -> { disabled: false }
+      and stopSequencesInput -> { disabled: false }
+      and advancedToggle -> { data-expanded: "true" }
+    }
+
+    example "toggle advanced back collapses advanced section": {
+      after advancedToggle.click -> ok
+      then advancedToggle.click -> ok
+      then root -> { data-state: "simple" }
+      and advancedSection -> { hidden: true }
+      and advancedToggle -> { data-expanded: "false" }
+    }
+
+    example "opening tool picker sets toolPicker state to open": {
+      after toolPickerTrigger.click -> ok
+      then root -> { data-tool-picker: "open" }
+      and toolPickerOverlay -> { hidden: false }
+      and toolPickerTrigger -> { aria-expanded: "true" }
+    }
+
+    example "Escape closes tool picker": {
+      after toolPickerTrigger.click -> ok
+      then send(ESCAPE) -> ok
+      then root -> { data-tool-picker: "closed" }
+      and toolPickerOverlay -> { hidden: true }
+      and toolPickerTrigger -> { aria-expanded: "false" }
+    }
+
+    example "selecting a tool closes picker and adds chip": {
+      after toolPickerTrigger.click -> ok
+      then send(TOOL_SELECTED, { toolId: "t1" }) -> ok
+      then root -> { data-tool-picker: "closed" }
+      and toolChip -> { data-tool-id: "t1" }
+    }
+
+    example "removing a tool chip dispatches REMOVE_TOOL": {
+      after toolChip.click -> ok
+      then toolChip -> { data-tool-id: self.id }
+    }
+
+    example "editing any field transitions form to dirty": {
+      after userPromptField.input -> ok
+      then root -> { data-form: "dirty" }
+      and saveButton -> { disabled: false }
+    }
+
+    example "save while pristine is disabled": {
+      after root -> { data-form: "pristine" }
+      then saveButton -> { disabled: true }
+    }
+
+    example "prompt preview resolves after PROMPT_CHANGED": {
+      after userPromptField.input -> ok
+      then send(PROMPT_CHANGED, { value: "Hello {{name}}" }) -> ok
+      then root -> { data-state: "advanced" }
+      and promptPreview -> { aria-busy: "true" }
+      then send(PREVIEW_READY) -> ok
+      then promptPreview -> { aria-busy: "false" }
+    }
+
+    example "error-variant row emits EDIT with variant and branchId": {
+      after errorBranchSelect.input({ variant: "invalid", branchId: "branch-1" }) -> ok
+      then errorVariantRow -> { data-branch-id: "branch-1" }
+    }
+
+    forall s in states.disclosure:
+      s.reachable = true
+
+    forall s in states.toolPicker:
+      s.reachable = true
+
+    forall s in states.promptPreview:
+      s.reachable = true
+
+    forall s in states.form:
+      s.reachable = true
+
+    always "data-state on root reflects disclosure FSM": {
+      root -> { data-state: state.disclosure }
+    }
+
+    always "advancedSection hidden when disclosure is simple": {
+      if state.disclosure == "simple" then advancedSection -> { hidden: true }
+    }
+
+    always "toolPickerOverlay hidden when toolPicker is closed": {
+      if state.toolPicker == "closed" then toolPickerOverlay -> { hidden: true }
+    }
+
+    always "saveButton disabled when form is pristine": {
+      if state.form == "pristine" then saveButton -> { disabled: true }
+    }
+
+    always "promptPreview aria-busy mirrors promptPreview resolving state": {
+      if state.promptPreview == "resolving" then promptPreview -> { aria-busy: "true" }
+      else promptPreview -> { aria-busy: "false" }
+    }
+
+    never "unauthorized tool selectable": {
+      exists t in availableTools:
+        t.allowed == false and toolChip -> { data-tool-id: t.id }
+    }
+
+    never "advanced fields editable in simple tier": {
+      state.disclosure == "simple" and systemPromptField -> { disabled: false }
+    }
+
+    never "tool picker and form save both active": {
+      state.toolPicker == "open" and saveButton -> { disabled: false }
+    }
+
+    action toolPickerTrigger.click {
+      ensures ok: state.toolPicker == "open"
+      ensures ok: toolPickerOverlay -> { hidden: false }
+    }
+
+    action advancedToggle.click {
+      ensures ok: state.disclosure != state.disclosure
+    }
+
+    action saveButton.click {
+      requires: state.form == "dirty"
+      ensures ok: state.form == "pristine"
+    }
+
+    action cancelButton.click {
+      ensures ok: state.form == "pristine"
+    }
+
+    "EDIT event carries { field, value } pairs — host debounces before dispatching to LLMCall concept action";
+    "SAVE event carries all configuration fields including stopSequences as a list — host maps to LLMCall/request params";
+    "TOOL_SELECTED event carries toolId — widget appends to selectedToolIds set; ToolRegistry/check_access is run by host before emitting";
+    "REMOVE_TOOL event carries toolId — host removes from selectedToolIds and rebinds the LLMCall step";
+    "promptPreview substitution is read-only; it does not affect the stored userPrompt value";
+    "errorVariantRoutes rows correspond exactly to the LLMCall variants: invalid, rejected, repair-exhausted";
+    "temperature is represented as a String to avoid floating-point serialization issues; host parses before persisting";
+    "Simple tier is the default per progressive-disclosure guidelines; advanced tier state is not persisted across inspector opens";
+    "tool picker overlay is inline (aria-modal false) — does not block keyboard access to the rest of the inspector tab";
+    "saveButton disabled while toolPicker is open to prevent submitting a half-completed tool selection";
+  }
+
+}
