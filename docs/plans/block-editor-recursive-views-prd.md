@@ -546,6 +546,10 @@ Minimal end-to-end proof across text + media + marks + theme.
 | MAG-716 | heading-block widget + seeds | Done | `251c59d1` | 21 invariants |
 | MAG-717 | image-block + media-picker + seeds | Done | `cd47ce57` | 31 invariants |
 | MAG-718 | bold/italic/code mark RenderTransforms | Done | `eaebdff7` | 3 syncs |
+| MAG-723 | persona-editor.derived + compile EditSurface + 3 widgets | Done | `202db185` | 43 invariants |
+| MAG-724 | RecursiveBlockEditor React + feature flag | Done | `7527e2c6` | partial acceptance (4 gaps flagged) |
+
+**Phase 1 complete (2026-04-12) — 16/16 cards shipped.** Callout theming and slash-menu registry queries work fully; four acceptance items remain partial pending backing-handler work (InlineMark concept, MediaAsset context threading, ContentNode/clone, paragraph-block FSM handler wiring). These become Phase 2 scope.
 
 **Concept API gaps noted (follow-up cards needed):**
 - `Outline` has no block-schema-change action — markdown-heading-2 ActionBinding uses `Schema/applyTo` as proxy (should be `Outline/retype` or similar)
