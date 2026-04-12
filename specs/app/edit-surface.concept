@@ -1,0 +1,357 @@
+@version(1)
+@category("ui-core")
+@visibility("public")
+concept EditSurface [E] {
+
+  purpose {
+    Manage per-(schema × context) editor bundles that activate when content
+    of a given schema is focused. Each surface declares which commands,
+    panels, toolbar, context menu, input rules, and pickers apply to a
+    particular schema in a particular editing context, and optionally
+    carries a compile bundle for schemas whose content can be compiled
+    (e.g., agent-persona, meeting-notes, workflow, filter-draft). The host
+    reads the bundle on focus change and rebinds all five plugin planes.
+
+    // Nesting note: `page-level` surfaces are intended to mount at the
+    // outermost page focus while `block-editor` surfaces mount at the
+    // innermost block focus. Enforcement of this nesting contract is
+    // host-side; this concept does not model the focus hierarchy.
+  }
+
+  state {
+    surfaces: set E
+
+    identity {
+      schema_ref: E -> String
+      context: E -> String
+    }
+
+    plugin_planes {
+      command_bindings: E -> list String
+      panel_widgets: E -> list String
+      toolbar_widget: E -> option String
+      context_menu_bindings: E -> list String
+      input_rule_refs: E -> list String
+      picker_refs: E -> list String
+    }
+
+    compile_bundle {
+      compile_action_ref: E -> option String
+      status_decoration_ref: E -> option String
+      output_preview_ref: E -> option String
+      consumers_panel_ref: E -> option String
+    }
+  }
+
+  actions {
+    action register(surface: E, schema_ref: String, context: String,
+                    command_bindings: list String,
+                    panel_widgets: list String,
+                    toolbar_widget: option String,
+                    context_menu_bindings: list String,
+                    input_rule_refs: list String,
+                    picker_refs: list String,
+                    compile_action_ref: option String,
+                    status_decoration_ref: option String,
+                    output_preview_ref: option String,
+                    consumers_panel_ref: option String) {
+      -> ok(surface: E) {
+        Register a new editor surface bundle for the given schema and context.
+        The bundle becomes resolvable immediately and will be returned by
+        resolve(schema_ref, context) from this point on.
+      }
+      -> duplicate(surface: E) {
+        A surface for this schema_ref and context combination already exists.
+        Unregister the existing surface before registering a replacement.
+      }
+      -> invalid_context(message: String) {
+        The context value is not one of the six allowed values:
+        block-editor, standalone, inspector, canvas, preview-only, page-level.
+        Unknown context strings are rejected to prevent misconfigured bundles
+        from silently going unresolved.
+      }
+      -> error(message: String) {
+        Registration failed because schema_ref is empty or another validation
+        constraint was violated.
+      }
+
+      // Happy-path fixtures — one per context enum value
+      fixture register_block_editor {
+        surface: "para-block-editor"
+        schema_ref: "paragraph"
+        context: "block-editor"
+        command_bindings: ["cmd-bold", "cmd-italic", "cmd-link"]
+        panel_widgets: []
+        toolbar_widget: "inline-toolbar"
+        context_menu_bindings: ["ctx-cut", "ctx-copy", "ctx-paste"]
+        input_rule_refs: ["rule-markdown-bold", "rule-markdown-italic"]
+        picker_refs: ["picker-emoji"]
+        compile_action_ref: none
+        status_decoration_ref: none
+        output_preview_ref: none
+        consumers_panel_ref: none
+      }
+
+      fixture register_standalone {
+        surface: "article-standalone"
+        schema_ref: "article"
+        context: "standalone"
+        command_bindings: ["cmd-save", "cmd-publish"]
+        panel_widgets: ["panel-outline", "panel-versions"]
+        toolbar_widget: none
+        context_menu_bindings: []
+        input_rule_refs: []
+        picker_refs: []
+        compile_action_ref: none
+        status_decoration_ref: none
+        output_preview_ref: none
+        consumers_panel_ref: none
+      }
+
+      fixture register_inspector {
+        surface: "schema-inspector"
+        schema_ref: "meeting-notes"
+        context: "inspector"
+        command_bindings: []
+        panel_widgets: ["panel-properties"]
+        toolbar_widget: none
+        context_menu_bindings: []
+        input_rule_refs: []
+        picker_refs: []
+        compile_action_ref: none
+        status_decoration_ref: none
+        output_preview_ref: none
+        consumers_panel_ref: none
+      }
+
+      fixture register_canvas {
+        surface: "diagram-canvas"
+        schema_ref: "diagram"
+        context: "canvas"
+        command_bindings: ["cmd-add-node", "cmd-connect"]
+        panel_widgets: ["panel-shape-library"]
+        toolbar_widget: "canvas-toolbar"
+        context_menu_bindings: ["ctx-group", "ctx-ungroup"]
+        input_rule_refs: []
+        picker_refs: ["picker-node-type"]
+        compile_action_ref: none
+        status_decoration_ref: none
+        output_preview_ref: none
+        consumers_panel_ref: none
+      }
+
+      fixture register_preview_only {
+        surface: "content-preview"
+        schema_ref: "article"
+        context: "preview-only"
+        command_bindings: []
+        panel_widgets: []
+        toolbar_widget: none
+        context_menu_bindings: []
+        input_rule_refs: []
+        picker_refs: []
+        compile_action_ref: none
+        status_decoration_ref: none
+        output_preview_ref: none
+        consumers_panel_ref: none
+      }
+
+      fixture register_page_level_compilable {
+        surface: "agent-persona-page"
+        schema_ref: "agent-persona"
+        context: "page-level"
+        command_bindings: ["cmd-run-agent", "cmd-test-persona"]
+        panel_widgets: ["panel-memory", "panel-tools"]
+        toolbar_widget: "persona-toolbar"
+        context_menu_bindings: []
+        input_rule_refs: []
+        picker_refs: ["picker-tool-binding"]
+        compile_action_ref: "ContentCompiler/compile"
+        status_decoration_ref: "compilation-status-badge"
+        output_preview_ref: "prompt-preview-panel"
+        consumers_panel_ref: "consumers-rail"
+      }
+
+      fixture register_invalid_context {
+        surface: "bad-surface"
+        schema_ref: "article"
+        context: "floating"
+        command_bindings: []
+        panel_widgets: []
+        toolbar_widget: none
+        context_menu_bindings: []
+        input_rule_refs: []
+        picker_refs: []
+        compile_action_ref: none
+        status_decoration_ref: none
+        output_preview_ref: none
+        consumers_panel_ref: none
+      } -> invalid_context
+
+      fixture register_empty_schema {
+        surface: "empty-schema-surface"
+        schema_ref: ""
+        context: "block-editor"
+        command_bindings: []
+        panel_widgets: []
+        toolbar_widget: none
+        context_menu_bindings: []
+        input_rule_refs: []
+        picker_refs: []
+        compile_action_ref: none
+        status_decoration_ref: none
+        output_preview_ref: none
+        consumers_panel_ref: none
+      } -> error
+
+      fixture register_duplicate {
+        surface: "para-block-editor-2"
+        schema_ref: "paragraph"
+        context: "block-editor"
+        command_bindings: []
+        panel_widgets: []
+        toolbar_widget: none
+        context_menu_bindings: []
+        input_rule_refs: []
+        picker_refs: []
+        compile_action_ref: none
+        status_decoration_ref: none
+        output_preview_ref: none
+        consumers_panel_ref: none
+      } after register_block_editor -> duplicate
+    }
+
+    action unregister(surface: E) {
+      -> ok() {
+        Remove the surface bundle. The schema × context slot becomes
+        available for a new registration.
+      }
+      -> notfound(message: String) {
+        No surface exists with this identifier.
+      }
+      reversal: none
+
+      fixture unregister_ok { surface: $register_block_editor.surface } after register_block_editor
+      fixture unregister_missing { surface: "nonexistent-surface" } -> notfound
+    }
+
+    action resolve(schema_ref: String, context: String) {
+      -> ok(surface: E) {
+        Return the surface registered for this schema × context combination.
+        The caller can then pass the surface to activate to obtain the full
+        bundle payload.
+      }
+      -> no_match(message: String) {
+        No surface has been registered for this schema and context pair.
+        The host should fall back to a default editing experience.
+      }
+
+      fixture resolve_ok {
+        schema_ref: "paragraph"
+        context: "block-editor"
+      } after register_block_editor
+      fixture resolve_no_match {
+        schema_ref: "unknown-schema-xyz"
+        context: "block-editor"
+      } -> no_match
+    }
+
+    action activate(surface: E) {
+      -> ok(bundle: String) {
+        Return a serialized JSON bundle containing all plugin-plane refs and
+        the compile bundle fields for the host to read and apply. Emits an
+        activation event for observability but does not mutate state.
+      }
+      -> notfound(message: String) {
+        No surface exists with this identifier.
+      }
+
+      fixture activate_ok { surface: $register_block_editor.surface } after register_block_editor
+      fixture activate_compilable { surface: $register_page_level_compilable.surface } after register_page_level_compilable
+      fixture activate_missing { surface: "nonexistent" } -> notfound
+    }
+
+    action deactivate(surface: E) {
+      -> ok() {
+        Emit a deactivation event so the host can tear down the current
+        plugin-plane bindings. Does not mutate state.
+      }
+      -> notfound(message: String) {
+        No surface exists with this identifier.
+      }
+
+      fixture deactivate_ok { surface: $register_block_editor.surface } after register_block_editor
+      fixture deactivate_missing { surface: "nonexistent" } -> notfound
+    }
+  }
+
+  // Invariants
+
+  example "register then resolve returns the same surface": {
+    after register(surface: s, schema_ref: "paragraph", context: "block-editor",
+      command_bindings: ["cmd-bold"],
+      panel_widgets: [],
+      toolbar_widget: none,
+      context_menu_bindings: [],
+      input_rule_refs: [],
+      picker_refs: [],
+      compile_action_ref: none,
+      status_decoration_ref: none,
+      output_preview_ref: none,
+      consumers_panel_ref: none) -> ok(surface: s)
+    then resolve(schema_ref: "paragraph", context: "block-editor") -> ok(surface: s)
+  }
+
+  example "register then activate returns a bundle": {
+    after register(surface: s, schema_ref: "agent-persona", context: "page-level",
+      command_bindings: ["cmd-run"],
+      panel_widgets: ["panel-tools"],
+      toolbar_widget: "persona-toolbar",
+      context_menu_bindings: [],
+      input_rule_refs: [],
+      picker_refs: [],
+      compile_action_ref: "ContentCompiler/compile",
+      status_decoration_ref: "status-badge",
+      output_preview_ref: "preview-panel",
+      consumers_panel_ref: "consumers-rail") -> ok(surface: s)
+    then activate(surface: s) -> ok(bundle: _)
+  }
+
+  example "compile bundle fields all null for non-compilable surface": {
+    after register(surface: s, schema_ref: "paragraph", context: "block-editor",
+      command_bindings: [],
+      panel_widgets: [],
+      toolbar_widget: none,
+      context_menu_bindings: [],
+      input_rule_refs: [],
+      picker_refs: [],
+      compile_action_ref: none,
+      status_decoration_ref: none,
+      output_preview_ref: none,
+      consumers_panel_ref: none) -> ok(surface: s)
+    then activate(surface: s) -> ok(bundle: _)
+  }
+
+  always "registered surfaces have non-empty schema_ref": {
+    forall s in surfaces: s.schema_ref != ""
+  }
+
+  always "context is one of six enum values": {
+    forall s in surfaces:
+      s.context in {"block-editor", "standalone", "inspector", "canvas", "preview-only", "page-level"}
+  }
+
+  never "two surfaces with same schema_ref and context": {
+    exists s1 in surfaces, s2 in surfaces:
+      s1 != s2 and s1.schema_ref = s2.schema_ref and s1.context = s2.context
+  }
+
+  action register {
+    requires: schema_ref != ""
+    ensures ok: surface in surfaces
+  }
+
+  action unregister {
+    requires: surface in surfaces
+  }
+}
