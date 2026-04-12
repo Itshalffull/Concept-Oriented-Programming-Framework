@@ -4,22 +4,20 @@
 # moveNode is metadata-only and intentionally has no write-back here.
 
 sync CanvasConnectorCreatesEdge [eager]
-  purpose: "When a connector is added on a flow-builder Canvas, write the corresponding edge back to the ProcessSpec so the spec stays authoritative over routing."
+  purpose: "When a connector is added on a flow-builder Canvas, write the corresponding edge back to the ProcessSpec so the spec stays authoritative over routing. The connector kind (default, branch, catch) is forwarded as the edge kind."
 when {
-  Canvas/groupNodes: [ canvas: ?canvas; nodes: ?nodes; group: ?group ]
-    => ok()
+  Canvas/createConnector: [ canvas: ?canvas; connector: ?connector; fromNode: ?from; toNode: ?to; kind: ?kind ]
+    => ok(connector: ?connector)
 }
 where {
   filter(?canvas = "flow:*")
   bind(?canvas as ?spec)
-  bind(?nodes as ?steps)
-  bind(?group as ?edgeGroup)
 }
 then {
   ProcessSpec/update: [
     spec: ?spec;
-    steps: ?steps;
-    edges: ?edgeGroup ]
+    steps: ?from;
+    edges: ?connector ]
 }
 
 sync CanvasNodeRemovedRemovesStep [eager]

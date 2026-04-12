@@ -1,9 +1,11 @@
 # @fixtures-added
-@version(3)
+@version(4)
 concept Canvas [V] {
 
   purpose {
-    Arrange content cards in a free-form 2D spatial layout with grouping.
+    Arrange content cards in a free-form 2D spatial layout with grouping and
+    first-class directed connectors. Connectors carry a kind (default, branch,
+    or catch) so that process-spec sync triggers can distinguish routing edges.
     Node connections are delegated to Graph via CanvasConnections sync.
     File embedding is delegated to FileManagement via CanvasFileEmbed sync.
     Items can be removed and resized within the spatial layout.
@@ -13,6 +15,10 @@ concept Canvas [V] {
     canvases: set V
     nodes: V -> String
     positions: V -> String
+    connectors: set String
+    connector_source: String -> String
+    connector_target: String -> String
+    connector_kind: String -> String
   }
 
   actions {
@@ -75,6 +81,48 @@ concept Canvas [V] {
       fixture valid_resize { canvas: $valid_add.id, node: "card-a", width: 200, height: 150 } after valid_add
       fixture resize_missing { canvas: "nonexistent", node: "card-a", width: 100, height: 100 } -> notfound
     }
+
+    action createConnector(canvas: V, connector: String, fromNode: String, toNode: String, kind: String) {
+      -> ok(connector: String) {
+        Registers a new directed connector between two nodes on the canvas with the
+        given kind (default, branch, or catch). Returns the connector identifier.
+      }
+      -> duplicate(message: String) {
+        A connector with this identifier already exists on the canvas.
+      }
+      -> missing_node(message: String) {
+        The fromNode or toNode does not exist in the canvas node list.
+      }
+      -> invalid_kind(message: String) {
+        The kind value is not one of the allowed values: default, branch, catch.
+      }
+      -> error(message: String) {
+        The canvas does not exist or an unexpected validation failure occurred.
+      }
+
+      fixture create_ok { canvas: "board-1", connector: "edge-1", fromNode: "card-a", toNode: "card-a", kind: "default" } after valid_add
+      fixture create_branch { canvas: "board-1", connector: "edge-2", fromNode: "card-a", toNode: "card-a", kind: "branch" } after valid_add
+      fixture create_duplicate { canvas: "board-1", connector: "edge-1", fromNode: "card-a", toNode: "card-a", kind: "default" } after create_ok -> duplicate
+      fixture create_missing_node { canvas: "board-1", connector: "edge-3", fromNode: "card-a", toNode: "no-such-node", kind: "default" } after valid_add -> missing_node
+      fixture create_invalid_kind { canvas: "board-1", connector: "edge-4", fromNode: "card-a", toNode: "card-a", kind: "teleport" } after valid_add -> invalid_kind
+      fixture create_missing_canvas { canvas: "nonexistent", connector: "edge-5", fromNode: "card-a", toNode: "card-a", kind: "default" } -> error
+    }
+
+    action removeConnector(canvas: V, connector: String) {
+      -> ok() {
+        Removes the connector from the canvas and clears its source, target, and kind records.
+      }
+      -> notfound(message: String) {
+        No connector with this identifier exists on the canvas.
+      }
+      -> error(message: String) {
+        The canvas does not exist.
+      }
+
+      fixture remove_ok { canvas: "board-1", connector: "edge-1" } after create_ok
+      fixture remove_notfound { canvas: "board-1", connector: "no-such-edge" } after valid_add -> notfound
+      fixture remove_missing_canvas { canvas: "nonexistent", connector: "edge-1" } -> error
+    }
   }
 
   example "addNode-then-moveNode": {
@@ -82,6 +130,24 @@ concept Canvas [V] {
     after addNode(canvas: v, node: "a", x: 0, y: 0) -> ok()
 
         then moveNode(canvas: v, node: "a", x: 100, y: 200) -> ok()
+
+  }
+
+  example "createConnector-then-removeConnector": {
+
+    after addNode(canvas: "board-x", node: "n1", x: 0, y: 0) -> ok()
+    after addNode(canvas: "board-x", node: "n2", x: 100, y: 0) -> ok()
+    after createConnector(canvas: "board-x", connector: "e1", fromNode: "n1", toNode: "n2", kind: "default") -> ok(connector: c)
+    then removeConnector(canvas: "board-x", connector: c) -> ok()
+
+  }
+
+  example "createConnector-duplicate-rejected": {
+
+    after addNode(canvas: "board-y", node: "n1", x: 0, y: 0) -> ok()
+    after addNode(canvas: "board-y", node: "n2", x: 100, y: 0) -> ok()
+    after createConnector(canvas: "board-y", connector: "e1", fromNode: "n1", toNode: "n2", kind: "default") -> ok()
+    then createConnector(canvas: "board-y", connector: "e1", fromNode: "n1", toNode: "n2", kind: "default") -> duplicate()
 
   }
 

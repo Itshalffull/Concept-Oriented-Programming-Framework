@@ -380,6 +380,253 @@ describe('Canvas functional handler', () => {
 
   });
 
+  describe('createConnector', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = canvasHandler.createConnector({ canvas: "board-1", connector: "edge-1", fromNode: "card-a", toNode: "card-a", kind: "default" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = canvasHandler.createConnector({ canvas: "board-1", connector: "edge-1", fromNode: "card-a", toNode: "card-a", kind: "default" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = canvasHandler.createConnector({ canvas: "board-1", connector: "edge-1", fromNode: "card-a", toNode: "card-a", kind: "default" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = canvasHandler.createConnector({ canvas: "board-1", connector: "edge-1", fromNode: "card-a", toNode: "card-a", kind: "default" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = canvasHandler.createConnector({ canvas: "board-1", connector: "edge-1", fromNode: "card-a", toNode: "card-a", kind: "default" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof canvasHandler.createConnector !== 'function') return;
+      const result = await interpret(canvasHandler.createConnector({ canvas: "board-1", connector: "edge-1", fromNode: "card-a", toNode: "card-a", kind: "default" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "create_ok" -> ok', async () => {
+      if (typeof canvasHandler.createConnector !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_valid_add = await interpret(canvasHandler.addNode({ canvas: "board-1", node: "card-a", x: "100", y: "200" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
+      const _fixtureInput = { canvas: "board-1", connector: "edge-1", fromNode: "card-a", toNode: "card-a", kind: "default" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(canvasHandler.createConnector({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_branch" -> ok', async () => {
+      if (typeof canvasHandler.createConnector !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_valid_add = await interpret(canvasHandler.addNode({ canvas: "board-1", node: "card-a", x: "100", y: "200" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
+      const _fixtureInput = { canvas: "board-1", connector: "edge-2", fromNode: "card-a", toNode: "card-a", kind: "branch" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(canvasHandler.createConnector({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_duplicate" -> duplicate', async () => {
+      if (typeof canvasHandler.createConnector !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_valid_add = await interpret(canvasHandler.addNode({ canvas: "board-1", node: "card-a", x: "100", y: "200" }), storage);
+      const afterResult_create_ok = await interpret(canvasHandler.createConnector({ canvas: "board-1", connector: "edge-1", fromNode: "card-a", toNode: "card-a", kind: "default" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}), (afterResult_create_ok?.output ?? {}));
+      const _fixtureInput = { canvas: "board-1", connector: "edge-1", fromNode: "card-a", toNode: "card-a", kind: "default" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(canvasHandler.createConnector({ ..._fixtureInput }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('duplicate'));
+    });
+
+    it('fixture "create_missing_node" -> missing_node', async () => {
+      if (typeof canvasHandler.createConnector !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_valid_add = await interpret(canvasHandler.addNode({ canvas: "board-1", node: "card-a", x: "100", y: "200" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
+      const _fixtureInput = { canvas: "board-1", connector: "edge-3", fromNode: "card-a", toNode: "no-such-node", kind: "default" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(canvasHandler.createConnector({ ..._fixtureInput }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('missing_node'));
+    });
+
+    it('fixture "create_invalid_kind" -> invalid_kind', async () => {
+      if (typeof canvasHandler.createConnector !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_valid_add = await interpret(canvasHandler.addNode({ canvas: "board-1", node: "card-a", x: "100", y: "200" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
+      const _fixtureInput = { canvas: "board-1", connector: "edge-4", fromNode: "card-a", toNode: "card-a", kind: "teleport" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(canvasHandler.createConnector({ ..._fixtureInput }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('invalid_kind'));
+    });
+
+    it('fixture "create_missing_canvas" -> error', async () => {
+      if (typeof canvasHandler.createConnector !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(canvasHandler.createConnector({ canvas: "nonexistent", connector: "edge-5", fromNode: "card-a", toNode: "card-a", kind: "default" }), storage);
+      expect(result.variant).not.toBe('ok');
+    });
+
+  });
+
+  describe('removeConnector', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = canvasHandler.removeConnector({ canvas: "board-1", connector: "edge-1" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = canvasHandler.removeConnector({ canvas: "board-1", connector: "edge-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = canvasHandler.removeConnector({ canvas: "board-1", connector: "edge-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = canvasHandler.removeConnector({ canvas: "board-1", connector: "edge-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = canvasHandler.removeConnector({ canvas: "board-1", connector: "edge-1" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof canvasHandler.removeConnector !== 'function') return;
+      const result = await interpret(canvasHandler.removeConnector({ canvas: "board-1", connector: "edge-1" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "remove_ok" -> ok', async () => {
+      if (typeof canvasHandler.removeConnector !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_valid_add = await interpret(canvasHandler.addNode({ canvas: "board-1", node: "card-a", x: "100", y: "200" }), storage);
+      const afterResult_create_ok = await interpret(canvasHandler.createConnector({ canvas: "board-1", connector: "edge-1", fromNode: "card-a", toNode: "card-a", kind: "default" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}), (afterResult_create_ok?.output ?? {}));
+      const _fixtureInput = { canvas: "board-1", connector: "edge-1" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(canvasHandler.removeConnector({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "remove_notfound" -> notfound', async () => {
+      if (typeof canvasHandler.removeConnector !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_valid_add = await interpret(canvasHandler.addNode({ canvas: "board-1", node: "card-a", x: "100", y: "200" }), storage);
+      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
+      const _fixtureInput = { canvas: "board-1", connector: "no-such-edge" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(canvasHandler.removeConnector({ ..._fixtureInput }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
+    });
+
+    it('fixture "remove_missing_canvas" -> error', async () => {
+      if (typeof canvasHandler.removeConnector !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(canvasHandler.removeConnector({ canvas: "nonexistent", connector: "edge-1" }), storage);
+      expect(result.variant).not.toBe('ok');
+    });
+
+  });
+
   describe('register()', () => {
     it('declares concept name', async () => {
       if (typeof canvasHandler.register !== 'function') return;
@@ -405,6 +652,14 @@ describe('Canvas functional handler', () => {
       expect(thenResult0.variant).toBe("ok");
     });
 
+    it("createConnector-then-removeConnector", async () => {
+      const storage = createInMemoryStorage();
+    });
+
+    it("createConnector-duplicate-rejected", async () => {
+      const storage = createInMemoryStorage();
+    });
+
   });
 
   describe('state invariants (stateful PBT)', () => {
@@ -418,6 +673,8 @@ describe('Canvas functional handler', () => {
               fc.record({ action: fc.constant('groupNodes'), input: fc.record({ canvas: fc.string(), nodes: fc.string({ minLength: 1, maxLength: 50 }), group: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('removeItem'), input: fc.record({ canvas: fc.string(), node: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('resizeItem'), input: fc.record({ canvas: fc.string(), node: fc.string({ minLength: 1, maxLength: 50 }), width: fc.integer({ min: 1, max: 1000 }), height: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('createConnector'), input: fc.record({ canvas: fc.string(), connector: fc.string({ minLength: 1, maxLength: 50 }), fromNode: fc.string({ minLength: 1, maxLength: 50 }), toNode: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('removeConnector'), input: fc.record({ canvas: fc.string(), connector: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -452,6 +709,8 @@ describe('Canvas functional handler', () => {
               fc.record({ action: fc.constant('groupNodes'), input: fc.record({ canvas: fc.string(), nodes: fc.string({ minLength: 1, maxLength: 50 }), group: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('removeItem'), input: fc.record({ canvas: fc.string(), node: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('resizeItem'), input: fc.record({ canvas: fc.string(), node: fc.string({ minLength: 1, maxLength: 50 }), width: fc.integer({ min: 1, max: 1000 }), height: fc.integer({ min: 1, max: 1000 }) }) }),
+              fc.record({ action: fc.constant('createConnector'), input: fc.record({ canvas: fc.string(), connector: fc.string({ minLength: 1, maxLength: 50 }), fromNode: fc.string({ minLength: 1, maxLength: 50 }), toNode: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('removeConnector'), input: fc.record({ canvas: fc.string(), connector: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
