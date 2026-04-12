@@ -424,7 +424,8 @@ Minimal end-to-end proof across text + media + marks + theme.
 - Synced content blocks (transclude another block's content)
 - Comment ranges (InlineAnnotation integration)
 - Track changes (InlineAnnotation + Attribution)
-- Side panels: outline, backlinks, comments
+- Side panels: outline, backlinks, comments (panel reuses existing Comment concept + new listByEntity action)
+- Comments displayed via 3 surfaces: gutter marker (decoration), inline span underline (RenderTransform keyed by InlineAnnotation.kind — serves comments / AI suggestions / track-changes / spell-check uniformly), comments panel (editor-panel plugin). Activated per schema via `isCommentable` / `commentScope` / `commentGutterPosition` Property seeds. No new Comment concept work — the existing concept is already polymorphic + threaded.
 - Real-time presence indicators (Replica + CausalClock)
 
 ### Phase 4 — Specialized editors
@@ -476,12 +477,54 @@ Minimal end-to-end proof across text + media + marks + theme.
 
 ## 9. Open Questions
 
-1. **InputRule conflict resolution.** Two rules match the same input (e.g. both `##` and `###`). Priority + first-match-wins is simple but may need "longest pattern wins" or user-configurable ordering for some cases.
-2. **Compose-time vs. render-time registry resolution.** Does the editor read ComponentMapping once at mount and cache, or per-block render? Per-block is simpler; cache is faster. Start simple, profile later.
-3. **Per-block FSM isolation.** If every block is its own widget with its own FSM, 100-block docs spawn 100 machines. The diagram suite has the same problem with 100-node canvases — check how Canvas handles it and reuse.
-4. **Inline mark rendering performance.** RenderTransforms composing per-character for a long paragraph could be expensive. May need a fast-path that collapses contiguous same-mark runs.
-5. **Paste-handler conflict.** Paste an image-URL: is it `media-embed-from-url` (YouTube-style preview) or `media-upload-from-clipboard` (download + rehost)? Priority field handles it but seed authors need clear guidance.
-6. **Snippet trigger scope.** Do snippet triggers work inside code blocks? Probably not — InputRule's `scope` field lets us gate per schema, but default behavior needs deciding.
+### 9.1 Resolved (2026-04-12, pre-Phase-1)
+
+1. **EditSurface `context` vocabulary — ENUM, not open string.** Initial closed set: `block-editor` | `standalone` | `inspector` | `canvas` | `preview-only` | `page-level`. `EditSurface/register` validates against this set and rejects unknown values. Adding a new context requires a concept migration + seed update. Open string was too permissive and would fragment the registry.
+
+2. **Surface nesting semantics — page-level mounts always; inline surfaces stack innermost-wins.** When focus lands three-deep (e.g. paragraph inside view-embed inside persona page):
+   - The `page-level` surface (outermost activating, keyed by page's schema) always mounts header toolbar + right-rail panels
+   - The `block-editor` surface for the innermost focused block provides selection toolbar + context menu + scoped InputRules
+   - Intermediate surfaces don't mount unless their context also matches (e.g. view-embed inside persona contributes no UI unless we invent an `inspector`-context surface for it)
+   - Slots of the same kind don't merge — the innermost context scope wins; the outermost page-level scope keeps header and right rail
+   - `EditSurface.context` field is the disambiguator
+
+3. **Feature-flag granularity — per-user-session + global schema-allowlist.** Flag stored in user preferences (`user.preferBlockEditorFlavor: "legacy" | "recursive"`). Global schema allowlist gates which schemas are eligible (starts minimal, grows as block types migrate). Users can opt in to recursive for any allowlisted schema; collaborative editing unaffected because content state is identical regardless of which editor renders it. No per-ContentNode flag — too fragile.
+
+4. **Compiled-output preview refresh — kernel observation subscription.** The `output_preview_ref` widget subscribes to `ContentCompiler` state for its page id via kernel observation. `ContentCompiler/markStale` or `/recompile` completion fires → subscription fires a render. No polling, no explicit refetch ActionBinding. Same pattern as other data-driven widgets in clef-base.
+
+5. **InputRule conflict resolution — higher priority wins; ties broken by longest-pattern-wins.** Documented in `InputRule/match` semantics. Seed authors set `priority: Int` explicitly when collision is possible; rules within the same priority tier tiebreak on regex length. Registry warning logged if two rules have identical priority + pattern.
+
+6. **Paste-handler conflict — priority + MIME-specificity tiebreaker.** Paste `image/*` + `https?://.*youtube\\..*` on the same content → specific MIME / URL pattern wins over generic fallback. Tiebreaker: longer pattern + explicit scope filter wins. Seed guidance doc added as part of P1.12.
+
+7. **Snippet trigger scope — default off in `literal`-tagged schemas.** Any schema with Property `literal: true` (code-block, math-block, raw-html-block) disables InputRule trigger expansion within its content range. Other schemas default to on. Per-rule `scope` field overrides.
+
+8. **`isCommentable` + related Schema Properties.** Three new Property keys on Schema for comment display control:
+   - `isCommentable: Bool` (default false) — block-level comments allowed
+   - `commentScope: "block" | "inline" | "both"` (default `"block"` when `isCommentable`) — whether selecting text enables span-commenting via InlineAnnotation
+   - `commentGutterPosition: "left" | "right" | "hidden"` (default `"right"`) — per-schema override for the gutter marker
+   Seeds on paragraph / heading / quote / callout / image schemas in Phase 3.
+
+9. **Comment concept — add `listByEntity` read action.** Additive, non-breaking. Returns all comments attached to a given entity id preserving `threadPath` order for direct tree render. Powers the block gutter marker, inline span underline lookup, and comments-panel. Part of the Phase 3 card set.
+
+### 9.2 Deferred to implementation time
+
+10. **Compose-time vs. render-time registry resolution.** Does the editor read ComponentMapping once at mount and cache, or per-block render? Per-block is simpler; cache is faster. Start simple, profile later. Affects "add a new block type without refresh" UX — acceptable to require refresh in Phase 1.
+
+11. **Per-block FSM isolation.** If every block is its own widget with its own FSM, 100-block docs spawn 100 machines. The diagram suite has the same problem with 100-node canvases — audit `canvas.handler.ts` at Phase 1 implementation time and reuse its pooling / lazy-spawn strategy.
+
+12. **Inline mark rendering performance.** RenderTransforms composing per-character for a long paragraph could be expensive. May need a fast-path that collapses contiguous same-mark runs. Not a Phase 1 concern until a 10k-character block exists.
+
+13. **Decoration layer performance under heavy load.** Comments + track-changes + presence + AI suggestions on a 1000-block doc with 500 annotations. Virtual-scroll-aware decoration dispatch. Deferred to Phase 3 when comments ship.
+
+14. **Collaborative block reordering.** Is Outline's current model sufficient for concurrent block drag-drop under Replica + CausalClock, or do we need a sequence CRDT (fractional-indexing or RGA)? Audit at Phase 3.
+
+15. **View-embed lazy loading.** A doc embedding a 1000-row ViewShell — eager, paginated, or virtualized? Parallel to the N+1 display-mode resolve bug in ViewRenderer. Address when P2.07 starts.
+
+16. **AI slash-command context size.** "Continue writing" — pass full doc, current block, last N tokens? Persona-level config (PromptAssembly defines context assembly rules). Default-persona convention in P1.13; per-persona overrides later.
+
+17. **Transcluded content surface ownership.** Same ContentNode embedded in two parent pages via SyncedContent — focusing the content from each parent: whose page-level EditSurface wins? Rule: the **host** page's surface wins, not the content's home context. The content is being read from the host.
+
+18. **Migration permanence risk.** If Phase 5 ends with some block type unable to clear the recursive-editor bar, Phase 6 stays open rather than the monolith returning to default. Call it explicitly: legacy BlockEditor.tsx is deletable only when 100% schema coverage, otherwise the flag stays.
 
 ---
 
