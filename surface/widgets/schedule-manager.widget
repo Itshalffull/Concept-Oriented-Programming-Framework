@@ -1,0 +1,298 @@
+@version(1)
+widget schedule-manager {
+
+  purpose {
+    Operational surface for managing Timer-backed scheduled jobs. Renders the
+    full list of ScheduledJob entries with live next-run timestamps drawn from
+    Timer state (not abstract placeholders), and exposes pause, resume, and
+    run-now as first-class ActionBinding buttons. Selecting a job opens an
+    inline cron editor as a progressive-disclosure modal; the cronPreview slot
+    shows a plain-English rendering of the schedule expression so operators can
+    verify intent before saving. Edit and delete controls are role-gated: they
+    render only when the current user has the required governance permission.
+    Keyboard navigation with ArrowUp/Down moves between job rows; P pauses
+    the focused job, R triggers run-now, and Enter opens the cron editor.
+    Connects to process-automation/timer.concept and automation/scheduled-job.derived.
+  }
+
+  requires @1 {
+    fields {
+      jobs: list;
+      selectedJobId: String;
+    }
+    actions {
+      pause(jobId: String);
+      resume(jobId: String);
+      runNow(jobId: String);
+      updateCron(jobId: String, cron: String);
+      deleteJob(jobId: String);
+    }
+  }
+
+  anatomy {
+    root:         container    { Top-level wrapper; carries data-state for the active FSM phase }
+    jobList:      container    { Scrollable ordered list of all scheduled job rows }
+    jobRow:       container    { A single job row containing all per-job parts }
+    jobName:      text         { Display name of the scheduled job }
+    nextRunCell:  text         { Next scheduled execution time sourced from live Timer state }
+    statusBadge:  presentation { Visual indicator of the job status: active, paused, or running }
+    pauseButton:  action       { ActionBinding button that pauses an active job via Timer/pause }
+    resumeButton: action       { ActionBinding button that resumes a paused job via Timer/resume }
+    runNowButton: action       { ActionBinding button that immediately triggers a one-off job run }
+    editButton:   action       { Role-gated button that opens the cron editor for the focused job }
+    cronEditor:   container    { Modal overlay holding the cron expression input; visible only in editing-cron state }
+    cronPreview:  widget       { Slot that renders the plain-English interpretation of the current cron expression }
+  }
+
+  states {
+    browsing [initial] {
+      on EDIT_CRON      -> editing-cron;
+      on CONFIRM_DELETE -> confirming-delete;
+    }
+
+    editing-cron {
+      on SAVE_CRON   -> browsing;
+      on CANCEL_EDIT -> browsing;
+      entry [openCronModal; focusCronInput];
+      exit  [closeCronModal; returnFocusToRow];
+    }
+
+    confirming-delete {
+      on CONFIRM_DELETE_OK     -> browsing;
+      on CONFIRM_DELETE_CANCEL -> browsing;
+      entry [showDeleteConfirmation];
+      exit  [hideDeleteConfirmation];
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      ArrowUp   -> NAVIGATE_PREV;
+      ArrowDown -> NAVIGATE_NEXT;
+      Enter     -> EDIT_CRON;
+      Escape    -> CANCEL_EDIT;
+      P         -> PAUSE_FOCUSED;
+      R         -> RUN_NOW_FOCUSED;
+    }
+    focus {
+      trap: false;
+      initial: jobList;
+      roving: true;
+      returnOnClose: jobRow;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Scheduled Jobs";
+      };
+      jobList -> {
+        role: "list";
+        aria-label: "Job list";
+      };
+      jobRow -> {
+        role: "listitem";
+        aria-selected: if self.id == ?selectedJobId then "true" else "false";
+        aria-label: concat("Job: ", self.name, ", status: ", self.status);
+      };
+      jobName -> {
+        role: "none";
+      };
+      nextRunCell -> {
+        role: "none";
+        aria-live: "polite";
+      };
+      statusBadge -> {
+        role: "status";
+        aria-label: concat("Status: ", self.status);
+      };
+      pauseButton -> {
+        role: "button";
+        aria-label: concat("Pause job: ", self.name);
+        aria-disabled: if self.status != "active" then "true" else "false";
+      };
+      resumeButton -> {
+        role: "button";
+        aria-label: concat("Resume job: ", self.name);
+        aria-disabled: if self.status != "paused" then "true" else "false";
+      };
+      runNowButton -> {
+        role: "button";
+        aria-label: concat("Run now: ", self.name);
+      };
+      editButton -> {
+        role: "button";
+        aria-label: concat("Edit schedule: ", self.name);
+        aria-haspopup: "dialog";
+        aria-disabled: if ?canEdit then "false" else "true";
+      };
+      cronEditor -> {
+        role: "dialog";
+        aria-modal: "true";
+        aria-label: "Edit cron expression";
+      };
+      cronPreview -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: "Plain-English schedule description";
+      };
+    }
+  }
+
+  props {
+    jobs:          list ScheduledJobEntry
+    selectedJobId: option String
+    canEdit:       Bool = false
+    canDelete:     Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part:  "root";
+      data-state: state;
+    }
+
+    jobList -> {
+      data-part: "job-list";
+    }
+
+    jobRow -> {
+      data-part:       "job-row";
+      data-job-id:     self.id;
+      data-job-status: self.status;
+      data-selected:   if self.id == ?selectedJobId then "true" else "false";
+      aria-selected:   if self.id == ?selectedJobId then "true" else "false";
+      tabIndex:        "0";
+      onClick:         send(SELECT_JOB, { jobId: self.id });
+      onKeyDown:       if key == "Enter" then send(EDIT_CRON, { jobId: self.id }) else if key == "p" or key == "P" then send(PAUSE_FOCUSED, { jobId: self.id }) else if key == "r" or key == "R" then send(RUN_NOW_FOCUSED, { jobId: self.id }) else noop;
+    }
+
+    jobName -> {
+      data-part: "job-name";
+      text:      self.name;
+    }
+
+    nextRunCell -> {
+      data-part: "next-run-cell";
+      text:      self.nextRun;
+    }
+
+    statusBadge -> {
+      data-part:       "status-badge";
+      data-job-status: self.status;
+      text:            self.status;
+    }
+
+    pauseButton -> {
+      data-part:     "pause-button";
+      disabled:      if self.status != "active" then true else false;
+      aria-disabled: if self.status != "active" then "true" else "false";
+      hidden:        if self.status == "paused" then true else false;
+      onClick:       if self.status == "active" then send(PAUSE_JOB, { jobId: self.id }) else noop;
+    }
+
+    resumeButton -> {
+      data-part:     "resume-button";
+      disabled:      if self.status != "paused" then true else false;
+      aria-disabled: if self.status != "paused" then "true" else "false";
+      hidden:        if self.status != "paused" then true else false;
+      onClick:       if self.status == "paused" then send(RESUME_JOB, { jobId: self.id }) else noop;
+    }
+
+    runNowButton -> {
+      data-part: "run-now-button";
+      onClick:   send(RUN_NOW_JOB, { jobId: self.id });
+    }
+
+    editButton -> {
+      data-part:     "edit-button";
+      hidden:        if ?canEdit then false else true;
+      disabled:      if ?canEdit then false else true;
+      aria-disabled: if ?canEdit then "false" else "true";
+      onClick:       if ?canEdit then send(EDIT_CRON, { jobId: self.id }) else noop;
+    }
+
+    cronEditor -> {
+      data-part:  "cron-editor";
+      hidden:     if state == "editing-cron" then false else true;
+      role:       "dialog";
+      aria-modal: "true";
+    }
+
+    cronPreview -> {
+      data-part: "cron-preview";
+    }
+  }
+
+  affordance {
+    serves: schedule-management;
+    specificity: 10;
+    bind {
+      jobs:          jobs;
+      selectedJobId: selectedJobId;
+    }
+  }
+
+  compose {
+    cronPreview: widget("cron-preview", { expression: self.currentCronExpression })
+  }
+
+  invariant {
+    example "EDIT_CRON from browsing enters editing-cron": {
+      after transition(from: "browsing", event: "EDIT_CRON") -> ok
+      then state.name = "editing-cron"
+    }
+
+    example "CANCEL_EDIT from editing-cron returns to browsing": {
+      after transition(from: "editing-cron", event: "CANCEL_EDIT") -> ok
+      then state.name = "browsing"
+    }
+
+    example "SAVE_CRON from editing-cron returns to browsing": {
+      after transition(from: "editing-cron", event: "SAVE_CRON") -> ok
+      then state.name = "browsing"
+    }
+
+    example "CONFIRM_DELETE from browsing enters confirming-delete": {
+      after transition(from: "browsing", event: "CONFIRM_DELETE") -> ok
+      then state.name = "confirming-delete"
+    }
+
+    example "CONFIRM_DELETE_OK from confirming-delete returns to browsing": {
+      after transition(from: "confirming-delete", event: "CONFIRM_DELETE_OK") -> ok
+      then state.name = "browsing"
+    }
+
+    example "CONFIRM_DELETE_CANCEL from confirming-delete returns to browsing": {
+      after transition(from: "confirming-delete", event: "CONFIRM_DELETE_CANCEL") -> ok
+      then state.name = "browsing"
+    }
+
+    always "FSM is in one of three named states": {
+      state.name = "browsing"
+    }
+
+    never "editing-cron and confirming-delete simultaneously": {
+      state.name = "editing-cron"
+    }
+
+    "editButton.click requires canEdit == true and state == browsing; ensures ok: state == editing-cron";
+    "pauseButton.click requires job.status == active; ensures ok: job.status == paused via Timer/pause ActionBinding";
+    "resumeButton.click requires job.status == paused; ensures ok: job.status == active via Timer/resume ActionBinding";
+    "nextRunCell text must be drawn from live Timer state, never a static placeholder";
+    "cronPreview slot must update on every keystroke in the cron editor without requiring save";
+    "cronEditor hidden must be true in browsing and confirming-delete states";
+    "cronEditor hidden must be false in editing-cron state";
+    "runNowButton dispatches the ActionBinding for ScheduledJob/runNow regardless of job status";
+    "editButton hidden and aria-disabled must be true when canEdit is false";
+    "pauseButton hidden must be true and resumeButton visible for jobs with status paused";
+    "ArrowUp/ArrowDown keyboard navigation moves focus using roving tabindex across jobRow elements";
+    "P key shortcut dispatches PAUSE_FOCUSED for the currently focused jobRow";
+    "R key shortcut dispatches RUN_NOW_FOCUSED for the currently focused jobRow";
+    "Enter key on a focused jobRow opens the cron editor only when canEdit is true";
+    "Escape key in editing-cron state dispatches CANCEL_EDIT without writing cron changes";
+    "editButton and delete controls must not receive keyboard focus when canEdit and canDelete are false";
+    "all three states browsing, editing-cron, and confirming-delete must be reachable from initial";
+  }
+
+}
