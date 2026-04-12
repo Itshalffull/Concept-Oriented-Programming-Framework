@@ -474,14 +474,14 @@ This work should not create a new top-level destination unless the upgraded them
 |---|---|---|---|---|---|---|
 | MAG-643 | Theme generator correctness and token alias repair | §4.1 | — | MAG-644, MAG-645, MAG-646 | high | `aa179183` |
 | MAG-644 | Shared shell tokenization cleanup | §4.2 | MAG-643 | MAG-646, MAG-647, MAG-648 | high | `5b454276` |
-| MAG-645 | Theme-aware widget resolution and affordance scoring | §4.3 | MAG-643 | MAG-647, MAG-648 | medium | |
+| MAG-645 | Theme-aware widget resolution and affordance scoring | §4.3 | MAG-643 | MAG-647, MAG-648 | medium | `cef37255` |
 | MAG-646 | Curated theme token refinement for existing themes | §4.4 | MAG-643 | MAG-647, MAG-648 | medium | |
 | MAG-647 | Themes admin preview surface and theme QA widget | §4.5 | MAG-644, MAG-645, MAG-646 | MAG-648 | medium | |
 | MAG-648 | Final theme polish, regression coverage, and rollout verification | §10, §11 | MAG-644, MAG-645, MAG-646, MAG-647 | — | medium | |
 
 ### Notes
 
-- Card IDs are intentionally left as `MAG-TBD` until Vibe Kanban cards are created.
+- Card IDs now reference the live Vibe Kanban epic `MAG-642`.
 - Execution should begin with generator correctness, because downstream styling work depends on trusted token output.
 
 ---
