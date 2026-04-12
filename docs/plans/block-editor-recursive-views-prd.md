@@ -530,12 +530,21 @@ Minimal end-to-end proof across text + media + marks + theme.
 
 ## 10.1 Phase 1 Commit Log
 
-| Card | Title | Status | Commit | Tests |
+| Card | Title | Status | Commit | Tests/Invariants |
 |---|---|---|---|---|
-| MAG-722 | InputRule concept | Done | `bb02b0e2` | 42 |
-| MAG-723 | EditSurface concept | Done | `ddf357ca` | 57 |
-| MAG-724 | blocks/outline-children | Done | `f30b5777` | 80 |
-| MAG-725 | Metadata additions | Done | `73104f25` | 183 |
+| MAG-722 | InputRule concept | Done | `bb02b0e2` | 42 tests |
+| MAG-723 | EditSurface concept | Done | `ddf357ca` | 57 tests |
+| MAG-724 | blocks/outline-children | Done | `f30b5777` | 80 tests |
+| MAG-725 | Metadata additions | Done | `73104f25` | 183 tests |
+| MAG-713 | block-editor host widget | Done | `dc6d5f46` | 27 invariants |
+| MAG-719 | callout-block widget | Done | `19c4d7e6` | 23 invariants |
+| MAG-721 | AI continue ActionBinding + persona | Done | `3e79c85c` | 124 seed tests |
+| MAG-720 | markdown-editor.derived | Done | `06c13bb7` | parser OK |
+| MAG-720b | InputRule seeds + paste-image sync | Done | `1a7676d4` | 42 tests |
+
+**Concept API gaps noted (follow-up cards needed):**
+- `Outline` has no block-schema-change action — markdown-heading-2 ActionBinding uses `Schema/applyTo` as proxy (should be `Outline/retype` or similar)
+- `MediaAsset/createMedia` doesn't thread `focusedDocId` through — paste-image-to-block sync has placeholder parent binding
 
 ## 10. Card Plan (Phase 1 only; Phase 2+ carded after Phase 1 ships)
 
