@@ -1,0 +1,541 @@
+@version(1)
+widget queue-monitor {
+
+  purpose {
+    Operational surface for observing and controlling background queues backed
+    by the Queue concept. Renders a card grid where each card shows live
+    kernel-sourced counters: current depth, concurrency cap, items currently
+    running, average wait time, and the queue paused or draining state. Cards
+    are the default view with progressive disclosure; clicking a card expands an
+    inline item list that shows individual in-flight and waiting items with
+    per-item requeue and drop action buttons. Stuck items and poison-queue
+    candidates are called out with a dedicated error badge and explicit
+    remediation controls. Admin actions pause, drain, and set-concurrency are
+    role-gated and hidden from read-only users; the governance badge on each
+    card indicates the current access tier. Connects to Queue concept actions:
+    enqueue, claim, process, release, delete.
+  }
+
+  requires @1 {
+    fields {
+      queues: list;
+      selectedQueueId: option String;
+      selectedItemId: option String;
+    }
+    actions {
+      pause(queueId: String);
+      drain(queueId: String);
+      resume(queueId: String);
+      setConcurrency(queueId: String, cap: Int);
+      requeueItem(queueId: String, itemId: String);
+      dropItem(queueId: String, itemId: String);
+    }
+  }
+
+  anatomy {
+    root:               container     { Top-level wrapper carrying data-state for the active FSM phase }
+    cardGrid:           container     { Responsive grid of per-queue summary cards }
+    queueCard:          container     { Summary card for a single queue; collapses or expands to show items }
+    queueName:          text          { Display name of the queue }
+    depthCounter:       text          { Live count of items currently waiting in the queue }
+    runningCounter:     text          { Live count of items currently being processed by workers }
+    concurrencyCap:     text          { Configured maximum concurrent workers for this queue }
+    avgWaitTime:        text          { Rolling average wait time (ms) for items before claim }
+    queueStatusBadge:   presentation  { Coloured badge indicating active, paused, or draining state }
+    errorBadge:         presentation  { Alert badge shown when the queue has stuck or poison items }
+    governanceBadge:    presentation  { Role indicator showing the current user access tier for this queue }
+    expandButton:       action        { Toggles expansion of the per-queue item list }
+    pauseButton:        action        { Role-gated button that pauses processing on this queue }
+    resumeButton:       action        { Role-gated button that resumes a paused queue }
+    drainButton:        action        { Role-gated button that drains the queue (stops accepting new items) }
+    setConcurrencyButton: action      { Role-gated button that opens the concurrency editor }
+    concurrencyEditor:  container     { Inline input panel for setting the concurrency cap; visible only in editing-concurrency state }
+    itemList:           container     { Expanded per-queue list of individual queue items; hidden when card is collapsed }
+    itemRow:            container     { Single row representing one queue item with id, status, and age }
+    itemId:             text          { Unique identifier of the queue item }
+    itemStatus:         presentation  { Badge indicating item state: waiting, running, stuck, or poison }
+    itemAge:            text          { Elapsed time the item has been in the queue }
+    requeueButton:      action        { Re-injects a drained or failed item back into the queue }
+    dropButton:         action        { Permanently removes a queue item }
+  }
+
+  states {
+    card {
+      collapsed [initial] {
+        on EXPAND_QUEUE    -> expanded;
+      }
+      expanded {
+        on COLLAPSE_QUEUE  -> collapsed;
+        on EXPAND_QUEUE    -> expanded;
+        entry [loadItemList];
+      }
+    }
+
+    admin {
+      read-only [initial] {
+        on GRANT_ADMIN     -> admin-active;
+      }
+      admin-active {
+        on REVOKE_ADMIN    -> read-only;
+        on EDIT_CONCURRENCY -> editing-concurrency;
+      }
+      editing-concurrency {
+        on SAVE_CONCURRENCY   -> admin-active;
+        on CANCEL_CONCURRENCY -> admin-active;
+        entry [openConcurrencyEditor; focusConcurrencyInput];
+        exit  [closeConcurrencyEditor; returnFocusToCard];
+      }
+    }
+
+    queueOp {
+      idle [initial] {
+        on PAUSE_QUEUE   -> pausing;
+        on DRAIN_QUEUE   -> draining;
+        on RESUME_QUEUE  -> resuming;
+      }
+      pausing {
+        on OP_SUCCESS -> idle;
+        on OP_ERROR   -> idle;
+        entry [setAriaBusyTrue];
+        exit  [setAriaBusyFalse];
+      }
+      draining {
+        on OP_SUCCESS -> idle;
+        on OP_ERROR   -> idle;
+        entry [setAriaBusyTrue];
+        exit  [setAriaBusyFalse];
+      }
+      resuming {
+        on OP_SUCCESS -> idle;
+        on OP_ERROR   -> idle;
+        entry [setAriaBusyTrue];
+        exit  [setAriaBusyFalse];
+      }
+    }
+
+    item {
+      none-selected [initial] {
+        on SELECT_ITEM   -> item-selected;
+      }
+      item-selected {
+        on DESELECT_ITEM   -> none-selected;
+        on SELECT_ITEM     -> item-selected;
+        on REQUEUE_ITEM    -> requeuing;
+        on DROP_ITEM       -> dropping;
+      }
+      requeuing {
+        on REQUEUE_SUCCESS -> item-selected;
+        on REQUEUE_ERROR   -> item-selected;
+      }
+      dropping {
+        on DROP_SUCCESS    -> none-selected;
+        on DROP_ERROR      -> item-selected;
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      ArrowUp       -> NAVIGATE_PREV_CARD;
+      ArrowDown     -> NAVIGATE_NEXT_CARD;
+      Enter         -> EXPAND_QUEUE;
+      Escape        -> COLLAPSE_QUEUE;
+      P             -> PAUSE_QUEUE;
+      D             -> DRAIN_QUEUE;
+      R             -> RESUME_QUEUE;
+      Tab           -> FOCUS_NEXT;
+      Shift+Tab     -> FOCUS_PREV;
+    }
+    focus {
+      trap: false;
+      initial: cardGrid;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Queue monitor";
+      };
+      cardGrid -> {
+        role: "list";
+        aria-label: "Queues";
+      };
+      queueCard -> {
+        role: "listitem";
+        aria-expanded: if state.card == "expanded" then "true" else "false";
+        aria-busy: if state.queueOp != "idle" then "true" else "false";
+      };
+      expandButton -> {
+        role: "button";
+        aria-expanded: if state.card == "expanded" then "true" else "false";
+        aria-controls: itemList;
+        aria-label: concat("Expand queue ", self.name);
+      };
+      itemList -> {
+        role: "list";
+        aria-label: concat("Items in queue ", self.name);
+        aria-live: "polite";
+      };
+      itemRow -> {
+        role: "listitem";
+        aria-selected: if ?selectedItemId != none then "true" else "false";
+      };
+      errorBadge -> {
+        role: "status";
+        aria-live: "assertive";
+        aria-label: concat("Queue error: stuck or poison items detected in ", self.name);
+      };
+      pauseButton -> {
+        role: "button";
+        aria-label: concat("Pause queue ", self.name);
+        aria-disabled: if state.admin == "read-only" then "true" else "false";
+      };
+      resumeButton -> {
+        role: "button";
+        aria-label: concat("Resume queue ", self.name);
+        aria-disabled: if state.admin == "read-only" then "true" else "false";
+      };
+      drainButton -> {
+        role: "button";
+        aria-label: concat("Drain queue ", self.name);
+        aria-disabled: if state.admin == "read-only" then "true" else "false";
+      };
+      setConcurrencyButton -> {
+        role: "button";
+        aria-label: concat("Set concurrency cap for queue ", self.name);
+        aria-disabled: if state.admin == "read-only" then "true" else "false";
+        aria-haspopup: "dialog";
+      };
+      concurrencyEditor -> {
+        role: "dialog";
+        aria-modal: "true";
+        aria-label: concat("Set concurrency cap for queue ", self.name);
+      };
+      requeueButton -> {
+        role: "button";
+        aria-label: concat("Requeue item ", self.itemId);
+        aria-disabled: if state.item == "requeuing" then "true" else "false";
+      };
+      dropButton -> {
+        role: "button";
+        aria-label: concat("Drop item ", self.itemId);
+        aria-disabled: if state.item == "dropping" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    queues: list {
+      id: String;
+      name: String;
+      depth: Int;
+      running: Int;
+      concurrencyCap: Int;
+      avgWaitMs: Int;
+      status: union "active" | "paused" | "draining";
+      stuckCount: Int;
+      poisonCount: Int;
+      userCanAdmin: Bool;
+    } = []
+    selectedQueueId: option String
+    selectedItemId: option String
+    items: list {
+      id: String;
+      queueId: String;
+      status: union "waiting" | "running" | "stuck" | "poison";
+      ageMs: Int;
+      payload: option String;
+    } = []
+    payloadRedacted: Bool = false
+    concurrencyDraft: option Int
+    autoRefreshEnabled: Bool = false
+    autoRefreshIntervalMs: Int = 5000
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.card;
+      aria-label: "Queue monitor";
+    }
+
+    cardGrid -> {
+      data-part: "card-grid";
+      role: "list";
+      aria-label: "Queues";
+    }
+
+    queueCard -> {
+      data-part: "queue-card";
+      data-queue-id: self.id;
+      data-status: self.status;
+      data-expanded: if state.card == "expanded" then "true" else "false";
+      aria-expanded: if state.card == "expanded" then "true" else "false";
+      aria-busy: if state.queueOp != "idle" then "true" else "false";
+    }
+
+    queueName -> {
+      data-part: "queue-name";
+    }
+
+    depthCounter -> {
+      data-part: "depth-counter";
+      data-value: self.depth;
+      aria-label: concat("Depth: ", self.depth);
+    }
+
+    runningCounter -> {
+      data-part: "running-counter";
+      data-value: self.running;
+      aria-label: concat("Running: ", self.running);
+    }
+
+    concurrencyCap -> {
+      data-part: "concurrency-cap";
+      data-value: self.concurrencyCap;
+      aria-label: concat("Concurrency cap: ", self.concurrencyCap);
+    }
+
+    avgWaitTime -> {
+      data-part: "avg-wait-time";
+      data-value: self.avgWaitMs;
+      aria-label: concat("Average wait: ", self.avgWaitMs, "ms");
+    }
+
+    queueStatusBadge -> {
+      data-part: "queue-status-badge";
+      data-status: self.status;
+      aria-label: concat("Status: ", self.status);
+    }
+
+    errorBadge -> {
+      data-part: "error-badge";
+      hidden: if self.stuckCount = 0 and self.poisonCount = 0 then true else false;
+      data-stuck: self.stuckCount;
+      data-poison: self.poisonCount;
+    }
+
+    governanceBadge -> {
+      data-part: "governance-badge";
+      data-can-admin: if self.userCanAdmin then "true" else "false";
+      aria-label: if self.userCanAdmin then "Admin access" else "Read-only access";
+    }
+
+    expandButton -> {
+      data-part: "expand-button";
+      aria-expanded: if state.card == "expanded" then "true" else "false";
+      onClick: if state.card == "collapsed" then send(EXPAND_QUEUE) else send(COLLAPSE_QUEUE);
+      onKeyDown: if state.card == "collapsed" then send(EXPAND_QUEUE) else send(COLLAPSE_QUEUE);
+    }
+
+    pauseButton -> {
+      data-part: "pause-button";
+      hidden: if not self.userCanAdmin then true else false;
+      disabled: if state.admin == "read-only" or state.queueOp != "idle" or self.status == "paused" then true else false;
+      aria-disabled: if state.admin == "read-only" or self.status == "paused" then "true" else "false";
+      onClick: send(PAUSE_QUEUE);
+    }
+
+    resumeButton -> {
+      data-part: "resume-button";
+      hidden: if not self.userCanAdmin then true else false;
+      disabled: if state.admin == "read-only" or state.queueOp != "idle" or self.status == "active" then true else false;
+      aria-disabled: if state.admin == "read-only" or self.status == "active" then "true" else "false";
+      onClick: send(RESUME_QUEUE);
+    }
+
+    drainButton -> {
+      data-part: "drain-button";
+      hidden: if not self.userCanAdmin then true else false;
+      disabled: if state.admin == "read-only" or state.queueOp != "idle" or self.status == "draining" then true else false;
+      aria-disabled: if state.admin == "read-only" or self.status == "draining" then "true" else "false";
+      onClick: send(DRAIN_QUEUE);
+    }
+
+    setConcurrencyButton -> {
+      data-part: "set-concurrency-button";
+      hidden: if not self.userCanAdmin then true else false;
+      disabled: if state.admin == "read-only" or state.queueOp != "idle" then true else false;
+      aria-disabled: if state.admin == "read-only" then "true" else "false";
+      onClick: send(EDIT_CONCURRENCY);
+    }
+
+    concurrencyEditor -> {
+      data-part: "concurrency-editor";
+      hidden: if state.admin != "editing-concurrency" then true else false;
+      role: "dialog";
+      aria-modal: "true";
+    }
+
+    itemList -> {
+      data-part: "item-list";
+      hidden: if state.card == "collapsed" then true else false;
+      aria-live: "polite";
+    }
+
+    itemRow -> {
+      data-part: "item-row";
+      data-item-id: self.id;
+      data-status: self.status;
+      aria-selected: if ?selectedItemId = self.id then "true" else "false";
+      onClick: send(SELECT_ITEM);
+    }
+
+    itemId -> {
+      data-part: "item-id";
+    }
+
+    itemStatus -> {
+      data-part: "item-status";
+      data-status: self.status;
+      aria-label: concat("Item status: ", self.status);
+    }
+
+    itemAge -> {
+      data-part: "item-age";
+      data-value: self.ageMs;
+      aria-label: concat("Age: ", self.ageMs, "ms");
+    }
+
+    requeueButton -> {
+      data-part: "requeue-button";
+      disabled: if state.item == "requeuing" or state.item == "dropping" then true else false;
+      aria-disabled: if state.item == "requeuing" then "true" else "false";
+      onClick: send(REQUEUE_ITEM);
+    }
+
+    dropButton -> {
+      data-part: "drop-button";
+      disabled: if state.item == "dropping" or state.item == "requeuing" then true else false;
+      aria-disabled: if state.item == "dropping" then "true" else "false";
+      onClick: send(DROP_ITEM);
+    }
+  }
+
+  affordance {
+    serves: group-repeating;
+    specificity: 9;
+    when {
+      concept: "Queue";
+    }
+    bind {
+      queues: queues;
+      selectedQueueId: selectedQueueId;
+    }
+  }
+
+  compose {
+    queueStatusBadge: widget("badge", { variant: self.status });
+    errorBadge:       widget("badge", { variant: "destructive" });
+    governanceBadge:  widget("badge", { variant: if self.userCanAdmin then "admin" else "read-only" });
+    _autoRefresh:     widget("interval-poller", { enabled: ?autoRefreshEnabled, intervalMs: ?autoRefreshIntervalMs });
+  }
+
+  invariant {
+    example "expand card transitions to expanded": {
+      after transition(from: "collapsed", event: "EXPAND_QUEUE") -> ok
+      then queueCard -> { data-expanded: "true" }
+      and itemList -> { hidden: false }
+    }
+
+    example "collapse card transitions to collapsed": {
+      after transition(from: "expanded", event: "COLLAPSE_QUEUE") -> ok
+      then queueCard -> { data-expanded: "false" }
+      and itemList -> { hidden: true }
+    }
+
+    example "pause queue triggers pausing state": {
+      after transition(from: "idle", event: "PAUSE_QUEUE") -> ok
+      then queueCard -> { aria-busy: "true" }
+    }
+
+    example "pause op success returns to idle": {
+      after transition(from: "pausing", event: "OP_SUCCESS") -> ok
+      then queueCard -> { aria-busy: "false" }
+    }
+
+    example "requeue item transitions to requeuing": {
+      after transition(from: "item-selected", event: "REQUEUE_ITEM") -> ok
+      then requeueButton -> { aria-disabled: "true" }
+      and dropButton -> { aria-disabled: "true" }
+    }
+
+    example "drop item success transitions to none-selected": {
+      after transition(from: "dropping", event: "DROP_SUCCESS") -> ok
+      then itemRow -> { aria-selected: "false" }
+    }
+
+    example "admin controls hidden for read-only users": {
+      after transition(from: "admin-active", event: "REVOKE_ADMIN") -> ok
+      then pauseButton -> { hidden: true }
+      and drainButton -> { hidden: true }
+      and setConcurrencyButton -> { hidden: true }
+    }
+
+    example "concurrency editor opens on EDIT_CONCURRENCY": {
+      after transition(from: "admin-active", event: "EDIT_CONCURRENCY") -> ok
+      then concurrencyEditor -> { hidden: false }
+    }
+
+    example "concurrency editor closes on SAVE_CONCURRENCY": {
+      after transition(from: "editing-concurrency", event: "SAVE_CONCURRENCY") -> ok
+      then concurrencyEditor -> { hidden: true }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects card FSM": {
+      forall s in card.states:
+        root -> { data-state: s.name }
+    }
+
+    always "itemList hidden when card collapsed": {
+      if state.card == "collapsed" then itemList -> { hidden: true }
+    }
+
+    always "errorBadge hidden when no stuck or poison items": {
+      if self.stuckCount = 0 and self.poisonCount = 0 then errorBadge -> { hidden: true }
+    }
+
+    always "admin buttons hidden for read-only users": {
+      if not self.userCanAdmin then pauseButton -> { hidden: true }
+      and drainButton -> { hidden: true }
+      and setConcurrencyButton -> { hidden: true }
+    }
+
+    always "queueOp busy flag propagates to queueCard aria-busy": {
+      if state.queueOp != "idle" then queueCard -> { aria-busy: "true" }
+    }
+
+    never "admin actions available to read-only user": {
+      state.admin == "read-only"
+        and pauseButton -> { disabled: false }
+    }
+
+    never "requeue and drop simultaneously in-flight": {
+      state.item == "requeuing" and state.item == "dropping"
+    }
+
+    never "item list visible when card is collapsed": {
+      state.card == "collapsed" and itemList -> { hidden: false }
+    }
+
+    never "concurrency editor open outside editing-concurrency state": {
+      state.admin != "editing-concurrency" and concurrencyEditor -> { hidden: false }
+    }
+
+    "depth, running, and concurrencyCap counters must reflect live kernel state, not stale local copies";
+    "stuck items (status == stuck) must appear before waiting items in itemList ordering";
+    "poison items (status == poison) must be visually distinguished with errorBadge and itemStatus data-status";
+    "requeueButton must call Queue/release with the item id to re-inject the item into the queue";
+    "dropButton must call Queue/delete with the item id to permanently remove the item";
+    "payloadRedacted prop must suppress item payload display for users lacking governance permission";
+    "auto-refresh interval polling must stop when autoRefreshEnabled is false or the component unmounts";
+    "P key shortcut must fire PAUSE_QUEUE only when state.admin == admin-active and a queue card is focused";
+    "D key shortcut must fire DRAIN_QUEUE only when state.admin == admin-active and a queue card is focused";
+    "R key shortcut must fire RESUME_QUEUE only when state.admin == admin-active and a queue card is focused";
+  }
+
+}
