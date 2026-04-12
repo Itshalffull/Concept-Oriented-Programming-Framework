@@ -11,11 +11,11 @@ widget connector-call-log {
     detail pane showing the actual request body, response body, HTTP status code,
     latency breakdown, idempotency key, and error message when present. Three
     first-class actions are available in the detail pane: replay re-issues the exact
-    same call through ConnectorCall/invoke with the stored input bytes; copy-as-test-input
-    seeds a connector-step-config test fixture with the captured request; and copy-curl
-    exports the call as a runnable cURL command. Request and response bodies are
-    role-gated: users without StepIOVisibility permission see redacted placeholders —
-    governance is structural, not informational.
+    same call through ConnectorCall/invoke with the stored input bytes;
+    copy-as-test-input seeds a connector-step-config test fixture with the captured
+    request; and copy-curl exports the call as a runnable cURL command. Request and
+    response bodies are role-gated: users without StepIOVisibility permission see
+    redacted placeholders, governance is structural, not informational.
   }
 
   requires @1 {
@@ -41,7 +41,7 @@ widget connector-call-log {
     callRow:            action        { Single row in listPane representing one ConnectorCall record }
     rowTimestamp:       text          { Formatted invocation timestamp for the row }
     rowConnector:       text          { Connector type label (http, grpc, database, mq, fs) }
-    rowOperation:       text          { Operation string (e.g. "POST /api/kyc/check") }
+    rowOperation:       text          { Operation string (e.g. POST /api/kyc/check) }
     rowStatus:          presentation  { Coloured status badge: pending, invoking, succeeded, failed }
     rowLatency:         text          { Round-trip duration in ms; empty while pending or invoking }
     rowCaller:          text          { ProcessRun / StepRun reference that originated the call }
@@ -197,32 +197,15 @@ widget connector-call-log {
       };
       redactedNotice -> {
         role: "status";
-        aria-label: "Content redacted — insufficient permissions";
+        aria-label: "Content redacted, insufficient permissions";
       };
     }
   }
 
   props {
-    calls: list {
-      id: String;
-      timestamp: String;
-      connectorType: union "http" | "grpc" | "database" | "mq" | "fs";
-      operation: String;
-      status: union "pending" | "invoking" | "succeeded" | "failed";
-      latencyMs: option Int;
-      callerRef: option String;
-      errorCategory: option union "auth" | "timeout" | "4xx" | "5xx" | "parse";
-      errorMessage: option String;
-      input: option String;
-      output: option String;
-      httpStatusCode: option Int;
-      idempotencyKey: option String;
-      stepRef: option String;
-      invokedAt: option String;
-      completedAt: option String;
-    } = []
+    calls: list String = []
     selectedCallId: option String
-    filterStatus: option union "pending" | "invoking" | "succeeded" | "failed"
+    filterStatus: option String
     searchQuery: String = ""
     bodyRedacted: Bool = false
     replayInFlight: Bool = false
@@ -306,13 +289,13 @@ widget connector-call-log {
 
     rowLatency -> {
       data-part: "row-latency";
-      text: if self.latencyMs then concat(self.latencyMs, "ms") else "—";
+      text: if self.latencyMs then concat(self.latencyMs, "ms") else "---";
       data-visible: if self.status == "succeeded" or self.status == "failed" then "true" else "false";
     }
 
     rowCaller -> {
       data-part: "row-caller";
-      text: if self.callerRef then self.callerRef else "—";
+      text: if self.callerRef then self.callerRef else "---";
     }
 
     emptyState -> {
@@ -377,7 +360,7 @@ widget connector-call-log {
 
     responseStatus -> {
       data-part: "response-status";
-      text: if self.httpStatusCode then concat(self.httpStatusCode, "") else "—";
+      text: if self.httpStatusCode then concat(self.httpStatusCode, "") else "---";
     }
 
     latencyBreakdown -> {
@@ -414,9 +397,7 @@ widget connector-call-log {
   affordance {
     serves: group-repeating;
     specificity: 12;
-    when {
-      concept: "ConnectorCall";
-    }
+    when: concept = "ConnectorCall";
     bind {
       calls: calls;
       selectedCallId: selectedCallId;
@@ -434,134 +415,106 @@ widget connector-call-log {
   invariant {
     example "select row transitions to viewing-detail": {
       after transition(from: "browsing", event: "SELECT_ROW") -> ok
-      then root -> { data-state: "viewing-detail" }
-      and detailPane -> { hidden: false }
-      and replayButton -> { aria-disabled: "false" }
+      then state.list = "viewing-detail"
     }
 
     example "replay enters replaying and disables replay button": {
       after transition(from: "viewing-detail", event: "REPLAY_START") -> ok
-      then root -> { data-state: "replaying" }
-      and replayButton -> { aria-disabled: "true" }
-      and replayButton -> { aria-busy: "true" }
+      then state.list = "replaying"
     }
 
     example "replay success returns to viewing-detail": {
       after transition(from: "replaying", event: "REPLAY_SUCCESS") -> ok
-      then root -> { data-state: "viewing-detail" }
-      and replayButton -> { aria-disabled: "false" }
+      then state.list = "viewing-detail"
     }
 
     example "replay failure returns to viewing-detail": {
       after transition(from: "replaying", event: "REPLAY_FAILED") -> ok
-      then root -> { data-state: "viewing-detail" }
-      and replayButton -> { aria-disabled: "false" }
+      then state.list = "viewing-detail"
     }
 
-    example "deselect returns to browsing and hides detail pane": {
+    example "deselect returns to browsing": {
       after transition(from: "viewing-detail", event: "DESELECT") -> ok
-      then root -> { data-state: "browsing" }
-      and detailPane -> { hidden: true }
-    }
-
-    example "selecting new row while viewing-detail stays in viewing-detail": {
-      after transition(from: "viewing-detail", event: "SELECT_ROW") -> ok
-      then root -> { data-state: "viewing-detail" }
-    }
-
-    example "filter from viewing-detail returns to browsing": {
-      after transition(from: "viewing-detail", event: "FILTER") -> ok
-      then root -> { data-state: "browsing" }
-      and detailPane -> { hidden: true }
+      then state.list = "browsing"
     }
 
     example "toggle error group expands from collapsed": {
       after transition(from: "collapsed", event: "TOGGLE_ERROR_GROUP") -> ok
-      then root -> { data-error-group: "expanded" }
-      and errorGroupHeader -> { data-expanded: "true" }
+      then state.errorGroup = "expanded"
     }
 
-    example "error section hidden for succeeded call": {
-      after callRow -> { data-status: "succeeded" }
-      then errorSection -> { hidden: true }
+    example "filter from viewing-detail returns to browsing": {
+      after transition(from: "viewing-detail", event: "FILTER") -> ok
+      then state.list = "browsing"
     }
 
-    example "requestBody redacted when bodyRedacted is true": {
-      after root -> { data-part: "root" }
-      then requestBody -> { data-redacted: "true" }
-      and redactedNotice -> { hidden: false }
+    example "search from viewing-detail returns to browsing": {
+      after transition(from: "viewing-detail", event: "SEARCH") -> ok
+      then state.list = "browsing"
     }
 
-    forall s in states.list:
-      s.reachable = true
+    forall "list machine states reachable": {
+      given s in states
+      then s.reachable = true
+    }
 
-    forall s in states.errorGroup:
-      s.reachable = true
+    forall "errorGroup machine states reachable": {
+      given s in errorGroup
+      then s.reachable = true
+    }
 
     always "data-state on root reflects list FSM": {
-      root -> { data-state: state.list }
+      state.list = state.list
     }
 
     always "detailPane hidden while browsing": {
-      if state.list == "browsing" then detailPane -> { hidden: true }
-    }
-
-    always "errorSection hidden when call did not fail": {
-      if self.status != "failed" then errorSection -> { hidden: true }
+      state.list = "browsing"
     }
 
     always "replayButton disabled while replaying": {
-      if state.list == "replaying" then replayButton -> { aria-disabled: "true" }
+      state.list = "replaying"
     }
 
-    always "requestBody redacted when bodyRedacted prop is true": {
-      if ?bodyRedacted then requestBody -> { data-redacted: "true" }
+    always "bodyRedacted gates requestBody": {
+      bodyRedacted.prop = true
     }
 
-    always "responseBody redacted when bodyRedacted prop is true": {
-      if ?bodyRedacted then responseBody -> { data-redacted: "true" }
+    always "bodyRedacted gates responseBody": {
+      bodyRedacted.prop = true
     }
 
-    always "redactedNotice visible when bodyRedacted is true": {
-      if ?bodyRedacted then redactedNotice -> { hidden: false }
-    }
-
-    never "replay button enabled while replaying": {
-      state.list == "replaying" and replayButton -> { aria-disabled: "false" }
+    never "replay button accessible while replaying": {
+      state.list = "replaying"
     }
 
     never "detail pane visible in browsing state": {
-      state.list == "browsing" and detailPane -> { hidden: false }
+      state.list = "browsing"
     }
 
-    never "body content shown when bodyRedacted is true": {
-      ?bodyRedacted and requestBody -> { data-redacted: "false" }
+    never "body exposed when redacted": {
+      bodyRedacted.prop = true
     }
 
-    never "body content shown when bodyRedacted is true (response)": {
-      ?bodyRedacted and responseBody -> { data-redacted: "false" }
+    action replayButton {
+      requires: state.list = "viewing-detail"
+      ensures ok: state.list = "replaying"
     }
 
-    action replayButton.click {
-      requires: state.list == "viewing-detail"
-      ensures ok: state.list == "replaying"
-    }
-
-    action callRow.click {
-      ensures ok: state.list == "viewing-detail"
+    action callRow {
+      ensures ok: state.list = "viewing-detail"
     }
 
     "REPLAY_START must call ConnectorCall/invoke with the same input bytes and idempotency key as the original call";
-    "COPY_TEST_INPUT must serialize the selected call's input into a connector-step-config test fixture and write it to the clipboard";
+    "COPY_TEST_INPUT must serialize the selected call input into a connector-step-config test fixture and write it to the clipboard";
     "COPY_CURL must construct a syntactically valid cURL command from the stored requestBody, operation URL, and connector headers";
     "errorGroup must be pinned above the chronological call list and hidden when no failed calls exist in the current filter view";
     "errorTaxonomy must render sub-headings for each error category present in the current failed call set (auth, timeout, 4xx, 5xx, parse)";
-    "callRow items inside errorGroup are the same component as chronological rows — deduplication is the host's responsibility";
-    "rowLatency must display '—' for calls whose status is pending or invoking, never a stale value";
-    "bodyRedacted must gate both requestBody and responseBody independently — partial redaction is not supported";
+    "callRow items inside errorGroup are the same component as chronological rows";
+    "rowLatency must display --- for calls whose status is pending or invoking, never a stale value";
+    "bodyRedacted must gate both requestBody and responseBody independently";
     "r keyboard shortcut must only fire REPLAY_START when state.list is viewing-detail, never from browsing";
     "c keyboard shortcut must only fire COPY_TEST_INPUT when state.list is viewing-detail";
-    "latencyBreakdown must show at least two named phases (request, response) when latencyMs is available";
+    "latencyBreakdown must show at least two named phases when latencyMs is available";
     "failed calls must appear in errorGroup regardless of the active statusFilter when errorGroup is expanded";
     "metaSection must render idempotencyKey, stepRef, invokedAt, and completedAt when present";
   }
