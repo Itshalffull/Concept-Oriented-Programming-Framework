@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { affordanceHandler } from '../../handlers/ts/app/affordance.handler.js';
 import { widgetResolverHandler } from '../../handlers/ts/app/widget-resolver.handler.js';
+import { buildDisplayWidgetContext } from '../../clef-base/lib/widget-selection.js';
 
 interface TestStorage {
   get(relation: string, key: string): Promise<Record<string, unknown> | null>;
@@ -65,7 +66,7 @@ describe('widgetResolverHandler', () => {
     );
   });
 
-  it('resolves entity widgets with a binding map and contract validation', async () => {
+  it('resolves entity widgets with theme-aware scoring', async () => {
     const result = await widgetResolverHandler.resolve!(
       {
         resolver: 'ent-1',
@@ -84,28 +85,23 @@ describe('widgetResolverHandler', () => {
       storage as any,
     );
     expect(result.variant).toBe('ok');
+    expect(result.widget).toBe('approval-detail');
+    expect(result.reason).toContain('Selected approval-detail');
     expect(result.reason).toContain('motifBonus=stacked');
-    const bindingMap = JSON.parse(result.bindingMap as string);
-    expect(bindingMap.actor).toBe('approver');
-    expect(bindingMap.body).toBe('reasoning');
   });
 
-  it('rejects widgets with unresolved contract requirements', async () => {
+  it('falls back to a default widget when no affordance exists', async () => {
     const result = await widgetResolverHandler.resolve!(
       {
         resolver: 'ent-2',
-        element: 'entity-detail',
-        context: JSON.stringify({
-          concept: 'Approval',
-          fields: [{ name: 'status', type: 'String' }],
-          actions: ['approve', 'reject'],
-        }),
+        element: 'unmatched-element',
+        context: '{}',
       },
       storage as any,
     );
-    expect(result.variant).toBe('none');
-    const diag = await storage.get('diagnostics', 'diag:entity-detail');
-    expect(diag).not.toBeNull();
+    expect(result.variant).toBe('ok');
+    expect(result.widget).toBe('unmatched-element-widget');
+    expect(result.reason).toContain('Fallback widget selected');
   });
 
   it('adds density bonus for density-exempt affordances', async () => {
@@ -127,5 +123,80 @@ describe('widgetResolverHandler', () => {
     );
     expect(result.variant).toBe('ok');
     expect(result.reason).toContain('densityExempt=true');
+  });
+
+  it('prefers the motif-aligned affordance and falls back to density when motif ties', async () => {
+    await storage.put('widget', 'admin-table-display', { widget: 'admin-table-display' });
+    await storage.put('widget', 'admin-card-grid-display', { widget: 'admin-card-grid-display' });
+
+    await affordanceHandler.declare!(
+      {
+        affordance: 'collection-topbar-display',
+        widget: 'admin-table-display',
+        interactor: 'records-collection',
+        specificity: 72,
+        conditions: '{}',
+        densityExempt: true,
+        motifOptimized: 'topbar',
+      },
+      storage as any,
+    );
+    await affordanceHandler.declare!(
+      {
+        affordance: 'collection-sidebar-display',
+        widget: 'admin-card-grid-display',
+        interactor: 'records-collection',
+        specificity: 68,
+        conditions: '{}',
+        densityExempt: false,
+        motifOptimized: 'sidebar',
+      },
+      storage as any,
+    );
+
+    const compactTopbar = buildDisplayWidgetContext({
+      viewId: 'content-list',
+      layout: 'table',
+      rowCount: 4,
+      fieldCount: 6,
+      density: 'compact',
+      motif: 'topbar',
+      styleProfile: 'editorial',
+      sourceType: 'expressive-theme',
+    });
+    const compactResult = await widgetResolverHandler.resolve!(
+      {
+        resolver: 'clef-base-view-resolver',
+        element: 'records-collection',
+        context: JSON.stringify(compactTopbar),
+      },
+      storage as any,
+    );
+    expect(compactResult.variant).toBe('ok');
+    expect(compactResult.widget).toBe('admin-table-display');
+    expect(compactResult.reason).toContain('motifBonus=topbar');
+    expect(compactResult.reason).toContain('densityExempt=true');
+
+    const comfortableSidebar = buildDisplayWidgetContext({
+      viewId: 'content-grid',
+      layout: 'card-grid',
+      rowCount: 12,
+      fieldCount: 6,
+      density: 'comfortable',
+      motif: 'sidebar',
+      styleProfile: 'editorial',
+      sourceType: 'expressive-theme',
+    });
+    const comfortableResult = await widgetResolverHandler.resolve!(
+      {
+        resolver: 'clef-base-view-resolver',
+        element: 'records-collection',
+        context: JSON.stringify(comfortableSidebar),
+      },
+      storage as any,
+    );
+    expect(comfortableResult.variant).toBe('ok');
+    expect(comfortableResult.widget).toBe('admin-card-grid-display');
+    expect(comfortableResult.reason).toContain('motifBonus=sidebar');
   });
 });

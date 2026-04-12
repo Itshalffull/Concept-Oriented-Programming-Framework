@@ -26,6 +26,8 @@ describe('clef-base widget selection helpers', () => {
     expect(context).toMatchObject({
       density: 'comfortable',
       motif: 'sidebar',
+      styleProfile: 'editorial',
+      sourceType: 'expressive-theme',
       optionCount: 4,
       fieldCount: 6,
       viewId: 'content-list',
