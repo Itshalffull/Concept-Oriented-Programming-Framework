@@ -1,0 +1,273 @@
+@version(1)
+widget outline-panel {
+
+  purpose {
+    Editor-panel plugin that displays the heading hierarchy of the current
+    document as an interactive tree. Reads Outline/children recursively for
+    the root node, filters to blocks whose schema equals "heading", and
+    reconstructs nesting from each heading level field. Users can click or
+    keyboard-navigate to any heading to scroll that block into view and move
+    editor focus to it. A search field lets users filter headings by text.
+    Collapsible subtrees allow hiding sections that are out of scope.
+    Registered with PluginRegistry as type "editor-panel" so it appears
+    automatically in the editor side-panel for markdown, wiki, notebook, and
+    persona contexts.
+  }
+
+  requires @1 {
+    fields {
+      children: list;
+      headingLevel: Int;
+      blockSchema: String;
+    }
+    actions {
+      scrollToBlock(blockId: String);
+      focusBlock(blockId: String);
+    }
+  }
+
+  anatomy {
+    root:            container    { Top-level panel wrapper; carries data-state for both FSMs }
+    searchInput:     interactive  { Text field for filtering headings by label text }
+    treeContainer:   container    { Scrollable region that holds the heading tree }
+    headingNode:     action       { Single row in the tree representing one heading block }
+    headingIcon:     presentation { Visual icon indicating the heading level (H1-H6) }
+    headingLabel:    text         { Display text of the heading block }
+    collapseToggle:  action       { Button that expands or collapses a heading subtree }
+    activeIndicator: presentation { Highlight marker on the headingNode that matches currentHeadingId }
+  }
+
+  states {
+    browse {
+      browsing [initial] {
+        on START_SEARCH    -> searching;
+        on NAVIGATE_START  -> navigating;
+      }
+      searching {
+        on CLEAR_SEARCH    -> browsing;
+        on START_SEARCH    -> searching;
+        on NAVIGATE_START  -> navigating;
+        entry [filterHeadings];
+        exit  [clearFilter];
+      }
+      navigating {
+        on NAVIGATE_DONE   -> browsing;
+        on START_SEARCH    -> searching;
+        entry [scrollToTarget; focusTarget];
+        exit  [clearNavigating];
+      }
+    }
+  }
+
+  accessibility {
+    role: tree;
+    keyboard {
+      ArrowUp      -> FOCUS_PREV_NODE;
+      ArrowDown    -> FOCUS_NEXT_NODE;
+      ArrowLeft    -> COLLAPSE_NODE;
+      ArrowRight   -> EXPAND_NODE;
+      Enter        -> NAVIGATE_START;
+      Slash        -> FOCUS_SEARCH;
+      Escape       -> CLEAR_SEARCH;
+      Home         -> FOCUS_FIRST_NODE;
+      End          -> FOCUS_LAST_NODE;
+    }
+    focus {
+      trap: false;
+      initial: searchInput;
+      roving: true;
+      returnOnClose: treeContainer;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Document outline";
+        aria-live: "polite";
+      };
+      searchInput -> {
+        role: "searchbox";
+        aria-label: "Filter headings";
+        aria-controls: "tree-container";
+        aria-autocomplete: "list";
+      };
+      treeContainer -> {
+        role: "tree";
+        aria-label: "Heading hierarchy";
+        aria-multiselectable: "false";
+      };
+      headingNode -> {
+        role: "treeitem";
+        aria-level: self.headingLevel;
+        aria-expanded: if self.hasChildren then if self.collapsed then "false" else "true" else none;
+        aria-selected: if ?currentHeadingId == self.blockId then "true" else "false";
+        aria-current: if ?currentHeadingId == self.blockId then "true" else "false";
+        tabIndex: "0";
+      };
+      collapseToggle -> {
+        role: "button";
+        aria-label: if self.collapsed then "Expand section" else "Collapse section";
+        aria-controls: concat(self.blockId, "-children");
+        tabIndex: "-1";
+      };
+    }
+  }
+
+  props {
+    rootNodeId:       String
+    currentHeadingId: option String
+    query:            String = ""
+    collapsedNodes:   list String
+  }
+
+  connect {
+    root -> {
+      data-part:  "root";
+      data-state: state.browse;
+    }
+
+    searchInput -> {
+      data-part:   "search-input";
+      value:       ?query;
+      placeholder: "Filter headings...";
+      onInput:     send(START_SEARCH, { query: self.value });
+      onKeyDown:   if key == "Escape" then send(CLEAR_SEARCH) else noop;
+      autofocus:   false;
+    }
+
+    treeContainer -> {
+      data-part: "tree-container";
+      id:        "tree-container";
+    }
+
+    headingNode -> {
+      data-part:        "heading-node";
+      data-block-id:    self.blockId;
+      data-level:       self.headingLevel;
+      data-active:      if ?currentHeadingId == self.blockId then "true" else "false";
+      data-collapsed:   if self.collapsed then "true" else "false";
+      onClick:          send(NAVIGATE_START, { blockId: self.blockId });
+      onKeyDown:        if key == "Enter" then send(NAVIGATE_START, { blockId: self.blockId }) else noop;
+      tabIndex:         "0";
+    }
+
+    headingIcon -> {
+      data-part:  "heading-icon";
+      data-level: self.headingLevel;
+    }
+
+    headingLabel -> {
+      data-part: "heading-label";
+      text:      self.labelText;
+    }
+
+    collapseToggle -> {
+      data-part:     "collapse-toggle";
+      data-block-id: self.blockId;
+      data-expanded: if self.collapsed then "false" else "true";
+      onClick:       send(TOGGLE_COLLAPSE, { blockId: self.blockId });
+      onKeyDown:     if key == "Enter" or key == "Space" then send(TOGGLE_COLLAPSE, { blockId: self.blockId }) else noop;
+    }
+
+    activeIndicator -> {
+      data-part:   "active-indicator";
+      data-active: if ?currentHeadingId == self.blockId then "true" else "false";
+      hidden:      if ?currentHeadingId != self.blockId then true else false;
+    }
+  }
+
+  affordance {
+    serves: editor-panel;
+    specificity: 8;
+    when: editorPanelContext = true;
+    bind {
+      rootNodeId:       rootNodeId;
+      currentHeadingId: currentHeadingId;
+    }
+  }
+
+  compose {
+    _search: widget("search-input", { value: ?query, onSearch: send(START_SEARCH) });
+  }
+
+  invariant {
+    example "typing in search transitions to searching": {
+      after searchInput(query: "intro") -> ok
+      then root.data-state = "searching"
+      and state.browse = "searching"
+    }
+
+    example "clearing search returns to browsing": {
+      after searchInput(query: "intro") -> ok
+      then root.data-state = "searching"
+      then searchInput(query: "") -> ok
+      then root.data-state = "browsing"
+    }
+
+    example "clicking headingNode triggers navigating state": {
+      after headingNode(blockId: "h1-intro") -> ok
+      then state.browse = "navigating"
+    }
+
+    example "navigating completes and returns to browsing": {
+      after transition(from: "navigating", event: "NAVIGATE_DONE") -> ok
+      then state.browse = "browsing"
+    }
+
+    example "collapse toggle changes collapsed state of node": {
+      after collapseToggle(blockId: "h2-section") -> ok
+      then headingNode.data-collapsed = "true"
+    }
+
+    forall "all browse states are reachable": {
+      given s in { browsing, searching, navigating }
+      then s.reachable = true
+    }
+
+    forall "all headingNode items expose required data attributes": {
+      given node in headingNode
+      then node.data-block-id != none
+      and node.data-level != none
+    }
+
+    always "data-state on root reflects browse FSM": {
+      root.data-state = state.browse
+    }
+
+    always "active headingNode carries data-active true": {
+      currentHeadingId != none
+      and headingNode.data-active = "true"
+    }
+
+    always "treeContainer role is tree": {
+      treeContainer.role = "tree"
+    }
+
+    always "headingNode aria-level matches heading level field": {
+      headingNode.aria-level = headingNode.data-level
+    }
+
+    never "searching state shown when query is empty": {
+      query = "" and state.browse = "searching"
+    }
+
+    never "activeIndicator visible for non-current node": {
+      activeIndicator.hidden = false and currentHeadingId != self.blockId
+    }
+
+    action headingNode {
+      requires: state.browse != "navigating"
+      ensures ok: state.browse = "navigating"
+    }
+
+    action collapseToggle {
+      requires: self.hasChildren = true
+      ensures ok: headingNode.data-collapsed = "true"
+    }
+
+    "Slash key must move focus to searchInput from any position in treeContainer";
+    "Escape key must clear query and return state.browse to browsing when in searching state";
+    "collapseToggle must not appear on headingNode items that have no children";
+    "headingNode aria-expanded must be absent when the node has no children";
+  }
+
+}

@@ -1,0 +1,22 @@
+# PluginRegistry seeds — outline-panel editor-panel plugin
+# Registers the outline-panel widget so it appears automatically in the editor
+# side-panel for markdown, wiki, notebook, and persona document contexts.
+
+concept: PluginRegistry
+action: register
+entries:
+  - type: editor-panel
+    name: outline-panel
+    metadata: >
+      {
+        "widget": "outline-panel",
+        "label": "Outline",
+        "icon": "outline",
+        "availableContexts": ["markdown", "wiki", "notebook", "persona"],
+        "defaultEnabled": true,
+        "order": 10,
+        "props": {
+          "rootNodeId": "$currentDocId",
+          "currentHeadingId": "$scrollTrackedHeadingId"
+        }
+      }
