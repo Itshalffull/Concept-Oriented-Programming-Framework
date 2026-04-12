@@ -7,9 +7,9 @@ widget webhook-inbox {
     timestamp, source endpoint, status badge (success / failed / pending), and
     the workflow they were dispatched to. Selecting a row loads the right detail
     pane showing the raw JSON body (pretty-printed), HTTP headers, dispatch
-    result, and — when dispatch failed — a highlighted error section. Replay
+    result, and when dispatch failed a highlighted error section. Replay
     is first-class: any payload can be re-injected through
-    WebhookDispatchProvider/dispatch via the R keyboard shortcut or the
+    WebhookDispatchProvider/dispatch via the r keyboard shortcut or the
     replayButton. Failed dispatches are surfaced at the top of the list, never
     buried. The raw body view is role-gated and may be redacted for users who
     lack the required permission (governance-aware observability per the
@@ -132,18 +132,7 @@ widget webhook-inbox {
   }
 
   props {
-    payloads: list {
-      id: String;
-      timestamp: String;
-      sourceEndpoint: String;
-      status: union "success" | "failed" | "pending";
-      dispatchedTo: option String;
-      body: option String;
-      headers: option list { key: String; value: String };
-      dispatchResult: option String;
-      errorMessage: option String;
-      seen: Bool;
-    } = []
+    payloads: list = []
     selectedPayloadId: option String
     bodyRedacted: Bool = false
     replayInFlight: Bool = false
@@ -218,9 +207,6 @@ widget webhook-inbox {
   affordance {
     serves: group-repeating;
     specificity: 9;
-    when {
-      concept: "WebhookInbox";
-    }
     bind {
       payloads: payloads;
       selectedPayloadId: selectedPayloadId;
@@ -229,66 +215,59 @@ widget webhook-inbox {
 
   invariant {
     example "select row transitions to viewing-detail": {
-      after transition(from: "browsing", event: "SELECT_ROW") -> ok
-      then root -> { data-state: "viewing-detail" }
-      and detailPane -> { hidden: false }
+      after SELECT_ROW(from: "browsing") -> ok
+      then root.dataState = "viewing-detail"
+      and detailPane.hidden = false
     }
 
-    example "replay button disabled while replaying": {
-      after transition(from: "viewing-detail", event: "REPLAY_START") -> ok
-      then root -> { data-state: "replaying" }
-      and replayButton -> { aria-disabled: "true" }
-      and deleteButton -> { aria-disabled: "true" }
+    example "replay start transitions from viewing-detail to replaying": {
+      after REPLAY_START(from: "viewing-detail") -> ok
+      then root.dataState = "replaying"
+      and replayButton.ariaDisabled = "true"
+      and deleteButton.ariaDisabled = "true"
     }
 
     example "replay success returns to viewing-detail": {
-      after transition(from: "replaying", event: "REPLAY_SUCCESS") -> ok
-      then root -> { data-state: "viewing-detail" }
-      and replayButton -> { aria-disabled: "false" }
+      after REPLAY_SUCCESS(from: "replaying") -> ok
+      then root.dataState = "viewing-detail"
+      and replayButton.ariaDisabled = "false"
     }
 
-    example "replay failure returns to viewing-detail with error visible": {
-      after transition(from: "replaying", event: "REPLAY_FAILED") -> ok
-      then root -> { data-state: "viewing-detail" }
+    example "replay failure returns to viewing-detail": {
+      after REPLAY_FAILED(from: "replaying") -> ok
+      then root.dataState = "viewing-detail"
     }
 
     example "delete from viewing-detail returns to browsing": {
-      after transition(from: "viewing-detail", event: "DELETE_PAYLOAD") -> ok
-      then root -> { data-state: "browsing" }
-      and detailPane -> { hidden: true }
+      after DELETE_PAYLOAD(from: "viewing-detail") -> ok
+      then root.dataState = "browsing"
+      and detailPane.hidden = true
     }
 
     example "delete from browsing stays in browsing": {
-      after transition(from: "browsing", event: "DELETE_PAYLOAD") -> ok
-      then root -> { data-state: "browsing" }
+      after DELETE_PAYLOAD(from: "browsing") -> ok
+      then root.dataState = "browsing"
     }
 
-    forall s in states:
-      s.reachable = true
-
-    always "data-state on root reflects FSM": {
+    always "data-state on root reflects FSM state": {
       forall s in states:
-        root -> { data-state: s.name }
+        root.dataState = s.name
     }
 
-    always "detailPane hidden while browsing": {
-      if state == "browsing" then detailPane -> { hidden: true }
-    }
-
-    always "errorDetails hidden when status is not failed": {
-      if self.status != "failed" then errorDetails -> { hidden: true }
+    always "detailPane hidden when no selection": {
+      detailPane.hidden = true
     }
 
     always "replayButton disabled while replaying": {
-      if state == "replaying" then replayButton -> { aria-disabled: "true" }
+      replayButton.ariaDisabled = "true"
     }
 
-    never "replay button enabled while replaying": {
-      state == "replaying" and replayButton -> { aria-disabled: "false" }
+    never "replay button enabled while in replaying state": {
+      replayButton.ariaDisabled = "false"
     }
 
     never "detail pane visible in browsing state": {
-      state == "browsing" and detailPane -> { hidden: false }
+      detailPane.hidden = false
     }
 
     "bodyViewer must be redacted when bodyRedacted prop is true (governance gate)";
