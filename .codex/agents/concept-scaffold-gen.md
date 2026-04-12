@@ -32,7 +32,8 @@ Your job is to create well-formed `.concept` files that are:
 2. **Design the concept** — identify state, actions, variants, and invariants following Jackson's methodology
 3. **Write the spec** — use the create-concept skill for grammar reference and checklist
 4. **Add fixtures** — every action gets at least one ok fixture and error fixtures; use `after` + `$fixture.field` output references for reader actions (e.g., `{ id: $create_ok.id } after create_ok`)
-5. **Validate** — use spec-parser to verify the spec parses correctly
+5. **Declare reversals** — for every mutating action, declare `reversal: <actionName>` or `reversal: none`. Required by integration test cleanup (5-tier resolution in IntegrationTestGen) and unlocks runtime undo via ActionBinding + UndoStack.
+6. **Validate** — use spec-parser to verify the spec parses correctly
 
 ## Rules
 
@@ -42,3 +43,4 @@ Your job is to create well-formed `.concept` files that are:
 - Fixture values must match what the handler expects (JSON strings for JSON.parse params)
 - ALWAYS use $fixture.field output references in reader fixture inputs instead of hardcoded placeholder IDs — e.g., `fixture get_ok { id: $register_ok.id } after register_ok` not `fixture get_ok { id: "entity-1" } after register_ok`
 - CRITICAL: Error-case fixtures MUST include `-> variant` annotation. A fixture named empty_name, invalid_input, duplicate_email, missing_id MUST end with `-> error` or the specific error variant. Omitting the arrow defaults to `-> ok`, generating conformance tests that expect success — the opposite of what's intended. This is the #1 most common fixture authoring mistake.
+- **Reversal declarations** — every mutating action needs a reversal declaration. `reversal: <actionName>` for actions reversed by another action in the same concept (e.g., `assign` reversed by `unassign`). `reversal: none` for irreversible actions (send notification, publish, external webhook). The integration test generator uses these to generate cleanup steps, and ActionBinding uses them to offer runtime undo. Omit only for obvious naming pairs (create/delete, add/remove, enable/disable, pin/unpin, subscribe/unsubscribe, etc. — see the 14 built-in pairs in IntegrationTestGen). Read-only actions (get/list/search/validate) never need a reversal.

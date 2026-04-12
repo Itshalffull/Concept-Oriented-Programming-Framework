@@ -1,4 +1,7 @@
 # @fixtures-added
+@version(1)
+@category("surface")
+@visibility("public")
 concept ThemeRealizer [R] {
 
   purpose {
@@ -104,6 +107,20 @@ concept ThemeRealizer [R] {
         lenses: "{}",
         context: "{}"
       } after css_realizer -> notfound
+      fixture realize_empty_theme {
+        realizer: "realizer-css",
+        theme: "",
+        contracts: "{\"contracts\":[]}",
+        lenses: "{\"lenses\":[]}",
+        context: "{}"
+      } after css_realizer -> error
+      fixture realize_bad_contracts {
+        realizer: "realizer-css",
+        theme: "{\"id\":\"light\"}",
+        contracts: "not-json",
+        lenses: "{\"lenses\":[]}",
+        context: "{}"
+      } after css_realizer
     }
 
     action get(realizer: R) {
@@ -143,7 +160,7 @@ concept ThemeRealizer [R] {
       capabilities: ["density-variants"],
       description: "Generate contract CSS and manifest output."
     ) -> ok(realizer: r)
-    then realize(realizer: r, theme: "t1", contracts: "c1", lenses: "l1", context: "ctx") -> ok(realizer: r, output: o, manifest: m)
+    then realize(realizer: r, theme: "{\"id\":\"light\"}", contracts: "{\"contracts\":[]}", lenses: "{\"lenses\":[]}", context: "{}") -> ok(realizer: r, output: o, manifest: m)
   }
 
   example "duplicate register returns duplicate": {
@@ -165,6 +182,30 @@ concept ThemeRealizer [R] {
     ) -> duplicate(realizer: r)
   }
 
+  example "register then get returns metadata": {
+    after register(
+      realizer: r,
+      target: "web-css",
+      outputKinds: ["ContractManifest", "ContractCss"],
+      contractSupport: ["field-control"],
+      capabilities: ["density-variants"],
+      description: "Generate contract CSS."
+    ) -> ok(realizer: r)
+    then get(realizer: r) -> ok(target: "web-css", description: "Generate contract CSS.")
+  }
+
+  example "listTargets reflects registrations": {
+    after register(
+      realizer: r,
+      target: "web-css",
+      outputKinds: ["ContractManifest"],
+      contractSupport: ["field-control"],
+      capabilities: ["density-variants"],
+      description: "CSS output."
+    ) -> ok(realizer: r)
+    then listTargets() -> ok(targets: _)
+  }
+
   always "registered realizers have targets" {
     forall r in realizers:
     target(r) != none
@@ -173,6 +214,16 @@ concept ThemeRealizer [R] {
   always "registered realizers declare outputs" {
     forall r in realizers:
     outputKinds(r) != []
+  }
+
+  always "registered realizers have descriptions" {
+    forall r in realizers:
+    description(r) != none and description(r) != ""
+  }
+
+  never "orphan realizer without target" {
+    exists r in realizers:
+    target(r) = none
   }
 
   action register {

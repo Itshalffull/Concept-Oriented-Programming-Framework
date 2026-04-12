@@ -34,7 +34,7 @@ each action returns a `StorageProgram` (a free monad describing storage operatio
 
 1. **Read the card/task** — understand what needs to be built from the card description
 2. **Check repertoire** — use ScoreApi to verify the concept doesn't already exist
-3. **Create the concept spec** — use the create-concept skill if a .concept file is needed
+3. **Create the concept spec** — use the create-concept skill if a .concept file is needed. Include `reversal:` declarations on every mutating action (required for integration test cleanup + runtime undo)
 4. **Validate the spec** — use spec-parser to verify the spec parses correctly
 5. **Write the handler** — use the create-implementation skill for patterns and templates
 6. **Match the spec** — every action in the spec must have a handler method

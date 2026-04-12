@@ -9524,6 +9524,7 @@ agent-annotations:
       - "**Design the concept** — identify state, actions, variants, and invariants following Jackson's methodology"
       - "**Write the spec** — use the create-concept skill for grammar reference and checklist"
       - "**Add fixtures** — every action gets at least one ok fixture and error fixtures; use `after` + `$fixture.field` output references for reader actions (e.g., `{ id: $create_ok.id } after create_ok`)"
+      - "**Declare reversals** — for every mutating action, declare `reversal: <actionName>` or `reversal: none`. Required by integration test cleanup (5-tier resolution in IntegrationTestGen) and unlocks runtime undo via ActionBinding + UndoStack."
       - "**Validate** — use spec-parser to verify the spec parses correctly"
     rules:
       - "ALWAYS check the repertoire before creating a new concept — reuse before rebuilding"
@@ -9532,6 +9533,7 @@ agent-annotations:
       - "Fixture values must match what the handler expects (JSON strings for JSON.parse params)"
       - "ALWAYS use $fixture.field output references in reader fixture inputs instead of hardcoded placeholder IDs — e.g., `fixture get_ok { id: $register_ok.id } after register_ok` not `fixture get_ok { id: \"entity-1\" } after register_ok`"
       - "CRITICAL: Error-case fixtures MUST include `-> variant` annotation. A fixture named empty_name, invalid_input, duplicate_email, missing_id MUST end with `-> error` or the specific error variant. Omitting the arrow defaults to `-> ok`, generating conformance tests that expect success — the opposite of what's intended. This is the #1 most common fixture authoring mistake."
+      - "**Reversal declarations** — every mutating action needs a reversal declaration. `reversal: <actionName>` for actions reversed by another action in the same concept (e.g., `assign` reversed by `unassign`). `reversal: none` for irreversible actions (send notification, publish, external webhook). The integration test generator uses these to generate cleanup steps, and ActionBinding uses them to offer runtime undo. Omit only for obvious naming pairs (create/delete, add/remove, enable/disable, pin/unpin, subscribe/unsubscribe, etc. — see the 14 built-in pairs in IntegrationTestGen). Read-only actions (get/list/search/validate) never need a reversal."
 
   SyncScaffoldGen:
     model: sonnet
@@ -9581,7 +9583,7 @@ agent-annotations:
     workflow:
       - "**Read the card/task** — understand what needs to be built from the card description"
       - "**Check repertoire** — use ScoreApi to verify the concept doesn't already exist"
-      - "**Create the concept spec** — use the create-concept skill if a .concept file is needed"
+      - "**Create the concept spec** — use the create-concept skill if a .concept file is needed. Include `reversal:` declarations on every mutating action (required for integration test cleanup + runtime undo)"
       - "**Validate the spec** — use spec-parser to verify the spec parses correctly"
       - "**Write the handler** — use the create-implementation skill for patterns and templates"
       - "**Match the spec** — every action in the spec must have a handler method"
