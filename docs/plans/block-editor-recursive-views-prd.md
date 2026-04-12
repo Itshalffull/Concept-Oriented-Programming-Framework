@@ -528,6 +528,15 @@ Minimal end-to-end proof across text + media + marks + theme.
 
 ---
 
+## 10.1 Phase 1 Commit Log
+
+| Card | Title | Status | Commit | Tests |
+|---|---|---|---|---|
+| MAG-722 | InputRule concept | Done | `bb02b0e2` | 42 |
+| MAG-723 | EditSurface concept | Done | `ddf357ca` | 57 |
+| MAG-724 | blocks/outline-children | Done | `f30b5777` | 80 |
+| MAG-725 | Metadata additions | Done | `73104f25` | 183 |
+
 ## 10. Card Plan (Phase 1 only; Phase 2+ carded after Phase 1 ships)
 
 See VK cards under epic "Block Editor — Recursive Views (Phase 1)" for the card breakdown.
