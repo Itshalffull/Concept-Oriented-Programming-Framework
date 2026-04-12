@@ -1,0 +1,256 @@
+@version(1)
+widget track-changes-decoration {
+
+  purpose {
+    Decoration-layer overlay that renders a single inline insert or delete
+    annotation produced by InlineAnnotation/insert or InlineAnnotation/delete.
+    Insert spans are highlighted in green; delete spans carry a strikethrough.
+    An author badge floats above the span and context-sensitive accept/reject
+    buttons appear on hover or keyboard focus so reviewers can resolve the
+    change without leaving the editing surface. Keyboard shortcuts A (accept)
+    and R (reject) fire when the decoration is focused. Backed by
+    repertoire/concepts/inline-annotation (resolve action).
+  }
+
+  requires @1 {
+    fields {
+      annotationId: String;
+      kind: String;
+      author: String;
+      content: String;
+      accepted: Bool;
+    }
+    actions {
+      resolve(annotationId: String, decision: String);
+    }
+  }
+
+  anatomy {
+    root:          container     { Outermost wrapper spanning the annotated text range }
+    insertMarker:  presentation  { Highlighted background shown when kind is insert }
+    deleteStrike:  presentation  { Strikethrough overlay shown when kind is delete }
+    authorBadge:   text          { Floating label showing the author who made the change }
+    acceptButton:  action        { Button that resolves the annotation with decision accepted }
+    rejectButton:  action        { Button that resolves the annotation with decision rejected }
+  }
+
+  states {
+    review {
+      idle [initial] {
+        on HOVER_ENTER  -> hovering;
+        on FOCUS        -> hovering;
+      }
+      hovering {
+        on HOVER_LEAVE  -> idle;
+        on BLUR         -> idle;
+        on ACCEPT       -> accepting;
+        on REJECT       -> rejecting;
+      }
+      accepting {
+        on ACCEPT_DONE  -> idle;
+        on ACCEPT_ERROR -> hovering;
+        entry [lockButtons];
+        exit [unlockButtons];
+      }
+      rejecting {
+        on REJECT_DONE  -> idle;
+        on REJECT_ERROR -> hovering;
+        entry [lockButtons];
+        exit [unlockButtons];
+      }
+    }
+  }
+
+  accessibility {
+    role: mark;
+    keyboard {
+      A      -> ACCEPT;
+      R      -> REJECT;
+      Escape -> BLUR;
+    }
+    focus {
+      trap: false;
+      initial: acceptButton;
+      roving: false;
+      returnOnClose: root;
+    }
+    aria {
+      root -> {
+        role: "mark";
+        aria-label: ?content;
+        aria-description: ?author;
+      };
+      insertMarker -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      deleteStrike -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      authorBadge -> {
+        role: "none";
+        aria-hidden: "true";
+      };
+      acceptButton -> {
+        role: "button";
+        aria-label: "Accept change";
+        aria-keyshortcuts: "A";
+        aria-disabled: if state.review == "accepting" or state.review == "rejecting" then "true" else "false";
+      };
+      rejectButton -> {
+        role: "button";
+        aria-label: "Reject change";
+        aria-keyshortcuts: "R";
+        aria-disabled: if state.review == "accepting" or state.review == "rejecting" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    annotationId: String
+    kind: String
+    author: String
+    content: String
+    accepted: Bool = false
+    focused: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.review;
+      data-kind: ?kind;
+      data-accepted: if ?accepted then "true" else "false";
+      aria-label: ?content;
+      onPointerEnter: send(HOVER_ENTER);
+      onPointerLeave: send(HOVER_LEAVE);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+    }
+
+    insertMarker -> {
+      data-part: "insert-marker";
+      hidden: if ?kind == "insert" then false else true;
+      aria-hidden: "true";
+    }
+
+    deleteStrike -> {
+      data-part: "delete-strike";
+      hidden: if ?kind == "delete" then false else true;
+      aria-hidden: "true";
+    }
+
+    authorBadge -> {
+      data-part: "author-badge";
+      text: ?author;
+      hidden: if state.review == "idle" then true else false;
+      aria-hidden: "true";
+    }
+
+    acceptButton -> {
+      data-part: "accept-button";
+      hidden: if state.review == "idle" then true else false;
+      disabled: if state.review == "accepting" or state.review == "rejecting" then true else false;
+      aria-disabled: if state.review == "accepting" or state.review == "rejecting" then "true" else "false";
+      onClick: send(ACCEPT);
+    }
+
+    rejectButton -> {
+      data-part: "reject-button";
+      hidden: if state.review == "idle" then true else false;
+      disabled: if state.review == "accepting" or state.review == "rejecting" then true else false;
+      aria-disabled: if state.review == "accepting" or state.review == "rejecting" then "true" else "false";
+      onClick: send(REJECT);
+    }
+  }
+
+  affordance {
+    serves: inline-decoration;
+    specificity: 9;
+    when feature = "track-changes";
+    bind {
+      annotationId: annotationId;
+      kind: kind;
+      author: author;
+      content: content;
+      accepted: accepted;
+    }
+  }
+
+  invariant {
+    example "hover enters hovering state": {
+      after transition(from: "idle", event: "HOVER_ENTER") -> ok
+      then state.review = "hovering"
+    }
+
+    example "accept transitions to accepting": {
+      after transition(from: "hovering", event: "ACCEPT") -> ok
+      then state.review = "accepting"
+    }
+
+    example "reject transitions to rejecting": {
+      after transition(from: "hovering", event: "REJECT") -> ok
+      then state.review = "rejecting"
+    }
+
+    example "accept done returns to idle": {
+      after transition(from: "accepting", event: "ACCEPT_DONE") -> ok
+      then state.review = "idle"
+    }
+
+    example "reject done returns to idle": {
+      after transition(from: "rejecting", event: "REJECT_DONE") -> ok
+      then state.review = "idle"
+    }
+
+    example "accept error returns to hovering": {
+      after transition(from: "accepting", event: "ACCEPT_ERROR") -> ok
+      then state.review = "hovering"
+    }
+
+    forall "all review states reachable": {
+      given s in reviewStates
+      then s.reachable = true
+    }
+
+    always "data-state on root reflects review FSM": {
+      root.dataState = state.review
+    }
+
+    always "data-kind on root reflects kind prop": {
+      root.dataKind = kind
+    }
+
+    never "accepting and rejecting simultaneously": {
+      state.review = "accepting" and state.review = "rejecting"
+    }
+
+    never "acceptButton enabled while accepting": {
+      state.review = "accepting" and acceptButton.disabled = false
+    }
+
+    never "rejectButton enabled while rejecting": {
+      state.review = "rejecting" and rejectButton.disabled = false
+    }
+
+    action acceptButton {
+      requires: state.review = "hovering"
+      ensures ok: state.review = "accepting"
+    }
+
+    action rejectButton {
+      requires: state.review = "hovering"
+      ensures ok: state.review = "rejecting"
+    }
+
+    "insertMarker must be hidden when kind is delete";
+    "deleteStrike must be hidden when kind is insert";
+    "authorBadge must be hidden when review state is idle";
+    "acceptButton and rejectButton must be hidden when review state is idle";
+    "A key fires ACCEPT only when state.review is hovering";
+    "R key fires REJECT only when state.review is hovering";
+    "aria-label on root must include author and kind and content";
+  }
+
+}

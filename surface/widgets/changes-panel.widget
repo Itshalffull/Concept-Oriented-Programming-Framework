@@ -1,0 +1,230 @@
+@version(1)
+widget changes-panel {
+
+  purpose {
+    Side-rail panel that lists all pending inline annotation changes grouped
+    by author, allowing reviewers to browse, filter by a specific author, and
+    resolve individual or all changes. Each change row shows the annotation
+    kind (insert or delete), a content excerpt, and per-row accept/reject
+    buttons. Bulk accept-all and reject-all buttons are provided at the group
+    level for efficiency. When filterAuthor is set only that author group is
+    visible. Backed by repertoire/concepts/inline-annotation (resolve action).
+  }
+
+  requires @1 {
+    fields {
+      changes: list;
+      filterAuthor: option String;
+      currentUser: String;
+    }
+    actions {
+      resolve(annotationId: String, decision: String);
+    }
+  }
+
+  anatomy {
+    root:            container    { Top-level side-rail panel wrapper }
+    authorGroup:     container    { Collapsible section grouping all changes by one author }
+    authorHeader:    action       { Clickable heading showing author name and pending count }
+    changeRow:       container    { Single row representing one pending annotation change }
+    changeContent:   text         { Excerpt of the annotated text with kind indicator }
+    acceptAllButton: action       { Button that bulk-accepts all changes in the author group }
+    rejectAllButton: action       { Button that bulk-rejects all changes in the author group }
+  }
+
+  states {
+    browse {
+      idle [initial] {
+        on FILTER_APPLY   -> filtering;
+        on ROW_FOCUS      -> reviewing;
+      }
+      filtering {
+        on FILTER_CLEAR   -> idle;
+        on ROW_FOCUS      -> reviewing;
+      }
+      reviewing {
+        on ROW_BLUR       -> idle;
+        on FILTER_APPLY   -> filtering;
+        on FILTER_CLEAR   -> idle;
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      ArrowUp   -> ROW_PREV;
+      ArrowDown -> ROW_NEXT;
+      Enter     -> ROW_FOCUS;
+      Escape    -> ROW_BLUR;
+    }
+    focus {
+      trap: false;
+      initial: authorGroup;
+      roving: true;
+      returnOnClose: root;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Track changes panel";
+        aria-live: "polite";
+      };
+      authorGroup -> {
+        role: "group";
+        aria-labelledby: authorHeader;
+      };
+      authorHeader -> {
+        role: "button";
+        aria-expanded: "true";
+      };
+      changeRow -> {
+        role: "listitem";
+        aria-label: self.kind;
+      };
+      changeContent -> {
+        role: "none";
+      };
+      acceptAllButton -> {
+        role: "button";
+        aria-label: "Accept all changes by this author";
+      };
+      rejectAllButton -> {
+        role: "button";
+        aria-label: "Reject all changes by this author";
+      };
+    }
+  }
+
+  props {
+    changes: list ChangeEntry
+    filterAuthor: option String
+    currentUser: String
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.browse;
+      role: "region";
+      aria-label: "Track changes panel";
+    }
+
+    authorGroup -> {
+      data-part: "author-group";
+      data-author: self.author;
+      hidden: if ?filterAuthor != none and ?filterAuthor != self.author then true else false;
+    }
+
+    authorHeader -> {
+      data-part: "author-header";
+      text: self.author;
+      aria-expanded: "true";
+      onClick: send(ROW_FOCUS);
+    }
+
+    changeRow -> {
+      data-part: "change-row";
+      data-annotation-id: self.annotationId;
+      data-kind: self.kind;
+      onFocus: send(ROW_FOCUS);
+      onBlur: send(ROW_BLUR);
+    }
+
+    changeContent -> {
+      data-part: "change-content";
+      text: self.content;
+      data-kind: self.kind;
+    }
+
+    acceptAllButton -> {
+      data-part: "accept-all-button";
+      onClick: send(ACCEPT_ALL);
+      aria-label: "Accept all changes by this author";
+    }
+
+    rejectAllButton -> {
+      data-part: "reject-all-button";
+      onClick: send(REJECT_ALL);
+      aria-label: "Reject all changes by this author";
+    }
+  }
+
+  affordance {
+    serves: side-panel;
+    specificity: 8;
+    when feature = "track-changes";
+    bind {
+      changes: pendingChanges;
+      filterAuthor: filterAuthor;
+      currentUser: currentUser;
+    }
+  }
+
+  invariant {
+    example "applying filter transitions to filtering state": {
+      after transition(from: "idle", event: "FILTER_APPLY") -> ok
+      then state.browse = "filtering"
+    }
+
+    example "clearing filter returns to idle": {
+      after transition(from: "filtering", event: "FILTER_CLEAR") -> ok
+      then state.browse = "idle"
+    }
+
+    example "row focus transitions to reviewing": {
+      after transition(from: "idle", event: "ROW_FOCUS") -> ok
+      then state.browse = "reviewing"
+    }
+
+    example "row blur from reviewing returns to idle": {
+      after transition(from: "reviewing", event: "ROW_BLUR") -> ok
+      then state.browse = "idle"
+    }
+
+    example "filter apply from reviewing transitions to filtering": {
+      after transition(from: "reviewing", event: "FILTER_APPLY") -> ok
+      then state.browse = "filtering"
+    }
+
+    forall "all browse states reachable": {
+      given s in browseStates
+      then s.reachable = true
+    }
+
+    always "data-state on root reflects browse FSM": {
+      root.dataState = state.browse
+    }
+
+    always "authorGroup hidden when filterAuthor set and author does not match": {
+      authorGroup.hidden = true
+    }
+
+    never "authorGroup visible when filterAuthor is set to a different author": {
+      filterAuthor != none and authorGroup.dataAuthor != filterAuthor and authorGroup.hidden = false
+    }
+
+    never "idle and filtering simultaneously": {
+      state.browse = "idle" and state.browse = "filtering"
+    }
+
+    action acceptAllButton {
+      requires: changes.length > 0
+      ensures ok: state.browse = "idle"
+    }
+
+    action rejectAllButton {
+      requires: changes.length > 0
+      ensures ok: state.browse = "idle"
+    }
+
+    "role region with aria-label Track changes panel must be present on root at all times";
+    "authorGroup data-author must match the author field of each grouped ChangeEntry";
+    "changeRow data-kind must be insert or delete";
+    "acceptAllButton must resolve all changeRows in the group with decision accepted";
+    "rejectAllButton must resolve all changeRows in the group with decision rejected";
+    "ArrowUp and ArrowDown must rove focus between changeRow items";
+    "filterAuthor prop controls authorGroup visibility via hidden attribute";
+  }
+
+}
