@@ -1,0 +1,303 @@
+@version(1)
+widget webhook-inbox {
+
+  purpose {
+    Two-pane operational surface for inspecting and acting on inbound webhook
+    payloads received by WebhookInbox. The left pane lists all payloads with
+    timestamp, source endpoint, status badge (success / failed / pending), and
+    the workflow they were dispatched to. Selecting a row loads the right detail
+    pane showing the raw JSON body (pretty-printed), HTTP headers, dispatch
+    result, and — when dispatch failed — a highlighted error section. Replay
+    is first-class: any payload can be re-injected through
+    WebhookDispatchProvider/dispatch via the R keyboard shortcut or the
+    replayButton. Failed dispatches are surfaced at the top of the list, never
+    buried. The raw body view is role-gated and may be redacted for users who
+    lack the required permission (governance-aware observability per the
+    StepIOVisibility pattern).
+  }
+
+  requires @1 {
+    fields {
+      payloads: list;
+      selectedPayloadId: option String;
+    }
+    actions {
+      replay();
+      delete();
+      markSeen();
+    }
+  }
+
+  anatomy {
+    root:           container     { Top-level two-pane wrapper; holds list and detail side by side }
+    payloadList:    container     { Scrollable left-pane list of all received webhook payloads }
+    payloadRow:     action        { Single row in payloadList representing one payload entry }
+    statusBadge:    presentation  { Coloured badge on each row indicating success, failed, or pending }
+    detailPane:     container     { Right-pane showing the full record for the selected payload }
+    bodyViewer:     container     { Pretty-printed JSON viewer for the raw request body; redactable }
+    headersTable:   container     { Key-value table of the inbound HTTP request headers }
+    dispatchResult: container     { Shows the dispatch provider response or routing outcome }
+    errorDetails:   container     { Visible only when dispatch failed; shows error message prominently }
+    replayButton:   action        { Re-injects the selected payload through WebhookDispatchProvider/dispatch }
+    deleteButton:   action        { Permanently removes the selected payload from WebhookInbox }
+    markSeenButton: action        { Marks the selected payload as acknowledged (ack) in WebhookInbox }
+  }
+
+  states {
+    browsing [initial] {
+      on SELECT_ROW      -> viewing-detail;
+      on DELETE_PAYLOAD  -> browsing;
+    }
+
+    viewing-detail {
+      on DESELECT        -> browsing;
+      on DELETE_PAYLOAD  -> browsing;
+      on REPLAY_START    -> replaying;
+      on MARK_SEEN       -> viewing-detail;
+    }
+
+    replaying {
+      on REPLAY_SUCCESS  -> viewing-detail;
+      on REPLAY_FAILED   -> viewing-detail;
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      ArrowUp       -> FOCUS_PREV_ROW;
+      ArrowDown     -> FOCUS_NEXT_ROW;
+      Enter         -> SELECT_ROW;
+      r             -> REPLAY_START;
+      Delete        -> DELETE_PAYLOAD;
+    }
+    focus {
+      trap: false;
+      initial: payloadList;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Webhook Inbox";
+      };
+      payloadList -> {
+        role: "listbox";
+        aria-label: "Webhook payloads";
+        aria-multiselectable: "false";
+      };
+      payloadRow -> {
+        role: "option";
+        aria-selected: if ?selectedPayloadId != none then "true" else "false";
+      };
+      detailPane -> {
+        role: "region";
+        aria-label: "Payload detail";
+        aria-live: "polite";
+      };
+      bodyViewer -> {
+        role: "region";
+        aria-label: "Raw request body";
+      };
+      headersTable -> {
+        role: "table";
+        aria-label: "Request headers";
+      };
+      dispatchResult -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: "Dispatch result";
+      };
+      errorDetails -> {
+        role: "alert";
+        aria-live: "assertive";
+        aria-label: "Dispatch error";
+      };
+      replayButton -> {
+        role: "button";
+        aria-label: "Replay payload";
+        aria-disabled: if state == "replaying" then "true" else "false";
+        aria-keyshortcuts: "r";
+      };
+      deleteButton -> {
+        role: "button";
+        aria-label: "Delete payload";
+        aria-disabled: if state == "replaying" then "true" else "false";
+      };
+      markSeenButton -> {
+        role: "button";
+        aria-label: "Mark as seen";
+      };
+    }
+  }
+
+  props {
+    payloads: list {
+      id: String;
+      timestamp: String;
+      sourceEndpoint: String;
+      status: union "success" | "failed" | "pending";
+      dispatchedTo: option String;
+      body: option String;
+      headers: option list { key: String; value: String };
+      dispatchResult: option String;
+      errorMessage: option String;
+      seen: Bool;
+    } = []
+    selectedPayloadId: option String
+    bodyRedacted: Bool = false
+    replayInFlight: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+    }
+
+    payloadList -> {
+      data-part: "payload-list";
+    }
+
+    payloadRow -> {
+      data-part: "payload-row";
+      aria-selected: if ?selectedPayloadId != none then "true" else "false";
+      onClick: send(SELECT_ROW);
+      onKeyDown: send(SELECT_ROW);
+    }
+
+    statusBadge -> {
+      data-part: "status-badge";
+      data-status: self.status;
+    }
+
+    detailPane -> {
+      data-part: "detail-pane";
+      hidden: if state == "browsing" then true else false;
+    }
+
+    bodyViewer -> {
+      data-part: "body-viewer";
+      data-redacted: if ?bodyRedacted then "true" else "false";
+    }
+
+    headersTable -> {
+      data-part: "headers-table";
+    }
+
+    dispatchResult -> {
+      data-part: "dispatch-result";
+    }
+
+    errorDetails -> {
+      data-part: "error-details";
+      hidden: if self.status != "failed" then true else false;
+    }
+
+    replayButton -> {
+      data-part: "replay-button";
+      disabled: if state == "replaying" or state == "browsing" then true else false;
+      aria-disabled: if state == "replaying" or state == "browsing" then "true" else "false";
+      onClick: send(REPLAY_START);
+    }
+
+    deleteButton -> {
+      data-part: "delete-button";
+      disabled: if state == "replaying" then true else false;
+      aria-disabled: if state == "replaying" then "true" else "false";
+      onClick: send(DELETE_PAYLOAD);
+    }
+
+    markSeenButton -> {
+      data-part: "mark-seen-button";
+      disabled: if state == "replaying" then true else false;
+      onClick: send(MARK_SEEN);
+    }
+  }
+
+  affordance {
+    serves: group-repeating;
+    specificity: 9;
+    when {
+      concept: "WebhookInbox";
+    }
+    bind {
+      payloads: payloads;
+      selectedPayloadId: selectedPayloadId;
+    }
+  }
+
+  invariant {
+    example "select row transitions to viewing-detail": {
+      after transition(from: "browsing", event: "SELECT_ROW") -> ok
+      then root -> { data-state: "viewing-detail" }
+      and detailPane -> { hidden: false }
+    }
+
+    example "replay button disabled while replaying": {
+      after transition(from: "viewing-detail", event: "REPLAY_START") -> ok
+      then root -> { data-state: "replaying" }
+      and replayButton -> { aria-disabled: "true" }
+      and deleteButton -> { aria-disabled: "true" }
+    }
+
+    example "replay success returns to viewing-detail": {
+      after transition(from: "replaying", event: "REPLAY_SUCCESS") -> ok
+      then root -> { data-state: "viewing-detail" }
+      and replayButton -> { aria-disabled: "false" }
+    }
+
+    example "replay failure returns to viewing-detail with error visible": {
+      after transition(from: "replaying", event: "REPLAY_FAILED") -> ok
+      then root -> { data-state: "viewing-detail" }
+    }
+
+    example "delete from viewing-detail returns to browsing": {
+      after transition(from: "viewing-detail", event: "DELETE_PAYLOAD") -> ok
+      then root -> { data-state: "browsing" }
+      and detailPane -> { hidden: true }
+    }
+
+    example "delete from browsing stays in browsing": {
+      after transition(from: "browsing", event: "DELETE_PAYLOAD") -> ok
+      then root -> { data-state: "browsing" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        root -> { data-state: s.name }
+    }
+
+    always "detailPane hidden while browsing": {
+      if state == "browsing" then detailPane -> { hidden: true }
+    }
+
+    always "errorDetails hidden when status is not failed": {
+      if self.status != "failed" then errorDetails -> { hidden: true }
+    }
+
+    always "replayButton disabled while replaying": {
+      if state == "replaying" then replayButton -> { aria-disabled: "true" }
+    }
+
+    never "replay button enabled while replaying": {
+      state == "replaying" and replayButton -> { aria-disabled: "false" }
+    }
+
+    never "detail pane visible in browsing state": {
+      state == "browsing" and detailPane -> { hidden: false }
+    }
+
+    "bodyViewer must be redacted when bodyRedacted prop is true (governance gate)";
+    "failed-status payloads must be sorted to the top of payloadList";
+    "ArrowUp and ArrowDown must move roving focus between payloadRow items";
+    "r key must only fire REPLAY_START when state is viewing-detail";
+    "replayButton onClick must call WebhookDispatchProvider/dispatch with stored payload body and event type";
+    "deleteButton onClick must call WebhookInbox/ack then remove the entry from payloads prop";
+    "markSeenButton onClick must call WebhookInbox/ack on the selected hook";
+  }
+
+}

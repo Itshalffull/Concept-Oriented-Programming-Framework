@@ -1,0 +1,282 @@
+@version(1)
+widget connector-library {
+
+  purpose {
+    Searchable grid browser for registered connector types (HTTP, gRPC, database, message queue,
+    filesystem, and custom integrations). Displays each connector type as a card with icon, name,
+    short description, and action count. The user can filter by keyword and select a type to
+    configure a new connector instance. The widget emits events only — no mutations happen here;
+    the host routes SELECT to the connector-config widget or an equivalent concept action.
+    Advanced filtering controls (tags, category, protocol) are hidden behind a filter expander
+    following progressive-disclosure guidelines.
+  }
+
+  anatomy {
+    root:            container    { Outermost wrapper that holds the search bar and the card grid }
+    searchInput:     interactive  { Text input for filtering connector types by name or description keyword }
+    filterToggle:    action       { Expander button that reveals advanced filter controls }
+    filterPanel:     container    { Collapsed-by-default panel with tag, category, and protocol filters }
+    grid:            container    { Responsive grid region that holds all visible connectorCard items }
+    connectorCard:   action       { Clickable card representing a single connector type }
+    iconSlot:        presentation { Icon or logo for the connector type inside a connectorCard }
+    nameLabel:       text         { Primary name of the connector type inside a connectorCard }
+    descriptionText: text         { One-line description of what the connector type integrates with }
+    actionCount:     text         { Badge showing how many operations this connector type exposes }
+    selectButton:    action       { Explicit "Add connector" button on each card for pointer-impaired users }
+    emptyState:      container    { Shown when the search query matches no connector types }
+  }
+
+  states {
+    filter [parallel] {
+      browsing [initial] {
+        on SEARCH -> searching;
+      }
+
+      searching {
+        on CLEAR_SEARCH -> browsing;
+        on SEARCH       -> searching;
+        entry [filterConnectorTypes];
+      }
+    }
+
+    filterPanel [parallel] {
+      collapsed [initial] {
+        on TOGGLE_FILTER_PANEL -> expanded;
+      }
+
+      expanded {
+        on TOGGLE_FILTER_PANEL -> collapsed;
+        entry [openFilterPanel];
+        exit  [closeFilterPanel];
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      ArrowRight   -> FOCUS_NEXT_CARD;
+      ArrowLeft    -> FOCUS_PREV_CARD;
+      ArrowDown    -> FOCUS_NEXT_ROW;
+      ArrowUp      -> FOCUS_PREV_ROW;
+      Enter        -> SELECT_FOCUSED;
+      Escape       -> CLEAR_SEARCH;
+      Tab          -> FOCUS_NEXT;
+      Shift+Tab    -> FOCUS_PREV;
+    }
+    focus {
+      trap: false;
+      initial: searchInput;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Connector library";
+        data-state: state.filter;
+      };
+      searchInput -> {
+        role: "searchbox";
+        aria-label: "Search connectors";
+        aria-controls: "grid";
+        aria-autocomplete: "list";
+      };
+      filterToggle -> {
+        role: "button";
+        aria-expanded: if state.filterPanel == "expanded" then "true" else "false";
+        aria-controls: "filter-panel";
+        aria-label: "Toggle advanced filters";
+      };
+      filterPanel -> {
+        role: "group";
+        aria-label: "Advanced connector filters";
+        aria-hidden: if state.filterPanel == "collapsed" then "true" else "false";
+      };
+      grid -> {
+        role: "grid";
+        aria-label: "Connector types";
+        aria-live: "polite";
+        aria-atomic: "false";
+      };
+      connectorCard -> {
+        role: "gridcell";
+        aria-label: concat(self.name, " connector");
+        aria-describedby: concat(self.id, "-desc");
+        tabIndex: "0";
+      };
+      selectButton -> {
+        role: "button";
+        aria-label: concat("Add ", self.name, " connector");
+      };
+      emptyState -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: "No connectors match the current search";
+      };
+    }
+  }
+
+  props {
+    connectorTypes:   list { id: String, name: String, description: String, iconUrl: String, actionCount: Int, tags: list String, category: String, protocol: String }
+    searchQuery:      String = ""
+    selectedTypeId:   option String
+    showFilterPanel:  Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part:         "root";
+      data-state:        state.filter;
+      data-filter-panel: state.filterPanel;
+    }
+
+    searchInput -> {
+      data-part:   "search-input";
+      value:       ?searchQuery;
+      placeholder: "Search connectors…";
+      onInput:     send(SEARCH, { query: self.value });
+      onKeyDown:   if key == "Escape" then send(CLEAR_SEARCH) else noop;
+    }
+
+    filterToggle -> {
+      data-part:     "filter-toggle";
+      data-expanded: if state.filterPanel == "expanded" then "true" else "false";
+      onClick:       send(TOGGLE_FILTER_PANEL);
+    }
+
+    filterPanel -> {
+      data-part:   "filter-panel";
+      data-state:  state.filterPanel;
+      hidden:      if state.filterPanel == "collapsed" then true else false;
+    }
+
+    grid -> {
+      data-part:  "grid";
+      data-state: state.filter;
+    }
+
+    connectorCard -> {
+      data-part:          "connector-card";
+      data-connector-id:  self.id;
+      data-selected:      if ?selectedTypeId == self.id then "true" else "false";
+      onClick:            send(SELECT_CONNECTOR_TYPE, { typeId: self.id });
+      onKeyDown:          if key == "Enter" or key == "Space" then send(SELECT_CONNECTOR_TYPE, { typeId: self.id }) else noop;
+      tabIndex:           "0";
+    }
+
+    iconSlot -> {
+      data-part:         "icon-slot";
+      data-connector-id: self.id;
+    }
+
+    nameLabel -> {
+      data-part: "name-label";
+    }
+
+    descriptionText -> {
+      data-part: "description-text";
+    }
+
+    actionCount -> {
+      data-part: "action-count";
+    }
+
+    selectButton -> {
+      data-part:         "select-button";
+      data-connector-id: self.id;
+      onClick:           send(SELECT_CONNECTOR_TYPE, { typeId: self.id });
+    }
+
+    emptyState -> {
+      data-part:   "empty-state";
+      data-state:  state.filter;
+      hidden:      if state.filter == "browsing" then true else false;
+    }
+  }
+
+  affordance {
+    serves: connector-type-picker;
+    specificity: 8;
+    when { connectorSelection: true }
+    bind {
+      selectedTypeId: selectedTypeId;
+      connectorTypes: connectorTypes;
+    }
+  }
+
+  invariant {
+    example "search filters the grid": {
+      after searchInput.input({ query: "slack" }) -> ok
+      then root -> { data-state: "searching" }
+      and grid -> { data-state: "searching" }
+    }
+
+    example "clear search returns to browsing": {
+      after searchInput.input({ query: "slack" }) -> ok
+      then root -> { data-state: "searching" }
+      then send(CLEAR_SEARCH) -> ok
+      then root -> { data-state: "browsing" }
+    }
+
+    example "select connector emits event": {
+      after connectorCard.click -> ok
+      then connectorCard -> { data-selected: "true" }
+    }
+
+    example "filter panel toggles on filterToggle click": {
+      after filterToggle.click -> ok
+      then filterPanel -> { hidden: false }
+      and filterToggle -> { data-expanded: "true" }
+      then filterToggle.click -> ok
+      then filterPanel -> { hidden: true }
+      and filterToggle -> { data-expanded: "false" }
+    }
+
+    example "empty state shown only when searching with no results": {
+      after searchInput.input({ query: "zzznomatch" }) -> ok
+      then root -> { data-state: "searching" }
+    }
+
+    forall s in states.filter:
+      s.reachable = true
+
+    forall s in states.filterPanel:
+      s.reachable = true
+
+    always "data-state on root reflects filter FSM": {
+      root -> { data-state: state.filter }
+    }
+
+    always "filterPanel hidden when collapsed": {
+      if state.filterPanel == "collapsed" then filterPanel -> { hidden: true }
+    }
+
+    always "connectorCard data-selected matches selectedTypeId": {
+      forall card in connectorCard:
+        if ?selectedTypeId == card.id then card -> { data-selected: "true" }
+        else card -> { data-selected: "false" }
+    }
+
+    never "selectButton triggers mutation": {
+      selectButton -> { onClick: mutate }
+    }
+
+    never "emptyState shown in browsing state": {
+      state.filter == "browsing" and emptyState -> { hidden: false }
+    }
+
+    action connectorCard.click {
+      ensures ok: connectorCard -> { data-selected: "true" }
+    }
+
+    action searchInput.input {
+      ensures ok: state.filter == "searching"
+    }
+
+    "SELECT_CONNECTOR_TYPE event carries the connector type id — host routes to connector-config for instance creation";
+    "SEARCH event carries the raw query string — filtering logic belongs to the host or view layer, not this widget";
+    "connectorCard and selectButton both dispatch SELECT_CONNECTOR_TYPE so keyboard and pointer users reach the same outcome";
+    "Icons are purely presentational — iconSlot has no role and is aria-hidden by the adapter";
+  }
+
+}

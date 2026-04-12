@@ -1,0 +1,377 @@
+@version(1)
+widget connector-config {
+
+  purpose {
+    Configuration and credential form for a single connector instance backed by
+    process-automation/connector-call. Lets users name the instance, supply credentials,
+    and optionally expand advanced fields (timeouts, base URL overrides, custom headers).
+    A test-connection button pings the external system and displays the live response in
+    the testResultPane — making the connection health observable rather than abstract.
+    Credentials are masked at the field level and never re-rendered in plain text once
+    saved, satisfying governance requirements. The form emits SAVE and CANCEL events only;
+    all mutations are routed through ActionBinding to the appropriate connector concept action.
+    test-failure is a dedicated FSM state, not a disabled state, so retry affordances are
+    always visible after a failed ping.
+  }
+
+  anatomy {
+    root:             container    { Outermost wrapper; data-state reflects the active FSM state }
+    typeLabel:        text         { Read-only label showing the connector type name (e.g. "Slack", "PostgreSQL") }
+    nameInput:        interactive  { Text field for the user-facing name of this connector instance }
+    credentialInput:  interactive  { Masked credential field (API key, token, connection string) }
+    advancedToggle:   action       { Expander button that reveals the advancedFields section }
+    advancedFields:   container    { Collapsed-by-default panel with timeout, base URL, and custom-header inputs }
+    testConnectionButton: action   { Button that initiates a live ping to verify the credential works }
+    testResultPane:   container    { Pane showing the real ping response, latency, and status code }
+    testResultStatus: text         { Summary line ("Connected — 142 ms" or error message) }
+    testResultDetail: text         { Expanded response body or error trace from the ping }
+    saveButton:       action       { Submits the form; disabled during testing or saving }
+    cancelButton:     action       { Discards changes; always enabled }
+  }
+
+  states {
+    form {
+      editing [initial] {
+        on TEST_CONNECTION   -> testing;
+        on SAVE              -> saving;
+        on CANCEL            -> editing;
+        on TOGGLE_ADVANCED   -> editing;
+      }
+
+      testing {
+        on TEST_SUCCEEDED    -> test-success;
+        on TEST_FAILED       -> test-failure;
+        on CANCEL            -> editing;
+        entry [maskCredentials; dispatchPing];
+        exit  [clearPendingPing];
+      }
+
+      test-success {
+        on TEST_CONNECTION   -> testing;
+        on SAVE              -> saving;
+        on CANCEL            -> editing;
+        on EDIT              -> editing;
+        entry [showTestResult];
+      }
+
+      test-failure {
+        on TEST_CONNECTION   -> testing;
+        on EDIT              -> editing;
+        on CANCEL            -> editing;
+        entry [showErrorResult];
+      }
+
+      saving {
+        on SAVE_SUCCEEDED    -> editing;
+        on SAVE_FAILED       -> editing;
+        entry [maskCredentials; submitForm];
+        exit  [clearSavePending];
+      }
+    }
+
+    advanced [parallel] {
+      collapsed [initial] {
+        on TOGGLE_ADVANCED -> expanded;
+      }
+
+      expanded {
+        on TOGGLE_ADVANCED -> collapsed;
+        entry [openAdvancedFields];
+        exit  [closeAdvancedFields];
+      }
+    }
+  }
+
+  accessibility {
+    role: form;
+    keyboard {
+      Enter        -> SAVE;
+      Escape       -> CANCEL;
+      Tab          -> FOCUS_NEXT;
+      Shift+Tab    -> FOCUS_PREV;
+    }
+    focus {
+      trap: false;
+      initial: nameInput;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "form";
+        aria-label: concat("Configure ", ?connectorType, " connector");
+        data-state: state.form;
+      };
+      typeLabel -> {
+        role: "heading";
+        aria-level: "2";
+      };
+      nameInput -> {
+        role: "textbox";
+        aria-label: "Connector instance name";
+        aria-required: "true";
+        aria-invalid: if self.error then "true" else "false";
+      };
+      credentialInput -> {
+        role: "textbox";
+        aria-label: concat(?connectorType, " credential");
+        aria-required: "true";
+        aria-description: "Value is masked and never re-displayed after saving";
+      };
+      advancedToggle -> {
+        role: "button";
+        aria-expanded: if state.advanced == "expanded" then "true" else "false";
+        aria-controls: "advanced-fields";
+        aria-label: "Toggle advanced settings";
+      };
+      advancedFields -> {
+        role: "group";
+        aria-label: "Advanced connection settings";
+        aria-hidden: if state.advanced == "collapsed" then "true" else "false";
+      };
+      testConnectionButton -> {
+        role: "button";
+        aria-label: "Test connection";
+        aria-busy: if state.form == "testing" then "true" else "false";
+        aria-disabled: if state.form == "saving" then "true" else "false";
+      };
+      testResultPane -> {
+        role: "status";
+        aria-live: "polite";
+        aria-atomic: "true";
+        aria-label: "Connection test result";
+        aria-hidden: if state.form == "editing" then "true" else "false";
+      };
+      saveButton -> {
+        role: "button";
+        aria-label: "Save connector";
+        aria-disabled: if state.form == "testing" or state.form == "saving" then "true" else "false";
+      };
+      cancelButton -> {
+        role: "button";
+        aria-label: "Cancel";
+      };
+    }
+  }
+
+  props {
+    connectorType:  String
+    instanceId:     option String
+    currentConfig:  option { name: String, credentialMasked: String, advanced: option { timeoutMs: Int, baseUrl: option String, headers: list { key: String, value: String } } }
+  }
+
+  connect {
+    root -> {
+      data-part:          "root";
+      data-state:         state.form;
+      data-advanced:      state.advanced;
+      data-connector-type: ?connectorType;
+      data-instance-id:   ?instanceId;
+    }
+
+    typeLabel -> {
+      data-part: "type-label";
+    }
+
+    nameInput -> {
+      data-part:   "name-input";
+      data-state:  state.form;
+      disabled:    if state.form == "saving" or state.form == "testing" then true else false;
+      onInput:     send(EDIT, { field: "name", value: self.value });
+      onKeyDown:   if key == "Enter" then send(SAVE) else noop;
+    }
+
+    credentialInput -> {
+      data-part:   "credential-input";
+      data-state:  state.form;
+      type:        "password";
+      autocomplete: "off";
+      disabled:    if state.form == "saving" or state.form == "testing" then true else false;
+      onInput:     send(EDIT, { field: "credential", value: self.value });
+    }
+
+    advancedToggle -> {
+      data-part:     "advanced-toggle";
+      data-expanded: if state.advanced == "expanded" then "true" else "false";
+      onClick:       send(TOGGLE_ADVANCED);
+    }
+
+    advancedFields -> {
+      data-part:   "advanced-fields";
+      data-state:  state.advanced;
+      hidden:      if state.advanced == "collapsed" then true else false;
+    }
+
+    testConnectionButton -> {
+      data-part:   "test-connection-button";
+      data-state:  state.form;
+      disabled:    if state.form == "saving" or state.form == "testing" then true else false;
+      aria-busy:   if state.form == "testing" then "true" else "false";
+      onClick:     send(TEST_CONNECTION);
+    }
+
+    testResultPane -> {
+      data-part:   "test-result-pane";
+      data-state:  state.form;
+      hidden:      if state.form == "editing" then true else false;
+    }
+
+    testResultStatus -> {
+      data-part:   "test-result-status";
+      data-state:  state.form;
+    }
+
+    testResultDetail -> {
+      data-part:   "test-result-detail";
+      data-state:  state.form;
+    }
+
+    saveButton -> {
+      data-part:   "save-button";
+      data-state:  state.form;
+      disabled:    if state.form == "testing" or state.form == "saving" then true else false;
+      onClick:     send(SAVE);
+    }
+
+    cancelButton -> {
+      data-part:   "cancel-button";
+      onClick:     send(CANCEL);
+    }
+  }
+
+  affordance {
+    serves: connector-instance-config;
+    specificity: 9;
+    when { connectorConfiguration: true }
+    bind {
+      connectorType: connectorType;
+      instanceId:    instanceId;
+      currentConfig: currentConfig;
+    }
+  }
+
+  invariant {
+    example "test connection enters testing state": {
+      after testConnectionButton.click -> ok
+      then root -> { data-state: "testing" }
+      and testConnectionButton -> { aria-busy: "true" }
+      and saveButton -> { disabled: true }
+    }
+
+    example "test-failure is a distinct dedicated state": {
+      after testConnectionButton.click -> ok
+      then send(TEST_FAILED, { error: "Connection refused" }) -> ok
+      then root -> { data-state: "test-failure" }
+      and testResultPane -> { hidden: false }
+      and testConnectionButton -> { disabled: false }
+    }
+
+    example "test-success renders result pane and allows save": {
+      after testConnectionButton.click -> ok
+      then send(TEST_SUCCEEDED, { latencyMs: 142, statusCode: 200 }) -> ok
+      then root -> { data-state: "test-success" }
+      and testResultPane -> { hidden: false }
+      and saveButton -> { disabled: false }
+    }
+
+    example "retry after failure re-enters testing": {
+      after testConnectionButton.click -> ok
+      then send(TEST_FAILED, { error: "Timeout" }) -> ok
+      then root -> { data-state: "test-failure" }
+      then testConnectionButton.click -> ok
+      then root -> { data-state: "testing" }
+    }
+
+    example "save emits SAVE event and enters saving state": {
+      after saveButton.click -> ok
+      then root -> { data-state: "saving" }
+      and saveButton -> { disabled: true }
+    }
+
+    example "cancel from test-failure returns to editing": {
+      after testConnectionButton.click -> ok
+      then send(TEST_FAILED, { error: "Timeout" }) -> ok
+      then cancelButton.click -> ok
+      then root -> { data-state: "editing" }
+    }
+
+    example "advanced fields toggle and collapse": {
+      after advancedToggle.click -> ok
+      then advancedFields -> { hidden: false }
+      and advancedToggle -> { data-expanded: "true" }
+      then advancedToggle.click -> ok
+      then advancedFields -> { hidden: true }
+      and advancedToggle -> { data-expanded: "false" }
+    }
+
+    example "credential field type is password": {
+      after root -> { data-state: "editing" }
+      then credentialInput -> { type: "password" }
+      and credentialInput -> { autocomplete: "off" }
+    }
+
+    forall s in states.form:
+      s.reachable = true
+
+    forall s in states.advanced:
+      s.reachable = true
+
+    always "data-state on root reflects form FSM": {
+      root -> { data-state: state.form }
+    }
+
+    always "testResultPane hidden during editing": {
+      if state.form == "editing" then testResultPane -> { hidden: true }
+    }
+
+    always "testResultPane visible in test-success and test-failure": {
+      if state.form == "test-success" or state.form == "test-failure" then testResultPane -> { hidden: false }
+    }
+
+    always "saveButton disabled while testing or saving": {
+      if state.form == "testing" or state.form == "saving" then saveButton -> { disabled: true }
+    }
+
+    always "credentialInput is password type": {
+      credentialInput -> { type: "password" }
+    }
+
+    always "advancedFields hidden when collapsed": {
+      if state.advanced == "collapsed" then advancedFields -> { hidden: true }
+    }
+
+    never "credential rendered in plain text": {
+      credentialInput -> { type: "text" }
+    }
+
+    never "save fires during testing": {
+      state.form == "testing" and saveButton -> { disabled: false }
+    }
+
+    never "test-failure rendered as disabled state": {
+      state.form == "test-failure" and testConnectionButton -> { disabled: true }
+    }
+
+    action testConnectionButton.click {
+      requires: state.form == "editing" or state.form == "test-success" or state.form == "test-failure"
+      ensures ok: state.form == "testing"
+    }
+
+    action saveButton.click {
+      requires: state.form == "editing" or state.form == "test-success"
+      ensures ok: state.form == "saving"
+    }
+
+    action cancelButton.click {
+      ensures ok: state.form == "editing"
+    }
+
+    "SAVE event carries instanceId (if present), connectorType, name, and raw credential — host routes to concept action";
+    "TEST_CONNECTION event carries connectorType and raw credential — host pings and replies with TEST_SUCCEEDED or TEST_FAILED";
+    "testResultPane shows the real HTTP response body, status code, and latency from the ping — never mocked";
+    "Credential value is sent in events but never re-read from state after saving, satisfying the masking governance rule";
+    "test-failure exposes testConnectionButton as enabled so the user can retry without returning to editing — failure is not a dead end";
+    "EDIT event carries field name and new value, allowing the host to update controlled form state without widget re-mount";
+    "advancedFields are collapsed by default per progressive disclosure — expanded only when the user explicitly requests them";
+  }
+
+}
