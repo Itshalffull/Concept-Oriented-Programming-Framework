@@ -68,21 +68,44 @@ Users building automation in Clef Base today cannot do any of this from the UI �
 
 ### 4.1 Existing Concepts — No Changes Needed
 
+**Automation data model:**
 - **ProcessSpec** — already has steps, edges, versions, draft/active/deprecated
 - **ProcessRun + StepRun** — already tracks per-step state and retry counts
 - **Workflow** — already FSM with guarded transitions
 - **AutomationRule** — already event-condition-action (but needs real dispatch)
 - **RetryPolicy + CompensationPlan** — already support retry/rollback
 
-### 4.2 New UI-Only Widgets
+**Diagram infrastructure — reuse, do not rebuild:**
+- **Canvas** (`repertoire/concepts/content/canvas.concept`) — items, positions, selection, pan/zoom, applyLayout
+- **ConnectorPort** (`repertoire/concepts/diagramming/connector-port.concept`) — typed connection points with direction (in/out), port_type validation, max_connections
+- **ConstraintAnchor** — anchoring connectors to ports so edges follow nodes
+- **DiagramNotation** — palette/shape vocabulary per domain
+- **SpatialLayout** — hierarchical/tree/force layout algorithms (already has `hierarchical` for flowcharts)
+- **DiagramExport** — PNG/SVG/JSON export
+- **GraphAnalysis** — cycle detection, reachability, topological ordering (useful for validating process graphs)
+- **FlowchartEditor [T]** (`repertoire/concepts/diagramming/flowchart-editor.derived`) — pre-composed Canvas + DiagramNotation + SpatialLayout + DiagramExport with flowchart palette and hierarchical auto-layout. **This is the graph canvas.**
 
-- `flow-builder.widget` — shell widget (palette, canvas, inspector)
-- `flow-steps-view.widget` — linear narrative renderer
-- `flow-graph-canvas.widget` — node-link canvas
-- `flow-step-inspector.widget` — right-pane config
+### 4.2 Composition Strategy — Flow Builder as a Specialized Diagram Editor
+
+The Flow Builder is a **ProcessSpec-bound FlowchartEditor**, not a new canvas. The graph view delegates entirely to Canvas + FlowchartEditor; we add a projection layer that keeps `ProcessSpec.steps/edges` and `Canvas.items/connectors` in sync.
+
+- Each `ProcessSpec` step → a Canvas item with typed `ConnectorPort`s (in port for incoming edges, out port per branch / default / catch)
+- Each `ProcessSpec` edge → a Canvas connector anchored via `ConstraintAnchor` to ports on source/target
+- Catch/fault paths → additional typed out-ports on the action node (`port_type: "catch"`), rendered with distinct notation from DiagramNotation
+- Auto-layout → `Canvas/applyLayout(algorithm: "hierarchical")` (inherited via FlowchartEditor)
+- Process graph validation → `GraphAnalysis` for cycle/reachability checks on save
+- Export → `DiagramExport` for PNG/SVG/JSON of the flow
+
+### 4.3 New UI-Only Widgets
+
+- `flow-builder.widget` — shell widget (palette, canvas host, inspector); embeds FlowchartEditor for the graph pane
+- `flow-steps-view.widget` — linear narrative renderer (the non-canvas projection of the same data)
+- `flow-step-inspector.widget` — right-pane config (uses action-editor widget)
 - `data-mapping.widget` — field pill picker with sample data
-- `error-branch.widget` — catch/fault path editor
+- `error-branch.widget` — catch/fault path editor (adds typed catch ports + catch connectors)
 - `workflow-version-history.widget` — diff + rollback UI
+
+No new canvas widget. The graph pane is a FlowchartEditor surface.
 
 ### 4.3 New React Components (clef-base)
 
@@ -91,12 +114,15 @@ Users building automation in Clef Base today cannot do any of this from the UI �
 
 ### 4.4 New Syncs
 
+- `ProcessSpecToCanvas` — on `ProcessSpec/create|updateStep|addEdge`, project steps → Canvas items and edges → connectors with ConstraintAnchor bindings
+- `CanvasToProcessSpec` — on `Canvas/moveItem|createConnector|deleteItem` inside a flow-builder canvas, write back to ProcessSpec (positions are metadata; structural edits go through ProcessSpec actions)
+- `FlowGraphValidate` — on `ProcessSpec/publish`, run `GraphAnalysis/detectCycles` + reachability; block publish on errors
 - `DispatchAutomationAction` — when `AutomationRule/execute` fires with action type `invoke-action-binding`, route to `ActionBinding/invoke`. Replaces `log` placeholder dispatch.
 - `ReplayRun` — when user requests replay, clone the past `ProcessRun` inputs and start a new run.
 
 ### 4.5 No New Concepts Required
 
-The data model is already complete. All deliverables are UI + syncs.
+The data model is already complete. All deliverables are UI + syncs composing existing automation and diagramming concepts.
 
 ---
 
@@ -106,7 +132,7 @@ The data model is already complete. All deliverables are UI + syncs.
 
 1. **Flow Builder shell** — Three-pane layout widget + React component wiring. Palette on left (triggers/actions/logic nodes). Canvas/steps area in center. Inspector on right. Switches between steps and graph view.
 2. **Steps view** — Linear list of steps with insert-between, reorder, collapse. Matches ProcessSpec's step array ordering.
-3. **Graph view** — Node-link canvas reading same ProcessSpec. Drag-to-connect between step nodes. Auto-layout on load. Mini-map for large graphs.
+3. **Graph view** — FlowchartEditor-backed canvas. ProcessSpec ↔ Canvas projection syncs keep step/edge data in sync with Canvas items/connectors. Drag-to-connect uses existing ConnectorPort + ConstraintAnchor. Auto-layout via `Canvas/applyLayout("hierarchical")`. Mini-map from Canvas viewport primitives.
 4. **Step inspector** — Right pane configuring selected step: type, params, condition, retry policy. Uses action-editor widget for step action config.
 5. **Data mapping widget** — Field pill picker. Shows available fields from preceding steps' outputs. Type-checked binding to current step's inputs.
 6. **Error branch authoring** — Add catch node after any action. Catch has its own action config (notify, retry, fallback).
@@ -133,7 +159,7 @@ The data model is already complete. All deliverables are UI + syncs.
 
 - MAG-A: flow-builder.widget spec + React adapter
 - MAG-B: flow-steps-view.widget + rendering from ProcessSpec
-- MAG-C: flow-graph-canvas.widget + node-link rendering
+- MAG-C: Integrate FlowchartEditor into flow-builder + ProcessSpec↔Canvas projection syncs (no new canvas widget)
 - MAG-D: flow-step-inspector.widget + action-editor integration
 - MAG-E: `FlowBuilderView` React component wiring all four
 
