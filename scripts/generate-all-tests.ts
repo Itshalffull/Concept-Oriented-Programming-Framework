@@ -307,6 +307,7 @@ async function main() {
     join(ROOT, 'score'),
     join(ROOT, 'bind'),
     join(ROOT, 'surface'),
+    join(ROOT, 'clef-base', 'concepts'),
   ];
 
   const conceptFiles = searchDirs.flatMap(d => findConceptFiles(d));

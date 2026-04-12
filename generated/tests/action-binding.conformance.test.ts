@@ -98,6 +98,20 @@ describe('ActionBinding functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
+    it('fixture "bind_slash_command" -> ok', async () => {
+      if (typeof actionBindingHandler.bind !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(actionBindingHandler.bind({ binding: "bold-slash-btn", target: "TextFormat/bold", parameterMap: "{}", executionPolicy: "auto", slash_command: "true", section: "Basic", label: "Bold", keyboard: "Ctrl+B" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "bind_toolbar_keyboard" -> ok', async () => {
+      if (typeof actionBindingHandler.bind !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(actionBindingHandler.bind({ binding: "italic-toolbar-btn", target: "TextFormat/italic", parameterMap: "{}", executionPolicy: "auto", toolbar_command: "true", keyboard: "Ctrl+I", section: "Basic" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
     it('fixture "bind_empty_target" -> invalid', async () => {
       if (typeof actionBindingHandler.bind !== 'function') return;
       const storage = createInMemoryStorage();
@@ -605,7 +619,7 @@ describe('ActionBinding functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('bind'), input: fc.record({ binding: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }), parameterMap: fc.string({ minLength: 1, maxLength: 50 }), precondition: fc.string(), confirmWhen: fc.string(), executionPolicy: fc.string({ minLength: 1, maxLength: 50 }), retryPolicy: fc.string(), reversalAction: fc.string(), label: fc.string(), icon: fc.string(), buttonVariant: fc.string() }) }),
+              fc.record({ action: fc.constant('bind'), input: fc.record({ binding: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }), parameterMap: fc.string({ minLength: 1, maxLength: 50 }), precondition: fc.string(), confirmWhen: fc.string(), executionPolicy: fc.string({ minLength: 1, maxLength: 50 }), retryPolicy: fc.string(), reversalAction: fc.string(), label: fc.string(), icon: fc.string(), buttonVariant: fc.string(), slash_command: fc.string(), toolbar_command: fc.string(), context_menu: fc.string(), keyboard: fc.string(), section: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ binding: fc.string() }) }),
               fc.record({ action: fc.constant('invoke'), input: fc.record({ binding: fc.string(), context: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('confirm'), input: fc.record({ binding: fc.string() }) }),
@@ -641,7 +655,7 @@ describe('ActionBinding functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('bind'), input: fc.record({ binding: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }), parameterMap: fc.string({ minLength: 1, maxLength: 50 }), precondition: fc.string(), confirmWhen: fc.string(), executionPolicy: fc.string({ minLength: 1, maxLength: 50 }), retryPolicy: fc.string(), reversalAction: fc.string(), label: fc.string(), icon: fc.string(), buttonVariant: fc.string() }) }),
+              fc.record({ action: fc.constant('bind'), input: fc.record({ binding: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }), parameterMap: fc.string({ minLength: 1, maxLength: 50 }), precondition: fc.string(), confirmWhen: fc.string(), executionPolicy: fc.string({ minLength: 1, maxLength: 50 }), retryPolicy: fc.string(), reversalAction: fc.string(), label: fc.string(), icon: fc.string(), buttonVariant: fc.string(), slash_command: fc.string(), toolbar_command: fc.string(), context_menu: fc.string(), keyboard: fc.string(), section: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ binding: fc.string() }) }),
               fc.record({ action: fc.constant('invoke'), input: fc.record({ binding: fc.string(), context: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('confirm'), input: fc.record({ binding: fc.string() }) }),
@@ -692,7 +706,7 @@ describe('ActionBinding functional handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ binding: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }), parameterMap: fc.string({ minLength: 1, maxLength: 50 }), precondition: fc.string(), confirmWhen: fc.string(), executionPolicy: fc.string({ minLength: 1, maxLength: 50 }), retryPolicy: fc.string(), reversalAction: fc.string(), label: fc.string(), icon: fc.string(), buttonVariant: fc.string() }),
+          fc.record({ binding: fc.string(), target: fc.string({ minLength: 1, maxLength: 50 }), parameterMap: fc.string({ minLength: 1, maxLength: 50 }), precondition: fc.string(), confirmWhen: fc.string(), executionPolicy: fc.string({ minLength: 1, maxLength: 50 }), retryPolicy: fc.string(), reversalAction: fc.string(), label: fc.string(), icon: fc.string(), buttonVariant: fc.string(), slash_command: fc.string(), toolbar_command: fc.string(), context_menu: fc.string(), keyboard: fc.string(), section: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
             const result = await safeInvoke(async () => {

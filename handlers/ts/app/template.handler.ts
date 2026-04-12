@@ -13,12 +13,14 @@ const _templateHandler: FunctionalConceptHandler = {
     const template = input.template as string;
     const body = input.body as string;
     const variables = input.variables as string;
+    const trigger = (input.trigger as string) || null;
+    const triggerKind = (input.trigger_kind as string) || null;
     let p = createProgram();
     p = spGet(p, 'template', template, 'existing');
     p = branch(p, 'existing',
       (b) => complete(b, 'exists', { message: 'A template with this identity already exists' }),
       (b) => {
-        let b2 = put(b, 'template', template, { template, body, variables, triggers: '[]' });
+        let b2 = put(b, 'template', template, { template, body, variables, triggers: '[]', trigger, trigger_kind: triggerKind });
         return complete(b2, 'ok', {});
       },
     );

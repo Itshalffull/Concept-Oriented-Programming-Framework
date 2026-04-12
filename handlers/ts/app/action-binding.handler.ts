@@ -29,6 +29,11 @@ const _handler: FunctionalConceptHandler = {
     const label = (input.label as string) || null;
     const icon = (input.icon as string) || null;
     const buttonVariant = (input.buttonVariant as string) || null;
+    const slashCommand = (input.slash_command as boolean) ?? false;
+    const toolbarCommand = (input.toolbar_command as boolean) ?? false;
+    const contextMenu = (input.context_menu as boolean) ?? false;
+    const keyboard = (input.keyboard as string) || null;
+    const section = (input.section as string) || null;
 
     // Input validation
     if (!binding || binding.trim() === '') {
@@ -78,6 +83,11 @@ const _handler: FunctionalConceptHandler = {
           label,
           icon,
           buttonVariant,
+          slash_command: slashCommand,
+          toolbar_command: toolbarCommand,
+          context_menu: contextMenu,
+          keyboard,
+          section,
           status: 'idle',
           lastTrace: null,
           pendingConfirmation: null,
@@ -114,6 +124,11 @@ const _handler: FunctionalConceptHandler = {
           icon: rec.icon ?? null,
           buttonVariant: rec.buttonVariant ?? null,
           status: rec.status ?? 'idle',
+          slash_command: (rec.slash_command as boolean) ?? false,
+          toolbar_command: (rec.toolbar_command as boolean) ?? false,
+          context_menu: (rec.context_menu as boolean) ?? false,
+          keyboard: rec.keyboard ?? null,
+          section: rec.section ?? null,
         };
       }),
       (elseP) => complete(elseP, 'notfound', { message: `binding '${binding}' not found` }),

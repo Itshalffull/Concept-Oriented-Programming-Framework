@@ -12,10 +12,13 @@ concept Template [T] {
     variables: T -> String
     triggers: T -> String
     body: T -> String
+    trigger: T -> option String
+    trigger_kind: T -> option String
   }
 
   actions {
-    action define(template: T, body: String, variables: String) {
+    action define(template: T, body: String, variables: String,
+                  trigger: option String, trigger_kind: option String) {
       -> ok() {
         Registers a new template with its body and variable declarations.
       }
@@ -24,6 +27,8 @@ concept Template [T] {
       }
 
       fixture valid_define { template: "welcome-email", body: "Hello {{name}}", variables: "name" }
+      fixture define_with_trigger { template: "bold-snippet", body: "**{{text}}**", variables: "text", trigger: "**", trigger_kind: "prefix" }
+      fixture define_with_slash_trigger { template: "callout-block", body: "> {{text}}", variables: "text", trigger: "/callout", trigger_kind: "slash" }
       fixture duplicate_define { template: "welcome-email", body: "Hi {{name}}", variables: "name" } after valid_define -> exists
     }
 

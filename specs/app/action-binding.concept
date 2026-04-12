@@ -21,6 +21,11 @@ concept ActionBinding [B] {
       label: B -> option String
       icon: B -> option String
       buttonVariant: B -> option String
+      slash_command: B -> Bool
+      toolbar_command: B -> Bool
+      context_menu: B -> Bool
+      keyboard: B -> option String
+      section: B -> option String
     }
     policies {
       precondition: B -> option String
@@ -45,7 +50,10 @@ concept ActionBinding [B] {
                 executionPolicy: String, retryPolicy: option String,
                 reversalAction: option String,
                 label: option String, icon: option String,
-                buttonVariant: option String) {
+                buttonVariant: option String,
+                slash_command: option Bool, toolbar_command: option Bool,
+                context_menu: option Bool, keyboard: option String,
+                section: option String) {
       -> ok(binding: B) {
         Create an action binding wiring a UI trigger to a concept action.
         Target is a concept/action reference (e.g., "Task/complete").
@@ -76,6 +84,25 @@ concept ActionBinding [B] {
         icon: "x-circle"
         buttonVariant: "destructive"
       }
+      fixture bind_slash_command {
+        binding: "bold-slash-btn"
+        target: "TextFormat/bold"
+        parameterMap: "{}"
+        executionPolicy: "auto"
+        slash_command: true
+        section: "Basic"
+        label: "Bold"
+        keyboard: "Ctrl+B"
+      }
+      fixture bind_toolbar_keyboard {
+        binding: "italic-toolbar-btn"
+        target: "TextFormat/italic"
+        parameterMap: "{}"
+        executionPolicy: "auto"
+        toolbar_command: true
+        keyboard: "Ctrl+I"
+        section: "Basic"
+      }
       fixture bind_empty_target {
         binding: "bad-btn"
         target: ""
@@ -102,7 +129,10 @@ concept ActionBinding [B] {
             executionPolicy: String, retryPolicy: option String,
             reversalAction: option String,
             label: option String, icon: option String,
-            buttonVariant: option String, status: String) {
+            buttonVariant: option String, status: String,
+            slash_command: Bool, toolbar_command: Bool,
+            context_menu: Bool, keyboard: option String,
+            section: option String) {
         Return the full binding configuration and current execution status.
       }
       -> notfound(message: String) {

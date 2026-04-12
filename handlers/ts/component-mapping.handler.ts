@@ -112,6 +112,8 @@ const _handler: FunctionalConceptHandler = {
     const widgetId = input.widget_id as string;
     const schema = input.schema as string;
     const displayMode = input.display_mode as string;
+    const insertable = (input.insertable as boolean) ?? false;
+    const blockEditorContext = (input.block_editor_context as string[]) ?? [];
 
     if (!name || !widgetId) {
       const p = createProgram();
@@ -136,6 +138,8 @@ const _handler: FunctionalConceptHandler = {
           widget_variant: null,
           schema: schema || null,
           display_mode: displayMode || null,
+          insertable,
+          block_editor_context: blockEditorContext,
         });
         return complete(elseP, 'ok', { mapping: id });
       },

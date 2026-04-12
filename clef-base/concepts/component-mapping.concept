@@ -14,6 +14,8 @@ concept ComponentMapping [M] {
     scope_display_mode: M -> option String
     widget_id: M -> String
     widget_variant: M -> option String
+    insertable: M -> Bool
+    block_editor_context: M -> list String
 
     slot_bindings {
       slots: set M
@@ -62,7 +64,8 @@ concept ComponentMapping [M] {
     }
 
     action create(name: String, widget_id: String, schema: String,
-                  display_mode: String) {
+                  display_mode: String, insertable: option Bool,
+                  block_editor_context: option list String) {
       -> ok(mapping: M) {
         Creates a new component mapping binding a widget to a
         Schema+DisplayMode combination.
@@ -71,6 +74,7 @@ concept ComponentMapping [M] {
         The widget ID does not exist or the Schema is unknown.
       }
       fixture create_ok { name: "Article Card", widget_id: "card", schema: "Article", display_mode: "teaser" }
+      fixture create_insertable { name: "Paragraph Block", widget_id: "paragraph", schema: "Paragraph", display_mode: "block", insertable: true, block_editor_context: ["markdown", "wiki"] }
       fixture create_empty_name { name: "", widget_id: "card", schema: "Article", display_mode: "teaser" } -> invalid
     }
 
