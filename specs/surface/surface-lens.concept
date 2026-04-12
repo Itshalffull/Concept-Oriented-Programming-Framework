@@ -1,0 +1,367 @@
+# @fixtures-added
+concept SurfaceLens [L] {
+
+  purpose {
+    Bind widget parts, view wrappers, and render-program nodes to
+    semantic surface contracts with deterministic precedence. A
+    surface lens records how semantic styling roles should attach
+    to rendered UI structure before target-specific realization.
+  }
+
+  state {
+    lenses: set L
+    name: L -> String
+    sourceType: L -> "widget-part" | "view-wrapper" | "render-node"
+    sourceRef: L -> String
+    contract: L -> String
+    variant: L -> option String
+    stateProjection: L -> list String
+    targetPlatforms: L -> list String
+    precedence: L -> Int
+    description: L -> String
+    selectorWidget: L -> option String
+    selectorPart: L -> option String
+    selectorRole: L -> option String
+    selectorKind: L -> option String
+    selectorBinding: L -> option String
+    selectorAncestry: L -> option String
+    selectorTags: L -> list String
+  }
+
+  actions {
+    action bind(
+      lens: L,
+      name: String,
+      sourceType: String,
+      sourceRef: String,
+      contract: String,
+      variant: option String,
+      stateProjection: list String,
+      targetPlatforms: list String,
+      precedence: Int,
+      description: String,
+      selectorWidget: option String,
+      selectorPart: option String,
+      selectorRole: option String,
+      selectorKind: option String,
+      selectorBinding: option String,
+      selectorAncestry: option String,
+      selectorTags: list String
+    ) {
+      -> ok(lens: L) {
+        Register a surface lens that maps a widget part, view wrapper,
+        or render-node selector onto a semantic surface contract.
+      }
+      -> duplicate(lens: L) {
+        A surface lens is already registered with this identifier.
+      }
+      -> error(message: String) {
+        The lens is missing a valid source target, contract binding,
+        or precedence needed for deterministic resolution.
+      }
+
+      fixture widget_part_lens {
+        lens: "field-widget-input",
+        name: "FieldWidgetInputLens",
+        sourceType: "widget-part",
+        sourceRef: "FieldWidget.input",
+        contract: "field-control",
+        variant: none,
+        stateProjection: ["invalid<-aria-invalid", "disabled<-disabled"],
+        targetPlatforms: ["web-css", "swiftui"],
+        precedence: 100,
+        description: "Bind the FieldWidget input part directly to the field-control contract.",
+        selectorWidget: none,
+        selectorPart: none,
+        selectorRole: none,
+        selectorKind: none,
+        selectorBinding: none,
+        selectorAncestry: none,
+        selectorTags: []
+      }
+      fixture view_wrapper_lens {
+        lens: "dashboard-section",
+        name: "DashboardSectionLens",
+        sourceType: "view-wrapper",
+        sourceRef: "DashboardView.section",
+        contract: "page-section",
+        variant: "default",
+        stateProjection: [],
+        targetPlatforms: ["web-css"],
+        precedence: 80,
+        description: "Bind dashboard sections to the page-section contract.",
+        selectorWidget: none,
+        selectorPart: none,
+        selectorRole: none,
+        selectorKind: none,
+        selectorBinding: none,
+        selectorAncestry: none,
+        selectorTags: []
+      }
+      fixture render_node_lens {
+        lens: "generated-form-input",
+        name: "GeneratedFormInputLens",
+        sourceType: "render-node",
+        sourceRef: "RenderProgram",
+        contract: "field-control",
+        variant: "generated",
+        stateProjection: ["invalid<-prop:aria-invalid", "disabled<-prop:disabled"],
+        targetPlatforms: ["web-css", "swiftui", "winui"],
+        precedence: 60,
+        description: "Bind generated form input nodes to the field-control contract through semantic selectors.",
+        selectorWidget: none,
+        selectorPart: none,
+        selectorRole: "input",
+        selectorKind: none,
+        selectorBinding: none,
+        selectorAncestry: "form",
+        selectorTags: ["generated", "semantic"]
+      }
+      fixture duplicate_lens {
+        lens: "field-widget-input",
+        name: "FieldWidgetInputLens",
+        sourceType: "widget-part",
+        sourceRef: "FieldWidget.input",
+        contract: "field-control",
+        variant: none,
+        stateProjection: [],
+        targetPlatforms: ["web-css"],
+        precedence: 100,
+        description: "Duplicate lens should fail.",
+        selectorWidget: none,
+        selectorPart: none,
+        selectorRole: none,
+        selectorKind: none,
+        selectorBinding: none,
+        selectorAncestry: none,
+        selectorTags: []
+      } after widget_part_lens -> duplicate
+      fixture missing_contract {
+        lens: "broken-lens",
+        name: "BrokenLens",
+        sourceType: "render-node",
+        sourceRef: "RenderProgram",
+        contract: "",
+        variant: none,
+        stateProjection: [],
+        targetPlatforms: ["web-css"],
+        precedence: 50,
+        description: "Missing contract should fail.",
+        selectorWidget: none,
+        selectorPart: none,
+        selectorRole: "input",
+        selectorKind: none,
+        selectorBinding: none,
+        selectorAncestry: none,
+        selectorTags: []
+      } -> error
+      fixture render_node_missing_selector {
+        lens: "broken-render-node",
+        name: "BrokenRenderNodeLens",
+        sourceType: "render-node",
+        sourceRef: "RenderProgram",
+        contract: "field-control",
+        variant: none,
+        stateProjection: [],
+        targetPlatforms: ["web-css"],
+        precedence: 50,
+        description: "Render-node lenses need at least one semantic selector field.",
+        selectorWidget: none,
+        selectorPart: none,
+        selectorRole: none,
+        selectorKind: none,
+        selectorBinding: none,
+        selectorAncestry: none,
+        selectorTags: []
+      } -> error
+      fixture conflicting_precedence {
+        lens: "field-widget-input-conflict",
+        name: "FieldWidgetInputConflictLens",
+        sourceType: "widget-part",
+        sourceRef: "FieldWidget.input",
+        contract: "field-control-alt",
+        variant: none,
+        stateProjection: [],
+        targetPlatforms: ["web-css"],
+        precedence: 100,
+        description: "Same source and precedence should fail deterministic resolution.",
+        selectorWidget: none,
+        selectorPart: none,
+        selectorRole: none,
+        selectorKind: none,
+        selectorBinding: none,
+        selectorAncestry: none,
+        selectorTags: []
+      } -> error
+    }
+
+    action get(lens: L) {
+      -> ok(
+        lens: L,
+        name: String,
+        sourceType: String,
+        sourceRef: String,
+        contract: String,
+        variant: option String,
+        stateProjection: list String,
+        targetPlatforms: list String,
+        precedence: Int,
+        description: String,
+        selectorWidget: option String,
+        selectorPart: option String,
+        selectorRole: option String,
+        selectorKind: option String,
+        selectorBinding: option String,
+        selectorAncestry: option String,
+        selectorTags: list String
+      ) {
+        Return the stored definition of a previously registered
+        surface lens.
+      }
+      -> notfound(message: String) {
+        No surface lens exists with this identifier.
+      }
+
+      fixture existing_lens { lens: $widget_part_lens.lens } after widget_part_lens
+      fixture unknown_lens { lens: "missing-lens" } -> notfound
+    }
+
+    action list(sourceType: option String, targetPlatform: option String) {
+      -> ok(lenses: list String) {
+        Return registered surface lens identifiers, optionally filtered
+        by source-target kind or target platform support.
+      }
+
+      fixture list_all { sourceType: none, targetPlatform: none } after widget_part_lens
+      fixture list_render_nodes { sourceType: "render-node", targetPlatform: none } after render_node_lens
+      fixture list_swiftui { sourceType: none, targetPlatform: "swiftui" } after render_node_lens
+    }
+  }
+
+  example "bind then get returns same lens": {
+    after bind(
+      lens: l,
+      name: "FieldWidgetInputLens",
+      sourceType: "widget-part",
+      sourceRef: "FieldWidget.input",
+      contract: "field-control",
+      variant: none,
+      stateProjection: ["invalid<-aria-invalid"],
+      targetPlatforms: ["web-css"],
+      precedence: 100,
+      description: "Bind the FieldWidget input part directly to the field-control contract.",
+      selectorWidget: none,
+      selectorPart: none,
+      selectorRole: none,
+      selectorKind: none,
+      selectorBinding: none,
+      selectorAncestry: none,
+      selectorTags: []
+    ) -> ok(lens: l)
+    then get(lens: l) -> ok(lens: l, name: n, sourceType: st, sourceRef: sr, contract: c, variant: v, stateProjection: sp, targetPlatforms: tp, precedence: p, description: d, selectorWidget: sw, selectorPart: sp2, selectorRole: sr2, selectorKind: sk, selectorBinding: sb, selectorAncestry: sa, selectorTags: stg)
+  }
+
+  example "duplicate bind returns duplicate": {
+    after bind(
+      lens: l,
+      name: "FieldWidgetInputLens",
+      sourceType: "widget-part",
+      sourceRef: "FieldWidget.input",
+      contract: "field-control",
+      variant: none,
+      stateProjection: [],
+      targetPlatforms: ["web-css"],
+      precedence: 100,
+      description: "Bind the FieldWidget input part directly to the field-control contract.",
+      selectorWidget: none,
+      selectorPart: none,
+      selectorRole: none,
+      selectorKind: none,
+      selectorBinding: none,
+      selectorAncestry: none,
+      selectorTags: []
+    ) -> ok(lens: l)
+    then bind(
+      lens: l,
+      name: "FieldWidgetInputLens",
+      sourceType: "widget-part",
+      sourceRef: "FieldWidget.input",
+      contract: "field-control",
+      variant: none,
+      stateProjection: [],
+      targetPlatforms: ["web-css"],
+      precedence: 100,
+      description: "Bind the FieldWidget input part directly to the field-control contract.",
+      selectorWidget: none,
+      selectorPart: none,
+      selectorRole: none,
+      selectorKind: none,
+      selectorBinding: none,
+      selectorAncestry: none,
+      selectorTags: []
+    ) -> duplicate(lens: l)
+  }
+
+  always "registered lenses have source types" {
+    forall l in lenses:
+    sourceType(l) != none
+  }
+
+  always "registered lenses have contracts" {
+    forall l in lenses:
+    contract(l) != none
+  }
+
+  always "render-node lenses declare semantic selectors" {
+    forall l in lenses:
+    sourceType(l) = "render-node" implies (
+      selectorWidget(l) != none or
+      selectorPart(l) != none or
+      selectorRole(l) != none or
+      selectorKind(l) != none or
+      selectorBinding(l) != none or
+      selectorAncestry(l) != none or
+      selectorTags(l) != []
+    )
+  }
+
+  never "two lenses share the same source and precedence" {
+    exists l1 in lenses, l2 in lenses:
+      l1 != l2 and
+      sourceType(l1) = sourceType(l2) and
+      sourceRef(l1) = sourceRef(l2) and
+      precedence(l1) = precedence(l2)
+  }
+
+  action bind {
+    requires: name != ""
+    requires: sourceType = "widget-part" or sourceType = "view-wrapper" or sourceType = "render-node"
+    requires: sourceRef != ""
+    requires: contract != ""
+    requires: precedence >= 0
+    requires: description != ""
+    requires: sourceType != "render-node" or (
+      selectorWidget != none or
+      selectorPart != none or
+      selectorRole != none or
+      selectorKind != none or
+      selectorBinding != none or
+      selectorAncestry != none or
+      selectorTags != []
+    )
+    ensures ok: lens in lenses
+    ensures ok: contract(lens) == contract
+    ensures ok: sourceType(lens) == sourceType
+    ensures duplicate: lenses' == lenses
+  }
+
+  action get {
+    requires: lens != ""
+    ensures ok: lens in lenses
+    ensures notfound: lenses' == lenses
+  }
+
+  action list {
+    ensures ok: true
+  }
+}

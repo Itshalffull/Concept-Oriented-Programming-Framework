@@ -36,6 +36,10 @@ concepts:
     spec: specs/surface/surface-contract.concept
     params:
       C: { as: SurfaceContractId, description: "Surface contract identifier" }
+  SurfaceLens:
+    spec: specs/surface/surface-lens.concept
+    params:
+      L: { as: SurfaceLensId, description: "Surface lens identifier" }
   TransformExtractionProvider:
     spec: specs/surface/providers/transform-extraction-provider.concept
     params:
