@@ -1,0 +1,578 @@
+@version(1)
+widget connector-step-config {
+
+  purpose {
+    Tab inside the flow-step-inspector for connector-call steps. Provides three
+    progressively-disclosed sections — pick connector instance, pick connector
+    action, configure params — that expand in order as the user makes choices.
+    A test-call button fires the real connector with the currently configured
+    params, renders the live response inline (including error bodies exactly as
+    they would appear in production), and seeds downstream step config with the
+    response schema. Connector instances are filtered to those the run-as
+    principal is authorised to invoke. Failed test calls land in a dedicated
+    FSM state (not a disabled state) so retry affordances remain visible. All
+    mutations are routed through events to the host; the widget never invokes
+    concept actions directly.
+  }
+
+  anatomy {
+    root:                  container    { Outermost wrapper; data-state reflects the active FSM composite state }
+
+    // Section 1 — pick connector instance
+    instanceSection:       container    { Expandable section for selecting a connector instance }
+    instanceSectionHeader: action       { Clickable heading row that toggles the instance section open/closed }
+    instanceSectionLabel:  text         { "1. Pick connector" section heading text }
+    instancePicker:        interactive  { Combobox/select listing the authorised connector instances for this run-as principal }
+    instanceOption:        presentation { Individual item in the instancePicker list }
+    instanceBadge:         text         { Shows connector type name (e.g. "Slack", "PostgreSQL") next to the chosen instance }
+    instanceError:         text         { Inline error when no authorised instances are available for the step's connector type }
+
+    // Section 2 — pick connector action
+    actionSection:         container    { Expandable section for selecting which connector operation to call }
+    actionSectionHeader:   action       { Clickable heading row that toggles the action section open/closed }
+    actionSectionLabel:    text         { "2. Pick action" section heading text }
+    actionPicker:          interactive  { Combobox/select listing operations supported by the chosen instance }
+    actionOption:          presentation { Individual item in the actionPicker list }
+    actionDescription:     text         { Read-only prose description of the selected operation }
+
+    // Section 3 — configure params
+    paramSection:          container    { Expandable section containing the param mapping rows }
+    paramSectionHeader:    action       { Clickable heading row that toggles the param section open/closed }
+    paramSectionLabel:     text         { "3. Configure params" section heading text }
+    paramList:             container    { Vertical list of one data-mapping widget per param }
+    paramRow:              container    { Row wrapper for a single param: label + data-mapping slot }
+    paramLabel:            text         { Name and expected type of the param }
+    paramRequiredBadge:    presentation { "required" badge shown next to mandatory params }
+
+    // Test call
+    testCallButton:        action       { Fires the real connector with current params and shows the response }
+    testCallResultPane:    container    { Region rendering the live response from the last test call }
+    testCallStatus:        text         { Summary line — e.g. "200 OK — 312 ms" or error classification }
+    testCallBody:          text         { Full response body or error trace, rendered exactly as in production }
+    testCallSeedNotice:    text         { Notice confirming that the response schema was used to seed downstream step config }
+  }
+
+  states {
+    // Section open/close — three independent parallel machines
+    instanceSection [parallel] {
+      open [initial] {
+        on TOGGLE_INSTANCE_SECTION -> closed;
+      }
+      closed {
+        on TOGGLE_INSTANCE_SECTION -> open;
+        entry [closeInstanceSection];
+        exit  [openInstanceSection];
+      }
+    }
+
+    actionSection [parallel] {
+      closed [initial] {
+        on INSTANCE_SELECTED     -> open;
+        on TOGGLE_ACTION_SECTION -> open;
+        entry [closeActionSection];
+      }
+      open {
+        on TOGGLE_ACTION_SECTION -> closed;
+        entry [openActionSection; populateActionPicker];
+        exit  [clearActionHighlight];
+      }
+    }
+
+    paramSection [parallel] {
+      closed [initial] {
+        on ACTION_SELECTED      -> open;
+        on TOGGLE_PARAM_SECTION -> open;
+        entry [closeParamSection];
+      }
+      open {
+        on TOGGLE_PARAM_SECTION -> closed;
+        entry [openParamSection; buildParamRows];
+        exit  [clearParamHighlight];
+      }
+    }
+
+    // Test-call lifecycle
+    testCall {
+      idle [initial] {
+        on RUN_TEST_CALL -> calling;
+      }
+
+      calling {
+        on CALL_SUCCEEDED -> success;
+        on CALL_FAILED    -> failure;
+        on CANCEL_TEST    -> idle;
+        entry [dispatchRealCall; markCallPending];
+        exit  [clearCallPending];
+      }
+
+      success {
+        on RUN_TEST_CALL  -> calling;
+        on RESET_TEST     -> idle;
+        entry [renderResponseInline; seedDownstreamSchema];
+      }
+
+      failure {
+        on RUN_TEST_CALL  -> calling;
+        on RESET_TEST     -> idle;
+        entry [renderErrorInline];
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      Enter        -> RUN_TEST_CALL;
+      Escape       -> CANCEL_TEST;
+      Tab          -> FOCUS_NEXT;
+      Shift+Tab    -> FOCUS_PREV;
+      Space        -> TOGGLE_INSTANCE_SECTION;
+    }
+    focus {
+      trap: false;
+      initial: instancePicker;
+      roving: false;
+      returnOnClose: instancePicker;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Connector step configuration";
+        data-state: state.testCall;
+      };
+      instanceSectionHeader -> {
+        role: "button";
+        aria-expanded: if state.instanceSection == "open" then "true" else "false";
+        aria-controls: "instance-section-body";
+        aria-label: "Pick connector — section toggle";
+      };
+      instanceSection -> {
+        role: "group";
+        aria-labelledby: "instance-section-header";
+      };
+      instancePicker -> {
+        role: "combobox";
+        aria-label: "Connector instance";
+        aria-required: "true";
+        aria-disabled: if state.instanceSection == "closed" then "true" else "false";
+      };
+      instanceError -> {
+        role: "alert";
+        aria-live: "assertive";
+        aria-atomic: "true";
+        aria-label: "No authorised connector instances";
+      };
+      actionSectionHeader -> {
+        role: "button";
+        aria-expanded: if state.actionSection == "open" then "true" else "false";
+        aria-controls: "action-section-body";
+        aria-label: "Pick action — section toggle";
+        aria-disabled: if ?selectedInstanceId == "" then "true" else "false";
+      };
+      actionSection -> {
+        role: "group";
+        aria-labelledby: "action-section-header";
+      };
+      actionPicker -> {
+        role: "combobox";
+        aria-label: "Connector action";
+        aria-required: "true";
+        aria-disabled: if ?selectedInstanceId == "" then "true" else "false";
+      };
+      paramSectionHeader -> {
+        role: "button";
+        aria-expanded: if state.paramSection == "open" then "true" else "false";
+        aria-controls: "param-section-body";
+        aria-label: "Configure params — section toggle";
+        aria-disabled: if ?selectedAction == "" then "true" else "false";
+      };
+      paramSection -> {
+        role: "group";
+        aria-labelledby: "param-section-header";
+      };
+      testCallButton -> {
+        role: "button";
+        aria-label: "Test call with current params";
+        aria-busy: if state.testCall == "calling" then "true" else "false";
+        aria-disabled: if ?selectedAction == "" or state.testCall == "calling" then "true" else "false";
+      };
+      testCallResultPane -> {
+        role: "status";
+        aria-live: "polite";
+        aria-atomic: "true";
+        aria-label: "Test call result";
+        aria-hidden: if state.testCall == "idle" then "true" else "false";
+      };
+      testCallStatus -> {
+        role: "note";
+        aria-live: "polite";
+      };
+    }
+  }
+
+  props {
+    stepId:              String = ""
+    connectorType:       String = ""
+    selectedInstanceId:  String = ""
+    selectedAction:      String = ""
+    paramBindings:       list { paramName: String, binding: option String } = []
+    availableInstances:  list { id: String, name: String, connectorType: String } = []
+    availableActions:    list { id: String, name: String, description: String, params: list { name: String, type: String, required: Bool } } = []
+    runAsPrincipal:      option String
+    lastCallStatus:      option String
+    lastCallBody:        option String
+    lastCallLatencyMs:   option Int
+    downstreamSeeded:    Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part:              "root";
+      data-state:             state.testCall;
+      data-instance-section:  state.instanceSection;
+      data-action-section:    state.actionSection;
+      data-param-section:     state.paramSection;
+      data-step-id:           ?stepId;
+      data-connector-type:    ?connectorType;
+      data-selected-instance: ?selectedInstanceId;
+      data-selected-action:   ?selectedAction;
+    }
+
+    instanceSection -> {
+      data-part:  "instance-section";
+      data-state: state.instanceSection;
+      hidden:     if state.instanceSection == "closed" then true else false;
+    }
+
+    instanceSectionHeader -> {
+      data-part:     "instance-section-header";
+      data-expanded: if state.instanceSection == "open" then "true" else "false";
+      onClick:       send(TOGGLE_INSTANCE_SECTION);
+    }
+
+    instanceSectionLabel -> {
+      data-part: "instance-section-label";
+    }
+
+    instancePicker -> {
+      data-part:  "instance-picker";
+      value:      ?selectedInstanceId;
+      disabled:   if state.instanceSection == "closed" then true else false;
+      onChange:   send(INSTANCE_SELECTED, { instanceId: self.value });
+    }
+
+    instanceOption -> {
+      data-part:         "instance-option";
+      data-instance-id:  self.id;
+      data-instance-type: self.connectorType;
+    }
+
+    instanceBadge -> {
+      data-part: "instance-badge";
+      hidden:    if ?selectedInstanceId == "" then true else false;
+    }
+
+    instanceError -> {
+      data-part: "instance-error";
+      hidden:    if ?availableInstances.length == 0 then false else true;
+    }
+
+    actionSection -> {
+      data-part:  "action-section";
+      data-state: state.actionSection;
+      hidden:     if state.actionSection == "closed" then true else false;
+    }
+
+    actionSectionHeader -> {
+      data-part:     "action-section-header";
+      data-expanded: if state.actionSection == "open" then "true" else "false";
+      disabled:      if ?selectedInstanceId == "" then true else false;
+      onClick:       send(TOGGLE_ACTION_SECTION);
+    }
+
+    actionSectionLabel -> {
+      data-part: "action-section-label";
+    }
+
+    actionPicker -> {
+      data-part:  "action-picker";
+      value:      ?selectedAction;
+      disabled:   if ?selectedInstanceId == "" then true else false;
+      onChange:   send(ACTION_SELECTED, { actionId: self.value });
+    }
+
+    actionOption -> {
+      data-part:       "action-option";
+      data-action-id:  self.id;
+    }
+
+    actionDescription -> {
+      data-part: "action-description";
+      hidden:    if ?selectedAction == "" then true else false;
+    }
+
+    paramSection -> {
+      data-part:  "param-section";
+      data-state: state.paramSection;
+      hidden:     if state.paramSection == "closed" then true else false;
+    }
+
+    paramSectionHeader -> {
+      data-part:     "param-section-header";
+      data-expanded: if state.paramSection == "open" then "true" else "false";
+      disabled:      if ?selectedAction == "" then true else false;
+      onClick:       send(TOGGLE_PARAM_SECTION);
+    }
+
+    paramSectionLabel -> {
+      data-part: "param-section-label";
+    }
+
+    paramList -> {
+      data-part: "param-list";
+    }
+
+    paramRow -> {
+      data-part:       "param-row";
+      data-param-name: self.paramName;
+    }
+
+    paramLabel -> {
+      data-part:       "param-label";
+      data-param-name: self.paramName;
+    }
+
+    paramRequiredBadge -> {
+      data-part:    "param-required-badge";
+      hidden:       if self.required then false else true;
+      aria-label:   "Required parameter";
+    }
+
+    testCallButton -> {
+      data-part:  "test-call-button";
+      data-state: state.testCall;
+      disabled:   if ?selectedAction == "" or state.testCall == "calling" then true else false;
+      aria-busy:  if state.testCall == "calling" then "true" else "false";
+      onClick:    send(RUN_TEST_CALL, { stepId: ?stepId, instanceId: ?selectedInstanceId, actionId: ?selectedAction, params: ?paramBindings });
+    }
+
+    testCallResultPane -> {
+      data-part:  "test-call-result-pane";
+      data-state: state.testCall;
+      hidden:     if state.testCall == "idle" then true else false;
+    }
+
+    testCallStatus -> {
+      data-part:  "test-call-status";
+      data-state: state.testCall;
+      text:       ?lastCallStatus;
+    }
+
+    testCallBody -> {
+      data-part:  "test-call-body";
+      data-state: state.testCall;
+      text:       ?lastCallBody;
+    }
+
+    testCallSeedNotice -> {
+      data-part: "test-call-seed-notice";
+      hidden:    if ?downstreamSeeded then false else true;
+    }
+  }
+
+  affordance {
+    serves: connector-step-config;
+    specificity: 10;
+    when { stepKind: "connector-call" }
+    bind {
+      stepId:             stepId;
+      connectorType:      connectorType;
+      selectedInstanceId: selectedInstanceId;
+      selectedAction:     selectedAction;
+      paramBindings:      paramBindings;
+      availableInstances: availableInstances;
+      availableActions:   availableActions;
+    }
+  }
+
+  compose {
+    _dataMapping: widget("data-mapping", { availableFields: ?availableFields, currentBinding: ?currentBinding, expectedType: ?expectedType })
+  }
+
+  invariant {
+    example "selecting an instance auto-opens action section": {
+      after instancePicker.change({ instanceId: "inst-1" }) -> ok
+      then root -> { data-selected-instance: "inst-1" }
+      and actionSection -> { hidden: false }
+      and root -> { data-action-section: "open" }
+    }
+
+    example "selecting an action auto-opens param section": {
+      after actionPicker.change({ actionId: "sendMessage" }) -> ok
+      then root -> { data-selected-action: "sendMessage" }
+      and paramSection -> { hidden: false }
+      and root -> { data-param-section: "open" }
+    }
+
+    example "test call enters calling state and shows busy button": {
+      after testCallButton.click -> ok
+      then root -> { data-state: "calling" }
+      and testCallButton -> { aria-busy: "true" }
+      and testCallButton -> { disabled: true }
+    }
+
+    example "successful test call renders inline result and shows seed notice": {
+      after testCallButton.click -> ok
+      then send(CALL_SUCCEEDED, { status: "200 OK", body: "{}", latencyMs: 312, seeded: true }) -> ok
+      then root -> { data-state: "success" }
+      and testCallResultPane -> { hidden: false }
+      and testCallSeedNotice -> { hidden: false }
+    }
+
+    example "failed test call renders error body in dedicated failure state": {
+      after testCallButton.click -> ok
+      then send(CALL_FAILED, { status: "403 Forbidden", body: "{\"error\":\"unauthorized\"}", latencyMs: 88 }) -> ok
+      then root -> { data-state: "failure" }
+      and testCallResultPane -> { hidden: false }
+      and testCallBody -> { text: "{\"error\":\"unauthorized\"}" }
+      and testCallButton -> { disabled: false }
+    }
+
+    example "retry after failure re-enters calling state": {
+      after testCallButton.click -> ok
+      then send(CALL_FAILED, { status: "500", body: "Internal Server Error" }) -> ok
+      then root -> { data-state: "failure" }
+      then testCallButton.click -> ok
+      then root -> { data-state: "calling" }
+    }
+
+    example "cancel test call returns to idle": {
+      after testCallButton.click -> ok
+      then root -> { data-state: "calling" }
+      then send(CANCEL_TEST) -> ok
+      then root -> { data-state: "idle" }
+      and testCallResultPane -> { hidden: true }
+    }
+
+    example "instance section manually toggles closed and open": {
+      after instanceSectionHeader.click -> ok
+      then instanceSection -> { hidden: true }
+      and root -> { data-instance-section: "closed" }
+      then instanceSectionHeader.click -> ok
+      then instanceSection -> { hidden: false }
+      and root -> { data-instance-section: "open" }
+    }
+
+    example "action section is closed and its header disabled until an instance is selected": {
+      after root -> { data-selected-instance: "" }
+      then actionSection -> { hidden: true }
+      and actionSectionHeader -> { disabled: true }
+    }
+
+    example "param section is closed and its header disabled until an action is selected": {
+      after root -> { data-selected-action: "" }
+      then paramSection -> { hidden: true }
+      and paramSectionHeader -> { disabled: true }
+    }
+
+    example "instance picker shows only instances with type matching connectorType": {
+      after root -> { data-connector-type: "slack" }
+      then instancePicker -> { data-filtered-by-type: "slack" }
+    }
+
+    example "no authorised instances renders instanceError": {
+      after root -> { data-available-instances: "0" }
+      then instanceError -> { hidden: false }
+    }
+
+    forall s in states.testCall:
+      s.reachable = true
+
+    forall s in states.instanceSection:
+      s.reachable = true
+
+    forall s in states.actionSection:
+      s.reachable = true
+
+    forall s in states.paramSection:
+      s.reachable = true
+
+    always "data-state on root reflects testCall FSM": {
+      root -> { data-state: state.testCall }
+    }
+
+    always "testCallResultPane hidden in idle": {
+      if state.testCall == "idle" then testCallResultPane -> { hidden: true }
+    }
+
+    always "testCallResultPane visible in success and failure": {
+      if state.testCall == "success" or state.testCall == "failure" then testCallResultPane -> { hidden: false }
+    }
+
+    always "testCallButton disabled while calling": {
+      if state.testCall == "calling" then testCallButton -> { disabled: true }
+    }
+
+    always "testCallButton enabled in failure — failure is not a dead end": {
+      if state.testCall == "failure" then testCallButton -> { disabled: false }
+    }
+
+    always "testCallButton disabled when no action selected": {
+      if ?selectedAction == "" then testCallButton -> { disabled: true }
+    }
+
+    always "actionSectionHeader disabled until instance selected": {
+      if ?selectedInstanceId == "" then actionSectionHeader -> { disabled: true }
+    }
+
+    always "paramSectionHeader disabled until action selected": {
+      if ?selectedAction == "" then paramSectionHeader -> { disabled: true }
+    }
+
+    always "instanceError visible only when availableInstances is empty": {
+      if ?availableInstances.length == 0 then instanceError -> { hidden: false }
+    }
+
+    never "test-call failure renders as a disabled state": {
+      state.testCall == "failure" and testCallButton -> { disabled: true }
+    }
+
+    never "action section opens without a selected instance": {
+      state.actionSection == "open" and ?selectedInstanceId == ""
+    }
+
+    never "param section opens without a selected action": {
+      state.paramSection == "open" and ?selectedAction == ""
+    }
+
+    never "testCallSeedNotice shown when downstreamSeeded is false": {
+      ?downstreamSeeded == false and testCallSeedNotice -> { hidden: false }
+    }
+
+    action testCallButton.click {
+      requires: ?selectedAction != "" and state.testCall != "calling"
+      ensures ok: state.testCall == "calling"
+    }
+
+    action instancePicker.change {
+      ensures ok: root -> { data-selected-instance: self.value }
+      ensures ok: state.actionSection == "open"
+    }
+
+    action actionPicker.change {
+      requires: ?selectedInstanceId != ""
+      ensures ok: root -> { data-selected-action: self.value }
+      ensures ok: state.paramSection == "open"
+    }
+
+    "INSTANCE_SELECTED carries instanceId and causes actionPicker to repopulate with operations from that instance's connector type — filtered through runAsPrincipal's scope";
+    "ACTION_SELECTED carries actionId; host resolves the param schema from availableActions and propagates it so each paramRow renders a data-mapping widget for its param";
+    "RUN_TEST_CALL event carries stepId, instanceId, actionId, and resolved paramBindings — host routes to ConnectorCall/invoke via ActionBinding";
+    "CALL_SUCCEEDED event carries HTTP status, response body, latency in ms, and a boolean seeded flag; when seeded is true testCallSeedNotice becomes visible";
+    "CALL_FAILED event carries HTTP status (if any), response error body (verbatim, not prettified), and latency in ms — rendered exactly as production would show it";
+    "availableInstances must already be filtered to those the runAsPrincipal may invoke; this widget does not perform governance filtering itself but binds data-connector-type for the host to use as the filter key";
+    "Seed downstream: on CALL_SUCCEEDED the host should extract the response schema and propagate it to subsequent steps via ActionBinding — downstreamSeeded prop confirms this happened";
+    "progressive disclosure: instanceSection is open by default; actionSection opens automatically on INSTANCE_SELECTED; paramSection opens automatically on ACTION_SELECTED";
+  }
+
+}
