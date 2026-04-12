@@ -1,0 +1,253 @@
+# @fixtures-added
+concept SurfaceContract [C] {
+
+  purpose {
+    Define reusable semantic UI surface roles that can be bound to
+    widget parts, view wrappers, and render-program nodes before
+    target-specific realization. A surface contract names what a
+    shared piece of UI chrome is for, which states it supports,
+    and which semantic resources it requires from the active theme.
+  }
+
+  state {
+    contracts: set C
+    name: C -> String
+    role: C -> String
+    description: C -> String
+    states: C -> list String
+    resources: C -> list String
+    densityModes: C -> list String
+    styleProfiles: C -> list String
+    motifs: C -> list String
+    typographyRole: C -> String
+    emphasisRole: C -> String
+    interactionModel: C -> String
+    targetHints: C -> list String
+  }
+
+  actions {
+    action define(
+      contract: C,
+      name: String,
+      role: String,
+      description: String,
+      states: list String,
+      resources: list String,
+      densityModes: list String,
+      styleProfiles: list String,
+      motifs: list String,
+      typographyRole: String,
+      emphasisRole: String,
+      interactionModel: String,
+      targetHints: list String
+    ) {
+      -> ok(contract: C) {
+        Register a semantic surface contract with its supported
+        states, semantic resource slots, and realization hints.
+      }
+      -> duplicate(contract: C) {
+        A contract is already registered with this identifier.
+      }
+      -> error(message: String) {
+        The contract is missing required semantic fields such as
+        name, role, states, or resources.
+      }
+
+      fixture field_control {
+        contract: "field-control",
+        name: "FieldControl",
+        role: "field-control",
+        description: "Editable input shell shared by text inputs, selects, and textareas.",
+        states: ["idle", "focus", "invalid", "disabled"],
+        resources: ["surface.control", "text.default", "border.control", "border.focus", "status.error", "shape.control", "type.body-md"],
+        densityModes: ["compact", "comfortable"],
+        styleProfiles: ["default", "editorial", "signal"],
+        motifs: ["sidebar", "topbar", "floating"],
+        typographyRole: "body-md",
+        emphasisRole: "interactive-primary",
+        interactionModel: "editable-focusable",
+        targetHints: ["web-css", "swiftui", "winui"]
+      }
+      fixture floating_panel {
+        contract: "floating-panel",
+        name: "FloatingPanel",
+        role: "floating-panel",
+        description: "Anchored panel chrome used by pickers, popovers, and lightweight dialogs.",
+        states: ["idle", "focus"],
+        resources: ["surface.panel", "text.default", "border.panel", "shape.panel", "elevation.panel", "type.body-md"],
+        densityModes: ["compact", "comfortable"],
+        styleProfiles: ["default", "editorial", "signal"],
+        motifs: ["floating"],
+        typographyRole: "body-md",
+        emphasisRole: "surface-elevated",
+        interactionModel: "overlay-dismissable",
+        targetHints: ["web-css", "swiftui", "winui", "gtk"]
+      }
+      fixture duplicate_contract {
+        contract: "field-control",
+        name: "FieldControl",
+        role: "field-control",
+        description: "Duplicate field control.",
+        states: ["idle", "focus"],
+        resources: ["surface.control"],
+        densityModes: ["compact"],
+        styleProfiles: ["default"],
+        motifs: ["sidebar"],
+        typographyRole: "body-md",
+        emphasisRole: "interactive-primary",
+        interactionModel: "editable-focusable",
+        targetHints: ["web-css"]
+      } after field_control -> duplicate
+      fixture missing_role {
+        contract: "broken",
+        name: "BrokenContract",
+        role: "",
+        description: "Missing role should fail.",
+        states: ["idle"],
+        resources: ["surface.control"],
+        densityModes: ["compact"],
+        styleProfiles: ["default"],
+        motifs: ["sidebar"],
+        typographyRole: "body-md",
+        emphasisRole: "interactive-primary",
+        interactionModel: "editable-focusable",
+        targetHints: ["web-css"]
+      } -> error
+    }
+
+    action get(contract: C) {
+      -> ok(
+        contract: C,
+        name: String,
+        role: String,
+        description: String,
+        states: list String,
+        resources: list String,
+        densityModes: list String,
+        styleProfiles: list String,
+        motifs: list String,
+        typographyRole: String,
+        emphasisRole: String,
+        interactionModel: String,
+        targetHints: list String
+      ) {
+        Return the stored definition of a previously registered
+        surface contract.
+      }
+      -> notfound(message: String) {
+        No surface contract exists with this identifier.
+      }
+
+      fixture existing_contract { contract: $field_control.contract } after field_control
+      fixture unknown_contract { contract: "missing-contract" } -> notfound
+    }
+
+    action list(role: option String, targetHint: option String) {
+      -> ok(contracts: list String) {
+        Return registered contract identifiers, optionally filtered
+        by semantic role or target-platform hint.
+      }
+
+      fixture list_all { role: none, targetHint: none } after field_control
+      fixture list_by_target { role: none, targetHint: "swiftui" } after field_control
+      fixture list_by_role { role: "floating-panel", targetHint: none } after floating_panel
+    }
+  }
+
+  example "define then get returns same contract": {
+    after define(
+      contract: c,
+      name: "FieldControl",
+      role: "field-control",
+      description: "Editable input shell.",
+      states: ["idle", "focus", "invalid", "disabled"],
+      resources: ["surface.control", "border.control"],
+      densityModes: ["compact", "comfortable"],
+      styleProfiles: ["default", "editorial"],
+      motifs: ["sidebar", "floating"],
+      typographyRole: "body-md",
+      emphasisRole: "interactive-primary",
+      interactionModel: "editable-focusable",
+      targetHints: ["web-css", "swiftui"]
+    ) -> ok(contract: c)
+    then get(contract: c) -> ok(contract: c, name: n, role: r, description: d, states: s, resources: rs, densityModes: dm, styleProfiles: sp, motifs: m, typographyRole: tr, emphasisRole: er, interactionModel: im, targetHints: th)
+  }
+
+  example "duplicate define returns duplicate": {
+    after define(
+      contract: c,
+      name: "FieldControl",
+      role: "field-control",
+      description: "Editable input shell.",
+      states: ["idle", "focus"],
+      resources: ["surface.control"],
+      densityModes: ["compact"],
+      styleProfiles: ["default"],
+      motifs: ["sidebar"],
+      typographyRole: "body-md",
+      emphasisRole: "interactive-primary",
+      interactionModel: "editable-focusable",
+      targetHints: ["web-css"]
+    ) -> ok(contract: c)
+    then define(
+      contract: c,
+      name: "FieldControl",
+      role: "field-control",
+      description: "Editable input shell.",
+      states: ["idle", "focus"],
+      resources: ["surface.control"],
+      densityModes: ["compact"],
+      styleProfiles: ["default"],
+      motifs: ["sidebar"],
+      typographyRole: "body-md",
+      emphasisRole: "interactive-primary",
+      interactionModel: "editable-focusable",
+      targetHints: ["web-css"]
+    ) -> duplicate(contract: c)
+  }
+
+  always "registered contracts have names" {
+    forall c in contracts:
+    name(c) != none
+  }
+
+  always "registered contracts have roles" {
+    forall c in contracts:
+    role(c) != none
+  }
+
+  always "registered contracts declare at least one state" {
+    forall c in contracts:
+    states(c) != []
+  }
+
+  always "registered contracts declare at least one resource" {
+    forall c in contracts:
+    resources(c) != []
+  }
+
+  action define {
+    requires: name != ""
+    requires: role != ""
+    requires: description != ""
+    requires: states != []
+    requires: resources != []
+    requires: typographyRole != ""
+    requires: emphasisRole != ""
+    requires: interactionModel != ""
+    ensures ok: contract in contracts
+    ensures ok: name(contract) == name
+    ensures ok: role(contract) == role
+    ensures duplicate: contracts' == contracts
+  }
+
+  action get {
+    requires: contract != ""
+    ensures ok: contract in contracts
+    ensures notfound: contracts' == contracts
+  }
+
+  action list {
+    ensures ok: true
+  }
+}

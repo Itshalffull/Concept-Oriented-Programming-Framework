@@ -32,6 +32,10 @@ concepts:
     spec: specs/surface/render-transform.concept
     params:
       X: { as: TransformId, description: "Render transform identifier" }
+  SurfaceContract:
+    spec: specs/surface/surface-contract.concept
+    params:
+      C: { as: SurfaceContractId, description: "Surface contract identifier" }
   TransformExtractionProvider:
     spec: specs/surface/providers/transform-extraction-provider.concept
     params:
