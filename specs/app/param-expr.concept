@@ -1,0 +1,251 @@
+@version(1)
+@category("ui-core")
+@visibility("public")
+concept ParamExpr [E] {
+
+  purpose {
+    Represent typed, statically analyzable expressions that resolve values
+    from placement context. Replaces opaque string expressions like "row.id"
+    with first-class objects carrying kind, type information, and dependency
+    metadata — validatable against available fields and composable into
+    parameter maps for ActionBinding.
+  }
+
+  state {
+    expressions: set E
+    core {
+      kind: E -> String
+      valueType: E -> String
+    }
+    literal {
+      literalValue: E -> option String
+    }
+    contextRef {
+      contextSource: E -> option String
+      contextPath: E -> option String
+    }
+    computed {
+      operator: E -> option String
+      operands: E -> option String
+    }
+    conditional {
+      predicateExpr: E -> option String
+      thenExpr: E -> option String
+      elseExpr: E -> option String
+    }
+    coalesce {
+      alternatives: E -> option String
+    }
+    analysis {
+      dependencies: E -> option String
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+
+    action literal(expr: E, value: String, valueType: String) {
+      -> ok(expr: E) {
+        Register a literal expression that resolves to the given constant
+        value with the declared type.
+      }
+      -> invalid(message: String) {
+        The expr identifier is empty, value is empty, or valueType is
+        not a recognized primitive type name.
+      }
+
+      fixture literal_string { expr: "lit-hello", value: "hello", valueType: "String" }
+      fixture literal_int { expr: "lit-42", value: "42", valueType: "Int" }
+      fixture literal_empty_value { expr: "lit-bad", value: "", valueType: "String" } -> invalid
+      fixture literal_empty_expr { expr: "", value: "x", valueType: "String" } -> invalid
+    }
+
+    action contextRef(expr: E, source: String, path: String, valueType: String) {
+      -> ok(expr: E) {
+        Register a context reference expression that resolves by looking up
+        path segments within the named source object at evaluation time.
+      }
+      -> invalid(message: String) {
+        The source is not one of the allowed context sources, path is empty
+        or not a valid JSON array of strings, or expr identifier is empty.
+      }
+
+      fixture contextRef_row_id { expr: "ref-row-id", source: "row", path: "[\"id\"]", valueType: "String" }
+      fixture contextRef_nested { expr: "ref-addr", source: "row", path: "[\"address\",\"city\"]", valueType: "String" }
+      fixture contextRef_page { expr: "ref-page-title", source: "page", path: "[\"title\"]", valueType: "String" }
+      fixture contextRef_invalid_source { expr: "ref-bad", source: "invalid", path: "[\"x\"]", valueType: "String" } -> invalid
+      fixture contextRef_empty_path { expr: "ref-nopath", source: "row", path: "[]", valueType: "String" } -> invalid
+    }
+
+    action computed(expr: E, operator: String, operands: String, valueType: String) {
+      -> ok(expr: E) {
+        Register a computed expression that applies operator to the resolved
+        values of the operand expression IDs listed in the JSON array.
+      }
+      -> invalid(message: String) {
+        The operator is empty, operands is not a valid JSON array, the array
+        is empty, or the expr identifier is empty.
+      }
+
+      fixture computed_concat { expr: "comp-concat", operator: "concat", operands: "[\"lit-hello\",\"lit-42\"]", valueType: "String" }
+      fixture computed_upper { expr: "comp-upper", operator: "toUpperCase", operands: "[\"lit-hello\"]", valueType: "String" }
+      fixture computed_empty_op { expr: "comp-bad", operator: "", operands: "[\"lit-hello\"]", valueType: "String" } -> invalid
+      fixture computed_bad_operands { expr: "comp-bad2", operator: "concat", operands: "not-json", valueType: "String" } -> invalid
+    }
+
+    action conditional(expr: E, predicateExpr: String, thenExpr: String, elseExpr: String, valueType: String) {
+      -> ok(expr: E) {
+        Register a conditional expression that resolves predicateExpr and
+        returns the resolution of thenExpr when truthy, or elseExpr otherwise.
+      }
+      -> invalid(message: String) {
+        Any of predicateExpr, thenExpr, or elseExpr is empty, or the expr
+        identifier is empty.
+      }
+
+      fixture conditional_ok { expr: "cond-1", predicateExpr: "lit-hello", thenExpr: "lit-hello", elseExpr: "lit-42", valueType: "String" }
+      fixture conditional_empty_pred { expr: "cond-bad", predicateExpr: "", thenExpr: "lit-hello", elseExpr: "lit-42", valueType: "String" } -> invalid
+    }
+
+    action coalesce(expr: E, alternatives: String, valueType: String) {
+      -> ok(expr: E) {
+        Register a coalesce expression that resolves alternatives in order
+        and returns the first non-null result.
+      }
+      -> invalid(message: String) {
+        Alternatives is not a valid JSON array, is empty, or the expr
+        identifier is empty.
+      }
+
+      fixture coalesce_ok { expr: "coal-1", alternatives: "[\"ref-row-id\",\"lit-hello\"]", valueType: "String" }
+      fixture coalesce_bad_json { expr: "coal-bad", alternatives: "not-json", valueType: "String" } -> invalid
+      fixture coalesce_empty_array { expr: "coal-empty", alternatives: "[]", valueType: "String" } -> invalid
+    }
+
+    action resolve(expr: E, context: String) {
+      -> ok(value: String, valueType: String) {
+        Evaluate the expression against the provided context JSON object and
+        return the resolved string value with its declared type.
+      }
+      -> unresolvable(message: String) {
+        The context does not contain the expected path for a contextRef
+        expression, or a dependent expression could not be resolved.
+      }
+      -> notfound(message: String) {
+        No expression exists with this identifier.
+      }
+
+      fixture resolve_literal { expr: $literal_string.expr, context: "{}" } after literal_string
+      fixture resolve_contextRef {
+        expr: $contextRef_row_id.expr
+        context: "{\"row\": {\"id\": \"entity-123\"}}"
+      } after contextRef_row_id
+      fixture resolve_missing { expr: "nonexistent", context: "{}" } -> notfound
+      fixture resolve_unresolvable {
+        expr: $contextRef_row_id.expr
+        context: "{\"row\": {}}"
+      } after contextRef_row_id -> unresolvable
+    }
+
+    action validate(expr: E, availableFields: String) {
+      -> ok(expr: E) {
+        All contextRef paths within the expression tree reference fields
+        listed in availableFields (a JSON array of "source.path" strings).
+      }
+      -> invalid(missingRefs: String) {
+        One or more contextRef paths reference fields not present in
+        availableFields. missingRefs is a JSON array of the missing
+        "source.path" strings.
+      }
+      -> notfound(message: String) {
+        No expression exists with this identifier.
+      }
+
+      fixture validate_ok {
+        expr: $contextRef_row_id.expr
+        availableFields: "[\"row.id\"]"
+      } after contextRef_row_id
+      fixture validate_missing {
+        expr: $contextRef_row_id.expr
+        availableFields: "[]"
+      } after contextRef_row_id -> invalid
+      fixture validate_notfound { expr: "nonexistent", availableFields: "[]" } -> notfound
+    }
+
+    action extractDependencies(expr: E) {
+      -> ok(dependencies: String) {
+        Return a JSON array of "source.path" dependency strings derived from
+        all contextRef nodes within the expression tree.
+      }
+      -> notfound(message: String) {
+        No expression exists with this identifier.
+      }
+
+      fixture extract_literal { expr: $literal_string.expr } after literal_string
+      fixture extract_contextRef { expr: $contextRef_row_id.expr } after contextRef_row_id
+      fixture extract_missing { expr: "nonexistent" } -> notfound
+    }
+
+    action get(expr: E) {
+      -> ok(expr: E, kind: String, valueType: String, dependencies: String) {
+        Return the expression record with its kind, declared type, and
+        a JSON array of dependency strings.
+      }
+      -> notfound(message: String) {
+        No expression exists with this identifier.
+      }
+
+      fixture get_literal { expr: $literal_string.expr } after literal_string
+      fixture get_contextRef { expr: $contextRef_row_id.expr } after contextRef_row_id
+      fixture get_missing { expr: "nonexistent" } -> notfound
+    }
+  }
+
+  example "literal registered and retrieved": {
+    after literal(expr: e, value: "hello", valueType: "String") -> ok(expr: e)
+    then get(expr: e) -> ok(kind: "literal", valueType: "String")
+  }
+
+  example "contextRef registered and resolved": {
+    after contextRef(expr: e, source: "row", path: "[\"id\"]", valueType: "String") -> ok(expr: e)
+    then resolve(expr: e, context: "{\"row\": {\"id\": \"abc\"}}") -> ok(valueType: "String")
+  }
+
+  example "literal resolves without context": {
+    after literal(expr: e, value: "constant", valueType: "String") -> ok(expr: e)
+    then resolve(expr: e, context: "{}") -> ok(value: "constant")
+  }
+
+  example "contextRef validate detects missing field": {
+    after contextRef(expr: e, source: "row", path: "[\"id\"]", valueType: "String") -> ok(expr: e)
+    then validate(expr: e, availableFields: "[]") -> invalid(missingRefs: _)
+  }
+
+  always "expressions have required fields": {
+    forall e in expressions:
+      e.kind != none and e.valueType != none
+  }
+
+  never "contextRef without source or path": {
+    exists e in expressions:
+      e.kind = "contextRef" and (e.contextSource = none or e.contextPath = none)
+  }
+
+  never "literal without value": {
+    exists e in expressions:
+      e.kind = "literal" and e.literalValue = none
+  }
+
+  action literal {
+    requires: expr != ""
+    ensures ok: expr in expressions
+  }
+
+  action contextRef {
+    requires: source != "" and path != ""
+    ensures ok: expr in expressions
+  }
+}
