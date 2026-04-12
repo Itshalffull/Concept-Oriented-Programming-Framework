@@ -236,6 +236,22 @@ Each card's acceptance criteria must explicitly confirm the applicable patterns:
 
 ---
 
-## 7. Card Plan
+## 7. Card Status
 
-See VK cards under epic "Automation Operational Surfaces — Epic" for the phase-mapped card breakdown.
+| Card | Title | Status | Commit |
+|---|---|---|---|
+| MAG-692 | Schedule manager (Timer + ScheduledJob) | Done | `c503e65b` |
+| MAG-693 | Webhook inbox + replay | Done | `d329e389` |
+| MAG-694 | Flow step inspector tab strip | Done | `16971e4e` |
+| MAG-695 | Retry policy editor | To do (unblocked) | — |
+| MAG-696 | Compensation plan editor | To do (unblocked) | — |
+| MAG-697 | LLM step config + tool registry | To do (unblocked) | — |
+| MAG-698 | Connector step config | To do (unblocked) | — |
+| MAG-699 | Connector library + instances | Done | `d329e389` |
+| MAG-700 | Connector call log | To do (unblocked) | — |
+| MAG-701 | Queue monitor | To do | — |
+| MAG-702 | Checkpoint viewer | To do | — |
+| MAG-703 | Automation provider dashboard | To do | — |
+| MAG-704 | AutomationScope admin editor | To do | — |
+| MAG-705 | Approval inbox (conditional) | To do | — |
+| MAG-706 | Evaluation runs view | To do | — |

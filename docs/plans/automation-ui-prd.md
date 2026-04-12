@@ -208,12 +208,26 @@ The data model is already complete. All deliverables are UI + syncs composing ex
 
 These gaps were documented during sync/widget work but are out of scope for the current cards. Track as new cards when revisited:
 
-- **ProcessSpec granular mutation** — spec stores `steps` and `edges` as opaque `Bytes` in `create`/`update`; no `addStep` / `addEdge` / `removeStep`. ProcessSpecToCanvas / CanvasToProcessSpec currently project at spec-level granularity. Adding granular actions (or a handler-level decode/traverse) would enable per-step projection fidelity.
-- **Canvas has no `createConnector` primitive** — edges are structural via `ConstraintAnchor/setFlowDirection`. CanvasToProcessSpec currently triggers on `Canvas/groupNodes` as the nearest semantic proxy.
-- **GraphAnalysis** exposes only `analyze(algorithm: ...)` — no dedicated `detectCycles`. FlowGraphValidate uses `analyze(algorithm: "cycle-detection")`.
-- **ProcessRun** lacks `replay` and `attachContext` actions; **StepRun** lacks `seed` (selective redrive) and `getIO` (visibility gating). ReplayRun triggers on `get_status` as a stand-in; StepIOVisibility gates on `StepRun/get`.
-- **ProcessSpec step record** has no `visibility` field — StepIOVisibility reads visibility from Authorization state as a workaround.
-- **FlowBuilderView** React adapter (MAG-671 scope-deferred) — wires the shell widget + sub-widgets into clef-base once the action-editor, step-test-runner, and version-history widgets are available to compose.
+- ✅ **ProcessSpec granular mutation** — addStep/removeStep/moveStep/addEdge/removeEdge shipped (`2925521b`). 111 conformance tests pass. ProcessSpecToCanvas/CanvasToProcessSpec can now be rewired to trigger on granular actions (follow-up).
+- ✅ **Canvas `createConnector` primitive** — first-class connector action + state shipped (`f690f93a`). CanvasToProcessSpec sync rewired. 69 tests pass.
+- **GraphAnalysis** exposes only `analyze(algorithm: ...)` — no dedicated `detectCycles`. FlowGraphValidate uses `analyze(algorithm: "cycle-detection")`. *(card MAG-685 pending)*
+- ✅ **StepRun** `seed` + `getIO` shipped (`be06b604`). StepIOVisibility rewired to getIO; ReplayRun rewired to use seed for selective redrive. 62 tests pass.
+- **ProcessRun** lacks `replay` and `attachContext` actions. ReplayRun triggers on `get_status` as a stand-in. *(card MAG-686 pending — now unblocked)*
+- **ProcessSpec step record** has no `visibility` field — StepIOVisibility reads visibility from Authorization state as a workaround. *(card MAG-688 pending — now unblocked)*
+- ✅ **FlowBuilderView** React adapter shipped (`9c838d8d`). Route `/admin/processes/:id/edit` wired; WorkflowsView links to it.
+
+## Follow-up Card Status
+
+| Card | Title | Status | Commit |
+|---|---|---|---|
+| MAG-683 | ProcessSpec granular mutations | Done | `2925521b` |
+| MAG-684 | Canvas createConnector primitive | Done | `f690f93a` |
+| MAG-685 | GraphAnalysis convenience actions | To do | — |
+| MAG-686 | ProcessRun replay + attachContext | To do (unblocked) | — |
+| MAG-687 | StepRun seed + getIO | Done | `be06b604` |
+| MAG-688 | ProcessSpec step visibility field | To do (unblocked) | — |
+| MAG-689 | FlowBuilderView React adapter | Done | `9c838d8d` |
+| MAG-690 | User Sync Editor (SyncAutomationProvider UI) | To do | — |
 
 ## Appendix: Companion Docs
 
