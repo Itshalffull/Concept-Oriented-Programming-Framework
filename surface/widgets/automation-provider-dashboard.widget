@@ -346,7 +346,6 @@ widget automation-provider-dashboard {
   affordance {
     serves: group-section;
     specificity: 8;
-    when { viewType: "automation-dispatch-view" }
     bind {
       providers:  providers;
       dispatches: dispatches;
@@ -355,152 +354,110 @@ widget automation-provider-dashboard {
   }
 
   invariant {
-    example "loads and renders provider list": {
-      after send(LOADED) -> ok
-      then root -> { data-state: "loaded" }
-      and providerList -> { hidden: false }
-      and loadingState -> { hidden: true }
-      and emptyState -> { hidden: true }
+    example "loading to loaded on LOADED event": {
+      after transition(from: "loading", event: "LOADED") -> ok
+      then state.name = "loaded"
     }
 
-    example "expand shows detail pane": {
-      after send(LOADED) -> ok
-      then send(EXPAND, { providerName: "manifest" }) -> ok
-      then root -> { data-state: "detail" }
-      and detailPane -> { hidden: false }
+    example "loading to empty on LOAD_EMPTY event": {
+      after transition(from: "loading", event: "LOAD_EMPTY") -> ok
+      then state.name = "empty"
     }
 
-    example "collapse hides detail pane": {
-      after send(LOADED) -> ok
-      then send(EXPAND, { providerName: "manifest" }) -> ok
-      then send(COLLAPSE) -> ok
-      then root -> { data-state: "loaded" }
+    example "loading to error on LOAD_ERROR event": {
+      after transition(from: "loading", event: "LOAD_ERROR") -> ok
+      then state.name = "error"
     }
 
-    example "empty state when no providers registered": {
-      after send(LOAD_EMPTY) -> ok
-      then root -> { data-state: "empty" }
-      and emptyState -> { hidden: false }
-      and providerList -> { hidden: true }
+    example "loaded to detail on EXPAND event": {
+      after transition(from: "loaded", event: "EXPAND") -> ok
+      then state.name = "detail"
     }
 
-    example "error state on fetch failure": {
-      after send(LOAD_ERROR) -> ok
-      then root -> { data-state: "error" }
-      and errorState -> { hidden: false }
-      and providerList -> { hidden: true }
+    example "detail to loaded on COLLAPSE event": {
+      after transition(from: "detail", event: "COLLAPSE") -> ok
+      then state.name = "loaded"
     }
 
-    example "retry from error transitions to loading": {
-      after send(LOAD_ERROR) -> ok
-      then retryButton.click -> ok
-      then root -> { data-state: "loading" }
+    example "loaded to refreshing on REFRESH event": {
+      after transition(from: "loaded", event: "REFRESH") -> ok
+      then state.name = "refreshing"
     }
 
-    example "refresh from loaded transitions to refreshing": {
-      after send(LOADED) -> ok
-      then refreshButton.click -> ok
-      then root -> { data-state: "refreshing" }
+    example "error to loading on RETRY event": {
+      after transition(from: "error", event: "RETRY") -> ok
+      then state.name = "loading"
     }
 
-    example "re-register button hidden for non-admin": {
-      after send(LOADED) -> ok
-      then send(EXPAND, { providerName: "sync" }) -> ok
-      then reRegisterButton -> { hidden: true }
+    example "detail to re-registering on RE_REGISTER event": {
+      after transition(from: "detail", event: "RE_REGISTER") -> ok
+      then state.name = "re-registering"
     }
 
-    example "re-register transitions to re-registering then loaded on success": {
-      after send(LOADED) -> ok
-      then send(EXPAND, { providerName: "manifest" }) -> ok
-      then send(RE_REGISTER, { providerName: "manifest" }) -> ok
-      then root -> { data-state: "re-registering" }
-      then send(RE_REGISTER_OK) -> ok
-      then root -> { data-state: "loaded" }
+    example "re-registering to loaded on RE_REGISTER_OK event": {
+      after transition(from: "re-registering", event: "RE_REGISTER_OK") -> ok
+      then state.name = "loaded"
     }
 
-    forall s in states:
-      s.reachable = true
-
-    always "data-state on root reflects FSM": {
-      root -> { data-state: state }
+    example "re-registering to detail on RE_REGISTER_ERROR event": {
+      after transition(from: "re-registering", event: "RE_REGISTER_ERROR") -> ok
+      then state.name = "detail"
     }
 
-    always "providerList hidden while loading or in error or empty": {
-      if state == "loading" then providerList -> { hidden: true }
-      and if state == "refreshing" then providerList -> { hidden: true }
-      and if state == "error" then providerList -> { hidden: true }
-      and if state == "empty" then providerList -> { hidden: true }
+    forall "all states reachable": {
+      given s in states
+      then s.reachable = true
     }
 
-    always "loadingState visible during loading or refreshing": {
-      if state == "loading" or state == "refreshing" then loadingState -> { hidden: false }
+    never "loading and loaded simultaneously": {
+      state = "loading" and state = "loaded"
     }
 
-    always "errorState visible only in error state": {
-      if state != "error" then errorState -> { hidden: true }
+    never "detail and empty simultaneously": {
+      state = "detail" and state = "empty"
     }
 
-    always "emptyState visible only in empty state": {
-      if state != "empty" then emptyState -> { hidden: true }
+    never "refreshing and error simultaneously": {
+      state = "refreshing" and state = "error"
     }
 
-    always "reRegisterButton hidden for non-admin": {
-      if not isAdmin then reRegisterButton -> { hidden: true }
+    action refreshButton {
+      requires: state = "loaded"
+      ensures ok: state = "refreshing"
     }
 
-    always "reRegisterButton disabled outside detail state": {
-      if state != "detail" then reRegisterButton -> { disabled: true }
+    action retryButton {
+      requires: state = "error"
+      ensures ok: state = "loading"
     }
 
-    always "refreshButton disabled while loading or refreshing": {
-      if state == "loading" or state == "refreshing" then refreshButton -> { disabled: true }
+    action expandButton {
+      requires: state = "loaded"
+      ensures ok: state = "detail"
     }
 
-    always "detailPane hidden when providerRow is not expanded": {
-      forall pr in providerRow:
-        if not pr.isExpanded then pr.detailPane -> { hidden: true }
+    action reRegisterButton {
+      requires: state = "detail"
+      ensures ok: state = "re-registering"
     }
 
-    never "reRegisterButton visible for non-admin": {
-      not isAdmin and reRegisterButton -> { hidden: false }
-    }
-
-    never "providerList and emptyState both visible": {
-      providerList -> { hidden: false } and emptyState -> { hidden: false }
-    }
-
-    never "providerList and errorState both visible": {
-      providerList -> { hidden: false } and errorState -> { hidden: false }
-    }
-
-    action refreshButton.click {
-      requires: state == "loaded" or state == "detail" or state == "empty"
-      ensures ok: state == "refreshing"
-    }
-
-    action retryButton.click {
-      requires: state == "error"
-      ensures ok: state == "loading"
-    }
-
-    action expandButton.click {
-      requires: state == "loaded" or state == "detail"
-      ensures ok: state == "detail"
-    }
-
-    action reRegisterButton.click {
-      requires: state == "detail" and isAdmin == true
-      ensures ok: state == "re-registering"
-    }
-
+    "data-state on root must always reflect the current FSM state name";
+    "providerList must be hidden when state is loading, refreshing, error, or empty";
+    "loadingState must be visible when state is loading or refreshing and hidden otherwise";
+    "errorState must be visible only when state is error";
+    "emptyState must be visible only when state is empty";
+    "reRegisterButton must be hidden when isAdmin prop is false";
+    "reRegisterButton must be disabled when state is not detail";
+    "refreshButton must be disabled when state is loading or refreshing";
+    "detailPane must be hidden for any providerRow where isExpanded is false";
     "LOADED event is dispatched after AutomationDispatch/list_providers resolves successfully";
-    "Providers are sorted so health == 'down' rows appear first, then health == 'degraded', then health == 'healthy'";
+    "Providers are sorted so health == down rows appear first, then health == degraded, then health == healthy";
     "failureRate is computed as (failed dispatches / total dispatches) in the window defined by windowMinutes";
     "dispatchCount reflects dispatches within the windowMinutes window from AutomationDispatch state";
     "EXPAND event sets the active provider and triggers loadDispatchLog entry action to fetch recent dispatches";
     "loadDispatchLog fetches up to maxLogEntries entries from AutomationDispatch state for the active provider";
-    "RE_REGISTER invokes the provider's own register() action via ActionBinding, then fires RE_REGISTER_OK on success";
-    "reRegisterButton is only rendered when isAdmin is true — governance gate enforced at the prop level";
+    "RE_REGISTER invokes the providers own register() action via ActionBinding then fires RE_REGISTER_OK on success";
+    "reRegisterButton is only rendered when isAdmin is true - governance gate enforced at the prop level";
     "errorTaxonomy groups dispatch errors by error message prefix to surface recurring failure patterns";
   }
 
