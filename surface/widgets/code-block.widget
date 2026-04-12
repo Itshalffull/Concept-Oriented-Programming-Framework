@@ -1,0 +1,282 @@
+@version(1)
+widget code-block {
+
+  purpose {
+    Literal code block for displaying and editing multi-line source code within a
+    content document. Presents syntax-highlighted code with an optional line-number
+    gutter and a language badge. Because this is a literal block, all markdown
+    shortcut and snippet InputRules are disabled inside it -- only the block-scoped
+    keyboard bindings (Tab to indent, Shift+Tab to outdent, Ctrl+/ to toggle comment,
+    Cmd+L to open the language picker) are active. A SurfaceContract lens binding
+    named block-body-code maps palette.surface.code, palette.fg.code,
+    typography.family.mono, and radius.code onto the body and root parts so every
+    theme can realise code colouring without touching this widget.
+  }
+
+  anatomy {
+    root:               container    { Outer wrapper; carries data-state and data-language for CSS and test selectors }
+    languageBadge:      presentation { Language label badge; shows the current language identifier above the code body }
+    body:               interactive  { Editable code textarea; receives focus, accepts keyboard input, and displays syntax-highlighted code }
+    lineNumbers:        presentation { Optional vertical column of line-number labels; rendered only when showLineNumbers is true }
+    syntaxErrorOverlay: container    { Floating overlay listing syntax errors from the language parser; hidden when there are no errors }
+  }
+
+  states {
+    edit {
+      idle [initial] {
+        on FOCUS           -> focused;
+        on OPEN_PICKER     -> language-picker-open;
+      }
+      focused {
+        on BLUR            -> idle;
+        on START_EDIT      -> editing;
+        on OPEN_PICKER     -> language-picker-open;
+      }
+      editing {
+        on BLUR            -> idle;
+        on SAVE            -> focused;
+        on OPEN_PICKER     -> language-picker-open;
+        entry [disableInputRules];
+      }
+      language-picker-open {
+        on CLOSE_PICKER    -> focused;
+        on PICK_LANGUAGE   -> focused;
+        entry [openLanguagePicker];
+        exit [closeLanguagePicker];
+      }
+    }
+  }
+
+  accessibility {
+    role: group;
+    keyboard {
+      Tab           -> INDENT;
+      Shift+Tab     -> OUTDENT;
+      Control+Slash -> TOGGLE_COMMENT;
+      Meta+l        -> OPEN_PICKER;
+      Escape        -> CLOSE_PICKER;
+    }
+    focus {
+      trap: false;
+      initial: body;
+      roving: false;
+      returnOnClose: body;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: "code block";
+        aria-roledescription: "code block";
+      };
+      languageBadge -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      body -> {
+        role: "textbox";
+        aria-multiline: "true";
+        aria-label: "code editor";
+        aria-readonly: if state.edit == "idle" then "true" else "false";
+      };
+      lineNumbers -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      syntaxErrorOverlay -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: "syntax errors";
+      };
+    }
+  }
+
+  props {
+    blockId:         String
+    content:         String = ""
+    language:        String = "plain"
+    showLineNumbers: Bool   = true
+    formatOnSave:    Bool   = false
+    focused:         Bool   = false
+  }
+
+  connect {
+    root -> {
+      data-part:     "root";
+      data-state:    state.edit;
+      data-language: ?language;
+      data-line-numbers: if ?showLineNumbers then "true" else "false";
+      onFocus:       send(FOCUS);
+      onBlur:        send(BLUR);
+      onKeyDown:     if self.key == "Escape" then send(CLOSE_PICKER) else noop;
+    }
+
+    languageBadge -> {
+      data-part:  "language-badge";
+      text:       ?language;
+      onClick:    send(OPEN_PICKER);
+    }
+
+    body -> {
+      data-part:       "body";
+      role:            "textbox";
+      aria-multiline:  "true";
+      aria-label:      "code editor";
+      text:            ?content;
+      onFocus:         send(FOCUS);
+      onBlur:          send(BLUR);
+      onInput:         send(START_EDIT);
+      onKeyDown-Tab:   send(INDENT);
+      onKeyDown-Shift+Tab: send(OUTDENT);
+      onKeyDown-Control+Slash: send(TOGGLE_COMMENT);
+      onKeyDown-Meta+l: send(OPEN_PICKER);
+    }
+
+    lineNumbers -> {
+      data-part:  "line-numbers";
+      hidden:     if ?showLineNumbers then false else true;
+    }
+
+    syntaxErrorOverlay -> {
+      data-part:  "syntax-error-overlay";
+      hidden:     if state.edit == "idle" then true else false;
+      aria-live:  "polite";
+    }
+  }
+
+  affordance {
+    serves: code-block;
+    specificity: 9;
+    when concept = "ContentNode";
+    bind {
+      content:  body;
+      language: language;
+    }
+  }
+
+  compose {
+    _languagePicker: widget("language-picker", { open: if state.edit == "language-picker-open" then true else false, currentLanguage: ?language });
+  }
+
+  invariant {
+    example "focus transitions edit machine from idle to focused": {
+      after FOCUS() -> ok
+      then state.edit = "focused"
+    }
+
+    example "blur from focused returns to idle": {
+      after BLUR() -> ok
+      then state.edit = "idle"
+    }
+
+    example "START_EDIT from focused moves to editing": {
+      after START_EDIT() -> ok
+      then state.edit = "editing"
+    }
+
+    example "OPEN_PICKER from focused opens language picker": {
+      after OPEN_PICKER() -> ok
+      then state.edit = "language-picker-open"
+    }
+
+    example "CLOSE_PICKER from language-picker-open returns to focused": {
+      after CLOSE_PICKER() -> ok
+      then state.edit = "focused"
+    }
+
+    example "PICK_LANGUAGE from language-picker-open returns to focused": {
+      after PICK_LANGUAGE() -> ok
+      then state.edit = "focused"
+    }
+
+    example "showLineNumbers false hides lineNumbers part": {
+      after render(showLineNumbers: false) -> ok
+      then lineNumbers.hidden = true
+    }
+
+    example "showLineNumbers true shows lineNumbers part": {
+      after render(showLineNumbers: true) -> ok
+      then lineNumbers.hidden = false
+    }
+
+    example "language prop binds to data-language on root": {
+      after render(language: "typescript") -> ok
+      then root.dataLanguage = "typescript"
+    }
+
+    example "default language is plain": {
+      after render() -> ok
+      then root.dataLanguage = "plain"
+    }
+
+    example "language badge text reflects language prop": {
+      after render(language: "python") -> ok
+      then languageBadge.text = "python"
+    }
+
+    example "body is aria-readonly true in idle state": {
+      after render() -> ok
+      then body.ariaReadonly = "true"
+    }
+
+    forall "all edit states reachable from initial": {
+      given s in editStates
+      then s.reachable = true
+    }
+
+    forall "all valid language identifiers bind on data-language": {
+      given lang in { "plain", "typescript", "python", "rust", "json", "bash" }
+      then root.dataLanguage = lang
+    }
+
+    always "root data-state reflects edit FSM": {
+      root.dataState = state.edit
+    }
+
+    always "body role is textbox": {
+      body.role = "textbox"
+    }
+
+    always "body aria-multiline is true": {
+      body.ariaMultiline = "true"
+    }
+
+    always "SurfaceContract block-body-code lens slots bound on body": {
+      body.dataPart = "body"
+    }
+
+    always "languageBadge data-part set": {
+      languageBadge.dataPart = "language-badge"
+    }
+
+    never "lineNumbers visible when showLineNumbers is false": {
+      showLineNumbers = false and lineNumbers.hidden = false
+    }
+
+    never "language-picker open in idle state": {
+      state.edit = "idle" and state.edit = "language-picker-open"
+    }
+
+    never "Tab key causes focus change inside body": {
+      body.onKeyDown = "Tab" and focus.moved = true
+    }
+
+    never "editing state exits without BLUR or SAVE event": {
+      state.edit = "editing" and event != "BLUR" and event != "SAVE" and state.edit = "idle"
+    }
+
+    action body {
+      requires: state.edit = "focused"
+      ensures ok: state.edit = "editing"
+    }
+
+    action languageBadge {
+      requires: state.edit != "language-picker-open"
+      ensures ok: state.edit = "language-picker-open"
+    }
+
+    "SurfaceContract block-body-code wires body-bg to palette.surface.code, body-fg to palette.fg.code, body-font to typography.family.mono, body-radius to radius.code";
+    "literal block scope disables all InputRule markdown shortcuts and snippet triggers inside the body part";
+    "Cmd+L and Meta+l both dispatch OPEN_PICKER to open the language picker regardless of current edit sub-state";
+  }
+
+}

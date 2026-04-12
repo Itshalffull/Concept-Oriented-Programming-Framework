@@ -1,0 +1,84 @@
+# ActionBinding seeds -- code block toolbar commands and input-rule dispatch (MAG-727).
+# markdown-transform-to-code: dispatched by the markdown-code-fence InputRule.
+# code-language-picker, code-format, code-copy, code-toggle-line-numbers:
+#   toolbar commands for the code-block editor surface.
+#
+# API gap notes:
+#   - code-language-picker invokes language-picker.widget, which ships in a later card.
+#     The target references the anticipated "Schema/applyTo" pattern used to retype the
+#     block's language field; the exact action may change when the language-picker
+#     concept is defined.
+#   - code-format has no dedicated concept action yet. Target references an anticipated
+#     "CodeFormatter/format" action; a follow-up card should introduce that concept.
+#   - code-copy uses ContentNode/read as the closest primitive for reading block content
+#     to the clipboard; a dedicated Clipboard concept may refine this later.
+#   - code-toggle-line-numbers targets the anticipated "Property/set" to toggle the
+#     showLineNumbers field on the ContentNode's property bag.
+
+concept: ActionBinding
+action: bind
+entries:
+  # Dispatched by the markdown-code-fence InputRule when a paragraph line
+  # matches ^\`\`\`(\w*). The captured language group is forwarded in parameterMap.
+  - name: markdown-transform-to-code
+    binding: markdown-transform-to-code
+    target: "Schema/applyTo"
+    parameterMap: '{"schema":"code","entity_id":"context.focusedBlockId","language":"context.capturedGroup1"}'
+    executionPolicy: "auto"
+    slash_command: false
+    toolbar_command: false
+
+  # Open the language picker for the focused code block.
+  # Anticipatory -- language-picker.widget ships in a later card.
+  - name: code-language-picker
+    binding: code-language-picker
+    target: "Schema/applyTo"
+    parameterMap: '{"schema":"code","entity_id":"context.focusedBlockId","language":"context.selectedLanguage"}'
+    executionPolicy: "auto"
+    toolbar_command: true
+    slash_command: false
+    context_menu: false
+    section: "Code"
+    label: "Language"
+    icon: "code"
+    picker_ref: "language-picker"
+
+  # Re-format the code in the focused block using the language's formatter.
+  # Anticipatory -- CodeFormatter concept ships in a later card.
+  - name: code-format
+    binding: code-format
+    target: "CodeFormatter/format"
+    parameterMap: '{"block":"context.focusedBlockId","language":"context.blockLanguage"}'
+    executionPolicy: "auto"
+    toolbar_command: true
+    slash_command: false
+    context_menu: false
+    section: "Code"
+    label: "Format"
+    icon: "align-left"
+
+  # Copy the raw code content of the focused block to the clipboard.
+  - name: code-copy
+    binding: code-copy
+    target: "ContentNode/read"
+    parameterMap: '{"node":"context.focusedBlockId"}'
+    executionPolicy: "auto"
+    toolbar_command: true
+    slash_command: false
+    context_menu: true
+    section: "Code"
+    label: "Copy"
+    icon: "clipboard"
+
+  # Toggle the showLineNumbers property on the focused code block.
+  - name: code-toggle-line-numbers
+    binding: code-toggle-line-numbers
+    target: "Property/set"
+    parameterMap: '{"entity":"context.focusedBlockId","key":"showLineNumbers","value":"context.toggleLineNumbers"}'
+    executionPolicy: "auto"
+    toolbar_command: true
+    slash_command: false
+    context_menu: false
+    section: "Code"
+    label: "Line numbers"
+    icon: "list-ordered"

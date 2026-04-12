@@ -21,3 +21,61 @@ entries:
     section: "Basic"
     icon: "heading"
     label: "Heading"
+
+  # Entity reference embed -- resolves a ContentNode id and renders it as
+  # a card, compact badge, or full preview inline in the block stream.
+  - id: entity-embed-mapping
+    name: entity-embed-mapping
+    widget_id: entity-embed-block
+    schema: entity-embed
+    display_mode: block-editor
+    insertable: true
+    section: "Embeds"
+    icon: "link-external"
+    label: "Entity reference"
+
+  # Quote block -- blockquote with border-start accent and optional citation (MAG-726)
+  - id: quote-block-mapping
+    name: quote-block-mapping
+    widget_id: quote-block
+    schema: quote
+    display_mode: block-editor
+    insertable: true
+    section: "Basic"
+    icon: "quote"
+    label: "Quote"
+
+  # Divider block -- horizontal rule separator (MAG-726)
+  - id: divider-block-mapping
+    name: divider-block-mapping
+    widget_id: divider-block
+    schema: divider
+    display_mode: block-editor
+    insertable: true
+    section: "Basic"
+    icon: "minus"
+    label: "Divider"
+
+  # Toggle block -- collapsible disclosure block with nested children (MAG-726)
+  - id: toggle-block-mapping
+    name: toggle-block-mapping
+    widget_id: toggle-block
+    schema: toggle
+    display_mode: block-editor
+    insertable: true
+    section: "Basic"
+    icon: "chevron-right"
+    label: "Toggle"
+
+  # Code block -- multi-line literal code editor with syntax highlighting,
+  # optional line numbers, and a language badge. InputRules are disabled
+  # inside this block (literal block scope). (MAG-727)
+  - id: code-block-mapping
+    name: code-block-mapping
+    widget_id: code-block
+    schema: code
+    display_mode: block-editor
+    insertable: true
+    section: "Advanced"
+    icon: "code"
+    label: "Code"

@@ -56,6 +56,83 @@ entries:
     compile_bundle_ref: null
     compile_status_field: null
 
+  # Entity-embed block editor surface (MAG-730)
+  # Toolbar: inline-toolbar (shared mark toolbar)
+  # Bindings: entity-follow (Enter/double-click), entity-display-mode-switch (toolbar),
+  #           entity-remove (context menu).
+  # Panel widgets: entity-metadata-panel is anticipatory — ships when the
+  #   entity detail side-panel concept is available.
+  - id: entity-embed-block-editor
+    schema_ref: entity-embed
+    context: block-editor
+    toolbar_widget: inline-toolbar
+    command_bindings:
+      - entity-follow
+      - entity-display-mode-switch
+      - entity-remove
+    panel_widgets:
+      - entity-metadata-panel
+    context_menu_bindings:
+      - entity-remove
+    input_rule_refs: []
+    picker_refs: []
+    compile_action_ref: null
+    compile_bundle_ref: null
+    compile_status_field: null
+
+  # Quote block editor surface (MAG-726)
+  # Toolbar: inline-toolbar (shared mark toolbar)
+  # Input rules: markdown-quote seeded below
+  - id: quote-block-editor
+    schema_ref: quote
+    context: block-editor
+    toolbar_widget: inline-toolbar
+    command_bindings:
+      - bold-toggle
+      - italic-toggle
+    panel_widgets: []
+    context_menu_bindings: []
+    input_rule_refs:
+      - markdown-quote
+    picker_refs: []
+    compile_action_ref: null
+    compile_bundle_ref: null
+    compile_status_field: null
+
+  # Divider block editor surface (MAG-726)
+  # No toolbar, no bindings, no panels — purely decorative non-editable block.
+  - id: divider-block-editor
+    schema_ref: divider
+    context: block-editor
+    toolbar_widget: null
+    command_bindings: []
+    panel_widgets: []
+    context_menu_bindings: []
+    input_rule_refs:
+      - markdown-divider
+    picker_refs: []
+    compile_action_ref: null
+    compile_bundle_ref: null
+    compile_status_field: null
+
+  # Toggle block editor surface (MAG-726)
+  # Toolbar: inline-toolbar for summary inline marks.
+  # Action bindings: toggle-disclosure-expand + toggle-disclosure-collapse.
+  - id: toggle-block-editor
+    schema_ref: toggle
+    context: block-editor
+    toolbar_widget: inline-toolbar
+    command_bindings:
+      - toggle-disclosure-expand
+      - toggle-disclosure-collapse
+    panel_widgets: []
+    context_menu_bindings: []
+    input_rule_refs: []
+    picker_refs: []
+    compile_action_ref: null
+    compile_bundle_ref: null
+    compile_status_field: null
+
   # Agent-persona page-level editor surface (MAG-723)
   # Proves ContentCompiler integration end-to-end: compile_action_ref +
   # status_decoration_ref + output_preview_ref + consumers_panel_ref.
@@ -79,3 +156,28 @@ entries:
     status_decoration_ref: persona-status-badge
     output_preview_ref: prompt-assembly-preview
     consumers_panel_ref: persona-consumers-panel
+
+  # Code block editor surface (MAG-727)
+  # Literal block scope: input_rule_refs is intentionally empty because
+  # all markdown shortcuts and snippet triggers are suppressed inside code blocks.
+  # Panel widgets: code-syntax-error-panel is anticipatory -- ships with the
+  # language-server integration in a later card.
+  # Language picker (code-language-picker) invokes language-picker.widget which
+  # also ships later; the binding is registered now so the command slot is reserved.
+  - id: code-block-editor
+    schema_ref: code
+    context: block-editor
+    toolbar_widget: inline-toolbar
+    command_bindings:
+      - code-language-picker
+      - code-format
+      - code-copy
+      - code-toggle-line-numbers
+    panel_widgets:
+      - code-syntax-error-panel
+    context_menu_bindings: []
+    input_rule_refs: []
+    picker_refs: []
+    compile_action_ref: null
+    compile_bundle_ref: null
+    compile_status_field: null

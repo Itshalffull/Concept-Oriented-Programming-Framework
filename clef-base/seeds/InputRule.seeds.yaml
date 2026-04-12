@@ -16,11 +16,65 @@ entries:
     priority: 100
     scope: null
 
+  # --- Block-type conversion rules (MAG-726) ---
+  - name: markdown-quote
+    rule: markdown-quote
+    kind: pattern
+    pattern: "^> "
+    action_ref: markdown-transform-to-quote
+    priority: 100
+    scope: null
+
+  - name: markdown-divider
+    rule: markdown-divider
+    kind: pattern
+    pattern: "^---"
+    action_ref: markdown-transform-to-divider
+    priority: 100
+    scope: null
+
+  # --- Trigger-char rules (MAG-730) ---
+  # trigger-wikilink: fires when the user types [[ in any block-editor context.
+  # Dispatches entity-picker-open-for-wikilink which mounts the entity-picker
+  # tool-plane; on completion the selected entity is wrapped in a wikilink mark.
+  - name: trigger-wikilink
+    rule: trigger-wikilink
+    kind: trigger-char
+    pattern: "[["
+    action_ref: entity-picker-open-for-wikilink
+    priority: 100
+    scope: null
+
+  # trigger-at-mention: fires when the user types @ in any block-editor context.
+  # Dispatches entity-picker-open-for-mention with schemaFilter for agent-persona
+  # or user; on completion inserts an inline @mention (same mark as wikilink with
+  # @ prefix convention).
+  - name: trigger-at-mention
+    rule: trigger-at-mention
+    kind: trigger-char
+    pattern: "@"
+    action_ref: entity-picker-open-for-mention
+    priority: 100
+    scope: null
+
   # --- Paste handler rules ---
   - name: media-upload-from-clipboard
     rule: media-upload-from-clipboard
     kind: paste
     pattern: "^image/"
     action_ref: media-upload-from-clipboard
+    priority: 100
+    scope: null
+
+  # --- Code fence markdown shortcut (MAG-727) ---
+  # Triggered when a line starts with triple backtick followed by optional word chars.
+  # The captured group (\w*) carries the language identifier (e.g. "typescript").
+  # scope: null = active globally, but the code-block widget's body part suppresses
+  # all InputRules internally via the literal block scope property.
+  - name: markdown-code-fence
+    rule: markdown-code-fence
+    kind: pattern
+    pattern: "^```(\\w*)"
+    action_ref: markdown-transform-to-code
     priority: 100
     scope: null
