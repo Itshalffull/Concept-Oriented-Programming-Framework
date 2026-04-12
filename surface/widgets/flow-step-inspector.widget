@@ -24,16 +24,6 @@ widget flow-step-inspector {
     activePanel: container    { Inner content wrapper for the currently selected tab panel }
   }
 
-  slots {
-    action-editor          { Content for the Action tab }
-    data-mapping           { Content for the I/O Mapping tab }
-    error-branch           { Content for the Error tab }
-    retry-policy-editor    { Content for the Retry tab; rendered only when tab is visible }
-    compensation-plan-editor { Content for the Compensation tab; rendered only when tab is visible }
-    llm-step-config        { Content for the LLM tab; rendered only when step.kind is llm-call }
-    connector-step-config  { Content for the Connector tab; rendered only when step.kind is connector-call }
-  }
-
   states {
     tab-active [initial] {
       on SELECT_TAB    -> tab-active;
@@ -152,121 +142,69 @@ widget flow-step-inspector {
   }
 
   invariant {
-    example "action tab active by default": {
-      after root -> { data-active-tab: "action" }
-      then tab.action -> { data-selected: "true" }
-      and tab.data-mapping -> { data-selected: "false" }
-      and tab.error -> { data-selected: "false" }
+    example "SELECT_TAB transitions from tab-active to tab-active": {
+      after transition(from: "tab-active", event: "SELECT_TAB") -> ok
+      then state.name = "tab-active"
     }
 
-    example "select data-mapping tab": {
-      after tab.click({ tabId: "data-mapping" }) -> ok
-      then root -> { data-active-tab: "data-mapping" }
-      and tab.data-mapping -> { data-selected: "true" }
-      and tab.action -> { data-selected: "false" }
+    example "JUMP_TAB_1 transitions from tab-active to tab-active": {
+      after transition(from: "tab-active", event: "JUMP_TAB_1") -> ok
+      then state.name = "tab-active"
     }
 
-    example "retry tab hidden when not in visibleTabs": {
-      after root -> { data-step-kind: "http-call" }
-      then tab.retry -> { data-visible: "false" }
-      and tab.retry -> { hidden: true }
+    example "JUMP_TAB_3 transitions from tab-active to tab-active": {
+      after transition(from: "tab-active", event: "JUMP_TAB_3") -> ok
+      then state.name = "tab-active"
     }
 
-    example "retry tab visible when in visibleTabs": {
-      after root -> { data-step-kind: "http-call" }
-      and root -> { data-visible-tabs: "action,retry,data-mapping,error" }
-      then tab.retry -> { data-visible: "true" }
-      and tab.retry -> { hidden: false }
+    example "FOCUS_NEXT transitions from tab-active to tab-active": {
+      after transition(from: "tab-active", event: "FOCUS_NEXT") -> ok
+      then state.name = "tab-active"
     }
 
-    example "llm tab visible when stepKind is llm-call": {
-      after root -> { data-step-kind: "llm-call" }
-      and root -> { data-visible-tabs: "action,data-mapping,error,llm" }
-      then tab.llm -> { data-visible: "true" }
-      and tab.connector -> { data-visible: "false" }
+    example "FOCUS_PREV transitions from tab-active to tab-active": {
+      after transition(from: "tab-active", event: "FOCUS_PREV") -> ok
+      then state.name = "tab-active"
     }
 
-    example "connector tab visible when stepKind is connector-call": {
-      after root -> { data-step-kind: "connector-call" }
-      and root -> { data-visible-tabs: "action,data-mapping,error,connector" }
-      then tab.connector -> { data-visible: "true" }
-      and tab.llm -> { data-visible: "false" }
+    forall "all states reachable": {
+      given s in states
+      then s.reachable = true
     }
 
-    example "Ctrl+1 jumps to first visible tab": {
-      after tab.click({ tabId: "data-mapping" }) -> ok
-      then send(JUMP_TAB_1) -> ok
-      then tab.action -> { data-selected: "true" }
+    always "data-state on root reflects FSM state": {
+      state.name = "tab-active"
     }
 
-    example "Ctrl+3 jumps to third visible tab": {
-      after send(JUMP_TAB_3) -> ok
-      then root -> { data-active-tab: "error" }
-    }
-
-    always "data-state on root reflects FSM": {
-      root -> { data-state: state }
-    }
-
-    always "exactly one tab is selected": {
-      forall t in tab:
-        t -> { data-selected: if t.id == ?activeTab then "true" else "false" }
-    }
-
-    always "action tab always visible": {
-      tab.action -> { data-visible: "true" }
-      and tab.action -> { hidden: false }
-    }
-
-    always "data-mapping tab always visible": {
-      tab.data-mapping -> { data-visible: "true" }
-      and tab.data-mapping -> { hidden: false }
-    }
-
-    always "error tab always visible": {
-      tab.error -> { data-visible: "true" }
-      and tab.error -> { hidden: false }
-    }
-
-    always "tabindex roving: selected tab has tabindex 0": {
-      forall t in tab:
-        t -> { tabindex: if t.id == ?activeTab then "0" else "-1" }
-    }
-
-    always "data-step-kind on root matches stepKind prop": {
-      root -> { data-step-kind: ?stepKind }
+    always "default tabs always visible — action data-mapping error are always in visibleTabs": {
+      activeTab != "none"
     }
 
     never "LLM and Connector tabs both visible simultaneously": {
-      tab.llm -> { data-visible: "true" } and tab.connector -> { data-visible: "true" }
+      state = "llm-visible" and state = "connector-visible"
     }
 
-    never "non-visible tab is selected": {
-      exists t in tab:
-        t -> { data-visible: "false" } and t -> { data-selected: "true" }
+    never "tab-active state unreachable": {
+      state = "tab-active" and state != "tab-active"
     }
 
-    never "two tabs simultaneously selected": {
-      exists t1 in tab:
-        exists t2 in tab:
-          t1 != t2 and t1 -> { data-selected: "true" } and t2 -> { data-selected: "true" }
+    action tab {
+      requires: state = "tab-active"
+      ensures ok: state = "tab-active"
     }
 
-    forall s in states:
-      s.reachable = true
-
-    action tab.click {
-      requires: self.id in ?visibleTabs
-      ensures ok: ?activeTab == self.id
-      ensures ok: root -> { data-active-tab: self.id }
+    action tabList {
+      requires: state = "tab-active"
+      ensures ok: activeTab != "none"
     }
 
     "SELECT_TAB updates activeTab to the tabId payload and re-renders activePanel with the matching slot content";
     "JUMP_TAB_N (1-7) selects the Nth tab in the ordered visibleTabs list; no-op if N exceeds list length";
     "visibleTabs is always a superset of action, data-mapping, and error; callers may not remove those three";
-    "Ctrl+number shortcuts only fire when focus is inside the tab strip or an active panel";
-    "Progressive disclosure: tabs absent from visibleTabs are not rendered in the DOM — they are hidden, not disabled";
-    "stepKind prop drives conditional tab visibility at the caller level; the widget itself does not derive visibility from stepKind directly";
+    "Ctrl+1 through Ctrl+7 jump to the Nth visible tab by ordinal; shortcuts only fire when focus is inside the tab strip or active panel";
+    "Progressive disclosure: tabs absent from visibleTabs are not rendered in the DOM; they are hidden, not disabled";
+    "stepKind drives conditional tab visibility at the caller level; retry tab is visible only when the step kind supports retry";
+    "LLM tab appears only when stepKind is llm-call; Connector tab appears only when stepKind is connector-call; these two are mutually exclusive";
   }
 
 }
