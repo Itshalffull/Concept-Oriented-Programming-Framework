@@ -1,0 +1,29 @@
+// When an EditSurface registers for a schema that has the isCommentable Property
+// set to true, automatically include the comments-panel editor-panel plugin in
+// that surface's panel_widgets list. This means authors never need to manually
+// configure the panel for each commentable schema — the Property alone is
+// sufficient to activate the UI. The sync is scoped to EditSurface/register
+// completions so it fires at surface mount time, not at schema definition time.
+//
+// API gap note: EditSurface/register is an anticipated action. If the actual
+// concept action differs (e.g., EditSurface/mount or Host/register), update the
+// when clause accordingly once the EditSurface concept spec is available.
+
+sync AttachCommentsPanelOnCommentableSchema [eager]
+  purpose: "Auto-attach the comments-panel editor-panel plugin to any EditSurface whose schema has isCommentable=true so comment threads are always accessible without manual configuration."
+when {
+  EditSurface/register: [ schemaId: ?schemaId ]
+    => ok(surface: ?surface)
+}
+where {
+  query(Property/get: [ schema: ?schemaId; key: "isCommentable" ]) as ?isCommentable
+  guard(?isCommentable == "true")
+}
+then {
+  PluginRegistry/register: [
+    type: "editor-panel";
+    name: "comments-panel";
+    surface: ?surface;
+    metadata: "{\"widget\":\"comments-panel\",\"label\":\"Comments\",\"icon\":\"comment\",\"order\":20}"
+  ]
+}

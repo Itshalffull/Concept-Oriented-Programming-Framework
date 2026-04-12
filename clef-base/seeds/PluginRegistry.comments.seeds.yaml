@@ -1,0 +1,68 @@
+# PluginRegistry seeds — comment display surface plugins (MAG-738)
+# Registers three plugins:
+#   1. comment-gutter-marker  — decoration-layer gutter indicator
+#   2. inline-annotation-decoration — decoration-layer span wrapper
+#   3. comments-panel  — editor-panel right-rail thread viewer
+#
+# The comments-panel is also auto-attached by the sync
+# register-comments-panel-on-commentable-schemas.sync for any schema
+# with isCommentable=true. These seeds cover the baseline registration
+# so the plugin is available even before schema-scoped wiring fires.
+
+concept: PluginRegistry
+action: register
+entries:
+  - type: decoration-layer
+    name: comment-gutter-marker
+    metadata: >
+      {
+        "widget": "comment-gutter-marker",
+        "label": "Comment Gutter Marker",
+        "icon": "comment",
+        "availableContexts": ["markdown", "wiki", "notebook", "persona", "database-record"],
+        "defaultEnabled": true,
+        "order": 20,
+        "props": {
+          "blockId": "$focusedBlockId",
+          "commentCount": "$commentCount",
+          "topAvatars": "$topCommentAvatars",
+          "focused": "$isGutterFocused",
+          "gutterPosition": "$schema.commentGutterPosition"
+        }
+      }
+
+  - type: decoration-layer
+    name: inline-annotation-decoration
+    metadata: >
+      {
+        "widget": "inline-annotation-decoration",
+        "label": "Inline Annotation",
+        "icon": "underline",
+        "availableContexts": ["markdown", "wiki", "notebook", "persona"],
+        "defaultEnabled": true,
+        "order": 30,
+        "props": {
+          "annotationId": "$annotation.id",
+          "annotationKind": "$annotation.kind",
+          "rangeStart": "$annotation.rangeStart",
+          "rangeEnd": "$annotation.rangeEnd",
+          "previewText": "$annotation.previewText"
+        }
+      }
+
+  - type: editor-panel
+    name: comments-panel
+    metadata: >
+      {
+        "widget": "comments-panel",
+        "label": "Comments",
+        "icon": "comment",
+        "availableContexts": ["markdown", "wiki", "notebook", "persona", "database-record", "canvas"],
+        "defaultEnabled": false,
+        "order": 20,
+        "props": {
+          "focusedBlockId": "$focusedBlockId",
+          "threads": "$commentThreads",
+          "currentUserId": "$currentUserId"
+        }
+      }

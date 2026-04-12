@@ -1,0 +1,281 @@
+@version(1)
+widget comments-panel {
+
+  purpose {
+    Editor-panel plugin that renders the full comment thread surface for
+    a document. When focusedBlockId is set the panel filters to threads
+    anchored to that block; otherwise it shows all threads grouped by
+    block in document order. Each thread is rendered as a header row
+    (block reference + resolve control + jump-to icon) followed by a
+    chronological list of comment rows, each showing author avatar, body
+    text, and timestamp. Replying enters a replying sub-state that
+    surfaces a reply input field; submitting the reply returns to
+    browsing. Resolving a thread enters a resolving sub-state and
+    dispatches Comment/resolve for that thread. Comment body text is
+    ordered using Comment.threadPath for correct nested-reply ordering.
+    At-mention autocomplete is delegated to the embedded entity-picker
+    compose widget. Backed by Comment and InlineAnnotation concepts.
+  }
+
+  requires @1 {
+    fields {
+      threads: list;
+      focusedBlockId: option String;
+    }
+    actions {
+      listByEntity(entityId: String);
+      reply(comment: String, body: String, author: String);
+      resolve(comment: String);
+    }
+  }
+
+  anatomy {
+    root:            container    { Top-level panel host; carries data-state and aria-label for the panel region }
+    filterBar:       container    { Optional filter strip showing the currently focused block label and a clear button when focusedBlockId is set }
+    threadList:      container    { Scrollable list of all thread groups in display order }
+    thread:          container    { Collapsible container for one comment thread, grouping header and all comment rows }
+    threadHeader:    container    { Header row of each thread: block reference label, resolve button, and jump-to-block icon }
+    commentRow:      container    { Single comment entry within a thread, containing author, body, and timestamp }
+    commentAuthor:   text         { Rendered display name of the comment author }
+    commentBody:     text         { Markdown-safe body text of the comment }
+    commentTimestamp: text        { Human-readable relative or absolute timestamp for when the comment was created }
+    replyInput:      interactive  { Textarea for composing a reply; visible only while browse FSM is in replying state }
+    resolveButton:   action       { Button to mark the entire thread resolved; triggers the resolving state }
+    jumpToBlockIcon: action       { Icon button that scrolls the editor viewport to the block anchoring this thread }
+  }
+
+  states {
+    browse {
+      browsing [initial] {
+        on START_REPLY    -> replying;
+        on START_RESOLVE  -> resolving;
+      }
+      replying {
+        on SUBMIT_REPLY   -> browsing;
+        on CANCEL_REPLY   -> browsing;
+        on ESCAPE         -> browsing;
+        entry [focusReplyInput];
+        exit [clearReplyInput];
+      }
+      resolving {
+        on RESOLVE_SUCCESS -> browsing;
+        on RESOLVE_FAILURE -> browsing;
+        on CANCEL_RESOLVE  -> browsing;
+        entry [lockResolveButton];
+        exit [unlockResolveButton];
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Escape       -> ESCAPE;
+      Enter        -> SUBMIT_REPLY;
+    }
+    focus {
+      trap: false;
+      initial: threadList;
+      roving: false;
+      returnOnClose: false;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Comments panel";
+        aria-live: "polite";
+        aria-atomic: "false";
+      };
+      filterBar -> {
+        role: "toolbar";
+        aria-label: "Comment filter";
+      };
+      threadList -> {
+        role: "list";
+        aria-label: "Comment threads";
+      };
+      thread -> {
+        role: "group";
+        aria-label: "Comment thread";
+      };
+      replyInput -> {
+        role: "textbox";
+        aria-label: "Reply to thread";
+        aria-multiline: "true";
+        aria-required: "true";
+      };
+      resolveButton -> {
+        role: "button";
+        aria-label: "Resolve thread";
+        aria-pressed: if state.browse == "resolving" then "true" else "false";
+      };
+      jumpToBlockIcon -> {
+        role: "button";
+        aria-label: "Jump to block";
+      };
+    }
+  }
+
+  props {
+    focusedBlockId: option String
+    threads: list CommentThread = []
+    showResolved: Bool = false
+    currentUserId: String = ""
+    placeholder: String = "Reply..."
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.browse;
+      aria-label: "Comments panel";
+      aria-live: "polite";
+    }
+
+    filterBar -> {
+      data-part: "filter-bar";
+      hidden: if ?focusedBlockId == none then true else false;
+    }
+
+    threadList -> {
+      data-part: "thread-list";
+      role: "list";
+    }
+
+    thread -> {
+      data-part: "thread";
+      role: "group";
+    }
+
+    threadHeader -> {
+      data-part: "thread-header";
+    }
+
+    commentRow -> {
+      data-part: "comment-row";
+    }
+
+    commentAuthor -> {
+      data-part: "comment-author";
+    }
+
+    commentBody -> {
+      data-part: "comment-body";
+    }
+
+    commentTimestamp -> {
+      data-part: "comment-timestamp";
+    }
+
+    replyInput -> {
+      data-part: "reply-input";
+      aria-label: "Reply to thread";
+      aria-multiline: "true";
+      placeholder: ?placeholder;
+      hidden: if state.browse == "replying" then false else true;
+      autofocus: if state.browse == "replying" then true else false;
+      onKeyDown: send(ESCAPE);
+    }
+
+    resolveButton -> {
+      data-part: "resolve-button";
+      aria-label: "Resolve thread";
+      aria-pressed: if state.browse == "resolving" then "true" else "false";
+      disabled: if state.browse == "resolving" then true else false;
+      onClick: send(START_RESOLVE);
+    }
+
+    jumpToBlockIcon -> {
+      data-part: "jump-to-block-icon";
+      aria-label: "Jump to block";
+      role: "button";
+      tabindex: "0";
+    }
+  }
+
+  affordance {
+    serves: panel-widget;
+    specificity: 8;
+    when pluginType = "editor-panel";
+    bind {
+      threads: threads;
+      focusedBlockId: focusedBlockId;
+    }
+  }
+
+  compose {
+    _mentionPicker: widget("entity-picker", { mode: "mention", trigger: "@" })
+  }
+
+  invariant {
+    example "START_REPLY transitions browsing to replying": {
+      after START_REPLY() -> ok
+      then state.browse = "replying"
+    }
+
+    example "CANCEL_REPLY returns replying to browsing": {
+      after CANCEL_REPLY() -> ok
+      then state.browse = "browsing"
+    }
+
+    example "SUBMIT_REPLY returns replying to browsing": {
+      after SUBMIT_REPLY() -> ok
+      then state.browse = "browsing"
+    }
+
+    example "ESCAPE from replying returns to browsing": {
+      after ESCAPE() -> ok
+      then state.browse = "browsing"
+    }
+
+    example "START_RESOLVE transitions browsing to resolving": {
+      after START_RESOLVE() -> ok
+      then state.browse = "resolving"
+    }
+
+    example "RESOLVE_SUCCESS from resolving returns to browsing": {
+      after RESOLVE_SUCCESS() -> ok
+      then state.browse = "browsing"
+    }
+
+    example "CANCEL_RESOLVE from resolving returns to browsing": {
+      after CANCEL_RESOLVE() -> ok
+      then state.browse = "browsing"
+    }
+
+    forall "all browse states are reachable": {
+      given s in browseStates
+      then s.reachable = true
+    }
+
+    always "data-state on root reflects browse FSM": {
+      root.dataState = state.browse
+    }
+
+    always "replyInput is hidden unless browse state is replying": {
+      replyInput.hidden = state.browse
+    }
+
+    always "resolveButton is disabled while browse state is resolving": {
+      resolveButton.disabled = state.browse
+    }
+
+    always "filterBar is hidden when focusedBlockId is none": {
+      filterBar.hidden = true
+    }
+
+    never "replyInput visible outside replying state": {
+      replyInput.hidden = false
+    }
+
+    action resolveButton {
+      requires: state.browse = "browsing"
+      ensures ok: state.browse = "resolving"
+    }
+
+    "comment rows within each thread must be sorted by Comment.threadPath so nested replies appear indented beneath their parent in chronological depth-first order";
+    "at-mention autocomplete must delegate to the entity-picker compose widget with mode mention; pressing Escape inside the mention picker must close the picker without cancelling the reply";
+  }
+
+}

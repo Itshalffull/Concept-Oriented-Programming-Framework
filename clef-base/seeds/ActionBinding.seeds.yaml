@@ -919,3 +919,74 @@ entries:
     section: "Table"
     label: "Toggle header row"
     icon: "table-header"
+
+  # --- Comment actions (MAG-738) ---
+  # comment-add-to-block: adds a comment anchored to the focused block.
+  # Available via context menu and keyboard shortcut on any block whose
+  # schema has isCommentable=true. blockId comes from the host EditSurface
+  # context. API gap note: Comment/addComment is anticipated; if the concept
+  # exposes addComment with (entity, body, author) the parameterMap should
+  # match. Update target when the action name is confirmed from the Comment
+  # concept spec.
+  - name: comment-add-to-block
+    binding: comment-add-to-block
+    target: "Comment/addComment"
+    parameterMap: '{"entity":"context.blockId","author":"context.currentUserId"}'
+    executionPolicy: "pessimistic"
+    slash_command: false
+    toolbar_command: false
+    context_menu: true
+    keyboard: "Ctrl+Alt+M"
+    section: "Comment"
+    label: "Add comment"
+    icon: "comment"
+
+  # comment-add-to-selection: adds an inline annotation comment to the active
+  # text selection. Only visible when the focused schema has commentScope in
+  # [inline, both]. Creates an InlineAnnotation first, then binds the new
+  # comment to that annotation's id. Two-step action; both targets are noted;
+  # a follow-up sync wires InlineAnnotation/create -> Comment/addComment.
+  # API gap note: InlineAnnotation/create is anticipated from the
+  # InlineAnnotation concept spec shipped in commit a4585cc1.
+  - name: comment-add-to-selection
+    binding: comment-add-to-selection
+    target: "InlineAnnotation/create"
+    parameterMap: '{"kind":"comment","rangeStart":"context.selectionStart","rangeEnd":"context.selectionEnd","blockId":"context.blockId"}'
+    executionPolicy: "pessimistic"
+    slash_command: false
+    toolbar_command: true
+    visibleWhen: "context.schema.commentScope in ['inline','both']"
+    section: "Comment"
+    label: "Comment on selection"
+    icon: "comment-text"
+
+  # comment-resolve: marks the focused comment thread resolved.
+  # API gap note: Comment/resolve is anticipated; if the concept instead
+  # exposes Comment/publish with resolved=true adjust target accordingly.
+  # A gap note is intentionally left here for the concept author to confirm.
+  - name: comment-resolve
+    binding: comment-resolve
+    target: "Comment/resolve"
+    parameterMap: '{"comment":"context.threadId","actor":"context.currentUserId"}'
+    executionPolicy: "pessimistic"
+    slash_command: false
+    toolbar_command: false
+    context_menu: true
+    section: "Comment"
+    label: "Resolve"
+    icon: "check-circle"
+
+  # comment-reply: opens the reply input in the comments-panel for the focused
+  # thread. Triggers START_REPLY FSM event on the comments-panel widget.
+  # API gap note: Comment/reply is anticipated; update target once confirmed.
+  - name: comment-reply
+    binding: comment-reply
+    target: "Comment/reply"
+    parameterMap: '{"comment":"context.threadId","body":"context.replyBody","author":"context.currentUserId"}'
+    executionPolicy: "pessimistic"
+    slash_command: false
+    toolbar_command: false
+    context_menu: true
+    section: "Comment"
+    label: "Reply"
+    icon: "reply"

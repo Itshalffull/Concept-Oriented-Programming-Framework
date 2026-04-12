@@ -1,0 +1,206 @@
+@version(1)
+widget inline-annotation-decoration {
+
+  purpose {
+    Decoration-layer plugin that wraps a text range in the block editor
+    with an annotated span, rendering an underline whose color and style
+    are determined by the annotationKind token via the existing
+    RenderTransform decorations registered in commit a4585cc1. Applies
+    uniformly across all annotation kinds: comment, ai-suggestion,
+    track-changes, and spell-check. Hovering the span opens a lightweight
+    hoverPopover previewing the first line of the associated comment thread
+    or suggestion. Clicking the span focuses the right-rail comments-panel
+    filtered to the annotation. The widget does not define new
+    RenderTransforms; it consumes the seven annotation-kind decorations
+    already registered. data-annotation-id and data-annotation-kind
+    attributes are emitted on root so the existing token-remap transform
+    can apply the correct color variables. Registered with PluginRegistry
+    as type decoration-layer, name inline-annotation-decoration.
+  }
+
+  requires @1 {
+    fields {
+      annotationId: String;
+      annotationKind: String;
+      rangeStart: Int;
+      rangeEnd: Int;
+    }
+    actions {
+      listByEntity(entityId: String);
+    }
+  }
+
+  anatomy {
+    root:         container    { Inline span wrapping the annotated text range; carries data-annotation-id, data-annotation-kind, and data-state for RenderTransform color targeting }
+    underline:    presentation { Decorative underline rendered beneath the annotated text; styled by annotationKind token via existing RenderTransforms; aria-hidden }
+    hoverPopover: container    { Floating popover shown on hover containing a preview snippet of the first comment or suggestion in the thread; role tooltip }
+  }
+
+  states {
+    view {
+      idle [initial] {
+        on POINTER_ENTER  -> hovering-annotation;
+        on FOCUS          -> hovering-annotation;
+      }
+      hovering-annotation {
+        on POINTER_LEAVE  -> idle;
+        on BLUR           -> idle;
+        on ESCAPE         -> idle;
+        on CLICK          -> idle;
+        entry [showHoverPopover; positionHoverPopover];
+        exit [hideHoverPopover];
+      }
+    }
+  }
+
+  accessibility {
+    role: mark;
+    modal: false;
+    keyboard {
+      Escape -> ESCAPE;
+      Enter  -> CLICK;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      roving: false;
+      returnOnClose: root;
+    }
+    aria {
+      root -> {
+        role: "mark";
+        aria-label: "Annotation";
+        aria-describedby: hoverPopover;
+        tabindex: "0";
+      };
+      underline -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      hoverPopover -> {
+        role: "tooltip";
+        aria-live: "polite";
+        hidden: if state.view == "idle" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    annotationId: String
+    annotationKind: String = "comment"
+    rangeStart: Int = 0
+    rangeEnd: Int = 0
+    previewText: String = ""
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.view;
+      data-annotation-id: ?annotationId;
+      data-annotation-kind: ?annotationKind;
+      data-range-start: ?rangeStart;
+      data-range-end: ?rangeEnd;
+      aria-label: "Annotation";
+      aria-describedby: hoverPopover;
+      tabindex: "0";
+      onPointerEnter: send(POINTER_ENTER);
+      onPointerLeave: send(POINTER_LEAVE);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+      onClick: send(CLICK);
+      onKeyDown: send(ESCAPE);
+    }
+
+    underline -> {
+      data-part: "underline";
+      data-annotation-kind: ?annotationKind;
+      aria-hidden: "true";
+    }
+
+    hoverPopover -> {
+      data-part: "hover-popover";
+      role: "tooltip";
+      aria-live: "polite";
+      hidden: if state.view == "idle" then true else false;
+      textContent: ?previewText;
+    }
+  }
+
+  affordance {
+    serves: decoration-layer;
+    specificity: 6;
+    when pluginType = "decoration-layer";
+    bind {
+      annotationId: annotationId;
+      annotationKind: annotationKind;
+      rangeStart: rangeStart;
+      rangeEnd: rangeEnd;
+    }
+  }
+
+  invariant {
+    example "POINTER_ENTER transitions idle to hovering-annotation": {
+      after POINTER_ENTER() -> ok
+      then state.view = "hovering-annotation"
+    }
+
+    example "POINTER_LEAVE transitions hovering-annotation to idle": {
+      after POINTER_LEAVE() -> ok
+      then state.view = "idle"
+    }
+
+    example "ESCAPE from hovering-annotation returns to idle": {
+      after ESCAPE() -> ok
+      then state.view = "idle"
+    }
+
+    example "FOCUS transitions idle to hovering-annotation": {
+      after FOCUS() -> ok
+      then state.view = "hovering-annotation"
+    }
+
+    example "CLICK from hovering-annotation transitions to idle": {
+      after CLICK() -> ok
+      then state.view = "idle"
+    }
+
+    forall "all view states are reachable": {
+      given s in viewStates
+      then s.reachable = true
+    }
+
+    always "data-state on root reflects view FSM": {
+      root.dataState = state.view
+    }
+
+    always "hoverPopover hidden while view state is idle": {
+      state.view = "idle" and hoverPopover.hidden = true
+    }
+
+    always "data-annotation-id is present on root": {
+      root.dataAnnotationId = annotationId
+    }
+
+    always "data-annotation-kind is present on root": {
+      root.dataAnnotationKind = annotationKind
+    }
+
+    never "hoverPopover shown while view state is idle": {
+      state.view = "idle" and hoverPopover.hidden = false
+    }
+
+    never "annotation span rendered with empty annotationId": {
+      root.dataAnnotationId = ""
+    }
+
+    action root {
+      requires: state.view = "idle"
+      ensures ok: state.view = "hovering-annotation"
+    }
+
+    "data-annotation-kind on root and underline must match one of the seven registered RenderTransform annotation kinds so the token-remap transform can apply the correct color variable without requiring new transform registrations";
+    "CLICK must dispatch a panel-focus event carrying annotationId and annotationKind so the comments-panel scrolls to and highlights the correct thread without requiring a page reload";
+  }
+
+}

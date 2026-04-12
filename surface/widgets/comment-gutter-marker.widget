@@ -1,0 +1,206 @@
+@version(1)
+widget comment-gutter-marker {
+
+  purpose {
+    Decoration-layer plugin that renders a compact gutter indicator beside
+    any content block that has one or more comments attached. Shows a stack
+    of up to three commenter avatars and a numeric badge when the thread
+    count exceeds the avatar cap. Clicking or activating the marker either
+    expands the comment thread inline beneath the block or focuses the
+    right-rail comments-panel filtered to that block, depending on the
+    schema commentGutterPosition Property (left, right, or hidden). The
+    widget is position-driven: the host decoration layer places it in the
+    gutter column; this spec does not prescribe horizontal offset. Registered
+    with PluginRegistry as type decoration-layer, name comment-gutter-marker.
+  }
+
+  requires @1 {
+    fields {
+      blockId: String;
+      commentCount: Int;
+      topAvatars: list;
+      focused: Bool;
+    }
+    actions {
+      listByEntity(entityId: String);
+    }
+  }
+
+  anatomy {
+    root:        container     { Absolute-positioned gutter host; carries data-state and data-block-id; hidden when commentCount is zero or gutterPosition is hidden }
+    avatarStack: container     { Horizontal stack of up to three circular avatar chips representing the most-recent commenters on this block }
+    countBadge:  presentation  { Numeric bubble showing the total comment count; visible at all times when commentCount is greater than zero }
+  }
+
+  states {
+    view {
+      idle [initial] {
+        on POINTER_ENTER -> hovering;
+        on FOCUS         -> hovering;
+      }
+      hovering {
+        on POINTER_LEAVE -> idle;
+        on BLUR          -> idle;
+        on CLICK         -> expanded;
+        on ENTER         -> expanded;
+      }
+      expanded {
+        on CLICK          -> idle;
+        on ESCAPE         -> idle;
+        on POINTER_LEAVE  -> idle;
+        entry [focusThreadPanel];
+        exit [releaseThreadFocus];
+      }
+    }
+  }
+
+  accessibility {
+    role: button;
+    modal: false;
+    keyboard {
+      Enter  -> ENTER;
+      Escape -> ESCAPE;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      roving: false;
+      returnOnClose: root;
+    }
+    aria {
+      root -> {
+        role: "button";
+        aria-label: "View comments";
+        aria-expanded: if state.view == "expanded" then "true" else "false";
+        aria-pressed: if state.view == "expanded" then "true" else "false";
+        tabindex: "0";
+      };
+      avatarStack -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      countBadge -> {
+        role: "status";
+        aria-label: "Comment count";
+        aria-live: "polite";
+        aria-atomic: "true";
+      };
+    }
+  }
+
+  props {
+    blockId: String
+    commentCount: Int = 0
+    topAvatars: list String = []
+    focused: Bool = false
+    gutterPosition: union "left" | "right" | "hidden" = "right"
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.view;
+      data-block-id: ?blockId;
+      data-gutter-position: ?gutterPosition;
+      aria-label: "View comments";
+      aria-expanded: if state.view == "expanded" then "true" else "false";
+      tabindex: "0";
+      hidden: if ?commentCount == 0 then true else false;
+      onClick: send(CLICK);
+      onPointerEnter: send(POINTER_ENTER);
+      onPointerLeave: send(POINTER_LEAVE);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+      onKeyDown: send(ENTER);
+    }
+
+    avatarStack -> {
+      data-part: "avatar-stack";
+      aria-hidden: "true";
+    }
+
+    countBadge -> {
+      data-part: "count-badge";
+      aria-live: "polite";
+      aria-atomic: "true";
+      textContent: ?commentCount;
+      hidden: if ?commentCount == 0 then true else false;
+    }
+  }
+
+  affordance {
+    serves: decoration-layer;
+    specificity: 7;
+    when pluginType = "decoration-layer";
+    bind {
+      blockId: blockId;
+      commentCount: commentCount;
+      topAvatars: topAvatars;
+    }
+  }
+
+  invariant {
+    example "CLICK from hovering transitions to expanded": {
+      after CLICK() -> ok
+      then state.view = "expanded"
+    }
+
+    example "ESCAPE from expanded returns to idle": {
+      after ESCAPE() -> ok
+      then state.view = "idle"
+    }
+
+    example "POINTER_ENTER from idle transitions to hovering": {
+      after POINTER_ENTER() -> ok
+      then state.view = "hovering"
+    }
+
+    example "POINTER_LEAVE from hovering returns to idle": {
+      after POINTER_LEAVE() -> ok
+      then state.view = "idle"
+    }
+
+    example "ENTER from hovering transitions to expanded": {
+      after ENTER() -> ok
+      then state.view = "expanded"
+    }
+
+    forall "all view states are reachable": {
+      given s in viewStates
+      then s.reachable = true
+    }
+
+    always "data-state on root reflects view FSM": {
+      root.dataState = state.view
+    }
+
+    always "root is hidden when commentCount is zero": {
+      commentCount = 0 and root.hidden = true
+    }
+
+    always "countBadge reflects commentCount": {
+      countBadge.textContent = commentCount
+    }
+
+    always "aria-expanded on root reflects expanded state": {
+      root.ariaExpanded = state.view
+    }
+
+    never "marker visible when gutterPosition is hidden": {
+      root.hidden = false
+    }
+
+    never "expanded state reached when commentCount is zero": {
+      state.view = "expanded"
+    }
+
+    action root {
+      requires: state.view = "hovering"
+      ensures ok: state.view = "expanded"
+    }
+
+    "avatarStack must render at most three avatar chips regardless of actual commenter count; excess commenters are reflected only in countBadge";
+    "focusThreadPanel entry action must dispatch a panel-focus event carrying blockId so the comments-panel or inline thread can scroll to the correct position";
+  }
+
+}
