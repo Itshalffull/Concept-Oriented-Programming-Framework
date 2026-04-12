@@ -229,6 +229,85 @@ entries:
     executionPolicy: "auto"
     label: "Delegate"
 
+  # --- Entity embed + wikilink / mention actions (MAG-730) ---
+  # entity-picker-open-for-wikilink: dispatched by the trigger-wikilink InputRule
+  # when the user types [[. Mounts the entity-picker tool-plane (schemaFilter unset
+  # — all entities searchable). On completion the selection is wrapped in a
+  # data-mark="wikilink" data-entity-ref span (the wikilink RenderTransform
+  # applies the accent.wikilink colour token automatically).
+  # API gap note: EntityPicker/open is an anticipated action; a follow-up card
+  # should introduce that concept and update the target at that time. The
+  # executionPolicy is "auto" because the picker opens immediately on trigger.
+  - name: entity-picker-open-for-wikilink
+    binding: entity-picker-open-for-wikilink
+    target: "EntityPicker/open"
+    parameterMap: '{"onComplete":"insert-wikilink-mark","context":"context.selection"}'
+    executionPolicy: "auto"
+    slash_command: false
+    toolbar_command: false
+    context_menu: false
+    label: "Insert link"
+    icon: "link"
+
+  # entity-picker-open-for-mention: dispatched by the trigger-at-mention InputRule
+  # when the user types @. Mounts the entity-picker with schemaFilter restricted to
+  # agent-persona and user entities. On completion inserts an @mention mark (same
+  # wikilink mark structure but with @ display prefix).
+  - name: entity-picker-open-for-mention
+    binding: entity-picker-open-for-mention
+    target: "EntityPicker/open"
+    parameterMap: '{"schemaFilter":"agent-persona,user","onComplete":"insert-mention-mark","context":"context.selection"}'
+    executionPolicy: "auto"
+    slash_command: false
+    toolbar_command: false
+    context_menu: false
+    label: "Mention"
+    icon: "at-sign"
+
+  # entity-follow: navigates to the referenced entity's detail view.
+  # Triggered by Enter or double-click on an entity-embed-block.
+  # API gap note: Navigator/navigate is the expected target; adjust once
+  # the Navigator concept surface action is finalised for entity deep-links.
+  - name: entity-follow
+    binding: entity-follow
+    target: "Navigator/navigate"
+    parameterMap: '{"destination":"entity-detail","params":{"id":"context.entityRef"}}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    context_menu: false
+    label: "Open"
+    icon: "arrow-up-right"
+
+  # entity-display-mode-switch: opens a mini-picker to switch between card,
+  # compact, and full display modes for the focused entity-embed-block.
+  # Appears as a toolbar command in the entity-embed EditSurface.
+  # API gap note: EntityEmbedBlock/setDisplayMode is anticipated; for now the
+  # target references the synthetic action. Update when the concept ships.
+  - name: entity-display-mode-switch
+    binding: entity-display-mode-switch
+    target: "EntityEmbedBlock/setDisplayMode"
+    parameterMap: '{"blockId":"context.blockId","mode":"context.selectedMode"}'
+    executionPolicy: "auto"
+    toolbar_command: true
+    context_menu: false
+    section: "Embed"
+    label: "Display mode"
+    icon: "layout"
+
+  # entity-remove: removes the entity-embed-block from the Outline.
+  # Available via context menu and keyboard Delete on the focused block.
+  - name: entity-remove
+    binding: entity-remove
+    target: "Outline/removeChild"
+    parameterMap: '{"parent":"context.parentId","child":"context.blockId"}'
+    executionPolicy: "pessimistic"
+    confirmWhen: "false"
+    toolbar_command: false
+    context_menu: true
+    label: "Remove embed"
+    buttonVariant: "destructive"
+    icon: "trash"
+
   # --- Block editor input-rule dispatch actions (MAG-720) ---
   # Both are triggered via InputRule dispatch — not slash menu or toolbar.
   #
@@ -346,3 +425,54 @@ entries:
     section: "Persona"
     label: "Duplicate"
     icon: "copy"
+
+  # --- Block-type markdown transform actions (MAG-726) ---
+  # API gap note: Outline/Schema have no dedicated "convert block to quote/divider"
+  # action. Schema/applyTo is the closest primitive: it overlays the target schema
+  # onto the focused ContentNode, effectively retyping the block without moving it
+  # in the outline. The parameterMap carries the schema name and the focusedBlockId
+  # from context, exactly as markdown-transform-to-heading-2 does above.
+  - name: markdown-transform-to-quote
+    binding: markdown-transform-to-quote
+    target: "Schema/applyTo"
+    parameterMap: '{"schema":"quote","entity_id":"context.focusedBlockId"}'
+    executionPolicy: "auto"
+    slash_command: false
+    toolbar_command: false
+
+  - name: markdown-transform-to-divider
+    binding: markdown-transform-to-divider
+    target: "Schema/applyTo"
+    parameterMap: '{"schema":"divider","entity_id":"context.focusedBlockId"}'
+    executionPolicy: "auto"
+    slash_command: false
+    toolbar_command: false
+
+  # --- Toggle disclosure actions (MAG-726) ---
+  # Sent by the toggle-block EditSurface command_bindings.
+  # API gap note: No dedicated Toggle/expand or Toggle/collapse action exists in
+  # the current repertoire. ContentNode/update is the closest existing primitive
+  # for persisting the expanded state field. A follow-up card should introduce a
+  # ToggleBlock concept with expand/collapse actions; these bindings reference the
+  # anticipated future API and will resolve once that concept is available.
+  - name: toggle-disclosure-expand
+    binding: toggle-disclosure-expand
+    target: "ContentNode/update"
+    parameterMap: '{"node":"context.focusedBlockId","field":"expanded","value":true}'
+    executionPolicy: "auto"
+    slash_command: false
+    toolbar_command: true
+    section: "Toggle"
+    label: "Expand"
+    icon: "chevron-down"
+
+  - name: toggle-disclosure-collapse
+    binding: toggle-disclosure-collapse
+    target: "ContentNode/update"
+    parameterMap: '{"node":"context.focusedBlockId","field":"expanded","value":false}'
+    executionPolicy: "auto"
+    slash_command: false
+    toolbar_command: true
+    section: "Toggle"
+    label: "Collapse"
+    icon: "chevron-right"

@@ -1,0 +1,265 @@
+@version(1)
+widget toggle-block {
+
+  purpose {
+    Collapsible disclosure block for the Clef block editor. A triggerButton
+    shows an expand/collapse indicator alongside a summary line; activating
+    it reveals or hides the childContainer holding nested child blocks. The
+    FSM has two parallel dimensions: a disclosure machine (collapsed /
+    expanded) and an edit machine (idle / focused / editing-summary). The
+    disclosure machine is toggled by Enter or Space on the trigger, expanded
+    by ArrowRight, and collapsed by ArrowLeft. The triggerButton carries
+    aria-expanded reflecting the disclosure state; childContainer carries
+    aria-hidden mirroring collapsed state so screen readers skip hidden
+    children. An InputRule shortcut for converting a block to a toggle is
+    not applicable via the typing pattern used by quote/divider, so the
+    widget is registered without a markdown input rule.
+  }
+
+  anatomy {
+    root:           container    { Outer wrapper; carries data-disclosure, data-edit, data-block-id for CSS and test selectors }
+    triggerButton:  action       { Button that toggles collapsed/expanded; carries aria-expanded and aria-controls }
+    summary:        interactive  { Contenteditable inline summary text displayed next to the trigger icon }
+    childContainer: container    { Hidden or visible region holding nested child blocks }
+  }
+
+  states {
+    disclosure {
+      collapsed [initial] {
+        on EXPAND  -> expanded;
+        on TOGGLE  -> expanded;
+      }
+      expanded {
+        on COLLAPSE -> collapsed;
+        on TOGGLE   -> collapsed;
+        entry [revealChildren];
+        exit  [hideChildren];
+      }
+    }
+
+    edit [parallel] {
+      idle [initial] {
+        on FOCUS_SUMMARY -> focused;
+      }
+      focused {
+        on INPUT_SUMMARY  -> editing-summary;
+        on BLUR_SUMMARY   -> idle;
+        on ESCAPE         -> idle;
+      }
+      editing-summary {
+        on BLUR_SUMMARY   -> idle;
+        on ESCAPE         -> focused;
+        entry [markDirty];
+        exit  [flushSummary];
+      }
+    }
+  }
+
+  accessibility {
+    role: group;
+    keyboard {
+      Enter      -> TOGGLE;
+      Space      -> TOGGLE;
+      ArrowRight -> EXPAND;
+      ArrowLeft  -> COLLAPSE;
+      Escape     -> ESCAPE;
+    }
+    focus {
+      trap: false;
+      initial: triggerButton;
+      roving: false;
+      returnOnClose: false;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: "toggle block";
+        aria-roledescription: "disclosure block";
+      };
+      triggerButton -> {
+        role: "button";
+        aria-expanded: if state.disclosure == "expanded" then "true" else "false";
+        aria-controls: childContainer;
+        aria-label: if ?summary != "" then ?summary else "toggle section";
+      };
+      summary -> {
+        role: "textbox";
+        aria-multiline: "false";
+        aria-label: "toggle summary";
+        contenteditable: if state.edit == "editing-summary" then "true" else "false";
+      };
+      childContainer -> {
+        role: "group";
+        aria-hidden: if state.disclosure == "collapsed" then "true" else "false";
+        aria-label: "toggle content";
+      };
+    }
+  }
+
+  props {
+    blockId:  String = ""
+    summary:  String = ""
+    expanded: Bool   = false
+    focused:  Bool   = false
+  }
+
+  connect {
+    root -> {
+      data-part:        "root";
+      data-disclosure:  state.disclosure;
+      data-edit:        state.edit;
+      data-block-id:    ?blockId;
+      data-focused:     if ?focused then "true" else "false";
+    }
+
+    triggerButton -> {
+      data-part:     "trigger-button";
+      aria-expanded: if state.disclosure == "expanded" then "true" else "false";
+      aria-controls: "child-container";
+      onClick:       send(TOGGLE);
+      onKeyDown-Enter:      send(TOGGLE);
+      onKeyDown-Space:      send(TOGGLE);
+      onKeyDown-ArrowRight: send(EXPAND);
+      onKeyDown-ArrowLeft:  send(COLLAPSE);
+    }
+
+    summary -> {
+      data-part:       "summary";
+      contenteditable: if state.edit == "editing-summary" then "true" else "false";
+      text:            ?summary;
+      onFocus:         send(FOCUS_SUMMARY);
+      onBlur:          send(BLUR_SUMMARY);
+      onInput:         send(INPUT_SUMMARY);
+      onKeyDown-Escape: send(ESCAPE);
+    }
+
+    childContainer -> {
+      data-part:  "child-container";
+      hidden:     if state.disclosure == "collapsed" then true else false;
+      aria-hidden: if state.disclosure == "collapsed" then "true" else "false";
+    }
+  }
+
+  affordance {
+    serves: block-editor-block;
+    specificity: 7;
+    when schema = "toggle";
+    bind {
+      blockId: nodeId;
+      summary: summaryText;
+      expanded: isExpanded;
+    }
+  }
+
+  invariant {
+    example "TOGGLE from collapsed transitions to expanded": {
+      after TOGGLE() -> ok
+      then state.disclosure = "expanded"
+    }
+
+    example "TOGGLE from expanded transitions to collapsed": {
+      after TOGGLE() -> ok
+      then state.disclosure = "collapsed"
+    }
+
+    example "EXPAND from collapsed transitions to expanded": {
+      after EXPAND() -> ok
+      then state.disclosure = "expanded"
+    }
+
+    example "COLLAPSE from expanded transitions to collapsed": {
+      after COLLAPSE() -> ok
+      then state.disclosure = "collapsed"
+    }
+
+    example "childContainer hidden when disclosure is collapsed": {
+      after render(expanded: false) -> ok
+      then childContainer.hidden = true
+    }
+
+    example "childContainer visible when disclosure is expanded": {
+      after EXPAND() -> ok
+      then childContainer.hidden = false
+    }
+
+    example "triggerButton aria-expanded false when collapsed": {
+      after render(expanded: false) -> ok
+      then triggerButton.ariaExpanded = "false"
+    }
+
+    example "triggerButton aria-expanded true when expanded": {
+      after EXPAND() -> ok
+      then triggerButton.ariaExpanded = "true"
+    }
+
+    example "FOCUS_SUMMARY transitions edit from idle to focused": {
+      after FOCUS_SUMMARY() -> ok
+      then state.edit = "focused"
+    }
+
+    example "INPUT_SUMMARY transitions edit from focused to editing-summary": {
+      after INPUT_SUMMARY() -> ok
+      then state.edit = "editing-summary"
+    }
+
+    example "BLUR_SUMMARY from editing-summary returns edit to idle": {
+      after BLUR_SUMMARY() -> ok
+      then state.edit = "idle"
+    }
+
+    example "summary contenteditable true only in editing-summary state": {
+      after INPUT_SUMMARY() -> ok
+      then summary.contenteditable = "true"
+    }
+
+    example "root data-disclosure reflects disclosure FSM": {
+      after EXPAND() -> ok
+      then root.dataDisclosure = "expanded"
+    }
+
+    always "root data-disclosure reflects disclosure FSM": {
+      root.dataDisclosure = state.disclosure
+    }
+
+    always "root data-edit reflects edit FSM": {
+      root.dataEdit = state.edit
+    }
+
+    never "childContainer aria-hidden false while collapsed": {
+      state.disclosure = "collapsed" and childContainer.ariaHidden = "false"
+    }
+
+    never "triggerButton aria-expanded false while expanded": {
+      state.disclosure = "expanded" and triggerButton.ariaExpanded = "false"
+    }
+
+    never "childContainer visible while disclosure is collapsed": {
+      state.disclosure = "collapsed" and childContainer.hidden = false
+    }
+
+    never "summary contenteditable true outside editing-summary state": {
+      state.edit != "editing-summary" and summary.contenteditable = "true"
+    }
+
+    action triggerButton {
+      requires: state.disclosure = "collapsed"
+      ensures ok: state.disclosure = "expanded"
+    }
+
+    action triggerButton {
+      requires: state.disclosure = "expanded"
+      ensures ok: state.disclosure = "collapsed"
+    }
+
+    forall "all disclosure states are reachable from initial": {
+      given s in { "collapsed", "expanded" }
+      then s.reachable = true
+    }
+
+    forall "all edit states are reachable from initial": {
+      given s in { "idle", "focused", "editing-summary" }
+      then s.reachable = true
+    }
+  }
+
+}

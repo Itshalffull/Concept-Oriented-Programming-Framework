@@ -1,0 +1,213 @@
+@version(1)
+widget quote-block {
+
+  purpose {
+    Block-level quotation unit for the Clef block editor. Renders a
+    blockquote region with a decorative border-start and muted italic body
+    text. The SurfaceContract lens slots bind border-start-color to
+    palette.accent.border and body foreground to palette.fg.muted with
+    italic style, so every theme can realise quote styling without touching
+    widget code. The FSM models three edit states: idle (unfocused),
+    focused (caret placed but no content change), and editing (content
+    actively being mutated). An optional citationRef prop displays
+    attribution text below the body. An InputRule shortcut (`> ` at the
+    start of a line) transforms the current block into a quote block without
+    requiring the slash menu.
+  }
+
+  anatomy {
+    root:        container    { Outer wrapper; carries data-state, data-block-id, and data-focused for CSS and test selectors }
+    borderStart: presentation { Left-border accent element; SurfaceContract binds its color to palette.accent.border }
+    body:        interactive  { Contenteditable text region; SurfaceContract binds foreground to palette.fg.muted and style to typography.style.italic }
+  }
+
+  states {
+    edit {
+      idle [initial] {
+        on FOCUS  -> focused;
+      }
+      focused {
+        on INPUT  -> editing;
+        on BLUR   -> idle;
+        on ESCAPE -> idle;
+      }
+      editing {
+        on BLUR   -> idle;
+        on ESCAPE -> focused;
+        entry [markDirty];
+        exit  [flushContent];
+      }
+    }
+  }
+
+  accessibility {
+    role: blockquote;
+    keyboard {
+      Escape -> ESCAPE;
+    }
+    focus {
+      trap: false;
+      initial: body;
+      roving: false;
+      returnOnClose: false;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: "quote block";
+        aria-roledescription: "blockquote";
+      };
+      borderStart -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      body -> {
+        role: "textbox";
+        aria-multiline: "true";
+        aria-label: if ?citationRef != "" then "quote attributed to {?citationRef}" else "quote text";
+        aria-readonly: "false";
+        contenteditable: if state.edit == "editing" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    blockId:     String        = ""
+    content:     String        = ""
+    focused:     Bool          = false
+    citationRef: option String
+  }
+
+  connect {
+    root -> {
+      data-part:     "root";
+      data-state:    state.edit;
+      data-block-id: ?blockId;
+      data-focused:  if ?focused then "true" else "false";
+    }
+
+    borderStart -> {
+      data-part: "border-start";
+    }
+
+    body -> {
+      data-part:       "body";
+      contenteditable: if state.edit == "editing" then "true" else "false";
+      data-block-id:   ?blockId;
+      text:            ?content;
+      onFocus:         send(FOCUS);
+      onBlur:          send(BLUR);
+      onInput:         send(INPUT);
+      onKeyDown-Escape: send(ESCAPE);
+    }
+  }
+
+  affordance {
+    serves: block-editor-block;
+    specificity: 7;
+    when schema = "quote";
+    bind {
+      blockId:     nodeId;
+      content:     textContent;
+      citationRef: citation;
+    }
+  }
+
+  invariant {
+    example "focus event transitions idle to focused": {
+      after FOCUS() -> ok
+      then state.edit = "focused"
+    }
+
+    example "input event in focused state transitions to editing": {
+      after INPUT() -> ok
+      then state.edit = "editing"
+    }
+
+    example "blur from editing returns to idle": {
+      after BLUR() -> ok
+      then state.edit = "idle"
+    }
+
+    example "escape from editing returns to focused": {
+      after ESCAPE() -> ok
+      then state.edit = "focused"
+    }
+
+    example "escape from focused returns to idle": {
+      after ESCAPE() -> ok
+      then state.edit = "idle"
+    }
+
+    example "root data-state reflects edit FSM in idle": {
+      after render(focused: false) -> ok
+      then root.dataState = "idle"
+    }
+
+    example "root data-focused true when focused prop is true": {
+      after render(focused: true) -> ok
+      then root.dataFocused = "true"
+    }
+
+    example "root data-block-id reflects blockId prop": {
+      after render(blockId: "q-1") -> ok
+      then root.dataBlockId = "q-1"
+    }
+
+    example "body contenteditable true only in editing state": {
+      after INPUT() -> ok
+      then body.contenteditable = "true"
+    }
+
+    example "body contenteditable false when idle": {
+      after render(focused: false) -> ok
+      then body.contenteditable = "false"
+    }
+
+    example "body text reflects content prop": {
+      after render(content: "To be or not to be") -> ok
+      then body.text = "To be or not to be"
+    }
+
+    example "body aria-label includes citationRef when set": {
+      after render(citationRef: "Shakespeare") -> ok
+      then body.ariaLabel = "quote attributed to Shakespeare"
+    }
+
+    always "root data-state reflects edit FSM": {
+      root.dataState = state.edit
+    }
+
+    always "borderStart is always present in DOM": {
+      borderStart.dataPart = "border-start"
+    }
+
+    always "body data-block-id equals blockId prop": {
+      body.dataBlockId = blockId
+    }
+
+    never "contenteditable true outside editing state": {
+      state.edit != "editing" and body.contenteditable = "true"
+    }
+
+    never "editing state entered while focused is false and no FOCUS event": {
+      state.edit = "editing" and body.focused = false
+    }
+
+    action body {
+      requires: state.edit = "idle"
+      ensures ok: state.edit = "focused"
+    }
+
+    action body {
+      requires: state.edit = "focused"
+      ensures ok: state.edit = "editing"
+    }
+
+    forall "all edit states are reachable from initial": {
+      given s in { "idle", "focused", "editing" }
+      then s.reachable = true
+    }
+  }
+
+}

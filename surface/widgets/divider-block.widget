@@ -1,0 +1,143 @@
+@version(1)
+widget divider-block {
+
+  purpose {
+    Non-editable, non-focusable horizontal rule block for the Clef block
+    editor. Renders a single decorative separator line whose visual style
+    (solid, dashed, or dotted) is driven by the style prop. The block
+    carries no interactive state beyond idle because there is no content to
+    edit. An InputRule shortcut (`---` at the start of a line) converts the
+    current block into a divider without requiring the slash menu. The root
+    carries data-state and data-style for CSS targeting; the line element is
+    aria-hidden so screen readers skip it.
+  }
+
+  anatomy {
+    root: container    { Outer wrapper; carries data-state and data-style for CSS and test selectors }
+    line: presentation { The visible horizontal rule; aria-hidden and purely decorative }
+  }
+
+  states {
+    edit {
+      idle [initial] {
+        on FOCUS -> focused;
+      }
+      focused {
+        on BLUR -> idle;
+      }
+    }
+  }
+
+  accessibility {
+    role: separator;
+    keyboard {
+      Escape -> BLUR;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      roving: false;
+      returnOnClose: false;
+    }
+    aria {
+      root -> {
+        role: "separator";
+        aria-label: "divider";
+        aria-orientation: "horizontal";
+      };
+      line -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    blockId: String = ""
+    style:   String = "solid"
+  }
+
+  connect {
+    root -> {
+      data-part:     "root";
+      data-state:    state.edit;
+      data-block-id: ?blockId;
+      data-style:    ?style;
+    }
+
+    line -> {
+      data-part:  "line";
+      data-style: ?style;
+    }
+  }
+
+  affordance {
+    serves: block-editor-block;
+    specificity: 7;
+    when schema = "divider";
+    bind {
+      blockId: nodeId;
+      style:   dividerStyle;
+    }
+  }
+
+  invariant {
+    example "root data-state is idle on initial render": {
+      after render(blockId: "d-1") -> ok
+      then root.dataState = "idle"
+    }
+
+    example "root data-style reflects style prop solid": {
+      after render(style: "solid") -> ok
+      then root.dataStyle = "solid"
+    }
+
+    example "root data-style reflects style prop dashed": {
+      after render(style: "dashed") -> ok
+      then root.dataStyle = "dashed"
+    }
+
+    example "root data-style reflects style prop dotted": {
+      after render(style: "dotted") -> ok
+      then root.dataStyle = "dotted"
+    }
+
+    example "line data-style mirrors root data-style": {
+      after render(style: "dashed") -> ok
+      then line.dataStyle = "dashed"
+    }
+
+    example "root data-block-id reflects blockId prop": {
+      after render(blockId: "div-42") -> ok
+      then root.dataBlockId = "div-42"
+    }
+
+    example "focus event transitions idle to focused": {
+      after FOCUS() -> ok
+      then state.edit = "focused"
+    }
+
+    example "blur from focused returns to idle": {
+      after BLUR() -> ok
+      then state.edit = "idle"
+    }
+
+    always "root data-state reflects edit FSM": {
+      root.dataState = state.edit
+    }
+
+    always "line data-style equals style prop": {
+      line.dataStyle = style
+    }
+
+    never "line has aria role other than presentation": {
+      line.role != "presentation"
+    }
+
+    forall "all three style values bind correctly on line": {
+      given s in { "solid", "dashed", "dotted" }
+      then line.dataStyle = s
+    }
+  }
+
+}
