@@ -110,6 +110,49 @@ concept ContentNode [N] {
       fixture change_to_document { node: $create_page_node.node, type: "document" } after create_page_node
       fixture change_type_missing { node: "nonexistent", type: "page" } -> error
     }
+
+    action clone(source: String, newId: String, includeChildren: Bool) {
+      -> ok(node: N) {
+        Copy the source node's type, content, metadata, and property annotations to newId.
+        If includeChildren is true, recursively clone all Outline children using
+        deterministic child ids derived from (source-child-id, newId); each child
+        gets its own cloned record. Reversal: delete the cloned node (and children if deep).
+      }
+      -> source_not_found(message: String) {
+        No ContentNode exists with the given source id. No writes are performed.
+      }
+      -> duplicate_target_id(message: String) {
+        A ContentNode with newId already exists. No writes are performed.
+      }
+      -> error(message: String) {
+        The source or newId parameter is empty, or an unexpected storage error occurred.
+      }
+
+      fixture clone_with_children_ok { source: $create_page_node.node, newId: "node-clone-deep", includeChildren: true } after create_page_node
+      fixture clone_shallow_ok { source: $create_page_node.node, newId: "node-clone-shallow", includeChildren: false } after create_page_node
+      fixture clone_source_missing { source: "does-not-exist", newId: "node-new", includeChildren: false } -> source_not_found
+      fixture clone_duplicate_target { source: $create_page_node.node, newId: $create_page_node.node, includeChildren: false } after create_page_node -> duplicate_target_id
+    }
+  }
+
+  example "clone-then-get": {
+
+    after create(node: "src-1", type: "page", content: "Original", createdBy: "user1") -> ok(node: "src-1")
+
+        after clone(source: "src-1", newId: "dst-1", includeChildren: false) -> ok(node: "dst-1")
+
+        then get(node: "dst-1") -> ok(node: "dst-1", type: "page", content: "Original", metadata: "")
+
+  }
+
+  example "clone-then-delete-reversal": {
+
+    after create(node: "src-2", type: "page", content: "Reversible", createdBy: "user1") -> ok(node: "src-2")
+
+        after clone(source: "src-2", newId: "dst-2", includeChildren: false) -> ok(node: "dst-2")
+
+        then delete(node: "dst-2") -> ok(node: "dst-2")
+
   }
 
   example "create-then-get": {

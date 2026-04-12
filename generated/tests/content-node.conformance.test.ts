@@ -534,6 +534,93 @@ describe('ContentNode functional handler', () => {
 
   });
 
+  describe('clone', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = contentNodeHandler.clone({ source: {"type":"ref","fixture":"create_page_node","field":"node"}, newId: "node-clone-deep", includeChildren: "true" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = contentNodeHandler.clone({ source: {"type":"ref","fixture":"create_page_node","field":"node"}, newId: "node-clone-deep", includeChildren: "true" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = contentNodeHandler.clone({ source: {"type":"ref","fixture":"create_page_node","field":"node"}, newId: "node-clone-deep", includeChildren: "true" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = contentNodeHandler.clone({ source: {"type":"ref","fixture":"create_page_node","field":"node"}, newId: "node-clone-deep", includeChildren: "true" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = contentNodeHandler.clone({ source: {"type":"ref","fixture":"create_page_node","field":"node"}, newId: "node-clone-deep", includeChildren: "true" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof contentNodeHandler.clone !== 'function') return;
+      const result = await interpret(contentNodeHandler.clone({ source: {"type":"ref","fixture":"create_page_node","field":"node"}, newId: "node-clone-deep", includeChildren: "true" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "clone_with_children_ok" -> ok', async () => {
+      if (typeof contentNodeHandler.clone !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_page_node = await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
+      const result = await interpret(contentNodeHandler.clone({ source: afterResult_create_page_node?.output?.["node"], newId: "node-clone-deep", includeChildren: "true" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "clone_shallow_ok" -> ok', async () => {
+      if (typeof contentNodeHandler.clone !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_page_node = await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
+      const result = await interpret(contentNodeHandler.clone({ source: afterResult_create_page_node?.output?.["node"], newId: "node-clone-shallow", includeChildren: "false" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "clone_source_missing" -> source_not_found', async () => {
+      if (typeof contentNodeHandler.clone !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contentNodeHandler.clone({ source: "does-not-exist", newId: "node-new", includeChildren: "false" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('source_not_found'));
+    });
+
+    it('fixture "clone_duplicate_target" -> duplicate_target_id', async () => {
+      if (typeof contentNodeHandler.clone !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_page_node = await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
+      const result = await interpret(contentNodeHandler.clone({ source: afterResult_create_page_node?.output?.["node"], newId: afterResult_create_page_node?.output?.["node"], includeChildren: "false" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('duplicate_target_id'));
+    });
+
+  });
+
   describe('register()', () => {
     it('declares concept name', async () => {
       if (typeof contentNodeHandler.register !== 'function') return;
@@ -551,6 +638,14 @@ describe('ContentNode functional handler', () => {
   });
 
   describe('invariant examples', () => {
+    it("clone-then-get", async () => {
+      const storage = createInMemoryStorage();
+    });
+
+    it("clone-then-delete-reversal", async () => {
+      const storage = createInMemoryStorage();
+    });
+
     it("create-then-get", async () => {
       const storage = createInMemoryStorage();
       const createResult0 = await interpret(contentNodeHandler.create({ node: "test-x", type: "page", content: "Hello", createdBy: "user1" }), storage);
@@ -586,6 +681,7 @@ describe('ContentNode functional handler', () => {
               fc.record({ action: fc.constant('setMetadata'), input: fc.record({ node: fc.string(), metadata: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('listBySchema'), input: fc.record({ schema: fc.string({ minLength: 1, maxLength: 50 }), limit: fc.string(), offset: fc.string() }) }),
               fc.record({ action: fc.constant('changeType'), input: fc.record({ node: fc.string(), type: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('clone'), input: fc.record({ source: fc.string({ minLength: 1, maxLength: 50 }), newId: fc.string({ minLength: 1, maxLength: 50 }), includeChildren: fc.boolean() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -622,6 +718,7 @@ describe('ContentNode functional handler', () => {
               fc.record({ action: fc.constant('setMetadata'), input: fc.record({ node: fc.string(), metadata: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('listBySchema'), input: fc.record({ schema: fc.string({ minLength: 1, maxLength: 50 }), limit: fc.string(), offset: fc.string() }) }),
               fc.record({ action: fc.constant('changeType'), input: fc.record({ node: fc.string(), type: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('clone'), input: fc.record({ source: fc.string({ minLength: 1, maxLength: 50 }), newId: fc.string({ minLength: 1, maxLength: 50 }), includeChildren: fc.boolean() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

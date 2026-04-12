@@ -6,7 +6,7 @@
 // concept), not from a "type" field. ContentNode is a universal entity pool.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, del, branch, complete, completeFrom, mapBindings,
+  createProgram, get as spGet, find, put, del, branch, complete, completeFrom, mapBindings, traverse,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -267,6 +267,123 @@ const _contentNodeHandler: FunctionalConceptHandler = {
       return JSON.stringify(results);
     }, 'enrichedItems');
     return completeFrom(p, 'ok', (bindings) => ({ items: bindings.enrichedItems as string })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
+  clone(input: Record<string, unknown>) {
+    const source = (input.source as string | undefined) ?? '';
+    const newId = (input.newId as string | undefined) ?? '';
+    const includeChildren = Boolean(input.includeChildren);
+
+    if (!source || (typeof source === 'string' && source.trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'source is required' }) as StorageProgram<Result>;
+    }
+    if (!newId || (typeof newId === 'string' && newId.trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'newId is required' }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    // 1. Read source node
+    p = spGet(p, 'node', source, '_sourceRecord');
+    // 2. Check source exists
+    p = branch(p, '_sourceRecord',
+      // source exists — continue
+      (b) => {
+        // 3. Check target doesn't exist
+        let b2 = spGet(b, 'node', newId, '_targetRecord');
+        b2 = branch(b2, '_targetRecord',
+          // target already exists — duplicate_target_id
+          (dup) => complete(dup, 'duplicate_target_id', { message: `A node with id '${newId}' already exists` }),
+          // target does not exist — write clone
+          (fresh) => {
+            // Write the top-level clone
+            let w = mapBindings(fresh, (bindings) => {
+              const srcRec = bindings._sourceRecord as Record<string, unknown>;
+              const now = new Date().toISOString();
+              return {
+                node: newId,
+                type: srcRec.type ?? '',
+                content: srcRec.content ?? '',
+                metadata: srcRec.metadata ?? '',
+                createdBy: srcRec.createdBy ?? 'system',
+                createdAt: now,
+                updatedAt: now,
+              };
+            }, '_cloneRecord');
+
+            let w2 = mapBindings(w, (bindings) => bindings._cloneRecord as Record<string, unknown>, '_cloneData');
+            // Use putFrom to write clone record (key = newId, value from _cloneRecord binding)
+            w2 = mapBindings(w2, (b) => newId, '_newIdBound');
+            // Write clone by putting directly with a static value derivation through bindings
+            // We derive the clone payload from bindings using a composed put approach
+            let writeP = createProgram();
+            // We embed the write by going through a mapBindings + put chain
+            let merged = w2;
+            // Instead of complex putFrom, use a simpler traversal of a single-element list
+            // This gives us a binding-derived put without putFrom's limitations
+            merged = mapBindings(merged, () => [newId], '_singletonIds');
+            merged = traverse(merged, '_singletonIds', '_cloneId', (_item, bindings) => {
+              const cloneData = bindings._cloneRecord as Record<string, unknown>;
+              let sub = createProgram();
+              sub = put(sub, 'node', newId, {
+                node: newId,
+                type: cloneData?.type ?? '',
+                content: cloneData?.content ?? '',
+                metadata: cloneData?.metadata ?? '',
+                createdBy: cloneData?.createdBy ?? 'system',
+                createdAt: cloneData?.createdAt ?? new Date().toISOString(),
+                updatedAt: cloneData?.updatedAt ?? new Date().toISOString(),
+              });
+              return complete(sub, 'written', {});
+            }, '_writeResults', {
+              writes: ['node'],
+              completionVariants: ['written'],
+            });
+
+            if (includeChildren) {
+              // 4. Find children (nodes whose id starts with source + ":")
+              merged = find(merged, 'node', {}, '_allNodes');
+              merged = mapBindings(merged, (bindings) => {
+                const all = (bindings._allNodes as Array<Record<string, unknown>>) || [];
+                return all.filter(n => {
+                  const nid = n.node as string;
+                  return typeof nid === 'string' && nid.startsWith(source + ':');
+                });
+              }, '_children');
+
+              // 5. Traverse children and clone each with deterministic ids
+              merged = traverse(merged, '_children', '_child', (childItem, bindings) => {
+                const child = childItem as Record<string, unknown>;
+                const childId = child.node as string;
+                // Deterministic child clone id: replace source prefix with newId
+                const childCloneId = newId + ':' + childId.slice(source.length + 1);
+                const now = new Date().toISOString();
+                let sub = createProgram();
+                sub = put(sub, 'node', childCloneId, {
+                  node: childCloneId,
+                  type: child.type ?? '',
+                  content: child.content ?? '',
+                  metadata: child.metadata ?? '',
+                  createdBy: child.createdBy ?? 'system',
+                  createdAt: now,
+                  updatedAt: now,
+                });
+                return complete(sub, 'child_cloned', { childId: childCloneId });
+              }, '_childResults', {
+                writes: ['node'],
+                completionVariants: ['child_cloned'],
+              });
+            }
+
+            return complete(merged, 'ok', { node: newId });
+          },
+        );
+        return b2;
+      },
+      // source does not exist
+      (b) => complete(b, 'source_not_found', { message: `No node found with id '${source}'` }),
+    );
+
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   changeType(input: Record<string, unknown>) {
