@@ -96,8 +96,10 @@ export const DisplayAsPicker: React.FC<DisplayAsPickerProps> = ({
     : currentModeName;
 
   return (
-    <div ref={ref} data-part="root" data-variant={variant} style={{ position: 'relative', display: 'inline-block' }} onKeyDown={handleKeyDown}>
+    <div ref={ref} data-surface="floating-anchor" data-part="root" data-variant={variant} onKeyDown={handleKeyDown}>
       <button
+        data-surface="floating-trigger"
+        data-layout={variant === 'inline' ? 'inline' : 'block'}
         data-part="trigger"
         data-size={sizeClass}
         data-variant="outlined"
@@ -106,44 +108,26 @@ export const DisplayAsPicker: React.FC<DisplayAsPickerProps> = ({
         aria-expanded={open}
         aria-label={`Display as: ${currentModeName}`}
         onClick={() => setOpen(!open)}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 'var(--spacing-xs, 4px)',
-          fontSize: variant === 'inline' ? '0.75rem' : undefined,
-        }}
       >
         {triggerLabel}
-        <span style={{ fontSize: '0.6em' }}>{open ? '\u25B2' : '\u25BC'}</span>
+        <span data-part="trigger-caret">{open ? '\u25B2' : '\u25BC'}</span>
       </button>
 
       {open && (
         <div
+          data-surface="floating-menu"
           data-part="dropdown"
           role="listbox"
           aria-label="Display mode options"
-          style={{
-            position: 'absolute',
-            top: '100%',
-            left: 0,
-            zIndex: 100,
-            minWidth: '180px',
-            background: 'var(--palette-surface, #fff)',
-            border: '1px solid var(--palette-outline-variant, #ccc)',
-            borderRadius: 'var(--radius-md, 8px)',
-            boxShadow: 'var(--elevation-2, 0 2px 8px rgba(0,0,0,0.15))',
-            padding: 'var(--spacing-xs, 4px) 0',
-            marginTop: '4px',
-          }}
         >
           {loading && (
-            <div style={{ padding: 'var(--spacing-sm, 8px)', color: 'var(--palette-on-surface-variant, #666)' }}>
+            <div data-part="empty">
               Loading...
             </div>
           )}
 
           {!loading && modes.length === 0 && (
-            <div style={{ padding: 'var(--spacing-sm, 8px)', color: 'var(--palette-on-surface-variant, #666)' }}>
+            <div data-part="empty">
               No display modes configured
             </div>
           )}
@@ -152,15 +136,7 @@ export const DisplayAsPicker: React.FC<DisplayAsPickerProps> = ({
             <div key={schema} data-part="schema-group">
               {schemaKeys.length > 1 && (
                 <div
-                  data-part="schema-label"
-                  style={{
-                    padding: 'var(--spacing-xs, 4px) var(--spacing-sm, 8px)',
-                    fontSize: '0.7rem',
-                    fontWeight: 600,
-                    color: 'var(--palette-on-surface-variant, #888)',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                  }}
+                  data-part="menu-label"
                 >
                   {schema}
                 </div>
@@ -168,7 +144,8 @@ export const DisplayAsPicker: React.FC<DisplayAsPickerProps> = ({
               {grouped[schema].map(mode => (
                 <div
                   key={mode.mode_id}
-                  data-part="mode-item"
+                  data-part="menu-item"
+                  data-selected={mode.mode_id === currentMode ? 'true' : 'false'}
                   role="option"
                   aria-selected={mode.mode_id === currentMode}
                   tabIndex={0}
@@ -179,25 +156,14 @@ export const DisplayAsPicker: React.FC<DisplayAsPickerProps> = ({
                       handleSelect(mode.mode_id);
                     }
                   }}
-                  style={{
-                    padding: 'var(--spacing-xs, 4px) var(--spacing-sm, 8px)',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 'var(--spacing-xs, 4px)',
-                    background: mode.mode_id === currentMode ? 'var(--palette-secondary-container, #e8eaf6)' : 'transparent',
-                    fontWeight: mode.mode_id === currentMode ? 600 : 400,
-                  }}
                 >
                   <span>{mode.name}</span>
-                  {mode.layout && (
-                    <span style={{ fontSize: '0.65rem', color: 'var(--palette-on-surface-variant, #888)', marginLeft: 'auto' }}>
-                      layout
-                    </span>
-                  )}
-                  {mode.component_mapping && (
-                    <span style={{ fontSize: '0.65rem', color: 'var(--palette-on-surface-variant, #888)', marginLeft: 'auto' }}>
-                      mapping
+                  {(mode.layout || mode.component_mapping) && (
+                    <span data-part="menu-item-meta">
+                      {[
+                        mode.layout ? 'layout' : null,
+                        mode.component_mapping ? 'mapping' : null,
+                      ].filter(Boolean).join(' · ')}
                     </span>
                   )}
                 </div>

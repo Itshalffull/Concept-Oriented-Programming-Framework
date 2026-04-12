@@ -24,54 +24,6 @@ interface FieldsPopoverProps {
   anchorRef?: React.RefObject<HTMLElement | null>;
 }
 
-const panelStyle: React.CSSProperties = {
-  position: 'absolute',
-  zIndex: 1000,
-  background: 'var(--palette-surface)',
-  border: '1px solid var(--palette-outline)',
-  borderRadius: 'var(--radius-md)',
-  boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
-  padding: 'var(--spacing-md)',
-  minWidth: 240,
-  maxWidth: 320,
-};
-
-const overlayStyle: React.CSSProperties = {
-  position: 'fixed',
-  inset: 0,
-  zIndex: 999,
-};
-
-const searchStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '6px 8px',
-  borderRadius: 'var(--radius-sm)',
-  border: '1px solid var(--palette-outline)',
-  background: 'var(--palette-surface-variant)',
-  color: 'var(--palette-on-surface)',
-  fontSize: 'var(--typography-body-sm-size)',
-  fontFamily: 'inherit',
-  boxSizing: 'border-box',
-  marginBottom: 'var(--spacing-xs)',
-};
-
-const fieldRowStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 'var(--spacing-xs)',
-  padding: '3px 0',
-};
-
-const smallBtnStyle: React.CSSProperties = {
-  background: 'none',
-  border: 'none',
-  cursor: 'pointer',
-  color: 'var(--palette-on-surface-variant)',
-  fontSize: 11,
-  padding: '0 2px',
-  fontFamily: 'inherit',
-};
-
 export const FieldsPopover: React.FC<FieldsPopoverProps> = ({
   open,
   onClose,
@@ -131,84 +83,66 @@ export const FieldsPopover: React.FC<FieldsPopoverProps> = ({
 
   return (
     <>
-      <div style={overlayStyle} onClick={onClose} aria-hidden="true" />
+      <div data-surface="floating-overlay" onClick={onClose} aria-hidden="true" />
       <div
         ref={panelRef}
+        data-surface="floating-panel"
         data-part="root"
         data-state="open"
         role="dialog"
         aria-label="Field visibility"
-        style={{ ...panelStyle, ...panelPos }}
+        aria-modal="true"
+        style={{ ...panelPos, minWidth: 240, maxWidth: 320 }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--spacing-xs)' }}>
-          <span style={{ fontSize: 'var(--typography-label-md-size)', fontWeight: 'var(--typography-label-md-weight)' as React.CSSProperties['fontWeight'] }}>
+        <div data-part="header">
+          <span data-part="title">
             Fields
           </span>
           <button
             type="button"
             onClick={onClose}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--palette-on-surface-variant)', fontSize: 18 }}
+            data-surface="floating-icon-button"
+            data-part="close-button"
+            data-variant="quiet"
+            aria-label="Close fields panel"
           >
             ×
           </button>
         </div>
 
-        {/* Bulk actions */}
-        <div style={{ display: 'flex', gap: 'var(--spacing-xs)', marginBottom: 'var(--spacing-xs)' }}>
-          <button type="button" onClick={showAll} style={{
-            fontSize: 'var(--typography-body-sm-size)', padding: '3px 8px',
-            border: '1px solid var(--palette-outline)', borderRadius: 'var(--radius-sm)',
-            background: 'none', cursor: 'pointer', fontFamily: 'inherit',
-            color: 'var(--palette-on-surface)',
-          }}>
+        <div data-part="actions">
+          <button type="button" onClick={showAll} data-surface="floating-action-button" data-variant="quiet">
             Show all
           </button>
-          <button type="button" onClick={hideAll} style={{
-            fontSize: 'var(--typography-body-sm-size)', padding: '3px 8px',
-            border: '1px solid var(--palette-outline)', borderRadius: 'var(--radius-sm)',
-            background: 'none', cursor: 'pointer', fontFamily: 'inherit',
-            color: 'var(--palette-on-surface)',
-          }}>
+          <button type="button" onClick={hideAll} data-surface="floating-action-button" data-variant="quiet">
             Hide all
           </button>
         </div>
 
-        {/* Search */}
         <input
           type="text"
           data-part="search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search fields…"
-          style={searchStyle}
         />
 
-        {/* Field list */}
-        <div
-          data-part="field-list"
-          style={{ maxHeight: 220, overflowY: 'auto' }}
-        >
+        <div data-part="list">
           {filtered.map((field) => {
             const index = fields.findIndex((f) => f.key === field.key);
             return (
-              <div key={field.key} data-part="field-row" style={fieldRowStyle}>
+              <div key={field.key} data-part="row">
                 <input
                   type="checkbox"
                   id={`field-vis-${field.key}`}
                   checked={field.visible}
                   onChange={() => toggleField(field.key)}
-                  style={{ cursor: 'pointer' }}
                 />
                 <label
                   htmlFor={`field-vis-${field.key}`}
-                  style={{
-                    flex: 1,
-                    fontSize: 'var(--typography-body-sm-size)',
-                    cursor: 'pointer',
-                    color: field.visible ? 'var(--palette-on-surface)' : 'var(--palette-on-surface-variant)',
-                  }}
+                  data-part="row-label"
+                  data-active={field.visible ? 'true' : 'false'}
                 >
                   {field.label ?? field.key}
                 </label>
@@ -216,7 +150,8 @@ export const FieldsPopover: React.FC<FieldsPopoverProps> = ({
                   type="button"
                   onClick={() => moveField(field.key, -1)}
                   disabled={index === 0}
-                  style={{ ...smallBtnStyle, opacity: index === 0 ? 0.3 : 1 }}
+                  data-surface="floating-icon-button"
+                  data-part="row-action"
                   aria-label="Move field up"
                 >
                   ▲
@@ -225,7 +160,8 @@ export const FieldsPopover: React.FC<FieldsPopoverProps> = ({
                   type="button"
                   onClick={() => moveField(field.key, 1)}
                   disabled={index === fields.length - 1}
-                  style={{ ...smallBtnStyle, opacity: index === fields.length - 1 ? 0.3 : 1 }}
+                  data-surface="floating-icon-button"
+                  data-part="row-action"
                   aria-label="Move field down"
                 >
                   ▼
@@ -234,7 +170,7 @@ export const FieldsPopover: React.FC<FieldsPopoverProps> = ({
             );
           })}
           {filtered.length === 0 && (
-            <p style={{ color: 'var(--palette-on-surface-variant)', fontSize: 'var(--typography-body-sm-size)', margin: 0 }}>
+            <p data-part="empty">
               No matching fields
             </p>
           )}

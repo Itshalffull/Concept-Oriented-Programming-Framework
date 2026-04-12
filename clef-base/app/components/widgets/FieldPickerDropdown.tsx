@@ -4,9 +4,9 @@
  * FieldPickerDropdown — searchable dropdown listing available fields.
  * Per surface/widgets/field-picker-dropdown.widget.
  *
- * Renders a select element that lists available fields. When fields are grouped
- * by type (groupBy="type"), each type group becomes an <optgroup>. Supports
- * free-text search to narrow the field list.
+ * Renders a token-driven menu that lists available fields. When fields are
+ * grouped by type (groupBy="type"), each type group becomes a labeled section.
+ * Supports free-text search to narrow the field list.
  */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
@@ -24,72 +24,6 @@ interface FieldPickerDropdownProps {
   groupBy?: 'type' | 'none';
   placeholder?: string;
 }
-
-const containerStyle: React.CSSProperties = {
-  position: 'relative',
-  minWidth: 120,
-};
-
-const buttonStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '4px 8px',
-  borderRadius: 'var(--radius-sm)',
-  border: '1px solid var(--palette-outline)',
-  background: 'var(--palette-surface-variant)',
-  color: 'var(--palette-on-surface)',
-  fontSize: 'var(--typography-body-sm-size)',
-  fontFamily: 'inherit',
-  cursor: 'pointer',
-  textAlign: 'left',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  gap: 4,
-};
-
-const dropdownStyle: React.CSSProperties = {
-  position: 'absolute',
-  top: 'calc(100% + 2px)',
-  left: 0,
-  minWidth: '100%',
-  maxHeight: 200,
-  overflowY: 'auto',
-  background: 'var(--palette-surface)',
-  border: '1px solid var(--palette-outline)',
-  borderRadius: 'var(--radius-sm)',
-  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-  zIndex: 1000,
-};
-
-const searchStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '6px 8px',
-  border: 'none',
-  borderBottom: '1px solid var(--palette-outline-variant)',
-  background: 'var(--palette-surface)',
-  color: 'var(--palette-on-surface)',
-  fontSize: 'var(--typography-body-sm-size)',
-  fontFamily: 'inherit',
-  outline: 'none',
-  boxSizing: 'border-box',
-};
-
-const optionStyle = (active: boolean): React.CSSProperties => ({
-  padding: '4px 10px',
-  cursor: 'pointer',
-  fontSize: 'var(--typography-body-sm-size)',
-  background: active ? 'var(--palette-primary-container)' : 'transparent',
-  color: active ? 'var(--palette-on-primary-container)' : 'var(--palette-on-surface)',
-});
-
-const groupLabelStyle: React.CSSProperties = {
-  padding: '4px 8px 2px',
-  fontSize: 'var(--typography-label-sm-size)',
-  color: 'var(--palette-on-surface-variant)',
-  fontWeight: 600,
-  textTransform: 'uppercase',
-  letterSpacing: '0.04em',
-};
 
 export const FieldPickerDropdown: React.FC<FieldPickerDropdownProps> = ({
   fields,
@@ -154,19 +88,20 @@ export const FieldPickerDropdown: React.FC<FieldPickerDropdownProps> = ({
   }, [open]);
 
   return (
-    <div ref={containerRef} data-part="root" style={containerStyle}>
+    <div ref={containerRef} data-surface="floating-anchor" data-part="root" style={{ minWidth: 120 }}>
       <button
         type="button"
+        data-surface="floating-trigger"
+        data-layout="block"
         data-part="trigger"
         onClick={() => setOpen((v) => !v)}
-        style={buttonStyle}
       >
         <span>{displayLabel}</span>
-        <span style={{ fontSize: 10, color: 'var(--palette-on-surface-variant)' }}>▾</span>
+        <span data-part="trigger-caret">▾</span>
       </button>
 
       {open && (
-        <div data-part="dropdown" style={dropdownStyle}>
+        <div data-surface="floating-menu" data-part="dropdown" role="listbox" aria-label="Available fields" style={{ minWidth: '100%' }}>
           <input
             ref={searchRef}
             type="text"
@@ -174,20 +109,20 @@ export const FieldPickerDropdown: React.FC<FieldPickerDropdownProps> = ({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search fields…"
-            style={searchStyle}
           />
           {grouped.map(({ type, items }) => (
             <div key={type || '_all'}>
               {type && (
-                <div data-part="group-label" style={groupLabelStyle}>{type}</div>
+                <div data-part="menu-label">{type}</div>
               )}
               {items.map((f) => (
                 <div
                   key={f.key}
-                  data-part="option"
+                  data-part="menu-item"
                   data-selected={f.key === currentField ? 'true' : 'false'}
+                  role="option"
+                  aria-selected={f.key === currentField}
                   onClick={() => handleSelect(f)}
-                  style={optionStyle(f.key === currentField)}
                 >
                   {f.label ?? f.key}
                 </div>
@@ -195,7 +130,7 @@ export const FieldPickerDropdown: React.FC<FieldPickerDropdownProps> = ({
             </div>
           ))}
           {filtered.length === 0 && (
-            <div style={{ padding: '8px 10px', color: 'var(--palette-on-surface-variant)', fontSize: 'var(--typography-body-sm-size)' }}>
+            <div data-part="empty">
               No fields found
             </div>
           )}

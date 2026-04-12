@@ -26,37 +26,6 @@ interface GroupPopoverProps {
   anchorRef?: React.RefObject<HTMLElement | null>;
 }
 
-const panelStyle: React.CSSProperties = {
-  position: 'absolute',
-  zIndex: 1000,
-  background: 'var(--palette-surface)',
-  border: '1px solid var(--palette-outline)',
-  borderRadius: 'var(--radius-md)',
-  boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
-  padding: 'var(--spacing-md)',
-  minWidth: 280,
-};
-
-const overlayStyle: React.CSSProperties = {
-  position: 'fixed',
-  inset: 0,
-  zIndex: 999,
-};
-
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  fontSize: 'var(--typography-label-sm-size)',
-  color: 'var(--palette-on-surface-variant)',
-  marginBottom: 'var(--spacing-xs)',
-};
-
-const toggleRowStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 'var(--spacing-sm)',
-  marginTop: 'var(--spacing-sm)',
-};
-
 export const GroupPopover: React.FC<GroupPopoverProps> = ({
   open,
   onClose,
@@ -109,24 +78,27 @@ export const GroupPopover: React.FC<GroupPopoverProps> = ({
 
   return (
     <>
-      <div style={overlayStyle} onClick={onClose} aria-hidden="true" />
+      <div data-surface="floating-overlay" onClick={onClose} aria-hidden="true" />
       <div
         ref={panelRef}
+        data-surface="floating-panel"
         data-part="root"
         data-state="open"
         role="dialog"
         aria-label="Group configuration"
-        style={{ ...panelStyle, ...panelPos }}
+        aria-modal="true"
+        style={{ ...panelPos, minWidth: 280 }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--spacing-sm)' }}>
-          <span style={{ fontSize: 'var(--typography-label-md-size)', fontWeight: 'var(--typography-label-md-weight)' as React.CSSProperties['fontWeight'] }}>
+        <div data-part="header">
+          <span data-part="title">
             Group
           </span>
           <button
             type="button"
             onClick={onClose}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--palette-on-surface-variant)', fontSize: 18 }}
+            data-surface="floating-icon-button"
+            data-part="close-button"
             aria-label="Close group panel"
           >
             ×
@@ -134,7 +106,7 @@ export const GroupPopover: React.FC<GroupPopoverProps> = ({
         </div>
 
         <div>
-          <label style={labelStyle}>Group by field</label>
+          <label data-part="section-label">Group by field</label>
           <FieldPickerDropdown
             fields={fieldsWithNone}
             currentField={groupConfig?.field ?? ''}
@@ -144,7 +116,7 @@ export const GroupPopover: React.FC<GroupPopoverProps> = ({
 
         {groupConfig?.field && (
           <>
-            <div style={toggleRowStyle}>
+            <div data-part="toggle-row">
               <input
                 type="checkbox"
                 id="hide-empty-groups"
@@ -153,12 +125,12 @@ export const GroupPopover: React.FC<GroupPopoverProps> = ({
               />
               <label
                 htmlFor="hide-empty-groups"
-                style={{ fontSize: 'var(--typography-body-sm-size)', cursor: 'pointer' }}
+                data-part="row-label"
               >
                 Hide empty groups
               </label>
             </div>
-            <div style={toggleRowStyle}>
+            <div data-part="toggle-row">
               <input
                 type="checkbox"
                 id="collapse-groups"
@@ -167,7 +139,7 @@ export const GroupPopover: React.FC<GroupPopoverProps> = ({
               />
               <label
                 htmlFor="collapse-groups"
-                style={{ fontSize: 'var(--typography-body-sm-size)', cursor: 'pointer' }}
+                data-part="row-label"
               >
                 Collapse groups by default
               </label>
@@ -175,17 +147,8 @@ export const GroupPopover: React.FC<GroupPopoverProps> = ({
             <button
               type="button"
               onClick={handleClear}
-              style={{
-                marginTop: 'var(--spacing-sm)',
-                padding: '4px 10px',
-                background: 'none',
-                border: '1px solid var(--palette-outline)',
-                borderRadius: 'var(--radius-sm)',
-                color: 'var(--palette-on-surface-variant)',
-                fontSize: 'var(--typography-body-sm-size)',
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-              }}
+              data-surface="floating-action-button"
+              data-variant="quiet"
             >
               Clear grouping
             </button>
