@@ -1,0 +1,77 @@
+# ProcessSpec → Canvas projection syncs
+# When a process spec is created or updated, project its steps and edges onto
+# a dedicated Canvas so the FlowchartEditor graph pane reflects the spec state.
+
+sync ProcessSpecCreatesCanvas [eager]
+  purpose: "Provision a named Canvas for a new process spec so the FlowchartEditor has a dedicated graph pane to project steps and edges into."
+when {
+  ProcessSpec/create: [ name: ?name; steps: ?steps; edges: ?edges ]
+    => ok(spec: ?spec)
+}
+where {
+  bind("flow:" as ?prefix)
+  bind(?spec as ?canvasId)
+}
+then {
+  Canvas/addNode: [
+    canvas: ?canvasId;
+    node: ?spec;
+    x: 0;
+    y: 0 ]
+}
+
+sync ProcessSpecStepAddedToCanvas [eager]
+  purpose: "Project each step from a process spec update onto the Canvas as a positioned node so the FlowchartEditor graph pane stays in sync with the spec definition."
+when {
+  ProcessSpec/update: [ spec: ?spec; steps: ?steps; edges: ?edges ]
+    => ok(spec: ?spec; version: ?version)
+}
+where {
+  bind(?spec as ?canvasId)
+  bind(?spec as ?stepNode)
+}
+then {
+  Canvas/addNode: [
+    canvas: ?canvasId;
+    node: ?stepNode;
+    x: 0;
+    y: 0 ]
+}
+then {
+  ConnectorPort/addPort: [
+    owner: ?stepNode;
+    side: "top";
+    offset: 0.5;
+    direction: "in";
+    port_type: "default";
+    label: "in";
+    max_connections: 1 ]
+}
+then {
+  ConnectorPort/addPort: [
+    owner: ?stepNode;
+    side: "bottom";
+    offset: 0.5;
+    direction: "out";
+    port_type: "default";
+    label: "out";
+    max_connections: 10 ]
+}
+
+sync ProcessSpecEdgeAddedToCanvas [eager]
+  purpose: "Project routing edges from a process spec update onto the Canvas as connector anchors so the FlowchartEditor renders the directed flow between steps."
+when {
+  ProcessSpec/update: [ spec: ?spec; steps: ?steps; edges: ?edges ]
+    => ok(spec: ?spec; version: ?version)
+}
+where {
+  bind(?spec as ?canvasId)
+  bind(?spec as ?fromNode)
+  bind(?spec as ?toNode)
+}
+then {
+  ConstraintAnchor/setFlowDirection: [
+    canvas_id: ?canvasId;
+    item_ids: [ ?fromNode; ?toNode ];
+    direction: "top-to-bottom" ]
+}

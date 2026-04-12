@@ -1,0 +1,41 @@
+# Canvas → ProcessSpec write-back syncs
+# Edits made directly on a flow-builder Canvas (identified by "flow:" prefix
+# naming convention) are reflected back into the owning ProcessSpec.
+# moveNode is metadata-only and intentionally has no write-back here.
+
+sync CanvasConnectorCreatesEdge [eager]
+  purpose: "When a connector is added on a flow-builder Canvas, write the corresponding edge back to the ProcessSpec so the spec stays authoritative over routing."
+when {
+  Canvas/groupNodes: [ canvas: ?canvas; nodes: ?nodes; group: ?group ]
+    => ok()
+}
+where {
+  filter(?canvas = "flow:*")
+  bind(?canvas as ?spec)
+  bind(?nodes as ?steps)
+  bind(?group as ?edgeGroup)
+}
+then {
+  ProcessSpec/update: [
+    spec: ?spec;
+    steps: ?steps;
+    edges: ?edgeGroup ]
+}
+
+sync CanvasNodeRemovedRemovesStep [eager]
+  purpose: "When a node is removed from a flow-builder Canvas, remove the corresponding step from the ProcessSpec so the spec and graph stay consistent."
+when {
+  Canvas/removeItem: [ canvas: ?canvas; node: ?node ]
+    => ok()
+}
+where {
+  filter(?canvas = "flow:*")
+  bind(?canvas as ?spec)
+  bind(?node as ?step)
+}
+then {
+  ProcessSpec/update: [
+    spec: ?spec;
+    steps: ?step;
+    edges: "" ]
+}

@@ -1,0 +1,40 @@
+# Flow graph validation sync
+# Gates ProcessSpec/publish by running cycle detection via GraphAnalysis/analyze.
+# A cycle in the process graph means control flow can loop without a
+# terminating condition, which would cause ProcessRun to run indefinitely.
+
+sync FlowGraphValidateOnPublish [eager]
+  purpose: "Run cycle-detection analysis on a process spec's Canvas before allowing publish, so specs with infinite loops are rejected before any ProcessRun instances are created."
+when {
+  ProcessSpec/publish: [ spec: ?spec ]
+    => ok(spec: ?spec; version: ?version)
+}
+where {
+  bind(?spec as ?graphId)
+  GraphAnalysis/analyze: [
+    graph: ?graphId;
+    algorithm: "cycle-detection";
+    config: "{\"directed\":true}" ] => ok(result: ?result; category: ?category; payload: ?payload)
+  guard(?payload = "{\"matches\":[]}")
+}
+then {
+  ProcessSpec/get: [ spec: ?spec ]
+}
+
+sync FlowGraphCycleDetectedBlocksPublish [eager]
+  purpose: "When cycle detection finds a cycle in the process graph, surface the finding as a validation failure so the publish is blocked and the author can fix the loop."
+when {
+  ProcessSpec/publish: [ spec: ?spec ]
+    => ok(spec: ?spec; version: ?version)
+}
+where {
+  bind(?spec as ?graphId)
+  GraphAnalysis/analyze: [
+    graph: ?graphId;
+    algorithm: "cycle-detection";
+    config: "{\"directed\":true}" ] => ok(result: ?result; category: ?category; payload: ?payload)
+  not(guard(?payload = "{\"matches\":[]}"))
+}
+then {
+  ProcessSpec/deprecate: [ spec: ?spec ]
+}
