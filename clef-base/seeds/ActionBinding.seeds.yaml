@@ -257,3 +257,48 @@ entries:
     executionPolicy: "auto"
     slash_command: false
     toolbar_command: false
+
+  # --- Inline mark toggle actions (MAG-718) ---
+  # API gap note: No concept currently provides a dedicated "toggle inline mark
+  # on selection" action. InlineAnnotation/annotate is the closest primitive but
+  # targets change-tracking, not presentational marks. Outline has no wrapMark /
+  # toggleMark action. A future follow-up card should introduce an InlineMark
+  # concept (or extend Outline) with a toggleMark(selection, markKind) action;
+  # at that point these bindings' targets can be updated from the synthetic
+  # reference below to the real action.
+  #
+  # For now, the target references "InlineMark/toggleMark" as a placeholder
+  # matching the expected future API shape. The bindings are valid seed records
+  # and will resolve once that concept is available.
+  - name: bold-toggle
+    binding: bold-toggle
+    target: "InlineMark/toggleMark"
+    parameterMap: '{"markKind":"bold","selection":"context.selection"}'
+    executionPolicy: "auto"
+    toolbar_command: true
+    keyboard: "Ctrl+B"
+    section: "Format"
+    label: "Bold"
+    icon: "bold"
+
+  - name: italic-toggle
+    binding: italic-toggle
+    target: "InlineMark/toggleMark"
+    parameterMap: '{"markKind":"italic","selection":"context.selection"}'
+    executionPolicy: "auto"
+    toolbar_command: true
+    keyboard: "Ctrl+I"
+    section: "Format"
+    label: "Italic"
+    icon: "italic"
+
+  - name: code-toggle
+    binding: code-toggle
+    target: "InlineMark/toggleMark"
+    parameterMap: '{"markKind":"code","selection":"context.selection"}'
+    executionPolicy: "auto"
+    toolbar_command: true
+    keyboard: "Ctrl+E"
+    section: "Format"
+    label: "Code"
+    icon: "code"

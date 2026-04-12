@@ -1,0 +1,16 @@
+# Register the bold mark as a token-remap RenderTransform so that theme
+# switches automatically restyle bold spans without any widget changes.
+
+sync RegisterBoldMark [eager]
+  purpose: "Register a token-remap RenderTransform for bold marks so bold text respects the active theme's weight token automatically."
+when {
+  PluginRegistry/register: [ type: "render-transform-provider"; name: ?name ]
+    => ok(plugin: ?plugin)
+}
+then {
+  RenderTransform/register: [
+    name: "mark-bold";
+    kind: "token-remap";
+    spec: "{\"scope\":\"[data-mark=\\\"bold\\\"]\",\"mappings\":{\"typography.weight\":\"typography.weight.bold\"}}"
+  ]
+}

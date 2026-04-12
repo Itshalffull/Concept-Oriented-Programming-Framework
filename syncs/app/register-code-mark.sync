@@ -1,0 +1,16 @@
+# Register the code mark as a token-remap RenderTransform so that theme
+# switches automatically restyle inline code spans without any widget changes.
+
+sync RegisterCodeMark [eager]
+  purpose: "Register a token-remap RenderTransform for code marks so inline code respects the active theme's mono family, subtle background, and code radius tokens automatically."
+when {
+  PluginRegistry/register: [ type: "render-transform-provider"; name: ?name ]
+    => ok(plugin: ?plugin)
+}
+then {
+  RenderTransform/register: [
+    name: "mark-code";
+    kind: "token-remap";
+    spec: "{\"scope\":\"[data-mark=\\\"code\\\"]\",\"mappings\":{\"typography.family\":\"typography.family.mono\",\"palette.background\":\"palette.surface.subtle\",\"radius\":\"radius.code\"}}"
+  ]
+}

@@ -1,0 +1,16 @@
+# Register the italic mark as a token-remap RenderTransform so that theme
+# switches automatically restyle italic spans without any widget changes.
+
+sync RegisterItalicMark [eager]
+  purpose: "Register a token-remap RenderTransform for italic marks so italic text respects the active theme's style token automatically."
+when {
+  PluginRegistry/register: [ type: "render-transform-provider"; name: ?name ]
+    => ok(plugin: ?plugin)
+}
+then {
+  RenderTransform/register: [
+    name: "mark-italic";
+    kind: "token-remap";
+    spec: "{\"scope\":\"[data-mark=\\\"italic\\\"]\",\"mappings\":{\"typography.style\":\"typography.style.italic\"}}"
+  ]
+}
