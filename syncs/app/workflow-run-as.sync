@@ -1,0 +1,93 @@
+# Workflow run-as impersonation syncs — MAG-681, docs/plans/automation-ui-prd.md §5.2-11.
+#
+# Chains: ProcessRun/start => Authentication/authenticate => Authorization/checkPermission
+# => deny (ProcessRun/fail) or allow (pass-through).
+#
+# API Gap: ProcessRun has no attachContext or run-as action. There is no way to
+# associate a service-account principal with a ProcessRun record after creation —
+# ProcessRun tracks spec_ref, status, and input/output only. The allow branch
+# therefore uses ProcessRun/get_status as a pass-through placeholder. A
+# ProcessRun/attachContext action should be added to the ProcessRun concept so
+# the resolved service account principal can be recorded on the run record.
+
+# Step 1 — resolve service account identity from the run-as token in the input.
+sync WorkflowRunAsAuthenticate [eager]
+  purpose: "When a process run starts, authenticate the run-as service account token carried in the input bytes so the identity can be verified before any steps execute."
+when {
+  ProcessRun/start: [
+    spec_ref: ?spec_ref;
+    spec_version: ?spec_version;
+    input: ?run_as_token
+  ]
+    => ok(run: ?run; spec_ref: ?spec_ref)
+}
+then {
+  Authentication/authenticate: [ token: ?run_as_token ]
+}
+
+# Step 2 — check that the resolved service account holds impersonation permission.
+sync WorkflowRunAsCheckPermission [eager]
+  purpose: "After the run-as service account token is authenticated, verify the resolved principal holds the workflow:impersonate permission before allowing the run to proceed."
+when {
+  ProcessRun/start: [
+    spec_ref: ?spec_ref;
+    spec_version: ?spec_version;
+    input: ?run_as_token
+  ]
+    => ok(run: ?run; spec_ref: ?spec_ref)
+  Authentication/authenticate: [ token: ?run_as_token ]
+    => ok(user: ?service_account)
+}
+then {
+  Authorization/checkPermission: [
+    user: ?service_account;
+    permission: "workflow:impersonate"
+  ]
+}
+
+# Step 3a — impersonation denied: fail the run immediately.
+sync WorkflowRunAsDenied [eager]
+  purpose: "When the service account does not hold workflow:impersonate permission, fail the run immediately before any steps execute so the caller receives a structured denial."
+when {
+  ProcessRun/start: [
+    spec_ref: ?spec_ref;
+    input: ?run_as_token
+  ]
+    => ok(run: ?run; spec_ref: ?spec_ref)
+  Authentication/authenticate: [ token: ?run_as_token ]
+    => ok(user: ?service_account)
+  Authorization/checkPermission: [
+    user: ?service_account;
+    permission: "workflow:impersonate"
+  ]
+    => ok(granted: false)
+}
+then {
+  ProcessRun/fail: [
+    run: ?run;
+    error: "impersonation denied: caller lacks workflow:impersonate permission"
+  ]
+}
+
+# Step 3b — impersonation allowed: confirm and proceed.
+sync WorkflowRunAsAllowed [eager]
+  purpose: "When the service account holds workflow:impersonate permission, confirm the run is live. A ProcessRun/attachContext action should be added to ProcessRun to record the resolved principal; this sync will invoke it once available."
+when {
+  ProcessRun/start: [
+    spec_ref: ?spec_ref;
+    input: ?run_as_token
+  ]
+    => ok(run: ?run; spec_ref: ?spec_ref)
+  Authentication/authenticate: [ token: ?run_as_token ]
+    => ok(user: ?service_account)
+  Authorization/checkPermission: [
+    user: ?service_account;
+    permission: "workflow:impersonate"
+  ]
+    => ok(granted: true)
+}
+then {
+  // GAP: no ProcessRun/attachContext action exists. Confirm run status as
+  // a pass-through read until attachContext is added to the ProcessRun concept.
+  ProcessRun/get_status: [ run: ?run ]
+}
