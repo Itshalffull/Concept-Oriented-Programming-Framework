@@ -2,11 +2,11 @@
 widget automation-scope-browser {
 
   purpose {
-    Read-only browser that displays the active AutomationScope's allowed and
+    Read-only browser that displays the active AutomationScope allowed and
     denied action references so sync authors can know which actions are
     available before they write and validate a sync. Groups rules by category
     and distinguishes allowlist vs denylist mode with a prominent mode badge.
-    This component is purely informational — the full administrative editor
+    This component is purely informational. The full administrative editor
     for creating and modifying scope rules is a separate widget (MAG-704).
   }
 
@@ -72,7 +72,7 @@ widget automation-scope-browser {
   props {
     scopeId:  option String
     mode:     String = "allowlist"
-    rules:    list { action_pattern: String, category: String } = []
+    rules:    list ScopeRule = []
   }
 
   connect {
@@ -99,16 +99,24 @@ widget automation-scope-browser {
   }
 
   invariant {
-    always "mode badge reflects prop": {
-      modeBadge.data-mode = ?mode
+    always "root data-state reflects lifecycle machine": {
+      root.data-state = state.lifecycle
     }
 
     never "rule list visible while loading": {
       state.lifecycle = "loading" and ruleList.hidden = false
     }
 
-    always "empty state shown when rules empty in ready state": {
-      if state.lifecycle = "ready" and ?rules.length = 0 then emptyState.hidden = false
+    never "loading indicator visible in ready state": {
+      state.lifecycle = "ready" and loadingState.hidden = false
     }
+
+    never "loading indicator visible in error state": {
+      state.lifecycle = "error" and loadingState.hidden = false
+    }
+
+    "Mode badge must reflect the current allowlist or denylist mode at all times";
+    "Empty state must be visible when the scope reaches ready state with no rules";
+    "Error state must be reachable from loading state when the data fetch fails";
   }
 }
