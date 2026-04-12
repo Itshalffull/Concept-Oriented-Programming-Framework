@@ -874,6 +874,68 @@ const _graphAnalysisHandler: FunctionalConceptHandler = {
     p = find(p, 'graph-result', {}, 'allResults');
     return complete(p, 'ok', { cleared: 0 }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
+
+  detectCycles(input: Record<string, unknown>) {
+    const graphJson = input.graph as string;
+
+    if (!graphJson || (typeof graphJson === 'string' && graphJson.trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'graph is required' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
+
+    let graph: Graph;
+    try {
+      graph = parseGraph(graphJson);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      return complete(createProgram(), 'error', { message }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
+
+    const cycles = findCycles(graph);
+    let p = createProgram();
+    if (cycles.length === 0) {
+      return complete(p, 'clean', {}) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
+    return complete(p, 'ok', { cycles: JSON.stringify(cycles) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
+  reachable(input: Record<string, unknown>) {
+    const graphJson = input.graph as string;
+    const from = input.from as string;
+    const to = input.to as string;
+
+    if (!graphJson || (typeof graphJson === 'string' && graphJson.trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'graph is required' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
+    if (!from || (typeof from === 'string' && from.trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'from is required' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
+    if (!to || (typeof to === 'string' && to.trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'to is required' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
+
+    let graph: Graph;
+    try {
+      graph = parseGraph(graphJson);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      return complete(createProgram(), 'error', { message }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
+
+    // Validate that both nodes exist in the graph
+    if (!graph.nodes.includes(from)) {
+      return complete(createProgram(), 'error', { message: `node '${from}' does not exist in the graph` }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
+    if (!graph.nodes.includes(to)) {
+      return complete(createProgram(), 'error', { message: `node '${to}' does not exist in the graph` }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
+
+    const pathResult = bfsShortestPath(graph, from, to) as { reachable: boolean; path: string[] };
+    let p = createProgram();
+    if (!pathResult.reachable) {
+      return complete(p, 'unreachable', {}) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
+    return complete(p, 'ok', { path: JSON.stringify(pathResult.path) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
 };
 
 export const graphAnalysisHandler = autoInterpret(_graphAnalysisHandler);

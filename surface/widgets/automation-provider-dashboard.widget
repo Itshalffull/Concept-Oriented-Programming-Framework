@@ -1,0 +1,507 @@
+@version(1)
+widget automation-provider-dashboard {
+
+  purpose {
+    Read-only governance surface for the AutomationDispatch provider registry. Displays
+    all registered automation providers (Manifest, Sync, Webhook, LLM, Process) as a
+    summary list with health indicator, recent dispatch count, failure rate, and
+    last-fired-at timestamp. Unhealthy providers float to the top of the list. Clicking
+    a provider row expands an inline detail pane showing recent dispatch log entries
+    and an error taxonomy breakdown. An admin-only re-register button re-invokes the
+    provider's register() action to recover from deregistration. Progressive disclosure
+    keeps the default view simple — only the summary row is visible until the user
+    expands a provider's detail pane.
+  }
+
+  requires @1 {
+    fields {
+      providers:    list;
+      dispatches:   list;
+      status:       String;
+    }
+    actions {
+      list_providers();
+    }
+  }
+
+  anatomy {
+    root:               container     { Outermost dashboard wrapper holding the header and provider list }
+    header:             container     { Dashboard heading with title, refresh button, and provider count badge }
+    title:              text          { Dashboard heading label "Automation Providers" }
+    providerCount:      text          { Badge showing total number of registered providers }
+    refreshButton:      action        { Triggers a fresh AutomationDispatch/list_providers call }
+    providerList:       container     { Ordered list of all registered provider summary rows; unhealthy providers sort first }
+    providerRow:        container     { Summary row for a single provider: health indicator, name, dispatch count, failure rate, last-fired-at }
+    healthIndicator:    presentation  { Color-coded dot conveying provider health: healthy, degraded, or down }
+    providerName:       text          { Human-readable provider name (manifest, sync, webhook, llm, process) }
+    dispatchCount:      text          { Count of recent dispatches for this provider }
+    failureRate:        text          { Percentage of recent dispatches that completed with error }
+    lastFiredAt:        text          { Timestamp of most recent dispatch for this provider }
+    expandButton:       action        { Toggle button that opens or closes the detail pane for this provider }
+    detailPane:         container     { Expanded area showing dispatch log and error taxonomy; hidden by default }
+    dispatchLog:        container     { Scrollable list of recent dispatch log entries for the selected provider }
+    dispatchEntry:      container     { One row in the dispatch log: rule_ref, status, result summary, timestamp }
+    dispatchRuleRef:    text          { Rule reference string for this dispatch entry }
+    dispatchStatus:     text          { Status label for this dispatch: Completed, Failed, Pending }
+    dispatchResult:     text          { Short result or error message from this dispatch }
+    dispatchTimestamp:  text          { Timestamp of this dispatch entry }
+    errorTaxonomy:      container     { Grouped breakdown of error types seen in recent dispatches for this provider }
+    errorCategory:      container     { One error category row: error type label and occurrence count }
+    errorTypeLabel:     text          { Short label describing the error category }
+    errorCount:         text          { Number of occurrences of this error category in the recent window }
+    reRegisterButton:   action        { Admin-only button that re-invokes provider.register() to recover from deregistration }
+    emptyState:         container     { Shown when no providers are registered }
+    loadingState:       container     { Shown while provider list is being fetched }
+    errorState:         container     { Shown when the list_providers call fails }
+    errorMessage:       text          { Description of the fetch error }
+    retryButton:        action        { Retries the failed list_providers call from errorState }
+  }
+
+  states {
+    loading [initial] {
+      on LOADED        -> loaded;
+      on LOAD_EMPTY    -> empty;
+      on LOAD_ERROR    -> error;
+      entry [fetchProviders];
+    }
+
+    loaded {
+      on REFRESH       -> refreshing;
+      on EXPAND        -> detail;
+      on RE_REGISTER   -> re-registering;
+    }
+
+    detail {
+      on COLLAPSE      -> loaded;
+      on EXPAND        -> detail;
+      on REFRESH       -> refreshing;
+      on RE_REGISTER   -> re-registering;
+      entry [loadDispatchLog];
+    }
+
+    refreshing {
+      on LOADED        -> loaded;
+      on LOAD_EMPTY    -> empty;
+      on LOAD_ERROR    -> error;
+      entry [fetchProviders];
+    }
+
+    re-registering {
+      on RE_REGISTER_OK    -> loaded;
+      on RE_REGISTER_ERROR -> detail;
+      entry [invokeRegister];
+    }
+
+    empty {
+      on REFRESH       -> refreshing;
+    }
+
+    error {
+      on RETRY         -> loading;
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      Enter        -> EXPAND;
+      Space        -> EXPAND;
+      Escape       -> COLLAPSE;
+      ArrowDown    -> FOCUS_NEXT_ROW;
+      ArrowUp      -> FOCUS_PREV_ROW;
+      Tab          -> FOCUS_NEXT;
+      Shift+Tab    -> FOCUS_PREV;
+      F5           -> REFRESH;
+    }
+    focus {
+      trap: false;
+      initial: refreshButton;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Automation provider dashboard";
+        aria-busy: if state == "loading" or state == "refreshing" or state == "re-registering" then "true" else "false";
+        data-state: state;
+      };
+      providerList -> {
+        role: "list";
+        aria-label: "Registered automation providers";
+        aria-live: "polite";
+      };
+      providerRow -> {
+        role: "listitem";
+        aria-label: concat(self.providerName, " provider, health: ", self.health);
+        aria-expanded: if self.isExpanded then "true" else "false";
+      };
+      expandButton -> {
+        role: "button";
+        aria-label: concat(if self.isExpanded then "Collapse " else "Expand ", self.providerName, " details");
+        aria-controls: detailPane;
+        aria-expanded: if self.isExpanded then "true" else "false";
+      };
+      detailPane -> {
+        role: "region";
+        aria-label: concat(self.providerName, " dispatch detail");
+        aria-labelledby: providerName;
+      };
+      dispatchLog -> {
+        role: "list";
+        aria-label: concat("Recent dispatches for ", self.providerName);
+        aria-live: "polite";
+      };
+      dispatchEntry -> {
+        role: "listitem";
+        aria-label: concat(self.dispatchStatus, ": rule ", self.dispatchRuleRef);
+      };
+      errorTaxonomy -> {
+        role: "list";
+        aria-label: "Error taxonomy";
+      };
+      refreshButton -> {
+        role: "button";
+        aria-label: "Refresh provider list";
+        aria-disabled: if state == "loading" or state == "refreshing" then "true" else "false";
+      };
+      reRegisterButton -> {
+        role: "button";
+        aria-label: concat("Re-register ", self.providerName, " provider");
+        aria-disabled: if state != "detail" then "true" else "false";
+      };
+      retryButton -> {
+        role: "button";
+        aria-label: "Retry loading providers";
+      };
+    }
+  }
+
+  props {
+    isAdmin:        Bool = false
+    windowMinutes:  Int  = 60
+    maxLogEntries:  Int  = 50
+  }
+
+  connect {
+    root -> {
+      data-part:    "root";
+      data-state:   state;
+      data-is-admin: if ?isAdmin then "true" else "false";
+    }
+
+    header -> {
+      data-part: "header";
+    }
+
+    title -> {
+      data-part: "title";
+      text: "Automation Providers";
+    }
+
+    providerCount -> {
+      data-part: "provider-count";
+      text: self.count;
+      hidden: if state == "loading" or state == "error" or state == "empty" then true else false;
+    }
+
+    refreshButton -> {
+      data-part: "refresh-button";
+      disabled: if state == "loading" or state == "refreshing" then true else false;
+      onClick: send(REFRESH);
+      onKeyDown: if key == "Enter" or key == " " then send(REFRESH) else noop;
+    }
+
+    providerList -> {
+      data-part: "provider-list";
+      hidden: if state == "loading" or state == "error" or state == "empty" then true else false;
+    }
+
+    providerRow -> {
+      data-part:          "provider-row";
+      data-provider-name: self.providerName;
+      data-health:        self.health;
+      data-expanded:      if self.isExpanded then "true" else "false";
+    }
+
+    healthIndicator -> {
+      data-part:   "health-indicator";
+      data-health: self.health;
+    }
+
+    providerName -> {
+      data-part: "provider-name";
+      text: self.providerName;
+    }
+
+    dispatchCount -> {
+      data-part: "dispatch-count";
+      text: self.dispatchCount;
+    }
+
+    failureRate -> {
+      data-part: "failure-rate";
+      text: self.failureRate;
+    }
+
+    lastFiredAt -> {
+      data-part: "last-fired-at";
+      text: self.lastFiredAt;
+    }
+
+    expandButton -> {
+      data-part: "expand-button";
+      onClick: send(if self.isExpanded then COLLAPSE else EXPAND, { providerName: self.providerName });
+      onKeyDown: if key == "Enter" or key == " " then send(if self.isExpanded then COLLAPSE else EXPAND, { providerName: self.providerName }) else noop;
+    }
+
+    detailPane -> {
+      data-part:          "detail-pane";
+      data-provider-name: self.providerName;
+      hidden: if not self.isExpanded then true else false;
+    }
+
+    dispatchLog -> {
+      data-part: "dispatch-log";
+    }
+
+    dispatchEntry -> {
+      data-part:   "dispatch-entry";
+      data-status: self.dispatchStatus;
+    }
+
+    dispatchRuleRef -> {
+      data-part: "dispatch-rule-ref";
+      text: self.dispatchRuleRef;
+    }
+
+    dispatchStatus -> {
+      data-part:   "dispatch-status";
+      text: self.dispatchStatus;
+      data-status: self.dispatchStatus;
+    }
+
+    dispatchResult -> {
+      data-part: "dispatch-result";
+      text: self.dispatchResult;
+    }
+
+    dispatchTimestamp -> {
+      data-part: "dispatch-timestamp";
+      text: self.dispatchTimestamp;
+    }
+
+    errorTaxonomy -> {
+      data-part: "error-taxonomy";
+    }
+
+    errorCategory -> {
+      data-part: "error-category";
+    }
+
+    errorTypeLabel -> {
+      data-part: "error-type-label";
+      text: self.errorTypeLabel;
+    }
+
+    errorCount -> {
+      data-part: "error-count";
+      text: self.errorCount;
+    }
+
+    reRegisterButton -> {
+      data-part: "re-register-button";
+      hidden: if not ?isAdmin then true else false;
+      disabled: if state != "detail" then true else false;
+      onClick: send(RE_REGISTER, { providerName: self.providerName });
+      onKeyDown: if key == "Enter" then send(RE_REGISTER, { providerName: self.providerName }) else noop;
+    }
+
+    emptyState -> {
+      data-part: "empty-state";
+      hidden: if state != "empty" then true else false;
+    }
+
+    loadingState -> {
+      data-part: "loading-state";
+      hidden: if state != "loading" and state != "refreshing" then true else false;
+    }
+
+    errorState -> {
+      data-part: "error-state";
+      hidden: if state != "error" then true else false;
+    }
+
+    errorMessage -> {
+      data-part: "error-message";
+      text: self.errorMessage;
+    }
+
+    retryButton -> {
+      data-part: "retry-button";
+      onClick: send(RETRY);
+      onKeyDown: if key == "Enter" then send(RETRY) else noop;
+    }
+  }
+
+  affordance {
+    serves: group-section;
+    specificity: 8;
+    when { viewType: "automation-dispatch-view" }
+    bind {
+      providers:  providers;
+      dispatches: dispatches;
+      status:     status;
+    }
+  }
+
+  invariant {
+    example "loads and renders provider list": {
+      after send(LOADED) -> ok
+      then root -> { data-state: "loaded" }
+      and providerList -> { hidden: false }
+      and loadingState -> { hidden: true }
+      and emptyState -> { hidden: true }
+    }
+
+    example "expand shows detail pane": {
+      after send(LOADED) -> ok
+      then send(EXPAND, { providerName: "manifest" }) -> ok
+      then root -> { data-state: "detail" }
+      and detailPane -> { hidden: false }
+    }
+
+    example "collapse hides detail pane": {
+      after send(LOADED) -> ok
+      then send(EXPAND, { providerName: "manifest" }) -> ok
+      then send(COLLAPSE) -> ok
+      then root -> { data-state: "loaded" }
+    }
+
+    example "empty state when no providers registered": {
+      after send(LOAD_EMPTY) -> ok
+      then root -> { data-state: "empty" }
+      and emptyState -> { hidden: false }
+      and providerList -> { hidden: true }
+    }
+
+    example "error state on fetch failure": {
+      after send(LOAD_ERROR) -> ok
+      then root -> { data-state: "error" }
+      and errorState -> { hidden: false }
+      and providerList -> { hidden: true }
+    }
+
+    example "retry from error transitions to loading": {
+      after send(LOAD_ERROR) -> ok
+      then retryButton.click -> ok
+      then root -> { data-state: "loading" }
+    }
+
+    example "refresh from loaded transitions to refreshing": {
+      after send(LOADED) -> ok
+      then refreshButton.click -> ok
+      then root -> { data-state: "refreshing" }
+    }
+
+    example "re-register button hidden for non-admin": {
+      after send(LOADED) -> ok
+      then send(EXPAND, { providerName: "sync" }) -> ok
+      then reRegisterButton -> { hidden: true }
+    }
+
+    example "re-register transitions to re-registering then loaded on success": {
+      after send(LOADED) -> ok
+      then send(EXPAND, { providerName: "manifest" }) -> ok
+      then send(RE_REGISTER, { providerName: "manifest" }) -> ok
+      then root -> { data-state: "re-registering" }
+      then send(RE_REGISTER_OK) -> ok
+      then root -> { data-state: "loaded" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      root -> { data-state: state }
+    }
+
+    always "providerList hidden while loading or in error or empty": {
+      if state == "loading" then providerList -> { hidden: true }
+      and if state == "refreshing" then providerList -> { hidden: true }
+      and if state == "error" then providerList -> { hidden: true }
+      and if state == "empty" then providerList -> { hidden: true }
+    }
+
+    always "loadingState visible during loading or refreshing": {
+      if state == "loading" or state == "refreshing" then loadingState -> { hidden: false }
+    }
+
+    always "errorState visible only in error state": {
+      if state != "error" then errorState -> { hidden: true }
+    }
+
+    always "emptyState visible only in empty state": {
+      if state != "empty" then emptyState -> { hidden: true }
+    }
+
+    always "reRegisterButton hidden for non-admin": {
+      if not isAdmin then reRegisterButton -> { hidden: true }
+    }
+
+    always "reRegisterButton disabled outside detail state": {
+      if state != "detail" then reRegisterButton -> { disabled: true }
+    }
+
+    always "refreshButton disabled while loading or refreshing": {
+      if state == "loading" or state == "refreshing" then refreshButton -> { disabled: true }
+    }
+
+    always "detailPane hidden when providerRow is not expanded": {
+      forall pr in providerRow:
+        if not pr.isExpanded then pr.detailPane -> { hidden: true }
+    }
+
+    never "reRegisterButton visible for non-admin": {
+      not isAdmin and reRegisterButton -> { hidden: false }
+    }
+
+    never "providerList and emptyState both visible": {
+      providerList -> { hidden: false } and emptyState -> { hidden: false }
+    }
+
+    never "providerList and errorState both visible": {
+      providerList -> { hidden: false } and errorState -> { hidden: false }
+    }
+
+    action refreshButton.click {
+      requires: state == "loaded" or state == "detail" or state == "empty"
+      ensures ok: state == "refreshing"
+    }
+
+    action retryButton.click {
+      requires: state == "error"
+      ensures ok: state == "loading"
+    }
+
+    action expandButton.click {
+      requires: state == "loaded" or state == "detail"
+      ensures ok: state == "detail"
+    }
+
+    action reRegisterButton.click {
+      requires: state == "detail" and isAdmin == true
+      ensures ok: state == "re-registering"
+    }
+
+    "LOADED event is dispatched after AutomationDispatch/list_providers resolves successfully";
+    "Providers are sorted so health == 'down' rows appear first, then health == 'degraded', then health == 'healthy'";
+    "failureRate is computed as (failed dispatches / total dispatches) in the window defined by windowMinutes";
+    "dispatchCount reflects dispatches within the windowMinutes window from AutomationDispatch state";
+    "EXPAND event sets the active provider and triggers loadDispatchLog entry action to fetch recent dispatches";
+    "loadDispatchLog fetches up to maxLogEntries entries from AutomationDispatch state for the active provider";
+    "RE_REGISTER invokes the provider's own register() action via ActionBinding, then fires RE_REGISTER_OK on success";
+    "reRegisterButton is only rendered when isAdmin is true — governance gate enforced at the prop level";
+    "errorTaxonomy groups dispatch errors by error message prefix to surface recurring failure patterns";
+  }
+
+}

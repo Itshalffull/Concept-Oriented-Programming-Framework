@@ -104,6 +104,44 @@ concept GraphAnalysis [A] {
 
       fixture clear_graph { graph: "{\"nodes\":[\"a\"],\"edges\":[]}" } after pagerank_analysis
     }
+
+    action detectCycles(graph: String) {
+      -> ok(cycles: String) {
+        The graph was analyzed and one or more cycles were found. Returns a
+        JSON-encoded array of cycles, where each cycle is a list of node IDs
+        forming the cycle (first and last element are the same start node).
+      }
+      -> clean() {
+        No cycles exist in the graph. The graph is acyclic (a DAG).
+      }
+      -> error(message: String) {
+        The graph input could not be parsed or the analysis failed.
+      }
+
+      fixture cyclic_graph { graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"},{\"source\":\"c\",\"target\":\"a\"}]}" }
+      fixture acyclic_graph { graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}" } -> clean
+      fixture invalid_graph_json { graph: "not-valid-json" } -> error
+    }
+
+    action reachable(graph: String, from: String, to: String) {
+      -> ok(path: String) {
+        A path exists from the source node to the destination node. Returns a
+        JSON-encoded array of node IDs representing the shortest path, including
+        both endpoints.
+      }
+      -> unreachable() {
+        No path exists from the source node to the destination node.
+      }
+      -> error(message: String) {
+        The graph input could not be parsed, or the source or destination node
+        does not exist in the graph.
+      }
+
+      fixture path_exists { graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", from: "a", to: "c" }
+      fixture no_path { graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"}]}", from: "c", to: "a" } -> unreachable
+      fixture missing_node { graph: "{\"nodes\":[\"a\",\"b\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"}]}", from: "a", to: "z" } -> error
+      fixture invalid_graph_json_r { graph: "bad-json", from: "a", to: "b" } -> error
+    }
   }
 
   example "register-then-analyze": {

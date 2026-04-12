@@ -87,14 +87,36 @@ describe('GraphAnalysis functional handler', () => {
     it('fixture "pagerank_analysis" -> ok', async () => {
       if (typeof graphAnalysisHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null }), storage);
+      const afterResult_path_exists = await interpret(graphAnalysisHandler.reachable({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", from: "a", to: "c" }), storage);
+      const afterResult_cyclic_graph = await interpret(graphAnalysisHandler.detectCycles({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"},{\"source\":\"c\",\"target\":\"a\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_path_exists?.output ?? {}), (afterResult_cyclic_graph?.output ?? {}));
+      const _fixtureInput = { graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(graphAnalysisHandler.analyze({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "degree_with_config" -> ok', async () => {
       if (typeof graphAnalysisHandler.analyze !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"x\",\"y\"],\"edges\":[{\"source\":\"x\",\"target\":\"y\"}]}", algorithm: "degree", config: "{}" }), storage);
+      const afterResult_path_exists = await interpret(graphAnalysisHandler.reachable({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", from: "a", to: "c" }), storage);
+      const afterResult_cyclic_graph = await interpret(graphAnalysisHandler.detectCycles({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"},{\"source\":\"c\",\"target\":\"a\"}]}" }), storage);
+      const _pool = Object.assign({}, (afterResult_path_exists?.output ?? {}), (afterResult_cyclic_graph?.output ?? {}));
+      const _fixtureInput = { graph: "{\"nodes\":[\"x\",\"y\"],\"edges\":[{\"source\":\"x\",\"target\":\"y\"}]}", algorithm: "degree", config: "{}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(graphAnalysisHandler.analyze({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -171,8 +193,10 @@ describe('GraphAnalysis functional handler', () => {
     it('fixture "register_provider" -> ok', async () => {
       if (typeof graphAnalysisHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_path_exists = await interpret(graphAnalysisHandler.reachable({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", from: "a", to: "c" }), storage);
+      const afterResult_cyclic_graph = await interpret(graphAnalysisHandler.detectCycles({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"},{\"source\":\"c\",\"target\":\"a\"}]}" }), storage);
       const afterResult_pagerank_analysis = await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null }), storage);
-      const _pool = Object.assign({}, (afterResult_pagerank_analysis?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_path_exists?.output ?? {}), (afterResult_cyclic_graph?.output ?? {}), (afterResult_pagerank_analysis?.output ?? {}));
       const _fixtureInput = { algorithm: "custom-centrality", category: "centrality", provider: "MyCentralityProvider" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -188,8 +212,10 @@ describe('GraphAnalysis functional handler', () => {
     it('fixture "register_community" -> ok', async () => {
       if (typeof graphAnalysisHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_path_exists = await interpret(graphAnalysisHandler.reachable({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", from: "a", to: "c" }), storage);
+      const afterResult_cyclic_graph = await interpret(graphAnalysisHandler.detectCycles({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"},{\"source\":\"c\",\"target\":\"a\"}]}" }), storage);
       const afterResult_pagerank_analysis = await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null }), storage);
-      const _pool = Object.assign({}, (afterResult_pagerank_analysis?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_path_exists?.output ?? {}), (afterResult_cyclic_graph?.output ?? {}), (afterResult_pagerank_analysis?.output ?? {}));
       const _fixtureInput = { algorithm: "spectral", category: "community", provider: "SpectralProvider" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -259,6 +285,8 @@ describe('GraphAnalysis functional handler', () => {
     it('fixture "existing_result" -> ok', async () => {
       if (typeof graphAnalysisHandler.getResult !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_path_exists = await interpret(graphAnalysisHandler.reachable({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", from: "a", to: "c" }), storage);
+      const afterResult_cyclic_graph = await interpret(graphAnalysisHandler.detectCycles({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"},{\"source\":\"c\",\"target\":\"a\"}]}" }), storage);
       const afterResult_pagerank_analysis = await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null }), storage);
       const result = await interpret(graphAnalysisHandler.getResult({ result: afterResult_pagerank_analysis?.output?.["result"] }), storage);
       expect(result.variant).toBe('ok');
@@ -329,8 +357,10 @@ describe('GraphAnalysis functional handler', () => {
     it('fixture "for_graph" -> ok', async () => {
       if (typeof graphAnalysisHandler.listResults !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_path_exists = await interpret(graphAnalysisHandler.reachable({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", from: "a", to: "c" }), storage);
+      const afterResult_cyclic_graph = await interpret(graphAnalysisHandler.detectCycles({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"},{\"source\":\"c\",\"target\":\"a\"}]}" }), storage);
       const afterResult_pagerank_analysis = await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null }), storage);
-      const _pool = Object.assign({}, (afterResult_pagerank_analysis?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_path_exists?.output ?? {}), (afterResult_cyclic_graph?.output ?? {}), (afterResult_pagerank_analysis?.output ?? {}));
       const _fixtureInput = { graph: "{\"nodes\":[\"a\"],\"edges\":[]}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -400,8 +430,10 @@ describe('GraphAnalysis functional handler', () => {
     it('fixture "all_algorithms" -> ok', async () => {
       if (typeof graphAnalysisHandler.listAlgorithms !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_path_exists = await interpret(graphAnalysisHandler.reachable({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", from: "a", to: "c" }), storage);
+      const afterResult_cyclic_graph = await interpret(graphAnalysisHandler.detectCycles({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"},{\"source\":\"c\",\"target\":\"a\"}]}" }), storage);
       const afterResult_pagerank_analysis = await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null }), storage);
-      const _pool = Object.assign({}, (afterResult_pagerank_analysis?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_path_exists?.output ?? {}), (afterResult_cyclic_graph?.output ?? {}), (afterResult_pagerank_analysis?.output ?? {}));
       const _fixtureInput = { category: null } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -417,8 +449,10 @@ describe('GraphAnalysis functional handler', () => {
     it('fixture "centrality_only" -> ok', async () => {
       if (typeof graphAnalysisHandler.listAlgorithms !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_path_exists = await interpret(graphAnalysisHandler.reachable({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", from: "a", to: "c" }), storage);
+      const afterResult_cyclic_graph = await interpret(graphAnalysisHandler.detectCycles({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"},{\"source\":\"c\",\"target\":\"a\"}]}" }), storage);
       const afterResult_pagerank_analysis = await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null }), storage);
-      const _pool = Object.assign({}, (afterResult_pagerank_analysis?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_path_exists?.output ?? {}), (afterResult_cyclic_graph?.output ?? {}), (afterResult_pagerank_analysis?.output ?? {}));
       const _fixtureInput = { category: "centrality" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -488,8 +522,10 @@ describe('GraphAnalysis functional handler', () => {
     it('fixture "clear_graph" -> ok', async () => {
       if (typeof graphAnalysisHandler.clearResults !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_path_exists = await interpret(graphAnalysisHandler.reachable({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", from: "a", to: "c" }), storage);
+      const afterResult_cyclic_graph = await interpret(graphAnalysisHandler.detectCycles({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"},{\"source\":\"c\",\"target\":\"a\"}]}" }), storage);
       const afterResult_pagerank_analysis = await interpret(graphAnalysisHandler.analyze({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", algorithm: "pagerank", config: null }), storage);
-      const _pool = Object.assign({}, (afterResult_pagerank_analysis?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_path_exists?.output ?? {}), (afterResult_cyclic_graph?.output ?? {}), (afterResult_pagerank_analysis?.output ?? {}));
       const _fixtureInput = { graph: "{\"nodes\":[\"a\"],\"edges\":[]}" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -500,6 +536,175 @@ describe('GraphAnalysis functional handler', () => {
       }
       const result = await interpret(graphAnalysisHandler.clearResults({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
+    });
+
+  });
+
+  describe('detectCycles', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = graphAnalysisHandler.detectCycles({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"},{\"source\":\"c\",\"target\":\"a\"}]}" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = graphAnalysisHandler.detectCycles({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"},{\"source\":\"c\",\"target\":\"a\"}]}" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = graphAnalysisHandler.detectCycles({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"},{\"source\":\"c\",\"target\":\"a\"}]}" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = graphAnalysisHandler.detectCycles({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"},{\"source\":\"c\",\"target\":\"a\"}]}" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = graphAnalysisHandler.detectCycles({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"},{\"source\":\"c\",\"target\":\"a\"}]}" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof graphAnalysisHandler.detectCycles !== 'function') return;
+      const result = await interpret(graphAnalysisHandler.detectCycles({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"},{\"source\":\"c\",\"target\":\"a\"}]}" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "cyclic_graph" -> ok', async () => {
+      if (typeof graphAnalysisHandler.detectCycles !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_path_exists = await interpret(graphAnalysisHandler.reachable({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", from: "a", to: "c" }), storage);
+      const _pool = Object.assign({}, (afterResult_path_exists?.output ?? {}));
+      const _fixtureInput = { graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"},{\"source\":\"c\",\"target\":\"a\"}]}" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(graphAnalysisHandler.detectCycles({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "acyclic_graph" -> clean', async () => {
+      if (typeof graphAnalysisHandler.detectCycles !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphAnalysisHandler.detectCycles({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('clean'));
+    });
+
+    it('fixture "invalid_graph_json" -> error', async () => {
+      if (typeof graphAnalysisHandler.detectCycles !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphAnalysisHandler.detectCycles({ graph: "not-valid-json" }), storage);
+      expect(result.variant).not.toBe('ok');
+    });
+
+  });
+
+  describe('reachable', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = graphAnalysisHandler.reachable({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", from: "a", to: "c" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = graphAnalysisHandler.reachable({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", from: "a", to: "c" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = graphAnalysisHandler.reachable({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", from: "a", to: "c" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = graphAnalysisHandler.reachable({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", from: "a", to: "c" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = graphAnalysisHandler.reachable({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", from: "a", to: "c" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof graphAnalysisHandler.reachable !== 'function') return;
+      const result = await interpret(graphAnalysisHandler.reachable({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", from: "a", to: "c" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "path_exists" -> ok', async () => {
+      if (typeof graphAnalysisHandler.reachable !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphAnalysisHandler.reachable({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"},{\"source\":\"b\",\"target\":\"c\"}]}", from: "a", to: "c" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "no_path" -> unreachable', async () => {
+      if (typeof graphAnalysisHandler.reachable !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphAnalysisHandler.reachable({ graph: "{\"nodes\":[\"a\",\"b\",\"c\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"}]}", from: "c", to: "a" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('unreachable'));
+    });
+
+    it('fixture "missing_node" -> error', async () => {
+      if (typeof graphAnalysisHandler.reachable !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphAnalysisHandler.reachable({ graph: "{\"nodes\":[\"a\",\"b\"],\"edges\":[{\"source\":\"a\",\"target\":\"b\"}]}", from: "a", to: "z" }), storage);
+      expect(result.variant).not.toBe('ok');
+    });
+
+    it('fixture "invalid_graph_json_r" -> error', async () => {
+      if (typeof graphAnalysisHandler.reachable !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(graphAnalysisHandler.reachable({ graph: "bad-json", from: "a", to: "b" }), storage);
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -528,6 +733,8 @@ describe('GraphAnalysis functional handler', () => {
               fc.record({ action: fc.constant('listResults'), input: fc.record({ graph: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('listAlgorithms'), input: fc.record({ category: fc.string() }) }),
               fc.record({ action: fc.constant('clearResults'), input: fc.record({ graph: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('detectCycles'), input: fc.record({ graph: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('reachable'), input: fc.record({ graph: fc.string({ minLength: 1, maxLength: 50 }), from: fc.string({ minLength: 1, maxLength: 50 }), to: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -563,6 +770,8 @@ describe('GraphAnalysis functional handler', () => {
               fc.record({ action: fc.constant('listResults'), input: fc.record({ graph: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('listAlgorithms'), input: fc.record({ category: fc.string() }) }),
               fc.record({ action: fc.constant('clearResults'), input: fc.record({ graph: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('detectCycles'), input: fc.record({ graph: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('reachable'), input: fc.record({ graph: fc.string({ minLength: 1, maxLength: 50 }), from: fc.string({ minLength: 1, maxLength: 50 }), to: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

@@ -1,5 +1,5 @@
 # Flow graph validation sync
-# Gates ProcessSpec/publish by running cycle detection via GraphAnalysis/analyze.
+# Gates ProcessSpec/publish by running cycle detection via GraphAnalysis/detectCycles.
 # A cycle in the process graph means control flow can loop without a
 # terminating condition, which would cause ProcessRun to run indefinitely.
 
@@ -11,11 +11,8 @@ when {
 }
 where {
   bind(?spec as ?graphId)
-  GraphAnalysis/analyze: [
-    graph: ?graphId;
-    algorithm: "cycle-detection";
-    config: "{\"directed\":true}" ] => ok(result: ?result; category: ?category; payload: ?payload)
-  guard(?payload = "{\"matches\":[]}")
+  GraphAnalysis/detectCycles: [
+    graph: ?graphId ] => clean()
 }
 then {
   ProcessSpec/get: [ spec: ?spec ]
@@ -29,11 +26,8 @@ when {
 }
 where {
   bind(?spec as ?graphId)
-  GraphAnalysis/analyze: [
-    graph: ?graphId;
-    algorithm: "cycle-detection";
-    config: "{\"directed\":true}" ] => ok(result: ?result; category: ?category; payload: ?payload)
-  not(guard(?payload = "{\"matches\":[]}"))
+  GraphAnalysis/detectCycles: [
+    graph: ?graphId ] => ok(cycles: ?cycles)
 }
 then {
   ProcessSpec/deprecate: [ spec: ?spec ]
