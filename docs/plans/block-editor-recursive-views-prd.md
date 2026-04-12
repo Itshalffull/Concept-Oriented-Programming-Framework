@@ -176,7 +176,53 @@ Each surface composes plane-specific plugins. Adding a new content type = shippi
 
 **Context orthogonality.** Same schema, different context, different surface. A `process-spec-step` focused inside FlowBuilderView activates the step-inspector tab strip. Focused inside a doc block, activates a thinner inline surface with a "Open in Builder" affordance + summary inspector. The `context` field lets a schema present differently depending on where it's embedded.
 
-### 2.7 Decoration layer — fixed slots reading existing state
+### 2.7 Structured content compilation — ContentCompiler integration
+
+The block editor isn't just editing visual content. When a page has a Schema overlay (via `Schema/applyTo`), its block tree IS structured data that compiles into concept-specific output through `ContentCompiler`:
+
+- `agent-persona` page → `PromptAssembly` (used by `AgentSession/spawn`)
+- `meeting-notes` page → `CalendarEvent` (surfaced in calendar views)
+- `workflow` page → `ProcessSpec` (executed by `ProcessRun`)
+- `filter-draft` page → `FilterNode` (installed into a ViewShell)
+- any future compilable schema → registered provider output via `PluginRegistry`
+
+Per the existing `content-native-schema.sync` pattern (foundation/content-compiler.concept), edits auto-fire `ContentCompiler/markStale`. The block editor makes all of this **first-class, in-place** — not a separate "compile" view, but surfaced alongside normal editing through the EditSurface for each compilable schema.
+
+EditSurface for a compilable schema declares four compilation-related plugin refs:
+
+| Bundle field | What it provides |
+|---|---|
+| `compile_action_ref` | ActionBinding calling `ContentCompiler/compile` or `/recompile`. Rendered in the page-level toolbar slot. |
+| `status_decoration_ref` | Decoration widget rendering compile status badge (`compiled` / `stale` / `invalid` / `never-compiled`) with `lastCompiledAt`. Reads ContentCompiler state for the page. |
+| `output_preview_ref` | Right-rail panel widget rendering the compiled output in a schema-specific way. PromptAssembly → role-sectioned text preview; CalendarEvent → mini event card; ProcessSpec → FlowchartEditor preview (reuses MAG-689); FilterNode → filter-pill preview. |
+| `consumers_panel_ref` | Backlinks panel showing downstream consumers (AgentSessions using this persona, ProcessRuns of this spec, calendars rendering this event). Reuses Reference + Backlink. |
+
+**What the user sees** on a page with schema `agent-persona`:
+- Normal block editor body (paragraph / heading / callout / code blocks forming the prompt)
+- Page header: status badge "Compiled 2m ago — stale" + "Recompile" button
+- Right rail panel: "Compiled PromptAssembly" preview with role sections, tool list, temperature settings
+- Right rail panel below: "Used by 3 AgentSessions" (live consumers, click → navigate)
+- Edit a block → auto-stale-mark fires → badge flips to stale → Recompile button activates
+
+Page-level compile surface + inline block surfaces coexist. Focus a paragraph inside the persona page and the text-format toolbar appears inline; the page-level compile surface stays mounted in the header and right rail.
+
+**Derived editors for compilable schemas** compose the compile surface with the content surfaces:
+- `MarkdownEditor` — plain content, no compile surface
+- `PersonaEditor [T]` — MarkdownEditor + `agent-persona` compile surface + PromptAssembly preview + AgentSession backlinks
+- `MeetingNotesEditor [T]` — MarkdownEditor + `meeting-notes` compile surface + CalendarEvent preview
+- `WorkflowEditor [T]` — **MAG-689 FlowBuilderView IS this.** ProcessSpec page + graph-view preview (= compiled output) + ProcessRun backlinks (= consumers). MAG-689 is retroactively an instance of this exact pattern — the PRD here describes the general shape that MAG-689 built one specialization of.
+- `FilterDraftEditor [T]` — block editor + `filter-draft` compile surface + filter-pill preview + ViewShell backlinks
+
+**What this unlocks for free** via composition of existing concepts:
+
+- **Compilation history + diff.** `ContentCompiler.listByPage` returns historical compilations; the preview panel renders "added 2 tools, changed temperature since previous compile" via the existing Diff concept.
+- **"Compile all" operations.** `ContentCompiler.listBySchema("agent-persona")` backs a ViewShell with compilations as rows + bulk-recompile ActionBinding. Zero new concepts.
+- **Consumer impact warnings.** Editing a persona's prompt block → "3 live AgentSessions will pick up the change on next spawn." Derived from Reference + ContentCompiler state.
+- **Pre-compile validation.** An ActionBinding that inspects the block tree for required schema fields; gaps shown inline in the status badge. Handler-side, no new concept.
+- **Cross-schema nesting.** A meeting-notes page embeds a workflow diagram (via SyncedContent) — compiling the meeting notes surfaces the embedded workflow's own compilation metadata, doesn't re-compile. The provider sees the embed as a reference.
+- **Stale-cascade through SyncedContent.** Edit a shared persona-snippet transcluded across 5 persona pages → all 5 compilations mark stale automatically. Already wired via the existing content-native syncs.
+
+### 2.8 Decoration layer — fixed slots reading existing state
 
 Overlays / ephemeral UI that isn't content: selection toolbar, hover cards, presence indicators, comment gutters, track-changes highlights. Each is a fixed slot on the editor host, rendering from existing state concepts:
 - Selection toolbar reads selection state + queries `toolbar_command` ActionBindings
@@ -225,7 +271,7 @@ Every bit of visual formatting flows through theme tokens, not CSS literals.
 
 **New:**
 - `InputRule` — unified input-plane plugin surface (§2.4)
-- `EditSurface` — per-content-type editor bundle activated on focus (§2.6). The plural of "snippets have their own UI" — every content type does
+- `EditSurface` — per-content-type editor bundle activated on focus (§2.6). The plural of "snippets have their own UI" — every content type does. Also carries optional compilation bundle fields (§2.7) so compilable schemas expose compile/status/preview/consumers surfaces in-place.
 
 **Reused, unchanged:**
 - `ViewShell`, `FilterSpec`, `SortSpec`, `GroupSpec`, `ProjectionSpec`, `PresentationSpec`, `DataSourceSpec`, `InteractionSpec` — view configuration
@@ -237,6 +283,7 @@ Every bit of visual formatting flows through theme tokens, not CSS literals.
 - `MediaAsset`, `Clip`, `Region`, `AnnotationLayer`, `Transcript` — media primitives
 - `Template` (with new `trigger: String` metadata) — snippets
 - `Reference`, `Backlink`, `SyncedContent`, `InlineAnnotation`, `Attribution`, `Version`, `Patch` — collaborative doc features (all free)
+- `ContentCompiler` — schema-overlaid page → concept-specific output. EditSurface for compilable schemas declares compile/status/preview/consumers bundle fields (§2.7). Existing `content-native-schema.sync` pattern auto-marks stale on edit.
 
 **Metadata additions (no concept change, just seed fields):**
 - `ComponentMapping.insertable: Bool` — should slash menu offer this mapping as a new-block option
@@ -456,6 +503,7 @@ Phase 1 card count: ~14-16 cards. Dispatching workflow: same as MAG-670 / MAG-69
 | Decoration | Fixed host slot reading existing state | "Add AI suggestion decoration" |
 | Theme | RenderTransform + SurfaceContract | "Add muted block variant" |
 | Per-type editor surface | EditSurface seed | "Add image block inspector panel with EXIF + crop/filter toolbar" |
+| Compilable-schema surface | EditSurface seed with compile bundle fields + ContentCompiler provider | "Add a `meeting-notes` compile surface: compile button + CalendarEvent preview + calendar backlinks" |
 
 ## Appendix B: Companion docs
 
