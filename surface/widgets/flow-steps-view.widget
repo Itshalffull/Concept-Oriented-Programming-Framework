@@ -1,0 +1,286 @@
+@version(1)
+widget flow-steps-view {
+
+  purpose {
+    Linear narrative projection of a ProcessSpec. Renders the ordered list of
+    process steps — triggers, actions, branches, catch blocks, and logic nodes —
+    as a vertical sequence with between-step insertion points and drag-to-reorder
+    handles. Branch steps display nested child steps beneath their parent with
+    collapse support. The widget is read-only with respect to ProcessSpec state:
+    it emits SELECT, INSERT_AT, and REORDER events that the host widget (or React
+    adapter) wires to ProcessSpec/addStep and ProcessSpec/moveStep. It shares the
+    same processSpecId as the FlowchartEditor graph view so the two representations
+    stay in sync through the host.
+  }
+
+  anatomy {
+    root:           container    { Outermost scroll container for the entire step sequence }
+    stepList:       container    { Ordered list of all top-level step items }
+    stepItem:       container    { A single step card, including header, body, and nested children }
+    insertHandle:   action       { Between-step insertion point; click to insert a new step at that index }
+    stepHeader:     container    { Top bar of a stepItem showing the step kind icon, label, and controls }
+    stepBody:       container    { Expandable content area inside a stepItem showing configuration details }
+    collapseToggle: action       { Button that collapses or expands a branch step item child list }
+    reorderHandle:  action       { Drag grip that initiates a reorder drag on a stepItem }
+  }
+
+  states {
+    interaction {
+      idle [initial] {
+        on STEP_POINTER_ENTER  -> step-hover;
+        on INSERT_HANDLE_FOCUS -> inserting;
+        on DRAG_START          -> step-dragging;
+      }
+
+      step-hover {
+        on STEP_POINTER_LEAVE  -> idle;
+        on DRAG_START          -> step-dragging;
+        on INSERT_HANDLE_FOCUS -> inserting;
+        on SELECT              -> idle;
+      }
+
+      step-dragging {
+        on DROP                -> idle;
+        on DRAG_CANCEL         -> idle;
+        entry [setDragSource; showDropZones];
+        exit  [clearDragSource; hideDropZones];
+      }
+
+      inserting {
+        on INSERT_CANCEL       -> idle;
+        on INSERT_CONFIRM      -> idle;
+        entry [highlightInsertSlot];
+        exit  [clearInsertHighlight];
+      }
+    }
+  }
+
+  accessibility {
+    role: list;
+    keyboard {
+      ArrowUp          -> NAVIGATE_PREV;
+      ArrowDown        -> NAVIGATE_NEXT;
+      Enter            -> SELECT;
+      Control+ArrowUp  -> REORDER_UP;
+      Control+ArrowDown -> REORDER_DOWN;
+      Plus             -> INSERT_AT_FOCUSED;
+      Escape           -> DRAG_CANCEL;
+    }
+    focus {
+      trap: false;
+      initial: stepList;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Process steps";
+      };
+      stepList -> {
+        role: "list";
+        aria-label: "Steps";
+      };
+      stepItem -> {
+        role: "listitem";
+        aria-current: if self.isSelected then "true" else "false";
+        aria-label: concat(self.stepKind, " step: ", self.stepLabel);
+        aria-expanded: if self.isCollapsible then if self.isCollapsed then "false" else "true" else noop;
+      };
+      insertHandle -> {
+        role: "button";
+        aria-label: concat("Insert step after position ", self.index);
+        aria-haspopup: "true";
+      };
+      stepHeader -> {
+        role: "group";
+        aria-label: concat("Step header: ", self.stepLabel);
+      };
+      collapseToggle -> {
+        role: "button";
+        aria-label: if self.isCollapsed then "Expand branch" else "Collapse branch";
+        aria-expanded: if self.isCollapsed then "false" else "true";
+        aria-controls: self.stepBodyId;
+      };
+      reorderHandle -> {
+        role: "button";
+        aria-label: concat("Reorder step: ", self.stepLabel);
+        aria-roledescription: "drag handle";
+        aria-grabbed: if state.interaction == "step-dragging" and self.isDragSource then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    processSpecId:      String
+    selectedStepId:     option String
+    collapsedBranches:  list String
+  }
+
+  connect {
+    root -> {
+      data-part:            "root";
+      data-state:           state.interaction;
+      data-process-spec-id: ?processSpecId;
+    }
+
+    stepList -> {
+      data-part:  "step-list";
+    }
+
+    stepItem -> {
+      data-part:      "step-item";
+      data-step-id:   self.stepId;
+      data-step-kind: self.stepKind;
+      data-collapsed: if self.isCollapsed then "true" else "false";
+      aria-current:   if self.isSelected then "true" else "false";
+      tabIndex:       "0";
+      onClick:        send(SELECT, { stepId: self.stepId });
+      onKeyDown:      if key == "Enter" then send(SELECT, { stepId: self.stepId }) else noop;
+    }
+
+    insertHandle -> {
+      data-part:     "insert-handle";
+      data-index:    self.index;
+      onClick:       send(INSERT_AT, { index: self.index });
+      onKeyDown:     if key == "+" or key == "Enter" then send(INSERT_AT, { index: self.index }) else noop;
+      onFocus:       send(INSERT_HANDLE_FOCUS, { index: self.index });
+      tabIndex:      "0";
+    }
+
+    stepHeader -> {
+      data-part:     "step-header";
+      data-step-id:  self.stepId;
+    }
+
+    stepBody -> {
+      data-part:     "step-body";
+      data-step-id:  self.stepId;
+      hidden:        if self.isCollapsed then true else false;
+    }
+
+    collapseToggle -> {
+      data-part:     "collapse-toggle";
+      data-step-id:  self.stepId;
+      onClick:       send(TOGGLE_COLLAPSE, { stepId: self.stepId });
+      aria-expanded: if self.isCollapsed then "false" else "true";
+    }
+
+    reorderHandle -> {
+      data-part:       "reorder-handle";
+      data-step-id:    self.stepId;
+      draggable:       "true";
+      onPointerDown:   send(DRAG_START, { stepId: self.stepId, fromIndex: self.index });
+      onDragEnd:       send(DROP, { fromIndex: self.fromIndex, toIndex: self.dropIndex });
+      onKeyDown:       if key == "Control+ArrowUp" then send(REORDER_UP, { stepId: self.stepId }) else if key == "Control+ArrowDown" then send(REORDER_DOWN, { stepId: self.stepId }) else noop;
+      aria-grabbed:    if state.interaction == "step-dragging" and self.isDragSource then "true" else "false";
+      tabIndex:        "0";
+    }
+  }
+
+  affordance {
+    serves: process-steps-list;
+    specificity: 10;
+    when { processView: "steps" }
+    bind {
+      processSpecId:     processSpecId;
+      selectedStepId:    selectedStepId;
+      collapsedBranches: collapsedBranches;
+    }
+  }
+
+  invariant {
+    example "step order matches processSpec.steps array order": {
+      after send(SELECT, { stepId: "step-1" }) -> ok
+      then stepItem -> { data-step-id: "step-1" }
+      and root -> { data-state: "idle" }
+    }
+
+    example "insert handle dispatches INSERT_AT with index": {
+      after insertHandle.click (when: self.index == 2) -> ok
+      then root -> { data-state: "inserting" }
+    }
+
+    example "reorder handle drag dispatches REORDER with fromIndex and toIndex": {
+      after reorderHandle.pointerDown (when: self.index == 1) -> ok
+      then root -> { data-state: "step-dragging" }
+      and reorderHandle -> { aria-grabbed: "true" }
+      then send(DROP, { fromIndex: 1, toIndex: 3 }) -> ok
+      then root -> { data-state: "idle" }
+      and reorderHandle -> { aria-grabbed: "false" }
+    }
+
+    example "branch collapse toggle hides stepBody": {
+      after collapseToggle.click (when: self.stepId == "branch-1") -> ok
+      then stepBody -> { hidden: true }
+      and collapseToggle -> { aria-expanded: "false" }
+      then collapseToggle.click -> ok
+      then stepBody -> { hidden: false }
+      and collapseToggle -> { aria-expanded: "true" }
+    }
+
+    example "selected step receives aria-current true": {
+      after send(SELECT, { stepId: "step-2" }) -> ok
+      then stepItem -> { aria-current: "true", data-step-id: "step-2" }
+    }
+
+    example "ArrowDown moves focus to next step": {
+      after stepItem.keyDown (key: "ArrowDown") -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    example "escape cancels in-progress drag": {
+      after reorderHandle.pointerDown -> ok
+      then root -> { data-state: "step-dragging" }
+      then send(DRAG_CANCEL) -> ok
+      then root -> { data-state: "idle" }
+      and reorderHandle -> { aria-grabbed: "false" }
+    }
+
+    forall s in states.interaction:
+      s.reachable = true
+
+    always "data-state on root reflects interaction FSM": {
+      root -> { data-state: state.interaction }
+    }
+
+    always "selected step receives aria-current": {
+      forall item in stepItems:
+        if item.stepId == ?selectedStepId then item -> { aria-current: "true" }
+    }
+
+    always "collapsed branch stepBody is hidden": {
+      forall item in stepItems:
+        if item.isCollapsed then stepBody -> { hidden: true }
+    }
+
+    always "drag source reorderHandle has aria-grabbed true": {
+      if state.interaction == "step-dragging" then reorderHandle -> { aria-grabbed: "true" }
+    }
+
+    never "duplicate step id in rendered list": {
+      exists a in stepItems, b in stepItems:
+        a != b and a.stepId == b.stepId
+    }
+
+    never "INSERT_AT fires during step-dragging state": {
+      state.interaction == "step-dragging" and send(INSERT_AT)
+    }
+
+    action reorderHandle.pointerDown {
+      requires: state.interaction == "idle" or state.interaction == "step-hover"
+      ensures ok: state.interaction == "step-dragging"
+    }
+
+    action insertHandle.click {
+      requires: state.interaction != "step-dragging"
+      ensures ok: state.interaction == "inserting"
+    }
+
+    "Widget emits events only — no direct writes to ProcessSpec state; the host wires INSERT_AT to ProcessSpec/addStep and REORDER to ProcessSpec/moveStep";
+    "stepItem data-step-kind must be one of: trigger, action, branch, catch, logic";
+    "Nested child stepItems under a branch parent are rendered within the parent stepItem boundary and share the same stepList role";
+    "collapsedBranches prop lists stepIds whose child lists are hidden; collapseToggle updates this list via the host";
+    "ArrowUp/Down keyboard navigation uses roving tabindex among all stepItems at the same nesting level";
+  }
+
+}
