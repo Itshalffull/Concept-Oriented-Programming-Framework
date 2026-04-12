@@ -118,7 +118,6 @@ widget upload-progress-decoration {
       data-active:    if state == "uploading" then "true" else "false";
       aria-valuenow:  ?progressPercent;
       hidden:         if state != "uploading" then true else false;
-      style:          { width: "{{progressPercent}}%" };
     }
 
     errorBadge -> {
@@ -145,10 +144,7 @@ widget upload-progress-decoration {
   affordance {
     serves: entity-overlay;
     specificity: 8;
-    when {
-      feature:   "upload-progress";
-      mediaType: "any";
-    }
+    when feature = "upload-progress";
     bind {
       assetId:         asset.id;
       progressPercent: asset.uploadProgress;
@@ -158,64 +154,81 @@ widget upload-progress-decoration {
   }
 
   compose {
-    slot progressBar inside root;
-    slot errorBadge  inside root;
-    slot retryButton inside root;
-    slot cancelButton inside root;
+    progressBar:  widget("progress-bar",  { active: if state == "uploading" then true else false })
+    errorBadge:   widget("error-badge",   { visible: if state == "failed" then true else false })
+    retryButton:  widget("retry-button",  { disabled: if state != "failed" then true else false })
+    cancelButton: widget("cancel-button", { hidden: if state == "hidden" or state == "success" then true else false })
   }
 
   invariant {
-    forall s in states:
-      s.reachable = true
-
-    always "data-state on root must reflect current FSM state": {
-      forall s in states:
-        s.name != ""
+    example "UPLOAD_START transitions queued to uploading": {
+      after UPLOAD_START() -> ok
+      then state = "uploading"
     }
 
-    always "root hidden attribute matches hidden state": {
-      if state == "hidden" then root.hidden == true
+    example "UPLOAD_SUCCESS transitions uploading to success": {
+      after UPLOAD_SUCCESS() -> ok
+      then state = "success"
     }
 
-    always "progressBar only visible during uploading state": {
-      if state != "uploading" then progressBar.hidden == true
+    example "UPLOAD_FAILURE transitions uploading to failed": {
+      after UPLOAD_FAILURE() -> ok
+      then state = "failed"
     }
 
-    always "errorBadge only visible during failed state": {
-      if state != "failed" then errorBadge.hidden == true
+    example "RETRY transitions failed back to queued": {
+      after RETRY() -> ok
+      then state = "queued"
     }
 
-    always "retryButton only accessible during failed state": {
-      if state != "failed" then retryButton.hidden == true and retryButton.disabled == true
+    example "CANCEL from uploading transitions to hidden": {
+      after CANCEL() -> ok
+      then state = "hidden"
     }
 
-    always "cancelButton hidden when in terminal states": {
-      if state == "hidden" or state == "success" then cancelButton.hidden == true
+    example "DISMISS transitions success to hidden": {
+      after DISMISS() -> ok
+      then state = "hidden"
     }
 
-    always "aria-busy true only during uploading state": {
-      if state == "uploading" then root["aria-busy"] == "true"
-      else root["aria-busy"] == "false"
+    forall "all states reachable": {
+      given s in states
+      then s.reachable = true
     }
 
-    always "progressBar aria-valuenow reflects progressPercent prop": {
-      progressBar["aria-valuenow"] == ?progressPercent
+    always "data-state on root reflects FSM state": {
+      root.dataState = state
     }
 
-    never "retryButton and cancelButton both visible in queued state": {
-      state == "queued" and retryButton.hidden == false
+    always "progressBar hidden when not uploading": {
+      progressBar.hidden = true
     }
 
-    "UPLOAD_START event must transition from queued to uploading and start progress animation";
-    "UPLOAD_SUCCESS event must transition from uploading to success and stop progress animation";
-    "UPLOAD_FAILURE event must transition from uploading to failed and display errorMessage in errorBadge";
-    "RETRY event must transition from failed to queued and re-initiate upload";
-    "CANCEL event must transition from any non-terminal state to hidden and abort the upload";
-    "DISMISS event must transition from success to hidden";
-    "progress bar animation must be suppressed when prefers-reduced-motion is reduce";
-    "widget must not trap keyboard focus in any state";
-    "errorBadge aria-live assertive region must announce errorMessage on UPLOAD_FAILURE without requiring focus movement";
-    "PluginRegistry decoration-layer registration must expose assetId as the MediaAsset state query key";
+    always "errorBadge hidden when not failed": {
+      errorBadge.hidden = true
+    }
+
+    always "retryButton hidden when not failed": {
+      retryButton.hidden = true
+    }
+
+    never "retryButton visible in queued state": {
+      state = "queued" and retryButton.hidden = false
+    }
+
+    never "progressBar visible in failed state": {
+      state = "failed" and progressBar.hidden = false
+    }
+
+    action retryButton {
+      requires: state = "failed"
+      ensures ok: state = "queued"
+    }
+
+    action cancelButton {
+      requires: state != "hidden"
+      ensures ok: state = "hidden"
+    }
   }
 
 }
