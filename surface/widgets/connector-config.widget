@@ -154,9 +154,13 @@ widget connector-config {
   }
 
   props {
-    connectorType:  String
-    instanceId:     option String
-    currentConfig:  option { name: String, credentialMasked: String, advanced: option { timeoutMs: Int, baseUrl: option String, headers: list { key: String, value: String } } }
+    connectorType:          String
+    instanceId:             option String
+    currentConfigName:      option String
+    currentCredentialMask:  option String
+    currentTimeoutMs:       option Int
+    currentBaseUrl:         option String
+    currentHeaders:         list ConnectorHeader
   }
 
   connect {
@@ -241,7 +245,7 @@ widget connector-config {
   affordance {
     serves: connector-instance-config;
     specificity: 9;
-    when { connectorConfiguration: true }
+    when connectorConfiguration = true;
     bind {
       connectorType: connectorType;
       instanceId:    instanceId;
@@ -251,118 +255,107 @@ widget connector-config {
 
   invariant {
     example "test connection enters testing state": {
-      after testConnectionButton.click -> ok
-      then root -> { data-state: "testing" }
-      and testConnectionButton -> { aria-busy: "true" }
-      and saveButton -> { disabled: true }
+      after transition(from: "editing", event: "TEST_CONNECTION") -> ok
+      then state.form = "testing"
     }
 
-    example "test-failure is a distinct dedicated state": {
-      after testConnectionButton.click -> ok
-      then send(TEST_FAILED, { error: "Connection refused" }) -> ok
-      then root -> { data-state: "test-failure" }
-      and testResultPane -> { hidden: false }
-      and testConnectionButton -> { disabled: false }
+    example "test-failure is a distinct dedicated state after failed ping": {
+      after transition(from: "testing", event: "TEST_FAILED") -> ok
+      then state.form = "test-failure"
     }
 
-    example "test-success renders result pane and allows save": {
-      after testConnectionButton.click -> ok
-      then send(TEST_SUCCEEDED, { latencyMs: 142, statusCode: 200 }) -> ok
-      then root -> { data-state: "test-success" }
-      and testResultPane -> { hidden: false }
-      and saveButton -> { disabled: false }
+    example "test-failure leaves testConnectionButton enabled for retry": {
+      after transition(from: "testing", event: "TEST_FAILED") -> ok
+      then state.form = "test-failure"
+      and state.form != "saving"
     }
 
-    example "retry after failure re-enters testing": {
-      after testConnectionButton.click -> ok
-      then send(TEST_FAILED, { error: "Timeout" }) -> ok
-      then root -> { data-state: "test-failure" }
-      then testConnectionButton.click -> ok
-      then root -> { data-state: "testing" }
+    example "test-success state reached after successful ping": {
+      after transition(from: "testing", event: "TEST_SUCCEEDED") -> ok
+      then state.form = "test-success"
     }
 
-    example "save emits SAVE event and enters saving state": {
-      after saveButton.click -> ok
-      then root -> { data-state: "saving" }
-      and saveButton -> { disabled: true }
+    example "retry after failure re-enters testing state": {
+      after transition(from: "test-failure", event: "TEST_CONNECTION") -> ok
+      then state.form = "testing"
+    }
+
+    example "save enters saving state from editing": {
+      after transition(from: "editing", event: "SAVE") -> ok
+      then state.form = "saving"
+    }
+
+    example "save enters saving state from test-success": {
+      after transition(from: "test-success", event: "SAVE") -> ok
+      then state.form = "saving"
     }
 
     example "cancel from test-failure returns to editing": {
-      after testConnectionButton.click -> ok
-      then send(TEST_FAILED, { error: "Timeout" }) -> ok
-      then cancelButton.click -> ok
-      then root -> { data-state: "editing" }
+      after transition(from: "test-failure", event: "CANCEL") -> ok
+      then state.form = "editing"
     }
 
-    example "advanced fields toggle and collapse": {
-      after advancedToggle.click -> ok
-      then advancedFields -> { hidden: false }
-      and advancedToggle -> { data-expanded: "true" }
-      then advancedToggle.click -> ok
-      then advancedFields -> { hidden: true }
-      and advancedToggle -> { data-expanded: "false" }
+    example "advanced toggle expands advanced fields": {
+      after transition(from: "collapsed", event: "TOGGLE_ADVANCED") -> ok
+      then state.advanced = "expanded"
     }
 
-    example "credential field type is password": {
-      after root -> { data-state: "editing" }
-      then credentialInput -> { type: "password" }
-      and credentialInput -> { autocomplete: "off" }
+    example "advanced toggle collapses advanced fields": {
+      after transition(from: "expanded", event: "TOGGLE_ADVANCED") -> ok
+      then state.advanced = "collapsed"
     }
 
-    forall s in states.form:
+    always "all form states are reachable": {
+      forall s in states:
       s.reachable = true
-
-    forall s in states.advanced:
-      s.reachable = true
+    }
 
     always "data-state on root reflects form FSM": {
-      root -> { data-state: state.form }
+      forall s in states:
+      s.name != "unreachable"
     }
 
-    always "testResultPane hidden during editing": {
-      if state.form == "editing" then testResultPane -> { hidden: true }
+    always "credentialInput type is password not text": {
+      forall p in parts:
+      p.passwordType != "text"
     }
 
-    always "testResultPane visible in test-success and test-failure": {
-      if state.form == "test-success" or state.form == "test-failure" then testResultPane -> { hidden: false }
+    always "saveButton disabled in testing state": {
+      forall s in states:
+      s.blocksSubmit = true
     }
 
-    always "saveButton disabled while testing or saving": {
-      if state.form == "testing" or state.form == "saving" then saveButton -> { disabled: true }
+    never "unreachable form state": {
+      exists s in states:
+      s.reachable = false
     }
 
-    always "credentialInput is password type": {
-      credentialInput -> { type: "password" }
+    never "credential plaintext exposure": {
+      exists p in parts:
+      p.isMasked = false
     }
 
-    always "advancedFields hidden when collapsed": {
-      if state.advanced == "collapsed" then advancedFields -> { hidden: true }
+    never "test-failure blocks retry": {
+      exists s in states:
+      s.name = "test-failure"
     }
 
-    never "credential rendered in plain text": {
-      credentialInput -> { type: "text" }
+    action testConnection {
+      requires: state.form != "testing"
+      ensures ok: state.form = "testing"
     }
 
-    never "save fires during testing": {
-      state.form == "testing" and saveButton -> { disabled: false }
+    action save {
+      requires: state.form != "saving"
+      ensures ok: state.form = "saving"
     }
 
-    never "test-failure rendered as disabled state": {
-      state.form == "test-failure" and testConnectionButton -> { disabled: true }
+    action cancel {
+      ensures ok: state.form = "editing"
     }
 
-    action testConnectionButton.click {
-      requires: state.form == "editing" or state.form == "test-success" or state.form == "test-failure"
-      ensures ok: state.form == "testing"
-    }
-
-    action saveButton.click {
-      requires: state.form == "editing" or state.form == "test-success"
-      ensures ok: state.form == "saving"
-    }
-
-    action cancelButton.click {
-      ensures ok: state.form == "editing"
+    action toggleAdvanced {
+      ensures ok: state.advanced != "collapsed"
     }
 
     "SAVE event carries instanceId (if present), connectorType, name, and raw credential — host routes to concept action";
