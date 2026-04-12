@@ -83,7 +83,7 @@ function formatValue(value: unknown, formatter?: string): React.ReactNode {
       const schemas = Array.isArray(value) ? value : [];
       if (schemas.length === 0) return <Badge variant="secondary">none</Badge>;
       return (
-        <span style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+        <span data-part="schema-list">
           {schemas.map((s: unknown) => (
             <Badge key={String(s)} variant="info">{String(s)}</Badge>
           ))}
@@ -92,7 +92,7 @@ function formatValue(value: unknown, formatter?: string): React.ReactNode {
     }
 
     case 'code':
-      return <code style={{ fontSize: 'var(--typography-code-sm-size)' }}>{String(value)}</code>;
+      return <code data-part="code">{String(value)}</code>;
 
     case 'truncate': {
       const s = String(value);
@@ -160,7 +160,7 @@ const GroupedTable: React.FC<{
   const displayColumns = columns.filter(c => c.key !== groupField);
 
   return (
-    <table data-part="data-table" role="grid" aria-label="Grouped view data">
+    <table data-part="data-table" data-surface="display-table" role="grid" aria-label="Grouped view data">
       <thead>
         <tr>
           {displayColumns.map(col => (
@@ -173,34 +173,18 @@ const GroupedTable: React.FC<{
           <React.Fragment key={group.key}>
             {/* Group header row */}
             <tr
+              data-part="group-row"
+              data-collapsed={collapsed.has(group.key) ? 'true' : 'false'}
               onClick={() => toggle(group.key)}
-              style={{
-                cursor: 'pointer',
-                background: 'var(--palette-surface-variant)',
-              }}
             >
               <td
                 colSpan={displayColumns.length}
-                style={{
-                  padding: 'var(--spacing-xs) var(--spacing-sm)',
-                  fontWeight: 600,
-                  fontSize: 'var(--typography-label-md-size, 13px)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 'var(--spacing-xs)',
-                }}
+                data-part="group-cell"
               >
-                <span style={{
-                  display: 'inline-block',
-                  width: 16,
-                  textAlign: 'center',
-                  fontSize: '10px',
-                  transition: 'transform 0.15s',
-                  transform: collapsed.has(group.key) ? 'rotate(-90deg)' : 'rotate(0deg)',
-                }}>
+                <span data-part="group-toggle" data-state={collapsed.has(group.key) ? 'collapsed' : 'expanded'}>
                   ▼
                 </span>
-                <span>{group.key}</span>
+                <span data-part="group-label">{group.key}</span>
                 <Badge variant="secondary">{group.rows.length}</Badge>
               </td>
             </tr>
@@ -236,20 +220,8 @@ const BulkActionToolbar: React.FC<{
   onAction: (actionKey: string) => void;
   onClear: () => void;
 }> = ({ selectedCount, totalCount, bulkActions, onAction, onClear }) => (
-  <div
-    data-part="bulk-toolbar"
-    style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: 'var(--spacing-sm)',
-      padding: 'var(--spacing-xs) var(--spacing-sm)',
-      background: 'var(--palette-primary-container, var(--palette-surface-variant))',
-      borderRadius: 'var(--radius-sm)',
-      marginBottom: 'var(--spacing-xs)',
-      fontSize: 'var(--typography-label-md-size, 13px)',
-    }}
-  >
-    <span style={{ fontWeight: 600 }}>
+  <div data-surface="display-toolbar" data-part="bulk-toolbar">
+    <span data-part="bulk-count">
       {selectedCount} of {totalCount} selected
     </span>
     {bulkActions.map(action => (
@@ -265,8 +237,8 @@ const BulkActionToolbar: React.FC<{
     <button
       data-part="button"
       data-variant="ghost"
+      data-role="bulk-clear"
       onClick={onClear}
-      style={{ marginLeft: 'auto' }}
     >
       Clear
     </button>
@@ -323,8 +295,8 @@ const RowActionButtons: React.FC<{
   }, [state.pending, onRowAction, row]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'flex-start' }}>
-      <div style={{ display: 'flex', gap: 'var(--spacing-xs)' }}>
+    <div data-surface="display-row-actions">
+      <div data-part="row-action-list">
         {rowActions.map(action => {
           const { visible, label } = resolveRowAction(action, row);
           if (!visible) return null;
@@ -350,7 +322,7 @@ const RowActionButtons: React.FC<{
               data-variant={isSuccess ? 'ghost' : (action.variant ?? 'ghost')}
               disabled={!!state.pending}
               onClick={(e) => handleAction(e, action)}
-              style={isSuccess ? { color: 'var(--palette-success, #2e7d32)' } : undefined}
+              data-state={isSuccess ? 'success' : undefined}
             >
               {isPending ? '...' : isSuccess ? 'Done' : label}
             </button>
@@ -358,19 +330,12 @@ const RowActionButtons: React.FC<{
         })}
       </div>
       {state.error && state.errorAction && (
-        <div style={{
-          fontSize: 'var(--typography-body-sm-size, 0.75rem)',
-          color: 'var(--palette-error, #d32f2f)',
-          marginTop: 2,
-          display: 'flex',
-          gap: 4,
-          alignItems: 'center',
-        }}>
+        <div data-part="row-action-error">
           <span>{state.error}</span>
           <button
             data-part="button"
             data-variant="ghost"
-            style={{ fontSize: 'inherit', padding: '0 2px', color: 'inherit' }}
+            data-role="row-action-retry"
             onClick={(e) => {
               e.stopPropagation();
               const action = rowActions.find(a => a.key === state.errorAction);

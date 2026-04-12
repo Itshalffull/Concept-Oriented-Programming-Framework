@@ -42,6 +42,7 @@ import {
   getDisplayInteractor,
   mapWidgetToLayout,
 } from '../../lib/widget-selection';
+import { getLabelVisualizationColorToken } from '../../lib/visualization-colors';
 import {
   evaluateFilterNode,
   buildFilterTree,
@@ -178,16 +179,6 @@ function resolveTemplates(obj: Record<string, unknown>, context: Record<string, 
   }
   return resolved;
 }
-
-// Schema color map for visual differentiation
-const SCHEMA_COLORS: Record<string, string> = {
-  Concept: '#6366f1', Schema: '#10b981', Sync: '#f59e0b', Suite: '#ec4899',
-  Workflow: '#8b5cf6', Theme: '#06b6d4', View: '#3b82f6', Widget: '#14b8a6',
-  AutomationRule: '#f97316', Taxonomy: '#84cc16', DisplayMode: '#0ea5e9',
-  VersionSpace: '#a855f7', VersionOverride: '#d946ef',
-  Article: '#22c55e', Page: '#22c55e', Media: '#eab308',
-  Comment: '#78716c', File: '#64748b',
-};
 
 /**
  * Extract all unique schema values from data rows for filter UI.
@@ -926,7 +917,7 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
           </button>
           {allValues.map((value) => {
             const isOn = active.has(value);
-            const dotColor = SCHEMA_COLORS[value] ?? '#64748b';
+            const dotColor = getLabelVisualizationColorToken(value);
             // Count: for schemas, count nodes that have this schema
             const count = filter.field === 'schemas'
               ? allData.filter((row) => Array.isArray(row.schemas) && (row.schemas as string[]).includes(value)).length

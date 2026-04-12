@@ -23,7 +23,7 @@ interface DetailDisplayProps {
 }
 
 function formatValue(value: unknown, formatter?: string): React.ReactNode {
-  if (value === null || value === undefined) return <span style={{ color: 'var(--palette-on-surface-variant)', opacity: 0.5 }}>—</span>;
+  if (value === null || value === undefined) return <span data-part="detail-empty-value">—</span>;
 
   const str = typeof value === 'object' ? JSON.stringify(value) : String(value);
 
@@ -45,7 +45,7 @@ function formatValue(value: unknown, formatter?: string): React.ReactNode {
       const schemas = Array.isArray(value) ? value : [];
       if (schemas.length === 0) return <Badge variant="secondary">none</Badge>;
       return (
-        <span style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+        <span data-part="detail-schema-list">
           {schemas.map((s: unknown) => (
             <Badge key={String(s)} variant="info">{String(s)}</Badge>
           ))}
@@ -53,19 +53,11 @@ function formatValue(value: unknown, formatter?: string): React.ReactNode {
       );
     }
     case 'code':
-      return <code style={{ fontFamily: 'var(--typography-font-family-mono)', fontSize: 'var(--typography-code-sm-size)' }}>{str}</code>;
+      return <code data-part="detail-code">{str}</code>;
     case 'json':
       try {
         return (
-          <pre style={{
-            fontFamily: 'var(--typography-font-family-mono)',
-            fontSize: 'var(--typography-code-sm-size)',
-            whiteSpace: 'pre-wrap',
-            wordBreak: 'break-word',
-            margin: 0,
-            maxHeight: 200,
-            overflow: 'auto',
-          }}>
+          <pre data-part="detail-json">
             {JSON.stringify(JSON.parse(str), null, 2)}
           </pre>
         );
@@ -89,14 +81,7 @@ export const DetailDisplay: React.FC<DetailDisplayProps> = ({ data, fields, onFi
     : Object.keys(entity).map((key) => ({ key, label: key }));
 
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: '160px 1fr',
-      gap: '1px 0',
-      borderRadius: 'var(--radius-md)',
-      overflow: 'hidden',
-      border: '1px solid var(--palette-outline-variant)',
-    }}>
+    <div data-surface="display-detail">
       {displayFields.map((field) => {
         const value = entity[field.key];
         const isSystem = field.formatter === 'system';
@@ -105,27 +90,11 @@ export const DetailDisplay: React.FC<DetailDisplayProps> = ({ data, fields, onFi
         return (
           <React.Fragment key={field.key}>
             {/* Label cell */}
-            <div style={{
-              padding: 'var(--spacing-sm) var(--spacing-md)',
-              background: 'var(--palette-surface-variant)',
-              fontWeight: 'var(--typography-label-md-weight)',
-              fontSize: 'var(--typography-label-sm-size)',
-              color: 'var(--palette-on-surface-variant)',
-              borderBottom: '1px solid var(--palette-outline-variant)',
-              display: 'flex',
-              alignItems: 'center',
-            }}>
+            <div data-part="detail-label">
               {field.label ?? field.key}
             </div>
             {/* Value cell */}
-            <div style={{
-              padding: 'var(--spacing-sm) var(--spacing-md)',
-              background: 'var(--palette-surface)',
-              borderBottom: '1px solid var(--palette-outline-variant)',
-              display: 'flex',
-              alignItems: 'center',
-              minHeight: 36,
-            }}>
+            <div data-part="detail-value">
               {isEditable ? (
                 <InlineEdit
                   value={value}

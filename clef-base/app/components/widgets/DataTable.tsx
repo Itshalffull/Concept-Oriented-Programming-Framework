@@ -86,15 +86,15 @@ export const DataTable: React.FC<DataTableProps> = ({
   }
 
   return (
-    <table data-part="data-table" role="grid" aria-label={ariaLabel}>
+    <table data-part="data-table" data-surface="display-table" role="grid" aria-label={ariaLabel}>
       <thead>
         <tr>
-          {hasExpandableRows && <th style={{ width: 28 }} />}
+          {hasExpandableRows && <th data-part="expand-cell" aria-hidden="true" />}
           {columns.map((col) => (
             <th
               key={col.key}
               onClick={sortable && col.sortable !== false && !col.headerRender ? () => handleSort(col.key) : undefined}
-              style={sortable && col.sortable !== false && !col.headerRender ? { cursor: 'pointer' } : undefined}
+              data-sortable={sortable && col.sortable !== false && !col.headerRender ? 'true' : undefined}
               aria-sort={
                 sortColumn === col.key
                   ? sortDirection === 'asc'
@@ -123,23 +123,15 @@ export const DataTable: React.FC<DataTableProps> = ({
             <React.Fragment key={i}>
               <tr
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
-                style={onRowClick ? { cursor: 'pointer' } : undefined}
+                data-clickable={onRowClick ? 'true' : undefined}
               >
                 {hasExpandableRows && (
                   <td
-                    style={{ width: 28, padding: '0 4px', textAlign: 'center' }}
+                    data-part="expand-cell"
                     onClick={isExpandable ? (e) => { e.stopPropagation(); toggleExpand(i); } : undefined}
                   >
                     {isExpandable && (
-                      <span style={{
-                        display: 'inline-block',
-                        fontSize: '10px',
-                        cursor: 'pointer',
-                        color: 'var(--palette-on-surface-variant)',
-                        transition: 'transform 0.15s',
-                        transform: isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)',
-                        userSelect: 'none',
-                      }}>
+                      <span data-part="expand-toggle" data-state={isExpanded ? 'expanded' : 'collapsed'}>
                         ▼
                       </span>
                     )}
@@ -156,7 +148,7 @@ export const DataTable: React.FC<DataTableProps> = ({
                 <tr>
                   <td
                     colSpan={columns.length + (hasExpandableRows ? 1 : 0)}
-                    style={{ padding: '0 0 0 24px', background: 'var(--palette-surface-variant)' }}
+                    data-part="nested-table"
                   >
                     <DataTable
                       columns={columns}

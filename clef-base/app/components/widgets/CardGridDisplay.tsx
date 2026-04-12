@@ -69,8 +69,8 @@ const CardRowActionButtons: React.FC<{
   }, [pending, onRowAction, row, stopPropagation]);
 
   return (
-    <div>
-      <div style={{ display: 'flex', gap: 'var(--spacing-xs)' }}>
+    <div data-surface="display-row-actions">
+      <div data-part="row-action-list">
         {rowActions.map(action => {
           const { visible, label } = resolveRowAction(action, row);
           if (!visible) return null;
@@ -90,13 +90,13 @@ const CardRowActionButtons: React.FC<{
           const isPending = pending === action.key;
           const isSuccess = success === action.key;
           return (
-            <button
+              <button
               key={action.key}
               data-part="button"
               data-variant={isSuccess ? 'ghost' : (action.variant ?? 'ghost')}
               disabled={!!pending}
               onClick={(e) => handleAction(e, action)}
-              style={isSuccess ? { color: 'var(--palette-success, #2e7d32)' } : undefined}
+              data-state={isSuccess ? 'success' : undefined}
             >
               {isPending ? '...' : isSuccess ? 'Done' : label}
             </button>
@@ -104,19 +104,12 @@ const CardRowActionButtons: React.FC<{
         })}
       </div>
       {error && errorAction && (
-        <div style={{
-          fontSize: 'var(--typography-body-sm-size, 0.75rem)',
-          color: 'var(--palette-error, #d32f2f)',
-          marginTop: 4,
-          display: 'flex',
-          gap: 4,
-          alignItems: 'center',
-        }}>
+        <div data-part="row-action-error">
           <span>{error}</span>
           <button
             data-part="button"
             data-variant="ghost"
-            style={{ fontSize: 'inherit', padding: '0 2px', color: 'inherit' }}
+            data-role="row-action-retry"
             onClick={(e) => {
               e.stopPropagation();
               const action = rowActions.find(a => a.key === errorAction);
@@ -161,7 +154,7 @@ export const CardGridDisplay: React.FC<CardGridDisplayProps> = ({ data, fields, 
   const metaFields = visibleFields.slice(1);
 
   return (
-    <div className="card-grid">
+    <div className="card-grid" data-surface="display-card-grid">
       {data.map((row, i) => {
         // Custom renderItem from DisplayMode — replaces default card content
         if (renderItem) {
@@ -174,7 +167,7 @@ export const CardGridDisplay: React.FC<CardGridDisplayProps> = ({ data, fields, 
             >
               {renderItem(row, onRowClick ? () => onRowClick(row) : undefined)}
               {rowActions && rowActions.length > 0 && (
-                <div style={{ marginTop: 'var(--spacing-sm)' }} onClick={(e) => e.stopPropagation()}>
+                <div data-part="card-row-actions" onClick={(e) => e.stopPropagation()}>
                   <CardRowActionButtons
                     row={row}
                     rowActions={rowActions}
@@ -194,17 +187,17 @@ export const CardGridDisplay: React.FC<CardGridDisplayProps> = ({ data, fields, 
             clickable={!!onRowClick}
             onClick={() => onRowClick?.(row)}
           >
-            <strong style={{ fontSize: 'var(--typography-heading-sm-size)', marginBottom: 'var(--spacing-sm)', display: 'block' }}>
+            <strong data-part="card-title">
               {titleValue}
             </strong>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-sm)' }}>
+            <div data-part="card-meta-list">
               {metaFields.map(field => {
                 const val = row[field.key];
                 const rendered = formatCardValue(val, field.formatter);
                 if (!rendered) return null;
                 return (
-                  <div key={field.key} style={{ fontSize: 'var(--typography-body-sm-size)' }}>
-                    <span style={{ color: 'var(--palette-on-surface-variant)', marginRight: 'var(--spacing-xs)' }}>
+                  <div key={field.key} data-part="card-meta">
+                    <span data-part="card-meta-label">
                       {field.label ?? field.key}:
                     </span>
                     {rendered}
@@ -213,7 +206,7 @@ export const CardGridDisplay: React.FC<CardGridDisplayProps> = ({ data, fields, 
               })}
             </div>
             {rowActions && rowActions.length > 0 && (
-              <div style={{ marginTop: 'var(--spacing-sm)' }} onClick={(e) => e.stopPropagation()}>
+              <div data-part="card-row-actions" onClick={(e) => e.stopPropagation()}>
                 <CardRowActionButtons
                   row={row}
                   rowActions={rowActions}

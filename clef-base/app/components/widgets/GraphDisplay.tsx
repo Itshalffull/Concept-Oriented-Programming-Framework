@@ -14,6 +14,7 @@
 
 import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import type { FieldConfig } from './TableDisplay';
+import { getTypeVisualizationColorToken } from '../../../lib/visualization-colors';
 
 interface NodePosition {
   x: number;
@@ -36,31 +37,6 @@ interface GraphDisplayProps {
   data: Record<string, unknown>[];
   fields: FieldConfig[];
   onRowClick?: (row: Record<string, unknown>) => void;
-}
-
-// Assign a color per schema (uses primary schema for coloring)
-const SCHEMA_COLORS: Record<string, string> = {
-  Concept: '#6366f1',        // indigo
-  Schema: '#10b981',         // emerald
-  Sync: '#f59e0b',           // amber
-  Suite: '#ec4899',          // pink
-  Workflow: '#8b5cf6',       // violet
-  Theme: '#06b6d4',          // cyan
-  View: '#3b82f6',           // blue
-  Widget: '#14b8a6',         // teal
-  DisplayMode: '#0ea5e9',    // sky
-  AutomationRule: '#f97316', // orange
-  Taxonomy: '#84cc16',       // lime
-  VersionSpace: '#a855f7',   // purple
-  VersionOverride: '#d946ef',// fuchsia
-  Article: '#22c55e',        // green
-  Page: '#22c55e',           // green
-  Media: '#eab308',          // yellow
-  default: '#64748b',        // slate
-};
-
-function getSchemaColor(schema: string): string {
-  return SCHEMA_COLORS[schema] ?? SCHEMA_COLORS.default;
 }
 
 /** Extract edges from data — nodes that reference each other by name/id */
@@ -294,7 +270,7 @@ export const GraphDisplay: React.FC<GraphDisplayProps> = ({ data, fields, onRowC
             markerHeight="6"
             orient="auto-start-reverse"
           >
-            <polygon points="0 0, 10 3.5, 0 7" fill={SCHEMA_COLORS.Sync} />
+            <polygon points="0 0, 10 3.5, 0 7" fill="var(--visualization-sync)" />
           </marker>
           <marker
             id="sync-arrow-highlight"
@@ -316,7 +292,7 @@ export const GraphDisplay: React.FC<GraphDisplayProps> = ({ data, fields, onRowC
           const highlighted = hoveredEdges.has(idx);
           const dimmed = hoveredNode !== null && !highlighted;
           const isSyncEdge = edge.isSync;
-          const defaultStroke = isSyncEdge ? SCHEMA_COLORS.Sync : 'var(--palette-outline-variant)';
+          const defaultStroke = isSyncEdge ? 'var(--visualization-sync)' : 'var(--visualization-edge-muted)';
           return (
             <line
               key={`edge-${idx}`}
@@ -340,7 +316,7 @@ export const GraphDisplay: React.FC<GraphDisplayProps> = ({ data, fields, onRowC
           const isHovered = hoveredNode === idx;
           const isConnected = connectedNodes.has(idx);
           const dimmed = hoveredNode !== null && !isConnected;
-          const color = getSchemaColor(node.type);
+          const color = getTypeVisualizationColorToken(node.type);
           const nodeRadius = isHovered ? 8 : 6;
           const isSyncNode = node.type === 'Sync';
 
@@ -377,7 +353,7 @@ export const GraphDisplay: React.FC<GraphDisplayProps> = ({ data, fields, onRowC
                 x={node.x}
                 y={node.y + nodeRadius + 12}
                 textAnchor="middle"
-                fill="var(--palette-on-surface)"
+                fill="var(--visualization-node-label)"
                 fontSize={isHovered ? 11 : 9}
                 fontFamily="var(--typography-font-family-mono)"
                 fontWeight={isHovered ? 600 : 400}
@@ -410,7 +386,7 @@ export const GraphDisplay: React.FC<GraphDisplayProps> = ({ data, fields, onRowC
               width: 8,
               height: 8,
               borderRadius: type === 'Sync' ? '1px' : '50%',
-              background: getSchemaColor(type),
+              background: getTypeVisualizationColorToken(type),
               transform: type === 'Sync' ? 'rotate(45deg) scale(0.85)' : undefined,
             }} />
             {type}

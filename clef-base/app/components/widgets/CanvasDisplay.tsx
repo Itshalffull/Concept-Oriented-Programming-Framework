@@ -14,6 +14,7 @@ import { Canvas } from '@clef/surface/domain/Canvas';
 import { GraphAnalysisPanel } from '@clef/surface/domain/GraphAnalysisPanel';
 import { useKernelInvoke } from '../../../lib/clef-provider';
 import type { FieldConfig } from './TableDisplay';
+import { getTypeVisualizationColorToken } from '../../../lib/visualization-colors';
 
 // --------------- Types ---------------
 
@@ -41,26 +42,7 @@ interface CanvasDisplayProps {
   onRowClick?: (row: Record<string, unknown>) => void;
 }
 
-// --------------- Color Palette ---------------
-
-const TYPE_COLORS: Record<string, string> = {
-  concept: '#6366f1',
-  schema: '#10b981',
-  sync: '#f59e0b',
-  suite: '#ec4899',
-  workflow: '#8b5cf6',
-  theme: '#06b6d4',
-  view: '#3b82f6',
-  'display-mode': '#14b8a6',
-  'automation-rule': '#f97316',
-  taxonomy: '#84cc16',
-  'version-space': '#a855f7',
-  default: '#64748b',
-};
-
-function getTypeColor(type: string): string {
-  return TYPE_COLORS[type] ?? TYPE_COLORS.default;
-}
+// --------------- Color Contract ---------------
 
 // --------------- Graph Building ---------------
 
@@ -315,7 +297,7 @@ export const CanvasDisplay: React.FC<CanvasDisplayProps> = ({ data, fields, onRo
         const isHovered = hoveredNode === node.id;
         const isConnected = connectedNodes.has(node.id);
         const dimmed = hoveredNode !== null && !isConnected;
-        const color = overlayColors[node.id] || getTypeColor(node.type);
+        const color = overlayColors[node.id] || getTypeVisualizationColorToken(node.type);
         const scale = overlaySizes[node.id] || 1;
         const displayLabel = node.label.replace(/^(concept|schema|sync|suite|view|theme):/, '');
 
@@ -348,15 +330,15 @@ export const CanvasDisplay: React.FC<CanvasDisplayProps> = ({ data, fields, onRo
                 cy={8 * scale}
                 r={6 * scale}
                 fill={color}
-                stroke={isHovered || isSelected ? 'var(--palette-on-surface, #1e293b)' : 'var(--palette-surface, #fff)'}
+                stroke={isHovered || isSelected ? 'var(--palette-on-surface)' : 'var(--visualization-node-stroke)'}
                 strokeWidth={isHovered || isSelected ? 2.5 : 1.5}
               />
             </svg>
             <div style={{
               fontSize: isHovered ? 11 : 9,
               fontWeight: isHovered ? 600 : 400,
-              fontFamily: 'var(--typography-font-family-mono, monospace)',
-              color: 'var(--palette-on-surface, #1e293b)',
+              fontFamily: 'var(--typography-font-family-mono)',
+              color: 'var(--visualization-node-label)',
               whiteSpace: 'nowrap',
               marginTop: 2,
             }}>
@@ -384,7 +366,7 @@ export const CanvasDisplay: React.FC<CanvasDisplayProps> = ({ data, fields, onRo
             y1={s.y}
             x2={t.x}
             y2={t.y}
-            stroke={highlighted ? 'var(--palette-primary, #6366f1)' : 'var(--palette-outline-variant, #cbd5e1)'}
+            stroke={highlighted ? 'var(--visualization-concept)' : 'var(--visualization-edge-muted)'}
             strokeWidth={highlighted ? 2 : 1}
             strokeOpacity={dimmed ? 0.15 : highlighted ? 1 : 0.4}
           />
@@ -413,9 +395,9 @@ export const CanvasDisplay: React.FC<CanvasDisplayProps> = ({ data, fields, onRo
             style={{
               width: '100%',
               height: dimensions.height,
-              background: 'var(--palette-surface-variant, #f8fafc)',
-              borderRadius: 'var(--radius-lg, 12px)',
-              border: '1px solid var(--palette-outline-variant, #e2e8f0)',
+              background: 'var(--palette-surface-variant)',
+              borderRadius: 'var(--radius-lg)',
+              border: '1px solid var(--palette-outline-variant)',
               position: 'relative',
               overflow: 'hidden',
             }}
@@ -425,24 +407,24 @@ export const CanvasDisplay: React.FC<CanvasDisplayProps> = ({ data, fields, onRo
           <div style={{
             display: 'flex',
             flexWrap: 'wrap',
-            gap: 'var(--spacing-sm, 8px)',
-            marginTop: 'var(--spacing-sm, 8px)',
-            padding: 'var(--spacing-xs, 4px) var(--spacing-sm, 8px)',
+            gap: 'var(--spacing-sm)',
+            marginTop: 'var(--spacing-sm)',
+            padding: 'var(--spacing-xs) var(--spacing-sm)',
           }}>
             {types.map((type) => (
               <div key={type} style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '4px',
-                fontSize: 'var(--typography-label-sm-size, 11px)',
-                color: 'var(--palette-on-surface-variant, #64748b)',
+                fontSize: 'var(--typography-label-sm-size)',
+                color: 'var(--palette-on-surface-variant)',
               }}>
                 <span style={{
                   display: 'inline-block',
                   width: 8,
                   height: 8,
                   borderRadius: '50%',
-                  background: getTypeColor(type),
+                  background: getTypeVisualizationColorToken(type),
                 }} />
                 {type}
               </div>
@@ -463,8 +445,8 @@ export const CanvasDisplay: React.FC<CanvasDisplayProps> = ({ data, fields, onRo
           style={{
             width: 340,
             flexShrink: 0,
-            borderLeft: '1px solid var(--palette-outline-variant, #e2e8f0)',
-            background: 'var(--palette-surface, #fff)',
+            borderLeft: '1px solid var(--palette-outline-variant)',
+            background: 'var(--palette-surface)',
             maxHeight: dimensions.height + 40,
             overflowY: 'auto',
           }}
