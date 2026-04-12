@@ -1,6 +1,6 @@
 # PRD: Automation Operational Surfaces
 
-## Status: Draft
+## Status: All 16 sub-cards landed (2026-04-12) — see Card Status
 ## Authors: 2026-04-12
 ## Depends on:
 - Completed: Automation Authoring UI (MAG-670, docs/plans/automation-ui-prd.md)
@@ -243,15 +243,16 @@ Each card's acceptance criteria must explicitly confirm the applicable patterns:
 | MAG-692 | Schedule manager (Timer + ScheduledJob) | Done | `c503e65b` |
 | MAG-693 | Webhook inbox + replay | Done | `d329e389` |
 | MAG-694 | Flow step inspector tab strip | Done | `16971e4e` |
-| MAG-695 | Retry policy editor | To do (unblocked) | — |
-| MAG-696 | Compensation plan editor | To do (unblocked) | — |
-| MAG-697 | LLM step config + tool registry | To do (unblocked) | — |
-| MAG-698 | Connector step config | To do (unblocked) | — |
-| MAG-699 | Connector library + instances | Done | `d329e389` |
-| MAG-700 | Connector call log | To do (unblocked) | — |
-| MAG-701 | Queue monitor | To do | — |
-| MAG-702 | Checkpoint viewer | To do | — |
-| MAG-703 | Automation provider dashboard | To do | — |
-| MAG-704 | AutomationScope admin editor | To do | — |
-| MAG-705 | Approval inbox (conditional) | To do | — |
-| MAG-706 | Evaluation runs view | To do | — |
+| MAG-695 | Retry policy editor | Done | `b660151e` + `9075f759` |
+| MAG-696 | Compensation plan editor | Done | `97826c82` + `60b3ae4e` |
+| MAG-697 | LLM step config + tool registry | Done | `16f0b19b` + `12a4f985` + `548c3d04` |
+| MAG-698 | Connector step config | Done | `c22779fd` + `66ed17e6` |
+| MAG-699 | Connector library + instances | Done | `d329e389` + `ec8fdc43` + `ea25e2d0` |
+| MAG-700 | Connector call log | Done | `a7a44802` + `9bcbcafe` |
+| MAG-701 | Queue monitor | Done | `c2a08522` + `41ec4017` |
+| MAG-702 | Checkpoint viewer | Done | `f3692741` + `3a196338` |
+| MAG-703 | Automation provider dashboard | Done | `6e703ec5` + `3312eef8` |
+| MAG-704 | AutomationScope admin editor | Done | `7c698d35` + `a0603680` |
+| MAG-705 | Approval inbox | Done | `e46e800f` |
+| MAG-706 | Evaluation runs view | Done | `e0f30b55` + `1ef859d1` |
+| MAG-707 | LLM step config → agent-persona flow | Done | `14084be7` + `12a4f985` |
