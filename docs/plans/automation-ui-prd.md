@@ -1,6 +1,6 @@
 # PRD: Automation & Workflow Authoring UI
 
-## Status: Draft
+## Status: MVP + V1 landed (2026-04-12) — see Card Status below
 ## Authors: 2026-04-12
 ## Depends on:
 - Research: `docs/research/automation/` (3 docs)
@@ -188,6 +188,32 @@ The data model is already complete. All deliverables are UI + syncs composing ex
 6. **Past runs can be replayed** — clicking "Replay" on a run clones inputs and fires a new run.
 
 ---
+
+## Card Status
+
+| Card | Title | Status | Commit |
+|---|---|---|---|
+| MAG-671 | flow-builder shell widget | Done | `d251b21b` |
+| MAG-672 | flow-steps-view widget | Done | `ab9ef883` |
+| MAG-674 | FlowchartEditor integration + projection syncs | Done | `e5c85b7c` |
+| MAG-675 | data-mapping widget | Done | `c5e7e8bb` |
+| MAG-676 | error-branch widget | Done | `680c1704` |
+| MAG-677 | AutomationRule dispatch sync | Done | `12a0b319` |
+| MAG-678 | step-test-runner widget | Done | `59bf8ba8` |
+| MAG-679 | ReplayRun sync | Done | `33201279` |
+| MAG-680 | workflow-version-history widget | Done | `6ab106cb` |
+| MAG-681 | Permissions & run-as syncs | Done | `0423d6e4` |
+
+## Known Follow-ups (concept API gaps surfaced during implementation)
+
+These gaps were documented during sync/widget work but are out of scope for the current cards. Track as new cards when revisited:
+
+- **ProcessSpec granular mutation** — spec stores `steps` and `edges` as opaque `Bytes` in `create`/`update`; no `addStep` / `addEdge` / `removeStep`. ProcessSpecToCanvas / CanvasToProcessSpec currently project at spec-level granularity. Adding granular actions (or a handler-level decode/traverse) would enable per-step projection fidelity.
+- **Canvas has no `createConnector` primitive** — edges are structural via `ConstraintAnchor/setFlowDirection`. CanvasToProcessSpec currently triggers on `Canvas/groupNodes` as the nearest semantic proxy.
+- **GraphAnalysis** exposes only `analyze(algorithm: ...)` — no dedicated `detectCycles`. FlowGraphValidate uses `analyze(algorithm: "cycle-detection")`.
+- **ProcessRun** lacks `replay` and `attachContext` actions; **StepRun** lacks `seed` (selective redrive) and `getIO` (visibility gating). ReplayRun triggers on `get_status` as a stand-in; StepIOVisibility gates on `StepRun/get`.
+- **ProcessSpec step record** has no `visibility` field — StepIOVisibility reads visibility from Authorization state as a workaround.
+- **FlowBuilderView** React adapter (MAG-671 scope-deferred) — wires the shell widget + sub-widgets into clef-base once the action-editor, step-test-runner, and version-history widgets are available to compose.
 
 ## Appendix: Companion Docs
 
