@@ -6,11 +6,11 @@ entries:
   - rule: auto-tag-on-create
     trigger: ContentNode/create
     conditions: '[]'
-    actions: '[{"type":"log","message":"Auto-apply taxonomy tags based on content type"}]'
+    actions: '[{"type":"invoke-action-binding","binding":"schema-apply","params":{"schema":"default","entity_id":"context.id"}}]'
   - rule: notify-on-publish
     trigger: Workflow/transition
     conditions: '[]'
-    actions: '[{"type":"log","message":"Send notification when content moves to published state"}]'
+    actions: '[{"type":"invoke-action-binding","binding":"process-resume","params":{"run":"context.runId"}}]'
   - rule: cache-invalidate-on-save
     trigger: ContentStorage/save
     conditions: '[]'

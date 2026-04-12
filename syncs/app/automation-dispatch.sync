@@ -1,0 +1,21 @@
+# Route AutomationRule execute completions to ActionBinding/invoke for rules
+# that declare an "invoke-action-binding" action type, replacing the log placeholder.
+
+sync DispatchAutomationAction [eager]
+  purpose: "When an automation rule executes and its action type is invoke-action-binding, forward the invocation to ActionBinding/invoke using the rule's declared binding ref and params"
+when {
+  AutomationRule/execute: [ rule: ?ruleId; context: ?ctx ]
+    => ok(result: ?actionsJson)
+}
+where {
+  AutomationRule: { ?ruleId actions: ?actionsJson }
+  bind(?actionsJson[0].type as ?actionType)
+  filter(?actionType = "invoke-action-binding")
+  bind(?actionsJson[0].binding as ?bindingRef)
+  bind(?actionsJson[0].params as ?params)
+}
+then {
+  ActionBinding/invoke: [
+    binding: ?bindingRef;
+    context: ?ctx ]
+}
