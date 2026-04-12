@@ -1,0 +1,293 @@
+@version(1)
+widget ai-chat-panel {
+
+  purpose {
+    Side-rail AI chat panel that attaches to any editor surface, providing
+    a persistent conversation thread with the current page as optional
+    context. The panel binds to an AgentSession: if no sessionId is
+    provided the first message auto-creates one via AgentSession/spawn.
+    Assistant messages stream in token-by-token while the FSM is in the
+    streaming state, and an aria-live polite region announces incoming text
+    to assistive technology. A contextToggle lets the user enable or disable
+    page context injection without leaving the panel. A modelSelector lets
+    the user switch between available model identifiers exposed by the
+    AgentSession persona.
+  }
+
+  anatomy {
+    root:              container     { Outer panel wrapper with role=region; carries data-state reflecting chat FSM }
+    messageList:       container     { Scrollable list of all chat turns; aria-live=polite for assistantMessage additions }
+    userMessage:       presentation  { Single user turn bubble; repeating child of messageList }
+    assistantMessage:  presentation  { Single assistant turn bubble; repeating child of messageList; aria-live polite }
+    inputArea:         interactive   { Multi-line text input for composing the next user message }
+    sendButton:        action        { Primary send action; disabled while chat machine is in sending or streaming state }
+    modelSelector:     interactive   { Dropdown or segmented control for switching the active model identifier }
+    contextToggle:     interactive   { Toggle control to include or exclude the current page content as context }
+  }
+
+  states {
+    chat {
+      idle [initial] {
+        on FOCUS_INPUT  -> composing;
+        on RECEIVE      -> streaming;
+      }
+      composing {
+        on BLUR_INPUT   -> idle;
+        on SEND         -> sending;
+        on CLEAR        -> idle;
+      }
+      sending {
+        on STREAM_START -> streaming;
+        on ERROR        -> error;
+        entry [disableSendButton; showLoadingIndicator];
+        exit [hideLoadingIndicator];
+      }
+      streaming {
+        on STREAM_DONE  -> idle;
+        on ERROR        -> error;
+        entry [enableStreamingUI];
+        exit [disableStreamingUI];
+      }
+      error {
+        on RETRY        -> sending;
+        on CLEAR        -> idle;
+        entry [showErrorMessage];
+        exit [clearErrorMessage];
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+
+    keyboard {
+      Enter           -> SEND;
+      Shift+Enter     -> INSERT_NEWLINE;
+      Escape          -> CLEAR;
+    }
+
+    focus {
+      trap: false;
+      initial: inputArea;
+      roving: false;
+      returnOnClose: inputArea;
+    }
+
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "AI chat panel";
+      };
+      messageList -> {
+        role: "log";
+        aria-label: "chat messages";
+        aria-live: "polite";
+        aria-relevant: "additions";
+      };
+      userMessage -> {
+        role: "article";
+        aria-label: "you";
+      };
+      assistantMessage -> {
+        role: "article";
+        aria-label: "assistant";
+        aria-live: "polite";
+      };
+      inputArea -> {
+        role: "textbox";
+        aria-multiline: "true";
+        aria-label: "message input";
+        aria-disabled: if state.chat == "sending" then "true" else if state.chat == "streaming" then "true" else "false";
+      };
+      sendButton -> {
+        role: "button";
+        aria-label: "send message";
+        aria-disabled: if state.chat == "sending" then "true" else if state.chat == "streaming" then "true" else "false";
+      };
+      modelSelector -> {
+        role: "combobox";
+        aria-label: "select model";
+      };
+      contextToggle -> {
+        role: "switch";
+        aria-label: "include page context";
+        aria-checked: if ?pageContextEnabled then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    sessionId:          option String
+    pageContextEnabled: Bool   = true
+    model:              String = "default"
+  }
+
+  connect {
+    root -> {
+      data-part:  "root";
+      data-state: state.chat;
+      role:       "region";
+      aria-label: "AI chat panel";
+    }
+
+    messageList -> {
+      data-part:    "message-list";
+      aria-live:    "polite";
+      aria-relevant: "additions";
+    }
+
+    userMessage -> {
+      data-part: "user-message";
+    }
+
+    assistantMessage -> {
+      data-part: "assistant-message";
+      aria-live: "polite";
+    }
+
+    inputArea -> {
+      data-part:      "input-area";
+      role:           "textbox";
+      aria-multiline: "true";
+      onFocus:        send(FOCUS_INPUT);
+      onBlur:         send(BLUR_INPUT);
+      onKeyDown-Enter: send(SEND);
+      onKeyDown-Escape: send(CLEAR);
+    }
+
+    sendButton -> {
+      data-part: "send-button";
+      disabled:  if state.chat == "sending" then true else if state.chat == "streaming" then true else false;
+      onClick:   send(SEND);
+    }
+
+    modelSelector -> {
+      data-part: "model-selector";
+      value:     ?model;
+    }
+
+    contextToggle -> {
+      data-part:    "context-toggle";
+      aria-checked: if ?pageContextEnabled then "true" else "false";
+    }
+  }
+
+  invariant {
+
+    example "FOCUS_INPUT transitions to composing": {
+      after FOCUS_INPUT() -> ok
+      then state.chat = "composing"
+    }
+
+    example "SEND from composing transitions to sending": {
+      after SEND() -> ok
+      then state.chat = "sending"
+    }
+
+    example "STREAM_START transitions to streaming": {
+      after STREAM_START() -> ok
+      then state.chat = "streaming"
+    }
+
+    example "STREAM_DONE returns to idle": {
+      after STREAM_DONE() -> ok
+      then state.chat = "idle"
+    }
+
+    example "ERROR from sending transitions to error": {
+      after ERROR() -> ok
+      then state.chat = "error"
+    }
+
+    example "RETRY from error re-enters sending": {
+      after RETRY() -> ok
+      then state.chat = "sending"
+    }
+
+    example "sendButton disabled while sending": {
+      after SEND() -> ok
+      then state.chat = "sending"
+      then sendButton.disabled = true
+    }
+
+    example "sendButton disabled while streaming": {
+      after STREAM_START() -> ok
+      then state.chat = "streaming"
+      then sendButton.disabled = true
+    }
+
+    example "sendButton enabled in idle state": {
+      after render() -> ok
+      then sendButton.disabled = false
+    }
+
+    example "contextToggle aria-checked true when pageContextEnabled": {
+      after render(pageContextEnabled: true) -> ok
+      then contextToggle.ariaChecked = "true"
+    }
+
+    example "contextToggle aria-checked false when disabled": {
+      after render(pageContextEnabled: false) -> ok
+      then contextToggle.ariaChecked = "false"
+    }
+
+    example "messageList has aria-live polite": {
+      after render() -> ok
+      then messageList.ariaLive = "polite"
+    }
+
+    example "assistantMessage has aria-live polite": {
+      after render() -> ok
+      then assistantMessage.ariaLive = "polite"
+    }
+
+    example "root role is region with aria-label AI chat panel": {
+      after render() -> ok
+      then root.role = "region"
+      then root.ariaLabel = "AI chat panel"
+    }
+
+    forall "chat FSM covers all expected states": {
+      given s in { "idle", "composing", "sending", "streaming", "error" }
+      then s.reachable = true
+    }
+
+    always "root data-state reflects chat FSM": {
+      root.dataState = state.chat
+    }
+
+    always "messageList role is log": {
+      messageList.role = "log"
+    }
+
+    always "inputArea role is textbox": {
+      inputArea.role = "textbox"
+    }
+
+    always "contextToggle role is switch": {
+      contextToggle.role = "switch"
+    }
+
+    never "sendButton enabled while sending": {
+      state.chat = "sending" and sendButton.disabled = false
+    }
+
+    never "sendButton enabled while streaming": {
+      state.chat = "streaming" and sendButton.disabled = false
+    }
+
+    never "error state entered without prior send": {
+      state.chat = "error" and state.chat != "sending" and state.chat != "streaming"
+    }
+
+    action sendButton {
+      requires: state.chat = "composing"
+      ensures ok: state.chat = "sending"
+    }
+
+    "First message auto-creates AgentSession via AgentSession/spawn using the pageContextEnabled prop to inject page content";
+    "When sessionId prop is absent on first send, the session is created and sessionId is set on the widget instance for the lifetime of the panel";
+    "Streaming assistant tokens are appended to the current assistantMessage turn as they arrive; STREAM_DONE seals the turn";
+  }
+
+}

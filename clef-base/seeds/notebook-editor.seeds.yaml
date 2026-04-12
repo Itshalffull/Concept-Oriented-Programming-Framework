@@ -1,0 +1,147 @@
+# Seeds for notebook-editor.derived (MAG-744).
+# Three sections:
+#   1. ComponentMapping — registers code-cell-block as the block-editor widget
+#      for content nodes with schema "code-cell".
+#   2. EditSurface — registers editing surfaces for the code-cell block and
+#      for notebook-page page-level editing.
+#   3. ActionBinding — binds toolbar/keyboard commands to AgentSession actions.
+#
+# API gap notes:
+#   - code-cell-run targets AgentSession/spawn with a "code-executor" persona.
+#     The exact parameterMap will be refined when the code-executor persona
+#     concept is created; a placeholder persona reference is used here.
+#   - code-cell-stop targets AgentSession/cancel. AgentSession does not yet
+#     expose a cancel action (the closest is terminate). A follow-up card
+#     should add AgentSession/cancel or map to AgentSession/terminate.
+#     The binding is registered now so the command slot is reserved.
+#   - ai-chat-send targets AgentSession/invoke with the panel's sessionId as
+#     the session reference and the inputArea content as the goal.
+
+# ---------------------------------------------------------------------------
+# 1. ComponentMapping
+# ---------------------------------------------------------------------------
+concept: ComponentMapping
+action: create
+entries:
+  # code-cell block — notebook-style executable code cell.
+  - id: code-cell-mapping
+    name: code-cell-mapping
+    widget_id: code-cell-block
+    schema: code-cell
+    display_mode: block-editor
+    insertable: true
+    section: "Advanced"
+    icon: "play"
+    label: "Code cell"
+
+---
+# ---------------------------------------------------------------------------
+# 2. EditSurface
+# ---------------------------------------------------------------------------
+concept: EditSurface
+action: register
+entries:
+  # code-cell block editor surface.
+  # Literal block scope: input_rule_refs intentionally empty (same as code-block).
+  # Bindings: code-cell-run (Ctrl+Enter), code-cell-stop (Escape while running),
+  #   code-cell-toggle-run-on-change (toolbar toggle).
+  - id: code-cell-block-editor
+    schema_ref: code-cell
+    context: block-editor
+    toolbar_widget: inline-toolbar
+    command_bindings:
+      - code-cell-run
+      - code-cell-stop
+      - code-cell-toggle-run-on-change
+    panel_widgets: []
+    context_menu_bindings: []
+    input_rule_refs: []
+    picker_refs: []
+    compile_action_ref: null
+    compile_bundle_ref: null
+    compile_status_field: null
+
+  # notebook page-level editor surface.
+  # Attaches ai-chat-panel, outline-panel, and backlinks-panel as side-rail
+  # panel widgets so the full notebook authoring surface is available.
+  - id: notebook-page-editor
+    schema_ref: notebook
+    context: page-level
+    toolbar_widget: inline-toolbar
+    command_bindings: []
+    panel_widgets:
+      - ai-chat-panel
+      - outline-panel
+      - backlinks-panel
+    context_menu_bindings: []
+    input_rule_refs: []
+    picker_refs: []
+    compile_action_ref: null
+    compile_bundle_ref: null
+    compile_status_field: null
+
+---
+# ---------------------------------------------------------------------------
+# 3. ActionBinding
+# ---------------------------------------------------------------------------
+concept: ActionBinding
+action: bind
+entries:
+  # Run the focused code cell via AgentSession/spawn with the code-executor
+  # persona. The personaPageId references the anticipated "code-executor"
+  # persona page; exact page ID will be resolved at runtime via ContentNode lookup.
+  - name: code-cell-run
+    binding: code-cell-run
+    target: "AgentSession/spawn"
+    parameterMap: '{"personaPageId":"code-executor","strategy":"code-executor","tools":"[]","context":"context.cellCode"}'
+    executionPolicy: "auto"
+    toolbar_command: true
+    slash_command: false
+    context_menu: false
+    section: "Cell"
+    label: "Run cell"
+    icon: "play"
+
+  # Stop the running code cell execution.
+  # Gap: AgentSession does not expose cancel. Targeting AgentSession/terminate
+  # as the closest available action. Follow-up card should add AgentSession/cancel.
+  - name: code-cell-stop
+    binding: code-cell-stop
+    target: "AgentSession/terminate"
+    parameterMap: '{"session":"context.cellSessionId"}'
+    executionPolicy: "auto"
+    toolbar_command: true
+    slash_command: false
+    context_menu: false
+    section: "Cell"
+    label: "Stop cell"
+    icon: "square"
+
+  # Toggle runOnChange mode for the focused code cell.
+  # Targets Property/set to flip the runOnChange field on the ContentNode.
+  - name: code-cell-toggle-run-on-change
+    binding: code-cell-toggle-run-on-change
+    target: "Property/set"
+    parameterMap: '{"entity":"context.focusedBlockId","key":"runOnChange","value":"context.toggleRunOnChange"}'
+    executionPolicy: "auto"
+    toolbar_command: true
+    slash_command: false
+    context_menu: false
+    section: "Cell"
+    label: "Run on change"
+    icon: "refresh"
+
+  # Send a message from the AI chat panel to the bound AgentSession.
+  # If context.chatSessionId is null the caller is responsible for creating
+  # the session first (NotebookEditor/askAI handles this via AgentSession/spawn).
+  - name: ai-chat-send
+    binding: ai-chat-send
+    target: "AgentSession/invoke"
+    parameterMap: '{"session":"context.chatSessionId","goal":"context.chatInputValue"}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    context_menu: false
+    section: "AI Chat"
+    label: "Send"
+    icon: "send"

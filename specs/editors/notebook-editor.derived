@@ -1,0 +1,53 @@
+derived NotebookEditor [T] {
+
+  purpose {
+    Page-level editor for notebook-style ContentNodes. Composes MarkdownEditor
+    for prose and structured block editing, AgentSession for code-cell
+    execution (via a "code-executor" persona) and inline AI chat, and
+    ContentCompiler for export/compilation of the notebook's cell outputs.
+    Extends the MarkdownEditor surface with a code-cell block vocabulary,
+    a run-on-change execution loop, and a side-rail AI chat panel — turning
+    any ContentNode into an interactive computational notebook without
+    coupling the notebook runtime to any particular execution backend.
+  }
+
+  composes {
+    MarkdownEditor [T]
+    AgentSession
+    ContentCompiler [T]
+  }
+
+  syncs {
+    required: [
+      notebook-code-cell-registered,
+      notebook-run-on-change-enabled,
+      notebook-ai-chat-panel-attached
+    ]
+  }
+
+  surface {
+    action create(name: String) {
+      matches: ContentNode/create
+      triggers: [
+        MarkdownEditor/create
+      ]
+    }
+
+    action runCell(cell: String) {
+      matches: AgentSession/spawn(strategy: "code-executor")
+    }
+
+    action askAI(session: String, prompt: String) {
+      matches: AgentSession/invoke
+    }
+
+    query cellExecutions(cell: String) -> AgentSession/list(personaPageId: cell)
+    query notebookSessions(page: String) -> AgentSession/list(personaPageId: page)
+  }
+
+  principle {
+    after create(name: "Research notebook") -> ok(id: p)
+    then runCell(cell: c) -> ok(session: s, agentLoopId: _, conversationId: _)
+    then cellExecutions(cell: c) returns [s]
+  }
+}

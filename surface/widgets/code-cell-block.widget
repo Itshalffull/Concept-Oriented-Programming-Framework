@@ -1,0 +1,378 @@
+@version(1)
+widget code-cell-block {
+
+  purpose {
+    Executable code cell block for notebook-style ContentNodes. Extends the
+    code-block editing surface with an execution lifecycle: a run button
+    dispatches AgentSession/spawn with a "code-executor" persona, streaming
+    output lines appear in the outputPane while the cell is running, and
+    an errorPane surfaces any execution errors after the run completes.
+    A parallel execute machine (idle | running | success | error) overlays
+    the inherited edit machine from code-block so that syntax editing and
+    execution status are tracked independently. runOnChange mode
+    automatically re-runs the cell whenever the code content changes.
+    Ctrl+Enter runs the cell, Escape stops a running cell, and
+    Shift+Enter runs the cell and inserts a new cell below.
+  }
+
+  anatomy {
+    root:            container     { Outer wrapper; carries data-state reflecting both edit and execute sub-states, plus data-language }
+    languageBadge:   presentation  { Language identifier badge above the code body; clicking opens the language picker }
+    body:            interactive   { Editable code textarea with syntax highlighting; all markdown InputRules are suppressed }
+    runButton:       action        { Primary run trigger; visible in idle, success, and error states }
+    stopButton:      action        { Cancel trigger; visible only while execute machine is in running state }
+    outputPane:      container     { Scrollable area that streams outputLine items during and after execution }
+    outputLine:      presentation  { Single line of stdout or evaluated result text; repeating child of outputPane }
+    errorPane:       container     { Highlighted error box; visible only when execute machine is in error state }
+    executionStatus: presentation  { Small badge showing execution index and duration; hidden when no execution has occurred }
+  }
+
+  states {
+    execute {
+      idle [initial] {
+        on RUN          -> running;
+        on RUN_CHANGE   -> running;
+        entry [clearOutput];
+      }
+      running {
+        on COMPLETE     -> success;
+        on FAIL         -> error;
+        on STOP         -> idle;
+        entry [showStopButton; startStreaming];
+        exit [hideStopButton];
+      }
+      success {
+        on RUN          -> running;
+        on RUN_CHANGE   -> running;
+        entry [showExecutionStatus];
+      }
+      error {
+        on RUN          -> running;
+        on RUN_CHANGE   -> running;
+        entry [showErrorPane];
+        exit [clearErrorPane];
+      }
+    }
+
+    edit {
+      idle [initial] {
+        on FOCUS        -> focused;
+        on OPEN_PICKER  -> language-picker-open;
+      }
+      focused {
+        on BLUR         -> idle;
+        on START_EDIT   -> editing;
+        on OPEN_PICKER  -> language-picker-open;
+      }
+      editing {
+        on BLUR         -> idle;
+        on SAVE         -> focused;
+        on OPEN_PICKER  -> language-picker-open;
+        entry [disableInputRules];
+        exit [maybeRunOnChange];
+      }
+      language-picker-open {
+        on CLOSE_PICKER -> focused;
+        on PICK_LANGUAGE -> focused;
+        entry [openLanguagePicker];
+        exit [closeLanguagePicker];
+      }
+    }
+  }
+
+  accessibility {
+    role: group;
+
+    keyboard {
+      Control+Enter   -> RUN;
+      Escape          -> STOP;
+      Shift+Enter     -> RUN_AND_ADVANCE;
+      Tab             -> INDENT;
+      Shift+Tab       -> OUTDENT;
+      Control+Slash   -> TOGGLE_COMMENT;
+      Meta+l          -> OPEN_PICKER;
+    }
+
+    focus {
+      trap: false;
+      initial: body;
+      roving: false;
+      returnOnClose: body;
+    }
+
+    aria {
+      root -> {
+        role: "group";
+        aria-label: "code cell";
+        aria-roledescription: "executable code cell";
+      };
+      body -> {
+        role: "textbox";
+        aria-multiline: "true";
+        aria-label: "cell code editor";
+        aria-readonly: if state.edit == "idle" then "true" else "false";
+      };
+      runButton -> {
+        role: "button";
+        aria-label: "run cell";
+        aria-disabled: if state.execute == "running" then "true" else "false";
+      };
+      stopButton -> {
+        role: "button";
+        aria-label: "stop execution";
+        aria-hidden: if state.execute == "running" then "false" else "true";
+      };
+      outputPane -> {
+        role: "log";
+        aria-label: "cell output";
+        aria-live: "polite";
+      };
+      errorPane -> {
+        role: "alert";
+        aria-label: "execution error";
+        aria-live: "assertive";
+        aria-hidden: if state.execute == "error" then "false" else "true";
+      };
+      executionStatus -> {
+        role: "status";
+        aria-label: "execution status";
+        aria-live: "polite";
+      };
+      languageBadge -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    blockId:      String
+    code:         String = ""
+    language:     String = "python"
+    runOnChange:  Bool   = false
+    sessionId:    option String
+  }
+
+  connect {
+    root -> {
+      data-part:        "root";
+      data-state:       state.execute;
+      data-edit-state:  state.edit;
+      data-language:    ?language;
+      data-run-on-change: if ?runOnChange then "true" else "false";
+      onFocus:          send(FOCUS);
+      onBlur:           send(BLUR);
+    }
+
+    languageBadge -> {
+      data-part: "language-badge";
+      text:      ?language;
+      onClick:   send(OPEN_PICKER);
+    }
+
+    body -> {
+      data-part:            "body";
+      role:                 "textbox";
+      aria-multiline:       "true";
+      text:                 ?code;
+      onFocus:              send(FOCUS);
+      onBlur:               send(BLUR);
+      onInput:              send(START_EDIT);
+      onKeyDown-Tab:        send(INDENT);
+      onKeyDown-Shift+Tab:  send(OUTDENT);
+      onKeyDown-Control+Enter: send(RUN);
+      onKeyDown-Shift+Enter:   send(RUN_AND_ADVANCE);
+      onKeyDown-Escape:        send(STOP);
+      onKeyDown-Control+Slash: send(TOGGLE_COMMENT);
+      onKeyDown-Meta+l:        send(OPEN_PICKER);
+    }
+
+    runButton -> {
+      data-part: "run-button";
+      hidden:    if state.execute == "running" then true else false;
+      onClick:   send(RUN);
+    }
+
+    stopButton -> {
+      data-part: "stop-button";
+      hidden:    if state.execute == "running" then false else true;
+      onClick:   send(STOP);
+    }
+
+    outputPane -> {
+      data-part: "output-pane";
+      hidden:    if state.execute == "idle" then true else false;
+    }
+
+    outputLine -> {
+      data-part: "output-line";
+    }
+
+    errorPane -> {
+      data-part: "error-pane";
+      hidden:    if state.execute == "error" then false else true;
+      aria-live: "assertive";
+    }
+
+    executionStatus -> {
+      data-part: "execution-status";
+      hidden:    if state.execute == "idle" then true else false;
+    }
+  }
+
+  affordance {
+    serves: code-cell;
+    specificity: 10;
+    when concept = "ContentNode";
+    bind {
+      code:     body;
+      language: language;
+      sessionId: sessionId;
+    }
+  }
+
+  compose {
+    _languagePicker: widget("language-picker", {
+      open: if state.edit == "language-picker-open" then true else false,
+      currentLanguage: ?language
+    });
+  }
+
+  invariant {
+
+    example "RUN transitions execute machine to running": {
+      after RUN() -> ok
+      then state.execute = "running"
+    }
+
+    example "COMPLETE transitions execute machine to success": {
+      after COMPLETE() -> ok
+      then state.execute = "success"
+    }
+
+    example "FAIL transitions execute machine to error": {
+      after FAIL() -> ok
+      then state.execute = "error"
+    }
+
+    example "STOP from running returns to idle": {
+      after STOP() -> ok
+      then state.execute = "idle"
+    }
+
+    example "RUN from success re-enters running": {
+      after RUN() -> ok
+      then state.execute = "running"
+    }
+
+    example "RUN from error re-enters running": {
+      after RUN() -> ok
+      then state.execute = "running"
+    }
+
+    example "stopButton hidden when not running": {
+      after render(code: "print(1)") -> ok
+      then stopButton.hidden = true
+    }
+
+    example "stopButton visible when running": {
+      after render(code: "print(1)") -> ok
+      then state.execute = "running"
+      then stopButton.hidden = false
+    }
+
+    example "outputPane hidden in idle state": {
+      after render() -> ok
+      then outputPane.hidden = true
+    }
+
+    example "errorPane hidden when not in error state": {
+      after render() -> ok
+      then errorPane.hidden = true
+    }
+
+    example "errorPane visible in error state": {
+      after FAIL() -> ok
+      then errorPane.hidden = false
+    }
+
+    example "language prop binds to data-language on root": {
+      after render(language: "python") -> ok
+      then root.dataLanguage = "python"
+    }
+
+    example "default language is python": {
+      after render() -> ok
+      then root.dataLanguage = "python"
+    }
+
+    example "Ctrl+Enter dispatches RUN event to body": {
+      after render(code: "x = 1") -> ok
+      then body.onKeyDown = "Control+Enter"
+      then state.execute = "running"
+    }
+
+    example "runOnChange true sets data-run-on-change attribute": {
+      after render(runOnChange: true) -> ok
+      then root.dataRunOnChange = "true"
+    }
+
+    forall "execute machine covers all expected states": {
+      given s in { "idle", "running", "success", "error" }
+      then s.reachable = true
+    }
+
+    always "root data-state reflects execute FSM": {
+      root.dataState = state.execute
+    }
+
+    always "body role is textbox": {
+      body.role = "textbox"
+    }
+
+    always "outputPane role is log": {
+      outputPane.role = "log"
+    }
+
+    always "errorPane aria-live is assertive": {
+      errorPane.ariaLive = "assertive"
+    }
+
+    never "runButton and stopButton both visible simultaneously": {
+      runButton.hidden = false and stopButton.hidden = false
+    }
+
+    never "stopButton visible outside running state": {
+      state.execute != "running" and stopButton.hidden = false
+    }
+
+    never "errorPane visible outside error state": {
+      state.execute != "error" and errorPane.hidden = false
+    }
+
+    never "Tab key causes focus to leave body": {
+      body.onKeyDown = "Tab" and focus.moved = true
+    }
+
+    action body {
+      requires: state.edit = "focused"
+      ensures ok: state.edit = "editing"
+    }
+
+    action runButton {
+      requires: state.execute != "running"
+      ensures ok: state.execute = "running"
+    }
+
+    action stopButton {
+      requires: state.execute = "running"
+      ensures ok: state.execute = "idle"
+    }
+
+    "Ctrl+Enter fires RUN regardless of which edit sub-state the cell is in";
+    "Shift+Enter fires RUN_AND_ADVANCE which additionally inserts a new cell below the current one";
+    "maybeRunOnChange exit action on editing state triggers RUN_CHANGE only when runOnChange prop is true";
+    "clearOutput entry action on execute/idle resets the outputPane children before a new run begins";
+  }
+
+}
