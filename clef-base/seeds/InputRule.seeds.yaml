@@ -80,6 +80,19 @@ entries:
     priority: 100
     scope: null
 
+  # paste-url-embed (MAG-734): when the clipboard contains a URL matching a known
+  # embeddable media host, open the embed-url-resolver.widget dialog so the user
+  # can choose link-card, rich-embed, or media-asset insertion mode. Priority 95
+  # (higher than paste-url-to-selection at 90) so specific embeddable-URL hosts
+  # are handled by this rule before the generic link-wrap fallback.
+  - name: paste-url-embed
+    rule: paste-url-embed
+    kind: paste
+    pattern: "^https?://(www\\.)?(youtube|vimeo|twitter|github|spotify|soundcloud)\\."
+    action_ref: media-embed-from-url
+    priority: 95
+    scope: null
+
   # paste-url-to-selection (MAG-728): when the clipboard contains a bare URL
   # matching ^https?:// and there is an active text selection, wrap the selection
   # as a link mark using the pasted URL via link-wrap-selection-with-url.

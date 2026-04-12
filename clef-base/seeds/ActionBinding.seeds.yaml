@@ -676,6 +676,71 @@ entries:
     label: "Refresh"
     icon: "refresh-cw"
 
+  # --- URL embed resolver actions (MAG-734) ---
+  # media-embed-from-url: dispatched by the paste-url-embed InputRule when the
+  # clipboard contains a URL matching a known embeddable media host (YouTube, Vimeo,
+  # Twitter/X, GitHub, Spotify, SoundCloud). Opens the embed-url-resolver.widget
+  # as a modal dialog, passing the pasted URL. On dialog confirm, one of the three
+  # confirm bindings fires depending on the selected embed type. On cancel, no block
+  # is inserted.
+  # API gap note: EmbedUrlResolver/open is an anticipated surface action that mounts
+  # the embed-url-resolver.widget with the captured URL. A follow-up card should
+  # introduce that concept. For now the target references the anticipated API shape.
+  - name: media-embed-from-url
+    binding: media-embed-from-url
+    target: "EmbedUrlResolver/open"
+    parameterMap: '{"url":"context.pastedText","blockId":"context.focusedBlockId","onComplete":"embed-url-confirm-link-card","onCancel":"noop"}'
+    executionPolicy: "auto"
+    slash_command: false
+    toolbar_command: false
+    context_menu: false
+
+  # embed-url-confirm-link-card: called when the user confirms link-card mode in the
+  # embed-url-resolver dialog. Creates a link-card block via Schema/applyTo on a new
+  # ContentNode, inserting it after the current focused block.
+  # API gap note: ContentNode/createWithSchema is an anticipated action; Schema/applyTo
+  # is the closest existing primitive. A follow-up card should introduce an atomic
+  # create+schema action. For now references Schema/applyTo with a new node uuid.
+  - name: embed-url-confirm-link-card
+    binding: embed-url-confirm-link-card
+    target: "Schema/applyTo"
+    parameterMap: '{"schema":"link-card","entity_id":"uuid()","url":"context.resolvedUrl","title":"context.resolvedTitle"}'
+    executionPolicy: "auto"
+    slash_command: false
+    toolbar_command: false
+    context_menu: false
+    label: "Insert as link card"
+
+  # embed-url-confirm-rich-embed: called when the user confirms rich-embed mode.
+  # Creates a rich-embed block backed by iframe or oEmbed data. The oEmbed endpoint
+  # is resolved by the embed-url-resolver widget before confirmation; the resolved
+  # oEmbed JSON is forwarded in context.oembedJson.
+  # API gap note: Same Schema/applyTo gap as embed-url-confirm-link-card. A follow-up
+  # card should introduce an atomic create+schema action.
+  - name: embed-url-confirm-rich-embed
+    binding: embed-url-confirm-rich-embed
+    target: "Schema/applyTo"
+    parameterMap: '{"schema":"rich-embed","entity_id":"uuid()","url":"context.resolvedUrl","oembedJson":"context.oembedJson"}'
+    executionPolicy: "auto"
+    slash_command: false
+    toolbar_command: false
+    context_menu: false
+    label: "Insert as embed"
+
+  # embed-url-confirm-media: called when the user confirms media-asset mode.
+  # Creates a MediaAsset record with the resolved platform source (youtube, vimeo,
+  # etc.) and inserts it as a media-asset block via the existing
+  # paste-image-to-block.sync pattern (source field drives sync trigger matching).
+  - name: embed-url-confirm-media
+    binding: embed-url-confirm-media
+    target: "MediaAsset/createMedia"
+    parameterMap: '{"asset":"uuid()","source":"context.embedPlatform","url":"context.resolvedUrl","title":"context.resolvedTitle"}'
+    executionPolicy: "auto"
+    slash_command: false
+    toolbar_command: false
+    context_menu: false
+    label: "Insert as media block"
+
   # --- Drop file upload action (MAG-733) ---
   # Dispatched by the drop-file-generic InputRule when a file is dropped onto the
   # block editor. context.droppedFile carries the raw File reference from the drop

@@ -1,0 +1,330 @@
+@version(1)
+widget embed-url-resolver {
+
+  purpose {
+    Modal dialog that intercepts a pasted embeddable URL and guides the user
+    through choosing how to insert it: as a plain link-card, a rich-embed
+    (iframe or oEmbed), or a first-class media-asset block (YouTube, Vimeo,
+    etc.). The widget fetches URL metadata asynchronously, shows a live
+    preview with title, image, and description, and exposes three embed-type
+    tabs so the user can compare insertion modes before confirming. Focus is
+    trapped inside the dialog; Escape cancels without inserting. Backed by
+    the paste-url-embed InputRule and the media-embed-from-url ActionBinding.
+  }
+
+  anatomy {
+    root:               container     { Top-level dialog wrapper; carries data-state for both FSMs }
+    urlDisplay:         text          { Read-only display of the URL being resolved }
+    previewCard:        container     { Container for the fetched URL preview metadata }
+    previewTitle:       text          { Fetched page title from URL metadata }
+    previewImage:       presentation  { Thumbnail or OG image from the resolved URL }
+    previewDescription: text          { Short description or OG description from the resolved URL }
+    embedTypeTabs:      container     { Tab strip for selecting the embed insertion mode }
+    tabLinkCard:        action        { Tab button that selects the link-card embed type }
+    tabRichEmbed:       action        { Tab button that selects the rich-embed (iframe/oEmbed) type }
+    tabMedia:           action        { Tab button that selects the media-asset block type }
+    confirmButton:      action        { Confirms the selected embed type and inserts the block }
+    cancelButton:       action        { Dismisses the dialog without inserting anything }
+    loadingIndicator:   presentation  { Spinner shown while URL metadata is being fetched }
+    errorMessage:       text          { Error text shown when URL fetch fails or URL is invalid }
+  }
+
+  states {
+    resolve {
+      idle [initial] {
+        on FETCH_START   -> fetching;
+        on CANCEL        -> idle;
+      }
+      fetching {
+        on FETCH_SUCCESS -> preview-ready;
+        on FETCH_FAILURE -> failed;
+        entry [startFetch];
+        exit [clearFetchTimer];
+      }
+      preview-ready {
+        on FETCH_START   -> fetching;
+        on CANCEL        -> idle;
+        on CONFIRM       -> idle;
+      }
+      failed {
+        on FETCH_START   -> fetching;
+        on CANCEL        -> idle;
+      }
+    }
+
+    embedType [parallel] {
+      link-card [initial] {
+        on SELECT_RICH_EMBED -> rich-embed;
+        on SELECT_MEDIA      -> media;
+      }
+      rich-embed {
+        on SELECT_LINK_CARD  -> link-card;
+        on SELECT_MEDIA      -> media;
+      }
+      media {
+        on SELECT_LINK_CARD  -> link-card;
+        on SELECT_RICH_EMBED -> rich-embed;
+      }
+    }
+  }
+
+  accessibility {
+    role: dialog;
+    modal: true;
+
+    keyboard {
+      Escape    -> CANCEL;
+      Tab       -> FOCUS_NEXT;
+      ArrowLeft -> SELECT_LINK_CARD;
+      ArrowRight -> SELECT_RICH_EMBED;
+      Enter     -> CONFIRM;
+    }
+
+    focus {
+      trap: true;
+      initial: tabLinkCard;
+      roving: true;
+      returnOnClose: true;
+    }
+
+    aria {
+      root -> {
+        role: "dialog";
+        aria-modal: "true";
+        aria-label: "Embed URL resolver";
+        aria-describedby: urlDisplay;
+      };
+      urlDisplay -> {
+        role: "status";
+        aria-live: "polite";
+      };
+      previewCard -> {
+        role: "region";
+        aria-label: "URL preview";
+        aria-busy: if state.resolve == "fetching" then "true" else "false";
+      };
+      embedTypeTabs -> {
+        role: "tablist";
+        aria-label: "Embed type";
+      };
+      tabLinkCard -> {
+        role: "tab";
+        aria-selected: if state.embedType == "link-card" then "true" else "false";
+        aria-controls: previewCard;
+      };
+      tabRichEmbed -> {
+        role: "tab";
+        aria-selected: if state.embedType == "rich-embed" then "true" else "false";
+        aria-controls: previewCard;
+      };
+      tabMedia -> {
+        role: "tab";
+        aria-selected: if state.embedType == "media" then "true" else "false";
+        aria-controls: previewCard;
+      };
+      confirmButton -> {
+        role: "button";
+        aria-disabled: if state.resolve == "fetching" then "true" else "false";
+      };
+      cancelButton -> {
+        role: "button";
+      };
+      loadingIndicator -> {
+        role: "status";
+        aria-label: "Fetching URL preview";
+        aria-hidden: if state.resolve == "fetching" then "false" else "true";
+      };
+      errorMessage -> {
+        role: "alert";
+        aria-live: "assertive";
+        aria-hidden: if state.resolve == "failed" then "false" else "true";
+      };
+    }
+  }
+
+  props {
+    url: String
+    onComplete: String
+    onCancel: String
+  }
+
+  connect {
+    root -> {
+      role: "dialog";
+      aria-modal: "true";
+      data-state: state.resolve;
+      data-embed-type: state.embedType;
+      data-part: "root";
+    }
+
+    urlDisplay -> {
+      textContent: ?url;
+      data-part: "urlDisplay";
+    }
+
+    previewCard -> {
+      hidden: if state.resolve == "idle" then true else false;
+      data-part: "previewCard";
+    }
+
+    previewTitle -> {
+      data-part: "previewTitle";
+    }
+
+    previewImage -> {
+      hidden: if state.resolve == "preview-ready" then false else true;
+      data-part: "previewImage";
+    }
+
+    previewDescription -> {
+      data-part: "previewDescription";
+    }
+
+    embedTypeTabs -> {
+      role: "tablist";
+      data-part: "embedTypeTabs";
+    }
+
+    tabLinkCard -> {
+      role: "tab";
+      aria-selected: if state.embedType == "link-card" then "true" else "false";
+      tabindex: if state.embedType == "link-card" then "0" else "-1";
+      onClick: send(SELECT_LINK_CARD);
+      data-part: "tabLinkCard";
+    }
+
+    tabRichEmbed -> {
+      role: "tab";
+      aria-selected: if state.embedType == "rich-embed" then "true" else "false";
+      tabindex: if state.embedType == "rich-embed" then "0" else "-1";
+      onClick: send(SELECT_RICH_EMBED);
+      data-part: "tabRichEmbed";
+    }
+
+    tabMedia -> {
+      role: "tab";
+      aria-selected: if state.embedType == "media" then "true" else "false";
+      tabindex: if state.embedType == "media" then "0" else "-1";
+      onClick: send(SELECT_MEDIA);
+      data-part: "tabMedia";
+    }
+
+    confirmButton -> {
+      onClick: send(CONFIRM);
+      disabled: if state.resolve == "fetching" then true else false;
+      aria-disabled: if state.resolve == "fetching" then "true" else "false";
+      data-part: "confirmButton";
+    }
+
+    cancelButton -> {
+      onClick: send(CANCEL);
+      data-part: "cancelButton";
+    }
+
+    loadingIndicator -> {
+      hidden: if state.resolve == "fetching" then false else true;
+      aria-hidden: if state.resolve == "fetching" then "false" else "true";
+      data-part: "loadingIndicator";
+    }
+
+    errorMessage -> {
+      hidden: if state.resolve == "failed" then false else true;
+      data-part: "errorMessage";
+    }
+  }
+
+  affordance {
+    serves: overlay;
+    specificity: 8;
+    bind {
+      url: context.pastedUrl;
+    }
+  }
+
+  invariant {
+    example "FETCH_START transitions resolve from idle to fetching": {
+      after transition(from: "idle", event: "FETCH_START") -> ok
+      then state.resolve = "fetching"
+      and loadingIndicator.hidden = false
+    }
+
+    example "FETCH_SUCCESS transitions resolve to preview-ready": {
+      after transition(from: "fetching", event: "FETCH_SUCCESS") -> ok
+      then state.resolve = "preview-ready"
+      and previewCard.hidden = false
+      and confirmButton.ariaDisabled = "false"
+    }
+
+    example "FETCH_FAILURE transitions resolve to failed": {
+      after transition(from: "fetching", event: "FETCH_FAILURE") -> ok
+      then state.resolve = "failed"
+      and errorMessage.hidden = false
+    }
+
+    example "CANCEL from failed returns resolve to idle": {
+      after transition(from: "failed", event: "CANCEL") -> ok
+      then state.resolve = "idle"
+    }
+
+    example "SELECT_RICH_EMBED transitions embedType to rich-embed": {
+      after transition(from: "link-card", event: "SELECT_RICH_EMBED") -> ok
+      then state.embedType = "rich-embed"
+      and tabRichEmbed.ariaSelected = "true"
+      and tabLinkCard.ariaSelected = "false"
+    }
+
+    example "SELECT_MEDIA transitions embedType to media": {
+      after transition(from: "rich-embed", event: "SELECT_MEDIA") -> ok
+      then state.embedType = "media"
+      and tabMedia.ariaSelected = "true"
+    }
+
+    forall "all resolve states reachable": {
+      given s in resolveStates
+      then s.reachable = true
+    }
+
+    forall "all embedType states reachable": {
+      given s in embedTypeStates
+      then s.reachable = true
+    }
+
+    always "data-state on root reflects resolve FSM": {
+      root.dataState = state.resolve
+    }
+
+    always "confirmButton disabled while fetch in flight": {
+      state.resolve = "fetching"
+    }
+
+    always "loadingIndicator hidden when resolve is not fetching": {
+      loadingIndicator.hidden = true
+    }
+
+    always "errorMessage hidden when resolve is not failed": {
+      errorMessage.hidden = true
+    }
+
+    never "confirmButton enabled while fetching": {
+      state.resolve = "fetching" and confirmButton.disabled = false
+    }
+
+    never "focus target outside root while dialog open": {
+      root.ariaModal = "true" and focusTarget.outside = true
+    }
+
+    never "previewCard and errorMessage visible at same time": {
+      previewCard.hidden = false and errorMessage.hidden = false
+    }
+
+    action confirmButton {
+      requires: state.resolve = "preview-ready"
+      ensures ok: state.resolve = "idle"
+    }
+
+    action cancelButton {
+      requires: state.resolve != "idle"
+      ensures ok: state.resolve = "idle"
+    }
+  }
+}
