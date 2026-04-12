@@ -20,8 +20,9 @@ import { Card } from '../components/widgets/Card';
 import { EmptyState } from '../components/widgets/EmptyState';
 import { LayoutRenderer } from '../components/LayoutRenderer';
 import { DisplayAsPicker } from '../components/widgets/DisplayAsPicker';
+import { ActionButton } from '../components/widgets/ActionButton';
 import { useConceptQuery } from '../../lib/use-concept-query';
-import { useNavigator, useKernelInvoke } from '../../lib/clef-provider';
+import { useNavigator } from '../../lib/clef-provider';
 import { useVersionPins, VersionPinInfo } from '../../lib/use-version-pins';
 
 interface EntityDetailViewProps {
@@ -46,7 +47,6 @@ const SCHEMA_COLORS: Record<string, 'primary' | 'success' | 'warning' | 'info' |
 };
 
 export const EntityDetailView: React.FC<EntityDetailViewProps> = ({ id }) => {
-  const invoke = useKernelInvoke();
   const { data, loading, error, refetch: refetchNode } = useConceptQuery<Record<string, unknown>>('ContentNode', 'get', { node: id });
   const { data: schemasResult, refetch: refetchSchemas } = useConceptQuery<{ schemas: string }>('Schema', 'getSchemasFor', { entity_id: id });
   const { data: allSchemaDefs } = useConceptQuery<Record<string, unknown>[]>('Schema', 'list');
@@ -60,8 +60,6 @@ export const EntityDetailView: React.FC<EntityDetailViewProps> = ({ id }) => {
   }, []);
 
   const [showSchemaManager, setShowSchemaManager] = useState(false);
-  const [schemaActionPending, setSchemaActionPending] = useState(false);
-  const [schemaActionError, setSchemaActionError] = useState<string | null>(null);
 
   // Parse schemas from the response
   const schemas: string[] = schemasResult?.schemas
@@ -94,43 +92,6 @@ export const EntityDetailView: React.FC<EntityDetailViewProps> = ({ id }) => {
   const recommendedWidgets = typeof widgetRegistryResult?.entries === 'string'
     ? JSON.parse(widgetRegistryResult.entries as string) as Array<Record<string, unknown>>
     : [];
-
-  // TODO: replace with <ActionButton binding={...}> when schema ActionBinding seeds exist
-  const handleApplySchema = useCallback(async (schema: string) => {
-    setSchemaActionPending(true);
-    setSchemaActionError(null);
-    try {
-      const result = await invoke('Schema', 'applyTo', { entity_id: id, schema });
-      if (result.variant !== 'ok') {
-        setSchemaActionError(String(result.message ?? `Failed to apply schema "${schema}"`));
-        return;
-      }
-      refetchSchemas();
-    } catch (err) {
-      setSchemaActionError(err instanceof Error ? err.message : `Failed to apply schema "${schema}"`);
-    } finally {
-      setSchemaActionPending(false);
-    }
-  }, [invoke, id, refetchSchemas]);
-
-  // TODO: replace with <ActionButton binding={...}> when schema ActionBinding seeds exist
-  const handleRemoveSchema = useCallback(async (schema: string) => {
-    if (!window.confirm(`Remove schema "${schema}" from this entity?`)) return;
-    setSchemaActionPending(true);
-    setSchemaActionError(null);
-    try {
-      const result = await invoke('Schema', 'removeFrom', { entity_id: id, schema });
-      if (result.variant !== 'ok') {
-        setSchemaActionError(String(result.message ?? `Failed to remove schema "${schema}"`));
-        return;
-      }
-      refetchSchemas();
-    } catch (err) {
-      setSchemaActionError(err instanceof Error ? err.message : `Failed to remove schema "${schema}"`);
-    } finally {
-      setSchemaActionPending(false);
-    }
-  }, [invoke, id, refetchSchemas]);
 
   if (loading) {
     return (
@@ -206,11 +167,6 @@ export const EntityDetailView: React.FC<EntityDetailViewProps> = ({ id }) => {
       {showSchemaManager && (
         <Card variant="outlined" style={{ marginBottom: 'var(--spacing-lg)' }}>
           <h3 style={{ margin: '0 0 var(--spacing-sm) 0', fontSize: '14px' }}>Applied Schemas</h3>
-          {schemaActionError && (
-            <div style={{ marginBottom: 'var(--spacing-sm)', padding: 'var(--spacing-xs) var(--spacing-md)', borderRadius: 'var(--radius-sm)', background: 'var(--palette-error-container)', color: 'var(--palette-on-error-container)', fontSize: '12px' }}>
-              {schemaActionError}
-            </div>
-          )}
           {schemas.length === 0 ? (
             <p style={{ color: 'var(--palette-on-surface-variant)', margin: '0 0 var(--spacing-sm) 0' }}>
               No schemas applied. Apply a schema to give this ContentNode structure and behavior.
@@ -220,15 +176,13 @@ export const EntityDetailView: React.FC<EntityDetailViewProps> = ({ id }) => {
               {schemas.map((s) => (
                 <div key={s} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <Badge variant={SCHEMA_COLORS[s] ?? 'secondary'}>{s}</Badge>
-                  <button
-                    data-part="button"
-                    data-variant="outlined"
-                    onClick={() => handleRemoveSchema(s)}
-                    disabled={schemaActionPending}
-                    style={{ fontSize: '10px', padding: '1px 4px', color: 'var(--palette-error)' }}
-                  >
-                    {schemaActionPending ? '...' : 'remove'}
-                  </button>
+                  <ActionButton
+                    binding="schema-remove"
+                    context={{ entity_id: id, schema: s }}
+                    label="remove"
+                    buttonVariant="ghost"
+                    onSuccess={() => refetchSchemas()}
+                  />
                 </div>
               ))}
             </div>
@@ -239,16 +193,14 @@ export const EntityDetailView: React.FC<EntityDetailViewProps> = ({ id }) => {
               <h3 style={{ margin: '0 0 var(--spacing-sm) 0', fontSize: '14px' }}>Apply Schema</h3>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-sm)' }}>
                 {availableSchemas.map((s) => (
-                  <button
+                  <ActionButton
                     key={s}
-                    data-part="button"
-                    data-variant="outlined"
-                    onClick={() => handleApplySchema(s)}
-                    disabled={schemaActionPending}
-                    style={{ fontSize: '12px', padding: '2px 8px' }}
-                  >
-                    + {s}
-                  </button>
+                    binding="schema-apply"
+                    context={{ entity_id: id, schema: s }}
+                    label={`+ ${s}`}
+                    buttonVariant="secondary"
+                    onSuccess={() => refetchSchemas()}
+                  />
                 ))}
               </div>
             </>

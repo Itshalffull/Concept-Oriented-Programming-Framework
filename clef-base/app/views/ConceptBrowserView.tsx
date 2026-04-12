@@ -10,6 +10,7 @@ import { Card } from '../components/widgets/Card';
 import { DataTable, type ColumnDef } from '../components/widgets/DataTable';
 import { EmptyState } from '../components/widgets/EmptyState';
 import { Badge } from '../components/widgets/Badge';
+import { ActionButton } from '../components/widgets/ActionButton';
 import { useKernelInvoke } from '../../lib/clef-provider';
 
 interface InstalledPackage extends Record<string, unknown> {
@@ -34,7 +35,6 @@ export const ConceptBrowserView: React.FC = () => {
   const [previewPackage, setPreviewPackage] = useState<InstalledPackage | null>(null);
   const [previewDetails, setPreviewDetails] = useState<Record<string, unknown> | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
-  const [actionPending, setActionPending] = useState<string | null>(null);
   const invoke = useKernelInvoke();
 
   const loadInstalled = useCallback(async () => {
@@ -93,53 +93,6 @@ export const ConceptBrowserView: React.FC = () => {
     }
   }, [invoke]);
 
-  // TODO: replace with <ActionButton binding={...}> when concept browser ActionBinding seeds exist
-  const handleInstall = useCallback(async (pkg: InstalledPackage) => {
-    setActionPending(`install:${pkg.name}`);
-    setStatusMessage(null);
-    try {
-      const result = await invoke('ConceptBrowser', 'install', {
-        package_name: pkg.name,
-        version: pkg.version,
-      });
-      if (result.variant === 'ok') {
-        await loadInstalled();
-        const installed = result.installed as InstalledPackage | undefined;
-        setStatusMessage(`Installed ${installed?.name ?? pkg.name} ${installed?.version ?? pkg.version}.`);
-        setBrowseResults((prev) =>
-          prev.map((entry) =>
-            entry.name === pkg.name ? { ...entry, status: 'installed' } : entry,
-          ),
-        );
-      } else {
-        setStatusMessage(String(result.message ?? `Install failed for ${pkg.name}.`));
-      }
-    } catch (err) {
-      setStatusMessage(err instanceof Error ? err.message : `Install failed for ${pkg.name}.`);
-    } finally {
-      setActionPending(null);
-    }
-  }, [invoke, loadInstalled]);
-
-  const handleRemove = useCallback(async (pkg: InstalledPackage) => {
-    setActionPending(`remove:${pkg.name}`);
-    setStatusMessage(null);
-    try {
-      const result = await invoke('ConceptBrowser', 'remove', { package_name: pkg.name });
-      if (result.variant === 'ok') {
-        await loadInstalled();
-        setStatusMessage(`Removed ${pkg.name}.`);
-      } else if (result.variant === 'depended_upon') {
-        setStatusMessage(`${pkg.name} is still required by: ${String((result.dependents as string[]).join(', '))}`);
-      } else {
-        setStatusMessage(String(result.message ?? `Remove failed for ${pkg.name}.`));
-      }
-    } catch (err) {
-      setStatusMessage(err instanceof Error ? err.message : `Remove failed for ${pkg.name}.`);
-    } finally {
-      setActionPending(null);
-    }
-  }, [invoke, loadInstalled]);
 
   const columns: ColumnDef[] = [
     { key: 'name', label: 'Suite Name' },
@@ -276,14 +229,22 @@ export const ConceptBrowserView: React.FC = () => {
                     >
                       Preview
                     </button>
-                    <button
-                      data-part="button"
-                      data-variant="filled"
-                      onClick={() => handleInstall(pkg)}
-                      disabled={actionPending != null}
-                    >
-                      {actionPending === `install:${pkg.name}` ? 'Installing...' : pkg.status === 'installed' ? 'Reinstall' : 'Install'}
-                    </button>
+                    <ActionButton
+                      binding="concept-install"
+                      context={{ package_name: pkg.name, version: pkg.version }}
+                      label={pkg.status === 'installed' ? 'Reinstall' : 'Install'}
+                      buttonVariant="primary"
+                      onSuccess={() => {
+                        loadInstalled();
+                        setStatusMessage(`Installed ${pkg.name} ${pkg.version}.`);
+                        setBrowseResults((prev) =>
+                          prev.map((entry) =>
+                            entry.name === pkg.name ? { ...entry, status: 'installed' } : entry,
+                          ),
+                        );
+                      }}
+                      onError={(message) => setStatusMessage(message ?? `Install failed for ${pkg.name}.`)}
+                    />
                   </div>
                 </Card>
               ))}
@@ -351,15 +312,18 @@ export const ConceptBrowserView: React.FC = () => {
       {activeTab === 'installed' && filtered.length > 0 && (
         <div style={{ marginTop: 'var(--spacing-lg)', display: 'flex', gap: 'var(--spacing-sm)', flexWrap: 'wrap' }}>
           {filtered.map((pkg) => (
-            <button
+            <ActionButton
               key={`remove-${pkg.id}`}
-              data-part="button"
-              data-variant="outlined"
-              onClick={() => handleRemove(pkg)}
-              disabled={actionPending != null}
-            >
-              {actionPending === `remove:${pkg.name}` ? 'Removing...' : `Remove ${pkg.name}`}
-            </button>
+              binding="concept-remove"
+              context={{ package_name: pkg.name }}
+              label={`Remove ${pkg.name}`}
+              buttonVariant="ghost"
+              onSuccess={() => {
+                loadInstalled();
+                setStatusMessage(`Removed ${pkg.name}.`);
+              }}
+              onError={(message) => setStatusMessage(message ?? `Remove failed for ${pkg.name}.`)}
+            />
           ))}
         </div>
       )}

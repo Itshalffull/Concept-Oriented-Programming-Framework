@@ -5,12 +5,12 @@
  * Create, rename, duplicate, delete workspaces and set the default.
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Card } from '../components/widgets/Card';
 import { Badge } from '../components/widgets/Badge';
 import { EmptyState } from '../components/widgets/EmptyState';
 import { CreateForm } from '../components/widgets/CreateForm';
-import { useKernelInvoke } from '../../lib/clef-provider';
+import { ActionButton } from '../components/widgets/ActionButton';
 import { useConceptQuery } from '../../lib/use-concept-query';
 
 interface WorkspaceRecord {
@@ -24,10 +24,7 @@ interface WorkspaceRecord {
 }
 
 export const WorkspaceManagerView: React.FC = () => {
-  const invoke = useKernelInvoke();
   const [showCreate, setShowCreate] = useState(false);
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [actionPending, setActionPending] = useState(false);
   const { data: workspacesRaw, loading, refetch } = useConceptQuery<Record<string, unknown>>(
     'Workspace', 'list', { owner: 'system' },
   );
@@ -40,76 +37,6 @@ export const WorkspaceManagerView: React.FC = () => {
     }
     return Array.isArray(raw.workspaces) ? raw.workspaces as WorkspaceRecord[] : [];
   })();
-
-  // TODO: replace with <ActionButton binding={...}> when workspace ActionBinding seeds exist
-  const handleSetDefault = useCallback(async (workspaceId: string) => {
-    setActionError(null);
-    setActionPending(true);
-    try {
-      const result = await invoke('Workspace', 'setDefault', { workspace: workspaceId });
-      if (result.variant === 'ok') {
-        refetch();
-      } else {
-        setActionError((result.message as string | undefined) ?? 'Failed to set default workspace.');
-      }
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Failed to set default workspace.');
-    } finally {
-      setActionPending(false);
-    }
-  }, [invoke, refetch]);
-
-  const handleDelete = useCallback(async (workspaceId: string) => {
-    setActionError(null);
-    setActionPending(true);
-    try {
-      const result = await invoke('Workspace', 'delete', { workspace: workspaceId });
-      if (result.variant === 'ok') {
-        refetch();
-      } else {
-        setActionError((result.message as string | undefined) ?? 'Failed to delete workspace.');
-      }
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Failed to delete workspace.');
-    } finally {
-      setActionPending(false);
-    }
-  }, [invoke, refetch]);
-
-  const handleDuplicate = useCallback(async (workspaceId: string, name: string) => {
-    setActionError(null);
-    setActionPending(true);
-    try {
-      const result = await invoke('Workspace', 'duplicate', {
-        workspace: workspaceId,
-        newName: `${name} (copy)`,
-      });
-      if (result.variant === 'ok') {
-        refetch();
-      } else {
-        setActionError((result.message as string | undefined) ?? 'Failed to duplicate workspace.');
-      }
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Failed to duplicate workspace.');
-    } finally {
-      setActionPending(false);
-    }
-  }, [invoke, refetch]);
-
-  const handleRestore = useCallback(async (workspaceId: string) => {
-    setActionError(null);
-    setActionPending(true);
-    try {
-      const result = await invoke('Workspace', 'restore', { workspace: workspaceId });
-      if (result.variant !== 'ok') {
-        setActionError((result.message as string | undefined) ?? 'Failed to restore workspace.');
-      }
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Failed to restore workspace.');
-    } finally {
-      setActionPending(false);
-    }
-  }, [invoke]);
 
   if (loading) {
     return (
@@ -134,24 +61,6 @@ export const WorkspaceManagerView: React.FC = () => {
       <p style={{ color: 'var(--palette-on-surface-variant)', marginBottom: 'var(--spacing-lg)' }}>
         Save and restore your panel arrangement. Each workspace remembers tab groups, splits, and dock positions.
       </p>
-      {actionError && (
-        <div style={{
-          marginBottom: 'var(--spacing-md)',
-          padding: '8px 12px',
-          background: 'var(--palette-error-container)',
-          color: 'var(--palette-on-error-container)',
-          borderRadius: 'var(--radius-sm)',
-          fontSize: '13px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: 8,
-        }}>
-          <span>{actionError}</span>
-          <button type="button" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: 14, lineHeight: 1 }} onClick={() => setActionError(null)} aria-label="Dismiss">×</button>
-        </div>
-      )}
-
       {workspaces.length === 0 ? (
         <Card variant="outlined">
           <EmptyState
@@ -180,20 +89,36 @@ export const WorkspaceManagerView: React.FC = () => {
                 {ws.isDefault && <Badge variant="primary">Default</Badge>}
               </div>
               <div style={{ display: 'flex', gap: 'var(--spacing-xs)', flexWrap: 'wrap' }}>
-                <button data-part="button" data-variant="filled" onClick={() => handleRestore(ws.workspace)} disabled={actionPending}>
-                  Restore
-                </button>
+                <ActionButton
+                  binding="workspace-restore"
+                  context={{ workspace: ws.workspace }}
+                  label="Restore"
+                  buttonVariant="primary"
+                  onSuccess={() => refetch()}
+                />
                 {!ws.isDefault && (
-                  <button data-part="button" data-variant="outlined" onClick={() => handleSetDefault(ws.workspace)} disabled={actionPending}>
-                    Set Default
-                  </button>
+                  <ActionButton
+                    binding="workspace-set-default"
+                    context={{ workspace: ws.workspace }}
+                    label="Set Default"
+                    buttonVariant="secondary"
+                    onSuccess={() => refetch()}
+                  />
                 )}
-                <button data-part="button" data-variant="outlined" onClick={() => handleDuplicate(ws.workspace, ws.name)} disabled={actionPending}>
-                  Duplicate
-                </button>
-                <button data-part="button" data-variant="outlined" onClick={() => handleDelete(ws.workspace)} disabled={actionPending}>
-                  Delete
-                </button>
+                <ActionButton
+                  binding="workspace-duplicate"
+                  context={{ workspace: ws.workspace, newName: `${ws.name} (copy)` }}
+                  label="Duplicate"
+                  buttonVariant="secondary"
+                  onSuccess={() => refetch()}
+                />
+                <ActionButton
+                  binding="workspace-delete"
+                  context={{ workspace: ws.workspace }}
+                  label="Delete"
+                  buttonVariant="ghost"
+                  onSuccess={() => refetch()}
+                />
               </div>
             </Card>
           ))}

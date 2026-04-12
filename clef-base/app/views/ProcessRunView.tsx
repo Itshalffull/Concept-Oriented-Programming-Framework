@@ -15,6 +15,7 @@ import { Card } from '../components/widgets/Card';
 import { Badge } from '../components/widgets/Badge';
 import { EmptyState } from '../components/widgets/EmptyState';
 import { DataTable, type ColumnDef } from '../components/widgets/DataTable';
+import { ActionButton } from '../components/widgets/ActionButton';
 import { useContentNodes } from '../../lib/use-content-nodes';
 import { useKernelInvoke, useNavigator } from '../../lib/clef-provider';
 
@@ -96,64 +97,28 @@ export const ProcessRunView: React.FC<ProcessRunViewProps> = ({ runId }) => {
   const [activeTab, setActiveTab] = useState<TabMode>('overview');
   const [focusedStepKey, setFocusedStepKey] = useState<string | null>(null);
   const [versionSpace, setVersionSpace] = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [actionPending, setActionPending] = useState(false);
   const invoke = useKernelInvoke();
   const { navigateToHref } = useNavigator();
 
-  // TODO: replace with <ActionButton binding={...}> when process ActionBinding seeds exist
-  // VersionSpace fork/compare/merge handlers
+  // Fork requires window.prompt for the name — stays as raw invoke
   const handleForkReality = useCallback(async () => {
     const name = window.prompt('Name for forked reality:');
     if (!name) return;
-    setActionError(null);
-    setActionPending(true);
     try {
       const result = await invoke('VersionSpace', 'fork', { scope: runId, name });
       if (result?.version_space) {
         setVersionSpace(result.version_space as string);
-      } else if (result.variant !== 'ok') {
-        setActionError((result.message as string | undefined) ?? 'Failed to fork reality.');
       }
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Failed to fork reality.');
-    } finally {
-      setActionPending(false);
+    } catch {
+      // ActionButton is not available here due to window.prompt dependency
     }
   }, [invoke, runId]);
 
+  // Compare has no ActionBinding seed (version-diff) — stays as raw invoke with TODO
   const handleCompareRealities = useCallback(async () => {
     if (!versionSpace) return;
-    setActionError(null);
-    setActionPending(true);
-    try {
-      const result = await invoke('VersionSpace', 'diff', { version_space: versionSpace, scope: runId });
-      if (result.variant !== 'ok') {
-        setActionError((result.message as string | undefined) ?? 'Failed to compare realities.');
-      }
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Failed to compare realities.');
-    } finally {
-      setActionPending(false);
-    }
-  }, [invoke, runId, versionSpace]);
-
-  const handleMergeReality = useCallback(async () => {
-    if (!versionSpace) return;
-    setActionError(null);
-    setActionPending(true);
-    try {
-      const result = await invoke('VersionSpace', 'merge', { version_space: versionSpace, scope: runId });
-      if (result.variant === 'ok') {
-        setVersionSpace(null);
-      } else {
-        setActionError((result.message as string | undefined) ?? 'Failed to merge reality.');
-      }
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Failed to merge reality.');
-    } finally {
-      setActionPending(false);
-    }
+    // TODO: replace with <ActionButton binding="version-diff"> when that seed is created
+    await invoke('VersionSpace', 'diff', { version_space: versionSpace, scope: runId });
   }, [invoke, runId, versionSpace]);
 
   // Derive version_space from run content if present (on first load)
@@ -245,37 +210,6 @@ export const ProcessRunView: React.FC<ProcessRunViewProps> = ({ runId }) => {
     },
   ];
 
-  // Run lifecycle actions
-  const handleCancel = async () => {
-    setActionError(null);
-    setActionPending(true);
-    try {
-      const result = await invoke('ProcessRun', 'cancel', { run: runId });
-      if (result.variant !== 'ok') {
-        setActionError((result.message as string | undefined) ?? 'Failed to cancel run.');
-      }
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Failed to cancel run.');
-    } finally {
-      setActionPending(false);
-    }
-  };
-
-  const handleResume = async () => {
-    setActionError(null);
-    setActionPending(true);
-    try {
-      const result = await invoke('ProcessRun', 'resume', { run: runId });
-      if (result.variant !== 'ok') {
-        setActionError((result.message as string | undefined) ?? 'Failed to resume run.');
-      }
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Failed to resume run.');
-    } finally {
-      setActionPending(false);
-    }
-  };
-
   const canCancel = runStatus === 'running' || runStatus === 'suspended';
   const canResume = runStatus === 'suspended';
 
@@ -332,50 +266,43 @@ export const ProcessRunView: React.FC<ProcessRunViewProps> = ({ runId }) => {
               {runStatus}
             </Badge>
           )}
-          <button data-part="button" data-variant="outlined" onClick={handleForkReality} disabled={actionPending}>
+          {/* Fork uses window.prompt for the name — kept as raw invoke */}
+          <button data-part="button" data-variant="outlined" onClick={handleForkReality}>
             Fork Reality
           </button>
           {versionSpace && (
-            <button data-part="button" data-variant="outlined" onClick={handleCompareRealities} disabled={actionPending}>
+            /* TODO: replace with <ActionButton binding="version-diff"> when that seed is created */
+            <button data-part="button" data-variant="outlined" onClick={handleCompareRealities}>
               Compare Realities
             </button>
           )}
           {versionSpace && (
-            <button data-part="button" data-variant="outlined" onClick={handleMergeReality} disabled={actionPending}>
-              Merge Reality
-            </button>
+            <ActionButton
+              binding="version-merge"
+              context={{ version_space: versionSpace, scope: runId }}
+              label="Merge Reality"
+              buttonVariant="secondary"
+              onSuccess={() => setVersionSpace(null)}
+            />
           )}
           {canResume && (
-            <button data-part="button" data-variant="outlined" onClick={handleResume} disabled={actionPending}>
-              {actionPending ? '...' : 'Resume'}
-            </button>
+            <ActionButton
+              binding="process-resume"
+              context={{ run: runId }}
+              label="Resume"
+              buttonVariant="secondary"
+            />
           )}
           {canCancel && (
-            <button data-part="button" data-variant="outlined" onClick={handleCancel} disabled={actionPending}>
-              {actionPending ? '...' : 'Cancel'}
-            </button>
+            <ActionButton
+              binding="process-cancel"
+              context={{ run: runId }}
+              label="Cancel"
+              buttonVariant="ghost"
+            />
           )}
         </div>
       </div>
-
-      {/* Action error banner */}
-      {actionError && (
-        <div style={{
-          marginBottom: 'var(--spacing-md)',
-          padding: '8px 12px',
-          background: 'var(--palette-error-container)',
-          color: 'var(--palette-on-error-container)',
-          borderRadius: 'var(--radius-sm)',
-          fontSize: '13px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: 8,
-        }}>
-          <span>{actionError}</span>
-          <button type="button" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: 14, lineHeight: 1 }} onClick={() => setActionError(null)} aria-label="Dismiss">×</button>
-        </div>
-      )}
 
       {/* Three-mode tab bar: Overview (map), Do (step execution), Variables */}
       <div data-part="tabs" style={{ marginBottom: 'var(--spacing-lg)' }}>

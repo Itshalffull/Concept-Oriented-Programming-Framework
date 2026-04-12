@@ -7,11 +7,12 @@
 
 import React, { useState } from 'react';
 import { useConceptQuery } from '../../lib/use-concept-query';
-import { useKernelInvoke, useNavigator } from '../../lib/clef-provider';
+import { useNavigator } from '../../lib/clef-provider';
 import { Card } from '../components/widgets/Card';
 import { Badge } from '../components/widgets/Badge';
 import { EmptyState } from '../components/widgets/EmptyState';
 import { CreateForm } from '../components/widgets/CreateForm';
+import { ActionButton } from '../components/widgets/ActionButton';
 import { getThemeId, isThemeActive, type ThemeRecord } from '../../lib/theme-selection';
 
 const createFields = [
@@ -45,11 +46,8 @@ function countOverrides(row: Record<string, unknown>): number {
 
 export const ThemesView: React.FC = () => {
   const [createOpen, setCreateOpen] = useState(false);
-  const [busyTheme, setBusyTheme] = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
   const { data, loading, refetch } = useConceptQuery<ThemeRecord[]>('Theme', 'list');
   const { navigateToHref } = useNavigator();
-  const invoke = useKernelInvoke();
 
   const rows = [...(data ?? [])].sort((left, right) => {
     if (isThemeActive(left) && !isThemeActive(right)) return -1;
@@ -57,24 +55,6 @@ export const ThemesView: React.FC = () => {
     return getThemeId(left).localeCompare(getThemeId(right));
   });
   const activeCount = rows.filter((theme) => isThemeActive(theme)).length;
-
-  // TODO: replace with <ActionButton binding={...}> when theme ActionBinding seeds exist
-  async function updateTheme(theme: string, action: 'activate' | 'deactivate') {
-    setBusyTheme(theme);
-    setActionError(null);
-    try {
-      const result = await invoke('Theme', action, { theme, ...(action === 'activate' ? { priority: 100 } : {}) });
-      if (result.variant !== 'ok') {
-        setActionError(String(result.message ?? `Theme ${action} failed.`));
-        return;
-      }
-      refetch();
-    } catch (error) {
-      setActionError(error instanceof Error ? error.message : 'Theme update failed.');
-    } finally {
-      setBusyTheme(null);
-    }
-  }
 
   return (
     <div>
@@ -90,20 +70,6 @@ export const ThemesView: React.FC = () => {
         <code> .theme</code> and expressive theme sources. One theme is always active, and
         activating a theme here immediately applies it across the shell.
       </p>
-
-      {actionError ? (
-        <div
-          style={{
-            marginBottom: 'var(--spacing-lg)',
-            padding: 'var(--spacing-sm) var(--spacing-md)',
-            borderRadius: 'var(--radius-md)',
-            background: 'var(--palette-error-container)',
-            color: 'var(--palette-on-error-container)',
-          }}
-        >
-          {actionError}
-        </div>
-      ) : null}
 
       {/* Theme cards */}
       {loading ? (
@@ -127,8 +93,7 @@ export const ThemesView: React.FC = () => {
               <Card
                 key={themeId || name}
                 variant={active ? 'filled' : 'outlined'}
-                style={{ cursor: active ? undefined : 'pointer', outline: active ? `2px solid var(--palette-primary)` : undefined }}
-                onClick={active ? undefined : () => updateTheme(themeId, 'activate')}
+                style={{ outline: active ? `2px solid var(--palette-primary)` : undefined }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-sm)' }}>
                   <strong style={{ fontSize: 'var(--typography-heading-sm-size)' }}>{name}</strong>
@@ -150,25 +115,14 @@ export const ThemesView: React.FC = () => {
                   }}
                   onClick={(event) => event.stopPropagation()}
                 >
-                  {active ? (
-                    <button
-                      data-part="button"
-                      data-variant="outlined"
-                      disabled={busyTheme === themeId || activeCount <= 1}
-                      onClick={() => updateTheme(themeId, 'deactivate')}
-                    >
-                      {busyTheme === themeId ? 'Updating...' : 'Deactivate'}
-                    </button>
-                  ) : (
-                    <button
-                      data-part="button"
-                      data-variant="filled"
-                      disabled={busyTheme === themeId}
-                      onClick={() => updateTheme(themeId, 'activate')}
-                    >
-                      {busyTheme === themeId ? 'Activating...' : 'Activate'}
-                    </button>
-                  )}
+                  <ActionButton
+                    binding={active ? "theme-deactivate" : "theme-activate"}
+                    context={{ id: themeId }}
+                    label={active ? "Deactivate" : "Activate"}
+                    buttonVariant={active ? "ghost" : "primary"}
+                    disabled={active && activeCount <= 1}
+                    onSuccess={() => refetch()}
+                  />
                   <button
                     data-part="button"
                     data-variant="ghost"
