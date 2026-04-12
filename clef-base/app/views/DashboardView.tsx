@@ -139,7 +139,7 @@ export const DashboardView: React.FC = () => {
       </div>
 
       {/* Stat cards — live KPIs */}
-      <section className="view-section">
+      <section className="view-section" data-contract="page-section">
         <div className="view-section-header">
           <h2 className="view-section-title">Live KPIs</h2>
         </div>

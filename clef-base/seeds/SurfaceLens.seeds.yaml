@@ -1,0 +1,82 @@
+# SurfaceLens seeds — pilot bindings for MAG-662
+# Binds widget anatomy parts to contract IDs for the three pilot surface families.
+# See PRD §3.2B and §3.9 for lens model.
+
+# ── Floating family ──────────────────────────────────────────────────────────
+
+- id: field-header-popover-lens
+  description: Binds FieldHeaderPopover panel root to the floating-panel contract.
+  bindings:
+    - source:
+        kind: widget-part
+        widget: FieldHeaderPopover
+        part: root
+      contract: floating-panel
+    - source:
+        kind: widget-part
+        widget: FieldHeaderPopover
+        part: menu-item
+      contract: menu-item
+
+- id: display-as-picker-lens
+  description: Binds DisplayAsPicker trigger and dropdown to floating-panel / menu-item contracts.
+  bindings:
+    - source:
+        kind: widget-part
+        widget: DisplayAsPicker
+        part: root
+      contract: floating-panel
+    - source:
+        kind: render-node
+        widget: DisplayAsPicker
+        role: floating-trigger
+      contract: floating-trigger
+
+# ── Form family ──────────────────────────────────────────────────────────────
+
+- id: create-form-lens
+  description: Binds CreateForm input elements to the field-control contract.
+  bindings:
+    - source:
+        kind: render-node
+        role: input
+        ancestry_contains: CreateForm
+      contract: field-control
+      stateMapping:
+        focus: aria-focused
+        invalid: aria-invalid
+        disabled: disabled
+
+- id: form-renderer-lens
+  description: Binds FormRenderer field wrapper rows to field-control.
+  bindings:
+    - source:
+        kind: render-node
+        role: input
+        ancestry_contains: FormRenderer
+      contract: field-control
+      stateMapping:
+        focus: aria-focused
+        invalid: aria-invalid
+
+# ── Detail / page-section family ─────────────────────────────────────────────
+
+- id: dashboard-stat-card-lens
+  description: Binds DashboardView stat card containers to the page-section contract.
+  bindings:
+    - source:
+        kind: render-node
+        role: stat-card
+        ancestry_contains: DashboardView
+      contract: page-section
+      variantMapping:
+        compact: compact
+
+- id: dashboard-section-lens
+  description: Binds DashboardView view-section wrappers to the page-section contract.
+  bindings:
+    - source:
+        kind: render-node
+        role: view-section
+        ancestry_contains: DashboardView
+      contract: page-section

@@ -1,0 +1,45 @@
+# SurfaceContract seeds — pilot set for MAG-662
+# Three contract families: floating-panel, field-control, page-section
+# See PRD §5.4 and §3.8 for design rationale.
+
+- id: floating-panel
+  role: floating-panel
+  states:
+    - hover
+    - active
+  variants: []
+  resources:
+    background: surface.overlay
+    border: border.overlay
+    radius: shape.overlay
+    shadow: elevation.panel
+
+- id: field-control
+  role: field-control
+  states:
+    - focus
+    - invalid
+    - disabled
+  variants:
+    - compact
+    - standard
+  resources:
+    background: surface.control
+    foreground: text.default
+    border: border.control
+    focusRing: border.focus
+    errorBorder: status.error
+    radius: shape.control
+    typography: type.body-md
+
+- id: page-section
+  role: page-section
+  states: []
+  variants:
+    - compact
+    - emphasized
+  resources:
+    background: surface.card
+    border: border.subtle
+    spacing: spacing.section
+    titleTypography: type.heading-sm

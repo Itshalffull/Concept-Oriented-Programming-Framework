@@ -360,6 +360,7 @@ export const FieldHeaderPopover: React.FC<FieldHeaderPopoverProps> = ({
         ref={panelRef}
         data-part="root"
         data-state="open"
+        data-contract="floating-panel"
         role="dialog"
         aria-label={`Field options for ${fieldLabel}`}
         aria-modal="false"

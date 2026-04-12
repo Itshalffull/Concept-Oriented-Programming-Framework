@@ -161,6 +161,7 @@ export const CreateForm: React.FC<CreateFormProps> = ({
                       required={field.required}
                       rows={3}
                       data-surface="mag651-field-control"
+                      data-contract="field-control"
                     />
                   ) : field.type === 'select' ? (
                     <select
@@ -169,6 +170,7 @@ export const CreateForm: React.FC<CreateFormProps> = ({
                       onChange={(e) => setValues(v => ({ ...v, [field.name]: e.target.value }))}
                       required={field.required}
                       data-surface="mag651-field-control"
+                      data-contract="field-control"
                     >
                       <option value="">Select...</option>
                       {field.options?.map(opt => (
@@ -184,6 +186,7 @@ export const CreateForm: React.FC<CreateFormProps> = ({
                       placeholder={field.placeholder}
                       required={field.required}
                       data-surface="mag651-field-control"
+                      data-contract="field-control"
                     />
                   )}
                 </div>

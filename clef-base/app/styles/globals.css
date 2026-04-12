@@ -5,6 +5,7 @@
  */
 
 @import './themes.generated.css';
+@import './contracts.generated.css';
 
 /* ─── Reset ─── */
 *, *::before, *::after {
