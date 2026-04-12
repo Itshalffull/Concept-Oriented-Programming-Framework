@@ -464,6 +464,177 @@ describe('ProcessRun functional handler', () => {
 
   });
 
+  describe('replay', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = processRunHandler.replay({ original_run: 'test-run', start_from_step: null });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = processRunHandler.replay({ original_run: 'test-run', start_from_step: null });
+      if (!program?.instructions) return;
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = processRunHandler.replay({ original_run: 'test-run', start_from_step: null });
+      if (!program?.instructions) return;
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = processRunHandler.replay({ original_run: 'test-run', start_from_step: null });
+      if (!program?.instructions) return;
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = processRunHandler.replay({ original_run: 'test-run', start_from_step: null });
+      if (!program?.instructions) return;
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('returns error for missing original_run', async () => {
+      const result = await interpret(
+        processRunHandler.replay({ original_run: 'nonexistent-run', start_from_step: null }),
+        storage,
+      );
+      expect(result.variant).toBe('error');
+    });
+
+    it('returns not_terminal when run is still active', async () => {
+      // Start a run (it will be in running status)
+      const startResult = await interpret(
+        processRunHandler.start({ spec_ref: 'pipe', spec_version: 1, input: 'e30=' }),
+        storage,
+      );
+      expect(startResult.variant).toBe('ok');
+      const runId = startResult.output?.run ?? startResult.run;
+      // Attempt replay on a non-terminal run
+      const result = await interpret(
+        processRunHandler.replay({ original_run: runId, start_from_step: null }),
+        storage,
+      );
+      expect(result.variant).toBe('not_terminal');
+    });
+
+    it('returns ok when replaying a completed run', async () => {
+      // Start then complete a run
+      const startResult = await interpret(
+        processRunHandler.start({ spec_ref: 'pipe', spec_version: 1, input: 'e30=' }),
+        storage,
+      );
+      expect(startResult.variant).toBe('ok');
+      const runId = startResult.output?.run ?? startResult.run;
+      const completeResult = await interpret(
+        processRunHandler.complete({ run: runId, output: 'cmpl' }),
+        storage,
+      );
+      expect(completeResult.variant).toBe('ok');
+      // Now replay the completed run
+      const replayResult = await interpret(
+        processRunHandler.replay({ original_run: runId, start_from_step: null }),
+        storage,
+      );
+      expect(replayResult.variant).toBe('ok');
+      expect(replayResult.output?.run ?? replayResult.run).toBeDefined();
+    });
+
+  });
+
+  describe('attachContext', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = processRunHandler.attachContext({ run: 'test-run', principal: 'svc@example.com', context: 'e30=' });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = processRunHandler.attachContext({ run: 'test-run', principal: 'svc@example.com', context: 'e30=' });
+      if (!program?.instructions) return;
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = processRunHandler.attachContext({ run: 'test-run', principal: 'svc@example.com', context: 'e30=' });
+      if (!program?.instructions) return;
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = processRunHandler.attachContext({ run: 'test-run', principal: 'svc@example.com', context: 'e30=' });
+      if (!program?.instructions) return;
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = processRunHandler.attachContext({ run: 'test-run', principal: 'svc@example.com', context: 'e30=' });
+      if (!program?.instructions) return;
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('returns error for empty principal', async () => {
+      const startResult = await interpret(
+        processRunHandler.start({ spec_ref: 'pipe', spec_version: 1, input: 'e30=' }),
+        storage,
+      );
+      const runId = startResult.output?.run ?? startResult.run;
+      const result = await interpret(
+        processRunHandler.attachContext({ run: runId, principal: '', context: 'e30=' }),
+        storage,
+      );
+      expect(result.variant).toBe('error');
+    });
+
+    it('returns not_found for nonexistent run', async () => {
+      const result = await interpret(
+        processRunHandler.attachContext({ run: 'nonexistent-run', principal: 'svc@example.com', context: 'e30=' }),
+        storage,
+      );
+      expect(result.variant).toBe('not_found');
+    });
+
+    it('returns ok and records principal on existing run', async () => {
+      const startResult = await interpret(
+        processRunHandler.start({ spec_ref: 'pipe', spec_version: 1, input: 'e30=' }),
+        storage,
+      );
+      expect(startResult.variant).toBe('ok');
+      const runId = startResult.output?.run ?? startResult.run;
+      const result = await interpret(
+        processRunHandler.attachContext({ run: runId, principal: 'svc-account@example.com', context: 'eyJrZXkiOiJ2YWwifQ==' }),
+        storage,
+      );
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
   describe('register()', () => {
     it('declares concept name', async () => {
       if (typeof processRunHandler.register !== 'function') return;
@@ -496,6 +667,32 @@ describe('ProcessRun functional handler', () => {
       expect(thenResult2.variant).toBe("ok");
     });
 
+    it("replay a completed run", async () => {
+      const storage = createInMemoryStorage();
+      const startResult = await interpret(processRunHandler.start({ spec_ref: "pipeline", spec_version: 2, input: "test-inp" }), storage);
+      expect(startResult.variant).toBe("ok");
+      const r = startResult.output?.run ?? startResult.run;
+      const completeResult = await interpret(processRunHandler.complete({ run: r, output: "test-out" }), storage);
+      expect(completeResult.variant).toBe("ok");
+      const replayResult = await interpret(processRunHandler.replay({ original_run: r, start_from_step: null }), storage);
+      expect(replayResult.variant).toBe("ok");
+      const r2 = replayResult.output?.run ?? replayResult.run;
+      expect(r2).toBeDefined();
+      expect(r2).not.toBe(r);
+    });
+
+    it("attachContext records principal", async () => {
+      const storage = createInMemoryStorage();
+      const startResult = await interpret(processRunHandler.start({ spec_ref: "pipeline", spec_version: 1, input: "test-inp" }), storage);
+      expect(startResult.variant).toBe("ok");
+      const r = startResult.output?.run ?? startResult.run;
+      const attachResult = await interpret(
+        processRunHandler.attachContext({ run: r, principal: "svc@example.com", context: "test-ctx" }),
+        storage,
+      );
+      expect(attachResult.variant).toBe("ok");
+    });
+
   });
 
   describe('state invariants (stateful PBT)', () => {
@@ -512,6 +709,8 @@ describe('ProcessRun functional handler', () => {
               fc.record({ action: fc.constant('suspend'), input: fc.record({ run: fc.string() }) }),
               fc.record({ action: fc.constant('resume'), input: fc.record({ run: fc.string() }) }),
               fc.record({ action: fc.constant('get_status'), input: fc.record({ run: fc.string() }) }),
+              fc.record({ action: fc.constant('replay'), input: fc.record({ original_run: fc.string(), start_from_step: fc.option(fc.string()) }) }),
+              fc.record({ action: fc.constant('attachContext'), input: fc.record({ run: fc.string(), principal: fc.string({ minLength: 1, maxLength: 50 }), context: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -549,6 +748,8 @@ describe('ProcessRun functional handler', () => {
               fc.record({ action: fc.constant('suspend'), input: fc.record({ run: fc.string() }) }),
               fc.record({ action: fc.constant('resume'), input: fc.record({ run: fc.string() }) }),
               fc.record({ action: fc.constant('get_status'), input: fc.record({ run: fc.string() }) }),
+              fc.record({ action: fc.constant('replay'), input: fc.record({ original_run: fc.string(), start_from_step: fc.option(fc.string()) }) }),
+              fc.record({ action: fc.constant('attachContext'), input: fc.record({ run: fc.string(), principal: fc.string({ minLength: 1, maxLength: 50 }), context: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

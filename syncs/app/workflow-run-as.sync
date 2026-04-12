@@ -1,14 +1,7 @@
-# Workflow run-as impersonation syncs — MAG-681, docs/plans/automation-ui-prd.md §5.2-11.
+# Workflow run-as impersonation syncs — MAG-686, docs/plans/automation-ui-prd.md §5.2-11.
 #
 # Chains: ProcessRun/start => Authentication/authenticate => Authorization/checkPermission
-# => deny (ProcessRun/fail) or allow (pass-through).
-#
-# API Gap: ProcessRun has no attachContext or run-as action. There is no way to
-# associate a service-account principal with a ProcessRun record after creation —
-# ProcessRun tracks spec_ref, status, and input/output only. The allow branch
-# therefore uses ProcessRun/get_status as a pass-through placeholder. A
-# ProcessRun/attachContext action should be added to the ProcessRun concept so
-# the resolved service account principal can be recorded on the run record.
+# => deny (ProcessRun/fail) or allow (ProcessRun/attachContext).
 
 # Step 1 — resolve service account identity from the run-as token in the input.
 sync WorkflowRunAsAuthenticate [eager]
@@ -69,9 +62,9 @@ then {
   ]
 }
 
-# Step 3b — impersonation allowed: confirm and proceed.
+# Step 3b — impersonation allowed: record the resolved principal on the run.
 sync WorkflowRunAsAllowed [eager]
-  purpose: "When the service account holds workflow:impersonate permission, confirm the run is live. A ProcessRun/attachContext action should be added to ProcessRun to record the resolved principal; this sync will invoke it once available."
+  purpose: "When the service account holds workflow:impersonate permission, record the resolved principal and the original run-as token as context on the run record so downstream steps can act on behalf of the service account."
 when {
   ProcessRun/start: [
     spec_ref: ?spec_ref;
@@ -87,7 +80,9 @@ when {
     => ok(granted: true)
 }
 then {
-  // GAP: no ProcessRun/attachContext action exists. Confirm run status as
-  // a pass-through read until attachContext is added to the ProcessRun concept.
-  ProcessRun/get_status: [ run: ?run ]
+  ProcessRun/attachContext: [
+    run: ?run;
+    principal: ?service_account;
+    context: ?run_as_token
+  ]
 }

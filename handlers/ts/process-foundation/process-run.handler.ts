@@ -202,6 +202,79 @@ const _handler: FunctionalConceptHandler = {
       (b) => complete(b, 'not_found', { run: runId }),
     ) as StorageProgram<Result>;
   },
+
+  replay(input: Record<string, unknown>) {
+    const originalRunId = input.original_run as string;
+    const startFromStep = (input.start_from_step as string | undefined) ?? null;
+
+    if (!originalRunId || originalRunId.trim() === '') {
+      return complete(createProgram(), 'error', { message: 'original_run is required' }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = get(p, 'process-run', originalRunId, 'existing');
+    return branch(p, 'existing',
+      (b) => {
+        // Check that the source run is in a terminal state
+        const checkTerminal = (bindings: Record<string, unknown>): boolean => {
+          const rec = bindings.existing as Record<string, unknown>;
+          const status = rec.status as string;
+          return status === 'completed' || status === 'failed' || status === 'cancelled';
+        };
+        return branch(b,
+          checkTerminal,
+          (b2) => {
+            // Terminal — create a new run with same spec/input
+            const newId = nextId();
+            const now = new Date().toISOString();
+            let b3 = putFrom(b2, 'process-run', newId, (bindings) => {
+              const rec = bindings.existing as Record<string, unknown>;
+              return {
+                id: newId,
+                spec_ref: rec.spec_ref,
+                spec_version: rec.spec_version,
+                status: 'running',
+                parent_run: null,
+                started_at: now,
+                ended_at: null,
+                input: rec.input,
+                output: null,
+                error: null,
+                principal: null,
+                run_context: null,
+              };
+            });
+            return complete(b3, 'ok', { run: newId });
+          },
+          (b2) => complete(b2, 'not_terminal', { run: originalRunId }),
+        );
+      },
+      (b) => complete(b, 'error', { message: `run ${originalRunId} not found` }),
+    ) as StorageProgram<Result>;
+  },
+
+  attachContext(input: Record<string, unknown>) {
+    const runId = input.run as string;
+    const principal = input.principal as string;
+    const context = input.context as string;
+
+    if (!principal || principal.trim() === '') {
+      return complete(createProgram(), 'error', { message: 'principal is required' }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = get(p, 'process-run', runId, 'existing');
+    return branch(p, 'existing',
+      (b) => {
+        let b2 = putFrom(b, 'process-run', runId, (bindings) => {
+          const rec = bindings.existing as Record<string, unknown>;
+          return { ...rec, principal, run_context: context };
+        });
+        return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'not_found', { message: `run ${runId} not found` }),
+    ) as StorageProgram<Result>;
+  },
 };
 
 // Rebuild complete and fail with proper storage writes

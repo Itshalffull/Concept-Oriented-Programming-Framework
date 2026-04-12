@@ -18,6 +18,8 @@ concept ProcessRun [R] {
     input: R -> option Bytes
     output: R -> option Bytes
     error: R -> option String
+    principal: R -> option String         // impersonated service-account set by attachContext
+    run_context: R -> option Bytes        // arbitrary metadata set by attachContext
   }
 
   capabilities {
@@ -33,6 +35,8 @@ concept ProcessRun [R] {
       -> ok(spec_ref: String) {
         Referenced spec does not exist or is not active.
       }
+      fixture start_ok { spec_ref: "onboard", spec_version: 1, input: "e30=" }
+      fixture start_then_complete { spec_ref: "onboard", spec_version: 1, input: "e30=" }
     }
 
     action start_child(spec_ref: String, spec_version: Int, parent_run: String, input: Bytes) {
@@ -97,6 +101,42 @@ concept ProcessRun [R] {
         No run with this identifier exists.
       }
     }
+
+    action replay(original_run: R, start_from_step: option String) {
+      -> ok(run: R) {
+        Creates a new ProcessRun with the same spec_ref, spec_version, and input
+        as the original. If start_from_step is provided, callers should seed
+        completed StepRuns up to that point via StepRun/seed before proceeding.
+      }
+      -> not_terminal(run: R) {
+        The source run status is not in {completed, failed, cancelled}.
+        Only terminal runs may be replayed.
+      }
+      -> error(message: String) {
+        original_run does not exist or an unexpected error occurred.
+      }
+      fixture replay_ok { original_run: $start_ok.run, start_from_step: none } after start_ok
+      fixture replay_with_step { original_run: $start_then_complete.run, start_from_step: "step-2" } after start_then_complete
+      fixture replay_not_terminal { original_run: $start_ok.run, start_from_step: none } -> not_terminal after start_ok
+      fixture replay_missing { original_run: "nonexistent-run", start_from_step: none } -> error
+    }
+
+    action attachContext(run: R, principal: String, context: Bytes) {
+      -> ok() {
+        Records the impersonated service-account principal and arbitrary run
+        metadata on the run record. Idempotent — overwrites any previously
+        attached context.
+      }
+      -> not_found(message: String) {
+        No run with this identifier exists.
+      }
+      -> error(message: String) {
+        principal is empty or an unexpected error occurred.
+      }
+      fixture attach_ok { run: $start_ok.run, principal: "svc-account@example.com", context: "eyJrZXkiOiJ2YWwifQ==" } after start_ok
+      fixture attach_empty_principal { run: $start_ok.run, principal: "", context: "e30=" } -> error after start_ok
+      fixture attach_missing_run { run: "nonexistent-run", principal: "svc@example.com", context: "e30=" } -> not_found
+    }
   }
 
   example "start then get_status": {
@@ -104,6 +144,17 @@ concept ProcessRun [R] {
     then get_status(run: r) -> ok(run: r, status: "running", spec_ref: "onboard")
     and  complete(run: r, output: o) -> ok(run: r)
     and  get_status(run: r) -> ok(run: r, status: "completed", spec_ref: "onboard")
+  }
+
+  example "replay a completed run": {
+    after start(spec_ref: "pipeline", spec_version: 2, input: inp) -> ok(run: r)
+    and   complete(run: r, output: out) -> ok(run: r)
+    then  replay(original_run: r, start_from_step: none) -> ok(run: r2)
+  }
+
+  example "attachContext records principal": {
+    after start(spec_ref: "pipeline", spec_version: 1, input: inp) -> ok(run: r)
+    then  attachContext(run: r, principal: "svc@example.com", context: ctx) -> ok()
   }
 
 

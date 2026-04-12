@@ -1,0 +1,569 @@
+@version(1)
+widget connector-call-log {
+
+  purpose {
+    Two-pane operational surface for inspecting outbound connector calls tracked by
+    process-automation/connector-call. The left pane lists calls with columns for
+    timestamp, connector type, operation, status badge, latency, and the ProcessRun
+    or StepRun that originated the call. Failed calls are grouped at the top of the
+    list under an error taxonomy section (auth / timeout / 4xx / 5xx / parse) so
+    operators can triage problems without scrolling. Selecting a row loads the right
+    detail pane showing the actual request body, response body, HTTP status code,
+    latency breakdown, idempotency key, and error message when present. Three
+    first-class actions are available in the detail pane: replay re-issues the exact
+    same call through ConnectorCall/invoke with the stored input bytes; copy-as-test-input
+    seeds a connector-step-config test fixture with the captured request; and copy-curl
+    exports the call as a runnable cURL command. Request and response bodies are
+    role-gated: users without StepIOVisibility permission see redacted placeholders —
+    governance is structural, not informational.
+  }
+
+  requires @1 {
+    fields {
+      calls: list;
+      selectedCallId: option String;
+    }
+    actions {
+      replay();
+      copyAsTestInput();
+    }
+  }
+
+  anatomy {
+    root:               container     { Top-level two-pane wrapper; data-state reflects active FSM state }
+    listPane:           container     { Scrollable left pane; header + error group + chronological call rows }
+    listHeader:         container     { Toolbar row above the call list with status filter chips and search }
+    statusFilter:       interactive   { Filter chip strip for all / failed / pending / succeeded status values }
+    searchInput:        interactive   { Text search field to filter by connector name or operation string }
+    errorGroup:         container     { Collapsible group pinned to the top of listPane when failed calls exist }
+    errorGroupHeader:   action        { Clickable header that expands or collapses errorGroup }
+    errorTaxonomy:      container     { Per-category sub-headers within errorGroup: auth, timeout, 4xx, 5xx, parse }
+    callRow:            action        { Single row in listPane representing one ConnectorCall record }
+    rowTimestamp:       text          { Formatted invocation timestamp for the row }
+    rowConnector:       text          { Connector type label (http, grpc, database, mq, fs) }
+    rowOperation:       text          { Operation string (e.g. "POST /api/kyc/check") }
+    rowStatus:          presentation  { Coloured status badge: pending, invoking, succeeded, failed }
+    rowLatency:         text          { Round-trip duration in ms; empty while pending or invoking }
+    rowCaller:          text          { ProcessRun / StepRun reference that originated the call }
+    emptyState:         widget        { Placeholder shown when no calls match the active filter }
+    detailPane:         container     { Right pane showing full call record for the selected row }
+    detailHeader:       container     { Header bar with connector + operation label and action buttons }
+    detailConnector:    text          { Connector type and operation label in the detail header }
+    replayButton:       action        { Re-issues the exact stored input through ConnectorCall/invoke }
+    copyTestInputButton: action       { Copies a connector-step-config test fixture seeded with the selected call input }
+    copyCurlButton:     action        { Exports the call as a cURL command string to the clipboard }
+    requestSection:     container     { Section containing the actual request body sent to the external system }
+    requestBody:        container     { Pretty-printed request body viewer; redactable by role }
+    responseSection:    container     { Section containing the response received from the external system }
+    responseBody:       container     { Pretty-printed response body viewer; redactable by role }
+    responseStatus:     text          { HTTP status code or gRPC status returned by the external system }
+    latencyBreakdown:   container     { Request, transfer, and processing phase timing bars }
+    metaSection:        container     { Idempotency key, step ref, invoked-at, completed-at metadata }
+    errorSection:       container     { Highlighted error block shown only when the call failed }
+    errorCategory:      text          { Classified error category: auth / timeout / 4xx / 5xx / parse }
+    errorMessage:       text          { Full error message recorded by ConnectorCall/mark_failure }
+    redactedNotice:     presentation  { Overlay notice informing the user that body content is redacted }
+  }
+
+  states {
+    list {
+      browsing [initial] {
+        on SELECT_ROW        -> viewing-detail;
+        on FILTER            -> browsing;
+        on SEARCH            -> browsing;
+        on TOGGLE_ERROR_GROUP -> browsing;
+        on RELOAD            -> browsing;
+      }
+
+      viewing-detail {
+        on DESELECT          -> browsing;
+        on SELECT_ROW        -> viewing-detail;
+        on REPLAY_START      -> replaying;
+        on COPY_TEST_INPUT   -> viewing-detail;
+        on COPY_CURL         -> viewing-detail;
+        on FILTER            -> browsing;
+        on SEARCH            -> browsing;
+        entry [loadDetail; scrollDetailToTop];
+      }
+
+      replaying {
+        on REPLAY_SUCCESS    -> viewing-detail;
+        on REPLAY_FAILED     -> viewing-detail;
+        entry [showReplaySpinner];
+        exit  [hideReplaySpinner];
+      }
+    }
+
+    errorGroup [parallel] {
+      collapsed [initial] {
+        on TOGGLE_ERROR_GROUP -> expanded;
+      }
+      expanded {
+        on TOGGLE_ERROR_GROUP -> collapsed;
+        entry [openErrorGroup];
+        exit  [closeErrorGroup];
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      ArrowUp          -> FOCUS_PREV_ROW;
+      ArrowDown        -> FOCUS_NEXT_ROW;
+      Enter            -> SELECT_ROW;
+      Escape           -> DESELECT;
+      r                -> REPLAY_START;
+      c                -> COPY_TEST_INPUT;
+    }
+    focus {
+      trap: false;
+      initial: listPane;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Connector call log";
+      };
+      listPane -> {
+        role: "region";
+        aria-label: "Call list";
+      };
+      statusFilter -> {
+        role: "group";
+        aria-label: "Filter calls by status";
+      };
+      searchInput -> {
+        role: "searchbox";
+        aria-label: "Search calls by connector or operation";
+      };
+      errorGroup -> {
+        role: "region";
+        aria-label: "Failed calls";
+        aria-expanded: if state.errorGroup == "expanded" then "true" else "false";
+      };
+      errorGroupHeader -> {
+        role: "button";
+        aria-expanded: if state.errorGroup == "expanded" then "true" else "false";
+        aria-controls: "error-group-body";
+        aria-label: "Toggle failed calls group";
+      };
+      callRow -> {
+        role: "option";
+        aria-selected: if self.id == ?selectedCallId then "true" else "false";
+        aria-describedby: rowStatus;
+      };
+      detailPane -> {
+        role: "region";
+        aria-label: "Call detail";
+        aria-live: "polite";
+      };
+      requestSection -> {
+        role: "region";
+        aria-label: "Request body";
+      };
+      requestBody -> {
+        role: "region";
+        aria-label: "Request body content";
+      };
+      responseSection -> {
+        role: "region";
+        aria-label: "Response body";
+      };
+      responseBody -> {
+        role: "region";
+        aria-label: "Response body content";
+      };
+      errorSection -> {
+        role: "alert";
+        aria-live: "assertive";
+        aria-label: "Call error";
+      };
+      replayButton -> {
+        role: "button";
+        aria-label: "Replay this call";
+        aria-disabled: if state.list == "replaying" then "true" else "false";
+        aria-keyshortcuts: "r";
+      };
+      copyTestInputButton -> {
+        role: "button";
+        aria-label: "Copy as test input for connector-step-config";
+        aria-keyshortcuts: "c";
+      };
+      copyCurlButton -> {
+        role: "button";
+        aria-label: "Copy as cURL command";
+      };
+      redactedNotice -> {
+        role: "status";
+        aria-label: "Content redacted — insufficient permissions";
+      };
+    }
+  }
+
+  props {
+    calls: list {
+      id: String;
+      timestamp: String;
+      connectorType: union "http" | "grpc" | "database" | "mq" | "fs";
+      operation: String;
+      status: union "pending" | "invoking" | "succeeded" | "failed";
+      latencyMs: option Int;
+      callerRef: option String;
+      errorCategory: option union "auth" | "timeout" | "4xx" | "5xx" | "parse";
+      errorMessage: option String;
+      input: option String;
+      output: option String;
+      httpStatusCode: option Int;
+      idempotencyKey: option String;
+      stepRef: option String;
+      invokedAt: option String;
+      completedAt: option String;
+    } = []
+    selectedCallId: option String
+    filterStatus: option union "pending" | "invoking" | "succeeded" | "failed"
+    searchQuery: String = ""
+    bodyRedacted: Bool = false
+    replayInFlight: Bool = false
+    showLatencyBreakdown: Bool = true
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.list;
+      data-error-group: state.errorGroup;
+    }
+
+    listPane -> {
+      data-part: "list-pane";
+    }
+
+    listHeader -> {
+      data-part: "list-header";
+    }
+
+    statusFilter -> {
+      data-part: "status-filter";
+      data-active: ?filterStatus;
+      onChange: send(FILTER, { status: self.value });
+    }
+
+    searchInput -> {
+      data-part: "search-input";
+      value: ?searchQuery;
+      onInput: send(SEARCH, { query: self.value });
+    }
+
+    errorGroup -> {
+      data-part: "error-group";
+      data-expanded: if state.errorGroup == "expanded" then "true" else "false";
+      hidden: if not self.hasFailedCalls then true else false;
+    }
+
+    errorGroupHeader -> {
+      data-part: "error-group-header";
+      data-expanded: if state.errorGroup == "expanded" then "true" else "false";
+      onClick: send(TOGGLE_ERROR_GROUP);
+    }
+
+    errorTaxonomy -> {
+      data-part: "error-taxonomy";
+      hidden: if state.errorGroup == "collapsed" then true else false;
+    }
+
+    callRow -> {
+      data-part: "call-row";
+      data-status: self.status;
+      data-error-category: if self.errorCategory then self.errorCategory else "none";
+      data-selected: if self.id == ?selectedCallId then "true" else "false";
+      aria-selected: if self.id == ?selectedCallId then "true" else "false";
+      tabindex: if self.id == ?selectedCallId then "0" else "-1";
+      onClick: send(SELECT_ROW, { id: self.id });
+      onKeyDown-Enter: send(SELECT_ROW, { id: self.id });
+    }
+
+    rowTimestamp -> {
+      data-part: "row-timestamp";
+      text: self.timestamp;
+    }
+
+    rowConnector -> {
+      data-part: "row-connector";
+      text: self.connectorType;
+    }
+
+    rowOperation -> {
+      data-part: "row-operation";
+      text: self.operation;
+    }
+
+    rowStatus -> {
+      data-part: "row-status";
+      data-status: self.status;
+    }
+
+    rowLatency -> {
+      data-part: "row-latency";
+      text: if self.latencyMs then concat(self.latencyMs, "ms") else "—";
+      data-visible: if self.status == "succeeded" or self.status == "failed" then "true" else "false";
+    }
+
+    rowCaller -> {
+      data-part: "row-caller";
+      text: if self.callerRef then self.callerRef else "—";
+    }
+
+    emptyState -> {
+      data-part: "empty-state";
+      hidden: if self.hasCalls then true else false;
+    }
+
+    detailPane -> {
+      data-part: "detail-pane";
+      hidden: if state.list == "browsing" then true else false;
+      aria-busy: if state.list == "replaying" then "true" else "false";
+    }
+
+    detailHeader -> {
+      data-part: "detail-header";
+    }
+
+    detailConnector -> {
+      data-part: "detail-connector";
+    }
+
+    replayButton -> {
+      data-part: "replay-button";
+      disabled: if state.list == "replaying" or state.list == "browsing" then true else false;
+      aria-disabled: if state.list == "replaying" or state.list == "browsing" then "true" else "false";
+      aria-busy: if state.list == "replaying" then "true" else "false";
+      onClick: send(REPLAY_START);
+    }
+
+    copyTestInputButton -> {
+      data-part: "copy-test-input-button";
+      disabled: if state.list == "browsing" then true else false;
+      onClick: send(COPY_TEST_INPUT);
+    }
+
+    copyCurlButton -> {
+      data-part: "copy-curl-button";
+      disabled: if state.list == "browsing" then true else false;
+      onClick: send(COPY_CURL);
+    }
+
+    requestSection -> {
+      data-part: "request-section";
+      hidden: if state.list == "browsing" then true else false;
+    }
+
+    requestBody -> {
+      data-part: "request-body";
+      data-redacted: if ?bodyRedacted then "true" else "false";
+    }
+
+    responseSection -> {
+      data-part: "response-section";
+      hidden: if state.list == "browsing" then true else false;
+    }
+
+    responseBody -> {
+      data-part: "response-body";
+      data-redacted: if ?bodyRedacted then "true" else "false";
+      data-visible: if self.output then "true" else "false";
+    }
+
+    responseStatus -> {
+      data-part: "response-status";
+      text: if self.httpStatusCode then concat(self.httpStatusCode, "") else "—";
+    }
+
+    latencyBreakdown -> {
+      data-part: "latency-breakdown";
+      hidden: if not ?showLatencyBreakdown then true else false;
+    }
+
+    metaSection -> {
+      data-part: "meta-section";
+    }
+
+    errorSection -> {
+      data-part: "error-section";
+      hidden: if self.status != "failed" then true else false;
+    }
+
+    errorCategory -> {
+      data-part: "error-category";
+      data-category: if self.errorCategory then self.errorCategory else "unknown";
+      text: if self.errorCategory then self.errorCategory else "unknown";
+    }
+
+    errorMessage -> {
+      data-part: "error-message";
+      text: if self.errorMessage then self.errorMessage else "";
+    }
+
+    redactedNotice -> {
+      data-part: "redacted-notice";
+      hidden: if not ?bodyRedacted then true else false;
+    }
+  }
+
+  affordance {
+    serves: group-repeating;
+    specificity: 12;
+    when {
+      concept: "ConnectorCall";
+    }
+    bind {
+      calls: calls;
+      selectedCallId: selectedCallId;
+    }
+  }
+
+  compose {
+    requestBody:    widget("code-block", { language: "json", readOnly: true });
+    responseBody:   widget("code-block", { language: "json", readOnly: true });
+    rowStatus:      widget("badge", { variant: "dot" });
+    emptyState:     widget("empty-state", { title: "No calls match the current filter" });
+    searchInput:    widget("text-input", { type: "search", size: "sm" });
+  }
+
+  invariant {
+    example "select row transitions to viewing-detail": {
+      after transition(from: "browsing", event: "SELECT_ROW") -> ok
+      then root -> { data-state: "viewing-detail" }
+      and detailPane -> { hidden: false }
+      and replayButton -> { aria-disabled: "false" }
+    }
+
+    example "replay enters replaying and disables replay button": {
+      after transition(from: "viewing-detail", event: "REPLAY_START") -> ok
+      then root -> { data-state: "replaying" }
+      and replayButton -> { aria-disabled: "true" }
+      and replayButton -> { aria-busy: "true" }
+    }
+
+    example "replay success returns to viewing-detail": {
+      after transition(from: "replaying", event: "REPLAY_SUCCESS") -> ok
+      then root -> { data-state: "viewing-detail" }
+      and replayButton -> { aria-disabled: "false" }
+    }
+
+    example "replay failure returns to viewing-detail": {
+      after transition(from: "replaying", event: "REPLAY_FAILED") -> ok
+      then root -> { data-state: "viewing-detail" }
+      and replayButton -> { aria-disabled: "false" }
+    }
+
+    example "deselect returns to browsing and hides detail pane": {
+      after transition(from: "viewing-detail", event: "DESELECT") -> ok
+      then root -> { data-state: "browsing" }
+      and detailPane -> { hidden: true }
+    }
+
+    example "selecting new row while viewing-detail stays in viewing-detail": {
+      after transition(from: "viewing-detail", event: "SELECT_ROW") -> ok
+      then root -> { data-state: "viewing-detail" }
+    }
+
+    example "filter from viewing-detail returns to browsing": {
+      after transition(from: "viewing-detail", event: "FILTER") -> ok
+      then root -> { data-state: "browsing" }
+      and detailPane -> { hidden: true }
+    }
+
+    example "toggle error group expands from collapsed": {
+      after transition(from: "collapsed", event: "TOGGLE_ERROR_GROUP") -> ok
+      then root -> { data-error-group: "expanded" }
+      and errorGroupHeader -> { data-expanded: "true" }
+    }
+
+    example "error section hidden for succeeded call": {
+      after callRow -> { data-status: "succeeded" }
+      then errorSection -> { hidden: true }
+    }
+
+    example "requestBody redacted when bodyRedacted is true": {
+      after root -> { data-part: "root" }
+      then requestBody -> { data-redacted: "true" }
+      and redactedNotice -> { hidden: false }
+    }
+
+    forall s in states.list:
+      s.reachable = true
+
+    forall s in states.errorGroup:
+      s.reachable = true
+
+    always "data-state on root reflects list FSM": {
+      root -> { data-state: state.list }
+    }
+
+    always "detailPane hidden while browsing": {
+      if state.list == "browsing" then detailPane -> { hidden: true }
+    }
+
+    always "errorSection hidden when call did not fail": {
+      if self.status != "failed" then errorSection -> { hidden: true }
+    }
+
+    always "replayButton disabled while replaying": {
+      if state.list == "replaying" then replayButton -> { aria-disabled: "true" }
+    }
+
+    always "requestBody redacted when bodyRedacted prop is true": {
+      if ?bodyRedacted then requestBody -> { data-redacted: "true" }
+    }
+
+    always "responseBody redacted when bodyRedacted prop is true": {
+      if ?bodyRedacted then responseBody -> { data-redacted: "true" }
+    }
+
+    always "redactedNotice visible when bodyRedacted is true": {
+      if ?bodyRedacted then redactedNotice -> { hidden: false }
+    }
+
+    never "replay button enabled while replaying": {
+      state.list == "replaying" and replayButton -> { aria-disabled: "false" }
+    }
+
+    never "detail pane visible in browsing state": {
+      state.list == "browsing" and detailPane -> { hidden: false }
+    }
+
+    never "body content shown when bodyRedacted is true": {
+      ?bodyRedacted and requestBody -> { data-redacted: "false" }
+    }
+
+    never "body content shown when bodyRedacted is true (response)": {
+      ?bodyRedacted and responseBody -> { data-redacted: "false" }
+    }
+
+    action replayButton.click {
+      requires: state.list == "viewing-detail"
+      ensures ok: state.list == "replaying"
+    }
+
+    action callRow.click {
+      ensures ok: state.list == "viewing-detail"
+    }
+
+    "REPLAY_START must call ConnectorCall/invoke with the same input bytes and idempotency key as the original call";
+    "COPY_TEST_INPUT must serialize the selected call's input into a connector-step-config test fixture and write it to the clipboard";
+    "COPY_CURL must construct a syntactically valid cURL command from the stored requestBody, operation URL, and connector headers";
+    "errorGroup must be pinned above the chronological call list and hidden when no failed calls exist in the current filter view";
+    "errorTaxonomy must render sub-headings for each error category present in the current failed call set (auth, timeout, 4xx, 5xx, parse)";
+    "callRow items inside errorGroup are the same component as chronological rows — deduplication is the host's responsibility";
+    "rowLatency must display '—' for calls whose status is pending or invoking, never a stale value";
+    "bodyRedacted must gate both requestBody and responseBody independently — partial redaction is not supported";
+    "r keyboard shortcut must only fire REPLAY_START when state.list is viewing-detail, never from browsing";
+    "c keyboard shortcut must only fire COPY_TEST_INPUT when state.list is viewing-detail";
+    "latencyBreakdown must show at least two named phases (request, response) when latencyMs is available";
+    "failed calls must appear in errorGroup regardless of the active statusFilter when errorGroup is expanded";
+    "metaSection must render idempotencyKey, stepRef, invokedAt, and completedAt when present";
+  }
+
+}
