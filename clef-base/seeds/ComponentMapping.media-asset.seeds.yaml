@@ -1,0 +1,60 @@
+# ComponentMapping seeds — media-asset widget bindings (MAG-717).
+# Two mappings:
+#   1. (media-asset, inline-media) — general insertable media picker entry;
+#      routes inline media embeds to the image-block widget.
+#   2. (media-asset, block-editor) — alias mapping so that when a ContentNode
+#      has schema "media-asset" and the view requests block-editor display,
+#      it routes to the image-block widget.
+
+concept: ComponentMapping
+action: create
+entries:
+  # (media-asset, inline-media) — insertable media block entry
+  - name: media-asset-inline-media
+    widget_id: image-block
+    schema: media-asset
+    display_mode: inline-media
+    insertable: true
+    section: "Media"
+    icon: "image"
+    label: "Image"
+
+  # (media-asset, block-editor) — schema-overlay alias for block-editor display
+  - name: media-asset-block-editor
+    widget_id: image-block
+    schema: media-asset
+    display_mode: block-editor
+
+---
+# Bind slots to entity fields for each mapping above
+
+concept: ComponentMapping
+action: bindSlot
+entries:
+  # Slots for media-asset-inline-media (resolves to image-block parts)
+  - mapping: media-asset-inline-media
+    slot_name: blockId
+    sources: ["entity_field:node"]
+  - mapping: media-asset-inline-media
+    slot_name: assetId
+    sources: ["entity_field:asset"]
+  - mapping: media-asset-inline-media
+    slot_name: alt
+    sources: ["entity_field:altText"]
+  - mapping: media-asset-inline-media
+    slot_name: caption
+    sources: ["entity_field:caption"]
+
+  # Slots for media-asset-block-editor
+  - mapping: media-asset-block-editor
+    slot_name: blockId
+    sources: ["entity_field:node"]
+  - mapping: media-asset-block-editor
+    slot_name: assetId
+    sources: ["entity_field:asset"]
+  - mapping: media-asset-block-editor
+    slot_name: alt
+    sources: ["entity_field:altText"]
+  - mapping: media-asset-block-editor
+    slot_name: caption
+    sources: ["entity_field:caption"]

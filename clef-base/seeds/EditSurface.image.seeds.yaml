@@ -1,0 +1,29 @@
+# EditSurface seeds — image block editor surface registration (MAG-717).
+# Declares the editing surface for the (image, block-editor) pair,
+# wiring toolbar, command bindings, panel widgets, and picker refs.
+# Panel widgets (image-metadata-panel, exif-panel) are anticipatory — Phase 5.
+# ActionBindings (image-crop, image-filter-picker, image-alt-text-edit, image-replace)
+# are placeholder stubs; actual handlers ship in Phase 5.
+
+concept: EditSurface
+action: register
+entries:
+  - id: image-block-editor
+    schema_ref: image
+    context: block-editor
+    toolbar_widget: inline-toolbar
+    command_bindings:
+      - image-crop
+      - image-filter-picker
+      - image-alt-text-edit
+      - image-replace
+    panel_widgets:
+      - image-metadata-panel
+      - exif-panel
+    context_menu_bindings: []
+    input_rule_refs: []
+    picker_refs:
+      - media-picker
+    compile_action_ref: null
+    compile_bundle_ref: null
+    compile_status_field: null

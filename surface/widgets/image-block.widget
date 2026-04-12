@@ -1,0 +1,244 @@
+@version(1)
+widget image-block {
+
+  purpose {
+    Inline image block within a block-editor surface. Renders a media asset
+    referenced by assetId, resolved via MediaAsset/get, displaying a thumbnail
+    at its intrinsic or constrained dimensions. Supports loading, error, ready,
+    and selected states. Keyboard interactions allow selection, deletion, and
+    anticipatory lightbox opening. Caption text is associated via aria-describedby
+    for accessible image description.
+  }
+
+  requires @1 {
+    fields {
+      blockId: String;
+      assetId: String;
+      alt: String;
+      caption: option String;
+    }
+    actions {
+      get(asset: String);
+    }
+  }
+
+  anatomy {
+    root:             container     { Top-level block wrapper; carries data-state and data-block-id }
+    imageContainer:   container     { Constrained box managing aspect-ratio and overflow }
+    imageElement:     presentation  { The img element rendering the resolved asset thumbnail }
+    captionSlot:      text          { Optional caption beneath the image; used as aria-describedby target }
+    loadingIndicator: presentation  { Spinner shown while the asset is being fetched }
+    errorMessage:     text          { Error text shown when asset resolution fails }
+  }
+
+  states {
+    load {
+      loading [initial] {
+        on LOAD_SUCCESS -> ready;
+        on LOAD_ERROR   -> error;
+        entry [fetchAsset];
+      }
+
+      ready {
+        on SELECT      -> selected;
+        on RELOAD      -> loading;
+        on REMOVE      -> loading;
+      }
+
+      error {
+        on RETRY       -> loading;
+        on REMOVE      -> loading;
+      }
+    }
+
+    selection [parallel] {
+      unselected [initial] {
+        on SELECT        -> selected;
+      }
+      selected {
+        on DESELECT      -> unselected;
+        on OPEN_LIGHTBOX -> unselected;
+        on REMOVE        -> unselected;
+        entry [showSelectionRing];
+        exit [hideSelectionRing];
+      }
+    }
+  }
+
+  accessibility {
+    role: img;
+    keyboard {
+      Enter  -> OPEN_LIGHTBOX;
+      Space  -> SELECT;
+      Delete -> REMOVE;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "figure";
+        aria-label: ?alt;
+        aria-describedby: captionSlot;
+        tabindex: "0";
+      };
+      imageElement -> {
+        role: "img";
+        aria-hidden: "false";
+        alt: ?alt;
+      };
+      captionSlot -> {
+        role: "caption";
+        aria-live: "polite";
+      };
+      loadingIndicator -> {
+        role: "status";
+        aria-label: "Loading image";
+        aria-live: "polite";
+      };
+      errorMessage -> {
+        role: "alert";
+        aria-live: "assertive";
+      };
+    }
+  }
+
+  props {
+    blockId: String
+    assetId: String
+    alt: String = ""
+    caption: option String
+    focused: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.load;
+      data-block-id: ?blockId;
+      data-asset-id: ?assetId;
+      tabindex: "0";
+      onKeyDown-Enter: send(OPEN_LIGHTBOX);
+      onKeyDown-Space: send(SELECT);
+      onKeyDown-Delete: send(REMOVE);
+      onClick: send(SELECT);
+    }
+
+    imageContainer -> {
+      data-part: "image-container";
+      hidden: if state.load == "loading" or state.load == "error" then true else false;
+    }
+
+    imageElement -> {
+      data-part: "image-element";
+      alt: ?alt;
+      hidden: if state.load == "loading" or state.load == "error" then true else false;
+    }
+
+    captionSlot -> {
+      data-part: "caption-slot";
+      text: ?caption;
+      hidden: if ?caption == none then true else false;
+    }
+
+    loadingIndicator -> {
+      data-part: "loading-indicator";
+      hidden: if state.load == "loading" then false else true;
+      aria-hidden: if state.load == "loading" then "false" else "true";
+    }
+
+    errorMessage -> {
+      data-part: "error-message";
+      hidden: if state.load == "error" then false else true;
+      text: if state.load == "error" then "Failed to load image. Press R to retry." else "";
+    }
+  }
+
+  affordance {
+    serves: block-media;
+    specificity: 9;
+    when schema = "media-asset";
+    bind {
+      blockId: blockId;
+      assetId: assetId;
+      alt: alt;
+      caption: caption;
+    }
+  }
+
+  invariant {
+    example "loading transitions to ready on LOAD_SUCCESS": {
+      after transition(from: "loading", event: "LOAD_SUCCESS") -> ok
+      then state.load = "ready"
+    }
+
+    example "loading transitions to error on LOAD_ERROR": {
+      after transition(from: "loading", event: "LOAD_ERROR") -> ok
+      then state.load = "error"
+    }
+
+    example "ready transitions to selected on SELECT": {
+      after transition(from: "ready", event: "SELECT") -> ok
+      then state.load = "ready"
+      and state.selection = "selected"
+    }
+
+    example "selected transitions to unselected on DESELECT": {
+      after transition(from: "selected", event: "DESELECT") -> ok
+      then state.selection = "unselected"
+    }
+
+    example "Enter fires OPEN_LIGHTBOX from selected state": {
+      after transition(from: "selected", event: "OPEN_LIGHTBOX") -> ok
+      then state.selection = "unselected"
+    }
+
+    example "retry from error returns to loading": {
+      after transition(from: "error", event: "RETRY") -> ok
+      then state.load = "loading"
+    }
+
+    example "REMOVE from ready transitions load back to loading": {
+      after transition(from: "ready", event: "REMOVE") -> ok
+      then state.load = "loading"
+    }
+
+    forall "all load states reachable": {
+      given s in loadStates
+      then s.reachable = true
+    }
+
+    forall "all selection states reachable": {
+      given s in selectionStates
+      then s.reachable = true
+    }
+
+    always "loadingIndicator hidden when not loading": {
+      state.load != "loading"
+    }
+
+    always "errorMessage hidden when not in error state": {
+      state.load != "error"
+    }
+
+    always "imageElement hidden while not ready or selected": {
+      state.load != "ready"
+    }
+
+    never "imageElement and loadingIndicator both visible at once": {
+      imageElement.hidden = false and loadingIndicator.hidden = false
+    }
+
+    never "errorMessage visible in ready state": {
+      state.load = "ready" and errorMessage.hidden = false
+    }
+
+    action root {
+      requires: state.load = "ready"
+      ensures ok: state.selection = "selected"
+    }
+  }
+
+}

@@ -1,0 +1,60 @@
+# ActionBinding seeds — image editing toolbar commands (MAG-717).
+# These are placeholder stubs; actual concept handlers ship in Phase 5.
+# All four are toolbar commands for the image-block editor surface.
+# image-replace also invokes the media-picker widget to select a replacement asset.
+
+concept: ActionBinding
+action: bind
+entries:
+  # Crop the currently focused image block
+  - name: image-crop
+    binding: image-crop
+    target: "MediaAsset/crop"
+    parameterMap: '{"asset":"context.assetId"}'
+    executionPolicy: "pessimistic"
+    toolbar_command: true
+    slash_command: false
+    context_menu: false
+    section: "Image"
+    label: "Crop"
+    icon: "crop"
+
+  # Open filter picker for the currently focused image block
+  - name: image-filter-picker
+    binding: image-filter-picker
+    target: "MediaAsset/applyFilter"
+    parameterMap: '{"asset":"context.assetId","filter":"context.selectedFilter"}'
+    executionPolicy: "pessimistic"
+    toolbar_command: true
+    slash_command: false
+    context_menu: false
+    section: "Image"
+    label: "Filter"
+    icon: "sliders"
+
+  # Edit alt text for the currently focused image block
+  - name: image-alt-text-edit
+    binding: image-alt-text-edit
+    target: "MediaAsset/setAltText"
+    parameterMap: '{"asset":"context.assetId","altText":"context.altText"}'
+    executionPolicy: "auto"
+    toolbar_command: true
+    slash_command: false
+    context_menu: false
+    section: "Image"
+    label: "Alt Text"
+    icon: "accessibility"
+
+  # Replace the current image by opening the media-picker widget
+  - name: image-replace
+    binding: image-replace
+    target: "MediaAsset/replace"
+    parameterMap: '{"asset":"context.assetId","replacement":"context.newAssetId"}'
+    executionPolicy: "pessimistic"
+    toolbar_command: true
+    slash_command: false
+    context_menu: false
+    section: "Image"
+    label: "Replace"
+    icon: "refresh"
+    picker_ref: "media-picker"

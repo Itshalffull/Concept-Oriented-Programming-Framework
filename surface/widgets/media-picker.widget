@@ -1,0 +1,315 @@
+@version(1)
+widget media-picker {
+
+  purpose {
+    Modal dialog for selecting or uploading a media asset. Presents three
+    acquisition modes (file upload, URL import, drag-and-drop) via
+    a tab interface. Runs two independent state machines: one for the active
+    acquisition mode (upload / url / drop) and one for the submission status
+    (idle / uploading / preview-loaded / error). On successful acquisition
+    the widget calls the onComplete ActionBinding reference with the resolved
+    asset identifier. Focus is trapped inside the dialog for the duration of
+    its presence on screen.
+  }
+
+  anatomy {
+    root:           container     { Dialog container; receives focus trap and aria-modal }
+    tabList:        container     { Row of mode-selection tabs }
+    tabUpload:      action        { Tab for local file upload mode }
+    tabUrl:         action        { Tab for remote URL import mode }
+    tabDropZone:    action        { Tab and drop-target for drag-and-drop mode }
+    uploadInput:    interactive   { Hidden file input element triggered by upload tab }
+    urlInput:       interactive   { Text input for entering a remote media URL }
+    urlPreview:     container     { Preview card showing a resolved remote URL resource }
+    uploadProgress: presentation  { Progress indicator shown during upload or URL fetch }
+    confirmButton:  action        { Confirms the selected or uploaded asset }
+    cancelButton:   action        { Dismisses the picker without completing }
+  }
+
+  states {
+    mode {
+      upload [initial] {
+        on SELECT_URL_TAB  -> url;
+        on SELECT_DROP_TAB -> drop;
+      }
+      url {
+        on SELECT_UPLOAD_TAB -> upload;
+        on SELECT_DROP_TAB   -> drop;
+      }
+      drop {
+        on SELECT_UPLOAD_TAB -> upload;
+        on SELECT_URL_TAB    -> url;
+      }
+    }
+
+    status [parallel] {
+      idle [initial] {
+        on UPLOAD_START     -> uploading;
+        on URL_PREVIEW_LOAD -> preview-loaded;
+      }
+      uploading {
+        on UPLOAD_SUCCESS -> preview-loaded;
+        on UPLOAD_ERROR   -> error;
+        entry [showProgress];
+        exit [hideProgress];
+      }
+      preview-loaded {
+        on RESET        -> idle;
+        on UPLOAD_START -> uploading;
+        entry [enableConfirm];
+      }
+      error {
+        on RESET        -> idle;
+        on UPLOAD_START -> uploading;
+        entry [showErrorMessage];
+      }
+    }
+  }
+
+  accessibility {
+    role: dialog;
+    modal: true;
+    keyboard {
+      Escape  -> CANCEL;
+      Tab     -> FOCUS_NEXT;
+    }
+    focus {
+      trap: true;
+      initial: tabUpload;
+      roving: false;
+      returnOnClose: true;
+    }
+    aria {
+      root -> {
+        role: "dialog";
+        aria-modal: "true";
+        aria-label: "Media picker";
+        aria-labelledby: tabList;
+      };
+      tabList -> {
+        role: "tablist";
+        aria-label: "Acquisition mode";
+      };
+      tabUpload -> {
+        role: "tab";
+        aria-selected: if state.mode == "upload" then "true" else "false";
+        aria-controls: uploadInput;
+      };
+      tabUrl -> {
+        role: "tab";
+        aria-selected: if state.mode == "url" then "true" else "false";
+        aria-controls: urlInput;
+      };
+      tabDropZone -> {
+        role: "tab";
+        aria-selected: if state.mode == "drop" then "true" else "false";
+      };
+      uploadInput -> {
+        role: "none";
+        aria-hidden: "true";
+      };
+      urlInput -> {
+        role: "textbox";
+        aria-label: "Image URL";
+        aria-required: "false";
+      };
+      urlPreview -> {
+        role: "region";
+        aria-label: "URL preview";
+        aria-live: "polite";
+      };
+      uploadProgress -> {
+        role: "progressbar";
+        aria-label: "Upload progress";
+        aria-live: "polite";
+      };
+      confirmButton -> {
+        role: "button";
+        aria-label: "Confirm selection";
+        aria-disabled: if state.status != "preview-loaded" then "true" else "false";
+      };
+      cancelButton -> {
+        role: "button";
+        aria-label: "Cancel";
+      };
+    }
+  }
+
+  props {
+    onComplete: String
+    onCancel: String
+    acceptedMimeTypes: list String
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.mode;
+      data-status: state.status;
+      role: "dialog";
+      aria-modal: "true";
+    }
+
+    tabList -> {
+      data-part: "tab-list";
+      role: "tablist";
+    }
+
+    tabUpload -> {
+      data-part: "tab-upload";
+      role: "tab";
+      aria-selected: if state.mode == "upload" then "true" else "false";
+      tabindex: if state.mode == "upload" then "0" else "-1";
+      onClick: send(SELECT_UPLOAD_TAB);
+    }
+
+    tabUrl -> {
+      data-part: "tab-url";
+      role: "tab";
+      aria-selected: if state.mode == "url" then "true" else "false";
+      tabindex: if state.mode == "url" then "0" else "-1";
+      onClick: send(SELECT_URL_TAB);
+    }
+
+    tabDropZone -> {
+      data-part: "tab-drop-zone";
+      role: "tab";
+      aria-selected: if state.mode == "drop" then "true" else "false";
+      tabindex: if state.mode == "drop" then "0" else "-1";
+      onClick: send(SELECT_DROP_TAB);
+      onDragOver: noop;
+      onDrop: send(UPLOAD_START);
+    }
+
+    uploadInput -> {
+      data-part: "upload-input";
+      hidden: if state.mode == "upload" then false else true;
+      accept: ?acceptedMimeTypes;
+      onInput: send(UPLOAD_START);
+    }
+
+    urlInput -> {
+      data-part: "url-input";
+      hidden: if state.mode == "url" then false else true;
+      disabled: if state.status == "uploading" then true else false;
+      placeholder: "https://example.com/image.jpg";
+      onInput: send(URL_PREVIEW_LOAD);
+    }
+
+    urlPreview -> {
+      data-part: "url-preview";
+      hidden: if state.status == "preview-loaded" then false else true;
+    }
+
+    uploadProgress -> {
+      data-part: "upload-progress";
+      hidden: if state.status == "uploading" then false else true;
+      aria-hidden: if state.status == "uploading" then "false" else "true";
+    }
+
+    confirmButton -> {
+      data-part: "confirm-button";
+      disabled: if state.status != "preview-loaded" then true else false;
+      aria-disabled: if state.status != "preview-loaded" then "true" else "false";
+      onClick: send(CONFIRM);
+    }
+
+    cancelButton -> {
+      data-part: "cancel-button";
+      onClick: send(CANCEL);
+    }
+  }
+
+  affordance {
+    serves: media-picker;
+    specificity: 10;
+    bind {
+      onComplete: onComplete;
+      onCancel: onCancel;
+    }
+  }
+
+  compose {
+    urlPreview: widget("entity-preview-card", { url: urlInput })
+    _focusTrap: widget("focus-trap", { active: true })
+  }
+
+  invariant {
+    example "switching to url tab changes mode state": {
+      after transition(from: "upload", event: "SELECT_URL_TAB") -> ok
+      then state.mode = "url"
+    }
+
+    example "switching to drop tab changes mode state": {
+      after transition(from: "upload", event: "SELECT_DROP_TAB") -> ok
+      then state.mode = "drop"
+    }
+
+    example "upload start transitions status to uploading": {
+      after transition(from: "idle", event: "UPLOAD_START") -> ok
+      then state.status = "uploading"
+    }
+
+    example "upload success transitions status to preview-loaded": {
+      after transition(from: "uploading", event: "UPLOAD_SUCCESS") -> ok
+      then state.status = "preview-loaded"
+    }
+
+    example "upload error transitions status to error": {
+      after transition(from: "uploading", event: "UPLOAD_ERROR") -> ok
+      then state.status = "error"
+    }
+
+    example "url preview load transitions status to preview-loaded": {
+      after transition(from: "idle", event: "URL_PREVIEW_LOAD") -> ok
+      then state.status = "preview-loaded"
+    }
+
+    example "reset from error returns to idle": {
+      after transition(from: "error", event: "RESET") -> ok
+      then state.status = "idle"
+    }
+
+    example "reset from preview-loaded returns to idle": {
+      after transition(from: "preview-loaded", event: "RESET") -> ok
+      then state.status = "idle"
+    }
+
+    forall "all mode states reachable": {
+      given s in modeStates
+      then s.reachable = true
+    }
+
+    forall "all status states reachable": {
+      given s in statusStates
+      then s.reachable = true
+    }
+
+    always "confirmButton disabled unless status is preview-loaded": {
+      state.status != "preview-loaded"
+    }
+
+    always "uploadProgress hidden unless uploading": {
+      state.status != "uploading"
+    }
+
+    never "confirmButton enabled during upload": {
+      state.status = "uploading" and confirmButton.disabled = false
+    }
+
+    never "urlInput visible while mode is upload or drop": {
+      state.mode != "url" and urlInput.hidden = false
+    }
+
+    action confirmButton {
+      requires: state.status = "preview-loaded"
+      ensures ok: state.status = "idle"
+    }
+
+    action cancelButton {
+      requires: state.status != "uploading"
+      ensures ok: state.status = "idle"
+    }
+  }
+
+}
