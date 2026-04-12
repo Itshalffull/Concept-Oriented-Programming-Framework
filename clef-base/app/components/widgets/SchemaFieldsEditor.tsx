@@ -308,6 +308,8 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
   const [typePickerPos, setTypePickerPos] = useState({ top: 0, left: 0 });
   const [deleteWarning, setDeleteWarning] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [actionPending, setActionPending] = useState(false);
 
   // Drag state
   const dragIndexRef = useRef<number>(-1);
@@ -333,16 +335,26 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
 
   const handleTypeSelect = useCallback(async (type: string) => {
     setTypePickerOpen(false);
+    setActionError(null);
+    setActionPending(true);
     const label = `New ${FIELD_TYPE_REGISTRY[type]?.label ?? type} field`;
-    const result = await invoke('FieldDefinition', 'create', {
-      schema: schemaId,
-      label,
-      type,
-      required: false,
-      unique: false,
-    });
-    if (result.variant === 'ok') {
-      refetch();
+    try {
+      const result = await invoke('FieldDefinition', 'create', {
+        schema: schemaId,
+        label,
+        type,
+        required: false,
+        unique: false,
+      });
+      if (result.variant === 'ok') {
+        refetch();
+      } else {
+        setActionError((result.message as string | undefined) ?? 'Failed to add field.');
+      }
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Failed to add field.');
+    } finally {
+      setActionPending(false);
     }
   }, [invoke, schemaId, refetch]);
 
@@ -368,8 +380,20 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
     // Confirmed delete
     setDeleteWarning(null);
     setPendingDeleteId(null);
-    await invoke('FieldDefinition', 'remove', { field: fieldId, schema: schemaId });
-    refetch();
+    setActionError(null);
+    setActionPending(true);
+    try {
+      const result = await invoke('FieldDefinition', 'remove', { field: fieldId, schema: schemaId });
+      if (result.variant === 'ok') {
+        refetch();
+      } else {
+        setActionError((result.message as string | undefined) ?? 'Failed to remove field.');
+      }
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Failed to remove field.');
+    } finally {
+      setActionPending(false);
+    }
   }, [invoke, schemaId, pendingDeleteId, refetch]);
 
   const cancelDelete = useCallback(() => {
@@ -405,7 +429,15 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
 
     // Persist new order
     const ids = reordered.map((f) => f.id);
-    await invoke('FieldDefinition', 'reorder', { schema: schemaId, fields: ids });
+    setActionError(null);
+    try {
+      const result = await invoke('FieldDefinition', 'reorder', { schema: schemaId, fields: ids });
+      if (result.variant !== 'ok') {
+        setActionError((result.message as string | undefined) ?? 'Failed to reorder fields.');
+      }
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Failed to reorder fields.');
+    }
   }, [fields, invoke, schemaId]);
 
   const handleDragEnd = useCallback(() => {
@@ -449,6 +481,30 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
           {fields.length} {fields.length === 1 ? 'field' : 'fields'}
         </span>
       </div>
+
+      {/* Action error banner */}
+      {actionError && (
+        <div style={{
+          padding: 'var(--spacing-xs) var(--spacing-md)',
+          background: 'var(--palette-error-container)',
+          color: 'var(--palette-on-error-container)',
+          fontSize: 'var(--typography-body-sm-size)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 'var(--spacing-sm)',
+        }} data-part="action-error">
+          <span>{actionError}</span>
+          <button
+            type="button"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: 14, lineHeight: 1, padding: '2px 4px' }}
+            onClick={() => setActionError(null)}
+            aria-label="Dismiss error"
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       {/* Delete warning banner */}
       {deleteWarning && (

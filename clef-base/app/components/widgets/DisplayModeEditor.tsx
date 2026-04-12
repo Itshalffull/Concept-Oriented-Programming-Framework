@@ -312,6 +312,8 @@ export const DisplayModeEditor: React.FC<DisplayModeEditorProps> = ({ schemaId }
   const [grid, setGrid] = useState<FormatterGrid>({});
   const [previewModeId, setPreviewModeId] = useState<string>('');
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   // Initialise grid from existing FieldPlacement data
   useEffect(() => {
@@ -347,6 +349,8 @@ export const DisplayModeEditor: React.FC<DisplayModeEditorProps> = ({ schemaId }
 
   const handleSave = useCallback(async () => {
     setSaving(true);
+    setSaveError(null);
+    setSaveSuccess(false);
     try {
       // Persist each (field, mode) formatter via FieldPlacement
       const promises: Promise<unknown>[] = [];
@@ -361,11 +365,19 @@ export const DisplayModeEditor: React.FC<DisplayModeEditorProps> = ({ schemaId }
               formatter,
               visible: formatter !== 'hidden',
               label_display: 'above',
+            }).then((result) => {
+              if (result.variant !== 'ok') {
+                throw new Error((result.message as string | undefined) ?? 'Failed to save placement.');
+              }
             }),
           );
         }
       }
       await Promise.all(promises);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2000);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to save display mode formatters.');
     } finally {
       setSaving(false);
     }
@@ -431,6 +443,12 @@ export const DisplayModeEditor: React.FC<DisplayModeEditorProps> = ({ schemaId }
                 <option key={m.mode_id} value={m.mode_id}>{m.name}</option>
               ))}
             </select>
+            {saveError && (
+              <span style={{ fontSize: '11px', color: 'var(--palette-error)', maxWidth: 200 }}>{saveError}</span>
+            )}
+            {saveSuccess && (
+              <span style={{ fontSize: '11px', color: 'var(--palette-on-surface-variant)' }}>Saved</span>
+            )}
             <button
               type="button"
               data-part="save-button"

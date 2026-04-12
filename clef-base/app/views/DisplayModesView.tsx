@@ -31,6 +31,7 @@ export const DisplayModesView: React.FC<DisplayModesViewProps> = ({ modeKey }) =
   const [mappingId, setMappingId] = useState('');
   const [layoutId, setLayoutId] = useState('');
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Parse existing placements
   let existingPlacements: string[] = [];
@@ -59,18 +60,32 @@ export const DisplayModesView: React.FC<DisplayModesViewProps> = ({ modeKey }) =
   const handleSetComponentMapping = useCallback(async () => {
     if (!mappingId.trim()) return;
     setSaving(true);
+    setSaveError(null);
     try {
-      await invoke('DisplayMode', 'set_component_mapping', { mode: modeKey, mapping: mappingId.trim() });
-      refetch();
+      const result = await invoke('DisplayMode', 'set_component_mapping', { mode: modeKey, mapping: mappingId.trim() });
+      if (result.variant === 'ok') {
+        refetch();
+      } else {
+        setSaveError((result.message as string | undefined) ?? 'Failed to set component mapping.');
+      }
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to set component mapping.');
     } finally { setSaving(false); }
   }, [invoke, modeKey, mappingId, refetch]);
 
   const handleSetLayout = useCallback(async () => {
     if (!layoutId.trim()) return;
     setSaving(true);
+    setSaveError(null);
     try {
-      await invoke('DisplayMode', 'set_layout', { mode: modeKey, layout: layoutId.trim() });
-      refetch();
+      const result = await invoke('DisplayMode', 'set_layout', { mode: modeKey, layout: layoutId.trim() });
+      if (result.variant === 'ok') {
+        refetch();
+      } else {
+        setSaveError((result.message as string | undefined) ?? 'Failed to set layout.');
+      }
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to set layout.');
     } finally { setSaving(false); }
   }, [invoke, modeKey, layoutId, refetch]);
 
@@ -86,14 +101,22 @@ export const DisplayModesView: React.FC<DisplayModesViewProps> = ({ modeKey }) =
 
   const handleSaveFlatFields = useCallback(async () => {
     setSaving(true);
+    setSaveError(null);
     try {
-      await invoke('DisplayMode', 'set_flat_fields', { mode: modeKey, placements: JSON.stringify(placements) });
-      refetch();
+      const result = await invoke('DisplayMode', 'set_flat_fields', { mode: modeKey, placements: JSON.stringify(placements) });
+      if (result.variant === 'ok') {
+        refetch();
+      } else {
+        setSaveError((result.message as string | undefined) ?? 'Failed to save flat fields.');
+      }
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to save flat fields.');
     } finally { setSaving(false); }
   }, [invoke, modeKey, placements, refetch]);
 
   const handleClear = useCallback(async () => {
     setSaving(true);
+    setSaveError(null);
     try {
       if (dm?.component_mapping) {
         await invoke('DisplayMode', 'clear_component_mapping', { mode: modeKey });
@@ -101,8 +124,14 @@ export const DisplayModesView: React.FC<DisplayModesViewProps> = ({ modeKey }) =
       if (dm?.layout) {
         await invoke('DisplayMode', 'clear_layout', { mode: modeKey });
       }
-      await invoke('DisplayMode', 'set_flat_fields', { mode: modeKey, placements: '[]' });
-      refetch();
+      const result = await invoke('DisplayMode', 'set_flat_fields', { mode: modeKey, placements: '[]' });
+      if (result.variant === 'ok') {
+        refetch();
+      } else {
+        setSaveError((result.message as string | undefined) ?? 'Failed to clear strategy.');
+      }
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to clear strategy.');
     } finally { setSaving(false); }
   }, [invoke, modeKey, dm?.component_mapping, dm?.layout, refetch]);
 
@@ -184,6 +213,25 @@ export const DisplayModesView: React.FC<DisplayModesViewProps> = ({ modeKey }) =
           </div>
         </div>
       </Card>
+
+      {/* Save error */}
+      {saveError && (
+        <div style={{
+          marginTop: 'var(--spacing-sm)',
+          padding: '6px 12px',
+          background: 'var(--palette-error-container)',
+          color: 'var(--palette-on-error-container)',
+          borderRadius: 'var(--radius-sm)',
+          fontSize: '12px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 8,
+        }}>
+          <span>{saveError}</span>
+          <button type="button" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: 13, lineHeight: 1 }} onClick={() => setSaveError(null)} aria-label="Dismiss">×</button>
+        </div>
+      )}
 
       {/* Strategy editor */}
       <div style={{ marginTop: 'var(--spacing-md)' }}>

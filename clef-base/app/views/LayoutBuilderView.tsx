@@ -141,6 +141,7 @@ export const LayoutBuilderView: React.FC = () => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [layoutName, setLayoutName] = useState('');
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const handleSplitH = useCallback(() => {
     if (!selectedId) return;
@@ -206,16 +207,21 @@ export const LayoutBuilderView: React.FC = () => {
   const handleSave = useCallback(async () => {
     if (!layoutName.trim()) return;
     setSaving(true);
+    setSaveError(null);
     try {
       const tree = JSON.stringify(Array.from(nodes.values()));
-      await invoke('SplitLayout', 'create', {
+      const result = await invoke('SplitLayout', 'create', {
         layout: layoutName,
         name: layoutName,
         tree,
       });
-      navigateToHref('/admin/layout-builder');
+      if (result.variant === 'ok') {
+        navigateToHref('/admin/layout-builder');
+      } else {
+        setSaveError((result.message as string | undefined) ?? 'Failed to save layout.');
+      }
     } catch (err) {
-      console.error('Failed to save layout:', err);
+      setSaveError(err instanceof Error ? err.message : 'Failed to save layout.');
     } finally {
       setSaving(false);
     }
@@ -257,6 +263,23 @@ export const LayoutBuilderView: React.FC = () => {
           {saving ? 'Saving...' : 'Save Layout'}
         </button>
       </div>
+      {saveError && (
+        <div style={{
+          marginBottom: 'var(--spacing-sm)',
+          padding: '6px 12px',
+          background: 'var(--palette-error-container)',
+          color: 'var(--palette-on-error-container)',
+          borderRadius: 'var(--radius-sm)',
+          fontSize: '12px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 8,
+        }}>
+          <span>{saveError}</span>
+          <button type="button" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: 13, lineHeight: 1 }} onClick={() => setSaveError(null)} aria-label="Dismiss">×</button>
+        </div>
+      )}
 
       {/* Canvas */}
       <Card variant="outlined" style={{ padding: 'var(--spacing-md)', minHeight: 400 }}>

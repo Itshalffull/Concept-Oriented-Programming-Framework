@@ -226,6 +226,7 @@ export const FieldHeaderPopover: React.FC<FieldHeaderPopoverProps> = ({
   const [showTypePicker, setShowTypePicker] = useState(false);
   const [typePickerPos, setTypePickerPos] = useState<React.CSSProperties>({});
   const [deleting, setDeleting] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   // Sync label draft when prop changes (e.g. popover reopens on different field)
   useEffect(() => {
@@ -276,7 +277,15 @@ export const FieldHeaderPopover: React.FC<FieldHeaderPopoverProps> = ({
   const handleTypeSelect = async (type: string) => {
     setShowTypePicker(false);
     onChangeType(type);
-    await invoke('FieldDefinition', 'update', { field: fieldId, type });
+    setActionError(null);
+    try {
+      const result = await invoke('FieldDefinition', 'update', { field: fieldId, type });
+      if (result.variant !== 'ok') {
+        setActionError((result.message as string | undefined) ?? 'Failed to update field type.');
+      }
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Failed to update field type.');
+    }
   };
 
   const handleDelete = async () => {
@@ -286,9 +295,20 @@ export const FieldHeaderPopover: React.FC<FieldHeaderPopoverProps> = ({
       return;
     }
     // Second click: confirmed delete
-    onDelete();
-    await invoke('FieldDefinition', 'remove', { field: fieldId, schema: schemaId });
-    onClose();
+    setActionError(null);
+    try {
+      const result = await invoke('FieldDefinition', 'remove', { field: fieldId, schema: schemaId });
+      if (result.variant === 'ok') {
+        onDelete();
+        onClose();
+      } else {
+        setActionError((result.message as string | undefined) ?? 'Failed to delete field.');
+        setDeleting(false);
+      }
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Failed to delete field.');
+      setDeleting(false);
+    }
   };
 
   if (!open) return null;
@@ -346,6 +366,25 @@ export const FieldHeaderPopover: React.FC<FieldHeaderPopoverProps> = ({
         style={{ ...panelStyle, ...panelPos }}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Action error */}
+        {actionError && (
+          <div
+            data-part="action-error"
+            style={{
+              padding: '4px var(--spacing-sm)',
+              background: 'var(--palette-error-container)',
+              color: 'var(--palette-on-error-container)',
+              fontSize: '11px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <span>{actionError}</span>
+            <button type="button" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: 12, lineHeight: 1, padding: '2px' }} onClick={() => setActionError(null)} aria-label="Dismiss">×</button>
+          </div>
+        )}
+
         {/* Rename input */}
         <div data-part="rename-section" style={{ padding: 'var(--spacing-xs) var(--spacing-sm)' }}>
           <input
