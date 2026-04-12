@@ -95,37 +95,25 @@ export const FormMode: React.FC<FormModeProps> = ({ entity, fields, onSave, onCa
   }
 
   return (
-    <div>
+    <div data-surface="mag651-form-shell">
       {error && (
-        <div style={{
-          padding: 'var(--spacing-sm) var(--spacing-md)',
-          background: 'var(--palette-error-container)',
-          color: 'var(--palette-on-error-container)',
-          borderRadius: 'var(--radius-sm)',
-          marginBottom: 'var(--spacing-md)',
-          fontSize: 'var(--typography-body-sm-size)',
-        }}>
+        <div data-part="field-error">
           {error}
         </div>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
+      <div data-part="field-panel-section">
         {fields.map(field => {
           const isEditable = field.mutability === 'editable' || field.mutability === undefined;
           return (
-            <div key={field.name}>
+            <div key={field.name} data-part="field-panel-row">
               <label
-                style={{
-                  display: 'block',
-                  marginBottom: 'var(--spacing-xs)',
-                  fontSize: 'var(--typography-label-md-size)',
-                  fontWeight: 'var(--typography-label-md-weight)',
-                  color: isEditable ? 'var(--palette-on-surface)' : 'var(--palette-on-surface-variant)',
-                }}
+                data-part="field-label"
+                data-muted={isEditable ? undefined : 'true'}
               >
                 {field.label ?? field.name}
                 {!isEditable && (
-                  <span style={{ fontSize: 'var(--typography-label-sm-size)', marginLeft: 'var(--spacing-xs)', opacity: 0.6 }}>
+                  <span data-part="field-meta">
                     ({field.mutability})
                   </span>
                 )}
@@ -137,13 +125,7 @@ export const FormMode: React.FC<FormModeProps> = ({ entity, fields, onSave, onCa
                   onChange={(v) => handleChange(field.name, v)}
                 />
               ) : (
-                <div style={{
-                  padding: 'var(--spacing-sm)',
-                  background: 'var(--palette-surface-variant)',
-                  borderRadius: 'var(--radius-sm)',
-                  fontSize: 'var(--typography-body-md-size)',
-                  opacity: 0.7,
-                }}>
+                <div data-part="field-readonly">
                   {String(values[field.name] ?? '')}
                 </div>
               )}
@@ -152,13 +134,9 @@ export const FormMode: React.FC<FormModeProps> = ({ entity, fields, onSave, onCa
         })}
       </div>
 
-      <div style={{ display: 'flex', gap: 'var(--spacing-sm)', justifyContent: 'flex-end', marginTop: 'var(--spacing-xl)', alignItems: 'center' }}>
+      <div data-part="field-actions" style={{ marginTop: 'var(--spacing-xl)' }}>
         {success && (
-          <span style={{
-            fontSize: 'var(--typography-body-sm-size)',
-            color: 'var(--palette-success, #2e7d32)',
-            marginRight: 'var(--spacing-sm)',
-          }}>
+          <span data-part="field-meta" style={{ color: 'var(--palette-success)' }}>
             Saved
           </span>
         )}

@@ -108,29 +108,13 @@ export const CreateForm: React.FC<CreateFormProps> = ({
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 1000,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'rgba(0,0,0,0.4)',
-      }}
+      data-surface="mag651-form-overlay"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
-        style={{
-          background: 'var(--palette-surface)',
-          borderRadius: 'var(--radius-lg)',
-          padding: 'var(--spacing-xl)',
-          minWidth: 400,
-          maxWidth: 560,
-          width: '100%',
-          boxShadow: 'var(--elevation-3)',
-        }}
+        data-surface="mag651-field-panel"
       >
-        <h2 style={{ marginBottom: 'var(--spacing-lg)' }}>{title}</h2>
+        <h2 data-part="field-panel-title">{title}</h2>
 
         {useFormRenderer ? (
           // FormSpec-driven rendering
@@ -143,29 +127,16 @@ export const CreateForm: React.FC<CreateFormProps> = ({
           />
         ) : schemaId != null && formSpecResolved === null ? (
           // Still probing for FormSpec — show a minimal loading state
-          <div
-            style={{
-              padding: 'var(--spacing-xl)',
-              textAlign: 'center',
-              color: 'var(--palette-on-surface-variant)',
-            }}
-          >
+          <div data-part="field-panel-subtitle">
             Loading form...
           </div>
         ) : (
           // Fallback: hardcoded FieldDef-based rendering
           <>
             {error && (
-              <div style={{
-                padding: 'var(--spacing-sm) var(--spacing-md)',
-                background: 'var(--palette-error-container)',
-                color: 'var(--palette-on-error-container)',
-                borderRadius: 'var(--radius-sm)',
-                marginBottom: 'var(--spacing-md)',
-                fontSize: 'var(--typography-body-sm-size)',
-              }}>
+              <div data-part="field-error">
                 {errorVariant && errorVariant !== 'error' && (
-                  <span style={{ fontWeight: 600, marginRight: 4 }}>[{errorVariant}]</span>
+                  <span data-part="field-error-variant">[{errorVariant}]</span>
                 )}
                 {error}
               </div>
@@ -173,18 +144,13 @@ export const CreateForm: React.FC<CreateFormProps> = ({
 
             <form onSubmit={handleSubmit}>
               {fields.map((field) => (
-                <div key={field.name} style={{ marginBottom: 'var(--spacing-md)' }}>
+                <div key={field.name} data-part="field-panel-row">
                   <label
                     htmlFor={`field-${field.name}`}
-                    style={{
-                      display: 'block',
-                      marginBottom: 'var(--spacing-xs)',
-                      fontSize: 'var(--typography-label-md-size)',
-                      fontWeight: 'var(--typography-label-md-weight)',
-                    }}
+                    data-part="field-label"
                   >
                     {field.label ?? field.name}
-                    {field.required && <span style={{ color: 'var(--palette-error)' }}> *</span>}
+                    {field.required && <span data-part="field-required"> *</span>}
                   </label>
                   {field.type === 'textarea' ? (
                     <textarea
@@ -194,17 +160,7 @@ export const CreateForm: React.FC<CreateFormProps> = ({
                       placeholder={field.placeholder}
                       required={field.required}
                       rows={3}
-                      style={{
-                        width: '100%',
-                        padding: 'var(--spacing-sm)',
-                        borderRadius: 'var(--radius-sm)',
-                        border: '1px solid var(--palette-outline)',
-                        background: 'var(--palette-surface-variant)',
-                        color: 'var(--palette-on-surface)',
-                        fontFamily: 'inherit',
-                        fontSize: 'var(--typography-body-md-size)',
-                        resize: 'vertical',
-                      }}
+                      data-surface="mag651-field-control"
                     />
                   ) : field.type === 'select' ? (
                     <select
@@ -212,15 +168,7 @@ export const CreateForm: React.FC<CreateFormProps> = ({
                       value={values[field.name] ?? ''}
                       onChange={(e) => setValues(v => ({ ...v, [field.name]: e.target.value }))}
                       required={field.required}
-                      style={{
-                        width: '100%',
-                        padding: 'var(--spacing-sm)',
-                        borderRadius: 'var(--radius-sm)',
-                        border: '1px solid var(--palette-outline)',
-                        background: 'var(--palette-surface-variant)',
-                        color: 'var(--palette-on-surface)',
-                        fontSize: 'var(--typography-body-md-size)',
-                      }}
+                      data-surface="mag651-field-control"
                     >
                       <option value="">Select...</option>
                       {field.options?.map(opt => (
@@ -235,21 +183,13 @@ export const CreateForm: React.FC<CreateFormProps> = ({
                       onChange={(e) => setValues(v => ({ ...v, [field.name]: e.target.value }))}
                       placeholder={field.placeholder}
                       required={field.required}
-                      style={{
-                        width: '100%',
-                        padding: 'var(--spacing-sm)',
-                        borderRadius: 'var(--radius-sm)',
-                        border: '1px solid var(--palette-outline)',
-                        background: 'var(--palette-surface-variant)',
-                        color: 'var(--palette-on-surface)',
-                        fontSize: 'var(--typography-body-md-size)',
-                      }}
+                      data-surface="mag651-field-control"
                     />
                   )}
                 </div>
               ))}
 
-              <div style={{ display: 'flex', gap: 'var(--spacing-sm)', justifyContent: 'flex-end', marginTop: 'var(--spacing-lg)' }}>
+              <div data-part="field-actions" style={{ marginTop: 'var(--spacing-lg)' }}>
                 <button
                   type="button"
                   data-part="button"

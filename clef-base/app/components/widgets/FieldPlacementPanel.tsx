@@ -62,78 +62,76 @@ export const FieldPlacementPanel: React.FC<FieldPlacementPanelProps> = ({
   }, [formatter, formatterOptions, labelDisplay, labelOverride, visible, fieldMapping, placement.placement, onSave]);
 
   return (
-    <div style={{
-      padding: 'var(--spacing-md, 16px)',
-      border: '1px solid var(--palette-outline-variant, #ccc)',
-      borderRadius: 'var(--radius-md, 8px)',
-      background: 'var(--palette-surface, #fff)',
-    }}>
-      <h3 style={{ margin: '0 0 var(--spacing-sm, 8px)' }}>
+    <div data-surface="mag651-field-panel" data-layout="compact">
+      <h3 data-part="field-panel-title">
         Field: {placement.source_field}
       </h3>
 
-      <div style={{ display: 'grid', gap: 'var(--spacing-sm, 8px)' }}>
+      <div data-part="field-panel-section">
         {/* Formatter */}
-        <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <span style={{ fontWeight: 500, fontSize: '0.85rem' }}>Formatter</span>
-          <select value={formatter} onChange={e => setFormatter(e.target.value)}>
+        <label data-part="field-label">
+          <span>Formatter</span>
+          <select value={formatter} onChange={e => setFormatter(e.target.value)} data-surface="mag651-field-control">
             {FORMATTERS.map(f => <option key={f} value={f}>{f}</option>)}
           </select>
         </label>
 
         {/* Formatter Options */}
-        <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <span style={{ fontWeight: 500, fontSize: '0.85rem' }}>Formatter Options (JSON)</span>
+        <label data-part="field-label">
+          <span>Formatter Options (JSON)</span>
           <input
             type="text"
             value={formatterOptions}
             onChange={e => setFormatterOptions(e.target.value)}
             placeholder='e.g. {"level": 1}'
+            data-surface="mag651-field-control"
           />
         </label>
 
         {/* Label Display */}
-        <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <span style={{ fontWeight: 500, fontSize: '0.85rem' }}>Label Display</span>
-          <select value={labelDisplay} onChange={e => setLabelDisplay(e.target.value)}>
+        <label data-part="field-label">
+          <span>Label Display</span>
+          <select value={labelDisplay} onChange={e => setLabelDisplay(e.target.value)} data-surface="mag651-field-control">
             {LABEL_DISPLAYS.map(d => <option key={d} value={d}>{d}</option>)}
           </select>
         </label>
 
         {/* Label Override */}
-        <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <span style={{ fontWeight: 500, fontSize: '0.85rem' }}>Label Override</span>
+        <label data-part="field-label">
+          <span>Label Override</span>
           <input
             type="text"
             value={labelOverride}
             onChange={e => setLabelOverride(e.target.value)}
             placeholder="Custom label (empty = use default)"
+            data-surface="mag651-field-control"
           />
         </label>
 
         {/* Visibility */}
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <label data-surface="mag651-toggle">
           <input
             type="checkbox"
             checked={visible}
             onChange={e => setVisible(e.target.checked)}
           />
-          <span style={{ fontWeight: 500, fontSize: '0.85rem' }}>Visible</span>
+          <span>Visible</span>
         </label>
 
         {/* Field Mapping */}
-        <label style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <span style={{ fontWeight: 500, fontSize: '0.85rem' }}>ComponentMapping ID</span>
+        <label data-part="field-label">
+          <span>ComponentMapping ID</span>
           <input
             type="text"
             value={fieldMapping}
             onChange={e => setFieldMapping(e.target.value)}
             placeholder="Optional — delegates to ComponentMapping"
+            data-surface="mag651-field-control"
           />
         </label>
       </div>
 
-      <div style={{ display: 'flex', gap: 'var(--spacing-sm, 8px)', marginTop: 'var(--spacing-md, 16px)' }}>
+      <div data-part="field-actions" style={{ marginTop: 'var(--spacing-md, 16px)' }}>
         <button data-part="button" data-variant="filled" onClick={handleSave} disabled={saving}>
           {saving ? 'Saving...' : 'Save'}
         </button>

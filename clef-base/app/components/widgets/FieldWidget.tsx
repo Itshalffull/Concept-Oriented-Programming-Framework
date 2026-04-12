@@ -57,26 +57,6 @@ export const FIELD_TYPE_REGISTRY: Record<string, FieldTypeConfig> = {
 };
 
 // ---------------------------------------------------------------------------
-// Shared base styles (CSS custom properties pattern)
-// ---------------------------------------------------------------------------
-
-const baseInputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: 'var(--spacing-sm)',
-  borderRadius: 'var(--radius-sm)',
-  border: '1px solid var(--palette-outline)',
-  background: 'var(--palette-surface-variant)',
-  color: 'var(--palette-on-surface)',
-  fontSize: 'var(--typography-body-md-size)',
-  fontFamily: 'inherit',
-  boxSizing: 'border-box',
-};
-
-const errorBorderStyle: React.CSSProperties = {
-  borderColor: 'var(--palette-error)',
-};
-
-// ---------------------------------------------------------------------------
 // FieldWidget props
 // ---------------------------------------------------------------------------
 
@@ -103,11 +83,12 @@ const TextInput: React.FC<{ field: SchemaField; value: unknown; onChange: (v: un
         placeholder={field.placeholder}
         aria-describedby={hasError ? errId : undefined}
         aria-invalid={hasError || undefined}
-        style={{ ...baseInputStyle, ...(hasError ? errorBorderStyle : {}) }}
-        data-part="input"
+        data-surface="mag651-field-control"
+        data-state={hasError ? 'error' : 'idle'}
+        data-part="field-input"
       />
       {maxLen != null && (
-        <span style={{ position: 'absolute', right: 'var(--spacing-sm)', bottom: 'var(--spacing-xs)', fontSize: 'var(--typography-label-sm-size)', opacity: 0.5 }} data-part="char-count">
+        <span style={{ position: 'absolute', right: 'var(--spacing-sm)', bottom: 'var(--spacing-xs)' }} data-part="field-meta">
           {str.length}/{maxLen}
         </span>
       )}
@@ -128,11 +109,12 @@ const TextareaInput: React.FC<{ field: SchemaField; value: unknown; onChange: (v
         placeholder={field.placeholder}
         aria-describedby={hasError ? errId : undefined}
         aria-invalid={hasError || undefined}
-        style={{ ...baseInputStyle, resize: 'vertical', ...(hasError ? errorBorderStyle : {}) }}
-        data-part="textarea"
+        data-surface="mag651-field-control"
+        data-state={hasError ? 'error' : 'idle'}
+        data-part="field-textarea"
       />
       {maxLen != null && (
-        <span style={{ display: 'block', textAlign: 'right', fontSize: 'var(--typography-label-sm-size)', opacity: 0.5, marginTop: '2px' }} data-part="char-count">
+        <span style={{ display: 'block', textAlign: 'right' }} data-part="field-meta">
           {str.length}/{maxLen}
         </span>
       )}
@@ -150,10 +132,11 @@ const RichTextInput: React.FC<{ field: SchemaField; value: unknown; onChange: (v
       placeholder={field.placeholder ?? 'Rich text (markdown supported)'}
       aria-describedby={hasError ? errId : undefined}
       aria-invalid={hasError || undefined}
-      style={{ ...baseInputStyle, resize: 'vertical', ...(hasError ? errorBorderStyle : {}) }}
-      data-part="rich-text-input"
+      data-surface="mag651-field-control"
+      data-state={hasError ? 'error' : 'idle'}
+      data-part="field-rich-text-input"
     />
-    <span style={{ fontSize: 'var(--typography-label-sm-size)', opacity: 0.5, marginTop: '2px', display: 'block' }} data-part="rich-text-hint">
+    <span data-part="field-hint">
       Basic implementation — full block editor upgrade pending
     </span>
   </div>
@@ -173,25 +156,17 @@ const NumberInput: React.FC<{ field: SchemaField; value: unknown; onChange: (v: 
       step={step}
       aria-describedby={hasError ? errId : undefined}
       aria-invalid={hasError || undefined}
-      style={{ ...baseInputStyle, ...(hasError ? errorBorderStyle : {}) }}
-      data-part="number-input"
+      data-surface="mag651-field-control"
+      data-state={hasError ? 'error' : 'idle'}
+      data-part="field-number-input"
     />
   );
 };
 
 // --- Currency ---
 const CurrencyInput: React.FC<{ field: SchemaField; value: unknown; onChange: (v: unknown) => void; hasError: boolean; errId: string }> = ({ field, value, onChange, hasError, errId }) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: 0 }} data-part="currency-wrapper">
-    <span style={{
-      padding: 'var(--spacing-sm)',
-      background: 'var(--palette-surface)',
-      border: '1px solid var(--palette-outline)',
-      borderRight: 'none',
-      borderRadius: 'var(--radius-sm) 0 0 var(--radius-sm)',
-      color: 'var(--palette-on-surface-variant)',
-      fontSize: 'var(--typography-body-md-size)',
-      lineHeight: 1,
-    }} data-part="currency-prefix">$</span>
+  <div data-surface="mag651-field-control-group" data-layout="inline" data-part="currency-wrapper">
+    <span data-part="field-addon" data-edge="start">$</span>
     <input
       type="number"
       value={value === null || value === undefined ? '' : String(value)}
@@ -201,15 +176,16 @@ const CurrencyInput: React.FC<{ field: SchemaField; value: unknown; onChange: (v
       min="0"
       aria-describedby={hasError ? errId : undefined}
       aria-invalid={hasError || undefined}
-      style={{ ...baseInputStyle, borderRadius: '0 var(--radius-sm) var(--radius-sm) 0', ...(hasError ? errorBorderStyle : {}) }}
-      data-part="currency-input"
+      data-surface="mag651-field-control"
+      data-state={hasError ? 'error' : 'idle'}
+      data-part="field-currency-input"
     />
   </div>
 );
 
 // --- Percentage ---
 const PercentageInput: React.FC<{ field: SchemaField; value: unknown; onChange: (v: unknown) => void; hasError: boolean; errId: string }> = ({ field, value, onChange, hasError, errId }) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: 0 }} data-part="percentage-wrapper">
+  <div data-surface="mag651-field-control-group" data-layout="inline" data-part="percentage-wrapper">
     <input
       type="number"
       value={value === null || value === undefined ? '' : String(value)}
@@ -220,19 +196,11 @@ const PercentageInput: React.FC<{ field: SchemaField; value: unknown; onChange: 
       max="100"
       aria-describedby={hasError ? errId : undefined}
       aria-invalid={hasError || undefined}
-      style={{ ...baseInputStyle, borderRadius: 'var(--radius-sm) 0 0 var(--radius-sm)', ...(hasError ? errorBorderStyle : {}) }}
-      data-part="percentage-input"
+      data-surface="mag651-field-control"
+      data-state={hasError ? 'error' : 'idle'}
+      data-part="field-percentage-input"
     />
-    <span style={{
-      padding: 'var(--spacing-sm)',
-      background: 'var(--palette-surface)',
-      border: '1px solid var(--palette-outline)',
-      borderLeft: 'none',
-      borderRadius: '0 var(--radius-sm) var(--radius-sm) 0',
-      color: 'var(--palette-on-surface-variant)',
-      fontSize: 'var(--typography-body-md-size)',
-      lineHeight: 1,
-    }} data-part="percentage-suffix">%</span>
+    <span data-part="field-addon" data-edge="end">%</span>
   </div>
 );
 
@@ -244,8 +212,9 @@ const DateInput: React.FC<{ field: SchemaField; value: unknown; onChange: (v: un
     onChange={(e) => onChange(e.target.value)}
     aria-describedby={hasError ? errId : undefined}
     aria-invalid={hasError || undefined}
-    style={{ ...baseInputStyle, ...(hasError ? errorBorderStyle : {}) }}
-    data-part="date-input"
+    data-surface="mag651-field-control"
+    data-state={hasError ? 'error' : 'idle'}
+    data-part="field-date-input"
   />
 );
 
@@ -257,8 +226,9 @@ const DateTimeInput: React.FC<{ field: SchemaField; value: unknown; onChange: (v
     onChange={(e) => onChange(e.target.value)}
     aria-describedby={hasError ? errId : undefined}
     aria-invalid={hasError || undefined}
-    style={{ ...baseInputStyle, ...(hasError ? errorBorderStyle : {}) }}
-    data-part="datetime-input"
+    data-surface="mag651-field-control"
+    data-state={hasError ? 'error' : 'idle'}
+    data-part="field-datetime-input"
   />
 );
 
@@ -266,40 +236,17 @@ const DateTimeInput: React.FC<{ field: SchemaField; value: unknown; onChange: (v
 const BooleanToggle: React.FC<{ field: SchemaField; value: unknown; onChange: (v: unknown) => void }> = ({ field: _field, value, onChange }) => {
   const checked = Boolean(value);
   return (
-    <label
-      style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', cursor: 'pointer', width: 'fit-content' }}
-      data-part="boolean-label"
-    >
+    <label data-surface="mag651-toggle" data-part="boolean-label">
       <span
         role="switch"
         aria-checked={checked}
         onClick={() => onChange(!checked)}
-        style={{
-          display: 'inline-flex',
-          width: '40px',
-          height: '22px',
-          borderRadius: '11px',
-          background: checked ? 'var(--palette-primary)' : 'var(--palette-outline)',
-          cursor: 'pointer',
-          alignItems: 'center',
-          padding: '2px',
-          transition: 'background 0.15s',
-          flexShrink: 0,
-        }}
-        data-part="toggle-track"
+        data-surface="mag651-toggle-track"
         data-state={checked ? 'on' : 'off'}
       >
-        <span style={{
-          display: 'block',
-          width: '18px',
-          height: '18px',
-          borderRadius: '50%',
-          background: 'var(--palette-on-primary, #fff)',
-          transform: checked ? 'translateX(18px)' : 'translateX(0)',
-          transition: 'transform 0.15s',
-        }} data-part="toggle-thumb" />
+        <span data-surface="mag651-toggle-thumb" data-part="toggle-thumb" />
       </span>
-      <span style={{ fontSize: 'var(--typography-body-md-size)' }} data-part="toggle-label">
+      <span data-part="toggle-label">
         {checked ? 'Yes' : 'No'}
       </span>
     </label>
@@ -320,8 +267,9 @@ const SelectInput: React.FC<{ field: SchemaField; value: unknown; onChange: (v: 
           placeholder="Search options..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          style={{ ...baseInputStyle, marginBottom: '4px' }}
-          data-part="select-search"
+          data-surface="mag651-field-control"
+          data-kind="search"
+          data-part="field-select-search"
         />
       )}
       <select
@@ -329,8 +277,9 @@ const SelectInput: React.FC<{ field: SchemaField; value: unknown; onChange: (v: 
         onChange={(e) => onChange(e.target.value)}
         aria-describedby={hasError ? errId : undefined}
         aria-invalid={hasError || undefined}
-        style={{ ...baseInputStyle, ...(hasError ? errorBorderStyle : {}) }}
-        data-part="select-input"
+        data-surface="mag651-field-control"
+        data-state={hasError ? 'error' : 'idle'}
+        data-part="field-select-input"
       >
         <option value="">Select...</option>
         {filtered.map(opt => (
@@ -358,45 +307,27 @@ const MultiSelectInput: React.FC<{ field: SchemaField; value: unknown; onChange:
   return (
     <div data-part="multi-select-wrapper" style={{ position: 'relative' }}>
       <div
-        style={{
-          ...baseInputStyle,
-          minHeight: '38px',
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '4px',
-          alignItems: 'center',
-          cursor: 'pointer',
-          ...(hasError ? errorBorderStyle : {}),
-        }}
+        data-surface="mag651-field-control"
+        data-state={hasError ? 'error' : 'idle'}
+        data-layout="wrap"
         onClick={() => setOpen(o => !o)}
         aria-describedby={hasError ? errId : undefined}
-        data-part="multi-select-display"
+        data-part="field-multiselect-display"
       >
         {selected.length === 0 && (
-          <span style={{ opacity: 0.5 }}>{field.placeholder ?? 'Select values...'}</span>
+          <span style={{ opacity: 0.5 }} data-part="field-placeholder">{field.placeholder ?? 'Select values...'}</span>
         )}
         {selected.map(s => (
           <span
             key={s}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px',
-              padding: '2px var(--spacing-xs)',
-              background: 'var(--palette-primary-container, #e8eaf6)',
-              color: 'var(--palette-on-primary-container, #1a237e)',
-              borderRadius: 'var(--radius-sm)',
-              fontSize: 'var(--typography-label-sm-size)',
-            }}
-            data-part="chip"
+            data-part="field-chip"
           >
             {s}
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); remove(s); }}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, lineHeight: 1, color: 'inherit', opacity: 0.7 }}
+              data-part="field-chip-remove"
               aria-label={`Remove ${s}`}
-              data-part="chip-remove"
             >
               ×
             </button>
@@ -404,32 +335,12 @@ const MultiSelectInput: React.FC<{ field: SchemaField; value: unknown; onChange:
         ))}
       </div>
       {open && available.length > 0 && (
-        <div style={{
-          position: 'absolute',
-          top: '100%',
-          left: 0,
-          right: 0,
-          zIndex: 10,
-          background: 'var(--palette-surface)',
-          border: '1px solid var(--palette-outline)',
-          borderRadius: 'var(--radius-sm)',
-          maxHeight: '180px',
-          overflowY: 'auto',
-          marginTop: '2px',
-          boxShadow: 'var(--elevation-2, 0 2px 8px rgba(0,0,0,0.15))',
-        }} data-part="multi-select-dropdown">
+        <div data-surface="mag651-field-dropdown" data-part="multi-select-dropdown">
           {available.map(opt => (
             <div
               key={opt}
               onClick={() => { add(opt); setOpen(false); }}
-              style={{
-                padding: 'var(--spacing-xs) var(--spacing-sm)',
-                cursor: 'pointer',
-                fontSize: 'var(--typography-body-md-size)',
-              }}
-              onMouseOver={(e) => (e.currentTarget.style.background = 'var(--palette-surface-variant)')}
-              onMouseOut={(e) => (e.currentTarget.style.background = '')}
-              data-part="multi-select-option"
+              data-part="field-dropdown-option"
             >
               {opt}
             </div>
@@ -452,24 +363,17 @@ const UrlInput: React.FC<{ field: SchemaField; value: unknown; onChange: (v: unk
         placeholder={field.placeholder ?? 'https://'}
         aria-describedby={hasError ? errId : undefined}
         aria-invalid={hasError || undefined}
-        style={{ ...baseInputStyle, flex: 1, ...(hasError ? errorBorderStyle : {}) }}
-        data-part="url-input"
+        data-surface="mag651-field-control"
+        data-state={hasError ? 'error' : 'idle'}
+        data-part="field-url-input"
       />
       {str && (
         <a
           href={str}
           target="_blank"
           rel="noopener noreferrer"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            padding: 'var(--spacing-xs)',
-            color: 'var(--palette-primary)',
-            textDecoration: 'none',
-            flexShrink: 0,
-          }}
           aria-label="Open link in new tab"
-          data-part="url-link-out"
+          data-part="field-link-out"
         >
           ↗
         </a>
@@ -488,8 +392,9 @@ const EmailInput: React.FC<{ field: SchemaField; value: unknown; onChange: (v: u
       placeholder={field.placeholder ?? 'name@example.com'}
       aria-describedby={hasError ? errId : undefined}
       aria-invalid={hasError || undefined}
-      style={{ ...baseInputStyle, ...(hasError ? errorBorderStyle : {}) }}
-      data-part="email-input"
+      data-surface="mag651-field-control"
+      data-state={hasError ? 'error' : 'idle'}
+      data-part="field-email-input"
     />
   </div>
 );
@@ -504,10 +409,11 @@ const RelationInput: React.FC<{ field: SchemaField; value: unknown; onChange: (v
       placeholder={field.placeholder ?? 'Enter entity ID or name'}
       aria-describedby={hasError ? errId : undefined}
       aria-invalid={hasError || undefined}
-      style={{ ...baseInputStyle, ...(hasError ? errorBorderStyle : {}) }}
-      data-part="relation-input"
+      data-surface="mag651-field-control"
+      data-state={hasError ? 'error' : 'idle'}
+      data-part="field-relation-input"
     />
-    <span style={{ fontSize: 'var(--typography-label-sm-size)', opacity: 0.5, marginTop: '2px', display: 'block' }} data-part="relation-hint">
+    <span data-part="field-hint">
       Relation — picker upgrade pending
     </span>
   </div>
@@ -523,10 +429,11 @@ const PersonInput: React.FC<{ field: SchemaField; value: unknown; onChange: (v: 
       placeholder={field.placeholder ?? 'Search for a user'}
       aria-describedby={hasError ? errId : undefined}
       aria-invalid={hasError || undefined}
-      style={{ ...baseInputStyle, ...(hasError ? errorBorderStyle : {}) }}
-      data-part="person-input"
+      data-surface="mag651-field-control"
+      data-state={hasError ? 'error' : 'idle'}
+      data-part="field-person-input"
     />
-    <span style={{ fontSize: 'var(--typography-label-sm-size)', opacity: 0.5, marginTop: '2px', display: 'block' }} data-part="person-hint">
+    <span data-part="field-hint">
       Person — user picker upgrade pending
     </span>
   </div>
@@ -555,16 +462,9 @@ const MediaInput: React.FC<{ field: SchemaField; value: unknown; onChange: (v: u
         if (file) handleFile(file);
       }}
       aria-describedby={hasError ? errId : undefined}
-      style={{
-        border: `2px dashed ${dragOver ? 'var(--palette-primary)' : hasError ? 'var(--palette-error)' : 'var(--palette-outline)'}`,
-        borderRadius: 'var(--radius-sm)',
-        padding: 'var(--spacing-md)',
-        textAlign: 'center',
-        background: dragOver ? 'var(--palette-primary-container, rgba(0,0,0,0.04))' : 'var(--palette-surface-variant)',
-        cursor: 'pointer',
-        transition: 'border-color 0.15s, background 0.15s',
-      }}
+      data-surface="mag651-field-control"
       data-part="media-dropzone"
+      data-state={dragOver ? 'drag-over' : hasError ? 'error' : 'idle'}
     >
       {isImage ? (
         <img
@@ -593,7 +493,7 @@ const MediaInput: React.FC<{ field: SchemaField; value: unknown; onChange: (v: u
           data-part="media-file-input"
         />
       </label>
-      <div style={{ fontSize: 'var(--typography-label-sm-size)', opacity: 0.5, marginTop: '2px' }} data-part="media-hint">
+      <div data-part="field-hint">
         Media — upload integration pending
       </div>
     </div>
@@ -606,7 +506,7 @@ const FileInput: React.FC<{ field: SchemaField; value: unknown; onChange: (v: un
   return (
     <div data-part="file-wrapper">
       {fileName && (
-        <div style={{ marginBottom: 'var(--spacing-xs)', fontSize: 'var(--typography-body-sm-size)', color: 'var(--palette-primary)' }} data-part="file-name">
+        <div data-part="field-meta" style={{ color: 'var(--palette-primary)' }}>
           {fileName}
         </div>
       )}
@@ -618,7 +518,6 @@ const FileInput: React.FC<{ field: SchemaField; value: unknown; onChange: (v: un
           const file = e.target.files?.[0];
           if (file) onChange(file.name);
         }}
-        style={{ fontSize: 'var(--typography-body-md-size)' }}
         data-part="file-input"
       />
     </div>
@@ -645,8 +544,8 @@ const RatingInput: React.FC<{ field: SchemaField; value: unknown; onChange: (v: 
             cursor: 'pointer',
             fontSize: '24px',
             color: star <= (hovered || rating)
-              ? 'var(--palette-primary, #f59e0b)'
-              : 'var(--palette-outline, #d1d5db)',
+              ? 'var(--palette-primary)'
+              : 'var(--palette-outline)',
             padding: 0,
             lineHeight: 1,
             transition: 'color 0.1s',
@@ -686,21 +585,21 @@ const JsonInput: React.FC<{ field: SchemaField; value: unknown; onChange: (v: un
         aria-describedby={hasError ? errId : undefined}
         aria-invalid={hasError || undefined}
         style={{
-          ...baseInputStyle,
           fontFamily: 'var(--typography-font-family-mono)',
           fontSize: 'var(--typography-code-sm-size)',
           resize: 'vertical',
-          ...(hasError ? errorBorderStyle : {}),
         }}
-        data-part="json-input"
+        data-surface="mag651-field-control"
+        data-state={hasError ? 'error' : 'idle'}
+        data-part="field-json-input"
       />
       {jsonValid === false && (
-        <span style={{ fontSize: 'var(--typography-label-sm-size)', color: 'var(--palette-error)', marginTop: '2px', display: 'block' }} data-part="json-invalid-indicator">
+        <span data-part="field-error">
           Invalid JSON
         </span>
       )}
       {jsonValid === true && (
-        <span style={{ fontSize: 'var(--typography-label-sm-size)', color: 'var(--palette-success, #16a34a)', marginTop: '2px', display: 'block' }} data-part="json-valid-indicator">
+        <span style={{ color: 'var(--palette-success)' }} data-part="field-hint">
           Valid JSON
         </span>
       )}
@@ -804,14 +703,7 @@ export const FieldWidget: React.FC<FieldWidgetProps> = ({ field, value, onChange
       {renderInput()}
       {field.helpText && !hasError && (
         <span
-          style={{
-            display: 'block',
-            marginTop: '4px',
-            fontSize: 'var(--typography-label-sm-size)',
-            color: 'var(--palette-on-surface-variant)',
-            opacity: 0.7,
-          }}
-          data-part="help-text"
+          data-part="field-help"
         >
           {field.helpText}
         </span>
@@ -820,15 +712,10 @@ export const FieldWidget: React.FC<FieldWidgetProps> = ({ field, value, onChange
         <div
           id={errorId}
           role="alert"
-          style={{
-            marginTop: '4px',
-            fontSize: 'var(--typography-label-sm-size)',
-            color: 'var(--palette-error)',
-          }}
-          data-part="error-messages"
+          data-part="field-error"
         >
           {errors.map((err, i) => (
-            <div key={i} data-part="error-message">{err}</div>
+            <div key={i} data-part="field-error-message">{err}</div>
           ))}
         </div>
       )}
