@@ -1,0 +1,80 @@
+# ActionBinding seeds -- columns block editor toolbar and context menu commands (MAG-736).
+# NOTE: All five bindings are placeholder stubs. The Columns concept has not yet been
+# created as of MAG-736 -- concept actions (target field) are anticipatory identifiers
+# that will resolve once a Columns concept is scaffolded in a follow-up card (MAG-<TBD>).
+# Gaps are documented inline.
+
+concept: ActionBinding
+action: bind
+entries:
+  # Insert a new column to the right of the currently focused column.
+  # GAP: no Columns concept exists yet; target is a placeholder.
+  - name: columns-add
+    binding: columns-add
+    target: "Columns/addColumn"
+    parameterMap: '{"block":"context.blockId","afterIndex":"context.columnIndex"}'
+    executionPolicy: "auto"
+    toolbar_command: true
+    slash_command: false
+    context_menu: true
+    section: "Columns"
+    label: "Add column"
+    icon: "plus"
+
+  # Remove the currently focused column from the layout.
+  # GAP: no Columns concept exists yet; target is a placeholder.
+  - name: columns-remove
+    binding: columns-remove
+    target: "Columns/removeColumn"
+    parameterMap: '{"block":"context.blockId","index":"context.columnIndex"}'
+    executionPolicy: "pessimistic"
+    confirmWhen: "columnCount <= 2"
+    toolbar_command: true
+    slash_command: false
+    context_menu: true
+    section: "Columns"
+    label: "Remove column"
+    icon: "minus"
+    buttonVariant: "destructive"
+
+  # Drag-to-reorder columns; fires REORDER_START on the columns-block FSM.
+  # GAP: no Columns concept exists yet; target is a placeholder.
+  - name: columns-reorder
+    binding: columns-reorder
+    target: "Columns/reorderColumns"
+    parameterMap: '{"block":"context.blockId","fromIndex":"context.dragSourceIndex","toIndex":"context.dropTargetIndex"}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    context_menu: false
+    section: "Columns"
+    label: "Reorder columns"
+    icon: "drag-handle"
+
+  # Set explicit percentage widths for all columns (must sum to 100).
+  # GAP: no Columns concept exists yet; target is a placeholder.
+  - name: columns-set-widths
+    binding: columns-set-widths
+    target: "Columns/setWidths"
+    parameterMap: '{"block":"context.blockId","widths":"context.columnWidths"}'
+    executionPolicy: "auto"
+    toolbar_command: true
+    slash_command: false
+    context_menu: false
+    section: "Columns"
+    label: "Set widths"
+    icon: "sliders"
+
+  # Toggle the stackOnNarrow responsive flag for the columns block.
+  # GAP: no Columns concept exists yet; target is a placeholder.
+  - name: columns-toggle-stack-on-narrow
+    binding: columns-toggle-stack-on-narrow
+    target: "Columns/toggleStackOnNarrow"
+    parameterMap: '{"block":"context.blockId","enabled":"context.stackOnNarrow"}'
+    executionPolicy: "auto"
+    toolbar_command: true
+    slash_command: false
+    context_menu: false
+    section: "Columns"
+    label: "Stack on narrow"
+    icon: "device-mobile"

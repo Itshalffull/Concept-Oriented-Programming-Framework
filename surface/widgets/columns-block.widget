@@ -1,0 +1,247 @@
+@version(1)
+widget columns-block {
+
+  purpose {
+    Multi-column layout block for the Clef block editor. Renders two or more
+    vertical columns side-by-side, each hosting a recursive ViewShell over
+    child ContentNodes filtered by columnIndex. A draggable divider between
+    adjacent columns lets authors resize column widths at edit time; a
+    REORDER_COLUMN drag sequence lets authors swap column positions. On narrow
+    viewports stackOnNarrow collapses the columns into a single vertical
+    stack, ignoring columnWidths entirely. Keyboard navigation with
+    ArrowLeft/ArrowRight moves focus between columns; Tab enters the first
+    the first column nested content.
+  }
+
+  anatomy {
+    root:            container    { Outer wrapper; carries data-state, data-column-count, data-stack for CSS and test selectors }
+    columnContainer: container    { Horizontal flex row holding all column parts and their interleaved dividers }
+    column:          container    { Individual column slot; hosts a recursive ViewShell for child ContentNodes at the matching columnIndex }
+    columnHandle:    action       { Drag handle affordance at the top of each column used to reorder columns }
+    divider:         interactive  { Draggable resize handle between two adjacent columns; triggers RESIZE_START on pointer-down }
+  }
+
+  states {
+    edit {
+      idle [initial] {
+        on FOCUS           -> idle;
+        on BLUR            -> idle;
+        on RESIZE_START    -> resizing-column;
+        on REORDER_START   -> reordering-columns;
+      }
+      resizing-column {
+        on RESIZE_COMMIT   -> idle;
+        on RESIZE_CANCEL   -> idle;
+        entry [capturePointer; saveWidthSnapshot];
+        exit  [releasePointer; flushWidths];
+      }
+      reordering-columns {
+        on REORDER_COMMIT  -> idle;
+        on REORDER_CANCEL  -> idle;
+        entry [markDragSource; activateDragOverlay];
+        exit  [clearDragSource; deactivateDragOverlay];
+      }
+    }
+  }
+
+  accessibility {
+    role: group;
+    keyboard {
+      Tab        -> FOCUS;
+      ArrowLeft  -> NAVIGATE_PREV;
+      ArrowRight -> NAVIGATE_NEXT;
+      Escape     -> REORDER_CANCEL;
+    }
+    focus {
+      trap: false;
+      initial: column;
+      roving: true;
+      returnOnClose: false;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: "columns layout";
+        aria-roledescription: "multi-column block";
+      };
+      columnContainer -> {
+        role: "group";
+        aria-label: "column container";
+      };
+      column -> {
+        role: "region";
+        aria-label: "column";
+      };
+      columnHandle -> {
+        role: "button";
+        aria-label: "drag to reorder column";
+        aria-grabbed: if state.edit == "reordering-columns" then "true" else "false";
+      };
+      divider -> {
+        role: "separator";
+        aria-orientation: "vertical";
+        aria-label: "resize column divider";
+        aria-valuenow: "50";
+        aria-valuemin: "10";
+        aria-valuemax: "90";
+      };
+    }
+  }
+
+  props {
+    blockId:          String = ""
+    columnCount:      Int    = 2
+    columnWidths:     list Float
+    stackOnNarrow:    Bool  = true
+    focused:          Bool  = false
+  }
+
+  connect {
+    root -> {
+      data-part:         "root";
+      data-state:        state.edit;
+      data-column-count: ?columnCount;
+      data-stack:        if ?stackOnNarrow then "true" else "false";
+      data-focused:      if ?focused then "true" else "false";
+      data-block-id:     ?blockId;
+    }
+
+    columnContainer -> {
+      data-part:  "column-container";
+      data-state: state.edit;
+    }
+
+    column -> {
+      data-part:   "column";
+      data-state:  state.edit;
+      tabindex:    "0";
+      onKeyDown-ArrowLeft:  send(NAVIGATE_PREV);
+      onKeyDown-ArrowRight: send(NAVIGATE_NEXT);
+    }
+
+    columnHandle -> {
+      data-part:   "column-handle";
+      draggable:   "true";
+      onPointerDown: send(REORDER_START);
+      onKeyDown-Escape: send(REORDER_CANCEL);
+    }
+
+    divider -> {
+      data-part:         "divider";
+      data-state:        state.edit;
+      aria-orientation:  "vertical";
+      onPointerDown:     send(RESIZE_START);
+      onKeyDown-Escape:  send(RESIZE_CANCEL);
+    }
+  }
+
+  affordance {
+    serves: block-editor-block;
+    specificity: 8;
+    when schema = "columns";
+    bind {
+      blockId:       nodeId;
+      columnCount:   columnCount;
+      columnWidths:  columnWidths;
+      stackOnNarrow: stackOnNarrow;
+    }
+  }
+
+  compose {
+    _presence: widget("presence", { present: if state.edit == "reordering-columns" then true else false })
+  }
+
+  invariant {
+    example "initial state is idle": {
+      after render(blockId: "col-1") -> ok
+      then state.edit = "idle"
+    }
+
+    example "RESIZE_START transitions idle to resizing-column": {
+      after RESIZE_START() -> ok
+      then state.edit = "resizing-column"
+    }
+
+    example "RESIZE_COMMIT from resizing-column returns to idle": {
+      after RESIZE_COMMIT() -> ok
+      then state.edit = "idle"
+    }
+
+    example "RESIZE_CANCEL from resizing-column returns to idle": {
+      after RESIZE_CANCEL() -> ok
+      then state.edit = "idle"
+    }
+
+    example "REORDER_START transitions idle to reordering-columns": {
+      after REORDER_START() -> ok
+      then state.edit = "reordering-columns"
+    }
+
+    example "REORDER_COMMIT from reordering-columns returns to idle": {
+      after REORDER_COMMIT() -> ok
+      then state.edit = "idle"
+    }
+
+    example "REORDER_CANCEL from reordering-columns returns to idle": {
+      after REORDER_CANCEL() -> ok
+      then state.edit = "idle"
+    }
+
+    example "root data-stack is true when stackOnNarrow is true": {
+      after render(stackOnNarrow: true) -> ok
+      then root.dataStack = "true"
+    }
+
+    example "root data-stack is false when stackOnNarrow is false": {
+      after render(stackOnNarrow: false) -> ok
+      then root.dataStack = "false"
+    }
+
+    example "root data-column-count reflects columnCount prop": {
+      after render(columnCount: 3) -> ok
+      then root.dataColumnCount = 3
+    }
+
+    example "root data-block-id reflects blockId prop": {
+      after render(blockId: "col-42") -> ok
+      then root.dataBlockId = "col-42"
+    }
+
+    example "columnHandle aria-grabbed true during reordering": {
+      after REORDER_START() -> ok
+      then columnHandle.ariaGrabbed = "true"
+    }
+
+    always "root data-state reflects edit FSM": {
+      root.dataState = state.edit
+    }
+
+    always "columnHandle aria-grabbed false when not reordering": {
+      state.edit != "reordering-columns"
+    }
+
+    never "resizing-column and reordering-columns active simultaneously": {
+      state.edit = "resizing-column" and state.edit = "reordering-columns"
+    }
+
+    never "divider interactive while state is reordering-columns": {
+      state.edit = "reordering-columns" and divider.dataState = "idle"
+    }
+
+    action divider {
+      requires: state.edit = "idle"
+      ensures ok: state.edit = "resizing-column"
+    }
+
+    action columnHandle {
+      requires: state.edit = "idle"
+      ensures ok: state.edit = "reordering-columns"
+    }
+
+    forall "all edit states are reachable from idle": {
+      given s in { "idle", "resizing-column", "reordering-columns" }
+      then s.reachable = true
+    }
+  }
+
+}

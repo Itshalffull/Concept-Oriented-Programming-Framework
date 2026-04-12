@@ -1,0 +1,91 @@
+# EditSurface seed for synced-content-block widget.
+# Registers the block-level editor surface for synced-content blocks (MAG-737).
+#
+# Command bindings:
+#   synced-content-open-source  — Enter key / toolbar button; fires Navigator/navigate
+#                                 to the source ContentNode page.
+#                                 GAP: Navigator concept must be resolvable from block context.
+#   synced-content-break-sync   — Ctrl+Shift+U / toolbar button; fires SyncedContent/detach
+#                                 (concept action: convertToIndependent).
+#                                 GAP: SyncedContent/detach is a proposed action alias for
+#                                 SyncedContent/convertToIndependent — confirm naming before
+#                                 wiring the binding at the kernel level.
+#   synced-content-refresh      — Toolbar button; fires SyncedContent/refresh.
+#                                 GAP: SyncedContent/refresh is not yet declared in the
+#                                 synced-content.concept spec; add the action before the
+#                                 binding can be dispatched to the kernel.
+
+concept: EditSurface
+action: register
+entries:
+  - id: synced-content-block-editor
+    schema_ref: synced-content
+    context: block-editor
+    toolbar_widget: inline-toolbar
+    command_bindings:
+      - synced-content-open-source
+      - synced-content-break-sync
+      - synced-content-refresh
+    panel_widgets: []
+    context_menu_bindings:
+      - synced-content-open-source
+      - synced-content-break-sync
+    input_rule_refs: []
+    picker_refs: []
+    compile_action_ref: null
+    compile_bundle_ref: null
+    compile_status_field: null
+
+---
+# ActionBinding seeds for synced-content-block commands.
+#
+# synced-content-open-source -> Navigator/navigate
+#   Navigates the current Navigator instance to the source ContentNode page.
+#   GAP: Navigator instance must be injected via context; the binding cannot
+#   know which Navigator instance to target without a context provider.
+#
+# synced-content-break-sync -> SyncedContent/detach
+#   Calls SyncedContent/convertToIndependent(ref: syncId) to detach the live link.
+#   GAP: The concept declares this action as convertToIndependent, not detach.
+#   Suggest adding a detach alias in the concept spec, or update this binding
+#   to call convertToIndependent directly once the kernel name is confirmed.
+#
+# synced-content-refresh -> SyncedContent/refresh
+#   GAP: SyncedContent/refresh does not exist in the current concept spec
+#   (repertoire/concepts/content/synced-content.concept). The concept has
+#   editOriginal but no explicit refresh action. A refresh action should be
+#   added to the concept before this binding can be dispatched. In the interim,
+#   the toolbar button can be wired to re-invoke SyncedContent/get(syncId) via
+#   a read-only re-fetch path at the surface layer.
+
+concept: ActionBinding
+action: register
+entries:
+  - id: synced-content-open-source
+    label: "Open source"
+    icon: external-link
+    keyboard_shortcut: Enter
+    concept: Navigator
+    action: navigate
+    input_map:
+      destination: sourceRef
+
+  - id: synced-content-break-sync
+    label: "Break sync"
+    icon: unlink
+    keyboard_shortcut: "Control+Shift+U"
+    concept: SyncedContent
+    action: convertToIndependent
+    input_map:
+      ref: syncId
+
+  - id: synced-content-refresh
+    label: "Refresh sync"
+    icon: refresh
+    keyboard_shortcut: null
+    concept: SyncedContent
+    # GAP: refresh action not yet in SyncedContent concept spec.
+    # Placeholder — replace with actual action name once added.
+    action: refresh
+    input_map:
+      ref: syncId

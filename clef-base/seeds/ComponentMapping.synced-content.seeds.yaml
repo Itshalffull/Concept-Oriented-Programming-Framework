@@ -1,0 +1,29 @@
+# ComponentMapping seed for synced-content-block widget.
+# Registers the synced-content-block widget in the Embeds section of the block picker.
+
+concept: ComponentMapping
+action: create
+entries:
+  # Synced content embed — live-synced transclusion block (MAG-737)
+  - name: synced-content-mapping
+    widget_id: synced-content-block
+    schema: SyncedContent
+    display_mode: block-embed
+    section: Embeds
+    icon: sync
+    label: Synced content
+
+---
+concept: ComponentMapping
+action: bindSlot
+entries:
+  # synced-content-mapping slot bindings
+  - mapping: synced-content-mapping
+    slot_name: syncId
+    sources: ["entity_field:syncId"]
+  - mapping: synced-content-mapping
+    slot_name: sourceRef
+    sources: ["entity_field:sourceRef"]
+  - mapping: synced-content-mapping
+    slot_name: sourceLabel
+    sources: ["entity_field:sourceTitle"]

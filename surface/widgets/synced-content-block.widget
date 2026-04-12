@@ -1,0 +1,253 @@
+@version(1)
+widget synced-content-block {
+
+  purpose {
+    Block-level transclusion widget that renders live-synced content from a
+    source ContentNode via a SyncedContent record. The block body mirrors the
+    source and updates automatically whenever the original changes. A sync
+    indicator decorates the block to signal its live-sync status (live, stale,
+    or broken) and a tooltip explains that edits propagate from the source. Two
+    keyboard-accessible actions are provided: Enter navigates to the source page
+    and Ctrl+Shift+U breaks the sync link, converting the block into an
+    independent local copy. The widget manages its own async render cycle in
+    parallel with sync-state tracking so the host editor does not need to know
+    about either dimension.
+  }
+
+  requires @1 {
+    fields {
+      syncId: String;
+      sourceRef: String;
+      blockId: String;
+      syncStatus: String;
+    }
+    actions {
+      get(syncId: String);
+      detach(syncId: String);
+      refresh(syncId: String);
+    }
+  }
+
+  anatomy {
+    root:              container    { Top-level block wrapper; carries data-state reflecting both sync and render FSM }
+    syncIndicator:     presentation { Colour-coded icon badge showing live / stale / broken sync health }
+    sourceLabel:       text         { Human-readable display name of the source ContentNode used in aria-label and the tooltip }
+    bodyContainer:     container    { Renders the mirrored body content fetched from the source ContentNode }
+    breakSyncButton:   action       { Button that detaches the sync link and converts the block to a local independent copy }
+    openSourceButton:  action       { Button that navigates to the source ContentNode page }
+  }
+
+  states {
+    sync {
+      live [initial] {
+        on STALE         -> stale;
+        on BROKEN        -> broken;
+        on SYNC_REFRESH  -> live;
+        entry [markLive];
+      }
+      stale {
+        on SYNC_REFRESH  -> live;
+        on BROKEN        -> broken;
+        on LIVE          -> live;
+        entry [markStale];
+      }
+      broken {
+        on SYNC_REFRESH  -> live;
+        on LIVE          -> live;
+        entry [markBroken];
+      }
+    }
+
+    render [parallel] {
+      loading [initial] {
+        on CONTENT_READY  -> ready;
+        on LOAD_ERROR     -> error;
+        entry [fetchContent];
+      }
+      ready {
+        on RELOAD         -> loading;
+        on SYNC_REFRESH   -> loading;
+      }
+      error {
+        on RELOAD         -> loading;
+        on SYNC_REFRESH   -> loading;
+        entry [showLoadError];
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      Enter           -> OPEN_SOURCE;
+      Control+Shift+U -> BREAK_SYNC;
+      ArrowDown       -> NAVIGATE_NEXT;
+      ArrowUp         -> NAVIGATE_PREV;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      roving: false;
+      returnOnClose: root;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: concat("Synced content from ", ?sourceLabel);
+        aria-live: "polite";
+        aria-atomic: "false";
+        aria-busy: if state.render == "loading" then "true" else "false";
+      };
+      syncIndicator -> {
+        role: "img";
+        aria-label: if state.sync == "live" then "Sync live" else if state.sync == "stale" then "Sync stale - refresh to update" else "Sync broken - source unavailable";
+      };
+      bodyContainer -> {
+        role: "group";
+        aria-label: concat("Content from ", ?sourceLabel);
+        aria-live: "polite";
+      };
+      breakSyncButton -> {
+        role: "button";
+        aria-label: "Break sync - convert to local copy";
+        aria-keyshortcuts: "Control+Shift+U";
+      };
+      openSourceButton -> {
+        role: "button";
+        aria-label: concat("Open source: ", ?sourceLabel);
+        aria-keyshortcuts: "Enter";
+      };
+    }
+  }
+
+  props {
+    blockId: String
+    sourceRef: String
+    syncId: String
+    sourceLabel: String = "source"
+    focused: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.sync;
+      data-render: state.render;
+      data-block-id: ?blockId;
+      data-source-ref: ?sourceRef;
+      data-focused: if ?focused then "true" else "false";
+      tabindex: "0";
+      onKeyDown-Enter: send(OPEN_SOURCE);
+      onKeyDown-Control+Shift+U: send(BREAK_SYNC);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+    }
+
+    syncIndicator -> {
+      data-part: "sync-indicator";
+      data-sync-state: state.sync;
+      title: if state.sync == "live" then "Content synced live from source" else if state.sync == "stale" then "Content is stale - click refresh to update" else "Sync broken - source is unavailable";
+    }
+
+    sourceLabel -> {
+      data-part: "source-label";
+      text: ?sourceLabel;
+    }
+
+    bodyContainer -> {
+      data-part: "body-container";
+      data-render: state.render;
+      hidden: if state.render == "loading" then true else false;
+      aria-live: "polite";
+    }
+
+    breakSyncButton -> {
+      data-part: "break-sync-button";
+      onClick: send(BREAK_SYNC);
+      disabled: if state.render == "loading" then true else false;
+      title: "Break sync and convert to local copy (Ctrl+Shift+U)";
+    }
+
+    openSourceButton -> {
+      data-part: "open-source-button";
+      onClick: send(OPEN_SOURCE);
+      disabled: if state.sync == "broken" then true else false;
+      title: concat("Open source page: ", ?sourceLabel, " (Enter)");
+    }
+  }
+
+  affordance {
+    serves: block-embed;
+    specificity: 9;
+    when schema = "synced-content";
+    bind {
+      syncId: syncId;
+      sourceRef: sourceRef;
+      sourceLabel: sourceTitle;
+    }
+  }
+
+  invariant {
+    example "STALE event moves sync machine from live to stale": {
+      after transition(from: "live", event: "STALE") -> ok
+      then state.sync = "stale"
+    }
+
+    example "BROKEN event moves sync machine from live to broken": {
+      after transition(from: "live", event: "BROKEN") -> ok
+      then state.sync = "broken"
+    }
+
+    example "SYNC_REFRESH from stale returns to live": {
+      after transition(from: "stale", event: "SYNC_REFRESH") -> ok
+      then state.sync = "live"
+    }
+
+    example "SYNC_REFRESH from broken returns to live": {
+      after transition(from: "broken", event: "SYNC_REFRESH") -> ok
+      then state.sync = "live"
+    }
+
+    example "CONTENT_READY moves render machine from loading to ready": {
+      after transition(from: "loading", event: "CONTENT_READY") -> ok
+      then state.render = "ready"
+    }
+
+    example "LOAD_ERROR moves render machine to error": {
+      after transition(from: "loading", event: "LOAD_ERROR") -> ok
+      then state.render = "error"
+    }
+
+    example "RELOAD from error retrieves loading": {
+      after transition(from: "error", event: "RELOAD") -> ok
+      then state.render = "loading"
+    }
+
+    example "SYNC_REFRESH from ready triggers reload": {
+      after transition(from: "ready", event: "SYNC_REFRESH") -> ok
+      then state.render = "loading"
+    }
+
+    always "data-state on root reflects sync FSM": {
+      root.dataState = state.sync
+    }
+
+    never "bodyContainer visible while render is loading": {
+      state.render = "loading" and bodyContainer.hidden = false
+    }
+
+    never "openSourceButton enabled when sync is broken": {
+      state.sync = "broken" and openSourceButton.disabled = false
+    }
+
+    never "breakSyncButton enabled while content is loading": {
+      state.render = "loading" and breakSyncButton.disabled = false
+    }
+
+    action breakSyncButton {
+      requires: state.render = "ready"
+      ensures ok: state.sync = "live"
+    }
+  }
+
+}

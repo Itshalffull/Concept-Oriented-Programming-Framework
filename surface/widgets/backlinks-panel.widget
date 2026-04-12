@@ -1,0 +1,255 @@
+@version(1)
+widget backlinks-panel {
+
+  purpose {
+    Editor-panel plugin that shows all ContentNodes that reference the
+    currently-focused node via the Reference/Backlink graph, grouped by
+    source document. Each group header names the source ContentNode and
+    expands to the matching backlink rows; every row renders a short
+    contextual snippet and a jump icon that navigates the host application
+    to the referencing location. An optional reference-kind filter narrows
+    results to a single relationship type (e.g. "uses-persona", "wikilink",
+    "mention", "embed"). Backed by Reference/listReferencing(target:
+    currentNodeId). Generalizes the consumers_panel_ref pattern so that
+    workflow-editor, filter-draft-editor, wiki-editor, and any other
+    editor panel can reuse it without per-panel specialisation.
+  }
+
+  requires @1 {
+    fields {
+      references: list;
+      currentNodeId: String;
+    }
+    actions {
+      listReferencing(target: String);
+    }
+  }
+
+  anatomy {
+    root:                container    { Outer panel wrapper; carries data-state for the browse FSM }
+    filterBar:           container    { Toolbar row containing the reference-kind filter control }
+    referenceKindFilter: interactive  { Select or segmented control for filtering by reference kind }
+    backlinkGroup:       container    { Collapsible group for one source ContentNode; repeated per source }
+    sourceDocHeader:     action       { Clickable heading naming the source document; toggles group expand/collapse }
+    backlinkRow:         container    { Single backlink entry within a group; one per referencing location }
+    backlinkSnippet:     text         { Short contextual excerpt from the source document around the reference }
+    backlinkKindBadge:   presentation { Pill badge showing the reference kind (wikilink, mention, embed, etc.) }
+    jumpIcon:            action       { Icon button that navigates to the exact location in the source document }
+  }
+
+  states {
+    browse {
+      browsing [initial] {
+        on FILTER_CHANGE     -> filtering;
+        on LOAD_START        -> loading;
+      }
+
+      filtering {
+        on FILTER_APPLIED    -> loading;
+        on FILTER_CLEARED    -> loading;
+        entry [applyKindFilter];
+      }
+
+      loading {
+        on RESULTS_LOADED    -> browsing;
+        on NO_RESULTS        -> browsing;
+        entry [fetchBacklinks];
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      ArrowDown  -> NAVIGATE_NEXT;
+      ArrowUp    -> NAVIGATE_PREV;
+      Enter      -> JUMP_TO_SOURCE;
+    }
+    focus {
+      trap: false;
+      initial: filterBar;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Backlinks panel";
+        aria-live: "polite";
+        data-state: state.browse;
+      };
+      filterBar -> {
+        role: "toolbar";
+        aria-label: "Filter backlinks";
+      };
+      referenceKindFilter -> {
+        role: "combobox";
+        aria-label: "Reference kind";
+        aria-expanded: "false";
+      };
+      backlinkGroup -> {
+        role: "group";
+        aria-labelledby: sourceDocHeader;
+      };
+      sourceDocHeader -> {
+        role: "button";
+        aria-expanded: if self.expanded then "true" else "false";
+      };
+      backlinkRow -> {
+        role: "listitem";
+        aria-label: "Backlink";
+      };
+      backlinkSnippet -> {
+        role: "note";
+        aria-label: "Snippet";
+      };
+      jumpIcon -> {
+        role: "button";
+        aria-label: "Jump to source location";
+      };
+    }
+  }
+
+  props {
+    currentNodeId:  String
+    filterKind:     option String
+    groupBySource:  Bool = true
+  }
+
+  connect {
+    root -> {
+      data-part:         "root";
+      data-state:        state.browse;
+      data-node-id:      ?currentNodeId;
+      aria-label:        "Backlinks panel";
+    }
+
+    filterBar -> {
+      data-part: "filter-bar";
+    }
+
+    referenceKindFilter -> {
+      data-part:    "reference-kind-filter";
+      value:        ?filterKind;
+      onInput:      send(FILTER_CHANGE);
+      placeholder:  "All reference kinds";
+    }
+
+    backlinkGroup -> {
+      data-part:          "backlink-group";
+      data-source-id:     self.sourceId;
+      data-group-by:      ?groupBySource;
+    }
+
+    sourceDocHeader -> {
+      data-part:       "source-doc-header";
+      data-source-id:  self.sourceId;
+      text:            self.sourceTitle;
+      onClick:         send(TOGGLE_GROUP, { sourceId: self.sourceId });
+      onKeyDown:       send(TOGGLE_GROUP, { sourceId: self.sourceId });
+    }
+
+    backlinkRow -> {
+      data-part:       "backlink-row";
+      data-ref-id:     self.refId;
+      data-kind:       self.kind;
+    }
+
+    backlinkSnippet -> {
+      data-part: "backlink-snippet";
+      text:      self.snippet;
+    }
+
+    backlinkKindBadge -> {
+      data-part:  "backlink-kind-badge";
+      data-kind:  self.kind;
+      text:       self.kind;
+    }
+
+    jumpIcon -> {
+      data-part:  "jump-icon";
+      data-ref-id: self.refId;
+      onClick:    send(JUMP_TO_SOURCE, { refId: self.refId, sourceId: self.sourceId });
+      aria-label: "Jump to source";
+    }
+  }
+
+  affordance {
+    serves: editor-panel;
+    specificity: 7;
+    when panelKind = "backlinks";
+    bind {
+      currentNodeId: currentNodeId;
+      filterKind:    filterKind;
+      groupBySource: groupBySource;
+    }
+  }
+
+  invariant {
+    example "results loaded resolves to browsing": {
+      after transition(from: "loading", event: "RESULTS_LOADED") -> ok
+      then state.browse = "browsing"
+    }
+
+    example "FILTER_CHANGE enters filtering state": {
+      after transition(from: "browsing", event: "FILTER_CHANGE") -> ok
+      then state.browse = "filtering"
+    }
+
+    example "applying filter transitions to loading": {
+      after transition(from: "filtering", event: "FILTER_APPLIED") -> ok
+      then state.browse = "loading"
+    }
+
+    example "clearing filter transitions to loading": {
+      after transition(from: "filtering", event: "FILTER_CLEARED") -> ok
+      then state.browse = "loading"
+    }
+
+    example "LOAD_START from browsing transitions to loading": {
+      after transition(from: "browsing", event: "LOAD_START") -> ok
+      then state.browse = "loading"
+    }
+
+    example "no results resolves back to browsing": {
+      after transition(from: "loading", event: "NO_RESULTS") -> ok
+      then state.browse = "browsing"
+    }
+
+    example "jump fires JUMP_TO_SOURCE and stays in browsing": {
+      after JUMP_TO_SOURCE(refId: "r1", sourceId: "s1") -> ok
+      then state.browse = "browsing"
+    }
+
+    forall "all browse states reachable": {
+      given s in browseStates
+      then s.reachable = true
+    }
+
+    always "root data-state reflects browse FSM": {
+      root.dataState = state.browse
+    }
+
+    always "referenceKindFilter value matches filterKind prop": {
+      referenceKindFilter.value = filterKind
+    }
+
+    never "loading state persists after RESULTS_LOADED": {
+      state.browse = "loading" and results.loaded = true
+    }
+
+    never "jumpIcon fires without a bound refId": {
+      jumpIcon.dataRefId = none and jumpIcon.active = true
+    }
+
+    action JUMP_TO_SOURCE {
+      requires: self.refId != none
+      ensures ok: state.browse = "browsing"
+    }
+
+    action FILTER_CHANGE {
+      requires: state.browse = "browsing"
+      ensures ok: state.browse = "filtering"
+    }
+  }
+
+}

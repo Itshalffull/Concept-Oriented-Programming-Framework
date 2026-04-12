@@ -127,3 +127,16 @@ entries:
     section: "Advanced"
     icon: "table"
     label: "Table"
+
+  # Columns block -- multi-column layout block with resizable dividers and
+  # recursive ViewShell per column. Responsive: stacks vertically on narrow
+  # viewports when stackOnNarrow is true. (MAG-736)
+  - id: columns-mapping
+    name: columns-mapping
+    widget_id: columns-block
+    schema: columns
+    display_mode: block-editor
+    insertable: true
+    section: "Advanced"
+    icon: "columns"
+    label: "Columns"

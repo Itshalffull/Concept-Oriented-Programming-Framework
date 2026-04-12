@@ -288,3 +288,36 @@ entries:
     compile_action_ref: null
     compile_bundle_ref: null
     compile_status_field: null
+
+  # Columns block editor surface (MAG-736)
+  # Toolbar: inline-toolbar (shared mark toolbar)
+  # Command bindings: columns-add (insert a new column), columns-remove (delete
+  #   the focused column), columns-reorder (drag-to-reorder), columns-set-widths
+  #   (set pixel/percent widths via number inputs), columns-toggle-stack-on-narrow
+  #   (toggle responsive stacking).
+  # NOTE: columns-add and columns-remove have no resolved concept target yet
+  #   (Columns concept not created as of MAG-736). ActionBinding targets are
+  #   placeholder strings pending MAG-<TBD>.
+  # Panel widgets: columns-layout-panel is anticipatory -- ships when the
+  #   columns layout settings side-panel concept is available.
+  # input_rule_refs intentionally empty -- column cells have their own block-slot scopes.
+  - id: columns-block-editor
+    schema_ref: columns
+    context: block-editor
+    toolbar_widget: inline-toolbar
+    command_bindings:
+      - columns-add
+      - columns-remove
+      - columns-reorder
+      - columns-set-widths
+      - columns-toggle-stack-on-narrow
+    panel_widgets:
+      - columns-layout-panel
+    context_menu_bindings:
+      - columns-add
+      - columns-remove
+    input_rule_refs: []
+    picker_refs: []
+    compile_action_ref: null
+    compile_bundle_ref: null
+    compile_status_field: null
