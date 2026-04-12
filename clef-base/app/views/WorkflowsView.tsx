@@ -85,13 +85,32 @@ export const WorkflowsView: React.FC = () => {
             }
           />
         ) : (
-          <DataTable
-            columns={columns}
-            data={workflows}
-            sortable
-            ariaLabel="Workflows"
-            onRowClick={(row) => navigateToHref(`/content/${encodeURIComponent(`workflow:${row.workflow}`)}`)}
-          />
+          <>
+            <DataTable
+              columns={columns}
+              data={workflows}
+              sortable
+              ariaLabel="Workflows"
+              onRowClick={(row) => navigateToHref(`/content/${encodeURIComponent(`workflow:${row.workflow}`)}`)}
+            />
+            <div style={{ padding: 'var(--spacing-sm) var(--spacing-md)', borderTop: '1px solid var(--palette-outline-variant)', display: 'flex', gap: 'var(--spacing-sm)', flexWrap: 'wrap' }}>
+              {workflows.map((w) => (
+                <button
+                  key={String(w.workflow)}
+                  data-part="button"
+                  data-variant="outlined"
+                  style={{ fontSize: '12px', padding: '4px 10px' }}
+                  title={`Open Flow Builder for ${w.workflow}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigateToHref(`/admin/processes/${encodeURIComponent(String(w.workflow))}/edit`);
+                  }}
+                >
+                  Edit flow: {String(w.workflow)}
+                </button>
+              ))}
+            </div>
+          </>
         )}
       </Card>
 

@@ -14,6 +14,7 @@ import { getAccessSnapshot } from '../../../lib/auth';
 import { FormBuilder } from '../../components/widgets/FormBuilder';
 import { SchemaFieldsEditor } from '../../components/widgets/SchemaFieldsEditor';
 import { CanvasBrowserView } from '../../views/CanvasBrowserView';
+import { FlowBuilderView } from '../../views/FlowBuilderView';
 
 export default async function AdminPage({
   params,
@@ -91,6 +92,15 @@ export default async function AdminPage({
     return (
       <HostedPage>
         <ViewRenderer viewId="automations-rules-list" />
+      </HostedPage>
+    );
+  }
+
+  // Flow Builder: /admin/processes/:processSpecId/edit
+  if (slug[0] === 'processes' && slug[1] && slug[2] === 'edit') {
+    return (
+      <HostedPage>
+        <FlowBuilderView processSpecId={decodeURIComponent(slug[1])} />
       </HostedPage>
     );
   }
