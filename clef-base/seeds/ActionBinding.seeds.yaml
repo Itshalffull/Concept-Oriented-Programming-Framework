@@ -228,3 +228,32 @@ entries:
     parameterMap: '{"item":"row.id"}'
     executionPolicy: "auto"
     label: "Delegate"
+
+  # --- Block editor input-rule dispatch actions (MAG-720) ---
+  # Both are triggered via InputRule dispatch — not slash menu or toolbar.
+  #
+  # API gap note: Outline has no action to change a child block's schema type
+  # directly (no "updateChild" or "setSchema" action). Schema/applyTo is the
+  # closest available primitive: it overlays the "heading" schema onto an
+  # existing ContentNode, effectively retyping the block without moving it in
+  # the outline. The metadata.level value is carried in parameterMap and read
+  # by the heading widget; it is not a typed field on the Schema action.
+  - name: markdown-transform-to-heading-2
+    binding: markdown-transform-to-heading-2
+    target: "Schema/applyTo"
+    parameterMap: '{"schema":"heading","entity_id":"context.focusedBlockId","level":2}'
+    executionPolicy: "auto"
+    slash_command: false
+    toolbar_command: false
+
+  # Dispatched by the paste InputRule when clipboard MIME matches ^image/.
+  # context.clipboardFile carries the raw blob reference from the paste event.
+  # After MediaAsset/createMedia completes -> ok, the paste-image-to-block.sync
+  # fires and inserts a new Outline child referencing the created asset.
+  - name: media-upload-from-clipboard
+    binding: media-upload-from-clipboard
+    target: "MediaAsset/createMedia"
+    parameterMap: '{"asset":"uuid()","source":"local-fs","file":"context.clipboardFile"}'
+    executionPolicy: "auto"
+    slash_command: false
+    toolbar_command: false

@@ -1,0 +1,19 @@
+# Paste-image dispatch sync — after a clipboard image is uploaded as a MediaAsset,
+# insert a new child block in the focused document's Outline referencing the asset.
+# This completes the InputRule -> ActionBinding -> MediaAsset/createMedia -> Outline/create
+# dispatch chain for paste-image handling (PRD §2.4, §3; MAG-720).
+
+sync PasteImageToBlock [eager]
+  purpose: "When a clipboard image is uploaded and MediaAsset/createMedia completes successfully, insert a new Outline child block at the current cursor position so the image appears inline in the document"
+when {
+  MediaAsset/createMedia: [ asset: ?asset; source: "local-fs" ]
+    => ok(asset: ?asset)
+}
+where {
+  bind(?asset as ?node)
+}
+then {
+  Outline/create: [
+    node: ?node;
+    parent: ?asset ]
+}

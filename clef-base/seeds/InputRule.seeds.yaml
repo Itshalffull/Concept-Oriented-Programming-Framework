@@ -1,0 +1,26 @@
+# InputRule seeds — block-editor input-plane rules for markdown shortcuts and paste handlers.
+# Each rule maps a kind-tagged pattern to an ActionBinding reference (action_ref).
+# Priority 100 is used for Phase 1 block-editor rules; higher values win on conflict.
+# scope: null means global — active in any block-editor context.
+# See PRD §2.4 and §3 (docs/plans/block-editor-recursive-views-prd.md).
+
+concept: InputRule
+action: register
+entries:
+  # --- Markdown shortcut rules ---
+  - name: markdown-heading-2
+    rule: markdown-heading-2
+    kind: pattern
+    pattern: "^## "
+    action_ref: markdown-transform-to-heading-2
+    priority: 100
+    scope: null
+
+  # --- Paste handler rules ---
+  - name: media-upload-from-clipboard
+    rule: media-upload-from-clipboard
+    kind: paste
+    pattern: "^image/"
+    action_ref: media-upload-from-clipboard
+    priority: 100
+    scope: null
