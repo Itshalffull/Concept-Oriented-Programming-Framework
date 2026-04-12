@@ -473,7 +473,7 @@ This work should not create a new top-level destination unless the upgraded them
 | Card | Deliverable | Section | Depends On | Unblocks | Priority | Commit |
 |---|---|---|---|---|---|---|
 | MAG-643 | Theme generator correctness and token alias repair | §4.1 | — | MAG-644, MAG-645, MAG-646 | high | `aa179183` |
-| MAG-644 | Shared shell tokenization cleanup | §4.2 | MAG-643 | MAG-646, MAG-647, MAG-648 | high | |
+| MAG-644 | Shared shell tokenization cleanup | §4.2 | MAG-643 | MAG-646, MAG-647, MAG-648 | high | `5b454276` |
 | MAG-645 | Theme-aware widget resolution and affordance scoring | §4.3 | MAG-643 | MAG-647, MAG-648 | medium | |
 | MAG-646 | Curated theme token refinement for existing themes | §4.4 | MAG-643 | MAG-647, MAG-648 | medium | |
 | MAG-647 | Themes admin preview surface and theme QA widget | §4.5 | MAG-644, MAG-645, MAG-646 | MAG-648 | medium | |
