@@ -302,3 +302,47 @@ entries:
     section: "Format"
     label: "Code"
     icon: "code"
+
+  # --- Agent-persona compile actions (MAG-723) ---
+  # persona-compile: initial compilation of the agent-persona page.
+  # Placed in the page-level EditSurface toolbar via compile_action_ref.
+  - name: persona-compile
+    binding: persona-compile
+    target: "ContentCompiler/compile"
+    parameterMap: '{"page":"context.pageId","schemaHint":"agent-persona"}'
+    executionPolicy: "pessimistic"
+    toolbar_command: true
+    section: "Persona"
+    label: "Compile"
+    icon: "zap"
+
+  # persona-recompile: re-run compilation after edits. Used as the
+  # compile_action_ref in the agent-persona EditSurface entry.
+  - name: persona-recompile
+    binding: persona-recompile
+    target: "ContentCompiler/recompile"
+    parameterMap: '{"page":"context.pageId"}'
+    executionPolicy: "pessimistic"
+    toolbar_command: true
+    section: "Persona"
+    label: "Recompile"
+    icon: "refresh-cw"
+
+  # persona-duplicate: deep-clone of the persona page + outline.
+  # API gap note: ContentNode has no clone or duplicate action in the
+  # current concept spec (repertoire/concepts/foundation/content-node.concept).
+  # The closest available primitive is ContentNode/create followed by
+  # Outline/addChild for each child block, but there is no atomic
+  # ContentNode/clone action that copies the full block tree in a single
+  # kernel call. This binding references the anticipated future action
+  # "ContentNode/clone"; a follow-up card should introduce that action
+  # (or a DuplicatePage derived action) and update this target at that time.
+  - name: persona-duplicate
+    binding: persona-duplicate
+    target: "ContentNode/clone"
+    parameterMap: '{"node":"context.pageId","newName":"context.pageName + \" (copy)\""}'
+    executionPolicy: "pessimistic"
+    toolbar_command: false
+    section: "Persona"
+    label: "Duplicate"
+    icon: "copy"

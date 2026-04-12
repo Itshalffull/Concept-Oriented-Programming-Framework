@@ -1,0 +1,221 @@
+@version(1)
+widget persona-consumers-panel {
+
+  purpose {
+    Right-rail panel showing the AgentSessions that reference this
+    agent-persona page via the Reference/Backlink graph with kind
+    "uses-persona". Each consumer row displays the session id,
+    spawned-at timestamp, current status, and a jump-to link that
+    navigates the host application to that session detail view.
+    Refreshes automatically when the Reference/Backlink set changes
+    via kernel observation. An empty state is shown when no sessions
+    currently reference this persona.
+  }
+
+  anatomy {
+    root:          container    { Outer panel wrapper; carries data-count for empty-state CSS }
+    header:        container    { Panel header with title "Consumers" and a live count badge }
+    countBadge:    presentation { Number badge showing how many sessions reference this persona }
+    emptyState:    presentation { Placeholder shown when consumerRows is empty }
+    consumerList:  container    { Scrollable list of consumer rows }
+    consumerRow:   container    { A single consumer row; one per referencing AgentSession }
+    sessionId:     text         { Truncated session identifier }
+    spawnedAt:     text         { Relative-time rendering of when the session was spawned }
+    statusBadge:   presentation { Colour-coded badge for the session status (active / idle / terminated) }
+    jumpToLink:    action        { Navigation link that jumps to the session detail view }
+  }
+
+  states {
+    panel {
+      loading [initial] {
+        on CONSUMERS_LOADED -> populated;
+        on NO_CONSUMERS     -> empty;
+        entry [fetchConsumers];
+      }
+
+      populated {
+        on CONSUMER_ADDED   -> populated;
+        on CONSUMER_REMOVED -> populated;
+        on NO_CONSUMERS     -> empty;
+        entry [renderRows];
+      }
+
+      empty {
+        on CONSUMERS_LOADED -> populated;
+        entry [showEmptyState];
+        exit  [hideEmptyState];
+      }
+    }
+  }
+
+  accessibility {
+    role: complementary;
+    keyboard {
+      Tab        -> FOCUS_NEXT_ROW;
+      Shift+Tab  -> FOCUS_PREV_ROW;
+      Enter      -> NAVIGATE_TO_SESSION;
+      ArrowDown  -> FOCUS_NEXT_ROW;
+      ArrowUp    -> FOCUS_PREV_ROW;
+    }
+    focus {
+      trap: false;
+      initial: header;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "complementary";
+        aria-label: "Persona consumers";
+        aria-live: "polite";
+        data-state: state.panel;
+      };
+      header -> {
+        role: "heading";
+        aria-level: "2";
+      };
+      countBadge -> {
+        role: "status";
+        aria-label: "Consumer count";
+        aria-live: "polite";
+        aria-atomic: "true";
+      };
+      emptyState -> {
+        role: "note";
+        aria-label: "No consumers";
+        hidden: if state.panel == "empty" then false else true;
+      };
+      consumerList -> {
+        role: "list";
+        aria-label: "AgentSessions using this persona";
+        hidden: if state.panel == "empty" or state.panel == "loading" then true else false;
+      };
+      consumerRow -> {
+        role: "listitem";
+      };
+      jumpToLink -> {
+        role: "link";
+        aria-label: "Go to session";
+        tabindex: "0";
+      };
+    }
+  }
+
+  props {
+    pageId:        String
+    consumerCount: Int = 0
+  }
+
+  connect {
+    root -> {
+      data-part:    "root";
+      data-state:   state.panel;
+      data-page-id: ?pageId;
+      data-count:   ?consumerCount;
+    }
+
+    header -> {
+      data-part: "header";
+    }
+
+    countBadge -> {
+      data-part: "count-badge";
+      text:      ?consumerCount;
+    }
+
+    emptyState -> {
+      data-part: "empty-state";
+      hidden:    if state.panel == "empty" then false else true;
+      text:      "No agent sessions are currently using this persona.";
+    }
+
+    consumerList -> {
+      data-part: "consumer-list";
+      hidden:    if state.panel == "empty" or state.panel == "loading" then true else false;
+    }
+
+    consumerRow -> {
+      data-part:       "consumer-row";
+      data-session-id: self.sessionId;
+      data-status:     self.status;
+    }
+
+    sessionId -> {
+      data-part: "session-id";
+      text:      self.sessionId;
+    }
+
+    spawnedAt -> {
+      data-part: "spawned-at";
+      text:      self.spawnedAt;
+    }
+
+    statusBadge -> {
+      data-part:   "status-badge";
+      data-status: self.status;
+      text:        self.status;
+    }
+
+    jumpToLink -> {
+      data-part: "jump-to-link";
+      onClick:   send(NAVIGATE_TO_SESSION, { sessionId: self.sessionId });
+    }
+  }
+
+  affordance {
+    serves: consumers-panel;
+    specificity: 8;
+    when schemaKind = "agent-persona";
+    bind {
+      pageId:        pageId;
+      consumerCount: consumerCount;
+    }
+  }
+
+  invariant {
+    example "loading is initial state": {
+      after transition(from: "loading", event: "MOUNTED") -> ok
+      then state.panel = "loading"
+    }
+
+    example "empty state reached when no consumers": {
+      after transition(from: "loading", event: "NO_CONSUMERS") -> ok
+      then state.panel = "empty"
+    }
+
+    example "populated state reached when consumers loaded": {
+      after transition(from: "loading", event: "CONSUMERS_LOADED") -> ok
+      then state.panel = "populated"
+    }
+
+    example "consumer added keeps populated state": {
+      after transition(from: "populated", event: "CONSUMER_ADDED") -> ok
+      then state.panel = "populated"
+    }
+
+    example "populated transitions back to empty when last consumer removed": {
+      after transition(from: "populated", event: "NO_CONSUMERS") -> ok
+      then state.panel = "empty"
+    }
+
+    example "consumer removed stays populated while others remain": {
+      after transition(from: "populated", event: "CONSUMER_REMOVED") -> ok
+      then state.panel = "populated"
+    }
+
+    always "consumer list hidden in loading state": {
+      state.panel = "loading"
+    }
+
+    always "empty state hidden when populated": {
+      state.panel = "populated"
+    }
+
+    never "consumer list and empty state both visible": {
+      consumerList.hidden = false and emptyState.hidden = false
+    }
+
+    "statusBadge data-status must be one of active, idle, or terminated — other values indicate an unrecognised session state";
+    "jumpToLink href is derived from sessionId; it must never be blank when a consumerRow is rendered";
+  }
+
+}

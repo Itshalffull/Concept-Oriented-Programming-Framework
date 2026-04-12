@@ -55,3 +55,27 @@ entries:
     compile_action_ref: null
     compile_bundle_ref: null
     compile_status_field: null
+
+  # Agent-persona page-level editor surface (MAG-723)
+  # Proves ContentCompiler integration end-to-end: compile_action_ref +
+  # status_decoration_ref + output_preview_ref + consumers_panel_ref.
+  - id: agent-persona-page-editor
+    schema_ref: agent-persona
+    context: page-level
+    toolbar_widget: persona-compile-toolbar
+    command_bindings:
+      - persona-compile
+      - persona-recompile
+      - persona-duplicate
+    panel_widgets:
+      - prompt-assembly-preview
+      - persona-consumers-panel
+    context_menu_bindings: []
+    input_rule_refs: []
+    picker_refs: []
+    compile_action_ref: persona-recompile
+    compile_bundle_ref: null
+    compile_status_field: null
+    status_decoration_ref: persona-status-badge
+    output_preview_ref: prompt-assembly-preview
+    consumers_panel_ref: persona-consumers-panel

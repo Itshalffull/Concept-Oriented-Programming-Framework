@@ -1,0 +1,220 @@
+@version(1)
+widget persona-status-badge {
+
+  purpose {
+    Decoration widget that displays the ContentCompiler compilation status
+    for an agent-persona page. Shows one of four states — compiled, stale,
+    invalid, never-compiled — with a colour-coded badge label and a
+    lastCompiledAt timestamp tooltip when status is compiled or stale.
+    Reads ContentCompiler state via kernel observation (PRD §9.1 #4) so
+    that the badge reflects the live kernel state without a full page
+    reload. Intended to be mounted in the page-level EditSurface toolbar
+    via the status_decoration_ref slot for the agent-persona schema.
+  }
+
+  anatomy {
+    root:          container     { Outer badge wrapper; carries data-status for CSS theming }
+    indicator:     presentation  { Colour dot or icon reflecting the current status }
+    label:         text          { Human-readable status label: "Compiled", "Stale", "Invalid", or "Never compiled" }
+    timestamp:     text          { lastCompiledAt value rendered as relative time; hidden when status is never-compiled }
+    recompileCta:  action        { Inline "Recompile" link shown only when status is stale or invalid }
+  }
+
+  states {
+    status {
+      neverCompiled [initial] {
+        on COMPILED        -> compiled;
+        on STALE           -> stale;
+        on INVALID         -> invalid;
+      }
+
+      compiled {
+        on STALE           -> stale;
+        on INVALID         -> invalid;
+        on COMPILE_STARTED -> compiling;
+        entry [showTimestamp];
+      }
+
+      stale {
+        on COMPILED        -> compiled;
+        on INVALID         -> invalid;
+        on COMPILE_STARTED -> compiling;
+        entry [showRecompileCta];
+        exit  [hideRecompileCta];
+      }
+
+      invalid {
+        on COMPILED        -> compiled;
+        on STALE           -> stale;
+        on COMPILE_STARTED -> compiling;
+        entry [showRecompileCta];
+        exit  [hideRecompileCta];
+      }
+
+      compiling {
+        on COMPILED        -> compiled;
+        on INVALID         -> invalid;
+        on STALE           -> stale;
+        entry [showSpinner];
+        exit  [hideSpinner];
+      }
+    }
+  }
+
+  accessibility {
+    role: status;
+    keyboard {
+      Enter  -> RECOMPILE_REQUESTED;
+      Space  -> RECOMPILE_REQUESTED;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "status";
+        aria-label: "Persona compilation status";
+        aria-live: "polite";
+        aria-atomic: "true";
+        data-status: state.status;
+      };
+      indicator -> {
+        role: "img";
+        aria-hidden: "true";
+      };
+      label -> {
+        role: "none";
+      };
+      timestamp -> {
+        aria-label: "Last compiled";
+        hidden: if state.status == "neverCompiled" then true else false;
+      };
+      recompileCta -> {
+        role: "button";
+        aria-label: "Recompile persona";
+        tabindex: if state.status == "stale" or state.status == "invalid" then "0" else "-1";
+        hidden: if state.status == "stale" or state.status == "invalid" then false else true;
+      };
+    }
+  }
+
+  props {
+    pageId:          String
+    status:          union "compiled" | "stale" | "invalid" | "never-compiled" = "never-compiled"
+    lastCompiledAt:  option String
+  }
+
+  connect {
+    root -> {
+      data-part:    "root";
+      data-status:  state.status;
+      data-page-id: ?pageId;
+    }
+
+    indicator -> {
+      data-part:   "indicator";
+      data-status: state.status;
+    }
+
+    label -> {
+      data-part: "label";
+      text: if state.status == "compiled" then "Compiled"
+            else if state.status == "stale" then "Stale"
+            else if state.status == "invalid" then "Invalid"
+            else "Never compiled";
+    }
+
+    timestamp -> {
+      data-part: "timestamp";
+      text:      ?lastCompiledAt;
+      hidden:    if state.status == "neverCompiled" then true else false;
+    }
+
+    recompileCta -> {
+      data-part: "recompile-cta";
+      hidden:    if state.status == "stale" or state.status == "invalid" then false else true;
+      tabindex:  if state.status == "stale" or state.status == "invalid" then "0" else "-1";
+      onClick:   send(RECOMPILE_REQUESTED);
+    }
+  }
+
+  affordance {
+    serves: status-decoration;
+    specificity: 8;
+    when schemaKind = "agent-persona";
+    bind {
+      pageId:         pageId;
+      status:         compilationStatus;
+      lastCompiledAt: lastCompiledAt;
+    }
+  }
+
+  invariant {
+    example "initial state is never-compiled": {
+      after transition(from: "neverCompiled", event: "MOUNTED") -> ok
+      then state.status = "neverCompiled"
+    }
+
+    example "compiled state reached from never-compiled": {
+      after transition(from: "neverCompiled", event: "COMPILED") -> ok
+      then state.status = "compiled"
+    }
+
+    example "stale state reached from compiled": {
+      after transition(from: "compiled", event: "STALE") -> ok
+      then state.status = "stale"
+    }
+
+    example "invalid state reached from compiled": {
+      after transition(from: "compiled", event: "INVALID") -> ok
+      then state.status = "invalid"
+    }
+
+    example "compiling state reached from stale": {
+      after transition(from: "stale", event: "COMPILE_STARTED") -> ok
+      then state.status = "compiling"
+    }
+
+    example "compiling resolves to compiled on success": {
+      after transition(from: "compiling", event: "COMPILED") -> ok
+      then state.status = "compiled"
+    }
+
+    example "compiling resolves to invalid on failure": {
+      after transition(from: "compiling", event: "INVALID") -> ok
+      then state.status = "invalid"
+    }
+
+    always "data-status reflects FSM state": {
+      root.dataStatus = state.status
+    }
+
+    always "recompileCta hidden when compiled or compiling": {
+      state.status = "compiled"
+    }
+
+    always "recompileCta hidden when never-compiled": {
+      state.status = "neverCompiled"
+    }
+
+    never "recompileCta shown when compiled": {
+      state.status = "compiled" and recompileCta.hidden = false
+    }
+
+    never "recompileCta shown during compiling": {
+      state.status = "compiling" and recompileCta.hidden = false
+    }
+
+    action recompileCta {
+      requires: state.status = "stale" or state.status = "invalid"
+      ensures ok: state.status = "compiling"
+    }
+
+    "aria-live polite ensures screen readers announce status changes without interrupting ongoing speech";
+    "pageId must be non-empty before kernel observation begins; root data-page-id carries it for the observation binding";
+    "status transitions are monotonic during a compile cycle: neverCompiled -> stale or compiled -> stale -> compiling -> compiled | invalid";
+  }
+
+}

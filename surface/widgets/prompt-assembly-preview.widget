@@ -1,0 +1,283 @@
+@version(1)
+widget prompt-assembly-preview {
+
+  purpose {
+    Right-rail panel widget that renders the compiled PromptAssembly for
+    an agent-persona page. Displays the role sections (system, user,
+    assistant) as collapsible cards, plus a metadata row showing the
+    model identifier, attached tools, and temperature setting. Shows a
+    "not yet compiled" empty state when ContentCompiler has never produced
+    output for this page, and a "stale" banner when the status is stale
+    so the user knows the preview may not reflect the latest edits.
+    Refreshes automatically when a new compilation completes via kernel
+    observation (PRD §9.1 #4).
+  }
+
+  anatomy {
+    root:            container     { Outer panel wrapper; carries data-status for CSS }
+    header:          container     { Panel header with title "Prompt Preview" and a Recompile button }
+    recompileButton: action        { Triggers ContentCompiler/recompile for this page }
+    staleBanner:     presentation  { Warning banner shown when compilation status is stale }
+    emptyState:      presentation  { Placeholder shown when no compilation exists yet }
+    sectionList:     container     { Ordered list of role section cards }
+    sectionCard:     container     { A single role section card (system / user / assistant) }
+    sectionRole:     text          { Role label inside a section card }
+    sectionBody:     text          { Rendered prompt text for this role section }
+    metaRow:         container     { Metadata row beneath the section list }
+    modelLabel:      text          { Displays the model identifier }
+    toolsList:       text          { Comma-separated list of attached tool names }
+    temperatureLabel: text         { Displays temperature value }
+  }
+
+  states {
+    visibility {
+      loading [initial] {
+        on COMPILATION_LOADED -> ready;
+        on NO_COMPILATION     -> empty;
+        entry [fetchCompilation];
+      }
+
+      ready {
+        on STALE_DETECTED     -> stale-preview;
+        on COMPILATION_LOADED -> ready;
+        on COMPILATION_CLEARED -> empty;
+      }
+
+      stale-preview {
+        on COMPILATION_LOADED -> ready;
+        on COMPILATION_CLEARED -> empty;
+        entry [showStaleBanner];
+        exit  [hideStaleBanner];
+      }
+
+      empty {
+        on COMPILATION_LOADED -> ready;
+        entry [showEmptyState];
+        exit  [hideEmptyState];
+      }
+    }
+
+    section [parallel] {
+      allCollapsed [initial] {
+        on EXPAND_SECTION  -> someExpanded;
+      }
+
+      someExpanded {
+        on COLLAPSE_ALL    -> allCollapsed;
+        on EXPAND_SECTION  -> someExpanded;
+      }
+    }
+  }
+
+  accessibility {
+    role: complementary;
+    keyboard {
+      Tab        -> FOCUS_NEXT;
+      Shift+Tab  -> FOCUS_PREV;
+      Enter      -> EXPAND_SECTION;
+      Space      -> EXPAND_SECTION;
+      Escape     -> COLLAPSE_ALL;
+    }
+    focus {
+      trap: false;
+      initial: header;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "complementary";
+        aria-label: "Prompt Assembly Preview";
+        data-status: state.visibility;
+      };
+      header -> {
+        role: "heading";
+        aria-level: "2";
+      };
+      recompileButton -> {
+        role: "button";
+        aria-label: "Recompile persona prompt";
+        aria-busy: if state.visibility == "loading" then "true" else "false";
+      };
+      staleBanner -> {
+        role: "alert";
+        aria-live: "assertive";
+        hidden: if state.visibility == "stale-preview" then false else true;
+      };
+      emptyState -> {
+        role: "note";
+        aria-label: "No compilation available";
+        hidden: if state.visibility == "empty" then false else true;
+      };
+      sectionList -> {
+        role: "list";
+        aria-label: "Prompt role sections";
+      };
+      sectionCard -> {
+        role: "listitem";
+        aria-expanded: if state.section == "someExpanded" then "true" else "false";
+      };
+      metaRow -> {
+        role: "region";
+        aria-label: "Model configuration";
+      };
+    }
+  }
+
+  props {
+    pageId:       String
+    model:        option String
+    tools:        list String
+    temperature:  option String
+    status:       union "compiled" | "stale" | "never-compiled" | "loading" = "loading"
+  }
+
+  connect {
+    root -> {
+      data-part:    "root";
+      data-status:  state.visibility;
+      data-page-id: ?pageId;
+    }
+
+    header -> {
+      data-part: "header";
+    }
+
+    recompileButton -> {
+      data-part: "recompile-button";
+      onClick:   send(RECOMPILE_REQUESTED);
+      disabled:  if state.visibility == "loading" then true else false;
+    }
+
+    staleBanner -> {
+      data-part: "stale-banner";
+      hidden:    if state.visibility == "stale-preview" then false else true;
+      text:      "Preview is out of date. Recompile to refresh.";
+    }
+
+    emptyState -> {
+      data-part: "empty-state";
+      hidden:    if state.visibility == "empty" then false else true;
+      text:      "Not yet compiled. Use the Recompile button to generate the prompt.";
+    }
+
+    sectionList -> {
+      data-part:   "section-list";
+      hidden:      if state.visibility == "empty" or state.visibility == "loading" then true else false;
+    }
+
+    sectionCard -> {
+      data-part:   "section-card";
+      data-role:   self.role;
+      onClick:     send(EXPAND_SECTION, { role: self.role });
+    }
+
+    sectionRole -> {
+      data-part: "section-role";
+      text:      self.role;
+    }
+
+    sectionBody -> {
+      data-part: "section-body";
+      text:      self.content;
+    }
+
+    metaRow -> {
+      data-part: "meta-row";
+      hidden:    if state.visibility == "empty" or state.visibility == "loading" then true else false;
+    }
+
+    modelLabel -> {
+      data-part: "model-label";
+      text:      ?model;
+    }
+
+    toolsList -> {
+      data-part: "tools-list";
+      text:      ?tools;
+    }
+
+    temperatureLabel -> {
+      data-part: "temperature-label";
+      text:      ?temperature;
+    }
+  }
+
+  affordance {
+    serves: output-preview;
+    specificity: 9;
+    when schemaKind = "agent-persona";
+    bind {
+      pageId:      pageId;
+      model:       model;
+      tools:       tools;
+      temperature: temperature;
+      status:      compilationStatus;
+    }
+  }
+
+  invariant {
+    example "loading state is initial": {
+      after transition(from: "loading", event: "MOUNTED") -> ok
+      then state.visibility = "loading"
+    }
+
+    example "empty state reached when no compilation exists": {
+      after transition(from: "loading", event: "NO_COMPILATION") -> ok
+      then state.visibility = "empty"
+    }
+
+    example "ready state reached when compilation loaded": {
+      after transition(from: "loading", event: "COMPILATION_LOADED") -> ok
+      then state.visibility = "ready"
+    }
+
+    example "stale-preview reached from ready on stale detected": {
+      after transition(from: "ready", event: "STALE_DETECTED") -> ok
+      then state.visibility = "stale-preview"
+    }
+
+    example "new compilation clears stale-preview to ready": {
+      after transition(from: "stale-preview", event: "COMPILATION_LOADED") -> ok
+      then state.visibility = "ready"
+    }
+
+    example "empty state reached when compilation cleared from ready": {
+      after transition(from: "ready", event: "COMPILATION_CLEARED") -> ok
+      then state.visibility = "empty"
+    }
+
+    always "data-status on root reflects visibility FSM": {
+      root.dataStatus = state.visibility
+    }
+
+    always "section list hidden when empty or loading": {
+      state.visibility = "empty"
+    }
+
+    always "stale banner only visible in stale-preview": {
+      state.visibility != "stale-preview"
+    }
+
+    always "meta-row hidden when no compilation": {
+      state.visibility = "empty"
+    }
+
+    never "section list shown in empty state": {
+      state.visibility = "empty" and sectionList.hidden = false
+    }
+
+    never "stale banner shown in ready state": {
+      state.visibility = "ready" and staleBanner.hidden = false
+    }
+
+    action recompileButton {
+      requires: state.visibility != "loading"
+      ensures ok: state.visibility = "loading"
+    }
+
+    "role section cards must appear in canonical order: system first, user second, assistant third";
+    "temperature must be displayed as a decimal in range 0 to 2; values outside this range indicate a configuration error";
+    "tools list renders as comma-separated names; an empty tools list shows the text none";
+  }
+
+}

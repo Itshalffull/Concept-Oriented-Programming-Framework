@@ -1,0 +1,56 @@
+derived PersonaEditor [T] {
+
+  purpose {
+    Page-level editor for agent-persona ContentNodes. Pre-configures
+    the MarkdownEditor surface with the "agent-persona" schema overlay,
+    wires ContentCompiler so that saving triggers re-compilation of the
+    PromptAssembly, and surfaces a consumers backlink panel showing
+    AgentSessions that reference this persona via Reference. Proves the
+    full ContentCompiler integration end-to-end: editing a persona page
+    triggers status badge updates, a Recompile toolbar action produces a
+    PromptAssembly preview, and the consumers panel reflects live
+    AgentSession backlinks. Same general shape that FlowBuilderView
+    implements for ProcessSpec editing.
+  }
+
+  composes {
+    MarkdownEditor [T]
+    ContentCompiler [T]
+    AgentSession
+    Reference
+  }
+
+  syncs {
+    required: [
+      markdown-editor-defaults-applied,
+      persona-compile-on-save,
+      persona-stale-on-block-edit
+    ]
+  }
+
+  surface {
+    action create(pageName: String) {
+      matches: ContentNode/create
+      triggers: [
+        MarkdownEditor/create
+      ]
+    }
+
+    action compile(page: String) {
+      matches: ContentCompiler/compile(schemaHint: "agent-persona")
+    }
+
+    action recompile(page: String) {
+      matches: ContentCompiler/recompile
+    }
+
+    query compilationStatus(page: String) -> ContentCompiler/listByPage(pageId: page)
+    query consumers(page: String) -> Reference/listReferencing(target: page, kind: "uses-persona")
+  }
+
+  principle {
+    after create(pageName: "Research Assistant") -> ok(id: p)
+    then compile(page: p) -> ok(compilation: c)
+    then compilationStatus(page: p) returns [c]
+  }
+}
