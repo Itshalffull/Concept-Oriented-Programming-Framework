@@ -477,7 +477,7 @@ This work should not create a new top-level destination unless the upgraded them
 | MAG-645 | Theme-aware widget resolution and affordance scoring | §4.3 | MAG-643 | MAG-647, MAG-648 | medium | `cef37255` |
 | MAG-646 | Curated theme token refinement for existing themes | §4.4 | MAG-643 | MAG-647, MAG-648 | medium | `0fdf758b` |
 | MAG-647 | Themes admin preview surface and theme QA widget | §4.5 | MAG-644, MAG-645, MAG-646 | MAG-648 | medium | `3000bd23` |
-| MAG-648 | Final theme polish, regression coverage, and rollout verification | §10, §11 | MAG-644, MAG-645, MAG-646, MAG-647 | — | medium | |
+| MAG-648 | Final theme polish, regression coverage, and rollout verification | §10, §11 | MAG-644, MAG-645, MAG-646, MAG-647 | — | medium | `de51b53a` |
 
 ### Notes
 
