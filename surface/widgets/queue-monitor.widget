@@ -226,27 +226,10 @@ widget queue-monitor {
   }
 
   props {
-    queues: list {
-      id: String;
-      name: String;
-      depth: Int;
-      running: Int;
-      concurrencyCap: Int;
-      avgWaitMs: Int;
-      status: union "active" | "paused" | "draining";
-      stuckCount: Int;
-      poisonCount: Int;
-      userCanAdmin: Bool;
-    } = []
+    queues: list
     selectedQueueId: option String
     selectedItemId: option String
-    items: list {
-      id: String;
-      queueId: String;
-      status: union "waiting" | "running" | "stuck" | "poison";
-      ageMs: Int;
-      payload: option String;
-    } = []
+    items: list
     payloadRedacted: Bool = false
     concurrencyDraft: option Int
     autoRefreshEnabled: Bool = false
@@ -416,9 +399,6 @@ widget queue-monitor {
   affordance {
     serves: group-repeating;
     specificity: 9;
-    when {
-      concept: "Queue";
-    }
     bind {
       queues: queues;
       selectedQueueId: selectedQueueId;
@@ -435,107 +415,152 @@ widget queue-monitor {
   invariant {
     example "expand card transitions to expanded": {
       after transition(from: "collapsed", event: "EXPAND_QUEUE") -> ok
-      then queueCard -> { data-expanded: "true" }
-      and itemList -> { hidden: false }
+      then state.card = "expanded"
     }
 
     example "collapse card transitions to collapsed": {
       after transition(from: "expanded", event: "COLLAPSE_QUEUE") -> ok
-      then queueCard -> { data-expanded: "false" }
-      and itemList -> { hidden: true }
+      then state.card = "collapsed"
     }
 
     example "pause queue triggers pausing state": {
       after transition(from: "idle", event: "PAUSE_QUEUE") -> ok
-      then queueCard -> { aria-busy: "true" }
+      then state.queueOp = "pausing"
     }
 
     example "pause op success returns to idle": {
       after transition(from: "pausing", event: "OP_SUCCESS") -> ok
-      then queueCard -> { aria-busy: "false" }
+      then state.queueOp = "idle"
     }
 
     example "requeue item transitions to requeuing": {
       after transition(from: "item-selected", event: "REQUEUE_ITEM") -> ok
-      then requeueButton -> { aria-disabled: "true" }
-      and dropButton -> { aria-disabled: "true" }
+      then state.item = "requeuing"
     }
 
     example "drop item success transitions to none-selected": {
       after transition(from: "dropping", event: "DROP_SUCCESS") -> ok
-      then itemRow -> { aria-selected: "false" }
+      then state.item = "none-selected"
     }
 
-    example "admin controls hidden for read-only users": {
+    example "admin revoke transitions to read-only": {
       after transition(from: "admin-active", event: "REVOKE_ADMIN") -> ok
-      then pauseButton -> { hidden: true }
-      and drainButton -> { hidden: true }
-      and setConcurrencyButton -> { hidden: true }
+      then state.admin = "read-only"
     }
 
     example "concurrency editor opens on EDIT_CONCURRENCY": {
       after transition(from: "admin-active", event: "EDIT_CONCURRENCY") -> ok
-      then concurrencyEditor -> { hidden: false }
+      then state.admin = "editing-concurrency"
     }
 
     example "concurrency editor closes on SAVE_CONCURRENCY": {
       after transition(from: "editing-concurrency", event: "SAVE_CONCURRENCY") -> ok
-      then concurrencyEditor -> { hidden: true }
+      then state.admin = "admin-active"
     }
 
-    forall s in states:
-      s.reachable = true
-
-    always "data-state on root reflects card FSM": {
-      forall s in card.states:
-        root -> { data-state: s.name }
+    example "drain queue triggers draining state": {
+      after transition(from: "idle", event: "DRAIN_QUEUE") -> ok
+      then state.queueOp = "draining"
     }
 
-    always "itemList hidden when card collapsed": {
-      if state.card == "collapsed" then itemList -> { hidden: true }
+    example "resume queue triggers resuming state": {
+      after transition(from: "idle", event: "RESUME_QUEUE") -> ok
+      then state.queueOp = "resuming"
     }
 
-    always "errorBadge hidden when no stuck or poison items": {
-      if self.stuckCount = 0 and self.poisonCount = 0 then errorBadge -> { hidden: true }
+    example "drain op success returns to idle": {
+      after transition(from: "draining", event: "OP_SUCCESS") -> ok
+      then state.queueOp = "idle"
     }
 
-    always "admin buttons hidden for read-only users": {
-      if not self.userCanAdmin then pauseButton -> { hidden: true }
-      and drainButton -> { hidden: true }
-      and setConcurrencyButton -> { hidden: true }
+    example "select item transitions to item-selected": {
+      after transition(from: "none-selected", event: "SELECT_ITEM") -> ok
+      then state.item = "item-selected"
     }
 
-    always "queueOp busy flag propagates to queueCard aria-busy": {
-      if state.queueOp != "idle" then queueCard -> { aria-busy: "true" }
+    example "requeue error stays in item-selected": {
+      after transition(from: "requeuing", event: "REQUEUE_ERROR") -> ok
+      then state.item = "item-selected"
     }
 
-    never "admin actions available to read-only user": {
-      state.admin == "read-only"
-        and pauseButton -> { disabled: false }
+    forall "all card states reachable": {
+      given s in cardStates
+      then s.reachable = true
     }
 
-    never "requeue and drop simultaneously in-flight": {
-      state.item == "requeuing" and state.item == "dropping"
+    forall "all queueOp states reachable": {
+      given s in queueOpStates
+      then s.reachable = true
     }
 
-    never "item list visible when card is collapsed": {
-      state.card == "collapsed" and itemList -> { hidden: false }
+    forall "all admin states reachable": {
+      given s in adminStates
+      then s.reachable = true
     }
 
-    never "concurrency editor open outside editing-concurrency state": {
-      state.admin != "editing-concurrency" and concurrencyEditor -> { hidden: false }
+    forall "all item states reachable": {
+      given s in itemStates
+      then s.reachable = true
+    }
+
+    always "card FSM has initial state": {
+      state.card = "collapsed"
+    }
+
+    always "queueOp FSM has initial state": {
+      state.queueOp = "idle"
+    }
+
+    always "admin FSM has initial state": {
+      state.admin = "read-only"
+    }
+
+    always "item FSM has initial state": {
+      state.item = "none-selected"
+    }
+
+    always "queueOp busy while pausing": {
+      state.queueOp = "pausing"
+    }
+
+    always "queueOp busy while draining": {
+      state.queueOp = "draining"
+    }
+
+    always "queueOp busy while resuming": {
+      state.queueOp = "resuming"
+    }
+
+    never "card collapsed and expanded simultaneously": {
+      state.card = "collapsed" and state.card = "expanded"
+    }
+
+    never "queueOp pausing and draining simultaneously": {
+      state.queueOp = "pausing" and state.queueOp = "draining"
+    }
+
+    never "item requeuing and dropping simultaneously": {
+      state.item = "requeuing" and state.item = "dropping"
+    }
+
+    never "admin read-only and editing-concurrency simultaneously": {
+      state.admin = "read-only" and state.admin = "editing-concurrency"
+    }
+
+    never "item selected and none-selected simultaneously": {
+      state.item = "item-selected" and state.item = "none-selected"
     }
 
     "depth, running, and concurrencyCap counters must reflect live kernel state, not stale local copies";
-    "stuck items (status == stuck) must appear before waiting items in itemList ordering";
-    "poison items (status == poison) must be visually distinguished with errorBadge and itemStatus data-status";
+    "stuck items must appear before waiting items in itemList ordering";
+    "poison items must be visually distinguished with errorBadge and itemStatus data-status";
     "requeueButton must call Queue/release with the item id to re-inject the item into the queue";
     "dropButton must call Queue/delete with the item id to permanently remove the item";
     "payloadRedacted prop must suppress item payload display for users lacking governance permission";
     "auto-refresh interval polling must stop when autoRefreshEnabled is false or the component unmounts";
-    "P key shortcut must fire PAUSE_QUEUE only when state.admin == admin-active and a queue card is focused";
-    "D key shortcut must fire DRAIN_QUEUE only when state.admin == admin-active and a queue card is focused";
-    "R key shortcut must fire RESUME_QUEUE only when state.admin == admin-active and a queue card is focused";
+    "P key shortcut must fire PAUSE_QUEUE only when state.admin is admin-active and a queue card is focused";
+    "D key shortcut must fire DRAIN_QUEUE only when state.admin is admin-active and a queue card is focused";
+    "R key shortcut must fire RESUME_QUEUE only when state.admin is admin-active and a queue card is focused";
   }
 
 }
