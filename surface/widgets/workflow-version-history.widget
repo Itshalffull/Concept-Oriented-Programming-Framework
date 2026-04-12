@@ -1,0 +1,367 @@
+@version(1)
+widget workflow-version-history {
+
+  purpose {
+    Diff viewer and rollback UI for ProcessSpec version history. Displays an
+    ordered list of published and draft versions; clicking a single version or
+    shift-clicking a range dispatches a DIFF event so the host can populate the
+    diff pane with a two-version comparison. Rollback is guarded by an explicit
+    confirmation step, and publishing a new version requires release notes to be
+    entered before the PUBLISH event is emitted. The widget emits events only —
+    all ProcessSpec mutation and publish/rollback wiring belongs to the host.
+  }
+
+  anatomy {
+    root:               container    { Top-level wrapper for the version history panel }
+    versionList:        container    { Scrollable listbox of available ProcessSpec versions }
+    versionEntry:       interactive  { A single row in the version list representing one version }
+    diffPane:           container    { Area displaying the computed diff between two selected versions }
+    diffLine:           container    { A single line in the diff pane, marked as added, removed, or unchanged }
+    rollbackButton:     action       { Button that initiates a rollback to the focused version }
+    publishButton:      action       { Button that opens the publishing flow for the current draft }
+    releaseNotesInput:  interactive  { Text area for entering release notes before publishing }
+    confirmDialog:      container    { Modal confirmation overlay shown before a rollback is committed }
+    confirmMessage:     text         { Prompt text explaining which version will be restored }
+    confirmRollback:    action       { Button that confirms and dispatches the ROLLBACK event }
+    cancelRollback:     action       { Button that dismisses the confirmation dialog without rolling back }
+  }
+
+  states {
+    // Primary workflow state machine
+    workflow {
+      browsing [initial] {
+        on DIFF           -> diffing;
+        on BEGIN_ROLLBACK -> rolling-back;
+        on BEGIN_PUBLISH  -> publishing;
+      }
+
+      diffing {
+        on CLEAR_DIFF     -> browsing;
+        on BEGIN_ROLLBACK -> rolling-back;
+        on BEGIN_PUBLISH  -> publishing;
+        entry [loadDiff];
+        exit  [clearDiff];
+      }
+
+      publishing {
+        on PUBLISH        -> browsing;
+        on CANCEL_PUBLISH -> browsing;
+        entry [focusReleaseNotes];
+        exit  [clearReleaseNotes];
+      }
+
+      rolling-back {
+        on ROLLBACK       -> browsing;
+        on CANCEL_ROLLBACK -> browsing;
+        entry [trapFocusOnConfirm];
+        exit  [releaseFocusFromConfirm];
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      ArrowUp         -> NAVIGATE_PREV;
+      ArrowDown       -> NAVIGATE_NEXT;
+      Shift+ArrowUp   -> EXTEND_SELECTION_PREV;
+      Shift+ArrowDown -> EXTEND_SELECTION_NEXT;
+      Enter           -> VIEW_VERSION;
+      r               -> BEGIN_ROLLBACK;
+      p               -> BEGIN_PUBLISH;
+      Escape          -> CANCEL_ROLLBACK;
+    }
+    focus {
+      trap: false;
+      initial: versionList;
+      roving: true;
+      returnOnClose: versionList;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-labelledby: "version-history-heading";
+        aria-busy: "false";
+      };
+      versionList -> {
+        role: "listbox";
+        aria-label: "ProcessSpec versions";
+        aria-multiselectable: "true";
+      };
+      versionEntry -> {
+        role: "option";
+        aria-selected: if self.isSelected then "true" else "false";
+        aria-label: concat("Version ", self.label, " by ", self.author, ", ", self.publishedAt);
+      };
+      diffPane -> {
+        role: "region";
+        aria-label: "Version diff";
+        aria-live: "polite";
+        hidden: if state.workflow != "diffing" then "true" else "false";
+      };
+      rollbackButton -> {
+        role: "button";
+        aria-label: concat("Roll back to version ", self.targetVersionLabel);
+        aria-disabled: if state.workflow == "rolling-back" then "true" else "false";
+      };
+      publishButton -> {
+        role: "button";
+        aria-label: "Publish current draft";
+        aria-disabled: if state.workflow == "publishing" then "true" else "false";
+      };
+      releaseNotesInput -> {
+        role: "textbox";
+        aria-label: "Release notes";
+        aria-required: "true";
+        aria-multiline: "true";
+      };
+      confirmDialog -> {
+        role: "alertdialog";
+        aria-modal: "true";
+        aria-label: "Confirm rollback";
+        aria-describedby: confirmMessage;
+      };
+      confirmRollback -> {
+        role: "button";
+        aria-label: "Confirm rollback";
+      };
+      cancelRollback -> {
+        role: "button";
+        aria-label: "Cancel rollback";
+      };
+    }
+  }
+
+  props {
+    processSpecId:    String
+    selectedVersionA: option String
+    selectedVersionB: option String
+    versions: list {
+      id:          String,
+      label:       String,
+      publishedAt: String,
+      author:      String,
+      status:      String
+    } = []
+    releaseNotes: String = ""
+  }
+
+  connect {
+    root -> {
+      data-part:          "root";
+      data-state:         state.workflow;
+      aria-labelledby:    "version-history-heading";
+      data-process-spec:  ?processSpecId;
+    }
+
+    versionList -> {
+      data-part:              "version-list";
+      role:                   "listbox";
+      aria-label:             "ProcessSpec versions";
+      aria-multiselectable:   "true";
+      onKeyDown-ArrowUp:      send(NAVIGATE_PREV);
+      onKeyDown-ArrowDown:    send(NAVIGATE_NEXT);
+      onKeyDown-Shift+ArrowUp:   send(EXTEND_SELECTION_PREV);
+      onKeyDown-Shift+ArrowDown: send(EXTEND_SELECTION_NEXT);
+      onKeyDown-Enter:        send(VIEW_VERSION);
+      onKeyDown-r:            send(BEGIN_ROLLBACK);
+      onKeyDown-p:            send(BEGIN_PUBLISH);
+    }
+
+    versionEntry -> {
+      data-part:          "version-entry";
+      data-version-id:    self.id;
+      data-version-status: self.status;
+      data-is-current:    if self.status == "active" then "true" else "false";
+      role:               "option";
+      aria-selected:      if self.isSelected then "true" else "false";
+      aria-label:         concat("Version ", self.label, " by ", self.author, ", ", self.publishedAt);
+      tabindex:           if self.isFocused then "0" else "-1";
+      onClick:            send(DIFF, { versionId: self.id });
+    }
+
+    diffPane -> {
+      data-part:   "diff-pane";
+      role:        "region";
+      aria-label:  "Version diff";
+      aria-live:   "polite";
+      hidden:      if state.workflow != "diffing" then true else false;
+    }
+
+    diffLine -> {
+      data-part:   "diff-line";
+      data-change: self.changeType;
+    }
+
+    rollbackButton -> {
+      data-part:   "rollback-button";
+      aria-label:  concat("Roll back to version ", self.targetVersionLabel);
+      disabled:    if state.workflow == "rolling-back" then true else false;
+      onClick:     send(BEGIN_ROLLBACK, { targetVersionId: self.targetVersionId });
+    }
+
+    publishButton -> {
+      data-part:   "publish-button";
+      aria-label:  "Publish current draft";
+      disabled:    if state.workflow == "publishing" then true
+                   else if ?releaseNotes == "" then true
+                   else false;
+      onClick:     send(BEGIN_PUBLISH);
+    }
+
+    releaseNotesInput -> {
+      data-part:    "release-notes-input";
+      role:         "textbox";
+      aria-label:   "Release notes";
+      aria-required: "true";
+      aria-multiline: "true";
+      hidden:       if state.workflow != "publishing" then true else false;
+      onInput:      send(UPDATE_RELEASE_NOTES, { value: self.value });
+    }
+
+    confirmDialog -> {
+      data-part:      "confirm-dialog";
+      role:           "alertdialog";
+      aria-modal:     "true";
+      aria-label:     "Confirm rollback";
+      aria-describedby: confirmMessage;
+      hidden:         if state.workflow != "rolling-back" then true else false;
+    }
+
+    confirmMessage -> {
+      data-part: "confirm-message";
+      text:      concat("This will restore version ", self.targetVersionLabel, ". Any unpublished changes will be lost.");
+    }
+
+    confirmRollback -> {
+      data-part:  "confirm-rollback";
+      role:       "button";
+      aria-label: "Confirm rollback";
+      onClick:    send(ROLLBACK, { targetVersionId: self.targetVersionId });
+    }
+
+    cancelRollback -> {
+      data-part:  "cancel-rollback";
+      role:       "button";
+      aria-label: "Cancel rollback";
+      onClick:    send(CANCEL_ROLLBACK);
+    }
+  }
+
+  affordance {
+    serves: group-section;
+    specificity: 7;
+    when {
+      context: "process-spec-version-history";
+    }
+    bind {
+      processSpecId: processSpecId;
+      versions:      versions;
+    }
+  }
+
+  compose {
+    _focusTrap: widget("focus-trap", {
+      active: if state.workflow == "rolling-back" then true else false
+    });
+    _presence: widget("presence", {
+      present: if state.workflow == "diffing" then true else false
+    });
+  }
+
+  invariant {
+    example "selecting two versions transitions to diffing state": {
+      after root -> { data-state: "browsing" }
+      after versionEntry.click -> ok
+      after send(DIFF, { versionId: "v2" })
+      then  root -> { data-state: "diffing" }
+      and   diffPane -> { hidden: "false" }
+    }
+
+    example "rollback requires confirmation before ROLLBACK dispatched": {
+      after root -> { data-state: "browsing" }
+      after rollbackButton.click -> ok
+      then  root -> { data-state: "rolling-back" }
+      and   confirmDialog -> { hidden: "false" }
+      after cancelRollback.click -> ok
+      then  root -> { data-state: "browsing" }
+      and   confirmDialog -> { hidden: "true" }
+    }
+
+    example "publish with release notes emits PUBLISH event": {
+      after root -> { data-state: "browsing" }
+      after publishButton.click -> ok
+      then  root -> { data-state: "publishing" }
+      and   releaseNotesInput -> { hidden: "false" }
+      after send(PUBLISH)
+      then  root -> { data-state: "browsing" }
+    }
+
+    example "Escape from rolling-back cancels without rollback": {
+      after root -> { data-state: "rolling-back" }
+      after keypress Escape
+      then  root -> { data-state: "browsing" }
+      and   confirmDialog -> { hidden: "true" }
+    }
+
+    always "rolling back requires confirmation": {
+      state.workflow == "rolling-back"
+        -> confirmDialog["hidden"] == "false"
+    }
+
+    always "diff pane hidden unless in diffing state": {
+      state.workflow != "diffing"
+        -> diffPane["hidden"] == "true"
+    }
+
+    always "release notes input hidden unless publishing": {
+      state.workflow != "publishing"
+        -> releaseNotesInput["hidden"] == "true"
+    }
+
+    always "data-state on root mirrors workflow machine": {
+      forall s in ["browsing", "diffing", "publishing", "rolling-back"]:
+        state.workflow == s -> root["data-state"] == s
+    }
+
+    never "publish without release notes being set": {
+      exists e in events:
+        e.type == "PUBLISH" and ?releaseNotes == ""
+    }
+
+    never "ROLLBACK dispatched without prior BEGIN_ROLLBACK": {
+      exists e in events:
+        e.type == "ROLLBACK" and state.workflow != "rolling-back"
+    }
+
+    never "confirm dialog visible outside rolling-back state": {
+      exists e in renderEvents:
+        state.workflow != "rolling-back" and confirmDialog["hidden"] != "true"
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    action rollbackButton.click {
+      requires: state.workflow != "rolling-back"
+      ensures ok: state.workflow == "rolling-back"
+    }
+
+    action confirmRollback.click {
+      requires: state.workflow == "rolling-back"
+      ensures ok: state.workflow == "browsing"
+    }
+
+    action cancelRollback.click {
+      requires: state.workflow == "rolling-back"
+      ensures ok: state.workflow == "browsing"
+    }
+
+    action publishButton.click {
+      requires: state.workflow == "browsing"
+      ensures ok: state.workflow == "publishing"
+    }
+  }
+
+}
