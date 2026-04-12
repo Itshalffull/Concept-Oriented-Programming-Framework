@@ -1,0 +1,296 @@
+@version(1)
+widget flow-builder {
+
+  purpose {
+    Three-pane shell for authoring Clef automation workflows. The left palette
+    lists draggable node types (trigger, action, logic, catch) that the user
+    drags onto the center canvas to build a ProcessSpec. The center pane switches
+    between a linear Steps view and a graph-based Graph view (hosted by
+    FlowchartEditor) without losing the current selection. The right inspector
+    shows configuration for whichever step or graph node is selected. The widget
+    does not own a canvas implementation — it hosts flow-steps-view in Steps mode
+    and FlowchartEditor in Graph mode, and coordinates selection state across both
+    representations. Requires processSpecId to be set before any palette drag can
+    be initiated.
+  }
+
+  anatomy {
+    root:        container    { Outermost application shell; owns the three-pane layout }
+    palette:     container    { Left pane listing draggable node type entries }
+    paletteItem: action       { A single draggable node type (trigger, action, logic, or catch) }
+    viewToggle:  action       { Toggle control that switches the center pane between Steps and Graph views }
+    centerPane:  container    { Center pane that hosts either flow-steps-view or FlowchartEditor }
+    inspector:   container    { Right pane displaying configuration for the currently selected step }
+  }
+
+  states {
+    interaction {
+      idle [initial] {
+        on DRAG_START          -> dragging-from-palette;
+        on SELECT_STEP         -> step-selected;
+        on SELECT_GRAPH_NODE   -> graph-selected;
+        on ESCAPE              -> idle;
+      }
+
+      dragging-from-palette {
+        on DROP_ON_CANVAS      -> idle;
+        on DROP_ON_STEPS       -> idle;
+        on DRAG_CANCEL         -> idle;
+        entry [setDragPayload; highlightDropTargets];
+        exit  [clearDragPayload; clearDropTargets];
+      }
+
+      step-selected {
+        on SELECT_STEP         -> step-selected;
+        on SELECT_GRAPH_NODE   -> graph-selected;
+        on DRAG_START          -> dragging-from-palette;
+        on ESCAPE              -> idle;
+        on DESELECT            -> idle;
+        entry [openInspector];
+        exit  [clearInspectorIfNoSelection];
+      }
+
+      graph-selected {
+        on SELECT_STEP         -> step-selected;
+        on SELECT_GRAPH_NODE   -> graph-selected;
+        on DRAG_START          -> dragging-from-palette;
+        on ESCAPE              -> idle;
+        on DESELECT            -> idle;
+        entry [openInspector];
+        exit  [clearInspectorIfNoSelection];
+      }
+    }
+
+    view [parallel] {
+      steps [initial] {
+        on TOGGLE_VIEW -> graph;
+        entry [mountStepsView];
+        exit  [unmountStepsView];
+      }
+
+      graph {
+        on TOGGLE_VIEW -> steps;
+        entry [mountFlowchartEditor];
+        exit  [unmountFlowchartEditor];
+      }
+    }
+  }
+
+  accessibility {
+    role: application;
+    keyboard {
+      Tab           -> FOCUS_NEXT_PANE;
+      Shift+Tab     -> FOCUS_PREV_PANE;
+      ArrowUp       -> NAVIGATE_UP;
+      ArrowDown     -> NAVIGATE_DOWN;
+      ArrowLeft     -> NAVIGATE_LEFT;
+      ArrowRight    -> NAVIGATE_RIGHT;
+      Enter         -> SELECT_FOCUSED;
+      Escape        -> ESCAPE;
+    }
+    focus {
+      trap: false;
+      initial: palette;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "application";
+        aria-label: "Flow Builder";
+        data-state: state.interaction;
+      };
+      palette -> {
+        role: "list";
+        aria-label: "Node type palette";
+        aria-description: "Drag items onto the canvas to add steps to the flow";
+      };
+      paletteItem -> {
+        role: "listitem";
+        aria-label: concat(self.label, " node");
+        aria-roledescription: "draggable node type";
+        aria-grabbed: if state.interaction == "dragging-from-palette" and self.isGrabbed then "true" else "false";
+        draggable: "true";
+      };
+      viewToggle -> {
+        role: "button";
+        aria-label: if state.view == "graph" then "Switch to Steps view" else "Switch to Graph view";
+        aria-pressed: if state.view == "graph" then "true" else "false";
+      };
+      centerPane -> {
+        role: "region";
+        aria-label: if state.view == "graph" then "Graph view" else "Steps view";
+        aria-live: "polite";
+      };
+      inspector -> {
+        role: "complementary";
+        aria-label: "Step inspector";
+        aria-hidden: if state.interaction == "idle" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    processSpecId:  String
+    currentView:    union "steps" | "graph" = "steps"
+    selectedStepId: option String
+  }
+
+  connect {
+    root -> {
+      data-part:            "root";
+      data-state:           state.interaction;
+      data-view:            state.view;
+      data-process-spec-id: ?processSpecId;
+      data-selected-step:   ?selectedStepId;
+    }
+
+    palette -> {
+      data-part:  "palette";
+      data-state: state.interaction;
+    }
+
+    paletteItem -> {
+      data-part:      "palette-item";
+      data-node-type: self.nodeType;
+      data-grabbed:   if state.interaction == "dragging-from-palette" and self.isGrabbed then "true" else "false";
+      onPointerDown:  if ?processSpecId != "" then send(DRAG_START, { nodeType: self.nodeType }) else noop;
+      onKeyDown:      if key == "Enter" or key == "Space" then send(DRAG_START, { nodeType: self.nodeType }) else noop;
+      draggable:      if ?processSpecId != "" then "true" else "false";
+      tabIndex:       "0";
+    }
+
+    viewToggle -> {
+      data-part:    "view-toggle";
+      data-view:    state.view;
+      onClick:      send(TOGGLE_VIEW);
+      aria-pressed: if state.view == "graph" then "true" else "false";
+    }
+
+    centerPane -> {
+      data-part: "center-pane";
+      data-view: state.view;
+    }
+
+    inspector -> {
+      data-part:         "inspector";
+      data-state:        state.interaction;
+      data-selected-step: ?selectedStepId;
+      hidden:            if state.interaction == "idle" then true else false;
+    }
+  }
+
+  affordance {
+    serves: workflow-authoring;
+    specificity: 10;
+    when { processEditing: true }
+    bind {
+      processSpecId:  processSpecId;
+      selectedStepId: selectedStepId;
+    }
+  }
+
+  compose {
+    centerPane:  widget("flow-steps-view",  { processSpecId: ?processSpecId, selectedStepId: ?selectedStepId })
+    _graph:      widget("flowchart-editor", { processSpecId: ?processSpecId, selectedNodeId: ?selectedStepId })
+    inspector:   widget("flow-step-inspector", { processSpecId: ?processSpecId, stepId: ?selectedStepId })
+  }
+
+  invariant {
+    example "view toggle preserves selectedStepId": {
+      after send(SELECT_STEP, { stepId: "step-1" }) -> ok
+      then root -> { data-selected-step: "step-1" }
+      and root -> { data-state: "step-selected" }
+      then viewToggle.click -> ok
+      then root -> { data-view: "graph" }
+      and root -> { data-selected-step: "step-1" }
+    }
+
+    example "drag from palette enters dragging-from-palette": {
+      after paletteItem.pointerDown -> ok
+      then root -> { data-state: "dragging-from-palette" }
+      and palette -> { data-state: "dragging-from-palette" }
+    }
+
+    example "drop clears drag state": {
+      after paletteItem.pointerDown -> ok
+      then root -> { data-state: "dragging-from-palette" }
+      then send(DROP_ON_CANVAS) -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    example "escape clears step selection": {
+      after send(SELECT_STEP, { stepId: "step-2" }) -> ok
+      then root -> { data-state: "step-selected" }
+      then send(ESCAPE) -> ok
+      then root -> { data-state: "idle" }
+      and inspector -> { hidden: true }
+    }
+
+    example "escape clears graph selection": {
+      after send(SELECT_GRAPH_NODE, { nodeId: "step-3" }) -> ok
+      then root -> { data-state: "graph-selected" }
+      then send(ESCAPE) -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    example "select step opens inspector": {
+      after send(SELECT_STEP, { stepId: "step-4" }) -> ok
+      then inspector -> { hidden: false }
+      and inspector -> { data-selected-step: "step-4" }
+    }
+
+    example "drag from palette blocked without processSpecId": {
+      after paletteItem.pointerDown (when: ?processSpecId == "") -> noop
+      then root -> { data-state: "idle" }
+    }
+
+    forall s in states.interaction:
+      s.reachable = true
+
+    forall s in states.view:
+      s.reachable = true
+
+    always "data-state on root reflects interaction FSM": {
+      root -> { data-state: state.interaction }
+    }
+
+    always "data-view on root reflects view FSM": {
+      root -> { data-view: state.view }
+    }
+
+    always "inspector hidden when no selection": {
+      if state.interaction == "idle" then inspector -> { hidden: true }
+    }
+
+    always "drag blocked without processSpecId": {
+      if ?processSpecId == "" then paletteItem -> { draggable: "false" }
+    }
+
+    never "drag starts without processSpecId": {
+      ?processSpecId == "" and state.interaction == "dragging-from-palette"
+    }
+
+    never "inspector visible in idle state": {
+      state.interaction == "idle" and inspector -> { hidden: false }
+    }
+
+    action viewToggle.click {
+      requires: state.interaction != "dragging-from-palette"
+      ensures ok: state.view != state.view
+    }
+
+    action paletteItem.pointerDown {
+      requires: ?processSpecId != ""
+      ensures ok: state.interaction == "dragging-from-palette"
+    }
+
+    "selectedStepId must be preserved across TOGGLE_VIEW transitions in both directions";
+    "graph-selected and step-selected refer to the same selectedStepId — two views of one selection";
+    "FlowchartEditor receives selectedNodeId equal to selectedStepId at all times";
+    "Dropping a palette item onto the canvas must send processSpecId with the node type so the kernel can create the step";
+    "Tab key moves focus between palette, viewToggle, centerPane, and inspector in document order";
+    "ArrowUp/ArrowDown within the palette roving tabindex among paletteItems";
+    "ArrowUp/ArrowDown within centerPane (Steps mode) delegate to flow-steps-view navigation";
+  }
+
+}
