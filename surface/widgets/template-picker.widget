@@ -1,0 +1,324 @@
+@version(1)
+widget template-picker {
+
+  purpose {
+    Modal tool-plane picker that lets users browse and select a Template by
+    schema type, then fill any declared variables before the template is
+    expanded and inserted at the current cursor position. The picker opens as
+    a dialog with a focus trap. The browsing stage presents a category tab list
+    filtered by schemaFilter and a keyboard-navigable template list with a
+    preview pane. When the selected template contains template variables
+    ({{var}} placeholders) the widget transitions to a variable-fill stage that
+    renders one labelled text input per variable. Confirming the filled form
+    invokes Template/expand and returns the result to the onComplete
+    ActionBinding reference. Backed by repertoire template and content concepts.
+  }
+
+  requires @1 {
+    fields {
+      templates: list;
+      categories: list;
+      selectedTemplateId: option String;
+      variables: list;
+    }
+    actions {
+      expand(template: String, variables: String);
+    }
+  }
+
+  anatomy {
+    root:            container    { Modal dialog wrapper; carries data-state for the stage FSM }
+    searchInput:     interactive  { Free-text field for filtering templates by name }
+    categoryList:    container    { Horizontal tab strip of available schema categories }
+    categoryTab:     action       { Single category filter tab; one per distinct schema }
+    templateList:    container    { Scrollable list of template rows matching the current filter }
+    templateRow:     action       { Single template entry row; one per matching Template }
+    templateTitle:   text         { Primary title of the template shown in the row }
+    templatePreview: container    { Read-only preview panel showing template body }
+    variablePanel:   container    { Variable-fill stage panel containing all variable inputs }
+    variableInput:   interactive  { Labelled text input for a single template variable }
+    confirmButton:   action       { Confirms and inserts the template or submits filled variables }
+    cancelButton:    action       { Dismisses the picker without inserting }
+  }
+
+  states {
+    stage {
+      browsing [initial] {
+        on SELECT_TEMPLATE      -> browsing;
+        on ADVANCE_TO_VARIABLES -> filling-variables;
+        on CONFIRM_DIRECT       -> inserting;
+        on CANCEL               -> browsing;
+        on QUERY_CHANGED        -> browsing;
+        on SELECT_CATEGORY      -> browsing;
+        entry [resetSelection];
+      }
+      filling-variables {
+        on CONFIRM_VARIABLES    -> inserting;
+        on BACK_TO_BROWSE       -> browsing;
+        on CANCEL               -> browsing;
+        entry [focusFirstVariable];
+      }
+      inserting {
+        on INSERT_DONE          -> browsing;
+        on INSERT_ERROR         -> filling-variables;
+        entry [expandAndInsert];
+      }
+    }
+  }
+
+  accessibility {
+    role: dialog;
+    modal: true;
+    keyboard {
+      Escape    -> CANCEL;
+      Enter     -> CONFIRM_DIRECT;
+      ArrowDown -> NAVIGATE_NEXT;
+      ArrowUp   -> NAVIGATE_PREV;
+      Tab       -> FOCUS_NEXT;
+    }
+    focus {
+      trap: true;
+      initial: searchInput;
+      roving: true;
+      returnOnClose: true;
+    }
+    aria {
+      root -> {
+        role: "dialog";
+        aria-modal: "true";
+        aria-label: "Insert template";
+        aria-live: "polite";
+      };
+      searchInput -> {
+        role: "combobox";
+        aria-label: "Search templates";
+        aria-expanded: if state.stage == "browsing" then "true" else "false";
+        aria-controls: templateList;
+        aria-autocomplete: "list";
+      };
+      categoryList -> {
+        role: "tablist";
+        aria-label: "Template categories";
+      };
+      categoryTab -> {
+        role: "tab";
+        aria-selected: if self.active then "true" else "false";
+      };
+      templateList -> {
+        role: "listbox";
+        aria-label: "Templates";
+      };
+      templateRow -> {
+        role: "option";
+        aria-selected: if self.id == ?selectedTemplateId then "true" else "false";
+      };
+      templatePreview -> {
+        role: "region";
+        aria-label: "Template preview";
+        aria-live: "polite";
+      };
+      variablePanel -> {
+        role: "group";
+        aria-label: "Fill template variables";
+        aria-live: "polite";
+      };
+      confirmButton -> {
+        role: "button";
+        aria-label: if state.stage == "filling-variables" then "Insert" else "Select";
+        aria-disabled: if state.stage == "inserting" then "true" else "false";
+      };
+      cancelButton -> {
+        role: "button";
+        aria-label: "Cancel";
+      };
+    }
+  }
+
+  props {
+    initialQuery: String = ""
+    schemaFilter: option String
+    onComplete: String
+    selectedTemplateId: option String = none
+    maxResults: Int = 50
+    placeholder: String = "Search templates..."
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.stage;
+      role: "dialog";
+      aria-modal: "true";
+    }
+
+    searchInput -> {
+      data-part: "search-input";
+      value: ?initialQuery;
+      placeholder: ?placeholder;
+      autofocus: true;
+      onInput: send(QUERY_CHANGED);
+    }
+
+    categoryList -> {
+      data-part: "category-list";
+      hidden: if state.stage == "filling-variables" or state.stage == "inserting" then true else false;
+    }
+
+    categoryTab -> {
+      data-part: "category-tab";
+      data-category: self.schema;
+      data-active: if self.active then "true" else "false";
+      aria-selected: if self.active then "true" else "false";
+      tabindex: if self.active then "0" else "-1";
+      onClick: send(SELECT_CATEGORY);
+    }
+
+    templateList -> {
+      data-part: "template-list";
+      hidden: if state.stage == "filling-variables" or state.stage == "inserting" then true else false;
+    }
+
+    templateRow -> {
+      data-part: "template-row";
+      data-template-id: self.id;
+      data-selected: if self.id == ?selectedTemplateId then "true" else "false";
+      aria-selected: if self.id == ?selectedTemplateId then "true" else "false";
+      tabindex: if self.id == ?selectedTemplateId then "0" else "-1";
+      onClick: send(SELECT_TEMPLATE);
+      onKeyDown: send(SELECT_TEMPLATE);
+    }
+
+    templateTitle -> {
+      data-part: "template-title";
+      text: self.name;
+    }
+
+    templatePreview -> {
+      data-part: "template-preview";
+      hidden: if ?selectedTemplateId == none then true else false;
+      aria-live: "polite";
+    }
+
+    variablePanel -> {
+      data-part: "variable-panel";
+      hidden: if state.stage != "filling-variables" then true else false;
+    }
+
+    variableInput -> {
+      data-part: "variable-input";
+      data-variable-name: self.name;
+      placeholder: self.name;
+      aria-label: self.name;
+      onInput: send(UPDATE_VARIABLE);
+    }
+
+    confirmButton -> {
+      data-part: "confirm-button";
+      disabled: if state.stage == "inserting" or ?selectedTemplateId == none then true else false;
+      aria-disabled: if state.stage == "inserting" then "true" else "false";
+      onClick: if state.stage == "filling-variables" then send(CONFIRM_VARIABLES) else send(CONFIRM_DIRECT);
+    }
+
+    cancelButton -> {
+      data-part: "cancel-button";
+      onClick: send(CANCEL);
+    }
+  }
+
+  affordance {
+    serves: template-picker;
+    specificity: 10;
+    when toolPlane = "true";
+    bind {
+      schemaFilter: schemaFilter;
+      onComplete: onComplete;
+    }
+  }
+
+  compose {
+    _focusTrap: widget("focus-trap", { active: true });
+    _portal:    widget("portal",     { target: "body" });
+  }
+
+  invariant {
+    example "SELECT_TEMPLATE while browsing stays in browsing": {
+      after transition(from: "browsing", event: "SELECT_TEMPLATE") -> ok
+      then state.stage = "browsing"
+    }
+
+    example "ADVANCE_TO_VARIABLES transitions browsing to filling-variables": {
+      after transition(from: "browsing", event: "ADVANCE_TO_VARIABLES") -> ok
+      then state.stage = "filling-variables"
+    }
+
+    example "CONFIRM_DIRECT from browsing transitions to inserting": {
+      after transition(from: "browsing", event: "CONFIRM_DIRECT") -> ok
+      then state.stage = "inserting"
+    }
+
+    example "CONFIRM_VARIABLES transitions filling-variables to inserting": {
+      after transition(from: "filling-variables", event: "CONFIRM_VARIABLES") -> ok
+      then state.stage = "inserting"
+    }
+
+    example "BACK_TO_BROWSE from filling-variables returns to browsing": {
+      after transition(from: "filling-variables", event: "BACK_TO_BROWSE") -> ok
+      then state.stage = "browsing"
+    }
+
+    example "INSERT_DONE from inserting returns to browsing": {
+      after transition(from: "inserting", event: "INSERT_DONE") -> ok
+      then state.stage = "browsing"
+    }
+
+    example "INSERT_ERROR from inserting returns to filling-variables": {
+      after transition(from: "inserting", event: "INSERT_ERROR") -> ok
+      then state.stage = "filling-variables"
+    }
+
+    example "CANCEL from filling-variables returns to browsing": {
+      after transition(from: "filling-variables", event: "CANCEL") -> ok
+      then state.stage = "browsing"
+    }
+
+    forall "all stage states are reachable": {
+      given s in stageStates
+      then s.reachable = true
+    }
+
+    always "data-state on root reflects stage FSM": {
+      root.dataState = state.stage
+    }
+
+    never "templateList and variablePanel both visible simultaneously": {
+      templateList.hidden = false and variablePanel.hidden = false
+    }
+
+    never "confirmButton enabled while inserting is in flight": {
+      state.stage = "inserting" and confirmButton.disabled = false
+    }
+
+    never "confirmButton enabled when no template is selected": {
+      selectedTemplateId = none and confirmButton.disabled = false
+    }
+
+    never "variablePanel visible outside filling-variables stage": {
+      state.stage != "filling-variables" and variablePanel.hidden = false
+    }
+
+    action confirmButton {
+      requires: state.stage = "browsing" and selectedTemplateId != none
+      ensures ok: state.stage = "inserting"
+    }
+
+    action cancelButton {
+      requires: state.stage != "inserting"
+      ensures ok: state.stage = "browsing"
+    }
+
+    "ArrowUp and ArrowDown must move roving focus between templateRow items in templateList while stage is browsing";
+    "Tab must advance focus from searchInput to categoryList to templateList to confirmButton in browsing stage";
+    "variableInput elements must be focused in declaration order when entering filling-variables stage";
+  }
+
+}

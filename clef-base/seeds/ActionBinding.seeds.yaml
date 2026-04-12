@@ -990,3 +990,101 @@ entries:
     section: "Comment"
     label: "Reply"
     icon: "reply"
+
+  # --- AI slash-command actions (MAG-749) ---
+  # Five AI editing commands available in the slash menu only (slash_command: true,
+  # toolbar_command: false). Each spawns an AgentSession with the corresponding
+  # built-in persona and the current selection as context. The selection toolbar
+  # covers formatting; AI operations are intentionally restricted to the slash menu.
+
+  # ai-summarize-selection: compresses the selected content into 2-3 sentences.
+  # Persona: persona:summarize (ContentNode.agent-persona.seeds.yaml).
+  - name: ai-summarize-selection
+    binding: ai-summarize-selection
+    target: "AgentSession/spawn"
+    parameterMap: '{"personaPageId":"persona:summarize","strategy":"react","tools":"[]","context":"${context.selection}"}'
+    executionPolicy: "auto"
+    slash_command: true
+    toolbar_command: false
+    context_menu: false
+    section: "AI"
+    label: "AI: summarize selection"
+    icon: "sparkles"
+
+  # ai-translate-selection: translates selection to target language (prompted).
+  # Persona: persona:translate. The target language is collected via a context
+  # parameter prompt before spawning; parameterMap forwards it as context.language.
+  - name: ai-translate-selection
+    binding: ai-translate-selection
+    target: "AgentSession/spawn"
+    parameterMap: '{"personaPageId":"persona:translate","strategy":"react","tools":"[]","context":"${context.selection}","language":"${context.language}"}'
+    executionPolicy: "pessimistic"
+    slash_command: true
+    toolbar_command: false
+    context_menu: false
+    section: "AI"
+    label: "AI: translate selection"
+    icon: "languages"
+
+  # ai-rewrite-selection: rewrites selection in a chosen style (formal/casual/concise/friendly).
+  # Persona: persona:rewrite. The style is collected via a context parameter prompt
+  # before spawning; parameterMap forwards it as context.style.
+  - name: ai-rewrite-selection
+    binding: ai-rewrite-selection
+    target: "AgentSession/spawn"
+    parameterMap: '{"personaPageId":"persona:rewrite","strategy":"react","tools":"[]","context":"${context.selection}","style":"${context.style}"}'
+    executionPolicy: "pessimistic"
+    slash_command: true
+    toolbar_command: false
+    context_menu: false
+    section: "AI"
+    label: "AI: rewrite selection"
+    icon: "pencil"
+
+  # ai-explain-selection: explains the selection in plain language.
+  # Persona: persona:explain. No additional context parameters required.
+  - name: ai-explain-selection
+    binding: ai-explain-selection
+    target: "AgentSession/spawn"
+    parameterMap: '{"personaPageId":"persona:explain","strategy":"react","tools":"[]","context":"${context.selection}"}'
+    executionPolicy: "auto"
+    slash_command: true
+    toolbar_command: false
+    context_menu: false
+    section: "AI"
+    label: "AI: explain selection"
+    icon: "info"
+
+  # ai-expand-selection: lengthens short or telegraphic text into full prose.
+  # Persona: persona:expand. No additional context parameters required.
+  - name: ai-expand-selection
+    binding: ai-expand-selection
+    target: "AgentSession/spawn"
+    parameterMap: '{"personaPageId":"persona:expand","strategy":"react","tools":"[]","context":"${context.selection}"}'
+    executionPolicy: "auto"
+    slash_command: true
+    toolbar_command: false
+    context_menu: false
+    section: "AI"
+    label: "AI: expand selection"
+    icon: "expand"
+
+  # --- Template insertion slash command (MAG-749) ---
+  # template-insert: opens template-picker.widget as a tool-plane modal. On picker
+  # confirm, the expanded template text is inserted at the cursor via Template/expand.
+  # The picker passes the filled variable map as context.variables and the selected
+  # template id as context.templateId before firing the onComplete binding
+  # (template-expand-confirmed, already seeded above in MAG-732 section).
+  # API gap note: TemplatePicker/open is an anticipated surface action that mounts
+  # the template-picker.widget. A follow-up card should introduce that concept.
+  - name: template-insert
+    binding: template-insert
+    target: "TemplatePicker/open"
+    parameterMap: '{"widget":"template-picker","onComplete":"template-expand-confirmed","context":"context.focusedBlockId"}'
+    executionPolicy: "auto"
+    slash_command: true
+    toolbar_command: false
+    context_menu: false
+    section: "Advanced"
+    label: "Insert template"
+    icon: "layout-template"
