@@ -1,0 +1,304 @@
+@version(1)
+widget entity-picker {
+
+  purpose {
+    Modal tool-plane picker that lets users search for and select a ContentNode
+    by free-text query with an optional schema-type filter. The picker opens as
+    a dialog with a focus trap, runs queries against ContentNode/search, and
+    presents results in a keyboard-navigable list. When no results match, a
+    "Create new" affordance is surfaced. Confirming selection fires the bound
+    ActionBinding reference (onComplete). Used as the backing tool-plane for
+    the wikilink and at-mention input rules.
+  }
+
+  requires @1 {
+    fields {
+      results: list;
+      selectedIndex: Int;
+    }
+    actions {
+      search(query: String, schemaFilter: option String);
+    }
+  }
+
+  anatomy {
+    root:             container    { Modal dialog wrapper; carries data-state for the search FSM }
+    searchInput:      interactive  { Text field where the user types the search query }
+    resultsList:      container    { Scrollable list of result rows }
+    resultRow:        action       { Single result entry; one per matching ContentNode }
+    resultIcon:       presentation { Entity type icon shown on each result row }
+    resultTitle:      text         { Primary title of the result entity }
+    resultSchema:     text         { Schema type badge shown on each result row }
+    confirmButton:    action       { Confirms the currently highlighted selection }
+    cancelButton:     action       { Dismisses the picker without making a selection }
+    createNewButton:  action       { Visible only when no results match; triggers entity creation }
+    emptyMessage:     text         { No results notice shown in empty state }
+    loadingIndicator: presentation { Spinner shown while a search request is in flight }
+  }
+
+  states {
+    search {
+      idle [initial] {
+        on QUERY_CHANGED -> searching;
+        on CONFIRM       -> idle;
+        on CANCEL        -> idle;
+        on CREATE_NEW    -> idle;
+      }
+      searching {
+        on RESULTS_READY -> results-ready;
+        on RESULTS_EMPTY -> empty;
+        on QUERY_CHANGED -> searching;
+        entry [debounceSearch];
+      }
+      results-ready {
+        on QUERY_CHANGED  -> searching;
+        on NAVIGATE_NEXT  -> results-ready;
+        on NAVIGATE_PREV  -> results-ready;
+        on CONFIRM        -> idle;
+        on CANCEL         -> idle;
+        entry [highlightFirstResult];
+      }
+      empty {
+        on QUERY_CHANGED -> searching;
+        on CREATE_NEW    -> idle;
+        on CANCEL        -> idle;
+        entry [showCreateNew];
+      }
+    }
+  }
+
+  accessibility {
+    role: dialog;
+    modal: true;
+    keyboard {
+      Escape    -> CANCEL;
+      Enter     -> CONFIRM;
+      ArrowDown -> NAVIGATE_NEXT;
+      ArrowUp   -> NAVIGATE_PREV;
+    }
+    focus {
+      trap: true;
+      initial: searchInput;
+      roving: true;
+      returnOnClose: true;
+    }
+    aria {
+      root -> {
+        role: "dialog";
+        aria-modal: "true";
+        aria-label: "Pick an entity";
+        aria-live: "polite";
+      };
+      searchInput -> {
+        role: "combobox";
+        aria-label: "Search entities";
+        aria-expanded: if state.search == "results-ready" then "true" else "false";
+        aria-controls: resultsList;
+        aria-autocomplete: "list";
+      };
+      resultsList -> {
+        role: "listbox";
+        aria-label: "Search results";
+      };
+      resultRow -> {
+        role: "option";
+        aria-selected: if self.index == ?selectedIndex then "true" else "false";
+      };
+      confirmButton -> {
+        role: "button";
+        aria-label: "Confirm selection";
+        aria-disabled: if state.search != "results-ready" then "true" else "false";
+      };
+      cancelButton -> {
+        role: "button";
+        aria-label: "Cancel";
+      };
+      createNewButton -> {
+        role: "button";
+        aria-label: "Create new entity";
+      };
+      loadingIndicator -> {
+        role: "status";
+        aria-label: "Searching";
+        aria-live: "polite";
+      };
+      emptyMessage -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: "No results found";
+      };
+    }
+  }
+
+  props {
+    initialQuery: String = ""
+    schemaFilter: option String
+    onComplete: String
+    selectedIndex: Int = 0
+    maxResults: Int = 20
+    placeholder: String = "Search or paste a link..."
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.search;
+      role: "dialog";
+      aria-modal: "true";
+    }
+
+    searchInput -> {
+      data-part: "search-input";
+      value: ?initialQuery;
+      placeholder: ?placeholder;
+      autofocus: true;
+      onInput: send(QUERY_CHANGED);
+    }
+
+    resultsList -> {
+      data-part: "results-list";
+      hidden: if state.search == "idle" or state.search == "empty" then true else false;
+    }
+
+    resultRow -> {
+      data-part: "result-row";
+      data-entity-ref: self.id;
+      data-selected: if self.index == ?selectedIndex then "true" else "false";
+      tabindex: if self.index == ?selectedIndex then "0" else "-1";
+      onClick: send(CONFIRM);
+    }
+
+    resultIcon -> {
+      data-part: "result-icon";
+      data-schema: self.schema;
+    }
+
+    resultTitle -> {
+      data-part: "result-title";
+      text: self.title;
+    }
+
+    resultSchema -> {
+      data-part: "result-schema";
+      text: self.schema;
+    }
+
+    confirmButton -> {
+      data-part: "confirm-button";
+      disabled: if state.search != "results-ready" then true else false;
+      aria-disabled: if state.search != "results-ready" then "true" else "false";
+      onClick: send(CONFIRM);
+    }
+
+    cancelButton -> {
+      data-part: "cancel-button";
+      onClick: send(CANCEL);
+    }
+
+    createNewButton -> {
+      data-part: "create-new-button";
+      hidden: if state.search != "empty" then true else false;
+      onClick: send(CREATE_NEW);
+    }
+
+    emptyMessage -> {
+      data-part: "empty-message";
+      hidden: if state.search != "empty" then true else false;
+      text: "No results found.";
+    }
+
+    loadingIndicator -> {
+      data-part: "loading-indicator";
+      hidden: if state.search != "searching" then true else false;
+    }
+  }
+
+  affordance {
+    serves: entity-picker;
+    specificity: 10;
+    when toolPlane = "true";
+    bind {
+      schemaFilter: schemaFilter;
+      onComplete: onComplete;
+    }
+  }
+
+  invariant {
+    example "QUERY_CHANGED transitions idle to searching": {
+      after transition(from: "idle", event: "QUERY_CHANGED") -> ok
+      then state.search = "searching"
+    }
+
+    example "RESULTS_READY transitions searching to results-ready": {
+      after transition(from: "searching", event: "RESULTS_READY") -> ok
+      then state.search = "results-ready"
+    }
+
+    example "RESULTS_EMPTY transitions searching to empty": {
+      after transition(from: "searching", event: "RESULTS_EMPTY") -> ok
+      then state.search = "empty"
+    }
+
+    example "CONFIRM in results-ready transitions to idle": {
+      after transition(from: "results-ready", event: "CONFIRM") -> ok
+      then state.search = "idle"
+    }
+
+    example "CANCEL from results-ready transitions to idle": {
+      after transition(from: "results-ready", event: "CANCEL") -> ok
+      then state.search = "idle"
+    }
+
+    example "CANCEL from empty transitions to idle": {
+      after transition(from: "empty", event: "CANCEL") -> ok
+      then state.search = "idle"
+    }
+
+    example "CREATE_NEW from empty transitions to idle": {
+      after transition(from: "empty", event: "CREATE_NEW") -> ok
+      then state.search = "idle"
+    }
+
+    example "NAVIGATE_NEXT in results-ready stays results-ready": {
+      after transition(from: "results-ready", event: "NAVIGATE_NEXT") -> ok
+      then state.search = "results-ready"
+    }
+
+    example "QUERY_CHANGED from results-ready retriggers searching": {
+      after transition(from: "results-ready", event: "QUERY_CHANGED") -> ok
+      then state.search = "searching"
+    }
+
+    forall "all search states are reachable": {
+      given s in searchStates
+      then s.reachable = true
+    }
+
+    always "data-state on root reflects search FSM": {
+      root.dataState = state.search
+    }
+
+    always "confirmButton disabled when not in results-ready": {
+      state.search != "results-ready"
+    }
+
+    never "resultsList visible and emptyMessage visible simultaneously": {
+      resultsList.hidden = false and emptyMessage.hidden = false
+    }
+
+    never "confirmButton enabled while search is in flight": {
+      state.search = "searching" and confirmButton.disabled = false
+    }
+
+    action confirmButton {
+      requires: state.search = "results-ready"
+      ensures ok: state.search = "idle"
+    }
+
+    action cancelButton {
+      requires: state.search != "idle"
+      ensures ok: state.search = "idle"
+    }
+  }
+
+}

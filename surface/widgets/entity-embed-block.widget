@@ -1,0 +1,276 @@
+@version(1)
+widget entity-embed-block {
+
+  purpose {
+    Block-level embed that resolves a ContentNode reference by its id and renders the
+    target entity according to a configurable displayMode (card, compact, or full).
+    The widget manages its own async load cycle (loading, resolved, error, missing) so
+    that the host block-editor never needs to know about resolution state. When the
+    entity cannot be found the widget surfaces an "Entity not found" affordance with
+    repair and remove actions. Keyboard interactions follow the block-selection pattern:
+    Enter navigates to the referenced entity, Space selects the block, and Delete
+    removes it.
+  }
+
+  requires @1 {
+    fields {
+      entityRef: String;
+      displayMode: String;
+    }
+    actions {
+      get(id: String);
+    }
+  }
+
+  anatomy {
+    root:                container     { Top-level block wrapper; carries data-state for the render FSM }
+    entityIcon:          presentation  { Icon representing the entity type; hidden while loading }
+    entityTitle:         text          { Primary title of the resolved entity; shown in all display modes }
+    entitySummary:       text          { Short summary excerpt; visible in card and full modes; hidden in compact }
+    displayModeSwitcher: action        { Button that opens a mini-picker to switch between card, compact, and full display modes }
+    loadingIndicator:    presentation  { Animated placeholder shown while the entity is being fetched }
+    errorMessage:        text          { Error message shown when resolution fails with a recoverable error }
+    missingMessage:      text          { Entity not found notice shown in missing state }
+    repairAction:        action        { Button in missing state that attempts to repair or relink the reference }
+    removeAction:        action        { Button in missing and error states to remove the embed block entirely }
+  }
+
+  states {
+    render {
+      loading [initial] {
+        on RESOLVED    -> resolved;
+        on NOT_FOUND   -> missing;
+        on FETCH_ERROR -> error;
+        entry [fetchEntity];
+      }
+      resolved {
+        on DISPLAY_MODE_CHANGE -> resolved;
+        on REMOVE              -> loading;
+        entry [renderEntity];
+      }
+      error {
+        on RETRY  -> loading;
+        on REMOVE -> loading;
+        entry [showErrorMessage];
+      }
+      missing {
+        on REPAIR -> loading;
+        on REMOVE -> loading;
+        entry [showMissingMessage];
+      }
+    }
+  }
+
+  accessibility {
+    role: figure;
+    keyboard {
+      Enter  -> NAVIGATE;
+      Space  -> SELECT_BLOCK;
+      Delete -> REMOVE;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      roving: false;
+      returnOnClose: root;
+    }
+    aria {
+      root -> {
+        role: "figure";
+        aria-label: "Entity embed block";
+        aria-busy: if state.render == "loading" then "true" else "false";
+      };
+      entityTitle -> {
+        role: "heading";
+        aria-level: "3";
+      };
+      displayModeSwitcher -> {
+        role: "button";
+        aria-label: "Switch display mode";
+        aria-haspopup: "listbox";
+      };
+      repairAction -> {
+        role: "button";
+        aria-label: "Repair entity reference";
+      };
+      removeAction -> {
+        role: "button";
+        aria-label: "Remove entity embed";
+      };
+      loadingIndicator -> {
+        role: "status";
+        aria-label: "Loading entity";
+        aria-live: "polite";
+      };
+      missingMessage -> {
+        role: "alert";
+        aria-live: "assertive";
+      };
+      errorMessage -> {
+        role: "alert";
+        aria-live: "assertive";
+      };
+    }
+  }
+
+  props {
+    blockId: String
+    entityRef: String
+    displayMode: String = "card"
+    entityTitle: option String
+    entitySummary: option String
+    entityIconToken: option String
+    readOnly: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.render;
+      data-display-mode: ?displayMode;
+      data-entity-ref: ?entityRef;
+      tabindex: "0";
+      onKeyDown-Enter: send(NAVIGATE);
+      onKeyDown-Space: send(SELECT_BLOCK);
+      onKeyDown-Delete: send(REMOVE);
+    }
+
+    entityIcon -> {
+      data-part: "entity-icon";
+      data-icon: ?entityIconToken;
+      hidden: if state.render == "loading" then true else false;
+    }
+
+    entityTitle -> {
+      data-part: "entity-title";
+      text: ?entityTitle;
+      hidden: if state.render != "resolved" then true else false;
+    }
+
+    entitySummary -> {
+      data-part: "entity-summary";
+      text: ?entitySummary;
+      hidden: if ?displayMode == "compact" or state.render != "resolved" then true else false;
+    }
+
+    displayModeSwitcher -> {
+      data-part: "display-mode-switcher";
+      hidden: if state.render != "resolved" or ?readOnly then true else false;
+      onClick: send(DISPLAY_MODE_CHANGE);
+    }
+
+    loadingIndicator -> {
+      data-part: "loading-indicator";
+      hidden: if state.render != "loading" then true else false;
+    }
+
+    errorMessage -> {
+      data-part: "error-message";
+      hidden: if state.render != "error" then true else false;
+      text: "Failed to load entity. Check your connection or try again.";
+    }
+
+    missingMessage -> {
+      data-part: "missing-message";
+      hidden: if state.render != "missing" then true else false;
+      text: "Entity not found. The referenced content may have been deleted.";
+    }
+
+    repairAction -> {
+      data-part: "repair-action";
+      hidden: if state.render != "missing" or ?readOnly then true else false;
+      onClick: send(REPAIR);
+    }
+
+    removeAction -> {
+      data-part: "remove-action";
+      hidden: if state.render == "resolved" then true else false;
+      disabled: ?readOnly;
+      onClick: send(REMOVE);
+    }
+  }
+
+  affordance {
+    serves: block-embed;
+    specificity: 8;
+    when schema = "entity-embed";
+    bind {
+      entityRef: entityRef;
+      displayMode: displayMode;
+    }
+  }
+
+  invariant {
+    example "RESOLVED event transitions render machine to resolved": {
+      after transition(from: "loading", event: "RESOLVED") -> ok
+      then state.render = "resolved"
+    }
+
+    example "NOT_FOUND event transitions render machine to missing": {
+      after transition(from: "loading", event: "NOT_FOUND") -> ok
+      then state.render = "missing"
+    }
+
+    example "FETCH_ERROR event transitions render machine to error": {
+      after transition(from: "loading", event: "FETCH_ERROR") -> ok
+      then state.render = "error"
+    }
+
+    example "REPAIR event in missing state retriggers loading": {
+      after transition(from: "missing", event: "REPAIR") -> ok
+      then state.render = "loading"
+    }
+
+    example "RETRY event in error state retriggers loading": {
+      after transition(from: "error", event: "RETRY") -> ok
+      then state.render = "loading"
+    }
+
+    example "REMOVE from missing transitions to loading": {
+      after transition(from: "missing", event: "REMOVE") -> ok
+      then state.render = "loading"
+    }
+
+    example "REMOVE from error transitions to loading": {
+      after transition(from: "error", event: "REMOVE") -> ok
+      then state.render = "loading"
+    }
+
+    example "DISPLAY_MODE_CHANGE in resolved stays resolved": {
+      after transition(from: "resolved", event: "DISPLAY_MODE_CHANGE") -> ok
+      then state.render = "resolved"
+    }
+
+    forall "all render states are reachable": {
+      given s in renderStates
+      then s.reachable = true
+    }
+
+    always "data-state on root reflects render FSM": {
+      root.dataState = state.render
+    }
+
+    always "loading state triggers fetchEntity entry action": {
+      state.render = "loading"
+    }
+
+    never "readOnly true and removeAction enabled simultaneously": {
+      readOnly = true and removeAction.disabled = false
+    }
+
+    never "removeAction hidden while state is missing": {
+      state.render = "missing" and removeAction.hidden = true
+    }
+
+    action repairAction {
+      requires: state.render = "missing"
+      ensures ok: state.render = "loading"
+    }
+
+    action removeAction {
+      requires: readOnly = false
+      ensures ok: state.render = "loading"
+    }
+  }
+
+}

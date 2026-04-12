@@ -1,0 +1,20 @@
+# Register the wikilink mark as a token-remap RenderTransform so that theme
+# switches automatically restyle [[link]] spans without any widget changes.
+# Scope: spans carrying data-mark="wikilink" and a data-entity-ref attribute.
+# On hover the Surface layer is expected to render a hover card showing the
+# target entity summary — that binding is handled by the entity-picker tool-plane
+# and the entity-embed-block widget; this sync only wires the token remapping.
+
+sync RegisterWikilinkMark [eager]
+  purpose: "Register a token-remap RenderTransform for wikilink marks so [[link]] spans adopt the active theme's accent.wikilink colour token and dotted-underline decoration automatically."
+when {
+  PluginRegistry/register: [ type: "render-transform-provider"; name: ?name ]
+    => ok(plugin: ?plugin)
+}
+then {
+  RenderTransform/register: [
+    name: "mark-wikilink";
+    kind: "token-remap";
+    spec: "{\"scope\":\"[data-mark=\\\"wikilink\\\"][data-entity-ref]\",\"mappings\":{\"palette.fg\":\"palette.accent.wikilink\",\"typography.decoration\":\"typography.decoration.dotted-underline\"}}"
+  ]
+}
