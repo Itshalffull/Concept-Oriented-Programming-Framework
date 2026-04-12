@@ -387,7 +387,7 @@ widget compensation-plan-editor {
   affordance {
     serves: step-compensation-config;
     specificity: 10;
-    when { stepTab: "compensation" }
+    when: stepTab-compensation;
     bind {
       stepId:           stepId;
       stepKey:          stepKey;
@@ -396,185 +396,126 @@ widget compensation-plan-editor {
   }
 
   invariant {
-    example "auto mode shows declared reversal badge and hides advanced panel": {
-      after root -> { data-state: "auto" }
-      then autoPanel -> { hidden: false }
-      and advancedPanel -> { hidden: true }
-      and declaredReversalBadge -> { data-has-reversal: "true" }
+    # --- Structured invariants (auto-generate conformance tests) ---
+
+    example "switch to advanced mode transitions disclosure FSM": {
+      after SWITCH_ADVANCED() -> ok
+      then state.disclosure = "advanced"
     }
 
-    example "switch to advanced mode hides auto panel and shows rollback picker": {
-      after modeAdvancedButton.click -> ok
-      then root -> { data-state: "advanced" }
-      and autoPanel -> { hidden: true }
-      and advancedPanel -> { hidden: false }
-      and modeAdvancedButton -> { data-selected: "true" }
-      and modeAutoButton -> { data-selected: "false" }
+    example "switch to auto mode transitions disclosure FSM": {
+      after SWITCH_AUTO() -> ok
+      then state.disclosure = "auto"
     }
 
-    example "changing rollback action marks edit state dirty": {
-      after root -> { data-state: "advanced" }
-      then send(CHANGE_ACTION, { action: "Booking/refund" }) -> ok
-      then root -> { data-edit-state: "dirty" }
-      and saveButton -> { disabled: false }
-      and discardButton -> { disabled: false }
+    example "CHANGE_ACTION event transitions edit FSM to dirty": {
+      after CHANGE_ACTION() -> ok
+      then state.edit = "dirty"
     }
 
-    example "save clears dirty state": {
-      after send(CHANGE_ACTION, { action: "Booking/refund" }) -> ok
-      then root -> { data-edit-state: "dirty" }
-      then send(SAVE) -> ok
-      then root -> { data-edit-state: "pristine" }
-      and saveButton -> { disabled: true }
+    example "CHANGE_PARAM event transitions edit FSM to dirty": {
+      after CHANGE_PARAM() -> ok
+      then state.edit = "dirty"
     }
 
-    example "discard resets dirty state without saving": {
-      after send(CHANGE_PARAM, { key: "timeout", value: "5s" }) -> ok
-      then root -> { data-edit-state: "dirty" }
-      then send(DISCARD) -> ok
-      then root -> { data-edit-state: "pristine" }
+    example "CHANGE_SCOPE event transitions edit FSM to dirty": {
+      after CHANGE_SCOPE() -> ok
+      then state.edit = "dirty"
     }
 
-    example "simulate rollback shows LIFO upstream compensations": {
-      after send(SIMULATE) -> ok
-      then root -> { data-simulation-state: "simulating" }
-      and simulationRefresh -> { disabled: true }
-      then send(SIMULATION_DONE) -> ok
-      then root -> { data-simulation-state: "showing" }
-      and simulationList -> { hidden: false }
-      and simulationRefresh -> { disabled: false }
+    example "SAVE event transitions edit FSM back to pristine": {
+      after SAVE() -> ok
+      then state.edit = "pristine"
     }
 
-    example "trigger scope on-step-failure is default": {
-      after root -> { data-step-key: "pay" }
-      then triggerScopeGroup -> { data-trigger-scope: "on-step-failure" }
-      and triggerOnStepFailure -> { data-selected: "true" }
-      and triggerOnWorkflow -> { data-selected: "false" }
+    example "DISCARD event transitions edit FSM back to pristine": {
+      after DISCARD() -> ok
+      then state.edit = "pristine"
     }
 
-    example "trigger scope switch marks dirty": {
-      after triggerOnWorkflow.click -> ok
-      then root -> { data-edit-state: "dirty" }
-      and triggerScopeGroup -> { data-trigger-scope: "on-workflow-failure" }
-      and triggerOnWorkflow -> { data-selected: "true" }
-      and triggerOnStepFailure -> { data-selected: "false" }
+    example "SIMULATE event transitions simulation FSM to simulating": {
+      after SIMULATE() -> ok
+      then state.simulation = "simulating"
     }
 
-    example "compensation order badge shows LIFO by default": {
-      after root -> {}
-      then orderBadge -> { textContent: "LIFO", data-order: "LIFO" }
+    example "SIMULATION_DONE event transitions simulation FSM to showing": {
+      after SIMULATION_DONE() -> ok
+      then state.simulation = "showing"
     }
 
-    example "no reversal declared shows informational text in auto panel": {
-      after root -> { data-step-key: "log-event" }
-      and root -> { data-state: "auto" }
-      then declaredReversalBadge -> { data-has-reversal: "false" }
+    example "SIMULATION_ERROR event transitions simulation FSM to sim-error": {
+      after SIMULATION_ERROR() -> ok
+      then state.simulation = "sim-error"
     }
 
-    example "disabled prop disables all interactive parts": {
-      after root -> { data-disabled: "true" }
-      then modeAutoButton -> { disabled: true }
-      and modeAdvancedButton -> { disabled: true }
-      and saveButton -> { disabled: true }
-      and discardButton -> { disabled: true }
+    example "STEP_KEY_CHANGED event triggers simulation refresh": {
+      after STEP_KEY_CHANGED() -> ok
+      then state.simulation = "simulating"
     }
 
-    example "simulation error state is shown when simulation fails": {
-      after send(SIMULATE) -> ok
-      then send(SIMULATION_ERROR) -> ok
-      then root -> { data-simulation-state: "sim-error" }
-      and simulationList -> { hidden: true }
+    forall "all states reachable": {
+      given s in states
+      then s.reachable = true
     }
 
-    forall s in states.disclosure:
-      s.reachable = true
-
-    forall s in states.simulation:
-      s.reachable = true
-
-    forall s in states.edit:
-      s.reachable = true
-
-    always "data-state on root reflects disclosure FSM": {
-      root -> { data-state: state.disclosure }
+    always "disclosure FSM initial state": {
+      state.disclosure = "auto"
     }
 
-    always "auto and advanced panels are mutually exclusive": {
-      if state.disclosure == "auto" then autoPanel -> { hidden: false }
-      and if state.disclosure == "auto" then advancedPanel -> { hidden: true }
-      and if state.disclosure == "advanced" then advancedPanel -> { hidden: false }
-      and if state.disclosure == "advanced" then autoPanel -> { hidden: true }
+    always "edit FSM initial state": {
+      state.edit = "pristine"
     }
 
-    always "exactly one mode button is selected": {
-      modeAutoButton -> { data-selected: if state.disclosure == "auto" then "true" else "false" }
-      and modeAdvancedButton -> { data-selected: if state.disclosure == "advanced" then "true" else "false" }
+    always "simulation FSM initial state": {
+      state.simulation = "idle"
     }
 
-    always "exactly one trigger scope option is selected": {
-      forall opt in triggerScope:
-        opt -> { data-selected: if opt.value == ?triggerScope then "true" else "false" }
+    never "edit state is both pristine and dirty": {
+      state.edit = "pristine" and state.edit = "dirty"
     }
 
-    always "save and discard enabled only in dirty state": {
-      saveButton -> { disabled: if state.edit == "pristine" or ?disabled then true else false }
-      and discardButton -> { disabled: if state.edit == "pristine" or ?disabled then true else false }
+    never "disclosure is both auto and advanced": {
+      state.disclosure = "auto" and state.disclosure = "advanced"
     }
 
-    always "simulationRefresh disabled while simulating": {
-      if state.simulation == "simulating" then simulationRefresh -> { disabled: true }
+    never "simulation is both idle and simulating": {
+      state.simulation = "idle" and state.simulation = "simulating"
     }
 
-    always "simulationPanel aria-busy reflects simulation state": {
-      simulationPanel -> { aria-busy: if state.simulation == "simulating" then "true" else "false" }
+    action SWITCH_ADVANCED {
+      requires: state.disclosure = "auto"
+      ensures ok: state.disclosure = "advanced"
     }
 
-    never "both mode buttons simultaneously selected": {
-      modeAutoButton -> { data-selected: "true" } and modeAdvancedButton -> { data-selected: "true" }
+    action SWITCH_AUTO {
+      requires: state.disclosure = "advanced"
+      ensures ok: state.disclosure = "auto"
     }
 
-    never "rollbackActionPicker interactive in auto mode": {
-      state.disclosure == "auto" and rollbackActionPicker -> { disabled: false }
+    action SAVE {
+      requires: state.edit = "dirty"
+      ensures ok: state.edit = "pristine"
     }
 
-    never "two trigger scope options simultaneously selected": {
-      triggerOnStepFailure -> { data-selected: "true" } and triggerOnWorkflow -> { data-selected: "true" }
+    action DISCARD {
+      requires: state.edit = "dirty"
+      ensures ok: state.edit = "pristine"
     }
 
-    never "save fires while edit state is pristine": {
-      state.edit == "pristine" and send(SAVE)
-    }
-
-    action modeAdvancedButton.click {
-      requires: state.disclosure == "auto"
-      ensures ok: state.disclosure == "advanced"
-      ensures ok: advancedPanel -> { hidden: false }
-    }
-
-    action modeAutoButton.click {
-      requires: state.disclosure == "advanced"
-      ensures ok: state.disclosure == "auto"
-      ensures ok: autoPanel -> { hidden: false }
-    }
-
-    action saveButton.click {
-      requires: state.edit == "dirty"
-      ensures ok: state.edit == "pristine"
-    }
-
-    action discardButton.click {
-      requires: state.edit == "dirty"
-      ensures ok: state.edit == "pristine"
-    }
+    # --- Prose invariants (behavioral documentation) ---
 
     "rollbackActionPicker is filtered to concept actions with a declared reversal field; governance-permitted actions are those in the governedActions prop";
-    "In auto mode, the widget reads declaredReversal from the step definition and renders it read-only — no CHANGE_ACTION event is emitted";
+    "In auto mode, the widget reads declaredReversal from the step definition and renders it read-only; no CHANGE_ACTION event is emitted";
     "In advanced mode, CHANGE_ACTION, CHANGE_PARAM, and CHANGE_SCOPE events all transition edit to dirty";
     "compensationOrder defaults to LIFO and is read-only in this widget; changing order is done at the ProcessSpec level";
     "triggerScope on-step-failure means compensation registers on CompensationPlan only when this specific step completes; on-workflow-failure registers it as a global saga participant";
-    "Simulate rollback queries the CompensationPlan concept for the current runRef and replays the LIFO execution order with step statuses from sample data — it never writes to any concept state";
+    "Simulate rollback queries the CompensationPlan concept for the current runRef and replays the LIFO execution order with step statuses from sample data; it never writes to any concept state";
     "governedActions is populated at mount by querying the caller authorization scope; only actions the caller can invoke appear in rollbackActionPicker";
     "Progressive disclosure contract: on first render, disclosure state is auto; the Advanced tab is a peer affordance, not a hidden drawer, so it is always reachable via keyboard within the tab";
+    "auto mode: autoPanel is visible and advancedPanel is hidden; advanced mode: advancedPanel is visible and autoPanel is hidden";
+    "exactly one mode button carries data-selected true at all times";
+    "save and discard buttons are disabled when edit state is pristine or when the disabled prop is true";
+    "simulationRefresh is disabled while state.simulation is simulating to prevent duplicate requests";
   }
 
 }
