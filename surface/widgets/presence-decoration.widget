@@ -1,0 +1,249 @@
+@version(1)
+widget presence-decoration {
+
+  purpose {
+    Decoration-layer plugin that renders live peer cursors, selection ranges,
+    and avatar indicators for collaborating peers inside a block-editor
+    decoration layer. Each widget instance represents a single remote peer:
+    it positions an absolute cursor caret at the peer current insertion
+    offset, overlays a translucent selection highlight across the peer
+    selected text range, and floats a small avatar chip that animates in
+    when the peer is active. Hovering the avatar reveals a hoverCard tooltip
+    showing the peer name and last-active timestamp. Peer color is
+    deterministically derived from a hash of peerId cycled over the
+    palette.presence token set so the same peer always appears in the same
+    color without server coordination. State is read from Replica peer
+    cursors; causal ordering of updates is provided by CausalClock.
+    Announces peer join and leave events to screen-reader users via an
+    aria-live polite region on root. Registered with PluginRegistry as
+    type decoration-layer, name presence-decoration.
+  }
+
+  requires @1 {
+    fields {
+      peerId: String;
+      peerName: String;
+      peerColor: String;
+      cursorOffset: Int;
+      selectionStart: option Int;
+      selectionEnd: option Int;
+      lastActive: String;
+    }
+    actions {
+      updateCursor(peerId: String, offset: Int);
+    }
+  }
+
+  anatomy {
+    root:           container     { Absolute-positioned decoration host; carries data-state and aria-live for join/leave announcements }
+    peerCursor:     presentation  { Blinking vertical caret rendered at the peer current cursor offset in the editor }
+    peerSelection:  presentation  { Translucent highlight band spanning the peer selection range; hidden when selectionStart equals selectionEnd }
+    peerAvatar:     action        { Small circular chip showing the peer initials or photo; hover triggers the hoverCard overlay }
+    hoverCard:      container     { Floating tooltip showing peer name, last-active time, and optional presence indicator; role tooltip }
+  }
+
+  states {
+    presence {
+      idle [initial] {
+        on AVATAR_POINTER_ENTER -> hovering-avatar;
+        on AVATAR_FOCUS         -> hovering-avatar;
+        entry [hideHoverCard];
+      }
+      hovering-avatar {
+        on AVATAR_POINTER_LEAVE -> idle;
+        on AVATAR_BLUR          -> idle;
+        on ESCAPE               -> idle;
+        entry [showHoverCard; positionHoverCard];
+        exit [hideHoverCard];
+      }
+    }
+  }
+
+  accessibility {
+    role: presentation;
+    modal: false;
+    keyboard {
+      Escape -> ESCAPE;
+    }
+    focus {
+      trap: false;
+      initial: none;
+      roving: false;
+      returnOnClose: false;
+    }
+    aria {
+      root -> {
+        role: "presentation";
+        aria-live: "polite";
+        aria-atomic: "false";
+        aria-label: "Peer presence decoration";
+      };
+      peerCursor -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      peerSelection -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      peerAvatar -> {
+        role: "button";
+        aria-label: ?peerName;
+        aria-expanded: if state.presence == "hovering-avatar" then "true" else "false";
+        aria-haspopup: "true";
+        tabindex: "0";
+      };
+      hoverCard -> {
+        role: "tooltip";
+        aria-label: ?peerName;
+        hidden: if state.presence == "idle" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    peerId: String
+    peerName: String
+    peerColor: String
+    cursorOffset: Int = 0
+    selectionStart: option Int
+    selectionEnd: option Int
+    lastActive: String = ""
+    showAvatar: Bool = true
+    editorContainerRef: String = ""
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.presence;
+      data-peer-id: ?peerId;
+      aria-live: "polite";
+      aria-atomic: "false";
+    }
+
+    peerCursor -> {
+      data-part: "peer-cursor";
+      data-peer-id: ?peerId;
+      data-offset: ?cursorOffset;
+      style-border-color: ?peerColor;
+      aria-hidden: "true";
+    }
+
+    peerSelection -> {
+      data-part: "peer-selection";
+      data-peer-id: ?peerId;
+      data-selection-start: ?selectionStart;
+      data-selection-end: ?selectionEnd;
+      style-background-color: ?peerColor;
+      aria-hidden: "true";
+      hidden: if ?selectionStart == none then true else false;
+    }
+
+    peerAvatar -> {
+      data-part: "peer-avatar";
+      data-peer-id: ?peerId;
+      data-peer-color: ?peerColor;
+      style-background-color: ?peerColor;
+      aria-label: ?peerName;
+      aria-expanded: if state.presence == "hovering-avatar" then "true" else "false";
+      tabindex: "0";
+      onPointerEnter: send(AVATAR_POINTER_ENTER);
+      onPointerLeave: send(AVATAR_POINTER_LEAVE);
+      onFocus: send(AVATAR_FOCUS);
+      onBlur: send(AVATAR_BLUR);
+      onKeyDown: send(ESCAPE);
+      hidden: if not ?showAvatar then true else false;
+    }
+
+    hoverCard -> {
+      data-part: "hover-card";
+      role: "tooltip";
+      data-peer-id: ?peerId;
+      aria-label: ?peerName;
+      hidden: if state.presence == "idle" then true else false;
+    }
+  }
+
+  affordance {
+    serves: decoration-layer;
+    specificity: 8;
+    when pluginType = "decoration-layer";
+    bind {
+      peerId: peerId;
+      peerName: peerName;
+      peerColor: peerColor;
+      cursorOffset: cursorOffset;
+    }
+  }
+
+  compose {
+    _presence: widget("presence", { present: ?showAvatar })
+  }
+
+  invariant {
+    example "AVATAR_POINTER_ENTER transitions idle to hovering-avatar": {
+      after AVATAR_POINTER_ENTER() -> ok
+      then state.presence = "hovering-avatar"
+    }
+
+    example "AVATAR_POINTER_LEAVE transitions hovering-avatar to idle": {
+      after AVATAR_POINTER_LEAVE() -> ok
+      then state.presence = "idle"
+    }
+
+    example "ESCAPE transitions hovering-avatar to idle": {
+      after ESCAPE() -> ok
+      then state.presence = "idle"
+    }
+
+    example "AVATAR_FOCUS transitions idle to hovering-avatar": {
+      after AVATAR_FOCUS() -> ok
+      then state.presence = "hovering-avatar"
+    }
+
+    example "AVATAR_BLUR transitions hovering-avatar to idle": {
+      after AVATAR_BLUR() -> ok
+      then state.presence = "idle"
+    }
+
+    forall "all presence states reachable": {
+      given s in presenceStates
+      then s.reachable = true
+    }
+
+    always "data-state on root reflects presence FSM": {
+      root.dataState = state.presence
+    }
+
+    always "hoverCard is hidden while in idle state": {
+      hoverCard.hidden = true
+    }
+
+    always "peerCursor is always present in DOM": {
+      peerCursor.ariaHidden = "true"
+    }
+
+    always "peerAvatar aria-expanded reflects hoverCard visibility": {
+      peerAvatar.ariaExpanded = state.presence
+    }
+
+    never "hoverCard shown while presence state is idle": {
+      state.presence = "idle" and hoverCard.hidden = false
+    }
+
+    never "peerCursor visible without a peerId": {
+      peerCursor.dataPeerId = none
+    }
+
+    action peerAvatar {
+      requires: state.presence = "idle"
+      ensures ok: state.presence = "hovering-avatar"
+    }
+
+    "peer join and leave announcements must be emitted into root aria-live polite region so screen readers announce collaborator activity";
+    "peerColor must be deterministically derived from peerId hash modulo palette.presence token count so the same peer always receives the same color";
+    "hoverCard must show peerName and a human-readable form of lastActive timestamp";
+  }
+
+}
