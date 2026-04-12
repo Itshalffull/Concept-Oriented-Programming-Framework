@@ -1,0 +1,220 @@
+@version(1)
+@category("content")
+@visibility("public")
+concept InlineMark [M] {
+
+  purpose {
+    Attach typed, range-scoped presentational marks (bold, italic, code, link,
+    strikethrough, subscript, superscript, wikilink) to character ranges within
+    a block's body text. Marks carry an opaque attributes payload (e.g., href
+    for link, entity-ref for wikilink) and are read at render time by
+    RenderTransforms. Unlike InlineAnnotation — which is content-typed for
+    track-changes and comments — InlineMark is purely presentational and
+    invisible to content semantics.
+
+    Overlap rule: if a toggleMark call finds an existing mark of the same kind
+    whose (block, rangeStart, rangeEnd) exactly matches, the mark is removed
+    (toggle-off). Partial overlap with an existing same-kind mark on the same
+    block triggers a merge: the surviving mark's range is expanded to cover the
+    union of both ranges. No two marks with the same (block, kind) may share any
+    character position after a merge.
+  }
+
+  state {
+    marks: set M
+    owner_block: M -> String
+    range_start: M -> Int
+    range_end: M -> Int
+    kind: M -> String
+    attributes: M -> Bytes
+  }
+
+  actions {
+
+    action toggleMark(block: String, rangeStart: Int, rangeEnd: Int, kind: String, attributes: Bytes) {
+      -> ok(mark: M) {
+        No existing mark of this kind covers the exact range on this block, so a
+        new mark is created and stored. The mark's range and kind are set from
+        the inputs; attributes carry kind-specific data (e.g., href for link).
+      }
+      -> removed(mark: M) {
+        An existing mark of this kind with the exact same block and range was
+        found and deleted. The returned mark is the one that was removed.
+      }
+      -> invalid_kind(message: String) {
+        The kind value is not in the eight-value allowlist: bold, italic, code,
+        link, strikethrough, subscript, superscript, wikilink. No mark is
+        created or removed.
+      }
+      -> invalid_range(message: String) {
+        rangeStart is negative, rangeEnd is not strictly greater than rangeStart,
+        or block is empty. No mark is created or removed.
+      }
+      -> error(message: String) {
+        A storage or unexpected error occurred.
+      }
+      reversal: toggleMark
+
+      fixture toggle_create {
+        block: "block-1"
+        rangeStart: 0
+        rangeEnd: 5
+        kind: "bold"
+        attributes: ""
+      }
+      fixture toggle_remove {
+        block: "block-1"
+        rangeStart: 0
+        rangeEnd: 5
+        kind: "bold"
+        attributes: ""
+      } after toggle_create -> removed
+      fixture toggle_invalid_kind {
+        block: "block-1"
+        rangeStart: 0
+        rangeEnd: 5
+        kind: "underline"
+        attributes: ""
+      } -> invalid_kind
+      fixture toggle_invalid_range_negative {
+        block: "block-1"
+        rangeStart: -1
+        rangeEnd: 5
+        kind: "italic"
+        attributes: ""
+      } -> invalid_range
+      fixture toggle_invalid_range_reversed {
+        block: "block-1"
+        rangeStart: 5
+        rangeEnd: 2
+        kind: "italic"
+        attributes: ""
+      } -> invalid_range
+      fixture toggle_invalid_empty_block {
+        block: ""
+        rangeStart: 0
+        rangeEnd: 5
+        kind: "bold"
+        attributes: ""
+      } -> invalid_range
+      fixture toggle_link {
+        block: "block-2"
+        rangeStart: 3
+        rangeEnd: 10
+        kind: "link"
+        attributes: "{\"href\":\"https://example.com\"}"
+      }
+      fixture toggle_wikilink {
+        block: "block-3"
+        rangeStart: 0
+        rangeEnd: 8
+        kind: "wikilink"
+        attributes: "{\"entity-ref\":\"page-abc\"}"
+      }
+    }
+
+    action openEditor(mark: M) {
+      -> ok(editor: String) {
+        Returns an opaque editor-kind token (e.g., "link-editor") that the host
+        widget can use to open an attribute-editor picker for this mark. This
+        action does not modify storage.
+      }
+      -> notfound(message: String) {
+        No mark exists with this identifier.
+      }
+      -> error(message: String) {
+        A storage or unexpected error occurred.
+      }
+      reversal: none
+
+      fixture openEditor_ok { mark: $toggle_create.mark } after toggle_create
+      fixture openEditor_link { mark: $toggle_link.mark } after toggle_link
+      fixture openEditor_missing { mark: "nonexistent-mark" } -> notfound
+    }
+
+    action listForBlock(block: String) {
+      -> ok(marks: String) {
+        Return a JSON array of all marks on the given block, each containing
+        mark id, rangeStart, rangeEnd, kind, and attributes.
+      }
+
+      fixture list_block_ok { block: "block-1" } after toggle_create
+      fixture list_block_empty { block: "block-999" }
+    }
+
+    action removeMark(mark: M) {
+      -> ok() {
+        The mark is deleted. The character range it covered is now unmarked for
+        that kind.
+      }
+      -> notfound(message: String) {
+        No mark exists with this identifier.
+      }
+      -> error(message: String) {
+        A storage or unexpected error occurred.
+      }
+      reversal: none
+
+      fixture removeMark_ok { mark: $toggle_create.mark } after toggle_create
+      fixture removeMark_notfound { mark: "nonexistent-mark" } -> notfound
+    }
+
+    action updateAttributes(mark: M, attributes: Bytes) {
+      -> ok(mark: M) {
+        Replace the mark's attributes payload with the new value. Useful for
+        changing a link's href or a wikilink's entity-ref without removing and
+        re-adding the mark.
+      }
+      -> notfound(message: String) {
+        No mark exists with this identifier.
+      }
+      -> error(message: String) {
+        A storage or unexpected error occurred.
+      }
+      reversal: updateAttributes
+
+      fixture updateAttributes_ok {
+        mark: $toggle_link.mark
+        attributes: "{\"href\":\"https://updated.example.com\"}"
+      } after toggle_link
+      fixture updateAttributes_notfound {
+        mark: "nonexistent-mark"
+        attributes: "{\"href\":\"https://example.com\"}"
+      } -> notfound
+    }
+
+  }
+
+  example "toggle-create then toggle-remove returns to original state": {
+    after toggleMark(block: "block-1", rangeStart: 0, rangeEnd: 4, kind: "bold", attributes: "") -> ok(mark: m)
+    then toggleMark(block: "block-1", rangeStart: 0, rangeEnd: 4, kind: "bold", attributes: "") -> removed(mark: m2)
+  }
+
+  example "toggle-create then listForBlock": {
+    after toggleMark(block: "doc-block-1", rangeStart: 2, rangeEnd: 9, kind: "italic", attributes: "") -> ok(mark: m)
+    then listForBlock(block: "doc-block-1") -> ok(marks: ms)
+  }
+
+  example "toggle-create then updateAttributes": {
+    after toggleMark(block: "block-link", rangeStart: 0, rangeEnd: 6, kind: "link", attributes: "{\"href\":\"https://a.com\"}") -> ok(mark: m)
+    then updateAttributes(mark: m, attributes: "{\"href\":\"https://b.com\"}") -> ok(mark: m2)
+  }
+
+  always "range invariant": {
+    forall m in marks: range_end(m) > range_start(m)
+  }
+
+  always "range non-negative": {
+    forall m in marks: range_start(m) >= 0
+  }
+
+  always "kind allowlist": {
+    forall m in marks: kind(m) in {"bold", "italic", "code", "link", "strikethrough", "subscript", "superscript", "wikilink"}
+  }
+
+  never "duplicate mark on same block-range-kind": {
+    exists m1 in marks: exists m2 in marks:
+      m1 != m2 and owner_block(m1) = owner_block(m2) and range_start(m1) = range_start(m2) and range_end(m1) = range_end(m2) and kind(m1) = kind(m2)
+  }
+
+}
