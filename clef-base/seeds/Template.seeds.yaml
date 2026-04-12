@@ -1,0 +1,22 @@
+# Template seeds — trigger-char snippet templates for use with the
+# snippet-expand-trigger InputRule (MAG-732). Each template declares a short
+# trigger string, trigger_kind, body with {{variable}} placeholders, and a
+# variables list for the snippet-variable-fill modal.
+# trigger_kind "prefix" means the user types the trigger text after the
+# trigger-char (;) and the full match is ;sig, ;sign, etc.
+
+concept: Template
+action: define
+entries:
+  # Email signature snippet.
+  # Triggered by typing ";sig" in any block-editor context.
+  # Opens snippet-variable-fill modal with name/title/org fields.
+  # On confirm, Template/expand interpolates {{name}}, {{title}}, {{org}}
+  # and inserts the result at the cursor.
+  - template: signature-snippet
+    id: signature-snippet
+    name: "Email signature"
+    trigger: "sig"
+    trigger_kind: "prefix"
+    body: "Best,\n\n{{name}}\n{{title}}\n{{org}}"
+    variables: "name,title,org"

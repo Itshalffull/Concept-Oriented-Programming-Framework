@@ -107,6 +107,31 @@ entries:
     priority: 90
     scope: null
 
+  # --- Trigger-char rules (MAG-732) ---
+  # trigger-emoji: fires when the user types : in any block-editor context.
+  # Dispatches emoji-picker-open which mounts the emoji-picker tool-plane.
+  # On completion the selected emoji character is inserted at the cursor position.
+  - name: trigger-emoji
+    rule: trigger-emoji
+    kind: trigger-char
+    pattern: ":"
+    action_ref: emoji-picker-open
+    priority: 100
+    scope: null
+
+  # trigger-snippet: fires when the user types ; in any block-editor context.
+  # Dispatches snippet-expand-trigger which queries Template by trigger=captured text;
+  # if a unique match is found, opens the snippet-variable-fill modal; invokes
+  # Template/expand on confirm. The captured text after the semicolon acts as the
+  # trigger identifier to look up the Template.
+  - name: trigger-snippet
+    rule: trigger-snippet
+    kind: trigger-char
+    pattern: ";"
+    action_ref: snippet-expand-trigger
+    priority: 100
+    scope: null
+
   # --- List block conversion rules (MAG-725) ---
   # markdown-bullet: fires when a line starts with "- " (dash space) in any block context.
   # Dispatches markdown-transform-to-bullet which applies schema "bullet-list" via Schema/applyTo.

@@ -758,3 +758,58 @@ entries:
     executionPolicy: "auto"
     slash_command: false
     toolbar_command: false
+
+  # --- Emoji picker + snippet expansion actions (MAG-732) ---
+  # emoji-picker-open: dispatched by the trigger-emoji InputRule when the user types :.
+  # Mounts the emoji-picker tool-plane (widget: emoji-picker). The capturedText from
+  # the InputRule seeds the initialQuery prop so the picker pre-filters by the typed
+  # text. On completion, the picked emoji character is inserted at the cursor via
+  # Outline/addChild (inline character insertion). executionPolicy "auto" because the
+  # picker opens immediately on trigger-char dispatch.
+  # API gap note: EmojiPicker/open is an anticipated surface action; the target below
+  # references the synthetic action. Update once the emoji-picker backing concept ships.
+  - name: emoji-picker-open
+    binding: emoji-picker-open
+    target: "EmojiPicker/open"
+    parameterMap: '{"widget":"emoji-picker","initialQuery":"context.capturedText","onComplete":"insert-emoji-at-cursor"}'
+    executionPolicy: "auto"
+    slash_command: false
+    toolbar_command: false
+    context_menu: false
+    label: "Insert emoji"
+    icon: "smile"
+
+  # snippet-expand-trigger: dispatched by the trigger-snippet InputRule when the user
+  # types ;. Queries Template by trigger=capturedText; if a unique match is found and
+  # the template has no variables, invokes Template/expand immediately and inserts the
+  # result. If the template has variables, opens the snippet-variable-fill modal to
+  # collect values before expansion. If no unique match exists the trigger falls through
+  # and the semicolon is inserted as literal text.
+  # API gap note: Template/queryByTrigger is an anticipated action; a follow-up card
+  # should introduce that action. For now the target references the synthetic action.
+  - name: snippet-expand-trigger
+    binding: snippet-expand-trigger
+    target: "Template/queryByTrigger"
+    parameterMap: '{"trigger":"context.capturedText","widget":"snippet-variable-fill","onComplete":"template-expand-confirmed"}'
+    executionPolicy: "auto"
+    slash_command: false
+    toolbar_command: false
+    context_menu: false
+    label: "Expand snippet"
+    icon: "braces"
+
+  # template-expand-confirmed: dispatched by the snippet-variable-fill widget confirmButton.
+  # Invokes Template/expand with the collected variable values (context.variables carries
+  # the name->value map). After expand completes -> ok, the result text is inserted at the
+  # cursor via Outline/addChild or inline text replacement at the trigger position.
+  # API gap note: Template/expand is the real action; this binding uses it directly.
+  - name: template-expand-confirmed
+    binding: template-expand-confirmed
+    target: "Template/expand"
+    parameterMap: '{"template":"context.templateId","variables":"context.variables"}'
+    executionPolicy: "auto"
+    slash_command: false
+    toolbar_command: false
+    context_menu: false
+    label: "Insert snippet"
+    icon: "braces"

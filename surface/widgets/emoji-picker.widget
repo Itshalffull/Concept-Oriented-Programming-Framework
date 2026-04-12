@@ -1,0 +1,261 @@
+@version(1)
+widget emoji-picker {
+
+  purpose {
+    Floating emoji selection panel triggered by the trigger-char InputRule when
+    the user types `:` in a block-editor context. Presents a search input, a row
+    of category tabs (smileys, people, nature, food, travel, objects, symbols,
+    flags, recent), a scrollable grid of emoji cells, and a recents row at the
+    top. The user can navigate with arrow keys or a mouse click; confirming an
+    emoji dispatches the onComplete action binding which inserts the character at
+    the cursor position and dismisses the panel. Backed by the emoji-picker-open
+    ActionBinding and the trigger-emoji InputRule.
+  }
+
+  anatomy {
+    root:          container    { Top-level floating panel wrapper; carries data-state for the browse FSM }
+    searchInput:   interactive  { Text field for filtering emojis by name or keyword }
+    categoryTabs:  container    { Horizontal row of category tab buttons }
+    categoryTab:   action       { Individual category tab button (smileys, people, etc.) }
+    emojiGrid:     container    { Scrollable grid of emojiCell items for the active category or search results }
+    emojiCell:     action       { Single emoji button showing one character; activatable by click or Enter }
+    recentsRow:    container    { Horizontal row of recently used emojis shown above the main grid }
+    recentCell:    action       { Single emoji button inside recentsRow }
+    emptyState:    text         { Message shown when the search query yields no results }
+  }
+
+  states {
+    browse {
+      browsing-category [initial] {
+        on SEARCH_INPUT     -> searching;
+        on SELECT_CATEGORY  -> browsing-category;
+        on CONFIRM_EMOJI    -> browsing-category;
+        on SHOW_RECENTS     -> showing-recents;
+        on CLOSE            -> browsing-category;
+      }
+      searching {
+        on CLEAR_SEARCH     -> browsing-category;
+        on SEARCH_INPUT     -> searching;
+        on CONFIRM_EMOJI    -> browsing-category;
+        on CLOSE            -> browsing-category;
+        entry [filterEmojis];
+      }
+      showing-recents {
+        on SELECT_CATEGORY  -> browsing-category;
+        on SEARCH_INPUT     -> searching;
+        on CONFIRM_EMOJI    -> browsing-category;
+        on CLOSE            -> browsing-category;
+        entry [loadRecents];
+      }
+    }
+  }
+
+  accessibility {
+    role: dialog;
+    modal: false;
+    keyboard {
+      Escape      -> CLOSE;
+      ArrowRight  -> NAVIGATE_NEXT;
+      ArrowLeft   -> NAVIGATE_PREV;
+      ArrowDown   -> NAVIGATE_NEXT_ROW;
+      ArrowUp     -> NAVIGATE_PREV_ROW;
+      Enter       -> CONFIRM_EMOJI;
+      Tab         -> FOCUS_NEXT_SECTION;
+    }
+    focus {
+      trap: true;
+      initial: searchInput;
+      roving: true;
+      returnOnClose: true;
+    }
+    aria {
+      root -> {
+        role: "dialog";
+        aria-label: "Emoji picker";
+        aria-modal: "false";
+      };
+      searchInput -> {
+        role: "searchbox";
+        aria-label: "Search emojis";
+        aria-autocomplete: "list";
+        aria-controls: emojiGrid;
+      };
+      categoryTabs -> {
+        role: "tablist";
+        aria-label: "Emoji categories";
+      };
+      categoryTab -> {
+        role: "tab";
+        aria-selected: if self.active then "true" else "false";
+        aria-controls: emojiGrid;
+      };
+      emojiGrid -> {
+        role: "grid";
+        aria-label: if state.browse == "searching" then "Search results" else "Emojis";
+        aria-live: "polite";
+      };
+      emojiCell -> {
+        role: "gridcell";
+        aria-label: self.name;
+      };
+      recentsRow -> {
+        role: "group";
+        aria-label: "Recently used";
+      };
+      recentCell -> {
+        role: "gridcell";
+        aria-label: self.name;
+      };
+    }
+  }
+
+  props {
+    initialQuery: String = ""
+    onComplete: String
+    defaultCategory: String = "smileys"
+    showRecents: Bool = true
+    maxRecents: Int = 16
+    columns: Int = 8
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.browse;
+      aria-label: "Emoji picker";
+    }
+
+    searchInput -> {
+      data-part: "search-input";
+      placeholder: "Search emojis...";
+      value: ?initialQuery;
+      autofocus: true;
+      onInput: send(SEARCH_INPUT);
+      aria-label: "Search emojis";
+    }
+
+    categoryTabs -> {
+      data-part: "category-tabs";
+      role: "tablist";
+    }
+
+    categoryTab -> {
+      data-part: "category-tab";
+      data-category: self.id;
+      data-active: if self.active then "true" else "false";
+      aria-selected: if self.active then "true" else "false";
+      onClick: send(SELECT_CATEGORY);
+      tabindex: if self.active then "0" else "-1";
+    }
+
+    emojiGrid -> {
+      data-part: "emoji-grid";
+      role: "grid";
+      hidden: if state.browse == "searching" and self.count == 0 then true else false;
+    }
+
+    emojiCell -> {
+      data-part: "emoji-cell";
+      data-emoji: self.char;
+      data-name: self.name;
+      aria-label: self.name;
+      onClick: send(CONFIRM_EMOJI);
+      onKeyDown-Enter: send(CONFIRM_EMOJI);
+      tabindex: if self.focused then "0" else "-1";
+    }
+
+    recentsRow -> {
+      data-part: "recents-row";
+      hidden: if not ?showRecents or state.browse == "searching" then true else false;
+    }
+
+    recentCell -> {
+      data-part: "recent-cell";
+      data-emoji: self.char;
+      data-name: self.name;
+      aria-label: self.name;
+      onClick: send(CONFIRM_EMOJI);
+      tabindex: if self.focused then "0" else "-1";
+    }
+
+    emptyState -> {
+      data-part: "empty-state";
+      hidden: if state.browse != "searching" or self.count != 0 then true else false;
+      text: "No emojis found";
+    }
+  }
+
+  affordance {
+    serves: overlay;
+    specificity: 7;
+    when triggerKind = "trigger-char";
+    bind {
+      initialQuery: capturedText;
+      onComplete: insertEmojiAtCursor;
+    }
+  }
+
+  invariant {
+    example "typing search text transitions to searching state": {
+      after transition(from: "browsing-category", event: "SEARCH_INPUT") -> ok
+      then state.browse = "searching"
+    }
+
+    example "clearing search returns to browsing-category": {
+      after transition(from: "searching", event: "CLEAR_SEARCH") -> ok
+      then state.browse = "browsing-category"
+    }
+
+    example "confirming emoji from searching resets to browsing-category": {
+      after transition(from: "searching", event: "CONFIRM_EMOJI") -> ok
+      then state.browse = "browsing-category"
+    }
+
+    example "show-recents event transitions to showing-recents": {
+      after transition(from: "browsing-category", event: "SHOW_RECENTS") -> ok
+      then state.browse = "showing-recents"
+    }
+
+    example "confirming emoji from showing-recents resets to browsing-category": {
+      after transition(from: "showing-recents", event: "CONFIRM_EMOJI") -> ok
+      then state.browse = "browsing-category"
+    }
+
+    forall "all browse states are reachable": {
+      given s in browseStates
+      then s.reachable = true
+    }
+
+    always "root data-state reflects browse FSM": {
+      root.dataState = state.browse
+    }
+
+    always "searchInput is autofocused on mount": {
+      searchInput.autofocus = true
+    }
+
+    never "emptyState visible when results exist": {
+      state.browse = "searching" and self.count != 0 and emptyState.hidden = false
+    }
+
+    never "emojiGrid and emptyState both visible simultaneously": {
+      emojiGrid.hidden = false and emptyState.hidden = false
+    }
+
+    action emojiCell {
+      requires: state.browse = "browsing-category" or state.browse = "searching" or state.browse = "showing-recents"
+      ensures ok: state.browse = "browsing-category"
+    }
+
+    action searchInput {
+      requires: state.browse = "browsing-category" or state.browse = "searching"
+      ensures ok: state.browse = "searching"
+    }
+
+    "recentsRow must be hidden when showRecents prop is false";
+    "categoryTab with active=true must have aria-selected=true and tabindex=0";
+    "Escape key must close the picker and return focus to the trigger element";
+    "roving tabindex on emojiGrid must move focus one cell per Arrow key press";
+  }
+
+}

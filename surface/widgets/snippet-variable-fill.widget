@@ -1,0 +1,224 @@
+@version(1)
+widget snippet-variable-fill {
+
+  purpose {
+    Minimal modal dialog for filling Template variables before a snippet is
+    expanded. Triggered when the snippet-expand-trigger ActionBinding resolves a
+    unique Template match by trigger text. Renders one labeled text input per
+    variable declared in the Template body, a live preview pane showing the
+    interpolated output, and confirm/cancel buttons. On confirm, dispatches
+    template-expand-confirmed which calls Template/expand with the collected
+    values and inserts the result at the cursor. On cancel, dismisses without
+    inserting anything.
+  }
+
+  requires @1 {
+    fields {
+      variables: list;
+      templateBody: String;
+      templateName: String;
+    }
+    actions {
+      expand(template: String, variables: String);
+    }
+  }
+
+  anatomy {
+    root:            container    { Top-level modal overlay; carries data-state for the fill FSM }
+    variableList:    container    { Vertically stacked list of variable input rows }
+    variableInput:   interactive  { Single labeled text input for one template variable }
+    previewPane:     container    { Live interpolated preview of the template with current variable values }
+    previewContent:  text         { The interpolated preview text rendered inside previewPane }
+    confirmButton:   action       { Submits the filled variables and triggers Template/expand }
+    cancelButton:    action       { Dismisses the modal without expanding }
+  }
+
+  states {
+    fill {
+      editing [initial] {
+        on INPUT_CHANGE  -> editing;
+        on PREVIEW       -> previewing;
+        on CONFIRM       -> submitting;
+        on CANCEL        -> editing;
+        entry [focusFirstInput];
+      }
+      previewing {
+        on EDIT          -> editing;
+        on CONFIRM       -> submitting;
+        on CANCEL        -> editing;
+        entry [renderPreview];
+      }
+      submitting {
+        on SUBMIT_SUCCESS -> editing;
+        on SUBMIT_FAILURE -> editing;
+        entry [lockForm];
+        exit [unlockForm];
+      }
+    }
+  }
+
+  accessibility {
+    role: dialog;
+    modal: true;
+    keyboard {
+      Escape  -> CANCEL;
+      Enter   -> CONFIRM;
+      Tab     -> FOCUS_NEXT;
+    }
+    focus {
+      trap: true;
+      initial: variableInput;
+      roving: false;
+      returnOnClose: true;
+    }
+    aria {
+      root -> {
+        role: "dialog";
+        aria-modal: "true";
+        aria-label: "Fill snippet variables";
+      };
+      variableList -> {
+        role: "group";
+        aria-label: "Template variables";
+      };
+      variableInput -> {
+        role: "textbox";
+        aria-label: self.label;
+        aria-required: "true";
+        aria-invalid: if self.empty and state.fill == "submitting" then "true" else "false";
+      };
+      previewPane -> {
+        role: "region";
+        aria-label: "Preview";
+        aria-live: "polite";
+      };
+      confirmButton -> {
+        role: "button";
+        aria-label: "Insert snippet";
+        aria-disabled: if state.fill == "submitting" then "true" else "false";
+      };
+      cancelButton -> {
+        role: "button";
+        aria-label: "Cancel";
+      };
+    }
+  }
+
+  props {
+    templateName: String = ""
+    variables: list VariableDef
+    templateBody: String = ""
+    showPreview: Bool = true
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.fill;
+      aria-modal: "true";
+    }
+
+    variableList -> {
+      data-part: "variable-list";
+      role: "group";
+    }
+
+    variableInput -> {
+      data-part: "variable-input";
+      data-variable: self.name;
+      placeholder: self.placeholder;
+      aria-label: self.label;
+      disabled: if state.fill == "submitting" then true else false;
+      onInput: send(INPUT_CHANGE);
+    }
+
+    previewPane -> {
+      data-part: "preview-pane";
+      hidden: if not ?showPreview then true else false;
+      aria-live: "polite";
+    }
+
+    previewContent -> {
+      data-part: "preview-content";
+      text: self.interpolated;
+    }
+
+    confirmButton -> {
+      data-part: "confirm-button";
+      disabled: if state.fill == "submitting" then true else false;
+      aria-disabled: if state.fill == "submitting" then "true" else "false";
+      onClick: send(CONFIRM);
+    }
+
+    cancelButton -> {
+      data-part: "cancel-button";
+      onClick: send(CANCEL);
+    }
+  }
+
+  affordance {
+    serves: overlay;
+    specificity: 8;
+    when triggerKind = "snippet-expand";
+    bind {
+      variables: templateVariables;
+      templateBody: templateBody;
+      templateName: templateName;
+    }
+  }
+
+  invariant {
+    example "input change keeps editing state": {
+      after transition(from: "editing", event: "INPUT_CHANGE") -> ok
+      then state.fill = "editing"
+    }
+
+    example "confirm transitions to submitting": {
+      after transition(from: "editing", event: "CONFIRM") -> ok
+      then state.fill = "submitting"
+    }
+
+    example "submit success resets to editing": {
+      after transition(from: "submitting", event: "SUBMIT_SUCCESS") -> ok
+      then state.fill = "editing"
+    }
+
+    example "cancel from previewing returns to editing": {
+      after transition(from: "previewing", event: "CANCEL") -> ok
+      then state.fill = "editing"
+    }
+
+    example "preview event from editing transitions to previewing": {
+      after transition(from: "editing", event: "PREVIEW") -> ok
+      then state.fill = "previewing"
+    }
+
+    forall "all fill states are reachable": {
+      given s in fillStates
+      then s.reachable = true
+    }
+
+    always "root data-state reflects fill FSM": {
+      root.dataState = state.fill
+    }
+
+    always "confirmButton disabled while submitting": {
+      state.fill = "submitting"
+    }
+
+    never "form submittable while already submitting": {
+      state.fill = "submitting" and confirmButton.disabled = false
+    }
+
+    action confirmButton {
+      requires: state.fill = "editing" or state.fill = "previewing"
+      ensures ok: state.fill = "submitting"
+    }
+
+    "previewPane must be hidden when showPreview prop is false";
+    "variableInput fields must be disabled while state.fill is submitting";
+    "Escape key must fire CANCEL from any fill state and return focus to trigger";
+    "Enter key must fire CONFIRM only when confirmButton is not disabled";
+  }
+
+}
