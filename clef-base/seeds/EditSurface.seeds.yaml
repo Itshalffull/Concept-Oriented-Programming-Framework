@@ -184,6 +184,8 @@ entries:
   # Agent-persona page-level editor surface (MAG-723)
   # Proves ContentCompiler integration end-to-end: compile_action_ref +
   # status_decoration_ref + output_preview_ref + consumers_panel_ref.
+  # backlinks-panel (MAG-741) is included in panel_widgets to show all
+  # ContentNodes that reference this persona via the Reference/Backlink graph.
   - id: agent-persona-page-editor
     schema_ref: agent-persona
     context: page-level
@@ -195,6 +197,7 @@ entries:
     panel_widgets:
       - prompt-assembly-preview
       - persona-consumers-panel
+      - backlinks-panel
     context_menu_bindings: []
     input_rule_refs: []
     picker_refs: []
@@ -204,6 +207,25 @@ entries:
     status_decoration_ref: persona-status-badge
     output_preview_ref: prompt-assembly-preview
     consumers_panel_ref: persona-consumers-panel
+
+  # Generic wiki-page page-level editor surface (MAG-741)
+  # Any content page authored as a wiki page gets a backlinks panel
+  # showing all other pages that link to it via wikilink, mention, or embed.
+  # workflow-editor, filter-draft-editor, and wiki-editor all share this
+  # registration pattern by referencing backlinks-panel in panel_widgets.
+  - id: wiki-page-editor
+    schema_ref: wiki-page
+    context: page-level
+    toolbar_widget: inline-toolbar
+    command_bindings: []
+    panel_widgets:
+      - backlinks-panel
+    context_menu_bindings: []
+    input_rule_refs: []
+    picker_refs: []
+    compile_action_ref: null
+    compile_bundle_ref: null
+    compile_status_field: null
 
   # View-embed block editor surface (MAG-731)
   # Toolbar: inline-toolbar (shared mark toolbar)
