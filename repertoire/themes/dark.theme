@@ -10,44 +10,44 @@ theme dark extends light {
 
   palette {
     # --- Brand (shifted lighter for dark background readability) ---
-    primary:              oklch(0.78 0.18 265)
-    primary-hover:        oklch(0.82 0.16 265)
-    primary-active:       oklch(0.72 0.20 265)
-    primary-container:    oklch(0.35 0.14 265)
-    on-primary:           oklch(0.15 0.06 265)
-    on-primary-container: oklch(0.92 0.06 265)
+    primary:              oklch(0.80 0.16 255)
+    primary-hover:        oklch(0.84 0.14 255)
+    primary-active:       oklch(0.74 0.18 255)
+    primary-container:    oklch(0.30 0.12 255)
+    on-primary:           oklch(0.12 0.05 255)
+    on-primary-container: oklch(0.93 0.05 255)
 
-    secondary:              oklch(0.78 0.08 290)
-    secondary-hover:        oklch(0.82 0.07 290)
-    secondary-active:       oklch(0.72 0.10 290)
-    secondary-container:    oklch(0.32 0.06 290)
-    on-secondary:           oklch(0.15 0.04 290)
-    on-secondary-container: oklch(0.93 0.04 290)
+    secondary:              oklch(0.77 0.08 228)
+    secondary-hover:        oklch(0.81 0.07 228)
+    secondary-active:       oklch(0.71 0.10 228)
+    secondary-container:    oklch(0.28 0.06 228)
+    on-secondary:           oklch(0.14 0.03 228)
+    on-secondary-container: oklch(0.94 0.03 228)
 
-    tertiary:              oklch(0.78 0.10 180)
-    tertiary-hover:        oklch(0.82 0.09 180)
-    tertiary-active:       oklch(0.72 0.12 180)
-    tertiary-container:    oklch(0.32 0.06 180)
-    on-tertiary:           oklch(0.15 0.04 180)
-    on-tertiary-container: oklch(0.93 0.04 180)
+    tertiary:              oklch(0.76 0.10 315)
+    tertiary-hover:        oklch(0.80 0.09 315)
+    tertiary-active:       oklch(0.70 0.12 315)
+    tertiary-container:    oklch(0.29 0.06 315)
+    on-tertiary:           oklch(0.14 0.04 315)
+    on-tertiary-container: oklch(0.94 0.04 315)
 
     # --- Surfaces (inverted: dark base, lighter variants) ---
-    background:       oklch(0.14 0.005 260)
-    on-background:    oklch(0.92 0.008 260)
-    surface:          oklch(0.17 0.006 260)
-    surface-dim:      oklch(0.12 0.004 260)
-    surface-bright:   oklch(0.24 0.008 260)
-    surface-variant:  oklch(0.22 0.008 260)
-    on-surface:       oklch(0.92 0.008 260)
-    on-surface-variant: oklch(0.78 0.006 260)
-    inverse-surface:    oklch(0.92 0.008 260)
-    inverse-on-surface: oklch(0.22 0.008 260)
+    background:       oklch(0.10 0.005 255)
+    on-background:    oklch(0.93 0.008 255)
+    surface:          oklch(0.13 0.006 255)
+    surface-dim:      oklch(0.08 0.004 255)
+    surface-bright:   oklch(0.18 0.007 255)
+    surface-variant:  oklch(0.16 0.007 255)
+    on-surface:       oklch(0.93 0.008 255)
+    on-surface-variant: oklch(0.76 0.006 255)
+    inverse-surface:    oklch(0.93 0.008 255)
+    inverse-on-surface: oklch(0.18 0.007 255)
     inverse-primary:    oklch(0.55 0.24 265)
 
     # --- Outlines (lighter to be visible on dark backgrounds) ---
-    outline:          oklch(0.55 0.008 260)
-    outline-variant:  oklch(0.35 0.006 260)
-    outline-focus:    oklch(0.78 0.18 265)
+    outline:          oklch(0.50 0.008 255)
+    outline-variant:  oklch(0.28 0.006 255)
+    outline-focus:    oklch(0.80 0.16 255)
 
     # --- Status (brightened for dark surface legibility) ---
     error:             oklch(0.78 0.16 27)
@@ -75,9 +75,9 @@ theme dark extends light {
     on-info-container: oklch(0.93 0.04 250)
 
     # --- Utility (adjusted for dark context) ---
-    shadow:           oklch(0.0 0 0 / 0.32)
-    scrim:            oklch(0.0 0 0 / 0.52)
-    overlay-backdrop: oklch(0.0 0 0 / 0.64)
+    shadow:           oklch(0.0 0 0 / 0.36)
+    scrim:            oklch(0.0 0 0 / 0.56)
+    overlay-backdrop: oklch(0.0 0 0 / 0.68)
 
     # --- Interactive states (light layers on dark surfaces) ---
     hover-state-layer:   oklch(0.92 0.008 260 / 0.08)

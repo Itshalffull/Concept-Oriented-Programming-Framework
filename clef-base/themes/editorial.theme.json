@@ -5,15 +5,15 @@
     "activeMode": "light",
     "modes": {
       "light": {
-        "primary": "#8f3f2f",
-        "onPrimary": "#fffaf6",
-        "surface": "#fff9f1",
-        "background": "#f8f1e7",
-        "foreground": "#2b1d16"
+        "primary": "#8a3929",
+        "onPrimary": "#fffaf7",
+        "surface": "#fffaf4",
+        "background": "#f8f0e6",
+        "foreground": "#261812"
       },
       "dark": {
         "primary": "#f2a37b",
-        "onPrimary": "#2b1d16",
+        "onPrimary": "#261812",
         "surface": "#221914",
         "background": "#18110d",
         "foreground": "#f6ede5"
@@ -22,21 +22,21 @@
   },
   "density": { "mode": "comfortable", "multiplier": 1, "exempt": ["dialog", "datepicker"] },
   "scope": { "global": { "depth": 0 }, "content": { "depth": 1 } },
-  "typeScale": { "baseSize": 17, "ratio": 1.2, "steps": { "body": "17px", "heading": "24.5px" } },
+  "typeScale": { "baseSize": 18, "ratio": 1.2, "steps": { "body": "18px", "heading": "26px" } },
   "fontMetrics": { "family": "Fraunces, Georgia, serif", "features": { "body": ["liga", "onum"], "data": ["tnum"] } },
-  "shape": { "family": "rounded", "radius": "0.75rem" },
+  "shape": { "family": "rounded", "radius": "0.875rem" },
   "iconography": { "variant": "outlined", "gradeCompensation": -25 },
   "material": {
     "kind": "paper",
     "shadows": {
-      "1": "0 1px 2px rgba(43, 29, 22, 0.08)",
-      "2": "0 12px 24px rgba(43, 29, 22, 0.12)"
+      "1": "0 1px 2px rgba(43, 29, 22, 0.06)",
+      "2": "0 16px 32px rgba(43, 29, 22, 0.10)"
     },
     "backdrop": "none"
   },
   "styleProfile": {
     "name": "Editorial",
-    "prompt": "Warm editorial composition with serif typography and paper-like surfaces."
+    "prompt": "Warm editorial composition with larger serif typography, paper-like surfaces, and generous spacing."
   },
   "springPhysics": { "presets": { "snappy": { "tension": 280, "friction": 22 }, "gentle": { "tension": 160, "friction": 18 } } },
   "motionChoreography": { "sequences": { "listEnter": { "stagger": 24, "order": "forward" } } },

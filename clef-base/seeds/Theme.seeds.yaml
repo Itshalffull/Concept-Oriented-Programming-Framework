@@ -5,13 +5,13 @@ action: create
 entries:
   - theme: light
     name: Light
-    overrides: '{"mode":"light"}'
+    overrides: '{"mode":"light","sourceType":"core-theme","density":"comfortable","motif":"sidebar","styleProfile":"foundation"}'
   - theme: dark
     name: Dark
-    overrides: '{"mode":"dark"}'
+    overrides: '{"mode":"dark","sourceType":"core-theme","density":"comfortable","motif":"topbar","styleProfile":"nocturne"}'
   - theme: high-contrast
     name: High Contrast
-    overrides: '{"mode":"high-contrast"}'
+    overrides: '{"mode":"high-contrast","sourceType":"core-theme","density":"comfortable","motif":"sidebar","styleProfile":"accessibility"}'
   - theme: editorial
     name: Editorial
     overrides: '{"mode":"light","sourceType":"expressive-theme","density":"comfortable","motif":"sidebar","styleProfile":"editorial"}'
