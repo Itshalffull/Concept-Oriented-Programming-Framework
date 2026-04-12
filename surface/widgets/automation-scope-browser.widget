@@ -1,0 +1,114 @@
+@version(1)
+widget automation-scope-browser {
+
+  purpose {
+    Read-only browser that displays the active AutomationScope's allowed and
+    denied action references so sync authors can know which actions are
+    available before they write and validate a sync. Groups rules by category
+    and distinguishes allowlist vs denylist mode with a prominent mode badge.
+    This component is purely informational — the full administrative editor
+    for creating and modifying scope rules is a separate widget (MAG-704).
+  }
+
+  anatomy {
+    root:         container    { Top-level wrapper carrying the current scope mode as data-mode }
+    header:       container    { Title row containing the scope label and mode badge }
+    modeBadge:    text         { Badge showing "allowlist" or "denylist" mode }
+    ruleList:     container    { Scrollable list of all rule rows grouped by category }
+    categoryGroup: container   { Section heading + rules for one category }
+    categoryLabel: text        { Category name heading }
+    ruleRow:      container    { Single rule row: action_pattern text and a permitted/denied indicator }
+    rulePattern:  text         { The glob-style action_pattern string (e.g. "Content/*") }
+    ruleIndicator: presentation { Visual dot or icon marking the rule as permitted (green) or denied (red) based on mode }
+    emptyState:   container    { Shown when the active scope has no rules yet }
+    loadingState: container    { Shown while the scope data is being fetched }
+  }
+
+  states {
+    loading [initial] {
+      on DATA_LOADED   -> ready;
+      on LOAD_FAILED   -> error;
+    }
+    ready {
+      on RELOAD        -> loading;
+    }
+    error {
+      on RELOAD        -> loading;
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      F5    -> RELOAD;
+    }
+    focus {
+      trap: false;
+      initial: root;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Automation scope browser";
+        aria-busy: if state.lifecycle == "loading" then "true" else "false";
+      };
+      modeBadge -> {
+        role: "status";
+        aria-live: "polite";
+      };
+      ruleList -> {
+        role: "list";
+        aria-label: "Scope rules";
+      };
+      ruleRow -> {
+        role: "listitem";
+      };
+      emptyState -> {
+        role: "status";
+      };
+    }
+  }
+
+  props {
+    scopeId:  option String
+    mode:     String = "allowlist"
+    rules:    list { action_pattern: String, category: String } = []
+  }
+
+  connect {
+    root -> {
+      data-state: state.lifecycle;
+      data-mode:  ?mode;
+    }
+
+    modeBadge -> {
+      data-mode: ?mode;
+    }
+
+    ruleList -> {
+      hidden: if state.lifecycle != "ready" or ?rules.length = 0 then true else false;
+    }
+
+    emptyState -> {
+      hidden: if state.lifecycle != "ready" or ?rules.length > 0 then true else false;
+    }
+
+    loadingState -> {
+      hidden: if state.lifecycle != "loading" then true else false;
+    }
+  }
+
+  invariant {
+    always "mode badge reflects prop": {
+      modeBadge.data-mode = ?mode
+    }
+
+    never "rule list visible while loading": {
+      state.lifecycle = "loading" and ruleList.hidden = false
+    }
+
+    always "empty state shown when rules empty in ready state": {
+      if state.lifecycle = "ready" and ?rules.length = 0 then emptyState.hidden = false
+    }
+  }
+}

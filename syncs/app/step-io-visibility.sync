@@ -1,4 +1,4 @@
-# Step I/O visibility gating — MAG-681, docs/plans/automation-ui-prd.md §5.2-11.
+# Step I/O visibility gating — MAG-681, MAG-688, docs/plans/automation-ui-prd.md §5.2-11.
 #
 # Gates StepRun/getIO reads on the caller's role vs the step's declared visibility.
 # StepRun/getIO is the dedicated action returning (input, output, status); keeping
@@ -6,29 +6,37 @@
 # metadata (run_ref, step_key, status, attempt) without permission, while raw
 # I/O payloads remain behind the visibility policy.
 #
-# ProcessSpec steps have no first-class visibility field — only config: Bytes.
-# The visibility level ("all" | role string) is read from Authorization state keyed
-# by step; if no entry exists the default is "all" (open access — all callers can read).
+# MAG-688: Visibility is now a first-class field in the ProcessSpec step JSON schema.
+# The optional `visibility` field (type: String) is stored inside the opaque step Bytes
+# alongside `key`, `step_type`, and `config`. When null or absent the default is "all"
+# (open access — all callers may read the step's I/O).
+#
+# Read path: resolve the StepRun's step_key → look up the ProcessSpec that owns it →
+# decode its steps Bytes → find the matching step object → read step.visibility.
+# If step.visibility is null or absent, allow read (default "all-roles").
 #
 # Note: The sync parser does not support not() conditions. The denial path is
 # expressed as a second sync that binds ?caller_roles from Authorization state
 # and guards on the role NOT matching the required visibility level.
 
-# Allowed path — caller role satisfies the step's visibility policy.
+# Allowed path — caller role satisfies the step's visibility policy read from ProcessSpec.
 sync StepIOVisibilityAllowed [eager]
-  purpose: "When a step's I/O is requested and the caller's role satisfies the step's declared visibility policy (or no policy restricts the step), confirm the read is permitted and forward the payload to the caller."
+  purpose: "When a step's I/O is requested and the step's visibility field in ProcessSpec is absent/null or equals 'all', or the caller's role matches the declared visibility value, confirm the read is permitted and forward the payload to the caller."
 when {
   StepRun/getIO: [ step: ?step ]
     => ok(input: ?input; output: ?output; status: ?status)
 }
 where {
-  // Bind the step's key so we can look up the visibility policy.
-  StepRun: { ?step step_key: ?step_key }
-  // Bind caller roles from Authorization state keyed by step identity.
+  // Resolve the StepRun's step_key and owning spec.
+  StepRun: { ?step step_key: ?step_key; spec: ?spec_id }
+  // Decode the ProcessSpec steps and extract the matching step's visibility field.
+  // If the field is absent or null in the JSON, bind null so the default "all" applies.
+  ProcessSpec: { ?spec_id steps: ?steps_bytes }
+  bind(stepVisibility(?steps_bytes; ?step_key) as ?step_visibility)
+  // Bind caller roles from Authorization state.
   Authorization: { ?step userRoles: ?caller_roles }
-  // Bind declared visibility; default to "all" (open access) when unset.
-  any(?step_key as ?step_visibility; "all" = ?step_visibility)
-  guard(?step_visibility = "all" or ?caller_roles contains ?step_visibility)
+  // Allow when: visibility is absent/null ("all") OR caller holds the required role.
+  guard(?step_visibility = none or ?step_visibility = "all" or ?caller_roles contains ?step_visibility)
 }
 then {
   StepRun/getIO: [ step: ?step ]
@@ -36,20 +44,21 @@ then {
 
 # Denied path — step has a restricted visibility and the caller's role does not match.
 sync StepIOVisibilityDenied [eager]
-  purpose: "When a step's I/O is requested but the caller's role does not satisfy the step's declared visibility policy, fail the request with an access-denied error so the caller receives a structured denial rather than silently empty payloads."
+  purpose: "When a step's I/O is requested but the step's visibility field in ProcessSpec is set to a specific role that the caller does not hold, fail the request with an access-denied error so the caller receives a structured denial rather than silently empty payloads."
 when {
   StepRun/getIO: [ step: ?step ]
     => ok(input: ?input; output: ?output; status: ?status)
 }
 where {
-  // Bind the step's key so we can look up the visibility policy.
-  StepRun: { ?step step_key: ?step_key }
+  // Resolve the StepRun's step_key and owning spec.
+  StepRun: { ?step step_key: ?step_key; spec: ?spec_id }
+  // Decode the ProcessSpec steps and extract the matching step's visibility field.
+  ProcessSpec: { ?spec_id steps: ?steps_bytes }
+  bind(stepVisibility(?steps_bytes; ?step_key) as ?step_visibility)
   // Bind caller roles from Authorization state.
   Authorization: { ?step userRoles: ?caller_roles }
-  // Bind the declared visibility for this step key.
-  any(?step_key as ?step_visibility; "all" = ?step_visibility)
-  // Deny when: visibility is restricted AND caller does not hold the required role.
-  guard(?step_visibility != "all")
+  // Deny when: visibility is set to a non-"all" value AND caller lacks the required role.
+  guard(?step_visibility != none and ?step_visibility != "all")
   filter(?caller_roles != ?step_visibility)
 }
 then {

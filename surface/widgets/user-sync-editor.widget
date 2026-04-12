@@ -1,0 +1,245 @@
+@version(1)
+widget user-sync-editor {
+
+  purpose {
+    Governance-aware editor for user-authored sync definitions that route through
+    SyncAutomationProvider. Progressive disclosure keeps the surface minimal for
+    the common draft-then-validate flow: advanced fields (author, scope notes)
+    collapse until explicitly expanded. Scope violations from validate completions
+    surface inline in a dedicated panel before the user can activate, making the
+    governance gate first-class rather than a hidden error. Validation-failed and
+    scope-violation are dedicated FSM states so UX affordances (retry, fix,
+    scope browse) appear in context without modal interruption. All three
+    lifecycle actions (validate, activate, suspend) are keyboard-reachable
+    (Ctrl+V, Ctrl+Enter, Ctrl+S) for power-user flow.
+  }
+
+  anatomy {
+    root:                 container    { Top-level wrapper; carries data-state reflecting the current FSM state }
+    nameInput:            interactive  { Single-line text input for the human-readable sync name }
+    sourceTextarea:       interactive  { Multi-line code area for the raw sync source text }
+    statusBadge:          text         { Read-only badge showing the current lifecycle status (Draft, Validated, Active, Suspended) }
+    validateButton:       action       { Triggers the validate lifecycle step; keyboard shortcut Ctrl+V }
+    activateButton:       action       { Triggers the activate lifecycle step; keyboard shortcut Ctrl+Enter; disabled unless status is Validated }
+    suspendButton:        action       { Triggers the suspend lifecycle step; only shown when status is Active }
+    scopeViolationsPanel: container    { Disclosure panel that appears when validate returns scope violations; hidden in all other states }
+    violationRow:         container    { One row per scope violation: action_ref on the left, reason on the right }
+    authorField:          interactive  { Collapsed-by-default text input for the author field; revealed via "advanced" toggle }
+  }
+
+  states {
+    // Outer lifecycle state machine
+    lifecycle {
+      draft [initial] {
+        on VALIDATE_START   -> validating;
+        on LOAD_ACTIVE      -> active;
+        on LOAD_VALIDATED   -> validated;
+        on LOAD_SUSPENDED   -> suspended;
+      }
+      validating {
+        on VALIDATE_OK          -> validated;
+        on VALIDATE_FAILED      -> validation-failed;
+        on SCOPE_VIOLATION      -> scope-violation;
+      }
+      validated {
+        on ACTIVATE_START   -> activating;
+        on EDIT             -> draft;
+        on VALIDATE_START   -> validating;
+      }
+      activating {
+        on ACTIVATE_OK      -> active;
+        on ACTIVATE_FAILED  -> validated;
+      }
+      active {
+        on SUSPEND_START    -> suspending;
+      }
+      suspending {
+        on SUSPEND_OK       -> suspended;
+        on SUSPEND_FAILED   -> active;
+      }
+      suspended {
+        on EDIT             -> draft;
+        on VALIDATE_START   -> validating;
+      }
+      validation-failed {
+        on EDIT             -> draft;
+        on VALIDATE_START   -> validating;
+      }
+      scope-violation {
+        on EDIT             -> draft;
+        on VALIDATE_START   -> validating;
+      }
+    }
+
+    // Independent author-field disclosure toggle
+    advanced [parallel] {
+      collapsed [initial] {
+        on TOGGLE_ADVANCED -> expanded;
+      }
+      expanded {
+        on TOGGLE_ADVANCED -> collapsed;
+      }
+    }
+  }
+
+  accessibility {
+    role: form;
+    keyboard {
+      Ctrl+S          -> VALIDATE_START;
+      Ctrl+V          -> VALIDATE_START;
+      Ctrl+Enter      -> ACTIVATE_START;
+      Escape          -> EDIT;
+    }
+    focus {
+      trap: false;
+      initial: nameInput;
+    }
+    aria {
+      root -> {
+        role: "form";
+        aria-label: "User sync editor";
+      };
+      nameInput -> {
+        role: "textbox";
+        aria-label: "Sync name";
+        aria-required: "true";
+      };
+      sourceTextarea -> {
+        role: "textbox";
+        aria-multiline: "true";
+        aria-label: "Sync source text";
+        aria-required: "true";
+      };
+      statusBadge -> {
+        role: "status";
+        aria-live: "polite";
+      };
+      validateButton -> {
+        role: "button";
+        aria-label: "Validate sync (Ctrl+V)";
+        aria-disabled: if state.lifecycle == "validating" then "true" else "false";
+      };
+      activateButton -> {
+        role: "button";
+        aria-label: "Activate sync (Ctrl+Enter)";
+        aria-disabled: if state.lifecycle != "validated" then "true" else "false";
+      };
+      suspendButton -> {
+        role: "button";
+        aria-label: "Suspend sync";
+        aria-disabled: if state.lifecycle != "active" then "true" else "false";
+      };
+      scopeViolationsPanel -> {
+        role: "region";
+        aria-label: "Scope violations";
+        aria-live: "assertive";
+      };
+      authorField -> {
+        role: "textbox";
+        aria-label: "Author";
+      };
+    }
+  }
+
+  props {
+    syncId:     option String
+    name:       String = ""
+    sourceText: String = ""
+    status:     String = "draft"
+    author:     String = ""
+    violations: list { actionRef: String, reason: String } = []
+  }
+
+  connect {
+    root -> {
+      data-state:          state.lifecycle;
+      data-advanced:       if state.advanced == "expanded" then "true" else "false";
+      data-has-violations: if ?violations.length > 0 then "true" else "false";
+    }
+
+    nameInput -> {
+      value:       ?name;
+      placeholder: "e.g. auto-tag-on-publish";
+      disabled:    if state.lifecycle == "validating" or state.lifecycle == "activating" or state.lifecycle == "suspending" then true else false;
+      onInput:     send(EDIT);
+    }
+
+    sourceTextarea -> {
+      value:       ?sourceText;
+      placeholder: "sync MySyncName [eager]\nwhen {\n  ...\n}\nthen {\n  ...\n}";
+      disabled:    if state.lifecycle == "validating" or state.lifecycle == "activating" or state.lifecycle == "suspending" then true else false;
+      onInput:     send(EDIT);
+      rows:        "16";
+      spellcheck:  "false";
+    }
+
+    statusBadge -> {
+      data-status: ?status;
+    }
+
+    validateButton -> {
+      disabled:    if state.lifecycle == "validating" or state.lifecycle == "activating" or state.lifecycle == "suspending" or state.lifecycle == "active" then true else false;
+      data-active: if state.lifecycle == "validating" then "true" else "false";
+      onClick:     send(VALIDATE_START);
+    }
+
+    activateButton -> {
+      disabled:    if state.lifecycle != "validated" then true else false;
+      data-active: if state.lifecycle == "activating" then "true" else "false";
+      onClick:     send(ACTIVATE_START);
+    }
+
+    suspendButton -> {
+      hidden:      if state.lifecycle != "active" then true else false;
+      data-active: if state.lifecycle == "suspending" then "true" else "false";
+      onClick:     send(SUSPEND_START);
+    }
+
+    scopeViolationsPanel -> {
+      hidden:      if state.lifecycle != "scope-violation" then true else false;
+    }
+
+    authorField -> {
+      value:  ?author;
+      hidden: if state.advanced == "collapsed" then true else false;
+      onInput: noop;
+    }
+  }
+
+  invariant {
+    example "draft-validate-activate flow": {
+      after nameInput.input -> ok
+      then validateButton.click -> ok
+      then root -> { data-state: "validating" }
+      then root -> { data-state: "validated" }
+      then activateButton.click -> ok
+      then root -> { data-state: "active" }
+    }
+
+    example "scope violations surface before activation": {
+      after validateButton.click -> ok
+      then root -> { data-state: "scope-violation" }
+      and scopeViolationsPanel -> { hidden: false }
+      and activateButton -> { aria-disabled: "true" }
+    }
+
+    always "activate disabled unless validated": {
+      forall s in ["draft", "validating", "validation-failed", "scope-violation", "active", "activating", "suspended", "suspending"]:
+        if state.lifecycle = s then activateButton.disabled = true
+    }
+
+    never "scope panel visible outside violation state": {
+      state.lifecycle != "scope-violation" and scopeViolationsPanel.hidden = false
+    }
+
+    action validateButton.click {
+      requires: state.lifecycle != "active"
+      ensures ok: state.lifecycle = "validating"
+    }
+
+    action suspendButton.click {
+      requires: state.lifecycle = "active"
+      ensures ok: state.lifecycle = "suspending"
+    }
+  }
+}

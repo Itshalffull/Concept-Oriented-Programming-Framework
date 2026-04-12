@@ -12,6 +12,11 @@ concept ProcessSpec [P] {
     version: P -> Int
     status: P -> String                    // draft | active | deprecated
     description: P -> option String
+    // MAG-688: Each step Bytes payload also carries an optional `visibility` field (String).
+    // When null or absent, the default is "all" (open access — any caller may read I/O).
+    // Any other string value is treated as the required role name that the caller must hold.
+    // The field is opaque to this concept (stored inside the Bytes payload) and read by
+    // the StepIOVisibility sync, which decodes the step JSON and inspects visibility directly.
     steps: P -> list {
       key: String,
       step_type: String,                   // human | automation | llm | approval | manual | subprocess | webhook_wait
@@ -116,6 +121,7 @@ concept ProcessSpec [P] {
       }
       reversal: removeStep
       fixture addStep_ok { spec: $create_ok.spec, step: "{\"key\":\"s2\",\"step_type\":\"automation\",\"config\":\"{}\"}", index: 1 } after create_ok
+      fixture addStep_with_visibility { spec: $create_ok.spec, step: "{\"key\":\"s3\",\"step_type\":\"human\",\"config\":\"{}\",\"visibility\":\"admin\"}", index: 1 } after create_ok
       fixture addStep_notfound { spec: "nonexistent-spec", step: "{\"key\":\"s2\",\"step_type\":\"automation\",\"config\":\"{}\"}", index: 0 } -> notfound
       fixture addStep_locked { spec: $publish_ok.spec, step: "{\"key\":\"s2\",\"step_type\":\"automation\",\"config\":\"{}\"}", index: 0 } after publish_ok -> locked
       fixture addStep_bad_json { spec: $create_ok.spec, step: "not-json", index: 0 } after create_ok -> error

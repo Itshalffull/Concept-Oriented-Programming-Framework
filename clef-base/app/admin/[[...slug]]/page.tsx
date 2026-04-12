@@ -15,6 +15,8 @@ import { FormBuilder } from '../../components/widgets/FormBuilder';
 import { SchemaFieldsEditor } from '../../components/widgets/SchemaFieldsEditor';
 import { CanvasBrowserView } from '../../views/CanvasBrowserView';
 import { FlowBuilderView } from '../../views/FlowBuilderView';
+import { UserSyncListView } from '../../views/UserSyncListView';
+import { UserSyncEditorView } from '../../views/UserSyncEditorView';
 
 export default async function AdminPage({
   params,
@@ -92,6 +94,24 @@ export default async function AdminPage({
     return (
       <HostedPage>
         <ViewRenderer viewId="automations-rules-list" />
+      </HostedPage>
+    );
+  }
+
+  // User Sync list: /admin/automation/user-syncs
+  if (path === 'automation/user-syncs') {
+    return (
+      <HostedPage>
+        <UserSyncListView />
+      </HostedPage>
+    );
+  }
+
+  // User Sync editor: /admin/automation/user-syncs/new or /admin/automation/user-syncs/:id
+  if (slug[0] === 'automation' && slug[1] === 'user-syncs' && slug[2]) {
+    return (
+      <HostedPage>
+        <UserSyncEditorView syncId={decodeURIComponent(slug[2])} />
       </HostedPage>
     );
   }

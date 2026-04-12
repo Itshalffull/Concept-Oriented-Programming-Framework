@@ -163,6 +163,37 @@ entries:
     label: "Remove Edge"
     buttonVariant: "destructive"
 
+  # --- User sync lifecycle actions ---
+  - name: user-sync-define
+    binding: user-sync-define
+    target: "SyncAutomationProvider/define"
+    parameterMap: '{"name":"context.name","source_text":"context.sourceText","author":"context.author"}'
+    executionPolicy: "auto"
+    label: "Save"
+
+  - name: user-sync-validate
+    binding: user-sync-validate
+    target: "SyncAutomationProvider/validate"
+    parameterMap: '{"sync_def":"context.syncId"}'
+    executionPolicy: "auto"
+    label: "Validate"
+
+  - name: user-sync-activate
+    binding: user-sync-activate
+    target: "SyncAutomationProvider/activate"
+    parameterMap: '{"sync_def":"context.syncId"}'
+    executionPolicy: "pessimistic"
+    label: "Activate"
+
+  - name: user-sync-suspend
+    binding: user-sync-suspend
+    target: "SyncAutomationProvider/suspend"
+    parameterMap: '{"sync_def":"context.syncId"}'
+    executionPolicy: "pessimistic"
+    confirmWhen: "true"
+    label: "Suspend"
+    buttonVariant: "destructive"
+
   # --- WorkItem actions ---
   - name: workitem-claim
     binding: workitem-claim
