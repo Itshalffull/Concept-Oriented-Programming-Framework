@@ -205,6 +205,31 @@ entries:
     output_preview_ref: prompt-assembly-preview
     consumers_panel_ref: persona-consumers-panel
 
+  # View-embed block editor surface (MAG-731)
+  # Toolbar: inline-toolbar (shared mark toolbar)
+  # Command bindings: view-embed-configure (pick ViewShell + filter overrides),
+  #   view-embed-open-source (navigate to the source ViewShell's canonical page),
+  #   view-embed-refresh (invoke ViewShell/refresh).
+  # Panel widgets: view-embed-filter-override-panel is anticipatory -- ships when
+  #   a dedicated filter-override editing panel concept is available.
+  - id: view-embed-block-editor
+    schema_ref: view-embed
+    context: block-editor
+    toolbar_widget: inline-toolbar
+    command_bindings:
+      - view-embed-configure
+      - view-embed-open-source
+      - view-embed-refresh
+    panel_widgets:
+      - view-embed-filter-override-panel
+    context_menu_bindings:
+      - view-embed-open-source
+    input_rule_refs: []
+    picker_refs: []
+    compile_action_ref: null
+    compile_bundle_ref: null
+    compile_status_field: null
+
   # Code block editor surface (MAG-727)
   # Literal block scope: input_rule_refs is intentionally empty because
   # all markdown shortcuts and snippet triggers are suppressed inside code blocks.

@@ -101,3 +101,16 @@ entries:
     section: "Basic"
     icon: "list-ordered"
     label: "Numbered list"
+
+  # View embed block -- mounts a live ViewShell (table/board/calendar) inline in
+  # the block stream. filterOverrides merge with the ViewShell's FilterSpec at
+  # render time. (MAG-731)
+  - id: view-embed-mapping
+    name: view-embed-mapping
+    widget_id: view-embed-block
+    schema: view-embed
+    display_mode: block-editor
+    insertable: true
+    section: "Embeds"
+    icon: "table"
+    label: "Embedded view"

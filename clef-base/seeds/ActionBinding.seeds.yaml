@@ -629,6 +629,53 @@ entries:
     label: "Superscript"
     icon: "superscript"
 
+  # --- View-embed block actions (MAG-731) ---
+  # view-embed-configure: opens the config panel inside view-embed-block to let
+  # the author pick a different ViewShell and edit filter overrides.
+  # API gap note: ViewEmbedBlock/configure is an anticipated surface action; a
+  # follow-up card should introduce that concept. For now references the synthetic
+  # action shape.
+  - name: view-embed-configure
+    binding: view-embed-configure
+    target: "ViewEmbedBlock/configure"
+    parameterMap: '{"blockId":"context.blockId"}'
+    executionPolicy: "auto"
+    toolbar_command: true
+    context_menu: false
+    section: "View"
+    label: "Configure"
+    icon: "settings"
+
+  # view-embed-open-source: navigates to the source ViewShell's canonical page.
+  # Available via context menu and the toolbar on a focused view-embed-block.
+  # API gap note: Navigator/navigate is the expected target; same gap noted for
+  # entity-follow. The parameterMap carries the viewShellRef from context.
+  - name: view-embed-open-source
+    binding: view-embed-open-source
+    target: "Navigator/navigate"
+    parameterMap: '{"destination":"view-shell-detail","params":{"id":"context.viewShellRef"}}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    context_menu: true
+    label: "Open source view"
+    icon: "arrow-up-right"
+
+  # view-embed-refresh: re-invokes ViewShell/refresh on the embedded ViewShell,
+  # causing the widget to re-resolve and re-mount the view with fresh data.
+  # API gap note: ViewShell/refresh does not currently exist in the ViewShell
+  # concept spec (specs/view/). A follow-up card should add that action. The
+  # binding is registered now so the command slot is reserved.
+  - name: view-embed-refresh
+    binding: view-embed-refresh
+    target: "ViewShell/refresh"
+    parameterMap: '{"shell":"context.viewShellRef"}'
+    executionPolicy: "auto"
+    toolbar_command: true
+    context_menu: false
+    section: "View"
+    label: "Refresh"
+    icon: "refresh-cw"
+
   # --- Drop file upload action (MAG-733) ---
   # Dispatched by the drop-file-generic InputRule when a file is dropped onto the
   # block editor. context.droppedFile carries the raw File reference from the drop

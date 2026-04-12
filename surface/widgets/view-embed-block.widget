@@ -1,0 +1,318 @@
+@version(1)
+widget view-embed-block {
+
+  purpose {
+    Block-level embed that mounts a live ViewShell (table, board, or calendar) inline
+    inside a document's block stream. The widget resolves the referenced ViewShell by its
+    id, applies any per-block filterOverrides on top of the ViewShell's own FilterSpec at
+    render time, and renders the composed view widgets directly in-place. The block can be
+    collapsed to a compact summary bar (Space to toggle) or expanded to show the full
+    interactive view. Entering the config panel (Enter) allows the author to pick a
+    different ViewShell or edit filter overrides without leaving the document context.
+  }
+
+  requires @1 {
+    fields {
+      viewShellRef: String;
+      filterOverrides: String;
+      collapsed: Bool;
+    }
+    actions {
+      resolve(id: String);
+    }
+  }
+
+  anatomy {
+    root:               container     { Top-level block wrapper; carries data-state reflecting the edit FSM }
+    header:             container     { Collapsed summary bar; always visible; shows view title and status badge }
+    viewTitle:          text          { Human-readable title of the resolved ViewShell; shown in header }
+    statusBadge:        presentation  { Small badge indicating current render state (resolving, rendering, error) }
+    collapseToggle:     action        { Button that expands or collapses the view shell container }
+    viewShellContainer: container     { Full-height mounting point for the composed ViewShell widgets; hidden when collapsed }
+    configPanel:        container     { Overlay panel for picking a ViewShell and editing filter overrides; hidden unless configuring }
+    configPanelTitle:   text          { Title of the config panel }
+    viewShellPicker:    interactive   { Search-and-select input inside the config panel for choosing a ViewShell id }
+    filterOverrideInput: interactive  { Text area inside the config panel for entering filter override JSON }
+    configConfirm:      action        { Confirm button inside the config panel; saves changes and returns to rendering }
+    configCancel:       action        { Cancel button inside the config panel; discards changes and returns to previous state }
+    errorMessage:       text          { Error message shown when ViewShell resolution or rendering fails }
+  }
+
+  states {
+    edit {
+      idle [initial] {
+        on CONFIGURE   -> configuring;
+        on COLLAPSE    -> idle;
+        on EXPAND      -> idle;
+        on RESOLVE     -> resolving;
+        entry [applyCollapsedProp];
+      }
+      configuring {
+        on CONFIRM     -> resolving;
+        on CANCEL      -> idle;
+        entry [openConfigPanel; trapFocus];
+        exit [closeConfigPanel; releaseFocus];
+      }
+      resolving {
+        on RESOLVED    -> rendering;
+        on RESOLVE_ERROR -> error;
+        entry [fetchViewShell];
+      }
+      rendering {
+        on CONFIGURE   -> configuring;
+        on COLLAPSE    -> rendering;
+        on EXPAND      -> rendering;
+        on REFRESH     -> resolving;
+        entry [mountViewShell; applyFilterOverrides];
+      }
+      error {
+        on CONFIGURE   -> configuring;
+        on RETRY       -> resolving;
+        entry [showErrorMessage];
+      }
+    }
+  }
+
+  accessibility {
+    role: figure;
+    keyboard {
+      Space -> COLLAPSE;
+      Enter -> CONFIGURE;
+    }
+    focus {
+      trap: false;
+      initial: collapseToggle;
+      roving: false;
+      returnOnClose: collapseToggle;
+    }
+    aria {
+      root -> {
+        role: "figure";
+        aria-label: "Embedded view block";
+        aria-busy: if state.edit == "resolving" then "true" else "false";
+      };
+      header -> {
+        role: "group";
+        aria-label: "View embed header";
+      };
+      collapseToggle -> {
+        role: "button";
+        aria-expanded: if ?collapsed then "false" else "true";
+        aria-controls: viewShellContainer;
+        aria-label: if ?collapsed then "Expand view" else "Collapse view";
+      };
+      viewShellContainer -> {
+        role: "region";
+        aria-labelledby: viewTitle;
+        aria-hidden: if ?collapsed then "true" else "false";
+      };
+      configPanel -> {
+        role: "dialog";
+        aria-modal: "true";
+        aria-labelledby: configPanelTitle;
+        aria-hidden: if state.edit != "configuring" then "true" else "false";
+      };
+      viewShellPicker -> {
+        role: "combobox";
+        aria-label: "Select ViewShell";
+        aria-autocomplete: "list";
+      };
+      filterOverrideInput -> {
+        role: "textbox";
+        aria-label: "Filter overrides JSON";
+        aria-multiline: "true";
+      };
+      configConfirm -> {
+        role: "button";
+        aria-label: "Confirm view embed configuration";
+      };
+      configCancel -> {
+        role: "button";
+        aria-label: "Cancel view embed configuration";
+      };
+      errorMessage -> {
+        role: "alert";
+        aria-live: "assertive";
+      };
+      statusBadge -> {
+        role: "status";
+        aria-live: "polite";
+      };
+    }
+  }
+
+  props {
+    blockId: String
+    viewShellRef: String
+    filterOverrides: option String
+    collapsed: Bool = false
+    focused: Bool = false
+    readOnly: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.edit;
+      data-collapsed: if ?collapsed then "true" else "false";
+      data-focused: if ?focused then "true" else "false";
+      data-block-id: ?blockId;
+      tabindex: "0";
+      onKeyDown-Space: send(COLLAPSE);
+      onKeyDown-Enter: send(CONFIGURE);
+    }
+
+    header -> {
+      data-part: "header";
+      data-state: state.edit;
+    }
+
+    viewTitle -> {
+      data-part: "view-title";
+      hidden: if state.edit == "resolving" then true else false;
+    }
+
+    statusBadge -> {
+      data-part: "status-badge";
+      data-status: state.edit;
+      hidden: if state.edit == "rendering" or state.edit == "idle" then true else false;
+    }
+
+    collapseToggle -> {
+      data-part: "collapse-toggle";
+      onClick: send(COLLAPSE);
+      disabled: if state.edit == "resolving" or state.edit == "error" then true else false;
+    }
+
+    viewShellContainer -> {
+      data-part: "view-shell-container";
+      hidden: if ?collapsed or state.edit == "idle" or state.edit == "configuring" or state.edit == "resolving" or state.edit == "error" then true else false;
+    }
+
+    configPanel -> {
+      data-part: "config-panel";
+      hidden: if state.edit != "configuring" then true else false;
+    }
+
+    configPanelTitle -> {
+      data-part: "config-panel-title";
+      text: "Configure embedded view";
+    }
+
+    viewShellPicker -> {
+      data-part: "view-shell-picker";
+      disabled: ?readOnly;
+    }
+
+    filterOverrideInput -> {
+      data-part: "filter-override-input";
+      placeholder: "{}";
+      disabled: ?readOnly;
+    }
+
+    configConfirm -> {
+      data-part: "config-confirm";
+      onClick: send(CONFIRM);
+      disabled: ?readOnly;
+    }
+
+    configCancel -> {
+      data-part: "config-cancel";
+      onClick: send(CANCEL);
+    }
+
+    errorMessage -> {
+      data-part: "error-message";
+      hidden: if state.edit != "error" then true else false;
+      text: "Failed to load view. The referenced ViewShell may have been deleted or is unavailable.";
+    }
+  }
+
+  affordance {
+    serves: block-embed;
+    specificity: 9;
+    when schema = "view-embed";
+    bind {
+      viewShellRef: viewShellRef;
+      filterOverrides: filterOverrides;
+    }
+  }
+
+  compose {
+    _focusTrap: widget("focus-trap", { active: if state.edit == "configuring" then true else false })
+  }
+
+  invariant {
+    example "RESOLVE event from idle transitions to resolving": {
+      after transition(from: "idle", event: "RESOLVE") -> ok
+      then state.edit = "resolving"
+    }
+
+    example "RESOLVED event transitions resolving to rendering": {
+      after transition(from: "resolving", event: "RESOLVED") -> ok
+      then state.edit = "rendering"
+    }
+
+    example "RESOLVE_ERROR event transitions resolving to error": {
+      after transition(from: "resolving", event: "RESOLVE_ERROR") -> ok
+      then state.edit = "error"
+    }
+
+    example "CONFIGURE event from rendering opens config panel": {
+      after transition(from: "rendering", event: "CONFIGURE") -> ok
+      then state.edit = "configuring"
+    }
+
+    example "CONFIRM in configuring retriggers resolving": {
+      after transition(from: "configuring", event: "CONFIRM") -> ok
+      then state.edit = "resolving"
+    }
+
+    example "CANCEL in configuring returns to idle": {
+      after transition(from: "configuring", event: "CANCEL") -> ok
+      then state.edit = "idle"
+    }
+
+    example "RETRY in error state retriggers resolving": {
+      after transition(from: "error", event: "RETRY") -> ok
+      then state.edit = "resolving"
+    }
+
+    example "REFRESH in rendering retriggers resolving": {
+      after transition(from: "rendering", event: "REFRESH") -> ok
+      then state.edit = "resolving"
+    }
+
+    forall "all edit states are reachable from idle": {
+      given s in editStates
+      then s.reachable = true
+    }
+
+    always "data-state on root reflects edit FSM": {
+      root.dataState = state.edit
+    }
+
+    always "configPanel hidden outside configuring state": {
+      state.edit != "configuring"
+    }
+
+    never "viewShellContainer visible when collapsed prop is true": {
+      collapsed = true and viewShellContainer.hidden = false
+    }
+
+    never "configConfirm enabled when readOnly is true": {
+      readOnly = true and configConfirm.disabled = false
+    }
+
+    action collapseToggle {
+      requires: state.edit = "rendering"
+      ensures ok: collapsed = true
+    }
+
+    action configConfirm {
+      requires: state.edit = "configuring"
+      ensures ok: state.edit = "resolving"
+    }
+  }
+
+}
