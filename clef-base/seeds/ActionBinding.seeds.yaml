@@ -1,0 +1,130 @@
+# ActionBinding seeds — pre-created binding records for all action triggers
+# used in Clef Base views. Grouped by domain: theme, schema, workspace,
+# concept browser, process, version space, and content.
+
+concept: ActionBinding
+action: bind
+entries:
+  # --- Theme actions ---
+  - name: theme-activate
+    binding: theme-activate
+    target: "Theme/activate"
+    parameterMap: '{"theme":"row.id"}'
+    executionPolicy: "auto"
+    label: "Activate"
+
+  - name: theme-deactivate
+    binding: theme-deactivate
+    target: "Theme/deactivate"
+    parameterMap: '{"theme":"row.id"}'
+    executionPolicy: "auto"
+    label: "Deactivate"
+
+  # --- Schema actions ---
+  - name: schema-apply
+    binding: schema-apply
+    target: "Schema/applyTo"
+    parameterMap: '{"schema":"row.schema","entity_id":"context.id"}'
+    executionPolicy: "auto"
+    label: "+ Schema"
+
+  - name: schema-remove
+    binding: schema-remove
+    target: "Schema/removeFrom"
+    parameterMap: '{"schema":"row.schema","entity_id":"context.id"}'
+    executionPolicy: "pessimistic"
+    confirmWhen: "true"
+    label: "Remove"
+    buttonVariant: "destructive"
+
+  # --- Workspace actions ---
+  - name: workspace-set-default
+    binding: workspace-set-default
+    target: "Workspace/setDefault"
+    parameterMap: '{"workspace":"row.id"}'
+    executionPolicy: "auto"
+    label: "Set Default"
+
+  - name: workspace-delete
+    binding: workspace-delete
+    target: "Workspace/delete"
+    parameterMap: '{"workspace":"row.id"}'
+    executionPolicy: "pessimistic"
+    confirmWhen: "true"
+    label: "Delete"
+    buttonVariant: "destructive"
+
+  - name: workspace-duplicate
+    binding: workspace-duplicate
+    target: "Workspace/duplicate"
+    parameterMap: '{"workspace":"row.id"}'
+    executionPolicy: "auto"
+    label: "Duplicate"
+
+  - name: workspace-restore
+    binding: workspace-restore
+    target: "Workspace/restore"
+    parameterMap: '{"workspace":"row.id"}'
+    executionPolicy: "auto"
+    label: "Restore"
+
+  # --- Concept browser actions ---
+  - name: concept-install
+    binding: concept-install
+    target: "ConceptBrowser/install"
+    parameterMap: '{"package":"row.name"}'
+    executionPolicy: "pessimistic"
+    label: "Install"
+
+  - name: concept-remove
+    binding: concept-remove
+    target: "ConceptBrowser/remove"
+    parameterMap: '{"package":"row.name"}'
+    executionPolicy: "pessimistic"
+    confirmWhen: "true"
+    label: "Remove"
+    buttonVariant: "destructive"
+
+  # --- Process actions ---
+  - name: process-resume
+    binding: process-resume
+    target: "ProcessRun/resume"
+    parameterMap: '{"run":"context.runId"}'
+    executionPolicy: "pessimistic"
+    label: "Resume"
+
+  - name: process-cancel
+    binding: process-cancel
+    target: "ProcessRun/cancel"
+    parameterMap: '{"run":"context.runId"}'
+    executionPolicy: "pessimistic"
+    confirmWhen: "true"
+    label: "Cancel"
+    buttonVariant: "destructive"
+
+  # --- Version space actions ---
+  - name: version-fork
+    binding: version-fork
+    target: "VersionSpace/fork"
+    parameterMap: '{"space":"context.spaceId"}'
+    executionPolicy: "pessimistic"
+    label: "Fork Reality"
+
+  - name: version-merge
+    binding: version-merge
+    target: "VersionSpace/merge"
+    parameterMap: '{"space":"context.spaceId"}'
+    executionPolicy: "pessimistic"
+    confirmWhen: "true"
+    label: "Merge"
+
+  # --- Content actions ---
+  - name: content-delete
+    binding: content-delete
+    target: "ContentNode/delete"
+    parameterMap: '{"node":"row.id"}'
+    executionPolicy: "pessimistic"
+    confirmWhen: "true"
+    reversalAction: "none"
+    label: "Delete"
+    buttonVariant: "destructive"
