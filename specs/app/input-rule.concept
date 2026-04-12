@@ -1,0 +1,213 @@
+@version(1)
+@category("ui-core")
+@visibility("public")
+concept InputRule [R] {
+
+  purpose {
+    Declarative input-time pattern matching that dispatches to ActionBinding.
+    Covers markdown shortcuts, trigger characters, paste handlers, and drop
+    handlers through a single kind-tagged extension surface. Conflict
+    resolution uses highest priority; within the same priority tier,
+    longest-pattern wins.
+  }
+
+  state {
+    rules: set R
+    definition {
+      kind: R -> String
+      pattern: R -> String
+      action_ref: R -> String
+      priority: R -> Int
+      scope: R -> option String
+    }
+  }
+
+  actions {
+    action register(rule: R, kind: String, pattern: String,
+                    action_ref: String, priority: Int,
+                    scope: option String) {
+      -> ok(rule: R) {
+        Register an input rule mapping a kind-tagged pattern to an ActionBinding
+        reference. The rule is immediately available for matching. Kind must be
+        one of "pattern", "trigger-char", "paste", or "drop".
+      }
+      -> duplicate(rule: R) {
+        A rule with this identifier, same kind, same pattern, and same scope
+        was already registered at the same priority level. Registering identical
+        rules at the same priority is ambiguous and rejected.
+      }
+      -> invalid_kind(message: String) {
+        The kind value is not one of the four documented kinds: "pattern",
+        "trigger-char", "paste", or "drop".
+      }
+      -> error(message: String) {
+        Registration failed because the pattern is empty, action_ref is empty,
+        or a storage error occurred.
+      }
+
+      fixture register_ok {
+        rule: "md-heading"
+        kind: "pattern"
+        pattern: "^#{1,6}\\s"
+        action_ref: "block-transform-heading"
+        priority: 10
+      }
+      fixture register_trigger {
+        rule: "slash-menu"
+        kind: "trigger-char"
+        pattern: "/"
+        action_ref: "open-slash-menu"
+        priority: 5
+        scope: "document"
+      }
+      fixture register_paste {
+        rule: "paste-url"
+        kind: "paste"
+        pattern: "text/uri-list"
+        action_ref: "embed-link"
+        priority: 8
+      }
+      fixture register_drop {
+        rule: "drop-image"
+        kind: "drop"
+        pattern: "image/*"
+        action_ref: "insert-image"
+        priority: 10
+      }
+      fixture register_high_priority {
+        rule: "md-heading-high"
+        kind: "pattern"
+        pattern: "^#{1,6}\\s"
+        action_ref: "block-transform-heading-high"
+        priority: 20
+      }
+      fixture register_invalid_kind {
+        rule: "bad-kind"
+        kind: "keyboard"
+        pattern: "ctrl+z"
+        action_ref: "undo"
+        priority: 1
+      } -> invalid_kind
+      fixture register_empty_pattern {
+        rule: "empty-pat"
+        kind: "pattern"
+        pattern: ""
+        action_ref: "block-transform-heading"
+        priority: 5
+      } -> error
+      fixture register_empty_action_ref {
+        rule: "empty-ref"
+        kind: "pattern"
+        pattern: "^#{1,6}\\s"
+        action_ref: ""
+        priority: 5
+      } -> error
+      fixture register_duplicate {
+        rule: "md-heading"
+        kind: "pattern"
+        pattern: "^#{1,6}\\s"
+        action_ref: "block-transform-heading"
+        priority: 10
+      } after register_ok -> duplicate
+    }
+
+    action unregister(rule: R) {
+      -> ok(rule: R) {
+        Remove the rule from the registry. Subsequent match calls will no
+        longer consider this rule.
+      }
+      -> notfound(message: String) {
+        No rule with this identifier exists in the registry.
+      }
+
+      reversal: none
+
+      fixture unregister_ok { rule: $register_ok.rule } after register_ok
+      fixture unregister_missing { rule: "nonexistent-rule" } -> notfound
+    }
+
+    action match(kind: String, input: String, scope: option String) {
+      -> ok(rule: R, action_ref: String, captures: String) {
+        Return the highest-priority rule matching the given kind and input.
+        Within the same priority tier, the rule with the longest pattern wins.
+        The captures field is a JSON array of regex capture groups (empty for
+        non-pattern kinds). Scope null matches global rules only; a non-null
+        scope matches rules with that scope or global rules (scope = null).
+      }
+      -> no_match() {
+        No registered rule matches the given kind and input combination.
+      }
+
+      fixture match_ok {
+        kind: "pattern"
+        input: "## Section heading"
+      } after register_ok
+      fixture match_priority_wins {
+        kind: "pattern"
+        input: "## Section heading"
+      } after register_ok, register_high_priority
+      fixture match_scoped {
+        kind: "trigger-char"
+        input: "/"
+        scope: "document"
+      } after register_trigger
+      fixture match_no_match {
+        kind: "pattern"
+        input: "plain text without special chars"
+      } -> no_match
+      fixture match_wrong_kind {
+        kind: "paste"
+        input: "## Section heading"
+      } after register_ok -> no_match
+    }
+  }
+
+  example "register then match returns registered rule": {
+    after register(rule: "md-bold", kind: "pattern", pattern: "\\*\\*(.+?)\\*\\*",
+                   action_ref: "bold-transform", priority: 10) -> ok(rule: r)
+    then match(kind: "pattern", input: "**hello**") -> ok(rule: r, action_ref: "bold-transform")
+  }
+
+  example "higher priority wins when both match": {
+    after register(rule: "rule-low", kind: "pattern", pattern: "^#\\s",
+                   action_ref: "heading-low", priority: 5) -> ok(rule: _)
+    after register(rule: "rule-high", kind: "pattern", pattern: "^#\\s",
+                   action_ref: "heading-high", priority: 20) -> ok(rule: _)
+    then match(kind: "pattern", input: "# Hello") -> ok(rule: "rule-high", action_ref: "heading-high")
+  }
+
+  example "register then unregister makes match return no_match": {
+    after register(rule: "temp-rule", kind: "trigger-char", pattern: "@",
+                   action_ref: "mention-menu", priority: 10) -> ok(rule: r)
+    after unregister(rule: r) -> ok(rule: r)
+    then match(kind: "trigger-char", input: "@") -> no_match()
+  }
+
+  always "registered rules have non-empty pattern": {
+    forall r in rules: r.pattern != ""
+  }
+
+  always "registered rules have one of four kinds": {
+    forall r in rules:
+      r.kind in {"pattern", "trigger-char", "paste", "drop"}
+  }
+
+  never "two rules with same priority and pattern and kind and scope": {
+    exists r1 in rules, r2 in rules:
+      r1 != r2
+      and r1.priority = r2.priority
+      and r1.pattern = r2.pattern
+      and r1.kind = r2.kind
+      and r1.scope = r2.scope
+  }
+
+  action register {
+    requires: kind in {"pattern", "trigger-char", "paste", "drop"}
+    ensures ok: rule in rules
+  }
+
+  action unregister {
+    requires: rule in rules
+    ensures ok: rule not in rules
+  }
+}
