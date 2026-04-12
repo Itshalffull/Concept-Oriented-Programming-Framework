@@ -25,6 +25,11 @@ interface CalendarDisplayProps {
   data: Record<string, unknown>[];
   fields: FieldConfig[];
   onRowClick?: (row: Record<string, unknown>) => void;
+  /** Called when the user clicks an empty day cell. Receives the date in ISO
+   *  format (YYYY-MM-DD). When absent, cells are not clickable and no hover
+   *  indicator is shown. The parent (ViewRenderer) is responsible for opening
+   *  the view's createForm ActionBinding with the date pre-filled. */
+  onCreateEvent?: (date: string) => void;
 }
 
 type ViewMode = 'month' | 'week' | 'day';
@@ -162,6 +167,149 @@ function EventChip({ label, onClick }: EventChipProps) {
 }
 
 // ---------------------------------------------------------------------------
+// CreateHint — faint "+" overlay shown when the parent day cell is hovered
+// and onCreateEvent is provided. The visible prop is driven by the parent
+// cell's onMouseEnter/onMouseLeave handlers so the hint never blocks pointer
+// events from reaching the parent.
+// ---------------------------------------------------------------------------
+
+function CreateHint({ visible }: { visible: boolean }) {
+  return (
+    <div
+      data-part="create-hint"
+      aria-hidden="true"
+      style={{
+        position: 'absolute',
+        inset: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        pointerEvents: 'none',
+        opacity: visible ? 0.35 : 0,
+        transition: 'opacity 120ms ease',
+        fontSize: '22px',
+        color: token.onSurface,
+        fontWeight: 300,
+        lineHeight: 1,
+      }}
+    >
+      +
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// MonthDayCell — a single populated day cell in the month grid. Extracted
+// into its own component so hover state can be managed with useState without
+// violating the Rules of Hooks (hooks cannot be called inside .map()).
+// ---------------------------------------------------------------------------
+
+interface MonthDayCellProps {
+  day: number;
+  di: number;
+  isToday: boolean;
+  items: Record<string, unknown>[];
+  visible: Record<string, unknown>[];
+  hidden: number;
+  canCreate: boolean;
+  isoDate: string;
+  viewMonth: number;
+  viewYear: number;
+  labelField: string;
+  onRowClick?: (row: Record<string, unknown>) => void;
+  onCreateEvent?: (date: string) => void;
+}
+
+function MonthDayCell({
+  day, di, isToday, items, visible, hidden, canCreate, isoDate,
+  viewMonth, viewYear, labelField, onRowClick, onCreateEvent,
+}: MonthDayCellProps) {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <div
+      data-part="day-cell"
+      role="gridcell"
+      aria-label={`${MONTH_NAMES[viewMonth]} ${day}, ${viewYear}${items.length > 0 ? `, ${items.length} event${items.length > 1 ? 's' : ''}` : ''}`}
+      data-today={isToday ? 'true' : 'false'}
+      data-has-events={items.length > 0 ? 'true' : 'false'}
+      tabIndex={isToday ? 0 : -1}
+      onClick={() => {
+        if (canCreate) onCreateEvent!(isoDate);
+      }}
+      onMouseEnter={() => { if (canCreate) setHovered(true); }}
+      onMouseLeave={() => setHovered(false)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          if (canCreate) {
+            e.preventDefault();
+            onCreateEvent!(isoDate);
+          } else if (items.length === 1) {
+            onRowClick?.(items[0]);
+          }
+        }
+      }}
+      style={{
+        background: token.surface,
+        minHeight: 80,
+        padding: 4,
+        borderRight: di < 6 ? `1px solid ${token.outline}` : undefined,
+        outline: 'none',
+        cursor: canCreate ? 'pointer' : 'default',
+        position: 'relative',
+      }}
+    >
+      {/* Day number */}
+      <div
+        data-part="day-number"
+        aria-hidden="true"
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: 22,
+          height: 22,
+          borderRadius: '50%',
+          background: isToday ? token.primary : 'transparent',
+          color: isToday ? token.onPrimary : token.onSurface,
+          fontSize: '12px',
+          fontWeight: isToday ? 700 : 400,
+          marginBottom: 2,
+        }}
+      >
+        {day}
+      </div>
+
+      {/* Faint "+" hint shown on hover for empty cells when onCreateEvent is provided */}
+      {canCreate && <CreateHint visible={hovered} />}
+
+      {/* Events */}
+      {visible.length > 0 && (
+        <div data-part="event-list" role="list" aria-label={`Events on ${MONTH_NAMES[viewMonth]} ${day}`}>
+          {visible.map((row, i) => (
+            <EventChip
+              key={i}
+              label={String(row[labelField] ?? '(no title)')}
+              onClick={onRowClick ? () => onRowClick(row) : undefined}
+            />
+          ))}
+        </div>
+      )}
+
+      {hidden > 0 && (
+        <div
+          data-part="overflow-badge"
+          aria-label={`${hidden} more events`}
+          style={{ fontSize: '9px', color: token.onSurfaceVar }}
+        >
+          +{hidden} more
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Month view
 // ---------------------------------------------------------------------------
 
@@ -173,9 +321,10 @@ interface MonthViewProps {
   labelField: string;
   maxPerCell: number;
   onRowClick?: (row: Record<string, unknown>) => void;
+  onCreateEvent?: (date: string) => void;
 }
 
-function MonthView({ viewYear, viewMonth, today, itemsByDay, labelField, maxPerCell, onRowClick }: MonthViewProps) {
+function MonthView({ viewYear, viewMonth, today, itemsByDay, labelField, maxPerCell, onRowClick, onCreateEvent }: MonthViewProps) {
   const { cells, startOffset } = useMemo(() => {
     const firstDay = new Date(viewYear, viewMonth, 1);
     const lastDay = new Date(viewYear, viewMonth + 1, 0);
@@ -271,74 +420,28 @@ function MonthView({ viewYear, viewMonth, today, itemsByDay, labelField, maxPerC
             const items = itemsByDay.get(day) ?? [];
             const visible = items.slice(0, maxPerCell);
             const hidden = items.length - visible.length;
+            const isEmpty = items.length === 0;
+            // ISO date string for this cell (YYYY-MM-DD), passed to onCreateEvent.
+            const isoDate = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const canCreate = isEmpty && !!onCreateEvent;
 
             return (
-              <div
+              <MonthDayCell
                 key={di}
-                data-part="day-cell"
-                role="gridcell"
-                aria-label={`${MONTH_NAMES[viewMonth]} ${day}, ${viewYear}${items.length > 0 ? `, ${items.length} event${items.length > 1 ? 's' : ''}` : ''}`}
-                data-today={isToday ? 'true' : 'false'}
-                data-has-events={items.length > 0 ? 'true' : 'false'}
-                tabIndex={isToday ? 0 : -1}
-                style={{
-                  background: token.surface,
-                  minHeight: 80,
-                  padding: 4,
-                  borderRight: di < 6 ? `1px solid ${token.outline}` : undefined,
-                  outline: 'none',
-                  cursor: 'default',
-                }}
-                onKeyDown={(e) => {
-                  if ((e.key === 'Enter' || e.key === ' ') && items.length === 1) {
-                    onRowClick?.(items[0]);
-                  }
-                }}
-              >
-                {/* Day number */}
-                <div
-                  data-part="day-number"
-                  aria-hidden="true"
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: 22,
-                    height: 22,
-                    borderRadius: '50%',
-                    background: isToday ? token.primary : 'transparent',
-                    color: isToday ? token.onPrimary : token.onSurface,
-                    fontSize: '12px',
-                    fontWeight: isToday ? 700 : 400,
-                    marginBottom: 2,
-                  }}
-                >
-                  {day}
-                </div>
-
-                {/* Events */}
-                {visible.length > 0 && (
-                  <div data-part="event-list" role="list" aria-label={`Events on ${MONTH_NAMES[viewMonth]} ${day}`}>
-                    {visible.map((row, i) => (
-                      <EventChip
-                        key={i}
-                        label={String(row[labelField] ?? '(no title)')}
-                        onClick={onRowClick ? () => onRowClick(row) : undefined}
-                      />
-                    ))}
-                  </div>
-                )}
-
-                {hidden > 0 && (
-                  <div
-                    data-part="overflow-badge"
-                    aria-label={`${hidden} more events`}
-                    style={{ fontSize: '9px', color: token.onSurfaceVar }}
-                  >
-                    +{hidden} more
-                  </div>
-                )}
-              </div>
+                day={day}
+                di={di}
+                isToday={isToday}
+                items={items}
+                visible={visible}
+                hidden={hidden}
+                canCreate={canCreate}
+                isoDate={isoDate}
+                viewMonth={viewMonth}
+                viewYear={viewYear}
+                labelField={labelField}
+                onRowClick={onRowClick}
+                onCreateEvent={onCreateEvent}
+              />
             );
           })}
         </div>
@@ -357,9 +460,10 @@ interface WeekViewProps {
   allItems: { row: Record<string, unknown>; date: Date }[];
   labelField: string;
   onRowClick?: (row: Record<string, unknown>) => void;
+  onCreateEvent?: (date: string) => void;
 }
 
-function WeekView({ anchor, today, allItems, labelField, onRowClick }: WeekViewProps) {
+function WeekView({ anchor, today, allItems, labelField, onRowClick, onCreateEvent }: WeekViewProps) {
   const weekStart = startOfWeek(anchor);
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
@@ -461,6 +565,9 @@ function WeekView({ anchor, today, allItems, labelField, onRowClick }: WeekViewP
         {weekDays.map((d, i) => {
           const dow = d.getDay();
           const dayItems = itemsByDow.get(dow) ?? [];
+          const isEmpty = dayItems.length === 0;
+          const isoDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+          const canCreate = isEmpty && !!onCreateEvent;
           return (
             <div
               key={i}
@@ -470,11 +577,19 @@ function WeekView({ anchor, today, allItems, labelField, onRowClick }: WeekViewP
               data-today={isSameDay(d, today) ? 'true' : 'false'}
               data-has-events={dayItems.length > 0 ? 'true' : 'false'}
               tabIndex={isSameDay(d, today) ? 0 : -1}
+              onClick={() => { if (canCreate) onCreateEvent!(isoDate); }}
+              onKeyDown={(e) => {
+                if ((e.key === 'Enter' || e.key === ' ') && canCreate) {
+                  e.preventDefault();
+                  onCreateEvent!(isoDate);
+                }
+              }}
               style={{
                 padding: '2px 4px',
                 borderRight: i < 6 ? `1px solid ${token.outline}` : undefined,
                 background: token.surface,
                 minHeight: 36,
+                cursor: canCreate ? 'pointer' : 'default',
               }}
             >
               <div data-part="event-list" role="list">
@@ -492,6 +607,11 @@ function WeekView({ anchor, today, allItems, labelField, onRowClick }: WeekViewP
       </div>
 
       {/* Scrollable hour rows — show 8 AM–6 PM visible, rest scrollable */}
+      {/* TODO (MAG-667): Add click-and-drag on hour cells to create events spanning
+          a time range. Clicking a single hour slot should call
+          onCreateEvent(isoDate) with the slot's date; dragging should determine
+          startTime and endTime before opening the create form. Skipped for now
+          due to complexity of drag-selection UX. */}
       <div style={{ maxHeight: 360, overflowY: 'auto' }}>
         {HOURS.map(h => (
           <div
@@ -542,9 +662,10 @@ interface DayViewProps {
   allItems: { row: Record<string, unknown>; date: Date }[];
   labelField: string;
   onRowClick?: (row: Record<string, unknown>) => void;
+  onCreateEvent?: (date: string) => void;
 }
 
-function DayView({ anchor, today, allItems, labelField, onRowClick }: DayViewProps) {
+function DayView({ anchor, today, allItems, labelField, onRowClick, onCreateEvent }: DayViewProps) {
   const isToday = isSameDay(anchor, today);
 
   const dayItems = useMemo(() =>
@@ -598,8 +719,8 @@ function DayView({ anchor, today, allItems, labelField, onRowClick }: DayViewPro
         </div>
       </div>
 
-      {/* All-day section */}
-      {dayItems.length > 0 && (
+      {/* All-day section — always rendered so empty days remain clickable */}
+      {(dayItems.length > 0 || !!onCreateEvent) && (
         <div
           role="row"
           style={{
@@ -620,8 +741,25 @@ function DayView({ anchor, today, allItems, labelField, onRowClick }: DayViewPro
             role="gridcell"
             aria-label={`${MONTH_NAMES[anchor.getMonth()]} ${anchor.getDate()} all-day events`}
             data-today={isToday ? 'true' : 'false'}
-            data-has-events="true"
-            style={{ padding: '4px 8px' }}
+            data-has-events={dayItems.length > 0 ? 'true' : 'false'}
+            onClick={() => {
+              if (dayItems.length === 0 && onCreateEvent) {
+                const isoDate = `${anchor.getFullYear()}-${String(anchor.getMonth() + 1).padStart(2, '0')}-${String(anchor.getDate()).padStart(2, '0')}`;
+                onCreateEvent(isoDate);
+              }
+            }}
+            onKeyDown={(e) => {
+              if ((e.key === 'Enter' || e.key === ' ') && dayItems.length === 0 && onCreateEvent) {
+                e.preventDefault();
+                const isoDate = `${anchor.getFullYear()}-${String(anchor.getMonth() + 1).padStart(2, '0')}-${String(anchor.getDate()).padStart(2, '0')}`;
+                onCreateEvent(isoDate);
+              }
+            }}
+            style={{
+              padding: '4px 8px',
+              cursor: dayItems.length === 0 && !!onCreateEvent ? 'pointer' : 'default',
+              minHeight: 32,
+            }}
           >
             <div data-part="event-list" role="list">
               {dayItems.map((item, i) => (
@@ -637,6 +775,9 @@ function DayView({ anchor, today, allItems, labelField, onRowClick }: DayViewPro
       )}
 
       {/* Hour rows */}
+      {/* TODO (MAG-667): Add click-and-drag on hour cells to create events
+          spanning a time range. For now, only the all-day cell fires
+          onCreateEvent. Drag-selection UX is deferred due to complexity. */}
       <div style={{ maxHeight: 480, overflowY: 'auto' }}>
         {HOURS.map(h => {
           const hourItems = itemsByHour.get(h) ?? [];
@@ -684,7 +825,7 @@ function DayView({ anchor, today, allItems, labelField, onRowClick }: DayViewPro
 // Root component
 // ---------------------------------------------------------------------------
 
-export const CalendarDisplay: React.FC<CalendarDisplayProps> = ({ data, fields, onRowClick }) => {
+export const CalendarDisplay: React.FC<CalendarDisplayProps> = ({ data, fields, onRowClick, onCreateEvent }) => {
   const today = new Date();
   const [view, setView] = useState<ViewMode>('month');
 
@@ -904,6 +1045,7 @@ export const CalendarDisplay: React.FC<CalendarDisplayProps> = ({ data, fields, 
           labelField={labelField}
           maxPerCell={3}
           onRowClick={onRowClick}
+          onCreateEvent={onCreateEvent}
         />
       )}
       {view === 'week' && (
@@ -913,6 +1055,7 @@ export const CalendarDisplay: React.FC<CalendarDisplayProps> = ({ data, fields, 
           allItems={parsedItems}
           labelField={labelField}
           onRowClick={onRowClick}
+          onCreateEvent={onCreateEvent}
         />
       )}
       {view === 'day' && (
@@ -922,6 +1065,7 @@ export const CalendarDisplay: React.FC<CalendarDisplayProps> = ({ data, fields, 
           allItems={parsedItems}
           labelField={labelField}
           onRowClick={onRowClick}
+          onCreateEvent={onCreateEvent}
         />
       )}
 
