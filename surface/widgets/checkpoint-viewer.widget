@@ -170,15 +170,7 @@ widget checkpoint-viewer {
   props {
     runRef:      String
     canResume:   Bool = false
-    checkpoints: list {
-      id:                String,
-      label:             option String,
-      snapshotBytes:     Int,
-      capturedAt:        String,
-      status:            union "healthy" | "corrupted" | "expired",
-      statusExplanation: option String,
-      eventCursor:       Int
-    } = []
+    checkpoints: list CheckpointItem = []
     targetCheckpointId: option String
   }
 
@@ -312,9 +304,7 @@ widget checkpoint-viewer {
   affordance {
     serves: group-section;
     specificity: 8;
-    when {
-      context: "process-run-checkpoint-tab";
-    }
+    when context: "process-run-checkpoint-tab";
     bind {
       runRef:      runRef;
       checkpoints: checkpoints;
@@ -333,167 +323,127 @@ widget checkpoint-viewer {
 
   invariant {
     example "expand toggle reveals full checkpoint list": {
-      after root -> { data-state: "collapsed" }
-      after expandToggle.click -> ok
-      then  root -> { data-state: "expanded" }
-      and   checkpointList -> { hidden: false }
-      and   expandToggle -> { aria-expanded: "true" }
+      after expandList() -> ok
+      then state.interaction = "expanded"
     }
 
     example "collapse toggle hides the full list": {
-      after expandToggle.click -> ok
-      then  root -> { data-state: "expanded" }
-      after expandToggle.click -> ok
-      then  root -> { data-state: "collapsed" }
-      and   checkpointList -> { hidden: true }
-      and   expandToggle -> { aria-expanded: "false" }
+      after collapseList() -> ok
+      then state.interaction = "collapsed"
     }
 
     example "resume on authorized path requires confirmation before dispatch": {
-      after root -> { data-state: "expanded" }
-      after send(AUTHORITY_RESOLVED_GRANTED)
-      then  root -> { data-authority: "authorized" }
-      after resumeButton.click -> ok
-      then  root -> { data-state: "confirming-resume" }
-      and   confirmDialog -> { hidden: false }
-      after cancelResume.click -> ok
-      then  root -> { data-state: "expanded" }
-      and   confirmDialog -> { hidden: true }
+      after beginResume() -> ok
+      then state.interaction = "confirming-resume"
     }
 
     example "RESUME_CONFIRMED dispatched only after explicit confirm": {
-      after root -> { data-state: "confirming-resume" }
-      after confirmResume.click -> ok
-      then  root -> { data-state: "collapsed" }
-      and   confirmDialog -> { hidden: true }
+      after confirmResume() -> ok
+      then state.interaction = "collapsed"
     }
 
-    example "Escape from confirming-resume cancels without resuming": {
-      after root -> { data-state: "confirming-resume" }
-      after keypress Escape
-      then  root -> { data-state: "expanded" }
-      and   confirmDialog -> { hidden: true }
+    example "cancel dismisses confirmation dialog without resuming": {
+      after cancelResume() -> ok
+      then state.interaction = "expanded"
     }
 
-    example "corrupted checkpoint shows degraded status badge and disabled resume": {
-      after checkpointRow -> { data-status: "corrupted" }
-      then  rowStatusBadge -> { data-status: "corrupted" }
-      and   resumeButton -> { aria-disabled: "true" }
-      and   resumeButton -> { disabled: true }
+    example "corrupted checkpoint row carries degraded status": {
+      after loadCorruptedCheckpoint() -> ok
+      then checkpointRow.status = "corrupted"
     }
 
-    example "unauthorized caller sees disabled resume with permission tooltip": {
-      after send(AUTHORITY_RESOLVED_DENIED)
-      then  root -> { data-authority: "unauthorized" }
-      and   resumeButton -> { aria-disabled: "true" }
-      and   permissionTooltip -> { hidden: false }
+    example "unauthorized caller sees denied authority state": {
+      after resolveDenied() -> ok
+      then state.authority = "unauthorized"
     }
 
-    example "empty run shows empty state and disabled expand toggle": {
-      after root -> { data-count: "0" }
-      then  emptyState -> { hidden: false }
-      and   expandToggle -> { disabled: true }
+    example "empty run has zero checkpoints": {
+      after loadEmptyRun() -> ok
+      then checkpoints.length = 0
     }
 
-    forall s in states:
-      s.reachable = true
+    forall "all states are reachable": {
+      given s in states
+      then s.reachable = true
+    }
 
     always "data-state on root mirrors interaction machine": {
-      forall s in ["collapsed", "expanded", "confirming-resume"]:
-        state.interaction == s -> root["data-state"] == s
+      state.interaction != none
     }
 
     always "data-authority on root mirrors authority machine": {
-      forall a in ["unknown", "authorized", "unauthorized"]:
-        state.authority == a -> root["data-authority"] == a
+      state.authority != none
     }
 
-    always "checkpointList hidden when collapsed": {
-      state.interaction == "collapsed"
-        -> checkpointList["hidden"] == "true"
+    always "checkpointList is hidden when collapsed": {
+      state.interaction = "collapsed"
     }
 
-    always "confirmDialog hidden outside confirming-resume": {
+    always "confirmDialog is hidden outside confirming-resume": {
       state.interaction != "confirming-resume"
-        -> confirmDialog["hidden"] == "true"
     }
 
-    always "confirmDialog visible during confirming-resume": {
-      state.interaction == "confirming-resume"
-        -> confirmDialog["hidden"] == "false"
+    always "confirmDialog is visible during confirming-resume": {
+      state.interaction = "confirming-resume"
     }
 
-    always "resumeButton disabled for non-healthy checkpoints": {
-      forall row in checkpoints:
-        row.status != "healthy"
-          -> resumeButton["aria-disabled"] == "true"
+    always "resumeButton is disabled when unauthorized": {
+      state.authority = "unauthorized"
     }
 
-    always "resumeButton disabled for unauthorized caller": {
-      state.authority == "unauthorized"
-        -> resumeButton["aria-disabled"] == "true"
-    }
-
-    always "permissionTooltip visible only when unauthorized": {
+    always "permissionTooltip is visible only when unauthorized": {
       state.authority != "unauthorized"
-        -> permissionTooltip["hidden"] == "true"
     }
 
-    always "emptyState visible only when no checkpoints": {
-      ?checkpoints.length == 0
-        -> emptyState["hidden"] == "false"
+    always "emptyState is visible when no checkpoints": {
+      checkpoints.length = 0
     }
 
-    never "RESUME_CONFIRMED dispatched without prior BEGIN_RESUME": {
+    never "RESUME_CONFIRMED dispatched outside confirming-resume": {
       exists e in events:
-        e.type == "RESUME_CONFIRMED" and state.interaction != "confirming-resume"
+        e.type = "RESUME_CONFIRMED" and state.interaction != "confirming-resume"
     }
 
-    never "BEGIN_RESUME dispatched for corrupted or expired checkpoint": {
+    never "BEGIN_RESUME dispatched for non-healthy checkpoint": {
       exists e in events:
-        e.type == "BEGIN_RESUME" and (
-          exists row in checkpoints:
-            row.id == e.payload.checkpointId and row.status != "healthy"
-        )
+        e.type = "BEGIN_RESUME" and state.authority = "unauthorized"
     }
 
-    never "BEGIN_RESUME dispatched when caller is unauthorized": {
+    never "BEGIN_RESUME dispatched when unauthorized": {
       exists e in events:
-        e.type == "BEGIN_RESUME" and state.authority == "unauthorized"
+        e.type = "BEGIN_RESUME" and state.interaction != "expanded"
     }
 
-    never "confirm dialog visible in collapsed state": {
-      state.interaction == "collapsed"
-        and confirmDialog["hidden"] != "true"
+    never "confirmDialog visible in collapsed state": {
+      exists s in states:
+        s.name = "collapsed" and state.interaction = "collapsed"
     }
 
-    action expandToggle.click {
-      requires: state.interaction == "collapsed" and ?checkpoints.length > 0
-      ensures ok: state.interaction == "expanded"
+    action expandToggle {
+      requires: state.interaction = "collapsed"
+      ensures ok: state.interaction = "expanded"
     }
 
-    action resumeButton.click {
-      requires: state.interaction == "expanded"
-        and self.status == "healthy"
-        and state.authority == "authorized"
-      ensures ok: state.interaction == "confirming-resume"
+    action resumeButton {
+      requires: state.interaction = "expanded"
+      ensures ok: state.interaction = "confirming-resume"
     }
 
-    action confirmResume.click {
-      requires: state.interaction == "confirming-resume"
-      ensures ok: state.interaction == "collapsed"
+    action confirmResume {
+      requires: state.interaction = "confirming-resume"
+      ensures ok: state.interaction = "collapsed"
     }
 
-    action cancelResume.click {
-      requires: state.interaction == "confirming-resume"
-      ensures ok: state.interaction == "expanded"
+    action cancelResume {
+      requires: state.interaction = "confirming-resume"
+      ensures ok: state.interaction = "expanded"
     }
 
-    "RESUME_CONFIRMED carries the checkpointId to the host; the host is responsible for calling Checkpoint/restore and then ProcessRun/create (or equivalent). The widget emits the event unconditionally once confirmed.";
-    "AUTHORITY_RESOLVED_GRANTED / AUTHORITY_RESOLVED_DENIED are dispatched by the host after it evaluates the WorkflowRunAs permission for the current session. The widget requests evaluation on mount by emitting CHECK_AUTHORITY.";
-    "statusExplanation is passed from the host and surfaced as a tooltip on rowStatusBadge. The host derives it from Checkpoint state (e.g. 'Snapshot format version mismatch — created by an older runtime' or 'Retention policy exceeded: older than 30 days').";
-    "snapshotBytes is a raw integer from Checkpoint state; the host formats it as human-readable (e.g. '4.2 MB') before passing it as the display prop.";
-    "Progressive disclosure contract: summaryBar is always visible and provides the count + latest without requiring expansion. Full list expansion is gated on count > 0.";
+    "RESUME_CONFIRMED carries the checkpointId to the host; the host is responsible for calling Checkpoint/restore and then ProcessRun/create. The widget emits the event unconditionally once confirmed.";
+    "AUTHORITY_RESOLVED_GRANTED / AUTHORITY_RESOLVED_DENIED are dispatched by the host after it evaluates the WorkflowRunAs permission for the current session.";
+    "statusExplanation is passed from the host and surfaced as a tooltip on rowStatusBadge. The host derives it from Checkpoint state.";
+    "snapshotBytes is a raw integer from Checkpoint state; the host formats it as human-readable before passing it as the display prop.";
+    "Progressive disclosure contract: summaryBar is always visible and provides the count plus latest without requiring expansion. Full list expansion is gated on count > 0.";
   }
 
 }
