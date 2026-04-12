@@ -1,0 +1,499 @@
+@version(1)
+widget checkpoint-viewer {
+
+  purpose {
+    Tab panel inside ProcessRunView that lists all checkpoints captured for a
+    running or completed process run. Presents each checkpoint ID, snapshot
+    size, creation timestamp, and a Resume-from-here button that reifies the
+    checkpoint into a fresh ProcessRun (finer-grained than full ReplayRun).
+    Corrupted or expired checkpoints are rendered explicitly as degraded rows
+    with an explanatory status badge rather than hidden or silently disabled.
+    By default the panel shows only the total checkpoint count and the single
+    latest checkpoint; the user expands the full list via EXPAND_LIST. Resuming
+    a checkpoint is gated by an impersonation-style permission check (WorkflowRunAs
+    pattern): if the caller lacks authority the button renders disabled with an
+    explanatory tooltip; if they have authority an explicit confirmation dialog
+    prevents accidental re-execution.
+  }
+
+  requires @1 {
+    fields {
+      checkpoints: list;
+      runRef:      String;
+    }
+    actions {
+      restore();
+    }
+  }
+
+  anatomy {
+    root:               container    { Top-level wrapper scoped to one ProcessRun }
+    summaryBar:         container    { Collapsed header row showing total count and latest checkpoint summary }
+    checkpointCount:    text         { Numeric badge showing how many checkpoints exist for this run }
+    latestSummary:      container    { Single-row summary of the most-recent checkpoint always visible }
+    latestLabel:        text         { Human-readable label or auto-generated ID of the latest checkpoint }
+    latestSize:         text         { Snapshot byte size of the latest checkpoint, formatted for display }
+    latestTimestamp:    text         { ISO-8601 creation timestamp of the latest checkpoint }
+    expandToggle:       action       { Chevron button that expands or collapses the full checkpoint list }
+    checkpointList:     container    { Scrollable list of all checkpoints, visible only when expanded }
+    checkpointRow:      container    { One row per checkpoint; carries data-status for healthy/corrupted/expired }
+    rowLabel:           text         { Label or truncated ID identifying the checkpoint in its row }
+    rowSize:            text         { Snapshot size for this checkpoint row }
+    rowTimestamp:       text         { Creation timestamp for this checkpoint row }
+    rowStatusBadge:     text         { Status badge: "healthy", "corrupted", or "expired" with explanatory tooltip }
+    resumeButton:       action       { Resume-from-checkpoint CTA; disabled when status != healthy or caller lacks authority }
+    permissionTooltip:  text         { Inline explanation shown when resumeButton is disabled due to permission }
+    confirmDialog:      container    { Confirmation overlay shown before a resume action is dispatched }
+    confirmMessage:     text         { Prose explaining which checkpoint will be resumed and that a new run will be created }
+    confirmResume:      action       { Button that confirms and dispatches the RESUME_CONFIRMED event }
+    cancelResume:       action       { Button that dismisses the confirmation dialog without resuming }
+    emptyState:         container    { Placeholder shown when the run has no checkpoints at all }
+  }
+
+  states {
+    // Primary interaction machine
+    interaction {
+      collapsed [initial] {
+        on EXPAND_LIST -> expanded;
+      }
+
+      expanded {
+        on COLLAPSE_LIST -> collapsed;
+        on BEGIN_RESUME  -> confirming-resume;
+        entry [scrollListIntoView];
+      }
+
+      confirming-resume {
+        on RESUME_CONFIRMED -> collapsed;
+        on CANCEL_RESUME    -> expanded;
+        entry [trapFocusOnConfirm];
+        exit  [releaseFocusFromConfirm];
+      }
+    }
+
+    // Permission guard machine — parallel, drives resumeButton disabled state
+    authority [parallel] {
+      unknown [initial] {
+        on AUTHORITY_RESOLVED_GRANTED -> authorized;
+        on AUTHORITY_RESOLVED_DENIED  -> unauthorized;
+      }
+
+      authorized {
+        on AUTHORITY_REVOKED -> unauthorized;
+      }
+
+      unauthorized {
+        on AUTHORITY_RESOLVED_GRANTED -> authorized;
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      ArrowDown   -> NAVIGATE_NEXT;
+      ArrowUp     -> NAVIGATE_PREV;
+      Enter       -> BEGIN_RESUME;
+      Escape      -> CANCEL_RESUME;
+      Space       -> EXPAND_LIST;
+    }
+    focus {
+      trap: false;
+      initial: expandToggle;
+      roving: true;
+      returnOnClose: expandToggle;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-labelledby: "checkpoint-viewer-heading";
+        aria-busy: "false";
+      };
+      summaryBar -> {
+        role: "group";
+        aria-label: "Checkpoint summary";
+      };
+      checkpointCount -> {
+        role: "status";
+        aria-label: concat(?runRef, " checkpoint count");
+        aria-live: "polite";
+      };
+      expandToggle -> {
+        role: "button";
+        aria-expanded: if state.interaction == "expanded" then "true" else "false";
+        aria-controls: "checkpointList";
+        aria-label: if state.interaction == "expanded" then "Collapse checkpoint list" else "Expand checkpoint list";
+      };
+      checkpointList -> {
+        role: "list";
+        aria-label: "All checkpoints";
+        aria-hidden: if state.interaction == "collapsed" then "true" else "false";
+      };
+      checkpointRow -> {
+        role: "listitem";
+        aria-label: concat("Checkpoint ", self.label, ", ", self.size, ", captured ", self.timestamp, ", status: ", self.status);
+      };
+      rowStatusBadge -> {
+        role: "status";
+        aria-label: concat("Status: ", self.status);
+        aria-description: self.statusExplanation;
+      };
+      resumeButton -> {
+        role: "button";
+        aria-label: concat("Resume from checkpoint ", self.checkpointId);
+        aria-disabled: if self.status != "healthy" then "true" else if state.authority == "unauthorized" then "true" else "false";
+        aria-describedby: if state.authority == "unauthorized" then permissionTooltip else "";
+      };
+      confirmDialog -> {
+        role: "alertdialog";
+        aria-modal: "true";
+        aria-label: "Confirm resume from checkpoint";
+        aria-describedby: confirmMessage;
+      };
+      confirmResume -> {
+        role: "button";
+        aria-label: "Confirm: create new run from this checkpoint";
+      };
+      cancelResume -> {
+        role: "button";
+        aria-label: "Cancel resume";
+      };
+      emptyState -> {
+        role: "status";
+        aria-label: "No checkpoints captured for this run";
+        aria-live: "polite";
+      };
+    }
+  }
+
+  props {
+    runRef:      String
+    canResume:   Bool = false
+    checkpoints: list {
+      id:                String,
+      label:             option String,
+      snapshotBytes:     Int,
+      capturedAt:        String,
+      status:            union "healthy" | "corrupted" | "expired",
+      statusExplanation: option String,
+      eventCursor:       Int
+    } = []
+    targetCheckpointId: option String
+  }
+
+  connect {
+    root -> {
+      data-part:        "root";
+      data-state:       state.interaction;
+      data-authority:   state.authority;
+      data-run-ref:     ?runRef;
+      data-count:       if ?checkpoints.length > 0 then ?checkpoints.length else "0";
+    }
+
+    summaryBar -> {
+      data-part:  "summary-bar";
+      data-empty: if ?checkpoints.length == 0 then "true" else "false";
+    }
+
+    checkpointCount -> {
+      data-part: "checkpoint-count";
+      text:      concat(?checkpoints.length, " checkpoints");
+    }
+
+    latestSummary -> {
+      data-part:   "latest-summary";
+      hidden:      if ?checkpoints.length == 0 then true else false;
+    }
+
+    latestLabel -> {
+      data-part: "latest-label";
+    }
+
+    latestSize -> {
+      data-part: "latest-size";
+    }
+
+    latestTimestamp -> {
+      data-part: "latest-timestamp";
+    }
+
+    expandToggle -> {
+      data-part:     "expand-toggle";
+      aria-expanded: if state.interaction == "expanded" then "true" else "false";
+      disabled:      if ?checkpoints.length == 0 then true else false;
+      onClick:       if state.interaction == "expanded" then send(COLLAPSE_LIST) else send(EXPAND_LIST);
+    }
+
+    checkpointList -> {
+      data-part: "checkpoint-list";
+      role:      "list";
+      hidden:    if state.interaction == "collapsed" then true else false;
+    }
+
+    checkpointRow -> {
+      data-part:       "checkpoint-row";
+      data-checkpoint: self.id;
+      data-status:     self.status;
+      role:            "listitem";
+    }
+
+    rowLabel -> {
+      data-part: "row-label";
+      text:      if self.label != "" then self.label else self.id;
+    }
+
+    rowSize -> {
+      data-part: "row-size";
+    }
+
+    rowTimestamp -> {
+      data-part: "row-timestamp";
+    }
+
+    rowStatusBadge -> {
+      data-part:   "row-status-badge";
+      data-status: self.status;
+      text:        self.status;
+      title:       self.statusExplanation;
+    }
+
+    resumeButton -> {
+      data-part:     "resume-button";
+      data-checkpoint: self.id;
+      disabled:      if self.status != "healthy" then true
+                     else if state.authority == "unauthorized" then true
+                     else false;
+      aria-disabled: if self.status != "healthy" then "true"
+                     else if state.authority == "unauthorized" then "true"
+                     else "false";
+      onClick:       if self.status == "healthy" and state.authority == "authorized" then send(BEGIN_RESUME, { checkpointId: self.id }) else noop;
+    }
+
+    permissionTooltip -> {
+      data-part: "permission-tooltip";
+      hidden:    if state.authority == "unauthorized" then false else true;
+      text:      "Resuming from a checkpoint requires WorkflowRunAs authority";
+    }
+
+    confirmDialog -> {
+      data-part:   "confirm-dialog";
+      role:        "alertdialog";
+      aria-modal:  "true";
+      aria-label:  "Confirm resume from checkpoint";
+      hidden:      if state.interaction != "confirming-resume" then true else false;
+    }
+
+    confirmMessage -> {
+      data-part: "confirm-message";
+      text:      concat("A new process run will be created starting from checkpoint ", ?targetCheckpointId, ". The original run is not affected.");
+    }
+
+    confirmResume -> {
+      data-part:  "confirm-resume";
+      role:       "button";
+      aria-label: "Confirm: create new run from this checkpoint";
+      onClick:    send(RESUME_CONFIRMED, { checkpointId: ?targetCheckpointId });
+    }
+
+    cancelResume -> {
+      data-part:  "cancel-resume";
+      role:       "button";
+      aria-label: "Cancel resume";
+      onClick:    send(CANCEL_RESUME);
+    }
+
+    emptyState -> {
+      data-part: "empty-state";
+      hidden:    if ?checkpoints.length > 0 then true else false;
+    }
+  }
+
+  affordance {
+    serves: group-section;
+    specificity: 8;
+    when {
+      context: "process-run-checkpoint-tab";
+    }
+    bind {
+      runRef:      runRef;
+      checkpoints: checkpoints;
+      canResume:   canResume;
+    }
+  }
+
+  compose {
+    _focusTrap: widget("focus-trap", {
+      active: if state.interaction == "confirming-resume" then true else false
+    });
+    _presence: widget("presence", {
+      present: if state.interaction == "expanded" then true else false
+    });
+  }
+
+  invariant {
+    example "expand toggle reveals full checkpoint list": {
+      after root -> { data-state: "collapsed" }
+      after expandToggle.click -> ok
+      then  root -> { data-state: "expanded" }
+      and   checkpointList -> { hidden: false }
+      and   expandToggle -> { aria-expanded: "true" }
+    }
+
+    example "collapse toggle hides the full list": {
+      after expandToggle.click -> ok
+      then  root -> { data-state: "expanded" }
+      after expandToggle.click -> ok
+      then  root -> { data-state: "collapsed" }
+      and   checkpointList -> { hidden: true }
+      and   expandToggle -> { aria-expanded: "false" }
+    }
+
+    example "resume on authorized path requires confirmation before dispatch": {
+      after root -> { data-state: "expanded" }
+      after send(AUTHORITY_RESOLVED_GRANTED)
+      then  root -> { data-authority: "authorized" }
+      after resumeButton.click -> ok
+      then  root -> { data-state: "confirming-resume" }
+      and   confirmDialog -> { hidden: false }
+      after cancelResume.click -> ok
+      then  root -> { data-state: "expanded" }
+      and   confirmDialog -> { hidden: true }
+    }
+
+    example "RESUME_CONFIRMED dispatched only after explicit confirm": {
+      after root -> { data-state: "confirming-resume" }
+      after confirmResume.click -> ok
+      then  root -> { data-state: "collapsed" }
+      and   confirmDialog -> { hidden: true }
+    }
+
+    example "Escape from confirming-resume cancels without resuming": {
+      after root -> { data-state: "confirming-resume" }
+      after keypress Escape
+      then  root -> { data-state: "expanded" }
+      and   confirmDialog -> { hidden: true }
+    }
+
+    example "corrupted checkpoint shows degraded status badge and disabled resume": {
+      after checkpointRow -> { data-status: "corrupted" }
+      then  rowStatusBadge -> { data-status: "corrupted" }
+      and   resumeButton -> { aria-disabled: "true" }
+      and   resumeButton -> { disabled: true }
+    }
+
+    example "unauthorized caller sees disabled resume with permission tooltip": {
+      after send(AUTHORITY_RESOLVED_DENIED)
+      then  root -> { data-authority: "unauthorized" }
+      and   resumeButton -> { aria-disabled: "true" }
+      and   permissionTooltip -> { hidden: false }
+    }
+
+    example "empty run shows empty state and disabled expand toggle": {
+      after root -> { data-count: "0" }
+      then  emptyState -> { hidden: false }
+      and   expandToggle -> { disabled: true }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root mirrors interaction machine": {
+      forall s in ["collapsed", "expanded", "confirming-resume"]:
+        state.interaction == s -> root["data-state"] == s
+    }
+
+    always "data-authority on root mirrors authority machine": {
+      forall a in ["unknown", "authorized", "unauthorized"]:
+        state.authority == a -> root["data-authority"] == a
+    }
+
+    always "checkpointList hidden when collapsed": {
+      state.interaction == "collapsed"
+        -> checkpointList["hidden"] == "true"
+    }
+
+    always "confirmDialog hidden outside confirming-resume": {
+      state.interaction != "confirming-resume"
+        -> confirmDialog["hidden"] == "true"
+    }
+
+    always "confirmDialog visible during confirming-resume": {
+      state.interaction == "confirming-resume"
+        -> confirmDialog["hidden"] == "false"
+    }
+
+    always "resumeButton disabled for non-healthy checkpoints": {
+      forall row in checkpoints:
+        row.status != "healthy"
+          -> resumeButton["aria-disabled"] == "true"
+    }
+
+    always "resumeButton disabled for unauthorized caller": {
+      state.authority == "unauthorized"
+        -> resumeButton["aria-disabled"] == "true"
+    }
+
+    always "permissionTooltip visible only when unauthorized": {
+      state.authority != "unauthorized"
+        -> permissionTooltip["hidden"] == "true"
+    }
+
+    always "emptyState visible only when no checkpoints": {
+      ?checkpoints.length == 0
+        -> emptyState["hidden"] == "false"
+    }
+
+    never "RESUME_CONFIRMED dispatched without prior BEGIN_RESUME": {
+      exists e in events:
+        e.type == "RESUME_CONFIRMED" and state.interaction != "confirming-resume"
+    }
+
+    never "BEGIN_RESUME dispatched for corrupted or expired checkpoint": {
+      exists e in events:
+        e.type == "BEGIN_RESUME" and (
+          exists row in checkpoints:
+            row.id == e.payload.checkpointId and row.status != "healthy"
+        )
+    }
+
+    never "BEGIN_RESUME dispatched when caller is unauthorized": {
+      exists e in events:
+        e.type == "BEGIN_RESUME" and state.authority == "unauthorized"
+    }
+
+    never "confirm dialog visible in collapsed state": {
+      state.interaction == "collapsed"
+        and confirmDialog["hidden"] != "true"
+    }
+
+    action expandToggle.click {
+      requires: state.interaction == "collapsed" and ?checkpoints.length > 0
+      ensures ok: state.interaction == "expanded"
+    }
+
+    action resumeButton.click {
+      requires: state.interaction == "expanded"
+        and self.status == "healthy"
+        and state.authority == "authorized"
+      ensures ok: state.interaction == "confirming-resume"
+    }
+
+    action confirmResume.click {
+      requires: state.interaction == "confirming-resume"
+      ensures ok: state.interaction == "collapsed"
+    }
+
+    action cancelResume.click {
+      requires: state.interaction == "confirming-resume"
+      ensures ok: state.interaction == "expanded"
+    }
+
+    "RESUME_CONFIRMED carries the checkpointId to the host; the host is responsible for calling Checkpoint/restore and then ProcessRun/create (or equivalent). The widget emits the event unconditionally once confirmed.";
+    "AUTHORITY_RESOLVED_GRANTED / AUTHORITY_RESOLVED_DENIED are dispatched by the host after it evaluates the WorkflowRunAs permission for the current session. The widget requests evaluation on mount by emitting CHECK_AUTHORITY.";
+    "statusExplanation is passed from the host and surfaced as a tooltip on rowStatusBadge. The host derives it from Checkpoint state (e.g. 'Snapshot format version mismatch — created by an older runtime' or 'Retention policy exceeded: older than 30 days').";
+    "snapshotBytes is a raw integer from Checkpoint state; the host formats it as human-readable (e.g. '4.2 MB') before passing it as the display prop.";
+    "Progressive disclosure contract: summaryBar is always visible and provides the count + latest without requiring expansion. Full list expansion is gated on count > 0.";
+  }
+
+}

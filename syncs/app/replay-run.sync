@@ -1,40 +1,28 @@
-# Run replay sync — MAG-679, docs/plans/automation-ui-prd.md §5.2-9.
+# Run replay syncs — MAG-686, docs/plans/automation-ui-prd.md §5.2-9.
 #
 # Two replay modes:
 #
 #   Full replay  — no start_from_step provided. Starts a fresh run from the
 #                  beginning with the original spec_ref, spec_version, and input.
 #
-#   Selective redrive — start_from_step provided. Clones every completed
-#                       StepRun whose step_key sorts before start_from_step
-#                       into the new run via StepRun/seed, then starts the
-#                       run so execution resumes from the target step.
+#   Selective redrive — start_from_step provided. Pre-seeds every completed
+#                       StepRun that precedes the target step into the new run
+#                       via StepRun/seed, then starts the run so execution
+#                       resumes from the target step.
 #
-# Trigger: ProcessRun/get_status is used as a stand-in. Replace with a
-# dedicated ProcessRun/replay(run: R, start_from_step: option String) action
-# once that action is added to ProcessRun (MAG-follow-up).
+# Trigger: ProcessRun/replay — the dedicated replay action added in MAG-686.
 
 # Full replay — no start_from_step; re-execute from the beginning.
 sync ReplayRunFull [eager]
-  purpose: "When a user replays a past terminal process run without specifying a start step, start a fresh run with the original spec reference, version, and input so the process re-executes from the beginning under the same conditions."
+  purpose: "When a user replays a terminal process run without specifying a start step, start a fresh run with the original spec reference, version, and input so the process re-executes from the beginning under the same conditions."
 when {
-  ProcessRun/get_status: [ run: ?original_run ]
-    => ok(run: ?original_run; status: ?status; spec_ref: ?spec_ref)
-}
-where {
-  // Read the original run's versioned spec reference and serialised input.
-  ProcessRun: { ?original_run spec_version: ?spec_version; input: ?input }
-  // Only replay terminal runs; replaying an active run would duplicate execution.
-  filter(?status = "completed" or ?status = "failed" or ?status = "cancelled")
-  // Full replay only: no start_from_step bound.
-  not(ProcessRun: { ?original_run start_from_step: ?_ })
+  ProcessRun/replay: [ original_run: ?original_run; start_from_step: none ]
+    => ok(run: ?new_run)
 }
 then {
-  ProcessRun/start: [
-    spec_ref: ?spec_ref;
-    spec_version: ?spec_version;
-    input: ?input
-  ]
+  // New run already created by ProcessRun/replay — this sync is the observation
+  // point for downstream syncs (notifications, audit) that react to a replay.
+  // No further action required for the full-replay path.
 }
 
 # Selective redrive — start_from_step provided.
@@ -43,25 +31,15 @@ then {
 sync ReplayRunSeedStep [eager]
   purpose: "When a user redrives a terminal process run from a specific step, pre-seed each completed StepRun that preceded the target step into the new run so the process can resume without re-executing those steps."
 when {
-  ProcessRun/get_status: [ run: ?original_run ]
-    => ok(run: ?original_run; status: ?status; spec_ref: ?spec_ref)
+  ProcessRun/replay: [ original_run: ?original_run; start_from_step: ?start_from_step ]
+    => ok(run: ?new_run)
 }
 where {
-  // Read the original run's versioned spec reference, input, and target step.
-  ProcessRun: { ?original_run spec_version: ?spec_version; input: ?input; start_from_step: ?start_from_step }
-  // Only redrive terminal runs.
-  filter(?status = "completed" or ?status = "failed" or ?status = "cancelled")
   // Bind completed StepRuns from the original run that precede the target step.
   StepRun: { ?prior_step run_ref: ?original_run; step_key: ?prior_key; step_type: ?prior_type; status: "completed"; input: ?prior_input; output: ?prior_output }
   filter(?prior_key != ?start_from_step)
 }
 then {
-  // Start the new run first so StepRun/seed can validate its parent run status.
-  ProcessRun/start: [
-    spec_ref: ?spec_ref;
-    spec_version: ?spec_version;
-    input: ?input
-  ] => ok(run: ?new_run)
   // Seed each completed prior-step record into the new run.
   StepRun/seed: [
     run_ref: ?new_run;
