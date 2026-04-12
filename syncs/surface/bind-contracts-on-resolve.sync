@@ -1,0 +1,11 @@
+# After widget resolution, query SurfaceLens for the anatomy-part contract bindings
+
+sync BindContractsOnResolve [eager]
+  purpose: "After WidgetResolver picks a widget, query SurfaceLens for the contract bindings for that widget's anatomy parts, enabling downstream rendering with data-contract attributes."
+when {
+  WidgetResolver/resolve: [ element: ?el; context: ?ctx ]
+    => ok(widget: ?widget; score: ?score)
+}
+then {
+  SurfaceLens/resolve: [ widget: ?widget; context: ?ctx ]
+}

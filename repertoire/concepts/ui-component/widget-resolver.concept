@@ -24,6 +24,7 @@ concept WidgetResolver [R] {
     defaultContext: R -> String
     scoringWeights: R -> String
     diagnostics: R -> option String
+    contractProfile: R -> option String
   }
 
   capabilities {

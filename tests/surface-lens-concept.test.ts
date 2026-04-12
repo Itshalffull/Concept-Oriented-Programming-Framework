@@ -30,7 +30,7 @@ describe('SurfaceLens concept', () => {
 
     expect(ast.name).toBe('SurfaceLens');
     expect(ast.typeParams).toEqual(['L']);
-    expect(ast.actions.map((a) => a.name)).toEqual(['bind', 'get', 'list']);
+    expect(ast.actions.map((a) => a.name)).toEqual(['bind', 'get', 'list', 'resolve']);
   });
 
   it('produces a manifest with lens registry fields and action schemas', async () => {
@@ -40,7 +40,7 @@ describe('SurfaceLens concept', () => {
 
     expect(manifest.name).toBe('SurfaceLens');
     expect(manifest.typeParams[0].name).toBe('L');
-    expect(manifest.actions.map((a) => a.name)).toEqual(['bind', 'get', 'list']);
+    expect(manifest.actions.map((a) => a.name)).toEqual(['bind', 'get', 'list', 'resolve']);
 
     const entries = manifest.relations.find((r) => r.name === 'entries');
     expect(entries?.fields.some((f) => f.name === 'sourceType')).toBe(true);

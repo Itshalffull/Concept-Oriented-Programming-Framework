@@ -236,6 +236,21 @@ concept SurfaceLens [L] {
       fixture list_render_nodes { sourceType: "render-node", targetPlatform: none } after render_node_lens
       fixture list_swiftui { sourceType: none, targetPlatform: "swiftui" } after render_node_lens
     }
+
+    action resolve(widget: String, context: String) {
+      -> ok(bindings: String) {
+        Return the contract bindings for all anatomy parts of the given
+        widget in the given context, serialized as a JSON object mapping
+        part names to their resolved SurfaceContract IDs. Parts without
+        a registered lens binding are omitted from the result.
+      }
+      -> notfound(message: String) {
+        No lens registrations exist for the given widget name.
+      }
+
+      fixture resolve_known { widget: "FieldWidget", context: "{\"platform\":\"web-css\"}" } after widget_part_lens
+      fixture resolve_unknown { widget: "UnknownWidget", context: "{}" } -> notfound
+    }
   }
 
   example "bind then get returns same lens": {
