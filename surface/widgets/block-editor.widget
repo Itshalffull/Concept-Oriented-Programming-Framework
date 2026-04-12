@@ -1,0 +1,367 @@
+@version(1)
+widget block-editor {
+
+  purpose {
+    Thin host widget for the recursive block editor. Renders a tree of ContentNode
+    children as nested block slots, where each block resolves its display widget via
+    ComponentMapping over the (Schema, DisplayMode) pair. Listens to EditSurface
+    registry on focus change to rebind the five plane slots: the page-level EditSurface
+    stays mounted in the header and right rail; the inline innermost EditSurface wins
+    for toolbar, context menu, and input rules. Supports four presentation modes
+    (normal, read-only, preview, print) and five focus states (idle, editing-block,
+    slash-open, drag-reorder, selection-active) modeled as parallel FSMs.
+  }
+
+  requires @1 {
+    fields {
+      rootNodeId: String;
+      focusedBlockId: option String;
+      selectedSchema: option String;
+      pageLevelSchema: option String;
+    }
+    actions {
+      resolveEditSurface(schema: String, context: String);
+      rebindSlots(surfaceBundle: String);
+    }
+  }
+
+  anatomy {
+    root:               container     { Top-level wrapper; carries data-state for focus FSM, data-editor-flavor, data-root-node-id }
+    pageHeader:         container     { Page-level EditSurface toolbar row and compile status badge; always mounted }
+    compileStatusBadge: presentation  { Compile status badge (compiled, stale, invalid, never-compiled); shown only when activeSurface has compile_action_ref }
+    contentArea:        container     { Recursive block-slot container; children are one block-slot per child of rootNodeId via outline-children DataSourceSpec }
+    slashMenuSlot:      widget        { Compose slot for slash-menu widget; visible only when focus FSM is slash-open }
+    inlineToolbarSlot:  widget        { Compose slot for inline-toolbar widget; bound to active inline EditSurface toolbar_widget_ref }
+    contextMenuSlot:    widget        { Compose slot for context-menu widget; bound to active EditSurface context_menu_ref }
+    sidePanelDock:      container     { Right-rail dock; populated dynamically from PluginRegistry type editor-panel filtered to active EditSurface panel_widgets }
+    decorationLayer:    overlay       { Fixed overlay for selection highlight, presence cursors, comment markers, and track-changes annotations }
+  }
+
+  states {
+    focus {
+      idle [initial] {
+        on BLOCK_FOCUS      -> editing-block;
+        on SLASH_TRIGGER    -> slash-open;
+        on DRAG_START       -> drag-reorder;
+        on SELECTION_START  -> selection-active;
+      }
+      editing-block {
+        on BLOCK_BLUR       -> idle;
+        on SLASH_TRIGGER    -> slash-open;
+        on DRAG_START       -> drag-reorder;
+        on SELECTION_START  -> selection-active;
+        on ESCAPE           -> idle;
+        entry [resolveEditSurface; rebindInlineSlots];
+        exit [deactivateInlineSurface];
+      }
+      slash-open {
+        on SLASH_CLOSE      -> editing-block;
+        on ESCAPE           -> editing-block;
+        on BLOCK_BLUR       -> idle;
+        entry [openSlashMenu];
+        exit [closeSlashMenu];
+      }
+      drag-reorder {
+        on DROP             -> idle;
+        on CANCEL           -> idle;
+        entry [activateDragLayer];
+        exit [deactivateDragLayer];
+      }
+      selection-active {
+        on SELECTION_CLEAR  -> idle;
+        on BLOCK_FOCUS      -> editing-block;
+        on ESCAPE           -> idle;
+        entry [showInlineToolbar];
+        exit [hideInlineToolbar];
+      }
+    }
+
+    view [parallel] {
+      normal [initial] {
+        on ENTER_READ_ONLY  -> read-only;
+        on ENTER_PREVIEW    -> preview;
+        on ENTER_PRINT      -> print;
+      }
+      read-only {
+        on EXIT_READ_ONLY   -> normal;
+        entry [disableAllEditing];
+        exit [enableAllEditing];
+      }
+      preview {
+        on EXIT_PREVIEW     -> normal;
+        entry [hideEditingChrome];
+        exit [showEditingChrome];
+      }
+      print {
+        on EXIT_PRINT       -> normal;
+        entry [applyPrintStyles; hideEditingChrome];
+        exit [removePrintStyles; showEditingChrome];
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      Tab                -> FOCUS_NEXT_BLOCK;
+      Shift+Tab          -> FOCUS_PREV_BLOCK;
+      Escape             -> ESCAPE;
+      Control+s          -> SAVE;
+      Control+z          -> UNDO;
+      Control+b          -> TOGGLE_BOLD;
+      Control+i          -> TOGGLE_ITALIC;
+      Control+e          -> TOGGLE_CODE;
+    }
+    focus {
+      trap: false;
+      initial: contentArea;
+      roving: true;
+      returnOnClose: contentArea;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Block editor";
+        aria-readonly: if state.view = "read-only" then "true" else "false";
+      };
+      pageHeader -> {
+        role: "toolbar";
+        aria-label: "Page toolbar";
+      };
+      compileStatusBadge -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: "Compile status";
+      };
+      contentArea -> {
+        role: "list";
+        aria-label: "Document blocks";
+      };
+      slashMenuSlot -> {
+        role: "dialog";
+        aria-label: "Command menu";
+        aria-expanded: if state.focus = "slash-open" then "true" else "false";
+      };
+      inlineToolbarSlot -> {
+        role: "toolbar";
+        aria-label: "Formatting toolbar";
+      };
+      contextMenuSlot -> {
+        role: "menu";
+        aria-label: "Block context menu";
+      };
+      sidePanelDock -> {
+        role: "complementary";
+        aria-label: "Editor panels";
+      };
+      decorationLayer -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    rootNodeId: String
+    editorFlavor: String = "markdown"
+    focusedBlockId: option String
+    selectedSchema: option String
+    pageLevelSchema: option String
+    canEdit: Bool = true
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.focus;
+      data-view-mode: state.view;
+      data-editor-flavor: ?editorFlavor;
+      data-root-node-id: ?rootNodeId;
+      data-focused-block: ?focusedBlockId;
+      data-page-schema: ?pageLevelSchema;
+    }
+
+    pageHeader -> {
+      data-part: "page-header";
+      data-schema: ?pageLevelSchema;
+    }
+
+    compileStatusBadge -> {
+      data-part: "compile-status-badge";
+      hidden: if ?pageLevelSchema = none then true else false;
+    }
+
+    contentArea -> {
+      data-part: "content-area";
+      data-root-node-id: ?rootNodeId;
+      role: "list";
+      aria-label: "Document blocks";
+    }
+
+    slashMenuSlot -> {
+      data-part: "slash-menu-slot";
+      hidden: if state.focus != "slash-open" then true else false;
+      aria-hidden: if state.focus != "slash-open" then "true" else "false";
+    }
+
+    inlineToolbarSlot -> {
+      data-part: "inline-toolbar-slot";
+      hidden: if state.focus != "selection-active" then true else false;
+      aria-hidden: if state.focus != "selection-active" then "true" else "false";
+    }
+
+    contextMenuSlot -> {
+      data-part: "context-menu-slot";
+    }
+
+    sidePanelDock -> {
+      data-part: "side-panel-dock";
+      data-schema: ?selectedSchema;
+    }
+
+    decorationLayer -> {
+      data-part: "decoration-layer";
+      aria-hidden: "true";
+    }
+  }
+
+  affordance {
+    serves: content-editor;
+    specificity: 10;
+    when editorContext = "block-editor";
+    bind {
+      rootNodeId: node;
+      focusedBlockId: focusedBlockId;
+      pageLevelSchema: schema;
+    }
+  }
+
+  compose {
+    contentArea:       widget("block-slot",       { rootNodeId: ?rootNodeId, dataSource: "outline-children", recursive: true })
+    slashMenuSlot:     widget("slash-menu",        { triggeredBy: ?focusedBlockId, schema: ?selectedSchema })
+    inlineToolbarSlot: widget("inline-toolbar",    { schema: ?selectedSchema, flavor: ?editorFlavor })
+    contextMenuSlot:   widget("context-menu",      { blockId: ?focusedBlockId, schema: ?selectedSchema })
+    sidePanelDock:     widget("panel-dock",        { registryType: "editor-panel", schema: ?selectedSchema })
+    decorationLayer:   widget("decoration-layer",  { registryType: "decoration-layer", rootNodeId: ?rootNodeId })
+  }
+
+  invariant {
+    example "focusing a block transitions focus FSM to editing-block": {
+      after transition(from: "idle", event: "BLOCK_FOCUS") -> ok
+      then state.focus = "editing-block"
+    }
+
+    example "typing slash transitions focus FSM to slash-open": {
+      after transition(from: "editing-block", event: "SLASH_TRIGGER") -> ok
+      then state.focus = "slash-open"
+    }
+
+    example "escape from slash-open returns to editing-block": {
+      after transition(from: "slash-open", event: "ESCAPE") -> ok
+      then state.focus = "editing-block"
+    }
+
+    example "starting a selection transitions focus FSM to selection-active": {
+      after transition(from: "editing-block", event: "SELECTION_START") -> ok
+      then state.focus = "selection-active"
+    }
+
+    example "on focus change the page-level EditSurface stays mounted": {
+      after transition(from: "idle", event: "BLOCK_FOCUS") -> ok
+      then pageHeader.mounted = true
+      and compileStatusBadge.mounted = true
+    }
+
+    example "drag-reorder transitions from editing-block on drag start": {
+      after transition(from: "editing-block", event: "DRAG_START") -> ok
+      then state.focus = "drag-reorder"
+    }
+
+    example "drop from drag-reorder returns to idle": {
+      after transition(from: "drag-reorder", event: "DROP") -> ok
+      then state.focus = "idle"
+    }
+
+    example "entering read-only view disables editing": {
+      after transition(from: "normal", event: "ENTER_READ_ONLY") -> ok
+      then state.view = "read-only"
+      and root.ariaReadonly = "true"
+    }
+
+    example "exiting read-only view restores normal mode": {
+      after transition(from: "read-only", event: "EXIT_READ_ONLY") -> ok
+      then state.view = "normal"
+    }
+
+    example "compile status badge hidden when pageLevelSchema is absent": {
+      after mount(pageLevelSchema: none) -> ok
+      then compileStatusBadge.hidden = true
+    }
+
+    always "data-state on root reflects focus FSM": {
+      root.dataState = state.focus
+    }
+
+    always "data-root-node-id on contentArea matches rootNodeId prop": {
+      contentArea.dataRootNodeId = rootNodeId
+    }
+
+    always "decorationLayer aria-hidden is always true": {
+      decorationLayer.ariaHidden = "true"
+    }
+
+    always "focus FSM starts in idle state": {
+      state.focus = "idle"
+    }
+
+    always "view FSM starts in normal state": {
+      state.view = "normal"
+    }
+
+    never "slashMenuSlot visible without focus FSM equal to slash-open": {
+      slashMenuSlot.hidden = false and state.focus != "slash-open"
+    }
+
+    never "page-level compile badge visible when pageLevelSchema is absent": {
+      compileStatusBadge.visible = true and pageLevelSchema = none
+    }
+
+    never "inlineToolbarSlot visible while focus FSM is not selection-active": {
+      inlineToolbarSlot.hidden = false and state.focus != "selection-active"
+    }
+
+    never "edit actions reachable in read-only view mode": {
+      state.view = "read-only" and root.ariaReadonly = "false"
+    }
+
+    forall "all focus states reachable from idle": {
+      given s in focusStates
+      then s.reachable = true
+    }
+
+    forall "all view states reachable from normal": {
+      given s in viewStates
+      then s.reachable = true
+    }
+
+    action contentArea {
+      requires: rootNodeId != ""
+      ensures ok: contentArea.rendered = true
+    }
+
+    action slashMenuSlot {
+      requires: state.focus = "slash-open"
+      ensures ok: slashMenuSlot.populated = true
+    }
+
+    action sidePanelDock {
+      requires: selectedSchema != none
+      ensures ok: sidePanelDock.rendered = true
+    }
+
+    "Tab and Shift+Tab move roving focus between blocks in contentArea";
+    "Ctrl+B, Ctrl+I, Ctrl+E are deferred to the active EditSurface input-rule dispatch pipeline";
+    "Ctrl+S fires SAVE; Ctrl+Z fires UNDO via the active EditSurface action binding";
+  }
+
+}
