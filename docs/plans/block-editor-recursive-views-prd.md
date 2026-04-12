@@ -135,7 +135,48 @@ Markdown shortcuts, autocomplete triggers, paste handlers, drop handlers, snippe
 
 Snippets are already expressible as the existing `Template` concept + a `trigger: String` field. Typing the trigger (via InputRule) opens a prompt for template variables, then `Template/expand` produces a block subtree that gets inserted. No new concept.
 
-### 2.6 Decoration layer — fixed slots reading existing state
+### 2.6 Per-content-type editor surfaces — `EditSurface`
+
+The five planes above describe *kinds* of plugins. `EditSurface` is the mechanism that **activates the right plugins for the focused content**. It's the parallel of ComponentMapping for the edit axis.
+
+Each content type (Schema, optionally per context like `block-editor` / `standalone` / `inspector`) registers an EditSurface that declares:
+- Which ActionBinding commands are surfaced (command plane)
+- Which side-inspector panels appear in the right rail (tool plane)
+- Which floating toolbar widget shows over selections (command plane)
+- Which context menu entries appear (command plane)
+- Which InputRules are scoped to this surface (input plane)
+- Which pickers are available for inline invocation (tool plane)
+
+The editor host listens for focus changes. On focus:
+1. Read focused node's schema.
+2. Call `EditSurface/resolve(schema, context)` to get the bundle.
+3. Rebind all five plane registries to the surface's refs — toolbar swaps, panels populate, context menu updates, scoped InputRules become active.
+
+On blur: deactivate. Bundles don't bleed across types.
+
+This is what makes snippets feel "type-aware" today (variable-fill + trigger-config appear when editing a Template). EditSurface generalizes that pattern to every content type:
+
+- **Text block** → bold/italic/link toolbar, text-format side panel
+- **Code block** → language picker + run button + syntax-error panel, format-on-save toggle in inspector
+- **Image block** → crop / filter / alt-text / replace toolbar; image metadata in inspector; EXIF panel
+- **Video block** → clip creator + transcript sidecar, annotation tools, keyboard shortcuts for play/pause
+- **Math block** → LaTeX editor in inspector, formula preview, symbol picker
+- **Table block** → row/column tools, cell-type picker, sort-by-column commands
+- **Snippet (Template)** → variable-fill / trigger-config / preview (today's UX)
+- **Entity embed** → entity picker, display mode switcher, reference metadata
+- **View embed** → filter/sort/group editor panel (reuses existing ViewEditor)
+- **Process-spec step** → reuses MAG-694 step-inspector tab strip as its EditSurface
+- **Sync definition** → reuses MAG-690 User Sync Editor surface
+- **Canvas node** → shape inspector, connector tools (parallel of FlowchartEditor's controls)
+- **Form field** → reuses MAG-601 FormBuilder per-field config
+
+Each surface composes plane-specific plugins. Adding a new content type = shipping its EditSurface seed alongside its schema + widget. No editor-host edits.
+
+**Derived editors compose EditSurfaces.** `MarkdownEditor` composes text / heading / code / image / link / divider surfaces. `NotebookEditor` = MarkdownEditor + code-cell surface (with run button) + AI-chat surface. `WikiEditor` = MarkdownEditor + entity-embed surface (with `[[link]]` picker). Composition, not inheritance.
+
+**Context orthogonality.** Same schema, different context, different surface. A `process-spec-step` focused inside FlowBuilderView activates the step-inspector tab strip. Focused inside a doc block, activates a thinner inline surface with a "Open in Builder" affordance + summary inspector. The `context` field lets a schema present differently depending on where it's embedded.
+
+### 2.7 Decoration layer — fixed slots reading existing state
 
 Overlays / ephemeral UI that isn't content: selection toolbar, hover cards, presence indicators, comment gutters, track-changes highlights. Each is a fixed slot on the editor host, rendering from existing state concepts:
 - Selection toolbar reads selection state + queries `toolbar_command` ActionBindings
@@ -184,6 +225,7 @@ Every bit of visual formatting flows through theme tokens, not CSS literals.
 
 **New:**
 - `InputRule` — unified input-plane plugin surface (§2.4)
+- `EditSurface` — per-content-type editor bundle activated on focus (§2.6). The plural of "snippets have their own UI" — every content type does
 
 **Reused, unchanged:**
 - `ViewShell`, `FilterSpec`, `SortSpec`, `GroupSpec`, `ProjectionSpec`, `PresentationSpec`, `DataSourceSpec`, `InteractionSpec` — view configuration
@@ -298,6 +340,7 @@ Minimal end-to-end proof across text + media + marks + theme.
 - Metadata additions to ComponentMapping + ActionBinding + Template (seed schema changes)
 - `block-editor.widget` + `block-slot.widget` + `slash-menu.widget` + `inline-toolbar.widget` host widget specs
 - Three block types migrated: **paragraph** + **heading** + **image** (the latter proves media integration)
+- Three EditSurfaces registered: paragraph (text-format toolbar + format panel), heading (level picker + anchor-link panel), image (crop/filter/alt-text toolbar + EXIF inspector panel). Proves activation-on-focus across text + media.
 - Three marks as RenderTransforms: **bold** + **italic** + **code**
 - One theme-aware block: **callout** with `paletteRole` proving the SurfaceContract integration
 - Two InputRules: markdown `##` → heading, paste `image/*` → media upload
@@ -412,6 +455,7 @@ Phase 1 card count: ~14-16 cards. Dispatching workflow: same as MAG-670 / MAG-69
 | Snippet | Template with `trigger` | "Add `;sig` → email signature" |
 | Decoration | Fixed host slot reading existing state | "Add AI suggestion decoration" |
 | Theme | RenderTransform + SurfaceContract | "Add muted block variant" |
+| Per-type editor surface | EditSurface seed | "Add image block inspector panel with EXIF + crop/filter toolbar" |
 
 ## Appendix B: Companion docs
 
