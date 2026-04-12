@@ -1,0 +1,27 @@
+# Wire ActionBinding IDs to InteractionSpec entries via addRowAction.
+# Each entry calls InteractionSpec/addRowAction(name, binding) to append an
+# ActionBinding seed ID to the named spec's row-action binding list.
+#
+# Only InteractionSpecs whose rowActions reference concept/action pairs that
+# have a matching ActionBinding seed are included here. At time of authoring,
+# only themes-list-controls qualifies — its two row actions (Theme/activate
+# and Theme/deactivate) map directly to the theme-activate and
+# theme-deactivate ActionBinding seeds.
+#
+# Other InteractionSpecs with non-empty rowActions (form-editor-controls,
+# process-steps-editor-controls, process-edges-editor-controls,
+# my-work-items-controls) reference actions (FormSpec/update,
+# ProcessSpec/updateStep, ProcessSpec/removeStep, ProcessSpec/removeEdge,
+# WorkItem/claim, WorkItem/complete, WorkItem/delegate) that do not yet
+# have corresponding ActionBinding seeds, so they are excluded.
+
+concept: InteractionSpec
+action: addRowAction
+entries:
+  # themes-list-controls — activate row action
+  - name: themes-list-controls
+    binding: theme-activate
+
+  # themes-list-controls — deactivate row action
+  - name: themes-list-controls
+    binding: theme-deactivate
