@@ -1,0 +1,58 @@
+derived MeetingNotesEditor [T] {
+
+  purpose {
+    Page-level editor for meeting-notes ContentNodes. Pre-configures the
+    MarkdownEditor surface with the "meeting-notes" schema overlay and
+    registers the four block-type schemas that model a structured meeting
+    record: attendee-list (bullet-list with person entity-embed items),
+    agenda-item (heading + children: discussion / decisions / action-items),
+    action-item (paragraph with assignee and dueDate Property overlays), and
+    decision (callout with paletteRole="success"). Wires ContentCompiler so
+    that saving triggers re-compilation into a CalendarEvent (PRD §2.7), and
+    surfaces a backlinks panel filtered to "attends-meeting" reference kinds
+    so attendee ContentNodes can discover meetings they appear in. Proves the
+    full ContentCompiler integration for structured meeting content: editing
+    any meeting-notes page triggers status badge updates, a Compile toolbar
+    action produces a CalendarEvent preview, and the consumers panel reflects
+    live attendance backlinks.
+  }
+
+  composes {
+    MarkdownEditor [T]
+    ContentCompiler [T]
+    Reference
+  }
+
+  syncs {
+    required: [
+      meeting-notes-block-schemas-registered,
+      meeting-notes-compile-on-save
+    ]
+  }
+
+  surface {
+    action create(meetingName: String) {
+      matches: ContentNode/create
+      triggers: [
+        MarkdownEditor/create
+      ]
+    }
+
+    action compile(page: String) {
+      matches: ContentCompiler/compile(schemaHint: "meeting-notes")
+    }
+
+    action recompile(page: String) {
+      matches: ContentCompiler/recompile
+    }
+
+    query compilationStatus(page: String) -> ContentCompiler/listByPage(pageId: page)
+    query attendees(page: String) -> Reference/listReferencing(target: page, kind: "attends-meeting")
+  }
+
+  principle {
+    after create(meetingName: "Weekly sync") -> ok(id: p)
+    then compile(page: p) -> ok(compilation: c)
+    then compilationStatus(page: p) returns [c]
+  }
+}

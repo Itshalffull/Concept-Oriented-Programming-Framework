@@ -1,0 +1,45 @@
+# EditSurface seeds — meeting-notes page-level editor surface (MAG-746).
+# Declares the full compile bundle for the meeting-notes schema:
+#   compile_action_ref: meeting-notes-compile
+#   status_decoration_ref: persona-status-badge (generic over any
+#     ContentCompiler-backed schema; reused per MAG-747 precedent.
+#     A dedicated compile-status-badge generalization is tracked as a
+#     follow-up card.)
+#   output_preview_ref: calendar-event-preview (MAG-746)
+#   consumers_panel_ref: backlinks-panel filtered to "attends-meeting"
+#     reference kind via the filterKind prop on backlinks-panel.
+#
+# Block-type schemas registered by meeting-notes-block-schemas-registered sync:
+#   attendee-list  — bullet-list variant with person entity-embed items
+#   agenda-item    — heading + children (discussion / decisions / action-items)
+#   action-item    — paragraph with assignee + dueDate Property overlays
+#   decision       — callout with paletteRole="success"
+
+concept: EditSurface
+action: register
+entries:
+  # Meeting-notes page-level editor surface (MAG-746)
+  # Proves ContentCompiler integration for structured meeting content:
+  # compile_action_ref + status_decoration_ref + output_preview_ref +
+  # consumers_panel_ref (backlinks-panel filtered to "attends-meeting").
+  - id: meeting-notes-page-editor
+    schema_ref: meeting-notes
+    context: page-level
+    toolbar_widget: inline-toolbar
+    command_bindings:
+      - meeting-notes-compile
+      - meeting-notes-recompile
+      - meeting-notes-duplicate
+    panel_widgets:
+      - calendar-event-preview
+      - backlinks-panel
+    context_menu_bindings: []
+    input_rule_refs: []
+    picker_refs: []
+    compile_action_ref: meeting-notes-compile
+    compile_bundle_ref: null
+    compile_status_field: null
+    status_decoration_ref: persona-status-badge
+    output_preview_ref: calendar-event-preview
+    consumers_panel_ref: backlinks-panel
+    consumers_panel_filter_kind: attends-meeting

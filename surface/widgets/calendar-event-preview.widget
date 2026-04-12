@@ -1,0 +1,313 @@
+@version(1)
+widget calendar-event-preview {
+
+  purpose {
+    Editor-panel output_preview_ref widget that renders the compiled
+    CalendarEvent for a meeting-notes page. Displays the event title
+    and date/time range in a header bar, lists attendees as compact
+    chips in a scrollable section, groups agenda items by heading with
+    their discussion body, shows decisions as success-coloured callout
+    rows, and surfaces action items with assignee and due-date metadata
+    in a dedicated section. Shows an "empty" state when ContentCompiler
+    has never produced output for this page and a "stale" banner when
+    the last compilation pre-dates the most recent block edit. Refreshes
+    automatically when a new CalendarEvent compilation completes via
+    kernel observation (PRD §9.1 #4). Mounted in the meeting-notes
+    page-level EditSurface via the output_preview_ref slot.
+  }
+
+  anatomy {
+    root:                container     { Outer panel wrapper; carries data-status for CSS theming }
+    titleBar:            container     { Header row showing the compiled event title and a Recompile button }
+    recompileButton:     action        { Triggers ContentCompiler/recompile for this page }
+    staleBanner:         presentation  { Warning banner shown when compilation status is stale }
+    emptyState:          presentation  { Placeholder shown when no CalendarEvent compilation exists yet }
+    dateTime:            container     { Date, start-time, and end-time rendered as a formatted row }
+    attendeesSection:    container     { Labelled section listing all attendee chips }
+    attendeeChip:        presentation  { Compact chip rendering a single attendee name or entity label }
+    agendaSection:       container     { Labelled section grouping agenda items by heading }
+    decisionsSection:    container     { Labelled section listing decision callout rows }
+    actionItemsSection:  container     { Labelled section listing action-item rows with assignee and due date }
+    actionItemRow:       container     { A single action-item row: task text, assignee chip, due-date label }
+  }
+
+  states {
+    preview {
+      empty [initial] {
+        on COMPILATION_LOADED  -> compiled;
+        entry [showEmptyState];
+        exit  [hideEmptyState];
+      }
+
+      compiled {
+        on STALE_DETECTED      -> stale;
+        on COMPILATION_LOADED  -> compiled;
+        on COMPILATION_CLEARED -> empty;
+        entry [renderCalendarEvent];
+      }
+
+      stale {
+        on COMPILATION_LOADED  -> compiled;
+        on COMPILATION_CLEARED -> empty;
+        entry [showStaleBanner];
+        exit  [hideStaleBanner];
+      }
+    }
+  }
+
+  accessibility {
+    role: complementary;
+    keyboard {
+      Tab        -> FOCUS_NEXT;
+      Shift+Tab  -> FOCUS_PREV;
+      Enter      -> RECOMPILE_REQUESTED;
+    }
+    focus {
+      trap: false;
+      initial: titleBar;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "complementary";
+        aria-label: "Calendar Event Preview";
+        data-status: state.preview;
+      };
+      titleBar -> {
+        role: "heading";
+        aria-level: "2";
+      };
+      recompileButton -> {
+        role: "button";
+        aria-label: "Recompile meeting notes";
+        aria-busy: if state.preview == "empty" then "false" else "false";
+      };
+      staleBanner -> {
+        role: "alert";
+        aria-live: "assertive";
+        hidden: if state.preview == "stale" then false else true;
+      };
+      emptyState -> {
+        role: "note";
+        aria-label: "No CalendarEvent compilation available";
+        hidden: if state.preview == "empty" then false else true;
+      };
+      dateTime -> {
+        role: "region";
+        aria-label: "Event date and time";
+        hidden: if state.preview == "empty" then true else false;
+      };
+      attendeesSection -> {
+        role: "region";
+        aria-label: "Attendees";
+        hidden: if state.preview == "empty" then true else false;
+      };
+      attendeeChip -> {
+        role: "listitem";
+        aria-label: "Attendee";
+      };
+      agendaSection -> {
+        role: "region";
+        aria-label: "Agenda";
+        hidden: if state.preview == "empty" then true else false;
+      };
+      decisionsSection -> {
+        role: "region";
+        aria-label: "Decisions";
+        hidden: if state.preview == "empty" then true else false;
+      };
+      actionItemsSection -> {
+        role: "region";
+        aria-label: "Action items";
+        hidden: if state.preview == "empty" then true else false;
+      };
+      actionItemRow -> {
+        role: "listitem";
+        aria-label: "Action item";
+      };
+    }
+  }
+
+  props {
+    compilationId:  option String
+    eventPreview:   option String
+    pageId:         String
+    status:         union "empty" | "compiled" | "stale" = "empty"
+  }
+
+  connect {
+    root -> {
+      data-part:    "root";
+      data-status:  state.preview;
+      data-page-id: ?pageId;
+    }
+
+    titleBar -> {
+      data-part: "title-bar";
+      hidden:    if state.preview == "empty" then true else false;
+    }
+
+    recompileButton -> {
+      data-part: "recompile-button";
+      onClick:   send(RECOMPILE_REQUESTED);
+    }
+
+    staleBanner -> {
+      data-part: "stale-banner";
+      hidden:    if state.preview == "stale" then false else true;
+      text:      "Preview is out of date. Recompile to refresh.";
+    }
+
+    emptyState -> {
+      data-part: "empty-state";
+      hidden:    if state.preview == "empty" then false else true;
+      text:      "Not yet compiled. Use the Compile button to generate the calendar event.";
+    }
+
+    dateTime -> {
+      data-part: "date-time";
+      hidden:    if state.preview == "empty" then true else false;
+    }
+
+    attendeesSection -> {
+      data-part: "attendees-section";
+      hidden:    if state.preview == "empty" then true else false;
+    }
+
+    attendeeChip -> {
+      data-part:  "attendee-chip";
+      data-label: self.name;
+      text:       self.name;
+    }
+
+    agendaSection -> {
+      data-part: "agenda-section";
+      hidden:    if state.preview == "empty" then true else false;
+    }
+
+    decisionsSection -> {
+      data-part: "decisions-section";
+      hidden:    if state.preview == "empty" then true else false;
+    }
+
+    actionItemsSection -> {
+      data-part: "action-items-section";
+      hidden:    if state.preview == "empty" then true else false;
+    }
+
+    actionItemRow -> {
+      data-part:     "action-item-row";
+      data-assignee: self.assignee;
+      data-due:      self.dueDate;
+    }
+  }
+
+  affordance {
+    serves: output-preview;
+    specificity: 9;
+    when schemaKind = "meeting-notes";
+    bind {
+      compilationId: compilationId;
+      eventPreview:  eventPreview;
+      pageId:        pageId;
+      status:        compilationStatus;
+    }
+  }
+
+  invariant {
+    example "initial state is empty": {
+      after transition(from: "empty", event: "MOUNTED") -> ok
+      then state.preview = "empty"
+    }
+
+    example "compiled state reached when compilation loaded": {
+      after transition(from: "empty", event: "COMPILATION_LOADED") -> ok
+      then state.preview = "compiled"
+    }
+
+    example "stale state reached from compiled on stale detected": {
+      after transition(from: "compiled", event: "STALE_DETECTED") -> ok
+      then state.preview = "stale"
+    }
+
+    example "new compilation clears stale to compiled": {
+      after transition(from: "stale", event: "COMPILATION_LOADED") -> ok
+      then state.preview = "compiled"
+    }
+
+    example "clearing compilation from compiled returns to empty": {
+      after transition(from: "compiled", event: "COMPILATION_CLEARED") -> ok
+      then state.preview = "empty"
+    }
+
+    example "clearing compilation from stale returns to empty": {
+      after transition(from: "stale", event: "COMPILATION_CLEARED") -> ok
+      then state.preview = "empty"
+    }
+
+    example "emptyState visible only in empty": {
+      after transition(from: "empty", event: "MOUNTED") -> ok
+      then emptyState.hidden = false
+    }
+
+    example "emptyState hidden once compiled": {
+      after transition(from: "empty", event: "COMPILATION_LOADED") -> ok
+      then emptyState.hidden = true
+    }
+
+    example "staleBanner visible only in stale": {
+      after transition(from: "compiled", event: "STALE_DETECTED") -> ok
+      then staleBanner.hidden = false
+    }
+
+    example "staleBanner hidden once new compilation loaded": {
+      after transition(from: "stale", event: "COMPILATION_LOADED") -> ok
+      then staleBanner.hidden = true
+    }
+
+    example "attendeesSection hidden in empty state": {
+      after transition(from: "empty", event: "MOUNTED") -> ok
+      then attendeesSection.hidden = true
+    }
+
+    example "attendeesSection visible in compiled state": {
+      after transition(from: "empty", event: "COMPILATION_LOADED") -> ok
+      then attendeesSection.hidden = false
+    }
+
+    always "data-status reflects preview FSM": {
+      root.dataStatus = state.preview
+    }
+
+    always "content sections hidden when no compilation": {
+      state.preview = "empty"
+    }
+
+    never "staleBanner shown in compiled state": {
+      state.preview = "compiled" and staleBanner.hidden = false
+    }
+
+    never "emptyState shown in stale state": {
+      state.preview = "stale" and emptyState.hidden = false
+    }
+
+    never "recompileButton fires without pageId": {
+      pageId = none and recompileButton.active = true
+    }
+
+    never "attendeesSection shown in empty state": {
+      state.preview = "empty" and attendeesSection.hidden = false
+    }
+
+    action recompileButton {
+      requires: pageId != none
+      ensures ok: state.preview = "stale"
+    }
+
+    action COMPILATION_LOADED {
+      requires: compilationId != none
+      ensures ok: state.preview = "compiled"
+    }
+  }
+
+}

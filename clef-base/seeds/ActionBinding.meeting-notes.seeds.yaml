@@ -1,0 +1,52 @@
+# ActionBinding seeds — meeting-notes compile actions (MAG-746).
+# Three bindings cover the full compile lifecycle for a meeting-notes page:
+#   meeting-notes-compile:    initial compilation → CalendarEvent
+#   meeting-notes-recompile:  re-run compilation after block edits
+#   meeting-notes-duplicate:  deep-clone of the meeting-notes page + outline
+#
+# API gap note: ContentNode has no atomic clone action in the current spec.
+# meeting-notes-duplicate references the anticipated "ContentNode/clone" action
+# (same gap as persona-duplicate, MAG-723). A follow-up card should introduce
+# that action and update this target at that time.
+
+concept: ActionBinding
+action: bind
+entries:
+  # meeting-notes-compile: initial compilation of the meeting-notes page
+  # into a CalendarEvent (PRD §2.7).
+  # Placed in the page-level EditSurface toolbar via compile_action_ref.
+  - name: meeting-notes-compile
+    binding: meeting-notes-compile
+    target: "ContentCompiler/compile"
+    parameterMap: '{"page":"context.pageId","schemaHint":"meeting-notes"}'
+    executionPolicy: "pessimistic"
+    toolbar_command: true
+    section: "Meeting"
+    label: "Compile"
+    icon: "calendar"
+
+  # meeting-notes-recompile: re-run compilation after edits.
+  # Used as the compile_action_ref in the meeting-notes EditSurface entry
+  # and exposed as a toolbar command for manual re-runs.
+  - name: meeting-notes-recompile
+    binding: meeting-notes-recompile
+    target: "ContentCompiler/recompile"
+    parameterMap: '{"page":"context.pageId"}'
+    executionPolicy: "pessimistic"
+    toolbar_command: true
+    section: "Meeting"
+    label: "Recompile"
+    icon: "refresh-cw"
+
+  # meeting-notes-duplicate: deep-clone of the meeting-notes page + outline.
+  # API gap: references the anticipated "ContentNode/clone" action.
+  # See persona-duplicate (MAG-723) for the same gap and resolution plan.
+  - name: meeting-notes-duplicate
+    binding: meeting-notes-duplicate
+    target: "ContentNode/clone"
+    parameterMap: '{"node":"context.pageId","newName":"context.pageName + \" (copy)\""}'
+    executionPolicy: "pessimistic"
+    toolbar_command: false
+    section: "Meeting"
+    label: "Duplicate"
+    icon: "copy"
