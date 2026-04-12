@@ -194,6 +194,19 @@ entries:
     label: "Suspend"
     buttonVariant: "destructive"
 
+  # --- AI actions ---
+  - name: ai-continue-writing
+    binding: ai-continue-writing
+    target: "AgentSession/spawn"
+    parameterMap: '{"personaPageId":"persona:continuation","strategy":"react","tools":"[]","context":"${currentBlock.body}"}'
+    executionPolicy: "auto"
+    slash_command: true
+    toolbar_command: false
+    context_menu: false
+    section: "AI"
+    label: "AI: continue writing"
+    icon: "sparkles"
+
   # --- WorkItem actions ---
   - name: workitem-claim
     binding: workitem-claim
