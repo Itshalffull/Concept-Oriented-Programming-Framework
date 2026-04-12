@@ -475,7 +475,7 @@ This work should not create a new top-level destination unless the upgraded them
 | MAG-643 | Theme generator correctness and token alias repair | §4.1 | — | MAG-644, MAG-645, MAG-646 | high | `aa179183` |
 | MAG-644 | Shared shell tokenization cleanup | §4.2 | MAG-643 | MAG-646, MAG-647, MAG-648 | high | `5b454276` |
 | MAG-645 | Theme-aware widget resolution and affordance scoring | §4.3 | MAG-643 | MAG-647, MAG-648 | medium | `cef37255` |
-| MAG-646 | Curated theme token refinement for existing themes | §4.4 | MAG-643 | MAG-647, MAG-648 | medium | |
+| MAG-646 | Curated theme token refinement for existing themes | §4.4 | MAG-643 | MAG-647, MAG-648 | medium | `0fdf758b` |
 | MAG-647 | Themes admin preview surface and theme QA widget | §4.5 | MAG-644, MAG-645, MAG-646 | MAG-648 | medium | |
 | MAG-648 | Final theme polish, regression coverage, and rollout verification | §10, §11 | MAG-644, MAG-645, MAG-646, MAG-647 | — | medium | |
 
@@ -602,14 +602,13 @@ Turn the current theme set into a smaller set of stronger, more clearly differen
 - refine `signal`
 - improve baseline `light` and `dark`
 - keep `high-contrast` accessibility-first
-- add one new curated theme, working name `atelier`
 - ensure differences show up in typography, spacing, shell chrome, and surfaces
 
 **Acceptance criteria**
 
 - at least three themes are visually distinct at a glance
 - default themes no longer feel neglected relative to expressive themes
-- new theme is seeded and usable in `clef-base`
+- the existing theme pack remains fully seeded and usable in `clef-base`
 
 **Risks**
 
