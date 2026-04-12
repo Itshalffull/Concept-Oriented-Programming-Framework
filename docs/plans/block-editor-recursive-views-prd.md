@@ -541,10 +541,16 @@ Minimal end-to-end proof across text + media + marks + theme.
 | MAG-721 | AI continue ActionBinding + persona | Done | `3e79c85c` | 124 seed tests |
 | MAG-720 | markdown-editor.derived | Done | `06c13bb7` | parser OK |
 | MAG-720b | InputRule seeds + paste-image sync | Done | `1a7676d4` | 42 tests |
+| MAG-714 | block-slot + slash/toolbar/context menus | Done | `98fa0d2d` | 55 invariants |
+| MAG-715 | paragraph-block widget + seeds | Done | `2908ebdf` | 19 invariants |
+| MAG-716 | heading-block widget + seeds | Done | `251c59d1` | 21 invariants |
+| MAG-717 | image-block + media-picker + seeds | Done | `cd47ce57` | 31 invariants |
+| MAG-718 | bold/italic/code mark RenderTransforms | Done | `eaebdff7` | 3 syncs |
 
 **Concept API gaps noted (follow-up cards needed):**
 - `Outline` has no block-schema-change action — markdown-heading-2 ActionBinding uses `Schema/applyTo` as proxy (should be `Outline/retype` or similar)
 - `MediaAsset/createMedia` doesn't thread `focusedDocId` through — paste-image-to-block sync has placeholder parent binding
+- No `InlineMark` concept exists for toggling marks on a selection range — bold/italic/code ActionBindings reference placeholder `InlineMark/toggleMark`. Follow-up card needed to introduce `InlineMark [M]` with `toggleMark(blockId, range, markKind)` action.
 
 ## 10. Card Plan (Phase 1 only; Phase 2+ carded after Phase 1 ships)
 
