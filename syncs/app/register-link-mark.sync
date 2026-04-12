@@ -1,0 +1,19 @@
+# Register the link mark as a token-remap RenderTransform so that theme
+# switches automatically restyle hyperlink spans without any widget changes.
+# The scope targets [data-mark="link"] spans and remaps the foreground colour
+# to the accent foreground token and decoration to underline. The href
+# attribute is passed through via the spec's attributePassthrough field.
+
+sync RegisterLinkMark [eager]
+  purpose: "Register a token-remap RenderTransform for link marks so hyperlink spans respect the active theme's accent colour and underline decoration automatically."
+when {
+  PluginRegistry/register: [ type: "render-transform-provider"; name: ?name ]
+    => ok(plugin: ?plugin)
+}
+then {
+  RenderTransform/register: [
+    name: "mark-link";
+    kind: "token-remap";
+    spec: "{\"scope\":\"[data-mark=\\\"link\\\"]\",\"mappings\":{\"palette.fg\":\"palette.accent.fg\",\"typography.decoration\":\"typography.decoration.underline\"},\"attributePassthrough\":[\"href\"]}"
+  ]
+}

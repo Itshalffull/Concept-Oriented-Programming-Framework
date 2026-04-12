@@ -66,6 +66,20 @@ entries:
     priority: 100
     scope: null
 
+  # paste-url-to-selection (MAG-728): when the clipboard contains a bare URL
+  # matching ^https?:// and there is an active text selection, wrap the selection
+  # as a link mark using the pasted URL via link-wrap-selection-with-url.
+  # If no selection exists the action falls through to default paste behaviour
+  # so the URL is inserted as literal text. Priority 90 (lower than image/100)
+  # so image paste takes precedence when both rules could match.
+  - name: paste-url-to-selection
+    rule: paste-url-to-selection
+    kind: paste
+    pattern: "^https?://"
+    action_ref: link-wrap-selection-with-url
+    priority: 90
+    scope: null
+
   # --- List block conversion rules (MAG-725) ---
   # markdown-bullet: fires when a line starts with "- " (dash space) in any block context.
   # Dispatches markdown-transform-to-bullet which applies schema "bullet-list" via Schema/applyTo.

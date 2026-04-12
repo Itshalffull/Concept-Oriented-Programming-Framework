@@ -1,0 +1,347 @@
+@version(1)
+widget link-editor {
+
+  purpose {
+    Modal tool-plane picker for inserting, editing, and removing hyperlinks
+    on a text selection. Presents a URL input, optional display-label input,
+    a target selector (new-tab vs same-window), and a live preview card that
+    resolves the URL title when the user pauses typing. The dialog confirms
+    via Enter or the Confirm button, cancels via Escape or Cancel, and
+    surfaces a Remove button when an existing link is being edited. Focus is
+    trapped inside the dialog from open until dismiss; initial focus lands on
+    the URL input field so keyboard-only users can type immediately.
+  }
+
+  anatomy {
+    root:             container    { Top-level dialog wrapper; carries data-state reflecting both FSMs }
+    heading:          text         { Accessible dialog title: Insert link or Edit link depending on hasExistingLink }
+    urlInput:         interactive  { Text field for the destination URL }
+    labelInput:       interactive  { Optional display-label field; when empty the selected text is used }
+    targetSelector:   container    { Radio group for choosing link target: new-tab or same-window }
+    newTabOption:     action       { Radio option that opens the link in a new browser tab }
+    sameWindowOption: action       { Radio option that opens the link in the same window }
+    previewCard:      container    { Live preview tile showing resolved page title and favicon for the entered URL }
+    previewTitle:     text         { Resolved page title shown inside previewCard }
+    previewFavicon:   presentation { Favicon image shown inside previewCard }
+    previewError:     text         { Error message shown when URL preview fetch fails }
+    confirmButton:    action       { Submits the form and applies the link mark to the selection }
+    cancelButton:     action       { Dismisses the dialog without making any changes }
+    removeButton:     action       { Removes the existing link mark from the selection; visible only when hasExistingLink is true }
+  }
+
+  states {
+    edit {
+      idle [initial] {
+        on URL_CHANGED     -> loading-preview;
+        on CONFIRM         -> idle;
+        on CANCEL          -> idle;
+        on REMOVE          -> idle;
+      }
+      loading-preview {
+        on PREVIEW_READY   -> preview-ready;
+        on PREVIEW_ERROR   -> preview-error;
+        on URL_CHANGED     -> loading-preview;
+        on CANCEL          -> idle;
+        entry [startPreviewFetch];
+        exit [cancelPreviewFetch];
+      }
+      preview-ready {
+        on URL_CHANGED     -> loading-preview;
+        on CONFIRM         -> idle;
+        on CANCEL          -> idle;
+        on REMOVE          -> idle;
+      }
+      preview-error {
+        on URL_CHANGED     -> loading-preview;
+        on CONFIRM         -> idle;
+        on CANCEL          -> idle;
+        on REMOVE          -> idle;
+      }
+    }
+
+    form [parallel] {
+      invalid [initial] {
+        on VALIDATION_PASS -> valid;
+      }
+      valid {
+        on VALIDATION_FAIL -> invalid;
+      }
+    }
+  }
+
+  accessibility {
+    role: dialog;
+    modal: true;
+    keyboard {
+      Enter  -> CONFIRM;
+      Escape -> CANCEL;
+      Tab    -> FOCUS_NEXT;
+    }
+    focus {
+      trap: true;
+      initial: urlInput;
+      roving: false;
+      returnOnClose: true;
+    }
+    aria {
+      root -> {
+        role: "dialog";
+        aria-modal: "true";
+        aria-labelledby: heading;
+      };
+      heading -> {
+        role: "heading";
+        aria-level: "2";
+      };
+      urlInput -> {
+        role: "textbox";
+        aria-label: "URL";
+        aria-required: "true";
+        aria-invalid: if state.form == "invalid" then "true" else "false";
+      };
+      labelInput -> {
+        role: "textbox";
+        aria-label: "Display label (optional)";
+        aria-required: "false";
+      };
+      targetSelector -> {
+        role: "radiogroup";
+        aria-label: "Open link in";
+      };
+      newTabOption -> {
+        role: "radio";
+        aria-label: "New tab";
+      };
+      sameWindowOption -> {
+        role: "radio";
+        aria-label: "Same window";
+      };
+      previewCard -> {
+        role: "region";
+        aria-label: "Link preview";
+        aria-live: "polite";
+        aria-busy: if state.edit == "loading-preview" then "true" else "false";
+      };
+      confirmButton -> {
+        role: "button";
+        aria-label: "Confirm link";
+        aria-disabled: if state.form == "invalid" then "true" else "false";
+      };
+      cancelButton -> {
+        role: "button";
+        aria-label: "Cancel";
+      };
+      removeButton -> {
+        role: "button";
+        aria-label: "Remove link";
+      };
+    }
+  }
+
+  props {
+    initialUrl: String = ""
+    initialLabel: String = ""
+    hasExistingLink: Bool = false
+    onComplete: String
+    onCancel: String
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.edit;
+      data-form: state.form;
+      role: "dialog";
+      aria-modal: "true";
+      aria-labelledby: "link-editor-heading";
+    }
+
+    heading -> {
+      data-part: "heading";
+      id: "link-editor-heading";
+      text: if ?hasExistingLink then "Edit link" else "Insert link";
+    }
+
+    urlInput -> {
+      data-part: "url-input";
+      autofocus: true;
+      value: ?initialUrl;
+      placeholder: "https://";
+      aria-required: "true";
+      aria-invalid: if state.form == "invalid" then "true" else "false";
+      onInput: send(URL_CHANGED);
+    }
+
+    labelInput -> {
+      data-part: "label-input";
+      value: ?initialLabel;
+      placeholder: "Display text (optional)";
+      onInput: send(LABEL_CHANGED);
+    }
+
+    targetSelector -> {
+      data-part: "target-selector";
+      role: "radiogroup";
+    }
+
+    newTabOption -> {
+      data-part: "new-tab-option";
+      role: "radio";
+      onClick: send(SELECT_NEW_TAB);
+    }
+
+    sameWindowOption -> {
+      data-part: "same-window-option";
+      role: "radio";
+      onClick: send(SELECT_SAME_WINDOW);
+    }
+
+    previewCard -> {
+      data-part: "preview-card";
+      data-preview-state: state.edit;
+      hidden: if state.edit == "idle" then true else false;
+      aria-live: "polite";
+      aria-busy: if state.edit == "loading-preview" then "true" else "false";
+    }
+
+    previewTitle -> {
+      data-part: "preview-title";
+    }
+
+    previewFavicon -> {
+      data-part: "preview-favicon";
+    }
+
+    previewError -> {
+      data-part: "preview-error";
+      hidden: if state.edit != "preview-error" then true else false;
+      role: "alert";
+    }
+
+    confirmButton -> {
+      data-part: "confirm-button";
+      disabled: if state.form == "invalid" then true else false;
+      aria-disabled: if state.form == "invalid" then "true" else "false";
+      onClick: send(CONFIRM);
+    }
+
+    cancelButton -> {
+      data-part: "cancel-button";
+      onClick: send(CANCEL);
+    }
+
+    removeButton -> {
+      data-part: "remove-button";
+      hidden: if not ?hasExistingLink then true else false;
+      onClick: send(REMOVE);
+    }
+  }
+
+  affordance {
+    serves: overlay;
+    specificity: 8;
+    when contextType = "link-editor";
+    bind {
+      initialUrl: selection.linkHref;
+      initialLabel: selection.text;
+      hasExistingLink: selection.hasLinkMark;
+    }
+  }
+
+  compose {
+    _focusTrap: widget("focus-trap", { active: true })
+    _scrollLock: widget("scroll-lock", { active: true })
+  }
+
+  invariant {
+    example "typing a URL sends URL_CHANGED and enters loading-preview": {
+      after send(event: "URL_CHANGED") -> ok
+      then state.edit = "loading-preview"
+    }
+
+    example "PREVIEW_READY transitions to preview-ready": {
+      after transition(from: "loading-preview", event: "PREVIEW_READY") -> ok
+      then state.edit = "preview-ready"
+    }
+
+    example "PREVIEW_ERROR transitions to preview-error": {
+      after transition(from: "loading-preview", event: "PREVIEW_ERROR") -> ok
+      then state.edit = "preview-error"
+    }
+
+    example "URL_CHANGED from preview-ready re-enters loading-preview": {
+      after transition(from: "preview-ready", event: "URL_CHANGED") -> ok
+      then state.edit = "loading-preview"
+    }
+
+    example "VALIDATION_PASS transitions form machine to valid": {
+      after transition(from: "invalid", event: "VALIDATION_PASS") -> ok
+      then state.form = "valid"
+    }
+
+    example "CONFIRM with valid form returns edit to idle": {
+      after transition(from: "valid", event: "CONFIRM") -> ok
+      then state.edit = "idle"
+    }
+
+    example "CANCEL from loading-preview returns edit to idle": {
+      after transition(from: "loading-preview", event: "CANCEL") -> ok
+      then state.edit = "idle"
+    }
+
+    example "REMOVE transitions edit to idle": {
+      after transition(from: "idle", event: "REMOVE") -> ok
+      then state.edit = "idle"
+    }
+
+    forall "all edit states reachable": {
+      given s in editStates
+      then s.reachable = true
+    }
+
+    forall "all form states reachable": {
+      given s in formStates
+      then s.reachable = true
+    }
+
+    always "data-state on root reflects edit FSM": {
+      root.dataState = state.edit
+    }
+
+    always "data-form on root reflects form FSM": {
+      root.dataForm = state.form
+    }
+
+    always "previewCard aria-busy true only during loading-preview": {
+      previewCard.ariaBusy != "true"
+    }
+
+    never "confirmButton enabled while form is invalid": {
+      state.form = "invalid" and confirmButton.disabled = false
+    }
+
+    never "removeButton visible when hasExistingLink is false": {
+      hasExistingLink = false and removeButton.hidden = false
+    }
+
+    never "focus leaves dialog while mounted": {
+      focusTrap.active = false
+    }
+
+    action confirmButton {
+      requires: state.form = "valid"
+      ensures ok: state.edit = "idle"
+    }
+
+    action removeButton {
+      requires: hasExistingLink = true
+      ensures ok: state.edit = "idle"
+    }
+
+    action cancelButton {
+      requires: state.edit != "idle"
+      ensures ok: state.edit = "idle"
+    }
+  }
+
+}

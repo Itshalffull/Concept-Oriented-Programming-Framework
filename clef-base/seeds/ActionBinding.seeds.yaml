@@ -382,6 +382,61 @@ entries:
     label: "Code"
     icon: "code"
 
+  # --- Inline link actions (MAG-728) ---
+  # API gap note: No concept currently provides a dedicated "toggle inline link
+  # mark on selection" action. InlineMark/toggleMark is the placeholder target
+  # from MAG-718 (same InlineMark gap). A future follow-up card should introduce
+  # an InlineMark concept (or extend Outline) with a toggleMark(selection, markKind)
+  # action; link-open-editor invokes the link-editor widget via a synthetic
+  # InlineMark/openEditor surface action (anticipated API shape).
+  #
+  # link-toggle: opens the link-editor widget to collect URL/label (Ctrl+K).
+  # link-open-editor: invokes link-editor.widget on the current selection.
+  # link-remove: removes the link mark from the current selection.
+  # link-wrap-selection-with-url: wraps active selection with link mark using
+  #   a pasted URL. Used by the paste-url-to-selection InputRule.
+  - name: link-toggle
+    binding: link-toggle
+    target: "InlineMark/toggleMark"
+    parameterMap: '{"markKind":"link","selection":"context.selection"}'
+    executionPolicy: "auto"
+    toolbar_command: true
+    keyboard: "Ctrl+K"
+    section: "Format"
+    label: "Link"
+    icon: "link"
+
+  - name: link-open-editor
+    binding: link-open-editor
+    target: "InlineMark/openEditor"
+    parameterMap: '{"selection":"context.selection","widget":"link-editor"}'
+    executionPolicy: "auto"
+    toolbar_command: true
+    context_menu: true
+    section: "Format"
+    label: "Edit link"
+    icon: "link"
+
+  - name: link-remove
+    binding: link-remove
+    target: "InlineMark/toggleMark"
+    parameterMap: '{"markKind":"link","selection":"context.selection","force":"off"}'
+    executionPolicy: "auto"
+    toolbar_command: true
+    visibleWhen: "context.selectionHasLinkMark"
+    section: "Format"
+    label: "Remove link"
+    icon: "link-off"
+
+  - name: link-wrap-selection-with-url
+    binding: link-wrap-selection-with-url
+    target: "InlineMark/toggleMark"
+    parameterMap: '{"markKind":"link","selection":"context.selection","href":"context.pastedText","force":"on"}'
+    executionPolicy: "auto"
+    slash_command: false
+    toolbar_command: false
+    context_menu: false
+
   # --- Agent-persona compile actions (MAG-723) ---
   # persona-compile: initial compilation of the agent-persona page.
   # Placed in the page-level EditSurface toolbar via compile_action_ref.
