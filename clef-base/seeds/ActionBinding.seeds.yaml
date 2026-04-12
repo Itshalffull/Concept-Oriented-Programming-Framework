@@ -591,3 +591,58 @@ entries:
     executionPolicy: "auto"
     slash_command: false
     toolbar_command: false
+
+  # --- Additional inline mark toggle actions (MAG-729) ---
+  # API gap note: Same InlineMark gap as bold/italic/code (MAG-718). These
+  # bindings use "InlineMark/toggleMark" as a placeholder matching the expected
+  # future API shape. They will resolve once the InlineMark concept is available.
+  - name: strikethrough-toggle
+    binding: strikethrough-toggle
+    target: "InlineMark/toggleMark"
+    parameterMap: '{"markKind":"strikethrough","selection":"context.selection"}'
+    executionPolicy: "auto"
+    toolbar_command: true
+    keyboard: "Ctrl+Shift+X"
+    section: "Format"
+    label: "Strikethrough"
+    icon: "strikethrough"
+
+  - name: subscript-toggle
+    binding: subscript-toggle
+    target: "InlineMark/toggleMark"
+    parameterMap: '{"markKind":"subscript","selection":"context.selection"}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    keyboard: "Ctrl+Shift+-"
+    section: "Format"
+    label: "Subscript"
+    icon: "subscript"
+
+  - name: superscript-toggle
+    binding: superscript-toggle
+    target: "InlineMark/toggleMark"
+    parameterMap: '{"markKind":"superscript","selection":"context.selection"}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    keyboard: "Ctrl+Shift+="
+    section: "Format"
+    label: "Superscript"
+    icon: "superscript"
+
+  # --- Drop file upload action (MAG-733) ---
+  # Dispatched by the drop-file-generic InputRule when a file is dropped onto the
+  # block editor. context.droppedFile carries the raw File reference from the drop
+  # event. source:"local-fs" is set so the drop-file-to-block.sync trigger pattern
+  # (source = "local-fs") fires after createMedia completes -> ok.
+  # After MediaAsset/createMedia completes -> ok, the drop-file-to-block.sync fires
+  # and inserts a new Outline child referencing the created asset.
+  # Context-threading gap: the drop position (parent / sibling) is not forwarded
+  # through createMedia. The sync therefore appends rather than inserts at the exact
+  # drop coordinates. A follow-up card should thread drop context.
+  - name: media-upload-from-drop
+    binding: media-upload-from-drop
+    target: "MediaAsset/createMedia"
+    parameterMap: '{"asset":"uuid()","source":"local-fs","file":"context.droppedFile"}'
+    executionPolicy: "auto"
+    slash_command: false
+    toolbar_command: false

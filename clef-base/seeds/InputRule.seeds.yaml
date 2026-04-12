@@ -57,6 +57,20 @@ entries:
     priority: 100
     scope: null
 
+  # --- Drop handler rules (MAG-733) ---
+  # drop-file-generic: fires when any file is dropped onto the block editor.
+  # pattern "*/*" matches all MIME types so any dropped file (image, PDF, video,
+  # etc.) routes through the same MediaAsset/createMedia path. Priority 100 matches
+  # the paste-image rule; a future more-specific drop rule (e.g. "image/*") can
+  # override with a higher priority value without touching this entry.
+  - name: drop-file-generic
+    rule: drop-file-generic
+    kind: drop
+    pattern: "*/*"
+    action_ref: media-upload-from-drop
+    priority: 100
+    scope: null
+
   # --- Paste handler rules ---
   - name: media-upload-from-clipboard
     rule: media-upload-from-clipboard

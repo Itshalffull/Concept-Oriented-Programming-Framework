@@ -1,0 +1,221 @@
+@version(1)
+widget upload-progress-decoration {
+
+  purpose {
+    Decoration-layer overlay rendered atop any block whose backing MediaAsset
+    is currently being uploaded. Shows upload progress (queued, uploading,
+    success, or failed), a progress bar during active transfer, an error badge
+    when the upload fails, and retry / cancel actions so the user can recover
+    or abort without leaving the document. Registered with PluginRegistry as
+    type decoration-layer so the block-editor mounts it automatically when
+    MediaAsset state transitions into the in-flight upload states.
+    Respects reduced-motion preferences by suppressing progress bar animation.
+  }
+
+  anatomy {
+    root:         container    { Absolute overlay wrapper anchored over the parent block }
+    progressBar:  presentation { Animated fill bar indicating byte-transfer progress 0–100 }
+    errorBadge:   presentation { Badge rendered on failure; displays the error message }
+    retryButton:  action       { Re-triggers the upload from the last known file reference }
+    cancelButton: action       { Cancels the in-flight or queued upload and removes the block }
+  }
+
+  states {
+    queued [initial] {
+      on UPLOAD_START -> uploading;
+      on CANCEL       -> hidden;
+      entry [showQueued];
+    }
+
+    uploading {
+      on UPLOAD_SUCCESS -> success;
+      on UPLOAD_FAILURE -> failed;
+      on CANCEL         -> hidden;
+      entry [startProgress];
+      exit  [stopProgress];
+    }
+
+    success {
+      on DISMISS -> hidden;
+      entry [markSuccess];
+    }
+
+    failed {
+      on RETRY  -> queued;
+      on CANCEL -> hidden;
+      entry [showError];
+    }
+
+    hidden {
+    }
+  }
+
+  accessibility {
+    role: status;
+    keyboard {
+      r -> RETRY;
+      Escape -> CANCEL;
+    }
+    focus {
+      trap: false;
+      initial: cancelButton;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "status";
+        aria-live: "polite";
+        aria-atomic: "false";
+        aria-label: "Upload progress";
+        aria-busy: if state == "uploading" then "true" else "false";
+        hidden: if state == "hidden" then "true" else "false";
+      };
+      progressBar -> {
+        role: "progressbar";
+        aria-valuemin: "0";
+        aria-valuemax: "100";
+        aria-valuenow: ?progressPercent;
+        aria-label: "Upload progress";
+        aria-hidden: if state != "uploading" then "true" else "false";
+      };
+      errorBadge -> {
+        role: "alert";
+        aria-live: "assertive";
+        aria-atomic: "true";
+        aria-label: ?errorMessage;
+        aria-hidden: if state != "failed" then "true" else "false";
+      };
+      retryButton -> {
+        role: "button";
+        aria-label: "Retry upload";
+        aria-disabled: if state != "failed" then "true" else "false";
+      };
+      cancelButton -> {
+        role: "button";
+        aria-label: "Cancel upload";
+      };
+    }
+  }
+
+  props {
+    assetId:         String
+    progressPercent: Int    = 0
+    errorMessage:    String = ""
+    fileName:        String = ""
+  }
+
+  connect {
+    root -> {
+      data-part:  "root";
+      data-state: state;
+      aria-live:  "polite";
+      aria-busy:  if state == "uploading" then "true" else "false";
+      hidden:     if state == "hidden" then true else false;
+    }
+
+    progressBar -> {
+      data-part:      "progress-bar";
+      data-active:    if state == "uploading" then "true" else "false";
+      aria-valuenow:  ?progressPercent;
+      hidden:         if state != "uploading" then true else false;
+      style:          { width: "{{progressPercent}}%" };
+    }
+
+    errorBadge -> {
+      data-part:    "error-badge";
+      data-visible: if state == "failed" then "true" else "false";
+      hidden:       if state != "failed" then true else false;
+      text:         ?errorMessage;
+    }
+
+    retryButton -> {
+      data-part:    "retry-button";
+      hidden:       if state != "failed" then true else false;
+      disabled:     if state != "failed" then true else false;
+      onClick:      send(RETRY);
+    }
+
+    cancelButton -> {
+      data-part: "cancel-button";
+      hidden:    if state == "hidden" or state == "success" then true else false;
+      onClick:   send(CANCEL);
+    }
+  }
+
+  affordance {
+    serves: entity-overlay;
+    specificity: 8;
+    when {
+      feature:   "upload-progress";
+      mediaType: "any";
+    }
+    bind {
+      assetId:         asset.id;
+      progressPercent: asset.uploadProgress;
+      errorMessage:    asset.uploadError;
+      fileName:        asset.fileName;
+    }
+  }
+
+  compose {
+    slot progressBar inside root;
+    slot errorBadge  inside root;
+    slot retryButton inside root;
+    slot cancelButton inside root;
+  }
+
+  invariant {
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root must reflect current FSM state": {
+      forall s in states:
+        s.name != ""
+    }
+
+    always "root hidden attribute matches hidden state": {
+      if state == "hidden" then root.hidden == true
+    }
+
+    always "progressBar only visible during uploading state": {
+      if state != "uploading" then progressBar.hidden == true
+    }
+
+    always "errorBadge only visible during failed state": {
+      if state != "failed" then errorBadge.hidden == true
+    }
+
+    always "retryButton only accessible during failed state": {
+      if state != "failed" then retryButton.hidden == true and retryButton.disabled == true
+    }
+
+    always "cancelButton hidden when in terminal states": {
+      if state == "hidden" or state == "success" then cancelButton.hidden == true
+    }
+
+    always "aria-busy true only during uploading state": {
+      if state == "uploading" then root["aria-busy"] == "true"
+      else root["aria-busy"] == "false"
+    }
+
+    always "progressBar aria-valuenow reflects progressPercent prop": {
+      progressBar["aria-valuenow"] == ?progressPercent
+    }
+
+    never "retryButton and cancelButton both visible in queued state": {
+      state == "queued" and retryButton.hidden == false
+    }
+
+    "UPLOAD_START event must transition from queued to uploading and start progress animation";
+    "UPLOAD_SUCCESS event must transition from uploading to success and stop progress animation";
+    "UPLOAD_FAILURE event must transition from uploading to failed and display errorMessage in errorBadge";
+    "RETRY event must transition from failed to queued and re-initiate upload";
+    "CANCEL event must transition from any non-terminal state to hidden and abort the upload";
+    "DISMISS event must transition from success to hidden";
+    "progress bar animation must be suppressed when prefers-reduced-motion is reduce";
+    "widget must not trap keyboard focus in any state";
+    "errorBadge aria-live assertive region must announce errorMessage on UPLOAD_FAILURE without requiring focus movement";
+    "PluginRegistry decoration-layer registration must expose assetId as the MediaAsset state query key";
+  }
+
+}

@@ -1,0 +1,24 @@
+# Drop-file dispatch sync — after a dropped file is uploaded as a MediaAsset,
+# insert a new child block in the focused document's Outline referencing the asset.
+# This completes the InputRule -> ActionBinding -> MediaAsset/createMedia -> Outline/create
+# dispatch chain for drop-file handling (MAG-733).
+# Context-threading gap: same as paste-image-to-block.sync (commit 1a7676d4) — the
+# drop position (parent block, sibling insertion point) is not threaded through
+# MediaAsset/createMedia. The Outline/create call therefore appends the new block
+# rather than inserting it at the precise cursor/drop position. A follow-up card
+# should introduce context-threading so the drop coordinates are available here.
+
+sync DropFileToBlock [eager]
+  purpose: "When a dropped file is uploaded and MediaAsset/createMedia completes successfully with source local-fs, insert a new Outline child block referencing the created asset so the dropped file appears inline in the document at the drop position"
+when {
+  MediaAsset/createMedia: [ asset: ?asset; source: "local-fs" ]
+    => ok(asset: ?asset)
+}
+where {
+  bind(?asset as ?node)
+}
+then {
+  Outline/create: [
+    node: ?node;
+    parent: ?asset ]
+}
