@@ -24,6 +24,7 @@ interface CardGridDisplayProps {
 // ─── CardRowActionButtons ─────────────────────────────────────────────────
 // Per-card action buttons with pending/error state management.
 
+// TODO: migrate to <ActionButtonCompact> when row actions have ActionBinding IDs
 const CardRowActionButtons: React.FC<{
   row: Record<string, unknown>;
   rowActions: RowActionConfig[];

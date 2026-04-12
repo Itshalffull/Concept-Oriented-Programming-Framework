@@ -27,6 +27,7 @@ interface BoardDisplayProps {
 // ─── BoardCardActionButtons ───────────────────────────────────────────────
 // Per-card action buttons with pending/error state management.
 
+// TODO: migrate to <ActionButtonCompact> when row actions have ActionBinding IDs
 const BoardCardActionButtons: React.FC<{
   row: Record<string, unknown>;
   rowActions: RowActionConfig[];

@@ -41,6 +41,7 @@ export const WorkspaceManagerView: React.FC = () => {
     return Array.isArray(raw.workspaces) ? raw.workspaces as WorkspaceRecord[] : [];
   })();
 
+  // TODO: replace with <ActionButton binding={...}> when workspace ActionBinding seeds exist
   const handleSetDefault = useCallback(async (workspaceId: string) => {
     setActionError(null);
     setActionPending(true);

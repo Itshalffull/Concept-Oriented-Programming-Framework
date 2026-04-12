@@ -95,6 +95,7 @@ export const EntityDetailView: React.FC<EntityDetailViewProps> = ({ id }) => {
     ? JSON.parse(widgetRegistryResult.entries as string) as Array<Record<string, unknown>>
     : [];
 
+  // TODO: replace with <ActionButton binding={...}> when schema ActionBinding seeds exist
   const handleApplySchema = useCallback(async (schema: string) => {
     setSchemaActionPending(true);
     setSchemaActionError(null);
@@ -112,6 +113,7 @@ export const EntityDetailView: React.FC<EntityDetailViewProps> = ({ id }) => {
     }
   }, [invoke, id, refetchSchemas]);
 
+  // TODO: replace with <ActionButton binding={...}> when schema ActionBinding seeds exist
   const handleRemoveSchema = useCallback(async (schema: string) => {
     if (!window.confirm(`Remove schema "${schema}" from this entity?`)) return;
     setSchemaActionPending(true);

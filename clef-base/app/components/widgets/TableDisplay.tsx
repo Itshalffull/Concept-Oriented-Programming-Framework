@@ -282,6 +282,7 @@ interface RowActionState {
   success: string | null;   // action key that last succeeded (auto-clears)
 }
 
+// TODO: migrate to <ActionButtonCompact> when row actions have ActionBinding IDs
 const RowActionButtons: React.FC<{
   row: Record<string, unknown>;
   rowIndex: number;

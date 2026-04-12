@@ -58,6 +58,7 @@ export const ThemesView: React.FC = () => {
   });
   const activeCount = rows.filter((theme) => isThemeActive(theme)).length;
 
+  // TODO: replace with <ActionButton binding={...}> when theme ActionBinding seeds exist
   async function updateTheme(theme: string, action: 'activate' | 'deactivate') {
     setBusyTheme(theme);
     setActionError(null);

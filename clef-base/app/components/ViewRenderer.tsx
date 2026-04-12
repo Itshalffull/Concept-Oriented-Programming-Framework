@@ -792,6 +792,7 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
   }, [controls.rowClick, navigateToHref, onSelect]);
 
   // Bulk action handler — invoke a concept action for each selected row
+  // TODO: migrate to <ActionButtonCompact> when InteractionSpec seeds create ActionBinding records
   const handleBulkAction = useCallback(async (actionKey: string, selectedRows: Record<string, unknown>[]) => {
     const bulkDef = controls.bulk?.actions.find(a => a.key === actionKey);
     if (!bulkDef) return;
@@ -825,6 +826,7 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
 
   // Row action handler — invoke a concept action with params mapped from the row
   const handleRowAction = useCallback(async (action: RowActionConfig, row: Record<string, unknown>) => {
+  // TODO: migrate to <ActionButtonCompact> when InteractionSpec seeds create ActionBinding records
     setActionPending(true);
     setActionError(null);
     setActionSuccess(null);

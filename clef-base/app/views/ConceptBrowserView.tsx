@@ -93,6 +93,7 @@ export const ConceptBrowserView: React.FC = () => {
     }
   }, [invoke]);
 
+  // TODO: replace with <ActionButton binding={...}> when concept browser ActionBinding seeds exist
   const handleInstall = useCallback(async (pkg: InstalledPackage) => {
     setActionPending(`install:${pkg.name}`);
     setStatusMessage(null);

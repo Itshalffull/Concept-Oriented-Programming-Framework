@@ -101,6 +101,7 @@ export const ProcessRunView: React.FC<ProcessRunViewProps> = ({ runId }) => {
   const invoke = useKernelInvoke();
   const { navigateToHref } = useNavigator();
 
+  // TODO: replace with <ActionButton binding={...}> when process ActionBinding seeds exist
   // VersionSpace fork/compare/merge handlers
   const handleForkReality = useCallback(async () => {
     const name = window.prompt('Name for forked reality:');
