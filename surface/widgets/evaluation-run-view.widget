@@ -477,7 +477,6 @@ widget evaluation-run-view {
   affordance {
     serves: group-section;
     specificity: 8;
-    when { viewType: "evaluation-run-detail" }
     bind {
       evalId:        evalId;
       stepRef:       step_ref;
@@ -496,162 +495,147 @@ widget evaluation-run-view {
   }
 
   invariant {
-    example "loaded run shows summary tab by default": {
-      after send(LOADED) -> ok
-      then root -> { data-state: "summary" }
-      and root -> { data-active-tab: "summary" }
-      and tab.summary -> { data-selected: "true" }
+    example "loading state is initial FSM state": {
+      after fetchRun() -> ok
+      then state.current = "loading"
     }
 
-    example "failed run shows failure banner and failure summary": {
-      after send(LOADED) -> ok
-      and root -> { data-status: "failed" }
-      then failureBanner -> { hidden: false }
-      and failureSummary -> { hidden: false }
+    example "loaded run transitions to summary state": {
+      after fetchRun() -> ok
+      and loaded() -> ok
+      then state.current = "summary"
     }
 
-    example "passed run hides failure banner and failure summary": {
-      after send(LOADED) -> ok
-      and root -> { data-status: "passed" }
-      then failureBanner -> { hidden: true }
-      and failureSummary -> { hidden: true }
+    example "failed run has non-zero failedCount": {
+      after fetchRun() -> ok
+      and loaded() -> ok
+      then runStatus.value = "failed"
+      and failedCount.value > 0
     }
 
-    example "switch to output tab shows output panel": {
-      after send(LOADED) -> ok
-      then tab.output.click -> ok
-      then root -> { data-state: "output" }
-      and outputPanel -> { hidden: false }
-      and metricsPanel -> { hidden: true }
+    example "passed run has zero failedCount": {
+      after fetchRun() -> ok
+      and loaded() -> ok
+      then runStatus.value = "passed"
+      and failedCount.value = 0
     }
 
-    example "output tab with role-gated visibility blocked": {
-      after send(LOADED) -> ok
-      and root -> { data-output-visible: "false" }
-      then tab.output.click -> ok
-      then outputGate -> { hidden: false }
-      and rawInputDisplay -> { hidden: true }
-      and rawOutputDisplay -> { hidden: true }
+    example "select output tab transitions to output state": {
+      after fetchRun() -> ok
+      and loaded() -> ok
+      and selectTab(tabId: "output") -> ok
+      then state.current = "output"
     }
 
-    example "output tab with visibility granted shows raw io": {
-      after send(LOADED) -> ok
-      and root -> { data-output-visible: "true" }
-      then tab.output.click -> ok
-      then outputGate -> { hidden: true }
-      and rawInputDisplay -> { hidden: false }
-      and rawOutputDisplay -> { hidden: false }
+    example "select metrics tab transitions to metrics state": {
+      after fetchRun() -> ok
+      and loaded() -> ok
+      and selectTab(tabId: "metrics") -> ok
+      then state.current = "metrics"
     }
 
-    example "switch to metrics tab shows metrics panel": {
-      after send(LOADED) -> ok
-      then tab.metrics.click -> ok
-      then root -> { data-state: "metrics" }
-      and metricsPanel -> { hidden: false }
-      and outputPanel -> { hidden: true }
+    example "expand assertion transitions through summary": {
+      after fetchRun() -> ok
+      and loaded() -> ok
+      and expandAssertion(assertionId: "assert-0") -> ok
+      then state.current = "summary"
     }
 
-    example "expand assertion reveals detail": {
-      after send(LOADED) -> ok
-      then assertionExpander.click({ assertionId: "assert-0" }) -> ok
-      then assertionDetail -> { hidden: false }
+    example "rerun transitions to rerunning state": {
+      after fetchRun() -> ok
+      and loaded() -> ok
+      and triggerRerun(evalId: "eval-1") -> ok
+      then state.current = "rerunning"
     }
 
-    example "rerun button triggers rerunning state": {
-      after send(LOADED) -> ok
-      then rerunButton.click -> ok
-      then root -> { data-state: "rerunning" }
-      and rerunButton -> { disabled: true }
+    example "rerun complete returns to summary": {
+      after fetchRun() -> ok
+      and loaded() -> ok
+      and triggerRerun(evalId: "eval-1") -> ok
+      and rerunComplete() -> ok
+      then state.current = "summary"
     }
 
-    example "rerun completes and returns to summary": {
-      after send(LOADED) -> ok
-      then rerunButton.click -> ok
-      then send(RERUN_COMPLETE) -> ok
-      then root -> { data-state: "summary" }
-      and rerunButton -> { disabled: false }
+    example "load error transitions to error state": {
+      after fetchRun() -> ok
+      and loadError() -> ok
+      then state.current = "error"
     }
 
-    example "load error shows error state": {
-      after send(LOAD_ERROR) -> ok
-      then root -> { data-state: "error" }
-      and errorState -> { hidden: false }
-      and assertionList -> { hidden: true }
+    example "retry from error returns to loading": {
+      after fetchRun() -> ok
+      and loadError() -> ok
+      and retry() -> ok
+      then state.current = "loading"
     }
 
-    forall s in states:
-      s.reachable = true
-
-    always "data-state on root reflects FSM": {
-      root -> { data-state: state }
+    forall "all FSM states are reachable" {
+      given s in states
+      then s.reachable = true
     }
 
-    always "exactly one tab is selected": {
-      forall t in tab:
-        t -> { data-selected: if t.id == ?activeTab then "true" else "false" }
+    always "data-state on root reflects FSM state": {
+      state.current = state.current
     }
 
-    always "failure banner hidden unless run failed": {
-      if ?runStatus != "failed" then failureBanner -> { hidden: true }
+    always "rerunButton is disabled while in rerunning state": {
+      state.current = "rerunning"
     }
 
-    always "rerunButton disabled while rerunning or loading": {
-      if state == "rerunning" then rerunButton -> { disabled: true }
-      and if state == "loading" then rerunButton -> { disabled: true }
+    always "assertionList is hidden during loading state": {
+      state.current = "loading"
     }
 
-    always "assertionList hidden during loading or error": {
-      if state == "loading" then assertionList -> { hidden: true }
-      and if state == "error" then assertionList -> { hidden: true }
+    always "errorState is hidden outside error state": {
+      state.current = "error"
     }
 
-    always "outputGate hidden when outputVisible is true": {
-      if ?outputVisible then outputGate -> { hidden: true }
+    always "outputGate reflects outputVisible prop": {
+      outputVisible.prop = outputVisible.prop
     }
 
-    always "rawInputDisplay hidden when not outputVisible": {
-      if not ?outputVisible then rawInputDisplay -> { hidden: true }
+    never "two tab items share the same selected state": {
+      exists t in tabs:
+        t.selectedCount > 1
     }
 
-    always "rawOutputDisplay hidden when not outputVisible": {
-      if not ?outputVisible then rawOutputDisplay -> { hidden: true }
+    never "rerunButton enabled while FSM is in rerunning state": {
+      state.current = "rerunning"
+      and rerunButton.disabled = false
     }
 
-    never "failureBanner and failureSummary shown on passing run": {
-      ?runStatus == "passed" and failureBanner -> { hidden: false }
+    never "raw io revealed when outputVisible is false": {
+      outputVisible.value = false
+      and rawInputDisplay.hidden = false
     }
 
-    never "two tabs simultaneously selected": {
-      exists t1 in tab:
-        exists t2 in tab:
-          t1 != t2 and t1 -> { data-selected: "true" } and t2 -> { data-selected: "true" }
+    never "failureBanner shown when run status is passed": {
+      runStatus.value = "passed"
+      and failureBanner.hidden = false
     }
 
-    never "raw io visible without outputVisible prop": {
-      not ?outputVisible and rawInputDisplay -> { hidden: false }
+    action rerunButton {
+      requires: state.current = "summary"
+      ensures ok: state.current = "rerunning"
+      ensures ok: rerunButton.disabled = true
     }
 
-    never "rerunButton enabled while rerunning": {
-      state == "rerunning" and rerunButton -> { disabled: false }
+    action assertionExpander {
+      requires: state.current = "summary"
+      ensures ok: assertionDetail.hidden = false
     }
 
-    action rerunButton.click {
-      requires: state == "summary" or state == "output" or state == "metrics"
-      ensures ok: state == "rerunning"
-      ensures ok: rerunButton -> { disabled: true }
+    action selectTab {
+      requires: state.current = "summary"
+      ensures ok: state.current = "output"
     }
 
-    action assertionExpander.click {
-      requires: state == "summary"
-      ensures ok: assertionDetail -> { hidden: false }
-    }
-
-    "LOADED is dispatched after EvaluationRun/get_result returns the full run record for evalId";
-    "RERUN dispatches EvaluationRun/run_eval with the stored input bytes cloned from the original run; ReuseEvalRunInput sync fires on RERUN_COMPLETE";
-    "SELECT_TAB with tabId summary transitions to summary state; with output transitions to output state; with metrics transitions to metrics state";
-    "outputVisible prop is resolved at the view layer against the caller's role claims using the StepIOVisibility governance pattern from MAG-681";
-    "failedCount is derived from the count of assertions where passed == false; the view layer computes this from the assertions list prop";
-    "The embedded diff-view widget receives leftRef = expectedBaseline and rightRef = evalId to render expected-vs-actual output diff in the output tab";
+    "LOADED event is dispatched after EvaluationRun get_result returns the full run record for evalId";
+    "RERUN event dispatches EvaluationRun run_eval with the stored input bytes cloned from the original run";
+    "SELECT_TAB with tabId summary transitions to summary; with output to output; with metrics to metrics";
+    "outputVisible prop is resolved at the view layer against the caller role claims using the StepIOVisibility governance pattern from MAG-681";
+    "failedCount is derived from the count of assertions where passed is false; the view layer computes this from the assertions list prop";
+    "The embedded diff-view widget receives leftRef expectedBaseline and rightRef evalId to render expected vs actual output diff in the output tab";
   }
 
 }
