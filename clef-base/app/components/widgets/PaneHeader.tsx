@@ -204,38 +204,26 @@ export const PaneHeader: React.FC<PaneHeaderProps> = ({
     [handleMaximize],
   );
 
-  const dragCursor = fsm.drag === 'dragging' ? 'grabbing' : 'grab';
-
   return (
     <div
       role="toolbar"
       aria-label={`Pane: ${title}`}
       aria-orientation="horizontal"
-      data-part="root"
+      data-part="pane-header"
       data-state={fsm.drag}
       data-size={fsm.size}
       data-pinned={pinned ? 'true' : 'false'}
       onKeyDown={handleKeyDown}
       className={className}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 'var(--spacing-xs)',
-        padding: '0 var(--spacing-sm)',
-        height: '2.25rem',
-        background: 'var(--palette-surface-variant)',
-        borderBottom: '1px solid var(--palette-outline-variant)',
-        userSelect: 'none',
-        ...style,
-      }}
+      style={style}
     >
       {/* Drag handle — left region */}
       <div
         role="button"
         aria-label="Drag pane to reposition"
         aria-grabbed={fsm.drag === 'dragging' ? 'true' : 'false'}
-        data-part="drag-handle"
-        data-state={fsm.drag}
+        data-part="pane-header-drag-handle"
+        data-drag-state={fsm.drag}
         tabIndex={0}
         onPointerDown={handleDragStart}
         onPointerUp={handleDragEnd}
@@ -244,26 +232,12 @@ export const PaneHeader: React.FC<PaneHeaderProps> = ({
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') dispatch('ACTIVATE' as PaneHeaderEvent);
         }}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 'var(--spacing-xs)',
-          flex: 1,
-          minWidth: 0,
-          cursor: dragCursor,
-          padding: '0 var(--spacing-xs)',
-        }}
       >
         {/* Icon */}
         {icon && (
           <span
-            data-part="icon"
+            data-part="pane-header-icon"
             aria-hidden="true"
-            style={{
-              flexShrink: 0,
-              fontSize: 'var(--typography-body-sm-size)',
-              color: 'var(--palette-on-surface-variant)',
-            }}
           >
             {icon}
           </span>
@@ -271,17 +245,9 @@ export const PaneHeader: React.FC<PaneHeaderProps> = ({
 
         {/* Title */}
         <span
-          data-part="title"
+          data-part="pane-header-title"
           aria-current="true"
           title={title}
-          style={{
-            fontSize: 'var(--typography-label-md-size)',
-            fontWeight: 'var(--typography-label-md-weight)',
-            color: 'var(--palette-on-surface)',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}
         >
           {title}
         </span>
@@ -291,8 +257,7 @@ export const PaneHeader: React.FC<PaneHeaderProps> = ({
       <div
         role="group"
         aria-label="Pane actions"
-        data-part="actions"
-        style={{ display: 'flex', alignItems: 'center', gap: '2px', flexShrink: 0 }}
+        data-part="pane-header-actions"
       >
         {/* Pin button */}
         <button
@@ -300,22 +265,12 @@ export const PaneHeader: React.FC<PaneHeaderProps> = ({
           role="button"
           aria-label={`Pin pane: ${title}`}
           aria-pressed={pinned ? 'true' : 'false'}
-          data-part="pin-button"
+          data-part="pane-header-button"
+          data-variant="toggle"
           data-pinned={pinned ? 'true' : 'false'}
+          data-flashed={flashedButton === 'pin' ? 'true' : 'false'}
           disabled={disabled}
           onClick={() => { dispatch('TOGGLE_PIN'); onTogglePin?.(); flashButton('pin'); }}
-          style={{
-            background: flashedButton === 'pin' ? 'var(--palette-primary-container, rgba(103,80,164,0.12))' : 'none',
-            border: 'none',
-            cursor: disabled ? 'not-allowed' : 'pointer',
-            color: pinned ? 'var(--palette-primary)' : 'var(--palette-on-surface-variant)',
-            padding: '4px',
-            borderRadius: 'var(--radius-sm)',
-            fontSize: '0.8rem',
-            lineHeight: 1,
-            opacity: disabled ? 0.4 : 1,
-            transition: 'background 0.15s',
-          }}
         >
           📌
         </button>
@@ -327,22 +282,12 @@ export const PaneHeader: React.FC<PaneHeaderProps> = ({
             role="button"
             aria-label={`Minimize pane: ${title}`}
             aria-disabled={fsm.size === 'minimized' ? 'true' : 'false'}
-            data-part="minimize-button"
+            data-part="pane-header-button"
+            data-variant="toggle"
             data-state={fsm.size}
+            data-flashed={flashedButton === 'minimize' ? 'true' : 'false'}
             disabled={disabled || fsm.size === 'minimized'}
             onClick={() => { handleMinimize(); flashButton('minimize'); }}
-            style={{
-              background: flashedButton === 'minimize' ? 'var(--palette-primary-container, rgba(103,80,164,0.12))' : 'none',
-              border: 'none',
-              cursor: disabled || fsm.size === 'minimized' ? 'not-allowed' : 'pointer',
-              color: 'var(--palette-on-surface-variant)',
-              padding: '4px',
-              borderRadius: 'var(--radius-sm)',
-              fontSize: '0.8rem',
-              lineHeight: 1,
-              opacity: disabled || fsm.size === 'minimized' ? 0.4 : 1,
-              transition: 'background 0.15s',
-            }}
           >
             −
           </button>
@@ -359,22 +304,12 @@ export const PaneHeader: React.FC<PaneHeaderProps> = ({
                 : `Maximize pane: ${title}`
             }
             aria-pressed={fsm.size === 'maximized' ? 'true' : 'false'}
-            data-part="maximize-button"
+            data-part="pane-header-button"
+            data-variant="toggle"
             data-state={fsm.size}
+            data-flashed={flashedButton === 'maximize' ? 'true' : 'false'}
             disabled={disabled}
             onClick={() => { handleMaximize(); flashButton('maximize'); }}
-            style={{
-              background: flashedButton === 'maximize' ? 'var(--palette-primary-container, rgba(103,80,164,0.12))' : 'none',
-              border: 'none',
-              cursor: disabled ? 'not-allowed' : 'pointer',
-              color: 'var(--palette-on-surface-variant)',
-              padding: '4px',
-              borderRadius: 'var(--radius-sm)',
-              fontSize: '0.8rem',
-              lineHeight: 1,
-              opacity: disabled ? 0.4 : 1,
-              transition: 'background 0.15s',
-            }}
           >
             {fsm.size === 'maximized' ? '⊡' : '□'}
           </button>
@@ -387,21 +322,11 @@ export const PaneHeader: React.FC<PaneHeaderProps> = ({
             role="button"
             aria-label="More pane actions"
             aria-haspopup="menu"
-            data-part="menu-button"
+            data-part="pane-header-button"
+            data-variant="toggle"
+            data-flashed={flashedButton === 'menu' ? 'true' : 'false'}
             disabled={disabled}
             onClick={() => { dispatch('OPEN_MENU'); onOpenMenu?.(); flashButton('menu'); }}
-            style={{
-              background: flashedButton === 'menu' ? 'var(--palette-primary-container, rgba(103,80,164,0.12))' : 'none',
-              border: 'none',
-              cursor: disabled ? 'not-allowed' : 'pointer',
-              color: 'var(--palette-on-surface-variant)',
-              padding: '4px',
-              borderRadius: 'var(--radius-sm)',
-              fontSize: '0.8rem',
-              lineHeight: 1,
-              opacity: disabled ? 0.4 : 1,
-              transition: 'background 0.15s',
-            }}
           >
             ⋯
           </button>
@@ -413,21 +338,11 @@ export const PaneHeader: React.FC<PaneHeaderProps> = ({
             type="button"
             role="button"
             aria-label={`Close pane: ${title}`}
-            data-part="close-button"
+            data-part="pane-header-button"
+            data-variant="destructive"
+            data-flashed={flashedButton === 'close' ? 'true' : 'false'}
             disabled={disabled}
             onClick={() => { dispatch('CLOSE'); onClose?.(); flashButton('close'); }}
-            style={{
-              background: flashedButton === 'close' ? 'var(--palette-error-container, rgba(211,47,47,0.12))' : 'none',
-              border: 'none',
-              cursor: disabled ? 'not-allowed' : 'pointer',
-              color: 'var(--palette-on-surface-variant)',
-              padding: '4px',
-              borderRadius: 'var(--radius-sm)',
-              fontSize: '0.8rem',
-              lineHeight: 1,
-              opacity: disabled ? 0.4 : 1,
-              transition: 'background 0.15s',
-            }}
           >
             ✕
           </button>

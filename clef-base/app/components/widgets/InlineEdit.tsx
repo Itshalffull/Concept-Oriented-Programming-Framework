@@ -21,33 +21,6 @@ interface InlineEditProps {
 }
 
 // ---------------------------------------------------------------------------
-// Shared inline input style (matches CSS custom properties pattern)
-// ---------------------------------------------------------------------------
-
-const inlineInputStyle: React.CSSProperties = {
-  padding: '2px var(--spacing-xs)',
-  borderRadius: 'var(--radius-sm)',
-  border: '1px solid var(--palette-primary)',
-  background: 'var(--palette-surface)',
-  color: 'var(--palette-on-surface)',
-  fontSize: 'inherit',
-  fontFamily: 'inherit',
-  width: '100%',
-  outline: 'none',
-};
-
-const inlineErrorStyle: React.CSSProperties = {
-  borderColor: 'var(--palette-error)',
-};
-
-const errorMessageStyle: React.CSSProperties = {
-  color: 'var(--palette-error)',
-  fontSize: 'var(--typography-label-sm-size, 0.75rem)',
-  marginTop: '2px',
-  display: 'block',
-};
-
-// ---------------------------------------------------------------------------
 // Type-specific input renderers
 // ---------------------------------------------------------------------------
 
@@ -68,11 +41,6 @@ const TypedInput: React.FC<TypedInputProps> = ({
   fieldType, value, options, placeholder, saving, hasError,
   inputRef, onChange, onBlur, onKeyDown,
 }) => {
-  const style: React.CSSProperties = {
-    ...inlineInputStyle,
-    ...(hasError ? inlineErrorStyle : {}),
-  };
-
   switch (fieldType) {
     case 'number':
       return (
@@ -85,7 +53,9 @@ const TypedInput: React.FC<TypedInputProps> = ({
           onKeyDown={onKeyDown}
           disabled={saving}
           placeholder={placeholder}
-          style={style}
+          data-part="inline-edit-input"
+          data-field-type={fieldType}
+          data-invalid={hasError ? 'true' : 'false'}
         />
       );
 
@@ -99,7 +69,9 @@ const TypedInput: React.FC<TypedInputProps> = ({
           onBlur={onBlur}
           onKeyDown={onKeyDown}
           disabled={saving}
-          style={style}
+          data-part="inline-edit-input"
+          data-field-type={fieldType}
+          data-invalid={hasError ? 'true' : 'false'}
         />
       );
 
@@ -113,7 +85,9 @@ const TypedInput: React.FC<TypedInputProps> = ({
           onBlur={onBlur}
           onKeyDown={onKeyDown}
           disabled={saving}
-          style={style}
+          data-part="inline-edit-input"
+          data-field-type={fieldType}
+          data-invalid={hasError ? 'true' : 'false'}
         />
       );
 
@@ -128,7 +102,9 @@ const TypedInput: React.FC<TypedInputProps> = ({
           onKeyDown={onKeyDown}
           disabled={saving}
           placeholder={placeholder ?? 'https://'}
-          style={style}
+          data-part="inline-edit-input"
+          data-field-type={fieldType}
+          data-invalid={hasError ? 'true' : 'false'}
         />
       );
 
@@ -143,7 +119,9 @@ const TypedInput: React.FC<TypedInputProps> = ({
           onKeyDown={onKeyDown}
           disabled={saving}
           placeholder={placeholder}
-          style={style}
+          data-part="inline-edit-input"
+          data-field-type={fieldType}
+          data-invalid={hasError ? 'true' : 'false'}
         />
       );
 
@@ -155,7 +133,9 @@ const TypedInput: React.FC<TypedInputProps> = ({
           onBlur={onBlur}
           onKeyDown={onKeyDown}
           disabled={saving}
-          style={{ ...style, cursor: 'pointer' }}
+          data-part="inline-edit-input"
+          data-field-type={fieldType}
+          data-invalid={hasError ? 'true' : 'false'}
         >
           <option value="">Select...</option>
           {(options ?? []).map((opt) => (
@@ -174,12 +154,9 @@ const TypedInput: React.FC<TypedInputProps> = ({
           disabled={saving}
           placeholder={placeholder ?? '{}'}
           rows={3}
-          style={{
-            ...style,
-            fontFamily: 'var(--typography-mono, monospace)',
-            fontSize: 'var(--typography-body-sm-size, 0.85em)',
-            resize: 'vertical',
-          }}
+          data-part="inline-edit-input"
+          data-field-type={fieldType}
+          data-invalid={hasError ? 'true' : 'false'}
         />
       );
 
@@ -195,7 +172,9 @@ const TypedInput: React.FC<TypedInputProps> = ({
           onKeyDown={onKeyDown}
           disabled={saving}
           placeholder={placeholder}
-          style={style}
+          data-part="inline-edit-input"
+          data-field-type={fieldType}
+          data-invalid={hasError ? 'true' : 'false'}
         />
       );
   }
@@ -232,31 +211,12 @@ const BooleanInlineToggle: React.FC<BooleanToggleProps> = ({ value, onSave, edit
       role="switch"
       aria-checked={checked}
       onClick={handleToggle}
-      style={{
-        display: 'inline-flex',
-        width: '36px',
-        height: '20px',
-        borderRadius: '10px',
-        background: checked ? 'var(--palette-primary)' : 'var(--palette-outline)',
-        cursor: editable && !saving ? 'pointer' : 'default',
-        alignItems: 'center',
-        padding: '2px',
-        transition: 'background 0.15s',
-        flexShrink: 0,
-        opacity: saving ? 0.6 : 1,
-      }}
       data-part="inline-toggle-track"
       data-state={checked ? 'on' : 'off'}
+      data-disabled={editable && !saving ? 'false' : 'true'}
+      data-saving={saving ? 'true' : 'false'}
     >
-      <span style={{
-        display: 'block',
-        width: '16px',
-        height: '16px',
-        borderRadius: '50%',
-        background: 'var(--palette-on-primary, #fff)',
-        transform: checked ? 'translateX(16px)' : 'translateX(0)',
-        transition: 'transform 0.15s',
-      }} data-part="inline-toggle-thumb" />
+      <span data-part="inline-toggle-thumb" data-state={checked ? 'on' : 'off'} />
     </span>
   );
 };
@@ -350,12 +310,12 @@ export const InlineEdit: React.FC<InlineEditProps> = ({
   }
 
   if (!editable) {
-    return <span>{String(value ?? '')}</span>;
+    return <span data-part="inline-edit-value">{String(value ?? '')}</span>;
   }
 
   if (editing) {
     return (
-      <span style={{ display: 'block' }}>
+      <span data-part="inline-edit" data-state="editing">
         <TypedInput
           fieldType={fieldType}
           value={editValue}
@@ -369,7 +329,7 @@ export const InlineEdit: React.FC<InlineEditProps> = ({
           onKeyDown={handleKeyDown}
         />
         {validationError && (
-          <span style={errorMessageStyle} role="alert">{validationError}</span>
+          <span data-part="inline-edit-error" role="alert">{validationError}</span>
         )}
       </span>
     );
@@ -377,12 +337,13 @@ export const InlineEdit: React.FC<InlineEditProps> = ({
 
   return (
     <span
+      data-part="inline-edit-trigger"
+      data-state="idle"
       onClick={() => {
         setEditValue(String(value ?? ''));
         setValidationError(null);
         setEditing(true);
       }}
-      style={{ cursor: 'pointer', borderBottom: '1px dashed var(--palette-outline-variant)' }}
       title="Click to edit"
     >
       {String(value ?? '') || '\u00A0'}

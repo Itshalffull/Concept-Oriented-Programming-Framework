@@ -913,6 +913,11 @@ a:active { color: var(--palette-primary-active); }
   opacity: 1;
 }
 
+[data-part="workspace-switcher-action-button"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
 [data-part="workspace-switcher-action-button"][data-variant="destructive"]:hover:not(:disabled) {
   background: color-mix(in srgb, var(--palette-error) 12%, transparent);
   color: var(--palette-error);
@@ -985,6 +990,11 @@ a:active { color: var(--palette-primary-active); }
   background: color-mix(in srgb, var(--palette-error) 12%, transparent);
   border-color: var(--palette-error);
   color: var(--palette-on-error-container);
+}
+
+[data-part="workspace-switcher-confirm-button"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
 }
 
 [data-part="workspace-switcher-create-row"] {
@@ -1089,6 +1099,11 @@ a:active { color: var(--palette-primary-active); }
   color: var(--palette-on-surface);
 }
 
+[data-part="pane-header-button"][data-variant="destructive"]:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--palette-error) 12%, transparent);
+  color: var(--palette-error);
+}
+
 [data-part="pane-header-button"][data-pinned="true"] {
   color: var(--palette-primary);
 }
@@ -1151,6 +1166,11 @@ a:active { color: var(--palette-primary-active); }
 [data-part="inline-edit-input"]:focus-visible {
   outline: 2px solid var(--palette-outline-focus);
   outline-offset: 1px;
+}
+
+[data-part="inline-edit-input"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
 }
 
 [data-part="inline-edit-input"][data-field-type="select"] {
@@ -1246,6 +1266,11 @@ a:active { color: var(--palette-primary-active); }
   outline-offset: 1px;
 }
 
+[data-part="cell-input"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
 [data-part="cell-input"][data-field-type="select"],
 [data-part="cell-input"][data-field-type="multi-select"] {
   appearance: none;
@@ -1275,6 +1300,11 @@ a:active { color: var(--palette-primary-active); }
 
 [data-part="cell-rating-option"][data-selected="true"] {
   color: var(--palette-primary);
+}
+
+[data-part="cell-rating-option"]:disabled {
+  cursor: default;
+  opacity: 0.45;
 }
 
 [data-part="cell-saving-indicator"] {

@@ -128,7 +128,8 @@ export const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
   // Focus first item when panel opens
   useEffect(() => {
     if (fsm.panel === 'open') {
-      setFocusedIndex(workspaces.findIndex((w) => w.active) ?? 0);
+      const activeIndex = workspaces.findIndex((w) => w.active);
+      setFocusedIndex(activeIndex >= 0 ? activeIndex : 0);
     }
   }, [fsm.panel, workspaces]);
 
@@ -251,13 +252,13 @@ export const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
 
   return (
     <div
-      data-part="root"
+      data-part="workspace-switcher"
       data-state={fsm.panel}
       data-operation={fsm.operation}
       data-disabled={disabled ? 'true' : 'false'}
       onKeyDown={handleKeyDown}
       className={className}
-      style={{ position: 'relative', display: 'inline-block', ...style }}
+      style={style}
     >
       {/* Trigger button */}
       <button
@@ -268,30 +269,15 @@ export const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
         aria-expanded={isOpen ? 'true' : 'false'}
         aria-controls={dropdownId}
         aria-label={`Current workspace: ${currentWorkspace ?? 'None'}`}
-        data-part="trigger"
+        data-part="workspace-switcher-trigger"
         data-state={fsm.panel}
         disabled={disabled}
         onClick={handleTriggerClick}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 'var(--spacing-xs)',
-          padding: 'var(--spacing-xs) var(--spacing-sm)',
-          background: 'var(--palette-surface-variant)',
-          border: '1px solid var(--palette-outline-variant)',
-          borderRadius: 'var(--radius-sm)',
-          color: 'var(--palette-on-surface)',
-          fontSize: 'var(--typography-label-md-size)',
-          fontWeight: 'var(--typography-label-md-weight)',
-          cursor: disabled ? 'not-allowed' : 'pointer',
-          opacity: disabled ? 0.5 : 1,
-          minWidth: 160,
-        }}
       >
-        <span data-part="current-name" style={{ flex: 1, textAlign: 'left' }}>
+        <span data-part="workspace-switcher-current-name">
           {currentWorkspace ?? 'Select workspace…'}
         </span>
-        <span aria-hidden="true" style={{ fontSize: '0.7rem' }}>{isOpen ? '▲' : '▼'}</span>
+        <span data-part="workspace-switcher-caret" aria-hidden="true">{isOpen ? '▲' : '▼'}</span>
       </button>
 
       {/* Dropdown panel */}
@@ -300,24 +286,9 @@ export const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
         role="listbox"
         aria-label="Workspaces"
         aria-orientation="vertical"
-        data-part="dropdown"
+        data-part="workspace-switcher-dropdown"
         data-state={fsm.panel}
         hidden={!isOpen}
-        style={{
-          position: 'absolute',
-          top: '100%',
-          left: 0,
-          zIndex: 200,
-          minWidth: '100%',
-          marginTop: 4,
-          background: 'var(--palette-surface)',
-          border: '1px solid var(--palette-outline-variant)',
-          borderRadius: 'var(--radius-md)',
-          boxShadow: 'var(--elevation-2)',
-          padding: 'var(--spacing-xs) 0',
-          maxHeight: 320,
-          overflowY: 'auto',
-        }}
       >
         {/* Workspace items */}
         {workspaces.map((ws, i) => {
@@ -327,24 +298,12 @@ export const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
               key={ws.id}
               role="option"
               aria-selected={ws.active ? 'true' : 'false'}
-              data-part="workspace-item"
+              data-part="workspace-switcher-item"
               data-active={ws.active ? 'true' : 'false'}
+              data-focused={i === focusedIndex ? 'true' : 'false'}
               tabIndex={i === focusedIndex ? 0 : -1}
               onClick={() => { if (!isRenaming) handleSelect(ws.id); }}
               onKeyDown={(e) => { if (e.key === 'Enter') handleSelect(ws.id); }}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 'var(--spacing-xs)',
-                padding: 'var(--spacing-xs) var(--spacing-sm)',
-                cursor: 'pointer',
-                background: ws.active
-                  ? 'var(--palette-primary-container)'
-                  : i === focusedIndex
-                  ? 'var(--palette-surface-variant)'
-                  : 'transparent',
-                borderLeft: ws.active ? '3px solid var(--palette-primary)' : '3px solid transparent',
-              }}
             >
               {isRenaming ? (
                 <input
@@ -353,7 +312,7 @@ export const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
                   role="textbox"
                   aria-label="Rename workspace"
                   aria-autocomplete="none"
-                  data-part="rename-input"
+                  data-part="workspace-switcher-rename-input"
                   data-state={fsm.operation}
                   value={renameValue}
                   onChange={(e) => setRenameValue(e.target.value)}
@@ -363,42 +322,18 @@ export const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
                     else if (e.key === 'Escape') handleCancelRename();
                   }}
                   onBlur={handleCancelRename}
-                  style={{
-                    flex: 1,
-                    padding: '2px var(--spacing-xs)',
-                    border: '1px solid var(--palette-primary)',
-                    borderRadius: 'var(--radius-xs)',
-                    background: 'var(--palette-surface)',
-                    color: 'var(--palette-on-surface)',
-                    fontSize: 'var(--typography-body-md-size)',
-                    outline: 'none',
-                  }}
                   onClick={(e) => e.stopPropagation()}
                 />
               ) : (
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div data-part="workspace-switcher-item-content">
                   <div
-                    data-part="workspace-name"
-                    style={{
-                      fontSize: 'var(--typography-body-md-size)',
-                      fontWeight: ws.active ? 'var(--typography-label-md-weight)' : 'normal',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
+                    data-part="workspace-switcher-name"
                   >
                     {ws.name}
                   </div>
                   {ws.description && (
                     <div
-                      data-part="workspace-description"
-                      style={{
-                        fontSize: 'var(--typography-body-sm-size)',
-                        color: 'var(--palette-on-surface-variant)',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
+                      data-part="workspace-switcher-description"
                     >
                       {ws.description}
                     </div>
@@ -408,24 +343,14 @@ export const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
 
               {/* Per-item action buttons */}
               {!isRenaming && (
-                <div style={{ display: 'flex', gap: 2, flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
+                <div data-part="workspace-switcher-item-actions" onClick={(e) => e.stopPropagation()}>
                   {canRename && (
                     <button
                       type="button"
                       aria-label={`Rename workspace: ${ws.name}`}
-                      data-part="rename-button"
+                      data-part="workspace-switcher-action-button"
                       disabled={disabled}
                       onClick={(e) => { e.stopPropagation(); handleBeginRename(ws.id, ws.name); }}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        color: 'var(--palette-on-surface-variant)',
-                        padding: '2px 4px',
-                        borderRadius: 'var(--radius-xs)',
-                        fontSize: '0.75rem',
-                        opacity: 0.7,
-                      }}
                     >
                       ✎
                     </button>
@@ -435,19 +360,10 @@ export const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
                       type="button"
                       role="button"
                       aria-label={`Delete workspace: ${ws.name}`}
-                      data-part="delete-button"
+                      data-part="workspace-switcher-action-button"
+                      data-variant="destructive"
                       disabled={disabled}
                       onClick={(e) => { e.stopPropagation(); handleBeginDelete(ws.id); }}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        color: 'var(--palette-error)',
-                        padding: '2px 4px',
-                        borderRadius: 'var(--radius-xs)',
-                        fontSize: '0.75rem',
-                        opacity: 0.7,
-                      }}
                     >
                       ✕
                     </button>
@@ -466,52 +382,27 @@ export const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
             aria-label="Confirm workspace deletion"
             aria-live="assertive"
             aria-modal="true"
-            data-part="confirm-dialog"
+            data-part="workspace-switcher-confirm-dialog"
             data-state={fsm.operation}
             tabIndex={-1}
-            style={{
-              padding: 'var(--spacing-sm) var(--spacing-md)',
-              background: 'var(--palette-error-container)',
-              color: 'var(--palette-on-error-container)',
-              borderTop: '1px solid var(--palette-outline-variant)',
-              borderBottom: '1px solid var(--palette-outline-variant)',
-            }}
           >
-            <p style={{ margin: '0 0 var(--spacing-xs)', fontSize: 'var(--typography-body-sm-size)' }}>
+            <p data-part="workspace-switcher-confirm-copy">
               Delete workspace &ldquo;{workspaces.find((w) => w.id === deletingId)?.name}&rdquo;? This cannot be undone.
             </p>
-            <div style={{ display: 'flex', gap: 'var(--spacing-xs)' }}>
+            <div data-part="workspace-switcher-confirm-actions">
               <button
                 type="button"
-                data-part="button"
+                data-part="workspace-switcher-confirm-button"
                 data-variant="filled"
                 onClick={handleConfirmDelete}
-                style={{
-                  padding: '4px var(--spacing-sm)',
-                  background: 'var(--palette-error)',
-                  color: 'var(--palette-on-error)',
-                  border: 'none',
-                  borderRadius: 'var(--radius-sm)',
-                  cursor: 'pointer',
-                  fontSize: 'var(--typography-label-sm-size)',
-                }}
               >
                 Delete
               </button>
               <button
                 type="button"
-                data-part="button"
+                data-part="workspace-switcher-confirm-button"
                 data-variant="outlined"
                 onClick={handleCancelDelete}
-                style={{
-                  padding: '4px var(--spacing-sm)',
-                  background: 'none',
-                  color: 'var(--palette-on-error-container)',
-                  border: '1px solid var(--palette-on-error-container)',
-                  borderRadius: 'var(--radius-sm)',
-                  cursor: 'pointer',
-                  fontSize: 'var(--typography-label-sm-size)',
-                }}
               >
                 Cancel
               </button>
@@ -521,43 +412,23 @@ export const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({
 
         {/* Rename input shown as overlay row when not in a specific item */}
         <div
-          data-part="rename-input"
+          data-part="workspace-switcher-rename-placeholder"
           data-state={fsm.operation}
           hidden={fsm.operation !== 'editing'}
-          style={{ display: fsm.operation === 'editing' ? undefined : 'none' }}
           aria-hidden={fsm.operation !== 'editing' ? 'true' : 'false'}
         />
 
         {/* Create button */}
         {canCreate && (
-          <div
-            style={{
-              borderTop: '1px solid var(--palette-outline-variant)',
-              marginTop: 4,
-              paddingTop: 4,
-            }}
-          >
+          <div data-part="workspace-switcher-create-row">
             <button
               type="button"
               role="button"
               aria-label="Create new workspace"
-              data-part="create-button"
+              data-part="workspace-switcher-create-button"
+              data-variant="quiet"
               disabled={disabled}
               onClick={() => { dispatch('CLOSE'); onCreate?.(); }}
-              style={{
-                width: '100%',
-                padding: 'var(--spacing-xs) var(--spacing-sm)',
-                background: 'none',
-                border: 'none',
-                color: 'var(--palette-primary)',
-                cursor: disabled ? 'not-allowed' : 'pointer',
-                fontSize: 'var(--typography-body-md-size)',
-                textAlign: 'left',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 'var(--spacing-xs)',
-                opacity: disabled ? 0.5 : 1,
-              }}
             >
               <span aria-hidden="true">＋</span> New workspace
             </button>
