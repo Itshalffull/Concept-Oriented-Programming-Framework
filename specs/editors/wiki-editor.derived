@@ -1,0 +1,48 @@
+derived WikiEditor [T] {
+
+  purpose {
+    Page-level editor for wiki ContentNodes. Extends MarkdownEditor with
+    wiki-specific block vocabulary (entity-embed) and the [[link]] mark
+    for inline wikilinks. Creating a wikilink registers a Reference with
+    kind="wikilink", making the target page discoverable via Backlink.
+    An Alias panel surfaces alternative names for the current page, and
+    a backlinks panel shows all pages that link here. Provides the
+    core hyperlinking surface that turns a collection of pages into a
+    navigable wiki graph.
+  }
+
+  composes {
+    MarkdownEditor [T]
+    Reference
+    Backlink
+    Alias
+  }
+
+  syncs {
+    required: [
+      wiki-blocks-registered,
+      wiki-marks-registered,
+      wiki-paste-handler,
+      wiki-backlinks-panel-attached
+    ]
+  }
+
+  surface {
+    action create(pageName: String) {
+      matches: MarkdownEditor/create
+    }
+
+    action createWikiLink(source: String, target: String, label: String) {
+      matches: Reference/create(kind: "wikilink")
+    }
+
+    query backlinks(page: String) -> Backlink/list(target: page)
+    query aliases(page: String) -> Alias/listForTarget(target: page)
+  }
+
+  principle {
+    after create(pageName: "Topic") -> ok(id: p)
+    then createWikiLink(source: p, target: p2, label: "Related") -> ok
+    then backlinks(page: p2) returns [p]
+  }
+}
