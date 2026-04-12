@@ -1,0 +1,289 @@
+@version(1)
+widget error-branch {
+
+  purpose {
+    Catch/fault path editor attached to any action step in the Clef Automation UI.
+    Lets the user configure a catch block on a ProcessSpec step by choosing a
+    catch kind (notify, retry, fallback, or rethrow), an optional error-type
+    filter (e.g. "ValidationError" or "*"), and the handler action to execute
+    when the fault fires. Emits discrete events (ADD_CATCH, REMOVE_CATCH,
+    SET_KIND, SET_FILTER) so the host can wire them to ProcessSpec mutations;
+    the widget itself holds no process state. In the graph view a configured
+    catch maps to a typed out-port with port_type:"catch" on the parent step node.
+  }
+
+  anatomy {
+    root:             container    { Outermost wrapper for the catch block; scoped to a single parent step }
+    catchHeader:      text         { Heading row labelling this as a catch block with the current kind badge }
+    catchBody:        container    { Expanded content area shown only when a catch is configured }
+    catchActionSlot:  container    { Slot that hosts an action-editor widget for the catch handler action }
+    errorFilterInput: interactive  { Text input for typing an error-type filter expression (e.g. "ValidationError" or "*") }
+    addCatchButton:   action       { Button that adds a new catch path to the parent step }
+    removeCatchButton: action      { Button that removes the configured catch path after confirmation }
+  }
+
+  states {
+    empty [initial] {
+      on ADD_CATCH   -> configured;
+      entry [hideCatchBody; showAddCatchButton; hideRemoveCatchButton];
+    }
+
+    configured {
+      on REMOVE_CATCH    -> empty;
+      on EDIT_FILTER     -> editing-filter;
+      on SET_KIND        -> configured;
+      entry [showCatchBody; hideAddCatchButton; showRemoveCatchButton];
+      exit  [clearTransientHighlights];
+    }
+
+    editing-filter {
+      on COMMIT_FILTER   -> configured;
+      on CANCEL_FILTER   -> configured;
+      on REMOVE_CATCH    -> empty;
+      entry [focusErrorFilterInput];
+      exit  [blurErrorFilterInput];
+    }
+  }
+
+  accessibility {
+    role: group;
+    keyboard {
+      Enter     -> ADD_CATCH;
+      Delete    -> REMOVE_CATCH;
+      Escape    -> CANCEL_FILTER;
+      Tab       -> FOCUS_NEXT;
+      Shift+Tab -> FOCUS_PREV;
+    }
+    focus {
+      trap: false;
+      initial: addCatchButton;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-labelledby: catchHeader;
+        data-state: state;
+      };
+      catchHeader -> {
+        role: "heading";
+        aria-level: "3";
+        aria-label: concat("Catch block: ", ?catchKind);
+      };
+      catchBody -> {
+        role: "region";
+        aria-label: "Catch configuration";
+        aria-hidden: if state == "empty" then "true" else "false";
+      };
+      catchActionSlot -> {
+        role: "region";
+        aria-label: "Catch handler action";
+      };
+      errorFilterInput -> {
+        role: "textbox";
+        aria-label: "Error filter expression";
+        aria-placeholder: "*";
+        aria-description: "Enter an error type name to match (e.g. ValidationError) or * to catch all errors";
+        aria-required: "false";
+      };
+      addCatchButton -> {
+        role: "button";
+        aria-label: "Add catch path";
+        aria-expanded: if state == "configured" or state == "editing-filter" then "true" else "false";
+        aria-controls: "catchBody";
+      };
+      removeCatchButton -> {
+        role: "button";
+        aria-label: "Remove catch path";
+        aria-hidden: if state == "empty" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    parentStepId:  String
+    catchActionId: option String
+    errorFilter:   option String
+    catchKind:     union "notify" | "retry" | "fallback" | "rethrow" = "notify"
+  }
+
+  connect {
+    root -> {
+      data-part:        "root";
+      data-state:       state;
+      data-parent-step: ?parentStepId;
+      data-catch-kind:  ?catchKind;
+      data-has-catch:   if state == "configured" or state == "editing-filter" then "true" else "false";
+    }
+
+    catchHeader -> {
+      data-part:       "catch-header";
+      data-catch-kind: ?catchKind;
+      id:              "catchHeader";
+    }
+
+    catchBody -> {
+      data-part: "catch-body";
+      hidden:    if state == "empty" then true else false;
+    }
+
+    catchActionSlot -> {
+      data-part:         "catch-action-slot";
+      data-catch-action: ?catchActionId;
+      hidden:            if state == "empty" then true else false;
+    }
+
+    errorFilterInput -> {
+      data-part:   "error-filter-input";
+      value:       ?errorFilter;
+      placeholder: "*";
+      disabled:    if state == "empty" then true else false;
+      onFocus:     send(EDIT_FILTER);
+      onChange:    send(SET_FILTER);
+      onBlur:      send(COMMIT_FILTER);
+      hidden:      if state == "empty" then true else false;
+    }
+
+    addCatchButton -> {
+      data-part: "add-catch-button";
+      hidden:    if state == "configured" or state == "editing-filter" then true else false;
+      onClick:   send(ADD_CATCH);
+      onKeyDown: if key == "Enter" then send(ADD_CATCH) else noop;
+    }
+
+    removeCatchButton -> {
+      data-part: "remove-catch-button";
+      hidden:    if state == "empty" then true else false;
+      onClick:   send(REMOVE_CATCH);
+      onKeyDown: if key == "Delete" then send(REMOVE_CATCH) else noop;
+    }
+  }
+
+  affordance {
+    serves: fault-path-editor;
+    specificity: 10;
+    when { stepEditing: true; catchEditing: true }
+    bind {
+      parentStepId:  parentStepId;
+      catchActionId: catchActionId;
+      errorFilter:   errorFilter;
+      catchKind:     catchKind;
+    }
+  }
+
+  compose {
+    catchActionSlot: widget("action-editor", { action: ?catchActionId })
+  }
+
+  invariant {
+    example "adding a catch transitions empty -> configured": {
+      after addCatchButton.click -> ok
+      then root -> { data-state: "configured" }
+      and root -> { data-has-catch: "true" }
+      and catchBody -> { hidden: false }
+      and addCatchButton -> { hidden: true }
+      and removeCatchButton -> { hidden: false }
+    }
+
+    example "remove catch transitions configured -> empty": {
+      after addCatchButton.click -> ok
+      then root -> { data-state: "configured" }
+      then removeCatchButton.click -> ok
+      then root -> { data-state: "empty" }
+      and root -> { data-has-catch: "false" }
+      and catchBody -> { hidden: true }
+      and addCatchButton -> { hidden: false }
+    }
+
+    example "focusing errorFilterInput enters editing-filter": {
+      after addCatchButton.click -> ok
+      then root -> { data-state: "configured" }
+      then errorFilterInput.focus -> ok
+      then root -> { data-state: "editing-filter" }
+    }
+
+    example "committing filter returns to configured": {
+      after addCatchButton.click -> ok
+      then errorFilterInput.focus -> ok
+      then root -> { data-state: "editing-filter" }
+      then send(COMMIT_FILTER) -> ok
+      then root -> { data-state: "configured" }
+    }
+
+    example "Escape cancels filter edit and returns to configured": {
+      after addCatchButton.click -> ok
+      then errorFilterInput.focus -> ok
+      then send(CANCEL_FILTER) -> ok
+      then root -> { data-state: "configured" }
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "data-state on root reflects FSM": {
+      root -> { data-state: state }
+    }
+
+    always "data-has-catch tracks configured states": {
+      if state == "configured" or state == "editing-filter"
+        then root -> { data-has-catch: "true" }
+      else root -> { data-has-catch: "false" }
+    }
+
+    always "data-catch-kind on root reflects catchKind prop": {
+      root -> { data-catch-kind: ?catchKind }
+    }
+
+    always "catchBody hidden in empty state": {
+      if state == "empty" then catchBody -> { hidden: true }
+    }
+
+    always "addCatchButton hidden when catch is configured": {
+      if state == "configured" or state == "editing-filter"
+        then addCatchButton -> { hidden: true }
+    }
+
+    always "removeCatchButton hidden in empty state": {
+      if state == "empty" then removeCatchButton -> { hidden: true }
+    }
+
+    always "errorFilterInput disabled in empty state": {
+      if state == "empty" then errorFilterInput -> { disabled: true }
+    }
+
+    always "configured state has non-null catchActionId": {
+      if state == "configured" or state == "editing-filter"
+        then ?catchActionId != ""
+    }
+
+    never "errorFilter set while in empty state": {
+      state == "empty" and ?errorFilter != ""
+    }
+
+    never "editing-filter entered from empty state": {
+      state == "empty" and send(EDIT_FILTER)
+    }
+
+    action addCatchButton.click {
+      requires: state == "empty"
+      ensures ok: state == "configured"
+    }
+
+    action removeCatchButton.click {
+      requires: state == "configured" or state == "editing-filter"
+      ensures ok: state == "empty"
+    }
+
+    action errorFilterInput.focus {
+      requires: state == "configured"
+      ensures ok: state == "editing-filter"
+    }
+
+    "SET_KIND dispatched when the catchKind selector changes value; host wires to ProcessSpec/updateStep";
+    "SET_FILTER dispatched on every errorFilterInput onChange; host debounces before persisting";
+    "REMOVE_CATCH should be confirmed by the host before mutating ProcessSpec - the widget dispatches the event unconditionally";
+    "catchActionSlot hosts an action-editor widget; the parent step's concept scope is passed as context";
+    "In the graph view a configured catch maps to an out-port with port_type:'catch' and the errorFilter as an edge annotation (handled by ProcessSpecToCanvas sync, MAG-674)";
+  }
+
+}
