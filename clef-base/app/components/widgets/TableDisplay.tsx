@@ -14,6 +14,7 @@ import { DataTable, type ColumnDef } from './DataTable';
 import { Badge } from './Badge';
 import { resolveRowAction, type RowActionConfig } from '../../../lib/row-actions';
 import type { GroupConfig } from '../../../lib/view-types';
+import { ActionButtonCompact } from './ActionButton';
 
 export interface FieldConfig {
   key: string;
@@ -282,7 +283,6 @@ interface RowActionState {
   success: string | null;   // action key that last succeeded (auto-clears)
 }
 
-// TODO: migrate to <ActionButtonCompact> when row actions have ActionBinding IDs
 const RowActionButtons: React.FC<{
   row: Record<string, unknown>;
   rowIndex: number;
@@ -328,6 +328,19 @@ const RowActionButtons: React.FC<{
         {rowActions.map(action => {
           const { visible, label } = resolveRowAction(action, row);
           if (!visible) return null;
+          // ActionBinding path — delegate to ActionButtonCompact
+          if (action.actionBindingId) {
+            return (
+              <ActionButtonCompact
+                key={action.key}
+                binding={action.actionBindingId}
+                context={row}
+                label={label}
+                buttonVariant={action.variant === 'filled' ? 'primary' : action.variant === 'outlined' ? 'default' : 'ghost'}
+              />
+            );
+          }
+          // Legacy path — raw button
           const isPending = state.pending === action.key;
           const isSuccess = state.success === action.key;
           return (

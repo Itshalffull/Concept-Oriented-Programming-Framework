@@ -18,6 +18,8 @@ export interface RowActionConfig {
   variant?: 'filled' | 'outlined' | 'ghost';
   /** Only show this action when condition is met */
   condition?: { field: string; equals: unknown } | { field: string; notEquals: unknown };
+  /** ActionBinding seed ID — when set, renders via ActionButtonCompact instead of a raw button */
+  actionBindingId?: string;
 }
 
 /** Resolve the label and visibility of a row action for a given data row */

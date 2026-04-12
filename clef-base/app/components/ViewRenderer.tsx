@@ -300,7 +300,7 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
   interface HydratedSort { name: string; keys: string }
   interface HydratedProjection { name: string; fields: string }
   interface HydratedPresentation { name: string; displayType: string; hints: string; displayModePolicy: string; defaultDisplayMode: string }
-  interface HydratedInteraction { name: string; createForm: string; rowClick: string; rowActions: string; pickerMode: string }
+  interface HydratedInteraction { name: string; createForm: string; rowClick: string; rowActions: string; pickerMode: string; actionBindings?: string }
 
   const hydratedSpecs = useMemo(() => {
     if (!shellResult?.view) return null;
@@ -374,7 +374,26 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
         try { controlsObj.rowClick = JSON.parse(interactionSpec.rowClick); } catch { /* ignore */ }
       }
       if (interactionSpec.rowActions) {
-        try { controlsObj.rowActions = JSON.parse(interactionSpec.rowActions); } catch { /* ignore */ }
+        try {
+          const parsedRowActions: RowActionConfig[] = JSON.parse(interactionSpec.rowActions);
+          // Enrich each row action with its ActionBinding ID when actionBindings field is present
+          if (interactionSpec.actionBindings) {
+            try {
+              const actionBindings: Array<{ id: string; key?: string; actionKey?: string }> =
+                JSON.parse(interactionSpec.actionBindings as string);
+              controlsObj.rowActions = parsedRowActions.map(ra => {
+                const binding = actionBindings.find(
+                  ab => (ab.key ?? ab.actionKey) === ra.key,
+                );
+                return binding ? { ...ra, actionBindingId: binding.id } : ra;
+              });
+            } catch {
+              controlsObj.rowActions = parsedRowActions;
+            }
+          } else {
+            controlsObj.rowActions = parsedRowActions;
+          }
+        } catch { /* ignore */ }
       }
       controlsJson = JSON.stringify(controlsObj);
     }
@@ -824,9 +843,8 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
     }
   }, [controls.bulk?.actions, controls.rowActions, invoke, refetch]);
 
-  // Row action handler — invoke a concept action with params mapped from the row
+  // Row action handler — legacy path; actions with actionBindingId bypass this via ActionButtonCompact in display components
   const handleRowAction = useCallback(async (action: RowActionConfig, row: Record<string, unknown>) => {
-  // TODO: migrate to <ActionButtonCompact> when InteractionSpec seeds create ActionBinding records
     setActionPending(true);
     setActionError(null);
     setActionSuccess(null);

@@ -11,6 +11,7 @@
 import React, { useMemo, useState, useCallback, useRef } from 'react';
 import type { FieldConfig } from './TableDisplay';
 import { resolveRowAction, type RowActionConfig } from '../../../lib/row-actions';
+import { ActionButtonCompact } from './ActionButton';
 
 interface BoardDisplayProps {
   data: Record<string, unknown>[];
@@ -27,7 +28,6 @@ interface BoardDisplayProps {
 // ─── BoardCardActionButtons ───────────────────────────────────────────────
 // Per-card action buttons with pending/error state management.
 
-// TODO: migrate to <ActionButtonCompact> when row actions have ActionBinding IDs
 const BoardCardActionButtons: React.FC<{
   row: Record<string, unknown>;
   rowActions: RowActionConfig[];
@@ -80,6 +80,19 @@ const BoardCardActionButtons: React.FC<{
         {rowActions.map(action => {
           const { visible, label } = resolveRowAction(action, row);
           if (!visible) return null;
+          // ActionBinding path — delegate to ActionButtonCompact
+          if (action.actionBindingId) {
+            return (
+              <ActionButtonCompact
+                key={action.key}
+                binding={action.actionBindingId}
+                context={row}
+                label={label}
+                buttonVariant={action.variant === 'filled' ? 'primary' : action.variant === 'outlined' ? 'default' : 'ghost'}
+              />
+            );
+          }
+          // Legacy path — raw button
           const isPending = pending === action.key;
           const isSuccess = success === action.key;
           return (

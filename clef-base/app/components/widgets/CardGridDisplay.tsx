@@ -10,6 +10,7 @@ import { Card } from './Card';
 import { Badge } from './Badge';
 import type { FieldConfig } from './TableDisplay';
 import { resolveRowAction, type RowActionConfig } from '../../../lib/row-actions';
+import { ActionButtonCompact } from './ActionButton';
 
 interface CardGridDisplayProps {
   data: Record<string, unknown>[];
@@ -24,7 +25,6 @@ interface CardGridDisplayProps {
 // ─── CardRowActionButtons ─────────────────────────────────────────────────
 // Per-card action buttons with pending/error state management.
 
-// TODO: migrate to <ActionButtonCompact> when row actions have ActionBinding IDs
 const CardRowActionButtons: React.FC<{
   row: Record<string, unknown>;
   rowActions: RowActionConfig[];
@@ -74,6 +74,19 @@ const CardRowActionButtons: React.FC<{
         {rowActions.map(action => {
           const { visible, label } = resolveRowAction(action, row);
           if (!visible) return null;
+          // ActionBinding path — delegate to ActionButtonCompact
+          if (action.actionBindingId) {
+            return (
+              <ActionButtonCompact
+                key={action.key}
+                binding={action.actionBindingId}
+                context={row}
+                label={label}
+                buttonVariant={action.variant === 'filled' ? 'primary' : action.variant === 'outlined' ? 'default' : 'ghost'}
+              />
+            );
+          }
+          // Legacy path — raw button
           const isPending = pending === action.key;
           const isSuccess = success === action.key;
           return (
