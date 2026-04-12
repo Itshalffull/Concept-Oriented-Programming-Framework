@@ -394,10 +394,10 @@ Potential exception:
 | Card | Deliverable | Section | Depends On | Unblocks | Priority | Commit |
 |---|---|---|---|---|---|---|
 | MAG-650 | Shared picker and popover surfaces | §4.1 | — | MAG-655 | high | `de9004ef` |
-| MAG-651 | Form and field widgets | §4.2 | — | MAG-655 | high | |
-| MAG-652 | Data display widgets | §4.3 | — | MAG-655 | high | |
-| MAG-653 | Visualization semantic colors | §4.4 | — | MAG-656 | high | |
-| MAG-654 | Workspace and editor chrome | §4.5 | — | MAG-656 | medium | |
+| MAG-651 | Form and field widgets | §4.2 | — | MAG-655 | high | `94629642` |
+| MAG-652 | Data display widgets | §4.3 | — | MAG-655 | high | `688610b5` |
+| MAG-653 | Visualization semantic colors | §4.4 | — | MAG-656 | high | `c35092a2` |
+| MAG-654 | Workspace and editor chrome | §4.5 | — | MAG-656 | medium | `cb7bda74` |
 | MAG-655 | Primary view wrapper cleanup | §4.6 | MAG-650, MAG-651, MAG-652 | MAG-656 | medium | |
 | MAG-656 | Final regression and rollout verification | §10, §11 | MAG-653, MAG-654, MAG-655 | — | medium | |
 
