@@ -27,6 +27,88 @@ widget widget-name {
   props { propName: Type (default: value) }
   connect { partName -> { attr: value; } }
   compose { partName: widget("name", { prop: value }) }
-  invariant { "description" }
+  invariant {
+    # structured forms (below) + legacy prose strings both allowed
+  }
 }
+```
+
+## Invariant Grammar (from handlers/ts/framework/widget-spec-parser.ts)
+
+The `invariant { }` block accepts FIVE structured kinds plus legacy prose strings. Each structured form generates a WidgetComponentTest conformance test. Prose strings do NOT generate tests — they are documentation only.
+
+### Structured forms
+
+```
+invariant {
+  # example: concrete before/after scenario
+  example "name of the scenario" {
+    after EVENT_NAME() -> variant_tag
+    then OTHER_EVENT() -> variant_tag
+  }
+
+  # always: temporal invariant with optional forall quantifier
+  always "name" {
+    forall p in stateSetName:
+      p.field = "expected"
+  }
+
+  # never: temporal invariant with optional exists quantifier
+  never "name" {
+    exists p in stateSetName:
+      p.field = "forbidden"
+  }
+
+  # forall: quantified scenario
+  forall "name" {
+    given x in {a, b, c}
+    after EVENT(arg: x) -> ok
+    then OTHER() -> ok
+  }
+
+  # action contract: requires/ensures on a named part or event
+  action saveButton {
+    requires: state.lifecycle = "dirty"
+    ensures ok: state.lifecycle = "saving"
+  }
+
+  # legacy prose (documentation only, no test generation)
+  "A prose string description of a behavioral guarantee."
+}
+```
+
+### Syntax rules the parser enforces (will SILENTLY drop your block if wrong)
+
+- **After-pattern required inside `example`:** the body must contain `after EVENT() -> variant` — bare assertion bodies are not accepted in example.
+- **Assertions use `=`, not `==`:** `state.mode = "open"` parses; `state.mode == "open"` does not.
+- **Quantifier keywords are specific:**
+  - `always` accepts `forall p in ...:` (colon required)
+  - `never` accepts `exists p in ...:` (colon required)
+  - `forall` top-level uses `given x in {...}`
+- **Action contract target is a bare identifier:** `action saveButton {...}` works; `action saveButton.click {...}` does NOT — drop the `.click`.
+- **Variant tags are bare identifiers after `->`:** `-> ok`, `-> error`, not `-> ok()` or `-> "ok"`.
+- **Semicolons between invariants are optional** but do not break the parser either way.
+
+### Common silent failures (the invariant block vanishes from the AST)
+
+If `parseWidgetFile(...).invariants.length` comes back 0 or smaller than you wrote, check:
+
+1. **Brace imbalance in anatomy / states / props / connect / compose.** A single `{` without matching `}` in an earlier section causes the parser to sail past the invariant block. Verify each section closes at column 0.
+2. **`example "..." { ... }` body missing `after` keyword.** The parser requires it; without it, the example silently drops.
+3. **Unsupported expressions inside `after` / `then`:** dotted event names like `button.click()`, inline object literals like `{x: 1}` in variant args, em-dashes / smart quotes in prose — all cause parse errors that abort the containing block.
+4. **Non-ASCII punctuation in prose strings** (em-dash `—`, curly quotes `'` / `"`, forward slash outside `//` comments) — the tokenizer skips or mis-classifies these.
+
+### Must-verify step (mandatory before reporting done)
+
+```
+npx tsx --tsconfig tsconfig.json -e "
+  import { parseWidgetFile } from './handlers/ts/framework/widget-spec-parser';
+  import fs from 'fs';
+  const m:any = parseWidgetFile(fs.readFileSync('<YOUR .widget PATH>','utf8'));
+  const n = (m.invariants||[]).length;
+  const counts:any = {};
+  (m.invariants||[]).forEach((i:any)=>{counts[i.kind]=(counts[i.kind]||0)+1;});
+  console.log('total:', n, 'by kind:', counts);
+  if (n < 5) throw new Error('FAIL: invariants not captured');
+"
 ```

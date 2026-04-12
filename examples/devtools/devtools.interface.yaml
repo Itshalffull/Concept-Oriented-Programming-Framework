@@ -4578,6 +4578,25 @@ workflows:
         - "Keyboard bindings cover Enter, Escape, Arrow keys?"
         - "Focus management (trap, roving, initial) is defined?"
         - "Props have types and defaults?"
+        - "Every structured invariant round-trips through parseWidgetFile? (See MUST-VERIFY below.)"
+        - "Invariant block has ≥ 5 structured entries (example/always/never/forall/action), not just prose strings?"
+        - "Anatomy, states, props, connect, compose blocks each have balanced braces? (A single imbalance silently eats the invariant block.)"
+    must-verify:
+      - title: "Parse-verify before committing"
+        rule: |
+          After writing the .widget file, you MUST parse it and verify the invariant block was captured. Silent drops are the #1 cause of shipped widgets with zero test coverage.
+
+          Run (from repo root):
+          ```
+          npx tsx --tsconfig tsconfig.json -e "
+            import { parseWidgetFile } from './handlers/ts/framework/widget-spec-parser';
+            import fs from 'fs';
+            const m:any = parseWidgetFile(fs.readFileSync('surface/widgets/YOUR-WIDGET.widget','utf8'));
+            console.log('invariants:', (m.invariants||[]).length);
+            if (!m.invariants || m.invariants.length < 5) throw new Error('FAIL: invariants not captured (brace imbalance upstream or wrong grammar)');
+          "
+          ```
+          If this prints 0 or fewer than your written count, the parser dropped your invariants. Find and fix the upstream brace imbalance (usually in anatomy/states/props/connect/compose) BEFORE reporting the card done.
     design-principles:
       - title: "Behavior-Rendering Separation"
         rule: "Widget specs define behavior (states, transitions, guards). Rendering is handled by framework adapters. They agree only on part names (anatomy)."
@@ -4702,8 +4721,90 @@ workflows:
             props { propName: Type (default: value) }
             connect { partName -> { attr: value; } }
             compose { partName: widget("name", { prop: value }) }
-            invariant { "description" }
+            invariant {
+              # structured forms (below) + legacy prose strings both allowed
+            }
           }
+          ```
+
+          ## Invariant Grammar (from handlers/ts/framework/widget-spec-parser.ts)
+
+          The `invariant { }` block accepts FIVE structured kinds plus legacy prose strings. Each structured form generates a WidgetComponentTest conformance test. Prose strings do NOT generate tests — they are documentation only.
+
+          ### Structured forms
+
+          ```
+          invariant {
+            # example: concrete before/after scenario
+            example "name of the scenario" {
+              after EVENT_NAME() -> variant_tag
+              then OTHER_EVENT() -> variant_tag
+            }
+
+            # always: temporal invariant with optional forall quantifier
+            always "name" {
+              forall p in stateSetName:
+                p.field = "expected"
+            }
+
+            # never: temporal invariant with optional exists quantifier
+            never "name" {
+              exists p in stateSetName:
+                p.field = "forbidden"
+            }
+
+            # forall: quantified scenario
+            forall "name" {
+              given x in {a, b, c}
+              after EVENT(arg: x) -> ok
+              then OTHER() -> ok
+            }
+
+            # action contract: requires/ensures on a named part or event
+            action saveButton {
+              requires: state.lifecycle = "dirty"
+              ensures ok: state.lifecycle = "saving"
+            }
+
+            # legacy prose (documentation only, no test generation)
+            "A prose string description of a behavioral guarantee."
+          }
+          ```
+
+          ### Syntax rules the parser enforces (will SILENTLY drop your block if wrong)
+
+          - **After-pattern required inside `example`:** the body must contain `after EVENT() -> variant` — bare assertion bodies are not accepted in example.
+          - **Assertions use `=`, not `==`:** `state.mode = "open"` parses; `state.mode == "open"` does not.
+          - **Quantifier keywords are specific:**
+            - `always` accepts `forall p in ...:` (colon required)
+            - `never` accepts `exists p in ...:` (colon required)
+            - `forall` top-level uses `given x in {...}`
+          - **Action contract target is a bare identifier:** `action saveButton {...}` works; `action saveButton.click {...}` does NOT — drop the `.click`.
+          - **Variant tags are bare identifiers after `->`:** `-> ok`, `-> error`, not `-> ok()` or `-> "ok"`.
+          - **Semicolons between invariants are optional** but do not break the parser either way.
+
+          ### Common silent failures (the invariant block vanishes from the AST)
+
+          If `parseWidgetFile(...).invariants.length` comes back 0 or smaller than you wrote, check:
+
+          1. **Brace imbalance in anatomy / states / props / connect / compose.** A single `{` without matching `}` in an earlier section causes the parser to sail past the invariant block. Verify each section closes at column 0.
+          2. **`example "..." { ... }` body missing `after` keyword.** The parser requires it; without it, the example silently drops.
+          3. **Unsupported expressions inside `after` / `then`:** dotted event names like `button.click()`, inline object literals like `{x: 1}` in variant args, em-dashes / smart quotes in prose — all cause parse errors that abort the containing block.
+          4. **Non-ASCII punctuation in prose strings** (em-dash `—`, curly quotes `'` / `"`, forward slash outside `//` comments) — the tokenizer skips or mis-classifies these.
+
+          ### Must-verify step (mandatory before reporting done)
+
+          ```
+          npx tsx --tsconfig tsconfig.json -e "
+            import { parseWidgetFile } from './handlers/ts/framework/widget-spec-parser';
+            import fs from 'fs';
+            const m:any = parseWidgetFile(fs.readFileSync('<YOUR .widget PATH>','utf8'));
+            const n = (m.invariants||[]).length;
+            const counts:any = {};
+            (m.invariants||[]).forEach((i:any)=>{counts[i.kind]=(counts[i.kind]||0)+1;});
+            console.log('total:', n, 'by kind:', counts);
+            if (n < 5) throw new Error('FAIL: invariants not captured');
+          "
           ```
     validation-commands:
       - label: "Generate a Clef Surface component scaffold"
@@ -9663,14 +9764,17 @@ agent-annotations:
       - "**Define states** — create FSM with transitions, entry/exit actions. Every state must be reachable"
       - "**Add accessibility** — ARIA role, keyboard bindings, focus management (trap/roving/returnOnClose)"
       - "**Write connect bindings** — map parts to attributes using expressions (?propName, state.machine, send(EVENT))"
-      - "**Write structured invariants** — use example/forall/always/never forms that generate good component tests via WidgetComponentTest"
+      - "**Write structured invariants** — use example/forall/always/never/action forms that generate conformance tests via WidgetComponentTest. See the Widget Grammar Reference in the create-widget skill for exact accepted syntax"
+      - "**Parse-verify before reporting done (MANDATORY)** — run parseWidgetFile on the file and assert `invariants.length >= 5`. If it returns 0, the parser silently dropped your block — usually a brace imbalance in anatomy/states/props/connect/compose. Fix upstream and re-verify"
       - "**Validate** — use spec-parser to verify the spec parses correctly"
     rules:
       - "**Anatomy-first** — every widget starts with its part tree. Parts are the structural contract"
       - "**Every state reachable** — no dead states in the FSM. Every transition must have a path from initial"
       - "**Every part has data-part** — connect bindings should include data-part attributes for testability"
       - "**ARIA completeness** — every interactive part needs role, aria-label or aria-labelledby, and keyboard access"
-      - "**Structured invariants for testability** — prefer example/forall/always/never over prose strings. These generate automated component conformance tests via WidgetComponentTest"
+      - "**Structured invariants for testability** — prefer example/forall/always/never/action over prose strings. These generate automated component conformance tests via WidgetComponentTest"
+      - "**PARSE-VERIFY EVERY WIDGET — NEVER SKIP** — After writing, run: `npx tsx --tsconfig tsconfig.json -e \"import {parseWidgetFile} from './handlers/ts/framework/widget-spec-parser'; import fs from 'fs'; const m:any=parseWidgetFile(fs.readFileSync('<PATH>','utf8')); console.log('inv:', (m.invariants||[]).length); if ((m.invariants||[]).length<5) throw new Error('dropped');\"`. If this fails, your invariants landed outside the parsed AST — find the upstream brace imbalance and fix before commit. Silent invariant drops are the #1 cause of shipped widgets with zero test coverage"
+      - "**Invariant syntax pitfalls (silent failures)** — `example` body MUST contain `after EVENT() -> variant`; assertions use `=` not `==`; action contract target is a bare identifier, not `part.click`; variants are bare `-> ok`, not `-> ok()` or `-> \"ok\"`; em-dashes and curly quotes in prose trip the tokenizer"
       - "**data-state on root** — always bind data-state to the FSM state on the root part for test selectors"
       - "**Props with defaults** — every prop must have a sensible default value"
       - "**No framework references** — widget specs are framework-agnostic. No React, Vue, or Svelte in specs"

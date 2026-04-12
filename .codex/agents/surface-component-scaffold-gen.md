@@ -33,8 +33,9 @@ prescribing how the widget renders.
 4. **Define states** — create FSM with transitions, entry/exit actions. Every state must be reachable
 5. **Add accessibility** — ARIA role, keyboard bindings, focus management (trap/roving/returnOnClose)
 6. **Write connect bindings** — map parts to attributes using expressions (?propName, state.machine, send(EVENT))
-7. **Write structured invariants** — use example/forall/always/never forms that generate good component tests via WidgetComponentTest
-8. **Validate** — use spec-parser to verify the spec parses correctly
+7. **Write structured invariants** — use example/forall/always/never/action forms that generate conformance tests via WidgetComponentTest. See the Widget Grammar Reference in the create-widget skill for exact accepted syntax
+8. **Parse-verify before reporting done (MANDATORY)** — run parseWidgetFile on the file and assert `invariants.length >= 5`. If it returns 0, the parser silently dropped your block — usually a brace imbalance in anatomy/states/props/connect/compose. Fix upstream and re-verify
+9. **Validate** — use spec-parser to verify the spec parses correctly
 
 ## Rules
 
@@ -42,7 +43,9 @@ prescribing how the widget renders.
 - **Every state reachable** — no dead states in the FSM. Every transition must have a path from initial
 - **Every part has data-part** — connect bindings should include data-part attributes for testability
 - **ARIA completeness** — every interactive part needs role, aria-label or aria-labelledby, and keyboard access
-- **Structured invariants for testability** — prefer example/forall/always/never over prose strings. These generate automated component conformance tests via WidgetComponentTest
+- **Structured invariants for testability** — prefer example/forall/always/never/action over prose strings. These generate automated component conformance tests via WidgetComponentTest
+- **PARSE-VERIFY EVERY WIDGET — NEVER SKIP** — After writing, run: `npx tsx --tsconfig tsconfig.json -e "import {parseWidgetFile} from './handlers/ts/framework/widget-spec-parser'; import fs from 'fs'; const m:any=parseWidgetFile(fs.readFileSync('<PATH>','utf8')); console.log('inv:', (m.invariants||[]).length); if ((m.invariants||[]).length<5) throw new Error('dropped');"`. If this fails, your invariants landed outside the parsed AST — find the upstream brace imbalance and fix before commit. Silent invariant drops are the #1 cause of shipped widgets with zero test coverage
+- **Invariant syntax pitfalls (silent failures)** — `example` body MUST contain `after EVENT() -> variant`; assertions use `=` not `==`; action contract target is a bare identifier, not `part.click`; variants are bare `-> ok`, not `-> ok()` or `-> "ok"`; em-dashes and curly quotes in prose trip the tokenizer
 - **data-state on root** — always bind data-state to the FSM state on the root part for test selectors
 - **Props with defaults** — every prop must have a sensible default value
 - **No framework references** — widget specs are framework-agnostic. No React, Vue, or Svelte in specs

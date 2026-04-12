@@ -70,6 +70,9 @@ Generate a complete Clef Surface component scaffold with widget
 - [ ] Keyboard bindings cover Enter, Escape, Arrow keys?
 - [ ] Focus management (trap, roving, initial) is defined?
 - [ ] Props have types and defaults?
+- [ ] Every structured invariant round-trips through parseWidgetFile? (See MUST-VERIFY below.)
+- [ ] Invariant block has ≥ 5 structured entries (example/always/never/forall/action), not just prose strings?
+- [ ] Anatomy, states, props, connect, compose blocks each have balanced braces? (A single imbalance silently eats the invariant block.)
 
 **Examples:**
 *Generate a dialog component*
