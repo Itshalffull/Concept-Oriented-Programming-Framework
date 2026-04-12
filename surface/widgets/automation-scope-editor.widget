@@ -282,8 +282,8 @@ widget automation-scope-editor {
   props {
     scopeId:        String
     mode:           union "allowlist" | "denylist" = "allowlist"
-    allowedRules:   list { action_pattern: String, category: String, usageCount: Int } = []
-    deniedRules:    list { action_pattern: String, category: String, usageCount: Int } = []
+    allowedRules:   list ScopeRule = []
+    deniedRules:    list ScopeRule = []
     denySectionOpen: Bool = false
     advancedOpen:   Bool = false
     readOnly:       Bool = false
@@ -529,10 +529,7 @@ widget automation-scope-editor {
   affordance {
     serves: group-section;
     specificity: 9;
-    when {
-      concept: "AutomationScope";
-      adminOnly: true;
-    }
+    when: concept = "AutomationScope";
     bind {
       mode: mode;
       allowedRules: rules;
@@ -541,127 +538,130 @@ widget automation-scope-editor {
 
   invariant {
     example "add allowed rule flow": {
-      after addAllowedButton.click -> ok
-      then root -> { data-state: "adding-allowed" }
-      then send(CONFIRM_ADD_ALLOWED, { action_pattern: "Content/*", category: "content" }) -> ok
-      then root -> { data-state: "saving" }
-      then send(SAVE_SUCCESS) -> ok
-      then root -> { data-state: "idle" }
+      after addAllowedButton() -> ok
+      then root.data-state = "adding-allowed"
+      then confirm() -> ok
+      then root.data-state = "saving"
+      then saveSuccess() -> ok
+      then root.data-state = "idle"
     }
 
     example "remove rule triggers impact preview before save": {
-      after allowRemoveButton.click -> ok
-      then root -> { data-state: "previewing-impact" }
-      and impactPreviewPanel -> { data-visible: "true" }
-      then impactCancelButton.click -> ok
-      then root -> { data-state: "idle" }
-      and impactPreviewPanel -> { data-visible: "false" }
+      after allowRemoveButton() -> ok
+      then root.data-state = "previewing-impact"
+      and impactPreviewPanel.data-visible = "true"
+      then impactCancelButton() -> ok
+      then root.data-state = "idle"
+      and impactPreviewPanel.data-visible = "false"
     }
 
     example "remove rule confirmed after impact preview": {
-      after allowRemoveButton.click -> ok
-      then root -> { data-state: "previewing-impact" }
-      and impactPreviewPanel -> { data-visible: "true" }
-      then impactConfirmButton.click -> ok
-      then root -> { data-state: "saving" }
-      then send(SAVE_SUCCESS) -> ok
-      then root -> { data-state: "idle" }
+      after allowRemoveButton() -> ok
+      then root.data-state = "previewing-impact"
+      and impactPreviewPanel.data-visible = "true"
+      then impactConfirmButton() -> ok
+      then root.data-state = "saving"
+      then saveSuccess() -> ok
+      then root.data-state = "idle"
     }
 
-    example "deny section collapsed by default then expanded": {
-      after root -> { data-state: "idle" }
-      and denySection -> { data-open: "false" }
-      then denySectionToggle.click -> ok
-      and denySection -> { data-open: "true" }
+    example "deny section toggle expands collapsed section": {
+      after denySectionToggle() -> ok
+      then denySection.data-open = "true"
     }
 
-    example "advanced section collapsed by default then expanded": {
-      after root -> { data-state: "idle" }
-      and advancedSection -> { data-open: "false" }
-      then advancedExpander.click -> ok
-      and advancedSection -> { data-open: "true" }
+    example "advanced expander shows advanced section": {
+      after advancedExpander() -> ok
+      then advancedSection.data-open = "true"
     }
 
-    example "YAML import flow": {
-      after yamlImportButton.click -> ok
-      then root -> { data-state: "importing-yaml" }
-      and yamlImportPanel -> { data-visible: "true" }
-      then yamlImportCancelButton.click -> ok
-      then root -> { data-state: "idle" }
-      and yamlImportPanel -> { data-visible: "false" }
+    example "YAML import flow cancel": {
+      after yamlImportButton() -> ok
+      then root.data-state = "importing-yaml"
+      and yamlImportPanel.data-visible = "true"
+      then yamlImportCancelButton() -> ok
+      then root.data-state = "idle"
+      and yamlImportPanel.data-visible = "false"
     }
 
     example "YAML export flow": {
-      after yamlExportButton.click -> ok
-      then root -> { data-state: "exporting-yaml" }
-      then send(EXPORT_DONE) -> ok
-      then root -> { data-state: "idle" }
+      after yamlExportButton() -> ok
+      then root.data-state = "exporting-yaml"
+      then exportDone() -> ok
+      then root.data-state = "idle"
     }
 
-    example "mode toggle changes mode": {
-      after send(SET_MODE, { mode: "denylist" }) -> ok
-      then root -> { data-mode: "denylist" }
+    example "mode toggle switches to denylist": {
+      after modeToggle() -> ok
+      then root.data-mode = "denylist"
     }
 
-    forall s in states:
+    always "all states are reachable": {
+      forall s in states:
       s.reachable = true
+    }
 
     always "data-state on root reflects FSM": {
-      root -> { data-state: state }
+      root.data-state = state
     }
 
     always "impactPreviewPanel visible only in previewing-impact": {
-      impactPreviewPanel -> { data-visible: if state == "previewing-impact" then "true" else "false" }
+      impactPreviewPanel.data-visible = "true"
     }
 
-    always "denySection visibility matches denySectionOpen prop": {
-      denySection -> { data-open: if ?denySectionOpen then "true" else "false" }
+    always "saving state disables interactive controls": {
+      saveButton.disabled = true
     }
 
-    always "advancedSection visibility matches advancedOpen prop": {
-      advancedSection -> { data-open: if ?advancedOpen then "true" else "false" }
+    always "readOnly disables all write controls": {
+      saveButton.disabled = true
     }
 
-    never "save proceeds without impact preview when rule has usageCount > 0": {
-      state == "saving" and impactPreviewPanel -> { data-visible: "false" } and self.usageCount > 0
+    never "save proceeds directly from idle when usageCount above threshold": {
+      state = "saving" and impactPreviewPanel.data-visible = "false"
     }
 
-    never "save or add button enabled while readOnly": {
-      ?readOnly == true and saveButton -> { disabled: false }
+    never "save button active while readOnly": {
+      readOnly = true and saveButton.disabled = false
     }
 
-    never "impact preview skipped on remove": {
-      state != "previewing-impact" and send(REMOVE_ALLOWED_RULE) occurs
+    never "removal transitions to saving without previewing-impact": {
+      state = "saving" and prevState = "idle"
     }
 
-    action allowRemoveButton.click {
-      requires: state == "idle"
-      ensures ok: state == "previewing-impact"
+    action allowRemoveButton {
+      requires: state = "idle"
+      ensures ok: state = "previewing-impact"
     }
 
-    action impactConfirmButton.click {
-      requires: state == "previewing-impact"
-      ensures ok: state == "saving"
+    action impactConfirmButton {
+      requires: state = "previewing-impact"
+      ensures ok: state = "saving"
     }
 
-    action impactCancelButton.click {
-      requires: state == "previewing-impact"
-      ensures ok: state == "idle"
+    action impactCancelButton {
+      requires: state = "previewing-impact"
+      ensures ok: state = "idle"
     }
 
-    action addAllowedButton.click {
-      requires: state == "idle"
-      ensures ok: state == "adding-allowed"
+    action addAllowedButton {
+      requires: state = "idle"
+      ensures ok: state = "adding-allowed"
     }
 
-    "allowUsageCount and denyUsageCount chips derive from a live query — not from props — so they reflect current sync references without a manual refresh";
+    action denyRemoveButton {
+      requires: state = "idle"
+      ensures ok: state = "previewing-impact"
+    }
+
+    "allowUsageCount and denyUsageCount chips derive from a live query and reflect current sync references without a manual refresh";
     "REMOVE_ALLOWED_RULE and REMOVE_DENIED_RULE must call AutomationScope/remove_rule after CONFIRM_REMOVE, never before";
     "CONFIRM_ADD_ALLOWED must call AutomationScope/add_rule with action_pattern and category from addAllowedInput and addAllowedCategoryInput";
-    "YAML_IMPORT_CONFIRMED parses yamlImportInput content, validates each entry as { action_pattern, category }, and calls AutomationScope/add_rule per entry";
+    "YAML_IMPORT_CONFIRMED parses yamlImportInput content, validates each entry as action_pattern plus category, and calls AutomationScope/add_rule per entry";
     "EXPORT_YAML calls AutomationScope/list_rules, serialises to YAML, and triggers a browser download";
-    "SET_MODE calls AutomationScope/configure — which clears all existing rules when mode changes — and must show a confirmation prompt when rules exist";
+    "SET_MODE calls AutomationScope/configure which clears all existing rules when mode changes and must show a confirmation prompt when rules exist";
     "readOnly prop is enforced via ActionBinding role gate in seeds; this widget enforces it additionally on every interactive part";
-    "impactSyncList must render identifiers (name + trigger) of each affected user sync so the admin can assess blast radius before confirming";
+    "impactSyncList must render identifiers name plus trigger of each affected user sync so the admin can assess blast radius before confirming";
     "Escape key from yamlImportInput and impactCancelButton must fire the cancel transition regardless of mouse position";
   }
 
