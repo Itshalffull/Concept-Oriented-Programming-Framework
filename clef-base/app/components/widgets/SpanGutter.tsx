@@ -344,7 +344,15 @@ export const SpanGutter: React.FC<SpanGutterProps> = ({ fragments, onSpanClick }
           >
             <button
               title={`${config.title}${fragment.color ? ` (${fragment.color})` : ''}${freshnessTitle}`}
-              onClick={() => onSpanClick?.(fragment.spanId)}
+              aria-label={`${config.title} span — click to open`}
+              onClick={(e) => { e.stopPropagation(); onSpanClick?.(fragment.spanId); }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onSpanClick?.(fragment.spanId);
+                }
+              }}
               style={{
                 background: 'none',
                 border: 'none',

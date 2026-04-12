@@ -1730,7 +1730,23 @@ const BlockRow: React.FC<BlockRowProps> = React.memo(({
               }}
               onFocus={() => onFocus(block.id)}
               onBlur={handleBlur}
-              onKeyDown={(e) => onKeyDown(block.id, e)}
+              onKeyDown={(e) => {
+                // Detect Enter/Space on focused span highlight elements (§4.2)
+                if (onSpanClick && (e.key === 'Enter' || e.key === ' ')) {
+                  const active = document.activeElement as HTMLElement | null;
+                  const spanEl = active?.closest('[data-span-id]') as HTMLElement | null;
+                  if (spanEl) {
+                    const spanId = spanEl.getAttribute('data-span-id');
+                    if (spanId) {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onSpanClick(spanId);
+                      return;
+                    }
+                  }
+                }
+                onKeyDown(block.id, e);
+              }}
               onClick={(e) => {
                 // Detect clicks on span highlight elements (§4.2)
                 if (onSpanClick) {
@@ -1738,7 +1754,10 @@ const BlockRow: React.FC<BlockRowProps> = React.memo(({
                   const spanEl = target.closest('[data-span-id]') as HTMLElement | null;
                   if (spanEl) {
                     const spanId = spanEl.getAttribute('data-span-id');
-                    if (spanId) onSpanClick(spanId);
+                    if (spanId) {
+                      e.stopPropagation();
+                      onSpanClick(spanId);
+                    }
                   }
                 }
               }}
