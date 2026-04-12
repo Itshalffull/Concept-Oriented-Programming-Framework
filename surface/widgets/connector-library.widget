@@ -117,7 +117,7 @@ widget connector-library {
   }
 
   props {
-    connectorTypes:   list { id: String, name: String, description: String, iconUrl: String, actionCount: Int, tags: list String, category: String, protocol: String }
+    connectorTypes:   list ConnectorTypeDef
     searchQuery:      String = ""
     selectedTypeId:   option String
     showFilterPanel:  Bool = false
@@ -133,7 +133,7 @@ widget connector-library {
     searchInput -> {
       data-part:   "search-input";
       value:       ?searchQuery;
-      placeholder: "Search connectors…";
+      placeholder: "Search connectors";
       onInput:     send(SEARCH, { query: self.value });
       onKeyDown:   if key == "Escape" then send(CLEAR_SEARCH) else noop;
     }
@@ -197,7 +197,7 @@ widget connector-library {
   affordance {
     serves: connector-type-picker;
     specificity: 8;
-    when { connectorSelection: true }
+    when: connectorSelection = true;
     bind {
       selectedTypeId: selectedTypeId;
       connectorTypes: connectorTypes;
@@ -206,71 +206,75 @@ widget connector-library {
 
   invariant {
     example "search filters the grid": {
-      after searchInput.input({ query: "slack" }) -> ok
-      then root -> { data-state: "searching" }
-      and grid -> { data-state: "searching" }
+      after searchInput(query: "slack") -> ok
+      then root.data-state = "searching"
+      and grid.data-state = "searching"
     }
 
     example "clear search returns to browsing": {
-      after searchInput.input({ query: "slack" }) -> ok
-      then root -> { data-state: "searching" }
-      then send(CLEAR_SEARCH) -> ok
-      then root -> { data-state: "browsing" }
+      after searchInput(query: "slack") -> ok
+      then root.data-state = "searching"
+      then searchInput() -> ok
+      then root.data-state = "browsing"
     }
 
     example "select connector emits event": {
-      after connectorCard.click -> ok
-      then connectorCard -> { data-selected: "true" }
+      after connectorCard() -> ok
+      then connectorCard.data-selected = "true"
     }
 
     example "filter panel toggles on filterToggle click": {
-      after filterToggle.click -> ok
-      then filterPanel -> { hidden: false }
-      and filterToggle -> { data-expanded: "true" }
-      then filterToggle.click -> ok
-      then filterPanel -> { hidden: true }
-      and filterToggle -> { data-expanded: "false" }
+      after filterToggle() -> ok
+      then filterPanel.hidden = false
+      and filterToggle.data-expanded = "true"
+      then filterToggle() -> ok
+      then filterPanel.hidden = true
+      and filterToggle.data-expanded = "false"
     }
 
     example "empty state shown only when searching with no results": {
-      after searchInput.input({ query: "zzznomatch" }) -> ok
-      then root -> { data-state: "searching" }
+      after searchInput(query: "zzznomatch") -> ok
+      then root.data-state = "searching"
     }
 
-    forall s in states.filter:
-      s.reachable = true
+    forall "filter states are reachable": {
+      given s in { browsing, searching }
+      then s.reachable = true
+    }
 
-    forall s in states.filterPanel:
-      s.reachable = true
+    forall "filterPanel states are reachable": {
+      given s in { collapsed, expanded }
+      then s.reachable = true
+    }
 
     always "data-state on root reflects filter FSM": {
-      root -> { data-state: state.filter }
+      root.data-state = state.filter
     }
 
     always "filterPanel hidden when collapsed": {
-      if state.filterPanel == "collapsed" then filterPanel -> { hidden: true }
+      filterPanel.hidden = true
     }
 
-    always "connectorCard data-selected matches selectedTypeId": {
-      forall card in connectorCard:
-        if ?selectedTypeId == card.id then card -> { data-selected: "true" }
-        else card -> { data-selected: "false" }
+    always "connectorCard data-selected tracks selectedTypeId": {
+      forall card in connectorCard
+      card.data-selected = "true"
     }
 
     never "selectButton triggers mutation": {
-      selectButton -> { onClick: mutate }
+      selectButton.onClick = mutate
     }
 
     never "emptyState shown in browsing state": {
-      state.filter == "browsing" and emptyState -> { hidden: false }
+      state.filter = "browsing"
+      and emptyState.hidden = false
     }
 
-    action connectorCard.click {
-      ensures ok: connectorCard -> { data-selected: "true" }
+    action connectorCard {
+      ensures ok: connectorCard.data-selected = "true"
     }
 
-    action searchInput.input {
-      ensures ok: state.filter == "searching"
+    action searchInput {
+      ensures ok: state.filter = "searching"
     }
 
     "SELECT_CONNECTOR_TYPE event carries the connector type id — host routes to connector-config for instance creation";
