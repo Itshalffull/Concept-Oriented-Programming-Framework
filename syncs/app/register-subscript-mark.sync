@@ -1,0 +1,16 @@
+# Register the subscript mark as a token-remap RenderTransform so that theme
+# switches automatically restyle subscript spans without any widget changes.
+
+sync RegisterSubscriptMark [eager]
+  purpose: "Register a token-remap RenderTransform for subscript marks so subscript text respects the active theme's scale and vertical-align tokens automatically."
+when {
+  PluginRegistry/register: [ type: "render-transform-provider"; name: ?name ]
+    => ok(plugin: ?plugin)
+}
+then {
+  RenderTransform/register: [
+    name: "mark-subscript";
+    kind: "token-remap";
+    spec: "{\"scope\":\"[data-mark=\\\"subscript\\\"]\",\"mappings\":{\"typography.scale\":\"typography.scale.sub\",\"typography.verticalAlign\":\"typography.verticalAlign.baseline.sub\"}}"
+  ]
+}

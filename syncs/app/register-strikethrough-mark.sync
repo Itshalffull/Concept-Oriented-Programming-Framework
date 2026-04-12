@@ -1,0 +1,16 @@
+# Register the strikethrough mark as a token-remap RenderTransform so that theme
+# switches automatically restyle strikethrough spans without any widget changes.
+
+sync RegisterStrikethroughMark [eager]
+  purpose: "Register a token-remap RenderTransform for strikethrough marks so struck-through text respects the active theme's decoration token automatically."
+when {
+  PluginRegistry/register: [ type: "render-transform-provider"; name: ?name ]
+    => ok(plugin: ?plugin)
+}
+then {
+  RenderTransform/register: [
+    name: "mark-strikethrough";
+    kind: "token-remap";
+    spec: "{\"scope\":\"[data-mark=\\\"strikethrough\\\"]\",\"mappings\":{\"typography.decoration\":\"typography.decoration.strikethrough\"}}"
+  ]
+}

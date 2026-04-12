@@ -1,0 +1,16 @@
+# Register the superscript mark as a token-remap RenderTransform so that theme
+# switches automatically restyle superscript spans without any widget changes.
+
+sync RegisterSuperscriptMark [eager]
+  purpose: "Register a token-remap RenderTransform for superscript marks so superscript text respects the active theme's scale and vertical-align tokens automatically."
+when {
+  PluginRegistry/register: [ type: "render-transform-provider"; name: ?name ]
+    => ok(plugin: ?plugin)
+}
+then {
+  RenderTransform/register: [
+    name: "mark-superscript";
+    kind: "token-remap";
+    spec: "{\"scope\":\"[data-mark=\\\"superscript\\\"]\",\"mappings\":{\"typography.scale\":\"typography.scale.sup\",\"typography.verticalAlign\":\"typography.verticalAlign.baseline.sup\"}}"
+  ]
+}
