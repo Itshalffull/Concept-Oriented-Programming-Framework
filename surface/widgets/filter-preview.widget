@@ -1,0 +1,199 @@
+@version(1)
+widget filter-preview {
+
+  purpose {
+    Right-rail panel widget that renders a compiled FilterNode as a
+    horizontal pill chain, giving the author of a filter-draft page an
+    at-a-glance structural preview of the filter they are editing.
+    Each predicate in the compiled FilterNode is rendered as an
+    individual pill showing the field, operator, and value segments in
+    read-only form. Logical group boundaries (AND / OR nesting) are
+    indicated by groupIndicator chips placed between pills. Negated
+    predicates carry a NOT badge on the leading edge of their pill.
+    Shows an "empty" state when no compilationId has been provided yet
+    and a "stale" banner when the ContentCompiler status for the draft
+    page is stale, signalling that the preview may not reflect the
+    latest block edits. Bound to the filter-draft EditSurface via the
+    output_preview_ref field.
+  }
+
+  anatomy {
+    root:           container     { Outer panel wrapper; carries data-status reflecting FSM state }
+    emptyState:     presentation  { Placeholder shown when compilationId is absent or filter has no predicates }
+    staleBanner:    presentation  { Warning banner shown when compilation status is stale }
+    pillChain:      container     { Ordered horizontal row of pills and group indicators }
+    pill:           container     { A single read-only pill representing one predicate condition }
+    pillField:      text          { Read-only field-name segment of a pill }
+    pillOperator:   text          { Read-only operator segment of a pill (e.g., "is", "contains", "before") }
+    pillValue:      text          { Read-only value segment of a pill; hidden for unary operators }
+    pillNegation:   text          { NOT badge displayed at the leading edge of a negated predicate pill }
+    groupIndicator: text          { AND / OR chip rendered between pills to mark logical group boundaries }
+  }
+
+  states {
+    preview [initial] {
+      on COMPILATION_LOADED -> compiled;
+      on NO_COMPILATION     -> empty;
+      entry [fetchCompilation];
+    }
+
+    compiled {
+      on STALE_DETECTED      -> stale;
+      on COMPILATION_LOADED  -> compiled;
+      on COMPILATION_CLEARED -> empty;
+    }
+
+    stale {
+      on COMPILATION_LOADED  -> compiled;
+      on COMPILATION_CLEARED -> empty;
+      entry  [showStaleBanner];
+      exit   [hideStaleBanner];
+    }
+
+    empty {
+      on COMPILATION_LOADED  -> compiled;
+      entry [showEmptyState];
+      exit  [hideEmptyState];
+    }
+  }
+
+  accessibility {
+    role: complementary;
+    keyboard {
+      Tab       -> FOCUS_NEXT;
+      Shift+Tab -> FOCUS_PREV;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "complementary";
+        aria-label: "Filter Preview";
+        data-status: state;
+      };
+      emptyState -> {
+        role: "note";
+        aria-label: "No filter compiled yet";
+        hidden: if state == "empty" then false else true;
+      };
+      staleBanner -> {
+        role: "alert";
+        aria-live: "assertive";
+        hidden: if state == "stale" then false else true;
+      };
+      pillChain -> {
+        role: "list";
+        aria-label: "Filter conditions";
+        hidden: if state == "empty" or state == "preview" then true else false;
+      };
+      pill -> {
+        role: "listitem";
+        aria-label: concat(self.field, " ", self.operator, " ", self.value);
+      };
+      pillNegation -> {
+        role: "note";
+        aria-label: "Negated";
+        hidden: if self.negated then false else true;
+      };
+      groupIndicator -> {
+        role: "separator";
+        aria-label: self.label;
+      };
+    }
+  }
+
+  props {
+    compilationId:      option String
+    filterNodePreview:  option String
+    status:             union "preview" | "compiled" | "stale" | "empty" = "preview"
+  }
+
+  connect {
+    root -> {
+      data-part:   "root";
+      data-status: state;
+    }
+
+    emptyState -> {
+      data-part: "empty-state";
+      hidden:    if state == "empty" then false else true;
+      text:      "No filter compiled yet. Save the draft to generate a preview.";
+    }
+
+    staleBanner -> {
+      data-part: "stale-banner";
+      hidden:    if state == "stale" then false else true;
+      text:      "Preview is out of date. Save the draft to recompile.";
+    }
+
+    pillChain -> {
+      data-part: "pill-chain";
+      hidden:    if state == "empty" or state == "preview" then true else false;
+    }
+
+    pill -> {
+      data-part:    "pill";
+      data-negated: if self.negated then "true" else "false";
+    }
+
+    pillField -> {
+      data-part: "pill-field";
+      text:      self.field;
+    }
+
+    pillOperator -> {
+      data-part: "pill-operator";
+      text:      self.operator;
+    }
+
+    pillValue -> {
+      data-part: "pill-value";
+      text:      if self.value == "" then "…" else self.value;
+      hidden:    if self.operator == "is-empty" or self.operator == "is-not-empty" then true else false;
+    }
+
+    pillNegation -> {
+      data-part: "pill-negation";
+      text:      "NOT";
+      hidden:    if self.negated then false else true;
+    }
+
+    groupIndicator -> {
+      data-part: "group-indicator";
+      text:      self.label;
+    }
+  }
+
+  affordance {
+    serves: output-preview;
+    specificity: 9;
+    when schemaKind = "filter-draft";
+    bind {
+      compilationId:     compilationId;
+      filterNodePreview: filterNodePreview;
+      status:            compilationStatus;
+    }
+  }
+
+  invariant {
+    "root data-status must always equal the current FSM state name (preview | compiled | stale | empty)";
+    "pillChain must be hidden (hidden: true) when FSM state is empty or preview; it must be visible only in compiled and stale states";
+    "emptyState must be visible only when FSM state is empty and hidden in all other states";
+    "staleBanner must be visible only when FSM state is stale and hidden in all other states";
+    "each pill in pillChain corresponds to exactly one leaf predicate node in the compiled FilterNode tree; and-node and or-node boundaries produce groupIndicator chips, not pills";
+    "pillValue must be hidden when pillOperator is is-empty or is-not-empty — these are unary operators that require no value segment";
+    "pillValue must show placeholder text … when the value prop is empty string, communicating an incomplete predicate to the author";
+    "pillNegation must be visible (hidden: false) when the predicate is negated (self.negated is true) and hidden otherwise";
+    "groupIndicator label must be AND for and-node boundaries and OR for or-node boundaries; no other labels are valid";
+    "the order of pills and groupIndicators in pillChain must match a left-to-right depth-first traversal of the FilterNode tree so the preview reads in the same order as the filter is evaluated";
+    "a STALE_DETECTED event sent while in compiled state must transition to stale, show the staleBanner, and keep the pillChain visible so the author can still read the last compiled preview";
+    "a COMPILATION_LOADED event sent from either stale or preview state must transition to compiled and hide the staleBanner";
+    "a COMPILATION_CLEARED event sent from compiled or stale state must transition to empty and hide the pillChain";
+    "when filterNodePreview prop is a serialised FilterNode with zero leaf predicates (e.g. type: true), the pillChain must render empty with no pill children but remain visible in compiled state — the empty-state element must not appear";
+    "pill aria-label must concatenate field, operator, and value as a natural-language phrase (e.g. status is active, due date before next week) using human-readable labels, not raw field keys, so screen-reader users understand each condition without visual context";
+  }
+
+}

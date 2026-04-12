@@ -1,0 +1,61 @@
+derived FilterDraftEditor [T] {
+
+  purpose {
+    Page-level editor for filter-draft ContentNodes. Pre-configures the
+    MarkdownEditor surface with the "filter-draft" schema overlay and a
+    three-level block vocabulary — predicate-group, predicate,
+    operator-value — that encodes structured filter logic as editable
+    content. Wires ContentCompiler so that saving a draft triggers
+    recompilation into a FilterNode IR output. Exposes an install action
+    that applies the compiled FilterNode to a target ViewShell via
+    FilterSpec/create + ViewShell/update. A consumers panel shows all
+    views that have consumed this draft via Reference with kind
+    "uses-filter". Proves the full ContentCompiler integration for
+    filter authoring: editing predicate blocks triggers stale status,
+    compile produces a FilterNode preview, and install wires the filter
+    into a live view.
+  }
+
+  composes {
+    MarkdownEditor [T]
+    ContentCompiler [T]
+    FilterSpec
+    Reference
+  }
+
+  syncs {
+    required: [
+      filter-draft-block-schemas-registered,
+      filter-draft-compile-on-save
+    ]
+  }
+
+  surface {
+    action create(draftName: String) {
+      matches: ContentNode/create(schema: "filter-draft")
+    }
+
+    action compile(page: String) {
+      matches: ContentCompiler/compile(schemaHint: "filter-draft")
+    }
+
+    action install(filterNode: String, targetViewShell: String) {
+      matches: FilterSpec/create
+      // GAP: FilterSpec has no applyToView action. The install surface action
+      // is implemented as a two-step sync: FilterSpec/create (registers the
+      // FilterNode as a named filter) followed by ViewShell/update (sets the
+      // filter field on the target shell). Both steps are wired by the
+      // filter-draft-install.sync. If FilterSpec gains an applyToView action
+      // in the future, replace both steps with a single call.
+    }
+
+    query consumingViews(page: String) -> Reference/listReferencing(target: page, kind: "uses-filter")
+    query compilationStatus(page: String) -> ContentCompiler/listByPage(pageId: page)
+  }
+
+  principle {
+    after create(draftName: "High-priority bugs") -> ok(id: p)
+    then compile(page: p) -> ok(compilation: c)
+    then install(filterNode: c, targetViewShell: v) -> ok
+  }
+}
