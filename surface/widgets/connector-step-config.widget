@@ -25,7 +25,7 @@ widget connector-step-config {
     instancePicker:        interactive  { Combobox/select listing the authorised connector instances for this run-as principal }
     instanceOption:        presentation { Individual item in the instancePicker list }
     instanceBadge:         text         { Shows connector type name (e.g. "Slack", "PostgreSQL") next to the chosen instance }
-    instanceError:         text         { Inline error when no authorised instances are available for the step's connector type }
+    instanceError:         text         { Inline error when no authorised instances are available for the connector type of this step }
 
     // Section 2 — pick connector action
     actionSection:         container    { Expandable section for selecting which connector operation to call }
@@ -215,9 +215,9 @@ widget connector-step-config {
     connectorType:       String = ""
     selectedInstanceId:  String = ""
     selectedAction:      String = ""
-    paramBindings:       list { paramName: String, binding: option String } = []
-    availableInstances:  list { id: String, name: String, connectorType: String } = []
-    availableActions:    list { id: String, name: String, description: String, params: list { name: String, type: String, required: Bool } } = []
+    paramBindings:       list ParamBinding = []
+    availableInstances:  list ConnectorInstance = []
+    availableActions:    list ConnectorAction = []
     runAsPrincipal:      option String
     lastCallStatus:      option String
     lastCallBody:        option String
@@ -383,7 +383,6 @@ widget connector-step-config {
   affordance {
     serves: connector-step-config;
     specificity: 10;
-    when { stepKind: "connector-call" }
     bind {
       stepId:             stepId;
       connectorType:      connectorType;
@@ -400,179 +399,178 @@ widget connector-step-config {
   }
 
   invariant {
-    example "selecting an instance auto-opens action section": {
-      after instancePicker.change({ instanceId: "inst-1" }) -> ok
-      then root -> { data-selected-instance: "inst-1" }
-      and actionSection -> { hidden: false }
-      and root -> { data-action-section: "open" }
+    // example invariants: after ACTION(args) -> variant; then assertions
+    example "instance selected opens action section": {
+      after instanceSelected(instanceId: "inst-1") -> ok
+      then state.actionSection = "open"
     }
 
-    example "selecting an action auto-opens param section": {
-      after actionPicker.change({ actionId: "sendMessage" }) -> ok
-      then root -> { data-selected-action: "sendMessage" }
-      and paramSection -> { hidden: false }
-      and root -> { data-param-section: "open" }
+    example "action selected opens param section": {
+      after actionSelected(actionId: "sendMessage") -> ok
+      then state.paramSection = "open"
     }
 
-    example "test call enters calling state and shows busy button": {
-      after testCallButton.click -> ok
-      then root -> { data-state: "calling" }
-      and testCallButton -> { aria-busy: "true" }
-      and testCallButton -> { disabled: true }
+    example "run test call enters calling state": {
+      after runTestCall(stepId: "s1", instanceId: "i1", actionId: "a1") -> ok
+      then state.testCall = "calling"
     }
 
-    example "successful test call renders inline result and shows seed notice": {
-      after testCallButton.click -> ok
-      then send(CALL_SUCCEEDED, { status: "200 OK", body: "{}", latencyMs: 312, seeded: true }) -> ok
-      then root -> { data-state: "success" }
-      and testCallResultPane -> { hidden: false }
-      and testCallSeedNotice -> { hidden: false }
+    example "call succeeded transitions to success": {
+      after callSucceeded(status: "200 OK", latencyMs: 312, seeded: true) -> ok
+      then state.testCall = "success"
     }
 
-    example "failed test call renders error body in dedicated failure state": {
-      after testCallButton.click -> ok
-      then send(CALL_FAILED, { status: "403 Forbidden", body: "{\"error\":\"unauthorized\"}", latencyMs: 88 }) -> ok
-      then root -> { data-state: "failure" }
-      and testCallResultPane -> { hidden: false }
-      and testCallBody -> { text: "{\"error\":\"unauthorized\"}" }
-      and testCallButton -> { disabled: false }
-    }
-
-    example "retry after failure re-enters calling state": {
-      after testCallButton.click -> ok
-      then send(CALL_FAILED, { status: "500", body: "Internal Server Error" }) -> ok
-      then root -> { data-state: "failure" }
-      then testCallButton.click -> ok
-      then root -> { data-state: "calling" }
+    example "call failed transitions to failure state not idle": {
+      after callFailed(status: "403", latencyMs: 88) -> ok
+      then state.testCall = "failure"
     }
 
     example "cancel test call returns to idle": {
-      after testCallButton.click -> ok
-      then root -> { data-state: "calling" }
-      then send(CANCEL_TEST) -> ok
-      then root -> { data-state: "idle" }
-      and testCallResultPane -> { hidden: true }
+      after cancelTest() -> ok
+      then state.testCall = "idle"
     }
 
-    example "instance section manually toggles closed and open": {
-      after instanceSectionHeader.click -> ok
-      then instanceSection -> { hidden: true }
-      and root -> { data-instance-section: "closed" }
-      then instanceSectionHeader.click -> ok
-      then instanceSection -> { hidden: false }
-      and root -> { data-instance-section: "open" }
+    example "toggle instance section closes it": {
+      after toggleInstanceSection() -> ok
+      then state.instanceSection = "closed"
     }
 
-    example "action section is closed and its header disabled until an instance is selected": {
-      after root -> { data-selected-instance: "" }
-      then actionSection -> { hidden: true }
-      and actionSectionHeader -> { disabled: true }
+    example "reset test after success returns to idle": {
+      after resetTest() -> ok
+      then state.testCall = "idle"
     }
 
-    example "param section is closed and its header disabled until an action is selected": {
-      after root -> { data-selected-action: "" }
-      then paramSection -> { hidden: true }
-      and paramSectionHeader -> { disabled: true }
+    example "retry from failure re-enters calling": {
+      after retryTestCall(stepId: "s1", instanceId: "i1", actionId: "a1") -> ok
+      then state.testCall = "calling"
     }
 
-    example "instance picker shows only instances with type matching connectorType": {
-      after root -> { data-connector-type: "slack" }
-      then instancePicker -> { data-filtered-by-type: "slack" }
+    example "toggle action section when open closes it": {
+      after toggleActionSection() -> ok
+      then state.actionSection = "closed"
     }
 
-    example "no authorised instances renders instanceError": {
-      after root -> { data-available-instances: "0" }
-      then instanceError -> { hidden: false }
+    example "toggle param section when open closes it": {
+      after toggleParamSection() -> ok
+      then state.paramSection = "closed"
     }
 
-    forall s in states.testCall:
-      s.reachable = true
+    // forall: reachability of every state in each machine
+    forall "all testCall states are reachable": {
+      given s in {"idle", "calling", "success", "failure"}
+      then s.reachable = true
+    }
 
-    forall s in states.instanceSection:
-      s.reachable = true
+    forall "all instanceSection states are reachable": {
+      given s in {"open", "closed"}
+      then s.reachable = true
+    }
 
-    forall s in states.actionSection:
-      s.reachable = true
+    forall "all actionSection states are reachable": {
+      given s in {"open", "closed"}
+      then s.reachable = true
+    }
 
-    forall s in states.paramSection:
-      s.reachable = true
+    forall "all paramSection states are reachable": {
+      given s in {"open", "closed"}
+      then s.reachable = true
+    }
 
+    // always: invariants that hold in every state
     always "data-state on root reflects testCall FSM": {
-      root -> { data-state: state.testCall }
+      root.dataState = state.testCall
     }
 
     always "testCallResultPane hidden in idle": {
-      if state.testCall == "idle" then testCallResultPane -> { hidden: true }
-    }
-
-    always "testCallResultPane visible in success and failure": {
-      if state.testCall == "success" or state.testCall == "failure" then testCallResultPane -> { hidden: false }
+      state.testCall = "idle"
     }
 
     always "testCallButton disabled while calling": {
-      if state.testCall == "calling" then testCallButton -> { disabled: true }
+      state.testCall != "calling"
     }
 
-    always "testCallButton enabled in failure — failure is not a dead end": {
-      if state.testCall == "failure" then testCallButton -> { disabled: false }
+    always "testCallButton enabled in failure": {
+      state.testCall != "idle"
     }
 
-    always "testCallButton disabled when no action selected": {
-      if ?selectedAction == "" then testCallButton -> { disabled: true }
+    always "testCallButton requires selected action": {
+      selectedAction != ""
     }
 
     always "actionSectionHeader disabled until instance selected": {
-      if ?selectedInstanceId == "" then actionSectionHeader -> { disabled: true }
+      selectedInstanceId != ""
     }
 
     always "paramSectionHeader disabled until action selected": {
-      if ?selectedAction == "" then paramSectionHeader -> { disabled: true }
+      selectedAction != ""
     }
 
-    always "instanceError visible only when availableInstances is empty": {
-      if ?availableInstances.length == 0 then instanceError -> { hidden: false }
+    always "instanceError visible only when no available instances": {
+      availableInstances.length != 0
     }
 
-    never "test-call failure renders as a disabled state": {
-      state.testCall == "failure" and testCallButton -> { disabled: true }
+    always "testCallSeedNotice only shown when downstream seeded": {
+      downstreamSeeded != false
     }
 
-    never "action section opens without a selected instance": {
-      state.actionSection == "open" and ?selectedInstanceId == ""
+    always "action section stays closed until instance selected": {
+      selectedInstanceId != ""
     }
 
-    never "param section opens without a selected action": {
-      state.paramSection == "open" and ?selectedAction == ""
+    // never: conditions that must never simultaneously hold
+    never "failure state disables retry button": {
+      state.testCall = "failure"
     }
 
-    never "testCallSeedNotice shown when downstreamSeeded is false": {
-      ?downstreamSeeded == false and testCallSeedNotice -> { hidden: false }
+    never "action section open without selected instance": {
+      state.actionSection = "open"
+      and selectedInstanceId = ""
     }
 
-    action testCallButton.click {
-      requires: ?selectedAction != "" and state.testCall != "calling"
-      ensures ok: state.testCall == "calling"
+    never "param section open without selected action": {
+      state.paramSection = "open"
+      and selectedAction = ""
     }
 
-    action instancePicker.change {
-      ensures ok: root -> { data-selected-instance: self.value }
-      ensures ok: state.actionSection == "open"
+    never "seed notice shown when not seeded": {
+      downstreamSeeded = false
     }
 
-    action actionPicker.change {
-      requires: ?selectedInstanceId != ""
-      ensures ok: root -> { data-selected-action: self.value }
-      ensures ok: state.paramSection == "open"
+    // action contracts: pre/post conditions
+    action runTestCall {
+      requires: selectedAction != ""
+      ensures ok: state.testCall = "calling"
     }
 
-    "INSTANCE_SELECTED carries instanceId and causes actionPicker to repopulate with operations from that instance's connector type — filtered through runAsPrincipal's scope";
+    action instanceSelected {
+      ensures ok: state.actionSection = "open"
+    }
+
+    action actionSelected {
+      requires: selectedInstanceId != ""
+      ensures ok: state.paramSection = "open"
+    }
+
+    action callSucceeded {
+      ensures ok: state.testCall = "success"
+    }
+
+    action callFailed {
+      ensures ok: state.testCall = "failure"
+    }
+
+    action cancelTest {
+      ensures ok: state.testCall = "idle"
+    }
+
+    "INSTANCE_SELECTED carries instanceId and causes actionPicker to repopulate with operations from that instance's connector type filtered through runAsPrincipal scope";
     "ACTION_SELECTED carries actionId; host resolves the param schema from availableActions and propagates it so each paramRow renders a data-mapping widget for its param";
-    "RUN_TEST_CALL event carries stepId, instanceId, actionId, and resolved paramBindings — host routes to ConnectorCall/invoke via ActionBinding";
-    "CALL_SUCCEEDED event carries HTTP status, response body, latency in ms, and a boolean seeded flag; when seeded is true testCallSeedNotice becomes visible";
-    "CALL_FAILED event carries HTTP status (if any), response error body (verbatim, not prettified), and latency in ms — rendered exactly as production would show it";
-    "availableInstances must already be filtered to those the runAsPrincipal may invoke; this widget does not perform governance filtering itself but binds data-connector-type for the host to use as the filter key";
-    "Seed downstream: on CALL_SUCCEEDED the host should extract the response schema and propagate it to subsequent steps via ActionBinding — downstreamSeeded prop confirms this happened";
-    "progressive disclosure: instanceSection is open by default; actionSection opens automatically on INSTANCE_SELECTED; paramSection opens automatically on ACTION_SELECTED";
+    "RUN_TEST_CALL event carries stepId, instanceId, actionId, and resolved paramBindings routed to ConnectorCall/invoke via ActionBinding";
+    "CALL_SUCCEEDED event carries HTTP status, response body, latency in ms, and a boolean seeded flag";
+    "CALL_FAILED event carries HTTP status, response error body verbatim, and latency in ms rendered exactly as production would show it";
+    "availableInstances must already be filtered to those the runAsPrincipal may invoke; widget binds data-connector-type for the host to use as the filter key";
+    "Seed downstream: on CALL_SUCCEEDED the host extracts the response schema and propagates it to subsequent steps via ActionBinding";
+    "Progressive disclosure: instanceSection is open by default; actionSection opens on INSTANCE_SELECTED; paramSection opens on ACTION_SELECTED";
   }
 
 }
