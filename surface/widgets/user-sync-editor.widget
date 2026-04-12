@@ -24,7 +24,7 @@ widget user-sync-editor {
     suspendButton:        action       { Triggers the suspend lifecycle step; only shown when status is Active }
     scopeViolationsPanel: container    { Disclosure panel that appears when validate returns scope violations; hidden in all other states }
     violationRow:         container    { One row per scope violation: action_ref on the left, reason on the right }
-    authorField:          interactive  { Collapsed-by-default text input for the author field; revealed via "advanced" toggle }
+    authorField:          interactive  { Collapsed-by-default text input for the author field; revealed via advanced toggle }
   }
 
   states {
@@ -147,7 +147,7 @@ widget user-sync-editor {
     sourceText: String = ""
     status:     String = "draft"
     author:     String = ""
-    violations: list { actionRef: String, reason: String } = []
+    violations: list ViolationItem = []
   }
 
   connect {
@@ -207,39 +207,79 @@ widget user-sync-editor {
   }
 
   invariant {
-    example "draft-validate-activate flow": {
-      after nameInput.input -> ok
-      then validateButton.click -> ok
-      then root -> { data-state: "validating" }
-      then root -> { data-state: "validated" }
-      then activateButton.click -> ok
-      then root -> { data-state: "active" }
+    example "draft-to-validating on validate": {
+      after validateButton() -> ok
+      then root.data-state = "validating"
     }
 
-    example "scope violations surface before activation": {
-      after validateButton.click -> ok
-      then root -> { data-state: "scope-violation" }
-      and scopeViolationsPanel -> { hidden: false }
-      and activateButton -> { aria-disabled: "true" }
+    example "validating-to-validated on success": {
+      after transition(from: "validating", event: "VALIDATE_OK") -> ok
+      then root.data-state = "validated"
+      and activateButton.disabled = false
     }
 
-    always "activate disabled unless validated": {
-      forall s in ["draft", "validating", "validation-failed", "scope-violation", "active", "activating", "suspended", "suspending"]:
-        if state.lifecycle = s then activateButton.disabled = true
+    example "validating-to-scope-violation on scope error": {
+      after transition(from: "validating", event: "SCOPE_VIOLATION") -> ok
+      then root.data-state = "scope-violation"
+      and scopeViolationsPanel.hidden = false
     }
 
-    never "scope panel visible outside violation state": {
+    example "validated-to-activating on activate": {
+      after activateButton() -> ok
+      then root.data-state = "activating"
+    }
+
+    example "activating-to-active on success": {
+      after transition(from: "activating", event: "ACTIVATE_OK") -> ok
+      then root.data-state = "active"
+      and suspendButton.hidden = false
+    }
+
+    example "active-to-suspending on suspend": {
+      after suspendButton() -> ok
+      then root.data-state = "suspending"
+    }
+
+    example "suspending-to-suspended on success": {
+      after transition(from: "suspending", event: "SUSPEND_OK") -> ok
+      then root.data-state = "suspended"
+    }
+
+    example "validation-failed returns to draft on edit": {
+      after transition(from: "validation-failed", event: "EDIT") -> ok
+      then root.data-state = "draft"
+    }
+
+    example "advanced toggle expands author field": {
+      after advancedToggle() -> ok
+      then root.data-advanced = "true"
+      and authorField.hidden = false
+    }
+
+    example "scope-violation returns to draft on edit": {
+      after transition(from: "scope-violation", event: "EDIT") -> ok
+      then root.data-state = "draft"
+      and scopeViolationsPanel.hidden = true
+    }
+
+    always "data-state on root reflects lifecycle FSM": {
+      root.data-state = state.lifecycle
+    }
+
+    always "activate button disabled outside validated": {
+      activateButton.disabled = true
+    }
+
+    always "suspend button hidden outside active state": {
+      suspendButton.hidden = true
+    }
+
+    never "scope violations panel visible in non-violation state": {
       state.lifecycle != "scope-violation" and scopeViolationsPanel.hidden = false
     }
 
-    action validateButton.click {
-      requires: state.lifecycle != "active"
-      ensures ok: state.lifecycle = "validating"
-    }
-
-    action suspendButton.click {
-      requires: state.lifecycle = "active"
-      ensures ok: state.lifecycle = "suspending"
+    never "mutually exclusive lifecycle states": {
+      state.lifecycle = "active" and state.lifecycle = "draft"
     }
   }
 }
