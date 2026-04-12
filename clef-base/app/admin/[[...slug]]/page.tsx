@@ -17,6 +17,8 @@ import { CanvasBrowserView } from '../../views/CanvasBrowserView';
 import { FlowBuilderView } from '../../views/FlowBuilderView';
 import { UserSyncListView } from '../../views/UserSyncListView';
 import { UserSyncEditorView } from '../../views/UserSyncEditorView';
+import { RecursiveEditorView } from '../../views/RecursiveEditorView';
+import { PersonaEditorView } from '../../views/PersonaEditorView';
 
 export default async function AdminPage({
   params,
@@ -245,6 +247,25 @@ export default async function AdminPage({
     return (
       <HostedPage>
         <ViewRenderer viewId="form-list" />
+      </HostedPage>
+    );
+  }
+
+  // Recursive block editor routes (MAG-724)
+  // /editors/markdown/:nodeId — RecursiveEditorView flavor resolved from schema
+  if (slug[0] === 'editors' && slug[1] === 'markdown' && slug[2]) {
+    return (
+      <HostedPage>
+        <RecursiveEditorView rootNodeId={decodeURIComponent(slug[2])} />
+      </HostedPage>
+    );
+  }
+
+  // /editors/persona/:nodeId — PersonaEditorView (flavor locked to "persona")
+  if (slug[0] === 'editors' && slug[1] === 'persona' && slug[2]) {
+    return (
+      <HostedPage>
+        <PersonaEditorView nodeId={decodeURIComponent(slug[2])} />
       </HostedPage>
     );
   }

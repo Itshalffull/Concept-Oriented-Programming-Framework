@@ -14,16 +14,79 @@
  * 4. Child Views use {{entityId}}/{{entityPrimarySchema}} templates
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Badge } from '../components/widgets/Badge';
 import { Card } from '../components/widgets/Card';
 import { EmptyState } from '../components/widgets/EmptyState';
 import { LayoutRenderer } from '../components/LayoutRenderer';
 import { DisplayAsPicker } from '../components/widgets/DisplayAsPicker';
 import { ActionButton } from '../components/widgets/ActionButton';
+import { RecursiveBlockEditor, type EditorFlavor } from '../components/widgets/RecursiveBlockEditor';
 import { useConceptQuery } from '../../lib/use-concept-query';
 import { useNavigator } from '../../lib/clef-provider';
 import { useVersionPins, VersionPinInfo } from '../../lib/use-version-pins';
+
+// ---------------------------------------------------------------------------
+// Feature flag: per-user-session + per-schema allowlist
+// Per PRD §9.1 resolution #3
+//
+// Mirror of clef-base/config/recursive-editor-allowlist.yaml — kept in sync
+// manually until a server-side config reader is wired.
+// ---------------------------------------------------------------------------
+
+/** User preference key stored in localStorage. */
+const EDITOR_FLAVOR_PREF_KEY = 'clef:preferBlockEditorFlavor';
+
+/** Schemas eligible for the recursive editor when the user opts in. */
+const RECURSIVE_EDITOR_SCHEMA_ALLOWLIST: ReadonlySet<string> = new Set([
+  'paragraph',
+  'heading',
+  'agent-persona',
+]);
+
+type BlockEditorFlavor = 'legacy' | 'recursive';
+
+/**
+ * Read the stored editor flavor preference.
+ * Defaults to "legacy" when no preference is stored.
+ */
+function readEditorFlavorPref(): BlockEditorFlavor {
+  if (typeof window === 'undefined') return 'legacy';
+  try {
+    const raw = window.localStorage.getItem(EDITOR_FLAVOR_PREF_KEY);
+    if (raw === 'recursive' || raw === 'legacy') return raw;
+  } catch { /* localStorage may be blocked in some environments */ }
+  return 'legacy';
+}
+
+function writeEditorFlavorPref(value: BlockEditorFlavor): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(EDITOR_FLAVOR_PREF_KEY, value);
+  } catch { /* non-fatal */ }
+}
+
+/**
+ * Returns true when BOTH conditions are met:
+ *   (a) user preference = "recursive"
+ *   (b) doc's primary schema is in the allowlist
+ */
+function shouldUseRecursiveEditor(pref: BlockEditorFlavor, schemas: string[]): boolean {
+  if (pref !== 'recursive') return false;
+  return schemas.some((s) => RECURSIVE_EDITOR_SCHEMA_ALLOWLIST.has(s));
+}
+
+/**
+ * Pick the editorFlavor for RecursiveBlockEditor from the schema list.
+ * Maps known schemas to flavors; everything else defaults to "markdown".
+ */
+function pickEditorFlavor(schemas: string[]): EditorFlavor {
+  if (schemas.includes('agent-persona')) return 'persona';
+  if (schemas.includes('workflow'))      return 'workflow';
+  if (schemas.includes('notebook'))      return 'notebook';
+  if (schemas.includes('wiki') || schemas.includes('Page')) return 'wiki';
+  return 'markdown';
+}
 
 interface EntityDetailViewProps {
   id: string;
@@ -54,6 +117,20 @@ export const EntityDetailView: React.FC<EntityDetailViewProps> = ({ id }) => {
   const [displayMode, setDisplayMode] = useState('entity-page');
   const [showVersionPins, setShowVersionPins] = useState(false);
   const versionPins = useVersionPins(id);
+
+  // ------- editor flavor feature flag (PRD §9.1 resolution #3) --------
+  const [editorFlavorPref, setEditorFlavorPref] = useState<BlockEditorFlavor>('legacy');
+  useEffect(() => {
+    setEditorFlavorPref(readEditorFlavorPref());
+  }, []);
+
+  const handleToggleEditorFlavor = useCallback(() => {
+    setEditorFlavorPref((prev) => {
+      const next: BlockEditorFlavor = prev === 'legacy' ? 'recursive' : 'legacy';
+      writeEditorFlavorPref(next);
+      return next;
+    });
+  }, []);
 
   const handleDisplayModeChange = useCallback((modeId: string) => {
     setDisplayMode(modeId);
@@ -129,6 +206,10 @@ export const EntityDetailView: React.FC<EntityDetailViewProps> = ({ id }) => {
     entityPrimarySchema: primarySchema,
   };
 
+  // Feature flag: should the recursive editor be shown instead of legacy LayoutRenderer?
+  const useRecursiveEditor = shouldUseRecursiveEditor(editorFlavorPref, schemas);
+  const recursiveEditorFlavor = pickEditorFlavor(schemas);
+
   return (
     <div>
       {/* Entity header with navigation and schema badges */}
@@ -160,6 +241,23 @@ export const EntityDetailView: React.FC<EntityDetailViewProps> = ({ id }) => {
           >
             {showSchemaManager ? 'Hide' : 'Manage Schemas'}
           </button>
+          {/* Editor flavor toggle — only shown for schemas in the allowlist */}
+          {RECURSIVE_EDITOR_SCHEMA_ALLOWLIST.has(primarySchema) && (
+            <button
+              data-part="button"
+              data-variant="outlined"
+              data-testid="editor-flavor-toggle"
+              onClick={handleToggleEditorFlavor}
+              title={
+                editorFlavorPref === 'recursive'
+                  ? 'Switch to legacy editor'
+                  : 'Switch to recursive block editor (beta)'
+              }
+              style={{ fontSize: '12px', padding: '2px 8px' }}
+            >
+              {editorFlavorPref === 'recursive' ? 'Legacy editor' : 'Block editor (beta)'}
+            </button>
+          )}
         </div>
       </div>
 
@@ -304,8 +402,24 @@ export const EntityDetailView: React.FC<EntityDetailViewProps> = ({ id }) => {
         </Card>
       )}
 
-      {/* Triple-zone layout — composed of Views via LayoutRenderer */}
-      <LayoutRenderer layoutId="entity-detail" context={context} />
+      {/* Triple-zone layout — composed of Views via LayoutRenderer (legacy)
+          OR RecursiveBlockEditor when the feature flag is active.
+          Per PRD §9.1 resolution #3: both (a) user preference = "recursive" AND
+          (b) schema in allowlist must be true to mount the recursive editor. */}
+      {useRecursiveEditor ? (
+        <div
+          data-part="recursive-editor-host"
+          style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}
+        >
+          <RecursiveBlockEditor
+            rootNodeId={String(data.node ?? id)}
+            editorFlavor={recursiveEditorFlavor}
+            canEdit={true}
+          />
+        </div>
+      ) : (
+        <LayoutRenderer layoutId="entity-detail" context={context} />
+      )}
     </div>
   );
 };

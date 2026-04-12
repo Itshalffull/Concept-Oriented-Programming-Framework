@@ -1,0 +1,18 @@
+# Recursive Block Editor — per-schema allowlist
+#
+# Controls which schema types are eligible for the RecursiveBlockEditor
+# when the user's preference is set to "recursive".
+#
+# Per PRD §9.1 resolution #3:
+#   - User preference key: preferBlockEditorFlavor = "legacy" | "recursive"
+#   - BOTH conditions must be true to mount RecursiveBlockEditor:
+#       (a) user preference = "recursive"
+#       (b) doc's primary schema is in this list
+#
+# Extend this list to enable the recursive editor for more schema types.
+# An empty list disables the recursive editor for all schemas (regardless of preference).
+
+allowlist:
+  - paragraph
+  - heading
+  - agent-persona
