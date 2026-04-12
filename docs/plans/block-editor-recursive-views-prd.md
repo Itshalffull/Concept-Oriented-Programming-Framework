@@ -387,14 +387,15 @@ Minimal end-to-end proof across text + media + marks + theme.
 - Metadata additions to ComponentMapping + ActionBinding + Template (seed schema changes)
 - `block-editor.widget` + `block-slot.widget` + `slash-menu.widget` + `inline-toolbar.widget` host widget specs
 - Three block types migrated: **paragraph** + **heading** + **image** (the latter proves media integration)
-- Three EditSurfaces registered: paragraph (text-format toolbar + format panel), heading (level picker + anchor-link panel), image (crop/filter/alt-text toolbar + EXIF inspector panel). Proves activation-on-focus across text + media.
+- Three block-level EditSurfaces: paragraph (text-format toolbar + format panel), heading (level picker + anchor-link panel), image (crop/filter/alt-text toolbar + EXIF inspector panel). Proves activation-on-focus across text + media.
+- **One page-level compilable-schema EditSurface: `agent-persona`.** Declares all four compile bundle fields (compile_action_ref, status_decoration_ref, output_preview_ref, consumers_panel_ref). Proves the ContentCompiler integration end-to-end: editing a persona page in the block editor, seeing compile status in the header, PromptAssembly preview in the right rail, AgentSession backlinks below. Stale-on-edit cascades via existing content-native-schema sync.
 - Three marks as RenderTransforms: **bold** + **italic** + **code**
 - One theme-aware block: **callout** with `paletteRole` proving the SurfaceContract integration
 - Two InputRules: markdown `##` → heading, paste `image/*` → media upload
 - One ActionBinding command: "AI: continue writing" (proves AgentSession integration)
 - `media-picker.widget` (upload + URL tabs)
 - `RecursiveBlockEditor.tsx` React adapter — thin host mounting block-slot per child
-- One derived editor: `markdown-editor.derived` composing the above
+- Two derived editors: `markdown-editor.derived` (paragraph/heading/image + marks + text InputRules); `persona-editor.derived` composing MarkdownEditor + the agent-persona compile surface. PersonaEditor proves the derived-editor composition pattern for compilable schemas — the same shape that MAG-689 FlowBuilderView already demonstrates works for ProcessSpec.
 - A feature flag in clef-base selecting between legacy and recursive editor per ContentNode
 
 **Acceptance:**
@@ -405,6 +406,7 @@ Minimal end-to-end proof across text + media + marks + theme.
 - Callout block renders with correct palette across all 5 themes (light / dark / high-contrast / editorial / signal) with zero widget code change
 - Slash menu opens on `/`, shows Basic (paragraph/heading) + Media (image) + AI (continue) sections from registries
 - Switch a block's children PresentationSpec from `blocks` to `card-grid` via ViewShell override → children render as cards, same data, free filter/sort
+- Open an `agent-persona` ContentNode in PersonaEditor → edit a prompt block → status badge flips from "compiled" to "stale" → click Recompile → PromptAssembly preview refreshes in right rail → AgentSession backlinks panel shows live consumers. End-to-end compile loop works through the same block editor used for plain content.
 
 ### Phase 2 — Complete text + marks
 
