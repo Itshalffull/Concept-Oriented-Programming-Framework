@@ -128,3 +128,59 @@ entries:
     reversalAction: "none"
     label: "Delete"
     buttonVariant: "destructive"
+
+  # --- FormSpec actions ---
+  - name: formspec-update
+    binding: formspec-update
+    target: "FormSpec/update"
+    parameterMap: '{"name":"row.name"}'
+    executionPolicy: "auto"
+    label: "Save"
+
+  # --- ProcessSpec actions ---
+  - name: processstep-update
+    binding: processstep-update
+    target: "ProcessSpec/updateStep"
+    parameterMap: '{"spec":"row.spec","step":"row.step"}'
+    executionPolicy: "auto"
+    label: "Update Step"
+
+  - name: processstep-remove
+    binding: processstep-remove
+    target: "ProcessSpec/removeStep"
+    parameterMap: '{"spec":"row.spec","step":"row.step"}'
+    executionPolicy: "pessimistic"
+    confirmWhen: "true"
+    label: "Remove Step"
+    buttonVariant: "destructive"
+
+  - name: processedge-remove
+    binding: processedge-remove
+    target: "ProcessSpec/removeEdge"
+    parameterMap: '{"spec":"row.spec","edge":"row.edge"}'
+    executionPolicy: "pessimistic"
+    confirmWhen: "true"
+    label: "Remove Edge"
+    buttonVariant: "destructive"
+
+  # --- WorkItem actions ---
+  - name: workitem-claim
+    binding: workitem-claim
+    target: "WorkItem/claim"
+    parameterMap: '{"item":"row.id"}'
+    executionPolicy: "auto"
+    label: "Claim"
+
+  - name: workitem-complete
+    binding: workitem-complete
+    target: "WorkItem/complete"
+    parameterMap: '{"item":"row.id"}'
+    executionPolicy: "auto"
+    label: "Complete"
+
+  - name: workitem-delegate
+    binding: workitem-delegate
+    target: "WorkItem/delegate"
+    parameterMap: '{"item":"row.id"}'
+    executionPolicy: "auto"
+    label: "Delegate"

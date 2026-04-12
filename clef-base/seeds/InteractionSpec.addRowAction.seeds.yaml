@@ -25,3 +25,31 @@ entries:
   # themes-list-controls — deactivate row action
   - name: themes-list-controls
     binding: theme-deactivate
+
+  # form-editor-controls — save row action
+  - name: form-editor-controls
+    binding: formspec-update
+
+  # process-steps-editor-controls — edit step row action
+  - name: process-steps-editor-controls
+    binding: processstep-update
+
+  # process-steps-editor-controls — delete step row action
+  - name: process-steps-editor-controls
+    binding: processstep-remove
+
+  # process-edges-editor-controls — delete edge row action
+  - name: process-edges-editor-controls
+    binding: processedge-remove
+
+  # my-work-items-controls — claim row action
+  - name: my-work-items-controls
+    binding: workitem-claim
+
+  # my-work-items-controls — complete row action
+  - name: my-work-items-controls
+    binding: workitem-complete
+
+  # my-work-items-controls — delegate row action
+  - name: my-work-items-controls
+    binding: workitem-delegate
