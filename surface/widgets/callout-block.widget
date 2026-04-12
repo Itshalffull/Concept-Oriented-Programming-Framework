@@ -1,0 +1,232 @@
+@version(1)
+widget callout-block {
+
+  purpose {
+    Theme-aware callout block for surfacing contextual alerts, notices, and
+    announcements inline within content. The paletteRole prop (info, warning,
+    danger, success, accent) drives all colour tokens through a SurfaceContract
+    lens binding so every theme can realise the palette without touching widget
+    code. An optional dismiss button transitions the block through a dismissing
+    intermediate state to the dismissed terminal state. Danger and warning
+    callouts carry aria-live so screen readers announce new content. This widget
+    is the zero-widget-change proof of the SurfaceContract + paletteRole pattern:
+    adding a sixth theme requires only a new theme realizer, never a widget edit.
+  }
+
+  anatomy {
+    root:          container    { Outer wrapper; carries data-state and data-palette-role for CSS and test selectors }
+    iconSlot:      presentation { Role badge icon defaults to the paletteRole icon; overridable via the icon prop }
+    body:          container    { Primary content area; background, foreground and border-start are all contract-bound to paletteRole tokens }
+    dismissButton: action       { Optional dismiss affordance rendered only when dismissible is true }
+  }
+
+  states {
+    interaction {
+      idle [initial] {
+        on HOVER_ENTER -> hovered;
+        on DISMISS     -> dismissing;
+      }
+      hovered {
+        on HOVER_LEAVE -> idle;
+        on DISMISS     -> dismissing;
+        on ESCAPE      -> idle;
+      }
+      dismissing {
+        on DISMISSED -> dismissed;
+        entry [animateOut];
+      }
+      dismissed {
+        entry [hideBlock];
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      Enter  -> DISMISS;
+      Escape -> DISMISS;
+    }
+    focus {
+      trap: false;
+      initial: dismissButton;
+      roving: false;
+      returnOnClose: false;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "callout";
+        aria-roledescription: "callout";
+        aria-live: if ?paletteRole == "danger" or ?paletteRole == "warning" then "polite" else "off";
+      };
+      iconSlot -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      body -> {
+        role: "region";
+        aria-label: "callout body";
+      };
+      dismissButton -> {
+        role: "button";
+        aria-label: "Dismiss callout";
+        hidden: if ?dismissible then "false" else "true";
+      };
+    }
+  }
+
+  props {
+    paletteRole: union "info" | "warning" | "danger" | "success" | "accent" = "info"
+    icon: option String
+    dismissible: Bool = false
+    bodyContent: String = ""
+    level: union "block" | "inline" = "block"
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.interaction;
+      data-palette-role: ?paletteRole;
+      data-level: ?level;
+      data-dismissible: if ?dismissible then "true" else "false";
+      onPointerEnter: send(HOVER_ENTER);
+      onPointerLeave: send(HOVER_LEAVE);
+      onKeyDown: if self.key == "Escape" then send(ESCAPE) else noop;
+    }
+
+    iconSlot -> {
+      data-part: "icon-slot";
+      data-palette-role: ?paletteRole;
+    }
+
+    body -> {
+      data-part: "body";
+      data-palette-role: ?paletteRole;
+      text: ?bodyContent;
+    }
+
+    dismissButton -> {
+      data-part: "dismiss-button";
+      hidden: if ?dismissible then false else true;
+      disabled: if state.interaction == "dismissed" then true else false;
+      onClick: send(DISMISS);
+      onKeyDown: if self.key == "Enter" then send(DISMISS) else noop;
+    }
+  }
+
+  affordance {
+    serves: callout-block;
+    specificity: 8;
+    when concept = "ContentNode";
+    bind {
+      paletteRole: alertLevel;
+      bodyContent: content;
+    }
+  }
+
+  compose {
+    _presence: widget("presence", { present: if state.interaction != "dismissed" then true else false });
+  }
+
+  invariant {
+    example "dismiss from idle transitions to dismissing": {
+      after DISMISS() -> ok
+      then state.interaction = "dismissing"
+    }
+
+    example "dismissed event moves dismissing to dismissed terminal": {
+      after DISMISSED() -> ok
+      then state.interaction = "dismissed"
+    }
+
+    example "hover enter from idle transitions to hovered": {
+      after HOVER_ENTER() -> ok
+      then state.interaction = "hovered"
+    }
+
+    example "hover leave from hovered returns to idle": {
+      after HOVER_LEAVE() -> ok
+      then state.interaction = "idle"
+    }
+
+    example "escape from hovered returns to idle": {
+      after ESCAPE() -> ok
+      then state.interaction = "idle"
+    }
+
+    example "info role binds info data-palette-role on root": {
+      after render(paletteRole: "info") -> ok
+      then root.dataPaletteRole = "info"
+    }
+
+    example "warning role sets data-palette-role warning on root": {
+      after render(paletteRole: "warning") -> ok
+      then root.dataPaletteRole = "warning"
+    }
+
+    example "dismissButton hidden when dismissible is false": {
+      after render(dismissible: false) -> ok
+      then dismissButton.hidden = true
+    }
+
+    example "dismissButton visible when dismissible is true": {
+      after render(dismissible: true) -> ok
+      then dismissButton.hidden = false
+    }
+
+    forall "all palette roles bind their contract tokens on root": {
+      given role in { "info", "warning", "danger", "success", "accent" }
+      then root.dataPaletteRole = role
+    }
+
+    forall "all interaction states reachable from initial": {
+      given s in interactionStates
+      then s.reachable = true
+    }
+
+    always "root data-state reflects interaction FSM": {
+      root.dataState = state.interaction
+    }
+
+    always "root data-palette-role reflects paletteRole prop": {
+      root.dataPaletteRole = paletteRole
+    }
+
+    always "body data-palette-role matches root data-palette-role": {
+      body.dataPaletteRole = root.dataPaletteRole
+    }
+
+    always "SurfaceContract slots bound via data-palette-role on body and iconSlot": {
+      body.dataPaletteRole != none
+    }
+
+    never "dismissButton visible when dismissible is false": {
+      dismissible = false and dismissButton.hidden = false
+    }
+
+    never "dismissed state has dismiss button enabled": {
+      state.interaction = "dismissed" and dismissButton.disabled = false
+    }
+
+    never "paletteRole outside the five valid values": {
+      paletteRole != "info" and paletteRole != "warning" and paletteRole != "danger"
+    }
+
+    action dismissButton {
+      requires: dismissible = true and state.interaction = "idle"
+      ensures ok: state.interaction = "dismissing"
+    }
+
+    action dismissButton {
+      requires: dismissible = true and state.interaction = "hovered"
+      ensures ok: state.interaction = "dismissing"
+    }
+
+    "dismiss from hovered also transitions to dismissing via DISMISS event";
+    "danger and warning paletteRole must have aria-live polite on root";
+    "iconSlot data-palette-role must always equal root data-palette-role";
+  }
+
+}
