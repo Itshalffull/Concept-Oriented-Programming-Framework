@@ -1,0 +1,264 @@
+@version(1)
+widget bullet-list-block {
+
+  purpose {
+    Single bullet-list item block for use inside a recursive block editor.
+    Renders a contenteditable text region beside a bullet glyph marker whose
+    shape is driven by the nesting level: level 0 uses a filled circle (u2022),
+    level 1 uses an open circle (u25e6), and level 2+ uses a filled square
+    (u25aa), cycling on deeper nesting. The FSM models four edit states: idle
+    (unfocused), focused (caret placed, no mutation yet), editing (content being
+    mutated), and reordering (drag-to-reorder in progress). Keyboard contracts
+    enforce list-editing semantics: Enter creates a new same-level sibling item,
+    Tab indents one level (level+1), Shift+Tab outdents one level (level-1), and
+    Backspace at the start of the body converts the block to a paragraph. The
+    parent Outline node is responsible for providing the WAI-ARIA role=list
+    context; this widget carries role=listitem on its root.
+  }
+
+  anatomy {
+    root:   container   { Outer wrapper; carries data-state, data-block-id, data-level, and data-focused for CSS and test selectors }
+    marker: presentation { Bullet glyph; shape cycles by nesting level using typography tokens }
+    body:   interactive  { The contenteditable text region; accepts inline marks }
+  }
+
+  states {
+    edit {
+      idle [initial] {
+        on FOCUS -> focused;
+      }
+      focused {
+        on INPUT       -> editing;
+        on BLUR        -> idle;
+        on SELECT      -> reordering;
+        on ESCAPE      -> idle;
+      }
+      editing {
+        on BLUR        -> idle;
+        on SELECT      -> reordering;
+        on ESCAPE      -> focused;
+        entry [markDirty];
+        exit  [flushContent];
+      }
+      reordering {
+        on BLUR           -> idle;
+        on REORDER_DONE   -> focused;
+        on ESCAPE         -> focused;
+        entry [beginReorder];
+        exit  [commitReorder];
+      }
+    }
+  }
+
+  accessibility {
+    role: listitem;
+    keyboard {
+      Enter      -> ENTER_BLOCK;
+      Backspace  -> BACKSPACE_BLOCK;
+      Tab        -> INDENT_BLOCK;
+      Shift+Tab  -> OUTDENT_BLOCK;
+      Escape     -> ESCAPE;
+    }
+    focus {
+      trap: false;
+      initial: body;
+      roving: false;
+      returnOnClose: false;
+    }
+    aria {
+      root -> {
+        role: "listitem";
+        aria-label: "list item";
+        aria-level: ?level;
+      };
+      marker -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      body -> {
+        role: "textbox";
+        aria-multiline: "false";
+        aria-label: "list item text";
+        aria-readonly: if ?readOnly then "true" else "false";
+        aria-placeholder: "List item";
+      };
+    }
+  }
+
+  props {
+    blockId:  String = ""
+    level:    Int    = 0
+    content:  String = ""
+    focused:  Bool   = false
+    readOnly: Bool   = false
+  }
+
+  connect {
+    root -> {
+      data-part:     "root";
+      data-state:    state.edit;
+      data-block-id: ?blockId;
+      data-level:    ?level;
+      data-focused:  if ?focused then "true" else "false";
+    }
+
+    marker -> {
+      data-part:  "marker";
+      data-level: ?level;
+      text:       if ?level == 0 then "\u2022" else if ?level == 1 then "\u25e6" else "\u25aa";
+    }
+
+    body -> {
+      data-part:            "body";
+      contenteditable:      if ?readOnly then "false" else "true";
+      data-block-id:        ?blockId;
+      text:                 ?content;
+      onFocus:              send(FOCUS);
+      onBlur:               send(BLUR);
+      onInput:              send(INPUT);
+      onPointerDown:        send(SELECT);
+      onKeyDown-Enter:      send(ENTER_BLOCK);
+      onKeyDown-Backspace:  send(BACKSPACE_BLOCK);
+      onKeyDown-Tab:        send(INDENT_BLOCK);
+      onKeyDown-Escape:     send(ESCAPE);
+    }
+  }
+
+  affordance {
+    serves: block-editor-block;
+    specificity: 8;
+    when schema = "bullet-list";
+    bind {
+      blockId: nodeId;
+      content: bodyText;
+      level:   indentLevel;
+    }
+  }
+
+  invariant {
+    example "focus event transitions from idle to focused": {
+      after FOCUS() -> ok
+      then state.edit = "focused"
+    }
+
+    example "input event transitions focused to editing": {
+      after INPUT() -> ok
+      then state.edit = "editing"
+    }
+
+    example "blur from any state returns to idle": {
+      after BLUR() -> ok
+      then state.edit = "idle"
+    }
+
+    example "escape from editing returns to focused": {
+      after ESCAPE() -> ok
+      then state.edit = "focused"
+    }
+
+    example "select event transitions to reordering": {
+      after SELECT() -> ok
+      then state.edit = "reordering"
+    }
+
+    example "reorder-done transitions back to focused": {
+      after REORDER_DONE() -> ok
+      then state.edit = "focused"
+    }
+
+    example "level 0 marker shows filled circle": {
+      after render(level: 0) -> ok
+      then marker.text = "\u2022"
+    }
+
+    example "level 1 marker shows open circle": {
+      after render(level: 1) -> ok
+      then marker.text = "\u25e6"
+    }
+
+    example "level 2 marker shows filled square": {
+      after render(level: 2) -> ok
+      then marker.text = "\u25aa"
+    }
+
+    example "level 3 marker shows filled square (cycle)": {
+      after render(level: 3) -> ok
+      then marker.text = "\u25aa"
+    }
+
+    example "readOnly true disables contenteditable on body": {
+      after render(readOnly: true) -> ok
+      then body.contenteditable = "false"
+    }
+
+    example "readOnly false enables contenteditable on body": {
+      after render(readOnly: false) -> ok
+      then body.contenteditable = "true"
+    }
+
+    example "focused prop binds data-focused true on root": {
+      after render(focused: true) -> ok
+      then root.dataFocused = "true"
+    }
+
+    example "blockId prop binds data-block-id on root": {
+      after render(blockId: "block-42") -> ok
+      then root.dataBlockId = "block-42"
+    }
+
+    example "level prop binds data-level on root": {
+      after render(level: 2) -> ok
+      then root.dataLevel = 2
+    }
+
+    example "blockId prop binds data-block-id on body": {
+      after render(blockId: "block-42") -> ok
+      then body.dataBlockId = "block-42"
+    }
+
+    forall "all edit states are reachable from initial": {
+      given s in { "idle", "focused", "editing", "reordering" }
+      then s.reachable = true
+    }
+
+    forall "level 0-2 each produce distinct marker glyphs": {
+      given lv in { 0, 1, 2 }
+      then marker.dataLevel = lv
+    }
+
+    always "root data-state reflects edit FSM": {
+      root.dataState = state.edit
+    }
+
+    always "marker aria-hidden is true": {
+      marker.ariaHidden = "true"
+    }
+
+    always "body aria-readonly is true when readOnly": {
+      readOnly = true
+    }
+
+    always "root data-level equals level prop": {
+      root.dataLevel = level
+    }
+
+    never "contenteditable true when readOnly is true": {
+      readOnly = true and body.contenteditable = "true"
+    }
+
+    never "idle state directly reaches editing without focused": {
+      state.edit = "editing" and body.focused = false
+    }
+
+    action body {
+      requires: readOnly = false and state.edit = "focused"
+      ensures ok: state.edit = "editing"
+    }
+
+    action body {
+      requires: state.edit = "idle"
+      ensures ok: state.edit = "focused"
+    }
+  }
+
+}

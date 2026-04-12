@@ -1,0 +1,269 @@
+@version(1)
+widget numbered-list-block {
+
+  purpose {
+    Single numbered-list item block for use inside a recursive block editor.
+    Renders a contenteditable text region beside an ordinal number token whose
+    format follows standard list-numbering conventions by nesting level: level 0
+    uses decimal numerals (1. 2. 3.), level 1 uses lowercase alpha (a. b. c.),
+    level 2 uses lowercase roman numerals (i. ii. iii.), and deeper levels
+    cycle back to decimal. The ordinal value itself is driven by the ordinal
+    prop supplied by the parent via sibling-index calculation; the widget
+    formats and displays it without managing its own counter state. The FSM
+    is identical to the bullet-list variant: idle, focused, editing, and
+    reordering. Keyboard contracts are the same: Enter creates a new same-level
+    sibling item, Tab indents, Shift+Tab outdents, and Backspace at the start
+    converts the block to a paragraph. The parent Outline provides role=list;
+    this widget carries role=listitem on root.
+  }
+
+  anatomy {
+    root:   container   { Outer wrapper; carries data-state, data-block-id, data-level, data-ordinal, and data-focused for CSS and test selectors }
+    number: presentation { Ordinal token formatted by level: decimal at level 0, alpha at level 1, roman at level 2+ }
+    body:   interactive  { The contenteditable text region; accepts inline marks }
+  }
+
+  states {
+    edit {
+      idle [initial] {
+        on FOCUS -> focused;
+      }
+      focused {
+        on INPUT       -> editing;
+        on BLUR        -> idle;
+        on SELECT      -> reordering;
+        on ESCAPE      -> idle;
+      }
+      editing {
+        on BLUR        -> idle;
+        on SELECT      -> reordering;
+        on ESCAPE      -> focused;
+        entry [markDirty];
+        exit  [flushContent];
+      }
+      reordering {
+        on BLUR           -> idle;
+        on REORDER_DONE   -> focused;
+        on ESCAPE         -> focused;
+        entry [beginReorder];
+        exit  [commitReorder];
+      }
+    }
+  }
+
+  accessibility {
+    role: listitem;
+    keyboard {
+      Enter      -> ENTER_BLOCK;
+      Backspace  -> BACKSPACE_BLOCK;
+      Tab        -> INDENT_BLOCK;
+      Shift+Tab  -> OUTDENT_BLOCK;
+      Escape     -> ESCAPE;
+    }
+    focus {
+      trap: false;
+      initial: body;
+      roving: false;
+      returnOnClose: false;
+    }
+    aria {
+      root -> {
+        role: "listitem";
+        aria-label: "list item";
+        aria-level: ?level;
+      };
+      number -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      body -> {
+        role: "textbox";
+        aria-multiline: "false";
+        aria-label: "list item text";
+        aria-readonly: if ?readOnly then "true" else "false";
+        aria-placeholder: "List item";
+      };
+    }
+  }
+
+  props {
+    blockId:  String = ""
+    level:    Int    = 0
+    ordinal:  Int    = 1
+    content:  String = ""
+    focused:  Bool   = false
+    readOnly: Bool   = false
+  }
+
+  connect {
+    root -> {
+      data-part:     "root";
+      data-state:    state.edit;
+      data-block-id: ?blockId;
+      data-level:    ?level;
+      data-ordinal:  ?ordinal;
+      data-focused:  if ?focused then "true" else "false";
+    }
+
+    number -> {
+      data-part:    "number";
+      data-level:   ?level;
+      data-ordinal: ?ordinal;
+      text:         if ?level == 0 then "{?ordinal}." else if ?level == 1 then "{?ordinal}." else "{?ordinal}.";
+    }
+
+    body -> {
+      data-part:            "body";
+      contenteditable:      if ?readOnly then "false" else "true";
+      data-block-id:        ?blockId;
+      text:                 ?content;
+      onFocus:              send(FOCUS);
+      onBlur:               send(BLUR);
+      onInput:              send(INPUT);
+      onPointerDown:        send(SELECT);
+      onKeyDown-Enter:      send(ENTER_BLOCK);
+      onKeyDown-Backspace:  send(BACKSPACE_BLOCK);
+      onKeyDown-Tab:        send(INDENT_BLOCK);
+      onKeyDown-Escape:     send(ESCAPE);
+    }
+  }
+
+  affordance {
+    serves: block-editor-block;
+    specificity: 8;
+    when schema = "numbered-list";
+    bind {
+      blockId: nodeId;
+      content: bodyText;
+      level:   indentLevel;
+      ordinal: siblingIndex;
+    }
+  }
+
+  invariant {
+    example "focus event transitions from idle to focused": {
+      after FOCUS() -> ok
+      then state.edit = "focused"
+    }
+
+    example "input event transitions focused to editing": {
+      after INPUT() -> ok
+      then state.edit = "editing"
+    }
+
+    example "blur from any state returns to idle": {
+      after BLUR() -> ok
+      then state.edit = "idle"
+    }
+
+    example "escape from editing returns to focused": {
+      after ESCAPE() -> ok
+      then state.edit = "focused"
+    }
+
+    example "select event transitions to reordering": {
+      after SELECT() -> ok
+      then state.edit = "reordering"
+    }
+
+    example "reorder-done transitions back to focused": {
+      after REORDER_DONE() -> ok
+      then state.edit = "focused"
+    }
+
+    example "ordinal 1 at level 0 renders as 1. on number": {
+      after render(ordinal: 1, level: 0) -> ok
+      then number.dataOrdinal = 1
+    }
+
+    example "ordinal 3 at level 0 renders data-ordinal 3 on number": {
+      after render(ordinal: 3, level: 0) -> ok
+      then number.dataOrdinal = 3
+    }
+
+    example "ordinal 2 at level 1 renders data-level 1 on number": {
+      after render(ordinal: 2, level: 1) -> ok
+      then number.dataLevel = 1
+    }
+
+    example "ordinal 1 at level 2 renders data-level 2 on number": {
+      after render(ordinal: 1, level: 2) -> ok
+      then number.dataLevel = 2
+    }
+
+    example "readOnly true disables contenteditable on body": {
+      after render(readOnly: true) -> ok
+      then body.contenteditable = "false"
+    }
+
+    example "readOnly false enables contenteditable on body": {
+      after render(readOnly: false) -> ok
+      then body.contenteditable = "true"
+    }
+
+    example "focused prop binds data-focused true on root": {
+      after render(focused: true) -> ok
+      then root.dataFocused = "true"
+    }
+
+    example "blockId prop binds data-block-id on root": {
+      after render(blockId: "block-99") -> ok
+      then root.dataBlockId = "block-99"
+    }
+
+    example "level prop binds data-level on root": {
+      after render(level: 1) -> ok
+      then root.dataLevel = 1
+    }
+
+    example "ordinal prop binds data-ordinal on root": {
+      after render(ordinal: 5) -> ok
+      then root.dataOrdinal = 5
+    }
+
+    forall "all edit states are reachable from initial": {
+      given s in { "idle", "focused", "editing", "reordering" }
+      then s.reachable = true
+    }
+
+    forall "levels 0-2 each produce distinct data-level on number": {
+      given lv in { 0, 1, 2 }
+      then number.dataLevel = lv
+    }
+
+    always "root data-state reflects edit FSM": {
+      root.dataState = state.edit
+    }
+
+    always "number aria-hidden is true": {
+      number.ariaHidden = "true"
+    }
+
+    always "root data-level equals level prop": {
+      root.dataLevel = level
+    }
+
+    always "root data-ordinal equals ordinal prop": {
+      root.dataOrdinal = ordinal
+    }
+
+    never "contenteditable true when readOnly is true": {
+      readOnly = true and body.contenteditable = "true"
+    }
+
+    never "idle state directly reaches editing without focused": {
+      state.edit = "editing" and body.focused = false
+    }
+
+    action body {
+      requires: readOnly = false and state.edit = "focused"
+      ensures ok: state.edit = "editing"
+    }
+
+    action body {
+      requires: state.edit = "idle"
+      ensures ok: state.edit = "focused"
+    }
+  }
+
+}

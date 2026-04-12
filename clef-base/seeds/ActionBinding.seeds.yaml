@@ -476,3 +476,63 @@ entries:
     section: "Toggle"
     label: "Collapse"
     icon: "chevron-right"
+
+  # --- List block input-rule dispatch actions (MAG-725) ---
+  # markdown-transform-to-bullet: dispatched by the markdown-bullet InputRule
+  # when the user types "- " at the start of a block. Applies the bullet-list
+  # schema via Schema/applyTo, retyping the current block in place.
+  - name: markdown-transform-to-bullet
+    binding: markdown-transform-to-bullet
+    target: "Schema/applyTo"
+    parameterMap: '{"schema":"bullet-list","entity_id":"context.focusedBlockId"}'
+    executionPolicy: "auto"
+    slash_command: false
+    toolbar_command: false
+
+  # markdown-transform-to-numbered: dispatched by the markdown-numbered InputRule
+  # when the user types "1. " at the start of a block. Applies the numbered-list
+  # schema via Schema/applyTo, retyping the current block in place.
+  - name: markdown-transform-to-numbered
+    binding: markdown-transform-to-numbered
+    target: "Schema/applyTo"
+    parameterMap: '{"schema":"numbered-list","entity_id":"context.focusedBlockId"}'
+    executionPolicy: "auto"
+    slash_command: false
+    toolbar_command: false
+
+  # indent: moves the focused block one level deeper in the Outline hierarchy
+  # via Outline/indent. Reachable from the Tab key in list block widgets and
+  # from the inline-toolbar indent button.
+  - name: indent
+    binding: indent
+    target: "Outline/indent"
+    parameterMap: '{"node":"context.focusedBlockId"}'
+    executionPolicy: "auto"
+    toolbar_command: true
+    section: "List"
+    label: "Indent"
+    icon: "indent"
+
+  # outdent: moves the focused block one level up in the Outline hierarchy
+  # via Outline/outdent. Reachable from the Shift+Tab key in list block widgets
+  # and from the inline-toolbar outdent button.
+  - name: outdent
+    binding: outdent
+    target: "Outline/outdent"
+    parameterMap: '{"node":"context.focusedBlockId"}'
+    executionPolicy: "auto"
+    toolbar_command: true
+    section: "List"
+    label: "Outdent"
+    icon: "outdent"
+
+  # convert-to-paragraph: applies the paragraph schema to the focused block,
+  # converting a list item back to a plain paragraph block. Triggered by
+  # Backspace at the start of an empty list item.
+  - name: convert-to-paragraph
+    binding: convert-to-paragraph
+    target: "Schema/applyTo"
+    parameterMap: '{"schema":"paragraph","entity_id":"context.focusedBlockId"}'
+    executionPolicy: "auto"
+    slash_command: false
+    toolbar_command: false

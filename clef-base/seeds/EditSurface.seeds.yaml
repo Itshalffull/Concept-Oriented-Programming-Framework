@@ -133,6 +133,54 @@ entries:
     compile_bundle_ref: null
     compile_status_field: null
 
+  # Bullet-list block editor surface (MAG-725)
+  # Toolbar: inline-toolbar (shared mark toolbar)
+  # Command bindings: bold-toggle, italic-toggle, code-toggle, indent, outdent, convert-to-paragraph
+  # Input rules: markdown-bullet
+  - id: bullet-list-block-editor
+    schema_ref: bullet-list
+    context: block-editor
+    toolbar_widget: inline-toolbar
+    command_bindings:
+      - bold-toggle
+      - italic-toggle
+      - code-toggle
+      - indent
+      - outdent
+      - convert-to-paragraph
+    panel_widgets: []
+    context_menu_bindings: []
+    input_rule_refs:
+      - markdown-bullet
+    picker_refs: []
+    compile_action_ref: null
+    compile_bundle_ref: null
+    compile_status_field: null
+
+  # Numbered-list block editor surface (MAG-725)
+  # Toolbar: inline-toolbar (shared mark toolbar)
+  # Command bindings: bold-toggle, italic-toggle, code-toggle, indent, outdent, convert-to-paragraph
+  # Input rules: markdown-numbered
+  - id: numbered-list-block-editor
+    schema_ref: numbered-list
+    context: block-editor
+    toolbar_widget: inline-toolbar
+    command_bindings:
+      - bold-toggle
+      - italic-toggle
+      - code-toggle
+      - indent
+      - outdent
+      - convert-to-paragraph
+    panel_widgets: []
+    context_menu_bindings: []
+    input_rule_refs:
+      - markdown-numbered
+    picker_refs: []
+    compile_action_ref: null
+    compile_bundle_ref: null
+    compile_status_field: null
+
   # Agent-persona page-level editor surface (MAG-723)
   # Proves ContentCompiler integration end-to-end: compile_action_ref +
   # status_decoration_ref + output_preview_ref + consumers_panel_ref.

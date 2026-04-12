@@ -79,3 +79,25 @@ entries:
     section: "Advanced"
     icon: "code"
     label: "Code"
+
+  # Bullet list block -- unordered list item with level-driven glyph cycle (MAG-725)
+  - id: bullet-list-mapping
+    name: bullet-list-mapping
+    widget_id: bullet-list-block
+    schema: bullet-list
+    display_mode: block-editor
+    insertable: true
+    section: "Basic"
+    icon: "list-bullet"
+    label: "Bulleted list"
+
+  # Numbered list block -- ordered list item with level-driven ordinal format (MAG-725)
+  - id: numbered-list-mapping
+    name: numbered-list-mapping
+    widget_id: numbered-list-block
+    schema: numbered-list
+    display_mode: block-editor
+    insertable: true
+    section: "Basic"
+    icon: "list-ordered"
+    label: "Numbered list"

@@ -66,6 +66,27 @@ entries:
     priority: 100
     scope: null
 
+  # --- List block conversion rules (MAG-725) ---
+  # markdown-bullet: fires when a line starts with "- " (dash space) in any block context.
+  # Dispatches markdown-transform-to-bullet which applies schema "bullet-list" via Schema/applyTo.
+  - name: markdown-bullet
+    rule: markdown-bullet
+    kind: pattern
+    pattern: "^- "
+    action_ref: markdown-transform-to-bullet
+    priority: 100
+    scope: null
+
+  # markdown-numbered: fires when a line starts with "1. " in any block context.
+  # Dispatches markdown-transform-to-numbered which applies schema "numbered-list" via Schema/applyTo.
+  - name: markdown-numbered
+    rule: markdown-numbered
+    kind: pattern
+    pattern: "^1\\. "
+    action_ref: markdown-transform-to-numbered
+    priority: 100
+    scope: null
+
   # --- Code fence markdown shortcut (MAG-727) ---
   # Triggered when a line starts with triple backtick followed by optional word chars.
   # The captured group (\w*) carries the language identifier (e.g. "typescript").
