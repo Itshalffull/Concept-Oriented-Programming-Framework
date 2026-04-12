@@ -114,3 +114,16 @@ entries:
     section: "Embeds"
     icon: "table"
     label: "Embedded view"
+
+  # Table block -- inline editable data grid where each cell hosts a child
+  # ContentNode rendered via block-slot. Supports row/column insert/delete,
+  # column sorting, and optional header row. (MAG-735)
+  - id: table-block-mapping
+    name: table-block-mapping
+    widget_id: table-block
+    schema: table
+    display_mode: block-editor
+    insertable: true
+    section: "Advanced"
+    icon: "table"
+    label: "Table"

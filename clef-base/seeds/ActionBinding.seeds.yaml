@@ -813,3 +813,109 @@ entries:
     context_menu: false
     label: "Insert snippet"
     icon: "braces"
+
+  # --- Table block structural actions (MAG-735) ---
+  # API gap note: These target the anticipated TableBlock concept actions. The
+  # blockId is read from context.blockId and the focused row/column indices from
+  # context.focusedRowIndex and context.focusedColIndex respectively. Update
+  # targets once the TableBlock concept is available in the kernel.
+
+  - name: table-insert-row-above
+    binding: table-insert-row-above
+    target: "TableBlock/insertRowAbove"
+    parameterMap: '{"blockId":"context.blockId","rowIndex":"context.focusedRowIndex"}'
+    executionPolicy: "auto"
+    slash_command: false
+    toolbar_command: true
+    context_menu: true
+    section: "Table"
+    label: "Insert row above"
+    icon: "arrow-up"
+
+  - name: table-insert-row-below
+    binding: table-insert-row-below
+    target: "TableBlock/insertRowBelow"
+    parameterMap: '{"blockId":"context.blockId","rowIndex":"context.focusedRowIndex"}'
+    executionPolicy: "auto"
+    slash_command: false
+    toolbar_command: true
+    context_menu: true
+    section: "Table"
+    label: "Insert row below"
+    icon: "arrow-down"
+
+  - name: table-insert-column-left
+    binding: table-insert-column-left
+    target: "TableBlock/insertColumnLeft"
+    parameterMap: '{"blockId":"context.blockId","colIndex":"context.focusedColIndex"}'
+    executionPolicy: "auto"
+    slash_command: false
+    toolbar_command: true
+    context_menu: true
+    section: "Table"
+    label: "Insert column left"
+    icon: "arrow-left"
+
+  - name: table-insert-column-right
+    binding: table-insert-column-right
+    target: "TableBlock/insertColumnRight"
+    parameterMap: '{"blockId":"context.blockId","colIndex":"context.focusedColIndex"}'
+    executionPolicy: "auto"
+    slash_command: false
+    toolbar_command: true
+    context_menu: true
+    section: "Table"
+    label: "Insert column right"
+    icon: "arrow-right"
+
+  - name: table-delete-row
+    binding: table-delete-row
+    target: "TableBlock/deleteRow"
+    parameterMap: '{"blockId":"context.blockId","rowIndex":"context.focusedRowIndex"}'
+    executionPolicy: "pessimistic"
+    confirmWhen: "false"
+    slash_command: false
+    toolbar_command: false
+    context_menu: true
+    section: "Table"
+    label: "Delete row"
+    buttonVariant: "destructive"
+    icon: "trash"
+
+  - name: table-delete-column
+    binding: table-delete-column
+    target: "TableBlock/deleteColumn"
+    parameterMap: '{"blockId":"context.blockId","colIndex":"context.focusedColIndex"}'
+    executionPolicy: "pessimistic"
+    confirmWhen: "false"
+    slash_command: false
+    toolbar_command: false
+    context_menu: true
+    section: "Table"
+    label: "Delete column"
+    buttonVariant: "destructive"
+    icon: "trash"
+
+  - name: table-sort-column
+    binding: table-sort-column
+    target: "TableBlock/sortColumn"
+    parameterMap: '{"blockId":"context.blockId","colIndex":"context.focusedColIndex","direction":"context.sortDirection"}'
+    executionPolicy: "auto"
+    slash_command: false
+    toolbar_command: true
+    context_menu: true
+    section: "Table"
+    label: "Sort column"
+    icon: "sort"
+
+  - name: table-toggle-header
+    binding: table-toggle-header
+    target: "TableBlock/toggleHeader"
+    parameterMap: '{"blockId":"context.blockId"}'
+    executionPolicy: "auto"
+    slash_command: false
+    toolbar_command: true
+    context_menu: true
+    section: "Table"
+    label: "Toggle header row"
+    icon: "table-header"

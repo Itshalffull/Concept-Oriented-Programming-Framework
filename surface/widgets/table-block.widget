@@ -1,0 +1,366 @@
+@version(1)
+widget table-block {
+
+  purpose {
+    Inline block-level table editor that renders a ContentNode-backed data grid inside
+    the document block stream. Columns and rows are independently insertable and
+    deletable; cells host child ContentNodes rendered via block-slot (recursive
+    ViewShell pattern), so any block type can nest inside a cell. The widget operates
+    two parallel state machines: an edit machine (idle, editing-cell,
+    selecting-range, resizing-column) that tracks the current user interaction, and a
+    sortState machine (unsorted, sorted-asc, sorted-desc) that tracks the active sort
+    on the last-clicked header cell. Keyboard navigation follows the ARIA grid pattern
+    with roving tabindex; structural operations (insert row/column, delete row/column,
+    sort) are bound to Ctrl+Shift shortcut keys and to toolbar/context-menu bindings.
+  }
+
+  requires @1 {
+    fields {
+      blockId: String;
+      columns: list;
+      rows: list;
+      showHeader: Bool;
+    }
+    actions {
+      insertRowAbove(blockId: String, rowIndex: Int);
+      insertRowBelow(blockId: String, rowIndex: Int);
+      insertColumnLeft(blockId: String, colIndex: Int);
+      insertColumnRight(blockId: String, colIndex: Int);
+      deleteRow(blockId: String, rowIndex: Int);
+      deleteColumn(blockId: String, colIndex: Int);
+      sortColumn(blockId: String, colIndex: Int, direction: String);
+      toggleHeader(blockId: String);
+    }
+  }
+
+  anatomy {
+    root:               container     { Top-level table wrapper; carries data-state for both FSMs and data-block-id }
+    headerRow:          container     { The optional sticky header row; hidden when showHeader is false }
+    headerCell:         action        { Single column-header cell; interactive for sorting and resize handle positioning }
+    row:                container     { A data row in the table body; maps to one TableRow entry }
+    cell:               container     { A single data cell; hosts a block-slot child for recursive ContentNode rendering }
+    columnResizeHandle: interactive   { Draggable right-edge handle on each headerCell for live column width resizing }
+    addRowButton:       action        { Button below the last row for appending a new row }
+    addColumnButton:    action        { Button to the right of the last header cell for appending a new column }
+    contextMenuAnchor:  container     { Invisible anchor point that positions the row/cell context menu trigger }
+  }
+
+  states {
+    edit {
+      idle [initial] {
+        on FOCUS_CELL          -> editing-cell;
+        on START_RANGE_SELECT  -> selecting-range;
+        on START_RESIZE        -> resizing-column;
+      }
+      editing-cell {
+        on BLUR_CELL           -> idle;
+        on ESCAPE              -> idle;
+        on START_RANGE_SELECT  -> selecting-range;
+        entry [mountCellEditor];
+        exit [unmountCellEditor];
+      }
+      selecting-range {
+        on COMMIT_RANGE        -> idle;
+        on ESCAPE              -> idle;
+        on FOCUS_CELL          -> editing-cell;
+        entry [beginRangeSelection];
+        exit [clearRangeHighlight];
+      }
+      resizing-column {
+        on COMMIT_RESIZE       -> idle;
+        on CANCEL_RESIZE       -> idle;
+        entry [lockColumnWidth];
+        exit [applyColumnWidth];
+      }
+    }
+
+    sortState [parallel] {
+      unsorted [initial] {
+        on SORT_ASC  -> sorted-asc;
+        on SORT_DESC -> sorted-desc;
+      }
+      sorted-asc {
+        on SORT_DESC   -> sorted-desc;
+        on CLEAR_SORT  -> unsorted;
+      }
+      sorted-desc {
+        on SORT_ASC    -> sorted-asc;
+        on CLEAR_SORT  -> unsorted;
+      }
+    }
+  }
+
+  accessibility {
+    role: table;
+    keyboard {
+      Tab              -> FOCUS_NEXT_CELL;
+      Shift+Tab        -> FOCUS_PREV_CELL;
+      Enter            -> INSERT_ROW_BELOW;
+      ArrowUp          -> NAVIGATE_UP;
+      ArrowDown        -> NAVIGATE_DOWN;
+      ArrowLeft        -> NAVIGATE_LEFT;
+      ArrowRight       -> NAVIGATE_RIGHT;
+      Control+Shift+I  -> INSERT_ROW_ABOVE;
+      Control+Shift+J  -> INSERT_ROW_BELOW;
+      Control+Shift+K  -> INSERT_COL_LEFT;
+      Control+Shift+L  -> INSERT_COL_RIGHT;
+      Delete           -> DELETE_FOCUSED_ROW;
+      Escape           -> ESCAPE;
+    }
+    focus {
+      trap: false;
+      initial: cell;
+      roving: true;
+      returnOnClose: false;
+    }
+    aria {
+      root -> {
+        role: "table";
+        aria-label: "Table block";
+        aria-rowcount: self.rowCount;
+        aria-colcount: self.colCount;
+      };
+      headerRow -> {
+        role: "row";
+        aria-rowindex: "1";
+      };
+      headerCell -> {
+        role: "columnheader";
+        aria-sort: if state.sortState = "sorted-asc" then "ascending" else if state.sortState = "sorted-desc" then "descending" else "none";
+        aria-label: self.label;
+      };
+      row -> {
+        role: "row";
+        aria-rowindex: self.rowIndex;
+      };
+      cell -> {
+        role: "cell";
+        aria-colindex: self.colIndex;
+      };
+      columnResizeHandle -> {
+        role: "separator";
+        aria-orientation: "vertical";
+        aria-label: "Resize column";
+        aria-valuenow: self.columnWidth;
+      };
+      addRowButton -> {
+        role: "button";
+        aria-label: "Add row";
+      };
+      addColumnButton -> {
+        role: "button";
+        aria-label: "Add column";
+      };
+      contextMenuAnchor -> {
+        role: "none";
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    blockId: String
+    columns: list TableColumn
+    rows: list TableRow
+    showHeader: Bool = true
+    focused: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.edit;
+      data-sort-state: state.sortState;
+      data-block-id: ?blockId;
+      data-focused: if ?focused then "true" else "false";
+      role: "table";
+      aria-label: "Table block";
+    }
+
+    headerRow -> {
+      data-part: "header-row";
+      hidden: if not ?showHeader then true else false;
+      role: "row";
+    }
+
+    headerCell -> {
+      data-part: "header-cell";
+      data-col-index: self.colIndex;
+      role: "columnheader";
+      aria-sort: if state.sortState = "sorted-asc" then "ascending" else if state.sortState = "sorted-desc" then "descending" else "none";
+      onClick: send(SORT_ASC);
+      onKeyDown: send(SORT_ASC);
+      tabindex: "0";
+    }
+
+    row -> {
+      data-part: "row";
+      data-row-index: self.rowIndex;
+      role: "row";
+    }
+
+    cell -> {
+      data-part: "cell";
+      data-row-index: self.rowIndex;
+      data-col-index: self.colIndex;
+      role: "cell";
+      tabindex: if state.edit = "editing-cell" then "0" else "-1";
+      onClick: send(FOCUS_CELL);
+      onFocus: send(FOCUS_CELL);
+      onBlur: send(BLUR_CELL);
+    }
+
+    columnResizeHandle -> {
+      data-part: "column-resize-handle";
+      data-col-index: self.colIndex;
+      role: "separator";
+      aria-orientation: "vertical";
+      tabindex: "0";
+      onPointerDown: send(START_RESIZE);
+      onKeyDown: send(START_RESIZE);
+    }
+
+    addRowButton -> {
+      data-part: "add-row-button";
+      role: "button";
+      aria-label: "Add row";
+      onClick: send(INSERT_ROW_BELOW);
+      tabindex: "0";
+    }
+
+    addColumnButton -> {
+      data-part: "add-column-button";
+      role: "button";
+      aria-label: "Add column";
+      onClick: send(INSERT_COL_RIGHT);
+      tabindex: "0";
+    }
+
+    contextMenuAnchor -> {
+      data-part: "context-menu-anchor";
+      aria-hidden: "true";
+    }
+  }
+
+  affordance {
+    serves: table-block;
+    specificity: 9;
+    when blockSchema = "table";
+    bind {
+      blockId: blockId;
+      columns: columns;
+      rows: rows;
+      showHeader: showHeader;
+    }
+  }
+
+  compose {
+    cell: widget("block-slot", { blockId: self.cellNodeId, schema: self.cellSchema, displayMode: "table-cell", focused: if state.edit = "editing-cell" and self.active then true else false })
+    _contextMenu: widget("context-menu", { anchor: contextMenuAnchor })
+  }
+
+  invariant {
+    example "focus cell transitions edit machine to editing-cell": {
+      after focusCell(rowIndex: 0, colIndex: 0) -> ok
+      then state.edit = "editing-cell"
+      and root.dataState = "editing-cell"
+    }
+
+    example "escape from editing-cell returns to idle": {
+      after escape() -> ok
+      then state.edit = "idle"
+    }
+
+    example "start resize transitions to resizing-column": {
+      after startResize(colIndex: 1) -> ok
+      then state.edit = "resizing-column"
+    }
+
+    example "commit resize returns to idle": {
+      after commitResize(colIndex: 1, width: 120) -> ok
+      then state.edit = "idle"
+    }
+
+    example "sort header cell transitions sortState to sorted-asc": {
+      after sortColumn(colIndex: 0, direction: "asc") -> ok
+      then state.sortState = "sorted-asc"
+      and headerCell.ariasort = "ascending"
+    }
+
+    example "sort asc then sort desc transitions sortState to sorted-desc": {
+      after sortColumn(colIndex: 0, direction: "desc") -> ok
+      then state.sortState = "sorted-desc"
+    }
+
+    example "clear sort returns sortState to unsorted": {
+      after clearSort() -> ok
+      then state.sortState = "unsorted"
+      and headerCell.ariasort = "none"
+    }
+
+    example "start range select transitions to selecting-range": {
+      after startRangeSelect(startRow: 0, startCol: 0) -> ok
+      then state.edit = "selecting-range"
+    }
+
+    example "header row hidden when showHeader is false": {
+      after toggleHeader(blockId: "b1") -> ok
+      then headerRow.hidden = true
+    }
+
+    always "data-state on root reflects edit FSM": {
+      root.dataState = state.edit
+    }
+
+    always "data-sort-state on root reflects sortState FSM": {
+      root.dataSortState = state.sortState
+    }
+
+    always "sortState starts unsorted": {
+      state.sortState != "invalid"
+    }
+
+    never "cell tabindex is 0 outside editing-cell state": {
+      state.edit != "editing-cell" and cell.tabindex = "0"
+    }
+
+    never "columnResizeHandle activated during editing-cell state": {
+      state.edit = "editing-cell" and state.edit = "resizing-column"
+    }
+
+    never "headerRow visible when showHeader is false": {
+      showHeader = false and headerRow.hidden = false
+    }
+
+    action addRowButton {
+      requires: state.edit = "idle"
+      ensures ok: rows.length = rows.length + 1
+    }
+
+    action addColumnButton {
+      requires: state.edit = "idle"
+      ensures ok: columns.length = columns.length + 1
+    }
+
+    action headerCell {
+      requires: state.edit = "idle" or state.edit = "editing-cell"
+      ensures ok: state.sortState = "sorted-asc"
+    }
+
+    forall "all edit states reachable": {
+      given s in editStates
+      then s.reachable = true
+    }
+
+    forall "all sortState states reachable": {
+      given s in sortStateStates
+      then s.reachable = true
+    }
+
+    forall "every cell has a block-slot child": {
+      given c in cells
+      then c.hasBlockSlot = true
+    }
+  }
+
+}

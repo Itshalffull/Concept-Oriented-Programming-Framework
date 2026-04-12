@@ -254,3 +254,37 @@ entries:
     compile_action_ref: null
     compile_bundle_ref: null
     compile_status_field: null
+
+  # Table block editor surface (MAG-735)
+  # Toolbar: inline-toolbar for cell-level inline marks.
+  # Command bindings: full row/column CRUD plus sort and header toggle.
+  # Context menu bindings: insert/delete row, insert/delete column, sort, toggle header.
+  # input_rule_refs intentionally empty -- table cells have their own block-slot scopes.
+  - id: table-block-editor
+    schema_ref: table
+    context: block-editor
+    toolbar_widget: inline-toolbar
+    command_bindings:
+      - table-insert-row-above
+      - table-insert-row-below
+      - table-insert-column-left
+      - table-insert-column-right
+      - table-delete-row
+      - table-delete-column
+      - table-sort-column
+      - table-toggle-header
+    panel_widgets: []
+    context_menu_bindings:
+      - table-insert-row-above
+      - table-insert-row-below
+      - table-insert-column-left
+      - table-insert-column-right
+      - table-delete-row
+      - table-delete-column
+      - table-sort-column
+      - table-toggle-header
+    input_rule_refs: []
+    picker_refs: []
+    compile_action_ref: null
+    compile_bundle_ref: null
+    compile_status_field: null
