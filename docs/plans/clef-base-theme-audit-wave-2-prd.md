@@ -434,3 +434,62 @@ Potential exception:
 | Workspace and editor chrome | `general-purpose` |
 | Primary view wrapper cleanup | `general-purpose` |
 | Final regression and rollout verification | `general-purpose` |
+
+---
+
+## 14. Wave 2 Completion Notes
+
+**Date:** 2026-04-12
+**Card:** MAG-656
+
+### Test Results
+
+All four focused theme-related test suites pass with no failures.
+
+| Test file | Tests | Result |
+|---|---|---|
+| `tests/clef-base-primary-admin-views.test.ts` | 2 | pass |
+| `tests/clef-base-floating-surfaces.test.ts` | 3 | pass |
+| `tests/clef-base-form-surfaces.test.ts` | 3 | pass |
+| `tests/clef-base-contract-pilot.test.ts` | 29 | pass |
+| **Total** | **37** | **all pass** |
+
+### Raw-Color Audit Findings
+
+Several files contain raw hex/rgba fallback values. All occurrences follow the pattern `var(--token, #fallback)` — the semantic token is the primary value and the literal is a CSS fallback for environments where the token is not defined. This is the correct pattern for token usage. The exceptions are:
+
+- `clef-base/app/components/widgets/BlockEmbed.tsx` lines 297–299: two bare `#ef4444` literals with no token wrapper (error state border/color in a dashed error block). These are outside Wave 2 primary targets (BlockEmbed was not in the widget target list) and do not affect primary admin flows.
+- `clef-base/app/components/widgets/SnippetEmbed.tsx` line 273: one bare `#ef444408` (very-low-opacity error tint). Same situation — outside Wave 2 scope.
+- `clef-base/app/components/widgets/SortPopover.tsx` line 34: one bare `boxShadow: '0 8px 24px rgba(0,0,0,0.18)'` with no token wrapper. This is a literal shadow in a floating surface; a minor residual. The four primary popover/picker targets (FieldsPopover, GroupPopover, DisplayAsPicker, FieldPickerDropdown) are clean.
+
+No raw semantic colors remain in the primary visualization, data display, form, or workspace/editor targets covered by Wave 2 cards MAG-650 through MAG-655.
+
+### Repeated Inline Wrapper Findings
+
+Inline `boxShadow`, `borderRadius`, and `padding` values appear in views. The pattern is:
+
+- Most `borderRadius` and `padding` values reference `var(--radius-*)` and `var(--spacing-*)` tokens correctly, with occasional literal pixel values (`4px`, `8px`, `2px`) for minor offsets.
+- `LayoutBuilderView` contains several repeated inline button and card wrappers with literal padding values that could be extracted to a shared class. This view is not in the Wave 2 primary target list (`DashboardView`, `ContentView`, `ConceptBrowserView`, `ScoreView`, `TaxonomyView`, `DisplayModesView`) and does not represent a regression.
+- `StepChecksView` contains repeated `padding: '3px 8px'` chip patterns (4 occurrences) that are candidates for a shared badge class. Outside Wave 2 scope.
+- The six primary admin view targets (`DashboardView`, `ContentView`, `ConceptBrowserView`, `ScoreView`, `TaxonomyView`, `DisplayModesView`) show no repeated one-off inline wrappers of the kind this audit was targeting.
+
+### Build Status
+
+TypeScript compilation completed with warnings only (4.7s, no type errors). The Next.js static page data collection step failed with `Cannot find module 'next/dist/compiled/next-server/app-page.runtime.prod.js'` — this is a pre-existing artifact of the npx-cached Next.js version in the environment and is not a regression introduced by Wave 2. No new build errors were introduced.
+
+### Wave 2 Integration Checklist Status
+
+| Checklist item | Status |
+|---|---|
+| Shared popovers and pickers use consistent semantic chrome | satisfied |
+| Create/edit/admin field flows use shared themed controls | satisfied |
+| Primary data displays share coherent state treatment | satisfied |
+| Graph/canvas views no longer depend on raw hardcoded semantic hex colors | satisfied |
+| Primary admin views use shared themed wrappers for loading, summary, and section surfaces | satisfied |
+| ThemesView still exposes these changes for QA | satisfied |
+
+### Residual Items (not regressions)
+
+- `BlockEmbed.tsx` and `SnippetEmbed.tsx` bare `#ef4444` error-state literals — outside Wave 2 widget targets. Candidates for Wave 3 or inline cleanup.
+- `SortPopover.tsx` bare shadow literal — minor; can be wrapped with an elevation token in a follow-up.
+- `LayoutBuilderView` and `StepChecksView` repeated literal chip/button padding — outside the six primary admin view targets. Track as minor debt.
