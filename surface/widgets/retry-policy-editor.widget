@@ -1,0 +1,438 @@
+@version(1)
+widget retry-policy-editor {
+
+  purpose {
+    Step-inspector tab for authoring RetryPolicy configuration. Presents
+    a simple mode (max retries + backoff preset: None / Gentle / Aggressive)
+    and an advanced mode that exposes max retries, backoff algorithm
+    (fixed / linear / exponential), initial delay, max delay, jitter toggle,
+    and a retry-on-variants multi-select scoped to the enclosing step
+    declared error variants. A live timeline preview renders the first five
+    retry attempts with concrete timestamps computed from the current policy
+    values, giving authors immediate feedback before saving.
+  }
+
+  requires @1 {
+    fields {
+      max_attempts: Int;
+      initial_interval_ms: Int;
+      backoff_coefficient: Float;
+      max_interval_ms: Int;
+      non_retryable_errors: list;
+    }
+    actions {
+      create();
+    }
+  }
+
+  anatomy {
+    root:               container  { Outer tab-panel wrapper for the editor }
+    modeToggle:         interactive { Toggle between simple and advanced disclosure modes }
+    simplePane:         container  { Simple-mode controls: presets and max-retries stepper }
+    presetGroup:        container  { Three preset buttons: None, Gentle, Aggressive }
+    presetNone:         action     { Preset: no retries }
+    presetGentle:       action     { Preset: 3 retries, linear backoff, 500 ms start }
+    presetAggressive:   action     { Preset: 10 retries, exponential backoff, 250 ms start }
+    maxRetriesInput:    interactive { Numeric stepper for max_attempts (1–100) }
+    maxRetriesLabel:    text       { Label for max retries field }
+    advancedPane:       container  { Advanced-mode controls: all raw fields }
+    backoffSelect:      interactive { Algorithm selector: fixed / linear / exponential }
+    backoffLabel:       text       { Label for backoff algorithm field }
+    initialDelayInput:  interactive { Numeric input for initial_interval_ms in milliseconds }
+    initialDelayLabel:  text       { Label for initial delay field }
+    maxDelayInput:      interactive { Numeric input for max_interval_ms in milliseconds }
+    maxDelayLabel:      text       { Label for max delay field }
+    jitterToggle:       interactive { Boolean toggle that enables randomised jitter on delays }
+    jitterLabel:        text       { Label for jitter toggle }
+    retryOnPicker:      container  { Multi-select listing the step declared error variants }
+    retryOnLabel:       text       { Label for retry-on variants picker }
+    variantChipList:    container  { Scrollable chip list of selectable error variants }
+    variantChip:        action     { Single selectable error-variant chip }
+    timelinePreview:    container  { Live read-only timeline of the first 5 retry attempts }
+    timelineLabel:      text       { Heading for the timeline preview section }
+    timelineItem:       container  { Single attempt row: attempt number and timestamp }
+    attemptBadge:       text       { Attempt ordinal badge (1 through 5) }
+    attemptTimestamp:   text       { Computed relative timestamp for this attempt }
+    saveButton:         action     { Commit the current policy to RetryPolicy/create }
+    cancelButton:       action     { Discard unsaved changes and revert to saved state }
+    validationMessage:  text       { Inline validation error surfaced on invalid input }
+  }
+
+  states {
+    // Disclosure-mode machine — controls which pane is visible
+    disclosure {
+      simple [initial] {
+        on EXPAND_ADVANCED -> advanced;
+      }
+      advanced {
+        on COLLAPSE_ADVANCED -> simple;
+      }
+    }
+
+    // Edit-lifecycle machine — tracks dirty / saving state
+    lifecycle {
+      clean [initial] {
+        on FIELD_CHANGE -> dirty;
+        on PRESET_SELECT -> dirty;
+      }
+      dirty {
+        on SAVE -> saving;
+        on CANCEL -> clean;
+        on FIELD_CHANGE -> dirty;
+      }
+      saving {
+        on SAVE_OK -> clean;
+        on SAVE_ERROR -> dirty;
+        entry [submitPolicy];
+      }
+    }
+  }
+
+  accessibility {
+    role: form;
+    keyboard {
+      Tab -> FOCUS_NEXT;
+      Enter -> SAVE;
+      Escape -> CANCEL;
+      ArrowUp -> INCREMENT_FIELD;
+      ArrowDown -> DECREMENT_FIELD;
+    }
+    focus {
+      trap: false;
+      initial: modeToggle;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "form";
+        aria-label: "Retry policy editor";
+        aria-busy: if state.lifecycle == "saving" then "true" else "false";
+      };
+      modeToggle -> {
+        role: "switch";
+        aria-checked: if state.disclosure == "advanced" then "true" else "false";
+        aria-label: "Show advanced settings";
+      };
+      simplePane -> {
+        role: "group";
+        aria-label: "Simple settings";
+        aria-hidden: if state.disclosure == "advanced" then "true" else "false";
+      };
+      presetGroup -> {
+        role: "group";
+        aria-label: "Backoff presets";
+      };
+      presetNone -> {
+        role: "button";
+        aria-label: "No retries preset";
+      };
+      presetGentle -> {
+        role: "button";
+        aria-label: "Gentle backoff preset — 3 retries, 500 ms initial delay";
+      };
+      presetAggressive -> {
+        role: "button";
+        aria-label: "Aggressive backoff preset — 10 retries, 250 ms initial delay";
+      };
+      maxRetriesInput -> {
+        role: "spinbutton";
+        aria-labelledby: maxRetriesLabel;
+        aria-valuemin: "1";
+        aria-valuemax: "100";
+      };
+      advancedPane -> {
+        role: "group";
+        aria-label: "Advanced settings";
+        aria-hidden: if state.disclosure == "simple" then "true" else "false";
+      };
+      backoffSelect -> {
+        role: "combobox";
+        aria-labelledby: backoffLabel;
+      };
+      initialDelayInput -> {
+        role: "spinbutton";
+        aria-labelledby: initialDelayLabel;
+      };
+      maxDelayInput -> {
+        role: "spinbutton";
+        aria-labelledby: maxDelayLabel;
+      };
+      jitterToggle -> {
+        role: "switch";
+        aria-labelledby: jitterLabel;
+        aria-checked: if ?jitter then "true" else "false";
+      };
+      retryOnPicker -> {
+        role: "group";
+        aria-labelledby: retryOnLabel;
+      };
+      variantChipList -> {
+        role: "listbox";
+        aria-label: "Error variants to retry on";
+        aria-multiselectable: "true";
+      };
+      variantChip -> {
+        role: "option";
+        aria-selected: if self.selected then "true" else "false";
+        aria-label: self.label;
+      };
+      timelinePreview -> {
+        role: "region";
+        aria-label: "Retry timeline preview";
+        aria-live: "polite";
+      };
+      saveButton -> {
+        role: "button";
+        aria-label: "Save retry policy";
+        aria-disabled: if state.lifecycle == "clean" or state.lifecycle == "saving" then "true" else "false";
+      };
+      cancelButton -> {
+        role: "button";
+        aria-label: "Cancel changes";
+        aria-disabled: if state.lifecycle == "clean" then "true" else "false";
+      };
+      validationMessage -> {
+        role: "alert";
+        aria-live: "assertive";
+      };
+    }
+  }
+
+  props {
+    maxRetries:          Int    = 3
+    backoffAlgorithm:    "fixed" | "linear" | "exponential" = "exponential"
+    initialDelayMs:      Int    = 500
+    maxDelayMs:          Int    = 30000
+    jitter:              Bool   = false
+    retryOnVariants:     set String
+    availableVariants:   list
+    stepRef:             String
+    runRef:              String = ""
+    disabled:            Bool   = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: concat(state.disclosure, ".", state.lifecycle);
+      data-disclosure: state.disclosure;
+      data-lifecycle: state.lifecycle;
+      data-disabled: if ?disabled then "true" else "false";
+    }
+
+    modeToggle -> {
+      data-part: "mode-toggle";
+      aria-checked: if state.disclosure == "advanced" then "true" else "false";
+      disabled: ?disabled;
+      onClick: send(EXPAND_ADVANCED);
+    }
+
+    simplePane -> {
+      data-part: "simple-pane";
+      data-visible: if state.disclosure == "simple" then "true" else "false";
+    }
+
+    presetGroup -> {
+      data-part: "preset-group";
+    }
+
+    presetNone -> {
+      data-part: "preset-none";
+      onClick: send(PRESET_SELECT, { preset: "none", maxRetries: 0 });
+    }
+
+    presetGentle -> {
+      data-part: "preset-gentle";
+      onClick: send(PRESET_SELECT, { preset: "gentle", maxRetries: 3, algorithm: "linear", initialDelayMs: 500, maxDelayMs: 10000, jitter: false });
+    }
+
+    presetAggressive -> {
+      data-part: "preset-aggressive";
+      onClick: send(PRESET_SELECT, { preset: "aggressive", maxRetries: 10, algorithm: "exponential", initialDelayMs: 250, maxDelayMs: 60000, jitter: true });
+    }
+
+    maxRetriesInput -> {
+      data-part: "max-retries-input";
+      value: ?maxRetries;
+      min: 0;
+      max: 100;
+      disabled: ?disabled;
+      onInput: send(FIELD_CHANGE, { field: "maxRetries" });
+    }
+
+    maxRetriesLabel -> {
+      data-part: "max-retries-label";
+      text: "Max retries";
+    }
+
+    advancedPane -> {
+      data-part: "advanced-pane";
+      data-visible: if state.disclosure == "advanced" then "true" else "false";
+    }
+
+    backoffSelect -> {
+      data-part: "backoff-select";
+      value: ?backoffAlgorithm;
+      disabled: ?disabled;
+      onInput: send(FIELD_CHANGE, { field: "backoffAlgorithm" });
+    }
+
+    backoffLabel -> {
+      data-part: "backoff-label";
+      text: "Backoff algorithm";
+    }
+
+    initialDelayInput -> {
+      data-part: "initial-delay-input";
+      value: ?initialDelayMs;
+      min: 0;
+      disabled: if ?disabled or state.disclosure == "simple" then true else false;
+      onInput: send(FIELD_CHANGE, { field: "initialDelayMs" });
+    }
+
+    initialDelayLabel -> {
+      data-part: "initial-delay-label";
+      text: "Initial delay (ms)";
+    }
+
+    maxDelayInput -> {
+      data-part: "max-delay-input";
+      value: ?maxDelayMs;
+      min: 0;
+      disabled: if ?disabled or state.disclosure == "simple" then true else false;
+      onInput: send(FIELD_CHANGE, { field: "maxDelayMs" });
+    }
+
+    maxDelayLabel -> {
+      data-part: "max-delay-label";
+      text: "Max delay (ms)";
+    }
+
+    jitterToggle -> {
+      data-part: "jitter-toggle";
+      aria-checked: if ?jitter then "true" else "false";
+      disabled: if ?disabled or state.disclosure == "simple" then true else false;
+      onClick: send(FIELD_CHANGE, { field: "jitter" });
+    }
+
+    jitterLabel -> {
+      data-part: "jitter-label";
+      text: "Add jitter";
+    }
+
+    retryOnPicker -> {
+      data-part: "retry-on-picker";
+      data-visible: if state.disclosure == "advanced" then "true" else "false";
+    }
+
+    retryOnLabel -> {
+      data-part: "retry-on-label";
+      text: "Retry on variants";
+    }
+
+    variantChipList -> {
+      data-part: "variant-chip-list";
+    }
+
+    variantChip -> {
+      data-part: "variant-chip";
+      data-selected: if self.selected then "true" else "false";
+      onClick: send(FIELD_CHANGE, { field: "retryOnVariants", variant: self.value });
+    }
+
+    timelinePreview -> {
+      data-part: "timeline-preview";
+    }
+
+    timelineLabel -> {
+      data-part: "timeline-label";
+      text: "Retry timeline preview";
+    }
+
+    timelineItem -> {
+      data-part: "timeline-item";
+      data-attempt: self.attempt;
+    }
+
+    attemptBadge -> {
+      data-part: "attempt-badge";
+      text: concat("#", self.attempt);
+    }
+
+    attemptTimestamp -> {
+      data-part: "attempt-timestamp";
+      text: self.relativeTimestamp;
+    }
+
+    saveButton -> {
+      data-part: "save";
+      disabled: if ?disabled or state.lifecycle == "clean" or state.lifecycle == "saving" then true else false;
+      onClick: send(SAVE);
+    }
+
+    cancelButton -> {
+      data-part: "cancel";
+      disabled: if ?disabled or state.lifecycle == "clean" then true else false;
+      onClick: send(CANCEL);
+    }
+
+    validationMessage -> {
+      data-part: "validation-message";
+      data-visible: if state.lifecycle == "dirty" then "true" else "false";
+    }
+  }
+
+  affordance {
+    serves: entity-editor;
+    specificity: 22;
+    bind {
+      maxRetries: max_attempts;
+      initialDelayMs: initial_interval_ms;
+      maxDelayMs: max_interval_ms;
+      retryOnVariants: non_retryable_errors;
+      stepRef: step_ref;
+    }
+  }
+
+  compose {
+    modeToggle:       widget("toggle-switch", { size: "sm", label: "Advanced" })
+    presetNone:       widget("action-button", { variant: "outline", size: "sm" })
+    presetGentle:     widget("action-button", { variant: "outline", size: "sm" })
+    presetAggressive: widget("action-button", { variant: "outline", size: "sm" })
+    maxRetriesInput:  widget("number-input", { min: 0, max: 100, step: 1 })
+    backoffSelect:    widget("select", { options: [{ label: "Fixed", value: "fixed" }, { label: "Linear", value: "linear" }, { label: "Exponential", value: "exponential" }] })
+    initialDelayInput: widget("number-input", { min: 0, step: 50 })
+    maxDelayInput:    widget("number-input", { min: 0, step: 1000 })
+    jitterToggle:     widget("toggle-switch", { size: "sm" })
+    saveButton:       widget("action-button", { variant: "solid", concept: "RetryPolicy", action: "create" })
+    cancelButton:     widget("action-button", { variant: "ghost" })
+  }
+
+  invariant {
+    "Initial state is simple disclosure mode with lifecycle clean; simplePane has data-visible true and advancedPane has data-visible false";
+    "Activating modeToggle transitions disclosure from simple to advanced; advancedPane becomes visible and simplePane hidden";
+    "Activating modeToggle again transitions disclosure from advanced to simple; simplePane becomes visible and advancedPane hidden";
+    "Selecting any preset dispatches PRESET_SELECT and transitions lifecycle to dirty";
+    "Changing any field via onInput dispatches FIELD_CHANGE and transitions lifecycle to dirty";
+    "saveButton aria-disabled is true while lifecycle is clean";
+    "saveButton aria-disabled is false while lifecycle is dirty";
+    "Activating cancelButton while dirty transitions lifecycle to clean and reverts displayed field values";
+    "presetAggressive sets jitterToggle aria-checked to true";
+    "All disclosure and lifecycle states are reachable from the initial configuration";
+    "root data-state always reflects the concatenation of current disclosure and lifecycle state names";
+    "advancedPane data-visible is false whenever disclosure state is simple";
+    "simplePane data-visible is false whenever disclosure state is advanced";
+    "retryOnPicker data-visible is false whenever disclosure state is simple";
+    "saveButton aria-disabled is true whenever lifecycle state is saving";
+    "cancelButton aria-disabled is true whenever lifecycle state is clean";
+    "saveButton and cancelButton are never both enabled simultaneously in the clean lifecycle state";
+    "variantChipList must not appear when availableVariants is empty";
+    "Timeline preview must compute attempt timestamps using the actual backoffAlgorithm, initialDelayMs, maxDelayMs, and jitter fields, not static placeholder values";
+    "Timeline preview must update reactively on every FIELD_CHANGE event without requiring a save";
+    "Variant chip selection must update retryOnVariants and must not remove non-selected variants from non_retryable_errors";
+    "Applying a preset in simple mode must populate all underlying advanced fields consistently";
+    "jitter toggle must be read-only in simple mode; toggling the preset is the only way to change it there";
+    "maxDelayMs must always be greater than or equal to initialDelayMs; violating this condition must surface a validationMessage and disable the save button";
+  }
+
+}
