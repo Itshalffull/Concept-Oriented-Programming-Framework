@@ -3,18 +3,18 @@ widget llm-step-config {
 
   purpose {
     Configuration tab for LLM-call steps inside the Flow Builder step inspector,
-    backed by process-llm/llm-call and process-llm/tool-registry. Presents two
-    disclosure levels: the simple tier shows model selector and user-prompt template;
-    the advanced tier (toggled by the user) reveals system prompt, temperature,
-    max tokens, and stop sequences. A prompt-preview pane substitutes real upstream
-    step outputs from the live sample-data stream so users see the rendered prompt
-    before saving — never an abstract template string. The tools multi-select opens
-    an inline tool-registry-browser picker that shows only tools the run-as principal
-    is authorized to invoke; unauthorized tools are displayed as disabled entries with
-    a denial reason tooltip. An error-variant routing row lets authors map specific
-    LLM error variants (invalid, rejected, repair-exhausted) to named Error-tab
-    branches, satisfying first-class error requirements. All mutations are emitted as
-    discrete events; no concept state is written directly by this widget.
+    backed by process-llm/llm-call, process-llm/tool-registry, and the Clef Base
+    agent-persona flow (PersonaCompiler → AgentSession). The widget operates in two
+    exclusive modes: persona mode (default) lets authors select a ContentNode with
+    schema "agent-persona", preview its compiled PromptAssembly, and supply only an
+    input template; inline mode exposes the raw LLM-call fields (model / system
+    prompt / temperature / max tokens / stop sequences / tools) for cases where no
+    pre-authored persona exists. A top-level mode toggle switches between modes;
+    only the active mode's fields are the authoritative source of truth and are
+    included in the emitted event. Both modes share the existing progressive-
+    disclosure, live prompt-preview, tool-governance, and error-variant routing
+    surface. All mutations are emitted as discrete events; no concept state is
+    written directly by this widget.
   }
 
   requires @1 {
@@ -33,43 +33,96 @@ widget llm-step-config {
   }
 
   anatomy {
-    root:               container    { Outermost wrapper scoped to one llm-call step configuration }
-    simpleSection:      container    { Always-visible tier: model selector + user-prompt template field }
-    modelSelector:      interactive  { Dropdown/combobox for choosing the LLM model }
-    modelOption:        action       { Individual model option inside the model selector }
-    userPromptField:    interactive  { Multiline text area for the user-prompt template; accepts data-mapping pill drops }
-    pillDropZone:       container    { Drop-target overlay rendered above the userPromptField for data-mapping pill drops }
-    promptPreview:      container    { Read-only pane rendering the live-interpolated prompt with sample upstream values }
-    promptPreviewText:  text         { Rendered text content of the resolved prompt preview }
-    promptPreviewBadge: text         { Summary badge showing substituted-field count and any unresolved tokens }
-    advancedToggle:     action       { Expander button that reveals the advanced configuration section }
-    advancedSection:    container    { Progressive-disclosure panel: system prompt, temperature, max tokens, stop sequences }
-    systemPromptField:  interactive  { Multiline text area for the optional system prompt }
-    temperatureSlider:  interactive  { Range input mapping to LLMCall temperature (0.0 – 2.0) }
-    temperatureValue:   text         { Numeric readout mirroring the current slider value }
-    maxTokensInput:     interactive  { Numeric input for the max_tokens cap }
-    stopSequencesInput: interactive  { Comma-delimited text input for stop-sequence tokens }
-    toolsSection:       container    { Tools multi-select section anchored below the prompt fields }
-    toolsLabel:         text         { Heading for the tools multi-select row }
-    toolsMultiSelect:   interactive  { Multi-select control listing selected tool names with remove chips }
-    toolPickerTrigger:  action       { Button that opens the embedded tool-registry-browser }
-    toolChip:           action       { Removable chip representing a selected tool }
-    toolPickerOverlay:  container    { Inline overlay hosting the composed tool-registry-browser }
-    errorRoutingSection: container  { Section for mapping LLM error variants to Error-tab branches }
-    errorRoutingLabel:  text         { Heading for the error-variant routing table }
-    errorVariantRow:    container    { One row per mappable LLM error variant (invalid / rejected / repair-exhausted) }
-    errorVariantName:   text         { Read-only label for the variant name in an error-routing row }
-    errorBranchSelect:  interactive  { Dropdown selecting the Error-tab branch to route to for that variant }
-    saveButton:         action       { Commits all changes; disabled while picker is open }
-    cancelButton:       action       { Discards changes and resets to saved state }
+    root:                  container    { Outermost wrapper scoped to one llm-call step configuration }
+    modeToggle:            interactive  { Segmented control that switches between persona and inline modes }
+    modePersonaOption:     action       { Option button that activates persona mode }
+    modeInlineOption:      action       { Option button that activates inline mode }
+
+    // ── Persona mode ──────────────────────────────────────────────────────────
+    personaModeSection:    container    { Visible in persona mode; holds persona picker, preview, and input template }
+    personaPicker:         interactive  { Single-select combobox filtering ContentNodes where schema == "agent-persona" }
+    personaOption:         action       { Individual persona option inside the personaPicker list }
+    personaPreview:        container    { Read-only panel showing the compiled PromptAssembly (model, system prompt, tool list) for the selected persona }
+    personaPreviewModel:   text         { Displays the model name resolved from the selected persona's PromptAssembly }
+    personaPreviewPrompt:  text         { Displays the system-prompt snippet from the selected persona's PromptAssembly }
+    personaPreviewTools:   text         { Comma-delimited list of tool names from the selected persona's PromptAssembly }
+    personaPreviewEmpty:   text         { Placeholder shown when no persona is selected }
+    inputTemplateEditor:   interactive  { Multiline text area for the user-supplied input template; accepts data-mapping pill drops }
+    inputTemplatePillZone: container    { Drop-target overlay above inputTemplateEditor for data-mapping pill drops }
+    toolOverrideToggle:    action       { Expander button that reveals the optional additive tool override section }
+    toolOverrideSection:   container    { Optional section for adding tool overrides on top of the persona's tool list }
+    toolOverrideMultiSelect: interactive { Multi-select for additive tool overrides; unavailable tools are disabled with denial tooltip }
+    toolOverrideChip:      action       { Removable chip representing a selected tool override }
+
+    // ── Inline mode ───────────────────────────────────────────────────────────
+    simpleSection:         container    { Always-visible inline-mode tier: model selector + user-prompt template field }
+    modelSelector:         interactive  { Dropdown/combobox for choosing the LLM model }
+    modelOption:           action       { Individual model option inside the model selector }
+    userPromptField:       interactive  { Multiline text area for the user-prompt template; accepts data-mapping pill drops }
+    pillDropZone:          container    { Drop-target overlay rendered above the userPromptField for data-mapping pill drops }
+    promptPreview:         container    { Read-only pane rendering the live-interpolated prompt with sample upstream values }
+    promptPreviewText:     text         { Rendered text content of the resolved prompt preview }
+    promptPreviewBadge:    text         { Summary badge showing substituted-field count and any unresolved tokens }
+    advancedToggle:        action       { Expander button that reveals the advanced configuration section }
+    advancedSection:       container    { Progressive-disclosure panel: system prompt, temperature, max tokens, stop sequences }
+    systemPromptField:     interactive  { Multiline text area for the optional system prompt }
+    temperatureSlider:     interactive  { Range input mapping to LLMCall temperature (0.0 – 2.0) }
+    temperatureValue:      text         { Numeric readout mirroring the current slider value }
+    maxTokensInput:        interactive  { Numeric input for the max_tokens cap }
+    stopSequencesInput:    interactive  { Comma-delimited text input for stop-sequence tokens }
+
+    // ── Shared ────────────────────────────────────────────────────────────────
+    toolsSection:          container    { Tools multi-select section anchored below the prompt fields (inline mode) }
+    toolsLabel:            text         { Heading for the tools multi-select row }
+    toolsMultiSelect:      interactive  { Multi-select control listing selected tool names with remove chips }
+    toolPickerTrigger:     action       { Button that opens the embedded tool-registry-browser }
+    toolChip:              action       { Removable chip representing a selected tool }
+    toolPickerOverlay:     container    { Inline overlay hosting the composed tool-registry-browser }
+    errorRoutingSection:   container   { Section for mapping LLM error variants to Error-tab branches }
+    errorRoutingLabel:     text         { Heading for the error-variant routing table }
+    errorVariantRow:       container    { One row per mappable LLM error variant (invalid / rejected / repair-exhausted) }
+    errorVariantName:      text         { Read-only label for the variant name in an error-routing row }
+    errorBranchSelect:     interactive  { Dropdown selecting the Error-tab branch to route to for that variant }
+    saveButton:            action       { Commits all changes; disabled while picker is open }
+    cancelButton:          action       { Discards changes and resets to saved state }
   }
 
   slots {
-    data-mapping-pills  { inside userPromptField }
-    tool-picker-content { inside toolPickerOverlay }
+    data-mapping-pills    { inside inputTemplateEditor }
+    inline-data-mapping-pills { inside userPromptField }
+    tool-picker-content   { inside toolPickerOverlay }
   }
 
   states {
+    // ── Mode: persona (default) ↔ inline ─────────────────────────────────────
+    mode [parallel] {
+      persona [initial] {
+        on SWITCH_TO_INLINE -> inline;
+        entry [showPersonaModeSection];
+        exit  [hidePersonaModeSection];
+      }
+
+      inline {
+        on SWITCH_TO_PERSONA -> persona;
+        entry [showInlineModeSection];
+        exit  [hideInlineModeSection];
+      }
+    }
+
+    // ── Persona: tool override sub-panel disclosure ───────────────────────────
+    toolOverride [parallel] {
+      hidden [initial] {
+        on SHOW_TOOL_OVERRIDE -> visible;
+      }
+
+      visible {
+        on HIDE_TOOL_OVERRIDE -> hidden;
+        entry [expandToolOverrideSection];
+        exit  [collapseToolOverrideSection];
+      }
+    }
+
+    // ── Inline: advanced section disclosure ───────────────────────────────────
     disclosure [parallel] {
       simple [initial] {
         on TOGGLE_ADVANCED -> advanced;
@@ -137,7 +190,7 @@ widget llm-step-config {
     }
     focus {
       trap: false;
-      initial: modelSelector;
+      initial: modeToggle;
       roving: false;
       returnOnClose: toolPickerTrigger;
     }
@@ -146,6 +199,59 @@ widget llm-step-config {
         role: "form";
         aria-label: "LLM step configuration";
         data-state: state.disclosure;
+        data-mode:  state.mode;
+      };
+      modeToggle -> {
+        role: "group";
+        aria-label: "Configuration mode";
+      };
+      modePersonaOption -> {
+        role: "radio";
+        aria-checked: if state.mode == "persona" then "true" else "false";
+        aria-label: "Persona mode";
+      };
+      modeInlineOption -> {
+        role: "radio";
+        aria-checked: if state.mode == "inline" then "true" else "false";
+        aria-label: "Inline mode";
+      };
+      personaModeSection -> {
+        role: "group";
+        aria-label: "Persona configuration";
+        aria-hidden: if state.mode == "inline" then "true" else "false";
+      };
+      personaPicker -> {
+        role: "combobox";
+        aria-label: "Select agent persona";
+        aria-required: "true";
+        aria-haspopup: "listbox";
+      };
+      personaOption -> {
+        role: "option";
+        aria-selected: if self.nodeId == ?personaRef then "true" else "false";
+      };
+      personaPreview -> {
+        role: "region";
+        aria-label: "Compiled persona preview";
+        aria-live: "polite";
+      };
+      inputTemplateEditor -> {
+        role: "textbox";
+        aria-label: "Input template";
+        aria-multiline: "true";
+        aria-required: "true";
+        aria-dropeffect: "copy";
+      };
+      toolOverrideToggle -> {
+        role: "button";
+        aria-expanded: if state.toolOverride == "visible" then "true" else "false";
+        aria-controls: "tool-override-section";
+        aria-label: "Add tool overrides";
+      };
+      toolOverrideSection -> {
+        role: "group";
+        aria-label: "Additive tool overrides";
+        aria-hidden: if state.toolOverride == "hidden" then "true" else "false";
       };
       modelSelector -> {
         role: "combobox";
@@ -252,34 +358,148 @@ widget llm-step-config {
   }
 
   props {
-    stepId:            String = ""
-    selectedModel:     String = ""
-    availableModels:   list { id: String, label: String, provider: String } = []
-    userPrompt:        String = ""
-    systemPrompt:      option String
-    temperature:       String = "1.0"
-    maxTokens:         option Int
-    stopSequences:     list String = []
-    selectedToolIds:   set String = []
-    availableTools:    list { id: String, name: String, description: String, status: String, allowed: Bool, denialReason: option String, capabilityBadges: list String, permissionBadges: list String }
-    sampleData:        option { upstreamStepOutputs: list { stepId: String, fieldPath: String, sampleValue: String, type: String } }
-    errorVariantRoutes: list { variant: String, branchId: option String } = []
-    availableBranches: list { id: String, label: String } = []
-    processRef:        String = ""
-    principalId:       String = ""
+    // ── Mode ──────────────────────────────────────────────────────────────────
+    mode:                union "persona" | "inline" = "persona"
+
+    // ── Persona-mode props ────────────────────────────────────────────────────
+    personaRef:          option String
+    availablePersonas:   list { nodeId: String, title: String, modelName: String, toolCount: Int } = []
+    compiledPromptPreview: option String
+    inputTemplate:       String = ""
+    toolOverrides:       list String = []
+
+    // ── Inline-mode props (MAG-697 surface, unchanged) ────────────────────────
+    stepId:              String = ""
+    selectedModel:       String = ""
+    availableModels:     list { id: String, label: String, provider: String } = []
+    userPrompt:          String = ""
+    systemPrompt:        option String
+    temperature:         String = "1.0"
+    maxTokens:           option Int
+    stopSequences:       list String = []
+    selectedToolIds:     set String = []
+    availableTools:      list { id: String, name: String, description: String, status: String, allowed: Bool, denialReason: option String, capabilityBadges: list String, permissionBadges: list String }
+    sampleData:          option { upstreamStepOutputs: list { stepId: String, fieldPath: String, sampleValue: String, type: String } }
+    errorVariantRoutes:  list { variant: String, branchId: option String } = []
+    availableBranches:   list { id: String, label: String } = []
+    processRef:          String = ""
+    principalId:         String = ""
   }
 
   connect {
     root -> {
-      data-part:      "root";
-      data-state:     state.disclosure;
+      data-part:        "root";
+      data-state:       state.disclosure;
+      data-mode:        state.mode;
       data-tool-picker: state.toolPicker;
-      data-form:      state.form;
-      data-step-id:   ?stepId;
+      data-form:        state.form;
+      data-step-id:     ?stepId;
     }
 
+    // ── Mode toggle ───────────────────────────────────────────────────────────
+    modeToggle -> {
+      data-part:  "mode-toggle";
+      data-mode:  state.mode;
+    }
+
+    modePersonaOption -> {
+      data-part:    "mode-persona-option";
+      data-active:  if state.mode == "persona" then "true" else "false";
+      onClick:      send(SWITCH_TO_PERSONA);
+    }
+
+    modeInlineOption -> {
+      data-part:    "mode-inline-option";
+      data-active:  if state.mode == "inline" then "true" else "false";
+      onClick:      send(SWITCH_TO_INLINE);
+    }
+
+    // ── Persona mode section ──────────────────────────────────────────────────
+    personaModeSection -> {
+      data-part:   "persona-mode-section";
+      data-mode:   state.mode;
+      hidden:      if state.mode == "inline" then true else false;
+    }
+
+    personaPicker -> {
+      data-part:   "persona-picker";
+      value:       ?personaRef;
+      onInput:     send(EDIT, { field: "personaRef", value: self.value });
+    }
+
+    personaOption -> {
+      data-part:       "persona-option";
+      data-node-id:    self.nodeId;
+      data-title:      self.title;
+      data-model-name: self.modelName;
+      data-tool-count: self.toolCount;
+      data-selected:   if self.nodeId == ?personaRef then "true" else "false";
+      onClick:         send(EDIT, { field: "personaRef", value: self.nodeId });
+    }
+
+    personaPreview -> {
+      data-part:   "persona-preview";
+      data-state:  if ?personaRef then "loaded" else "empty";
+    }
+
+    personaPreviewModel -> {
+      data-part:   "persona-preview-model";
+    }
+
+    personaPreviewPrompt -> {
+      data-part:   "persona-preview-prompt";
+      text:        ?compiledPromptPreview;
+    }
+
+    personaPreviewTools -> {
+      data-part:   "persona-preview-tools";
+    }
+
+    personaPreviewEmpty -> {
+      data-part:   "persona-preview-empty";
+      hidden:      if ?personaRef then true else false;
+    }
+
+    inputTemplateEditor -> {
+      data-part:   "input-template-editor";
+      value:       ?inputTemplate;
+      onInput:     send(EDIT, { field: "inputTemplate", value: self.value });
+      onFocus:     send(EDIT, { field: "inputTemplate" });
+      onDrop:      send(EDIT, { field: "inputTemplate", droppedPill: self.droppedData });
+    }
+
+    inputTemplatePillZone -> {
+      data-part:   "input-template-pill-zone";
+    }
+
+    toolOverrideToggle -> {
+      data-part:     "tool-override-toggle";
+      data-expanded: if state.toolOverride == "visible" then "true" else "false";
+      onClick:       if state.toolOverride == "hidden" then send(SHOW_TOOL_OVERRIDE) else send(HIDE_TOOL_OVERRIDE);
+    }
+
+    toolOverrideSection -> {
+      data-part:   "tool-override-section";
+      data-state:  state.toolOverride;
+      hidden:      if state.toolOverride == "hidden" then true else false;
+    }
+
+    toolOverrideMultiSelect -> {
+      data-part:   "tool-override-multi-select";
+    }
+
+    toolOverrideChip -> {
+      data-part:       "tool-override-chip";
+      data-tool-id:    self.id;
+      data-tool-name:  self.name;
+      onClick:         send(REMOVE_TOOL_OVERRIDE, { toolId: self.id });
+      onKeyDown:       if key == "Delete" or key == "Backspace" then send(REMOVE_TOOL_OVERRIDE, { toolId: self.id }) else noop;
+    }
+
+    // ── Inline mode section ───────────────────────────────────────────────────
     simpleSection -> {
-      data-part: "simple-section";
+      data-part:   "simple-section";
+      hidden:      if state.mode == "persona" then true else false;
     }
 
     modelSelector -> {
@@ -376,6 +596,7 @@ widget llm-step-config {
       onInput:     send(EDIT, { field: "stopSequences", value: self.value });
     }
 
+    // ── Shared ────────────────────────────────────────────────────────────────
     toolsSection -> {
       data-part:   "tools-section";
     }
@@ -443,7 +664,7 @@ widget llm-step-config {
       data-part:   "save-button";
       data-state:  state.form;
       disabled:    if state.form == "pristine" then true else false;
-      onClick:     send(SAVE);
+      onClick:     if state.mode == "persona" then send(USE_PERSONA) else send(USE_INLINE);
     }
 
     cancelButton -> {
@@ -472,8 +693,75 @@ widget llm-step-config {
   }
 
   invariant {
+    // ── Mode exclusivity ──────────────────────────────────────────────────────
+    never "both persona and inline config set simultaneously": {
+      state.mode == "persona" and state.mode == "inline"
+    }
+
+    example "default mode is persona": {
+      after root -> { data-mode: "persona" }
+      then personaModeSection -> { hidden: false }
+      and simpleSection -> { hidden: true }
+    }
+
+    example "switching to inline mode hides persona section and shows inline section": {
+      after modeInlineOption.click -> ok
+      then root -> { data-mode: "inline" }
+      and personaModeSection -> { hidden: true }
+      and simpleSection -> { hidden: false }
+    }
+
+    example "switching back to persona mode hides inline and shows persona section": {
+      after modeInlineOption.click -> ok
+      then modePersonaOption.click -> ok
+      then root -> { data-mode: "persona" }
+      and personaModeSection -> { hidden: false }
+      and simpleSection -> { hidden: true }
+    }
+
+    // ── Persona mode ──────────────────────────────────────────────────────────
+    example "selecting a persona sets personaPicker value and shows preview": {
+      after personaOption.click({ nodeId: "persona-abc" }) -> ok
+      then personaPicker -> { value: "persona-abc" }
+      and personaPreview -> { data-state: "loaded" }
+      and personaPreviewEmpty -> { hidden: true }
+    }
+
+    example "no persona selected shows personaPreviewEmpty": {
+      after root -> { data-mode: "persona" }
+      then personaPreview -> { data-state: "empty" }
+      and personaPreviewEmpty -> { hidden: false }
+    }
+
+    example "tool override section hidden by default in persona mode": {
+      after root -> { data-mode: "persona" }
+      then toolOverrideSection -> { hidden: true }
+      and toolOverrideToggle -> { data-expanded: "false" }
+    }
+
+    example "expanding tool overrides reveals toolOverrideSection": {
+      after toolOverrideToggle.click -> ok
+      then toolOverrideSection -> { hidden: false }
+      and toolOverrideToggle -> { data-expanded: "true" }
+    }
+
+    example "save in persona mode emits USE_PERSONA with personaRef, inputTemplate, toolOverrides": {
+      after personaOption.click({ nodeId: "persona-abc" }) -> ok
+      then inputTemplateEditor.input({ value: "Summarize: {{text}}" }) -> ok
+      then saveButton.click -> ok
+      then send(USE_PERSONA, { personaRef: "persona-abc", inputTemplate: "Summarize: {{text}}", toolOverrides: [] }) -> ok
+    }
+
+    example "save in inline mode emits USE_INLINE with full inline config": {
+      after modeInlineOption.click -> ok
+      then modelSelector.input({ value: "gpt-4o" }) -> ok
+      then saveButton.click -> ok
+      then send(USE_INLINE, { model: "gpt-4o", systemPrompt: "", userPrompt: "", temperature: "1.0", maxTokens: null, tools: [], stopSequences: [] }) -> ok
+    }
+
+    // ── Inline mode — progressive disclosure ─────────────────────────────────
     example "simple tier shows model and user-prompt only": {
-      after root -> { data-state: "simple" }
+      after root -> { data-mode: "inline" }
       then advancedSection -> { hidden: true }
       and systemPromptField -> { disabled: true }
       and temperatureSlider -> { disabled: true }
@@ -482,7 +770,8 @@ widget llm-step-config {
     }
 
     example "toggle advanced reveals system prompt, temperature, max tokens, stop sequences": {
-      after advancedToggle.click -> ok
+      after modeInlineOption.click -> ok
+      then advancedToggle.click -> ok
       then root -> { data-state: "advanced" }
       and advancedSection -> { hidden: false }
       and systemPromptField -> { disabled: false }
@@ -493,13 +782,15 @@ widget llm-step-config {
     }
 
     example "toggle advanced back collapses advanced section": {
-      after advancedToggle.click -> ok
+      after modeInlineOption.click -> ok
+      then advancedToggle.click -> ok
       then advancedToggle.click -> ok
       then root -> { data-state: "simple" }
       and advancedSection -> { hidden: true }
       and advancedToggle -> { data-expanded: "false" }
     }
 
+    // ── Tool picker (inline mode) ─────────────────────────────────────────────
     example "opening tool picker sets toolPicker state to open": {
       after toolPickerTrigger.click -> ok
       then root -> { data-tool-picker: "open" }
@@ -527,6 +818,7 @@ widget llm-step-config {
       then toolChip -> { data-tool-id: self.id }
     }
 
+    // ── Form dirtiness ────────────────────────────────────────────────────────
     example "editing any field transitions form to dirty": {
       after userPromptField.input -> ok
       then root -> { data-form: "dirty" }
@@ -538,19 +830,27 @@ widget llm-step-config {
       then saveButton -> { disabled: true }
     }
 
+    // ── Prompt preview ────────────────────────────────────────────────────────
     example "prompt preview resolves after PROMPT_CHANGED": {
       after userPromptField.input -> ok
       then send(PROMPT_CHANGED, { value: "Hello {{name}}" }) -> ok
-      then root -> { data-state: "advanced" }
-      and promptPreview -> { aria-busy: "true" }
+      then promptPreview -> { aria-busy: "true" }
       then send(PREVIEW_READY) -> ok
       then promptPreview -> { aria-busy: "false" }
     }
 
+    // ── Error routing ─────────────────────────────────────────────────────────
     example "error-variant row emits EDIT with variant and branchId": {
       after errorBranchSelect.input({ variant: "invalid", branchId: "branch-1" }) -> ok
       then errorVariantRow -> { data-branch-id: "branch-1" }
     }
+
+    // ── Forall reachability ───────────────────────────────────────────────────
+    forall s in states.mode:
+      s.reachable = true
+
+    forall s in states.toolOverride:
+      s.reachable = true
 
     forall s in states.disclosure:
       s.reachable = true
@@ -564,8 +864,21 @@ widget llm-step-config {
     forall s in states.form:
       s.reachable = true
 
+    // ── Always / never ────────────────────────────────────────────────────────
+    always "data-mode on root reflects mode FSM": {
+      root -> { data-mode: state.mode }
+    }
+
     always "data-state on root reflects disclosure FSM": {
       root -> { data-state: state.disclosure }
+    }
+
+    always "personaModeSection hidden when mode is inline": {
+      if state.mode == "inline" then personaModeSection -> { hidden: true }
+    }
+
+    always "simpleSection hidden when mode is persona": {
+      if state.mode == "persona" then simpleSection -> { hidden: true }
     }
 
     always "advancedSection hidden when disclosure is simple": {
@@ -574,6 +887,10 @@ widget llm-step-config {
 
     always "toolPickerOverlay hidden when toolPicker is closed": {
       if state.toolPicker == "closed" then toolPickerOverlay -> { hidden: true }
+    }
+
+    always "toolOverrideSection hidden when toolOverride is hidden": {
+      if state.toolOverride == "hidden" then toolOverrideSection -> { hidden: true }
     }
 
     always "saveButton disabled when form is pristine": {
@@ -598,6 +915,7 @@ widget llm-step-config {
       state.toolPicker == "open" and saveButton -> { disabled: false }
     }
 
+    // ── Action contracts ──────────────────────────────────────────────────────
     action toolPickerTrigger.click {
       ensures ok: state.toolPicker == "open"
       ensures ok: toolPickerOverlay -> { hidden: false }
@@ -616,8 +934,22 @@ widget llm-step-config {
       ensures ok: state.form == "pristine"
     }
 
+    action modePersonaOption.click {
+      ensures ok: state.mode == "persona"
+    }
+
+    action modeInlineOption.click {
+      ensures ok: state.mode == "inline"
+    }
+
+    // ── Prose notes (host-side contracts) ────────────────────────────────────
+    "USE_PERSONA event carries { personaRef, inputTemplate, toolOverrides } — host routes to AgentSession/spawn(personaPageId: personaRef, strategy: from-step, tools: toolOverrides, context: inputTemplate)";
+    "USE_INLINE event carries { model, systemPrompt, userPrompt, temperature, maxTokens, tools, stopSequences } — host maps to LLMCall/request params";
+    "personaPicker filters only ContentNodes where schema == agent-persona; governance check mirrors MAG-681 pattern: only personas the run-as principal can invoke are enabled";
+    "compiledPromptPreview is populated by the host by calling PersonaCompiler/compile for the selected personaRef and surfacing the resulting PromptAssembly text fields";
+    "toolOverrides are additive on top of the persona's tool list; the host merges them when constructing the AgentSession/spawn tools argument";
     "EDIT event carries { field, value } pairs — host debounces before dispatching to LLMCall concept action";
-    "SAVE event carries all configuration fields including stopSequences as a list — host maps to LLMCall/request params";
+    "SAVE event in inline mode carries all configuration fields including stopSequences as a list — host maps to LLMCall/request params";
     "TOOL_SELECTED event carries toolId — widget appends to selectedToolIds set; ToolRegistry/check_access is run by host before emitting";
     "REMOVE_TOOL event carries toolId — host removes from selectedToolIds and rebinds the LLMCall step";
     "promptPreview substitution is read-only; it does not affect the stored userPrompt value";
@@ -626,6 +958,7 @@ widget llm-step-config {
     "Simple tier is the default per progressive-disclosure guidelines; advanced tier state is not persisted across inspector opens";
     "tool picker overlay is inline (aria-modal false) — does not block keyboard access to the rest of the inspector tab";
     "saveButton disabled while toolPicker is open to prevent submitting a half-completed tool selection";
+    "Persona mode IS the simple path per progressive-disclosure guidelines; inline mode requires an explicit toggle";
   }
 
 }
