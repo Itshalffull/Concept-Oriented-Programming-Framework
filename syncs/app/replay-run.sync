@@ -1,0 +1,43 @@
+# Run replay sync — MAG-679, docs/plans/automation-ui-prd.md §5.2-9.
+#
+# Full-replay only: clones the original ProcessRun's spec_ref, spec_version,
+# and input, then starts a fresh run from the beginning.
+#
+# API Gap (full-replay trigger): ProcessRun has no dedicated replay action.
+# The trigger below uses ProcessRun/get_status as a stand-in — but in
+# practice the "Replay" button should call a ProcessRun/replay action
+# (accepting the run identifier and an optional start_from_step field) so
+# the intent is explicit and unambiguous. Track as follow-up: add
+# ProcessRun/replay(run: R, start_from_step: option String) -> ok(run: R).
+#
+# API Gap (selective redrive): StepRun has no action to pre-seed completed
+# step outputs for steps prior to a given start_from_step. Without such an
+# action (e.g. StepRun/seed(run_ref, step_key, output)) the sync engine
+# cannot clone prior-step outputs and selective redrive is not implementable.
+# Full replay (below) is the only safe path until that action is added.
+# Track as follow-up: add StepRun/seed(run_ref: String, step_key: String,
+# step_type: String, output: Bytes) -> ok(step: S).
+
+sync ReplayRun [eager]
+  purpose: "When a user replays a past process run, read its original spec reference, version, and input from state, then start a fresh run with those same inputs so the process re-executes from the beginning under the same conditions."
+when {
+  // GAP: no ProcessRun/replay action exists. ProcessRun/get_status is used
+  // here as a placeholder trigger. Replace with ProcessRun/replay once added.
+  ProcessRun/get_status: [ run: ?original_run ]
+    => ok(run: ?original_run; status: ?status; spec_ref: ?spec_ref)
+}
+where {
+  // Read the original run's versioned spec reference and serialised input
+  // from ProcessRun state so we can clone them into the new run.
+  ProcessRun: { ?original_run spec_version: ?spec_version; input: ?input }
+  // Guard: only replay runs that have reached a terminal state — replaying
+  // an active run would create a duplicate execution.
+  filter(?status = "completed" or ?status = "failed" or ?status = "cancelled")
+}
+then {
+  ProcessRun/start: [
+    spec_ref: ?spec_ref;
+    spec_version: ?spec_version;
+    input: ?input
+  ]
+}
