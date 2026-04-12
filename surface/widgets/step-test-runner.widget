@@ -1,0 +1,209 @@
+@version(1)
+widget step-test-runner {
+
+  purpose {
+    Inline test runner for a single ProcessSpec step. Presents an editable
+    sample-input JSON editor, a run button, and result panes for output and
+    error text. Supports reusing input from a previous run via a past-run
+    picker and a toggle that switches the input source between the manual
+    editor and a selected past run. The widget emits a TEST event carrying
+    the step identifier and current input; actual step-in-isolation invocation
+    belongs to the host, which routes the event to ProcessSpec/runStep or an
+    equivalent concept action.
+  }
+
+  anatomy {
+    root:              container    { Outermost wrapper for the entire test runner panel }
+    header:            text         { Title bar labelling the runner with the step kind and step id }
+    inputEditor:       interactive  { Editable textarea for the sample JSON input payload }
+    runButton:         action       { Button that dispatches the TEST event with the current input }
+    outputPane:        container    { Region that displays the successful step output on completion }
+    outputLine:        text         { A single line of text within the output pane }
+    errorPane:         container    { Region that displays the error message when the step fails }
+    usePastRunToggle:  interactive  { Toggle switch that switches the input source between manual and past-run }
+    pastRunPicker:     interactive  { Select control for choosing a past run whose input fills the editor }
+  }
+
+  states {
+    run {
+      idle [initial] {
+        on EDIT_INPUT       -> configuring-input;
+        on TEST             -> running;
+        on SELECT_PAST_RUN  -> idle;
+        on TOGGLE_PAST_RUN  -> idle;
+      }
+
+      configuring-input {
+        on COMMIT_INPUT     -> idle;
+        on TEST             -> running;
+        on ESCAPE           -> idle;
+        on TOGGLE_PAST_RUN  -> idle;
+        on SELECT_PAST_RUN  -> idle;
+        entry [focusInputEditor];
+      }
+
+      running {
+        on TEST_SUCCEEDED   -> success;
+        on TEST_FAILED      -> failure;
+        on CANCEL           -> idle;
+        entry [clearResults; markPending];
+        exit  [clearPending];
+      }
+
+      success {
+        on TEST             -> running;
+        on EDIT_INPUT       -> configuring-input;
+        on SELECT_PAST_RUN  -> success;
+        on TOGGLE_PAST_RUN  -> success;
+      }
+
+      failure {
+        on TEST             -> running;
+        on EDIT_INPUT       -> configuring-input;
+        on SELECT_PAST_RUN  -> failure;
+        on TOGGLE_PAST_RUN  -> failure;
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      Enter  -> TEST;
+      Escape -> CANCEL;
+    }
+    focus {
+      trap: false;
+      initial: inputEditor;
+      roving: false;
+      returnOnClose: runButton;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-labelledby: header;
+      };
+      header -> {
+        role: "heading";
+        aria-level: "3";
+      };
+      inputEditor -> {
+        role: "textbox";
+        aria-label: "Sample input JSON";
+        aria-multiline: "true";
+        aria-disabled: if state.run == "running" then "true" else "false";
+      };
+      runButton -> {
+        role: "button";
+        aria-label: "Run step test";
+        aria-busy: if state.run == "running" then "true" else "false";
+        aria-disabled: if state.run == "running" then "true" else "false";
+      };
+      outputPane -> {
+        role: "region";
+        aria-label: "Step output";
+        aria-live: "polite";
+        aria-relevant: "additions text";
+      };
+      errorPane -> {
+        role: "alert";
+        aria-label: "Step error";
+        aria-live: "assertive";
+      };
+      usePastRunToggle -> {
+        role: "switch";
+        aria-label: "Use input from past run";
+        aria-checked: if ?pastRunId then "true" else "false";
+      };
+      pastRunPicker -> {
+        role: "combobox";
+        aria-label: "Select past run";
+        aria-disabled: if ?pastRunId then "false" else "true";
+      };
+    }
+  }
+
+  props {
+    stepId:      String
+    stepKind:    String
+    sampleInput: option String
+    pastRunId:   option String
+    lastOutput:  option String
+    lastError:   option String
+  }
+
+  connect {
+    root -> {
+      data-part:        "root";
+      data-state:       state.run;
+      data-step-id:     ?stepId;
+      data-last-result: if state.run == "success" then "success" else if state.run == "failure" then "failure" else "none";
+    }
+
+    header -> {
+      data-part: "header";
+      id:        "step-test-runner-header";
+      text:      concat("Test: ", ?stepKind, " — ", ?stepId);
+    }
+
+    inputEditor -> {
+      data-part: "input-editor";
+      value:     ?sampleInput;
+      disabled:  if state.run == "running" then true else false;
+      onInput:   send(EDIT_INPUT);
+      onBlur:    send(COMMIT_INPUT);
+    }
+
+    runButton -> {
+      data-part: "run-button";
+      disabled:  if state.run == "running" then true else false;
+      onClick:   send(TEST, { stepId: ?stepId, input: ?sampleInput });
+      onKeyDown: send(TEST);
+    }
+
+    outputPane -> {
+      data-part: "output-pane";
+      hidden:    if state.run == "success" then false else true;
+    }
+
+    outputLine -> {
+      data-part: "output-line";
+      text:      ?lastOutput;
+    }
+
+    errorPane -> {
+      data-part: "error-pane";
+      hidden:    if state.run == "failure" then false else true;
+      text:      ?lastError;
+    }
+
+    usePastRunToggle -> {
+      data-part: "use-past-run-toggle";
+      checked:   if ?pastRunId then true else false;
+      onChange:  send(TOGGLE_PAST_RUN);
+    }
+
+    pastRunPicker -> {
+      data-part: "past-run-picker";
+      value:     ?pastRunId;
+      disabled:  if ?pastRunId then false else true;
+      onChange:  send(SELECT_PAST_RUN, { pastRunId: self.value });
+    }
+  }
+
+  invariant {
+    "running transitions to success or failure: after the TEST event the FSM enters running, then transitions to success on TEST_SUCCEEDED or to failure on TEST_FAILED — no other terminal states are reachable from running";
+    "success shows lastOutput in outputPane: when state is success outputPane is visible, outputLine text equals lastOutput, and errorPane is hidden";
+    "running state without a pending test invocation must not occur: runButton aria-busy and aria-disabled must both be true whenever state is running";
+    "data-state on root always reflects the current FSM state — idle, configuring-input, running, success, or failure";
+    "data-last-result on root is success when state is success, failure when state is failure, and none in all other states";
+    "data-step-id on root is always bound to the stepId prop";
+    "Enter key on runButton dispatches TEST carrying the current stepId and sampleInput values";
+    "Escape key while running dispatches CANCEL and transitions the FSM back to idle";
+    "pastRunPicker SELECT_PAST_RUN dispatches SELECT_PAST_RUN with the selected run's pastRunId, filling sampleInput from that run's recorded input";
+    "usePastRunToggle TOGGLE_PAST_RUN switches the input source between the manual inputEditor and the pastRunPicker selection";
+    "inputEditor is disabled while state is running";
+    "host is solely responsible for routing the TEST event to ProcessSpec/runStep or equivalent — this widget only emits events and never invokes concept actions directly";
+  }
+
+}
