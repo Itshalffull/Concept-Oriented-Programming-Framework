@@ -3,7 +3,7 @@
 // PluginRegistry Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, branch, complete,
+  createProgram, get as spGet, find, put, del, branch, complete,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -35,6 +35,32 @@ const _pluginRegistryHandler: FunctionalConceptHandler = {
         });
         return complete(b2, 'ok', { plugin: key });
       },
+    );
+
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
+  remove(input: Record<string, unknown>) {
+    if (!input.type || (typeof input.type === 'string' && (input.type as string).trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'type is required' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
+    const category = (input.category ?? input.type ?? '') as string;
+    const providerId = (input.provider_id ?? input.name ?? '') as string;
+
+    if (!providerId || (typeof providerId === 'string' && providerId.trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
+
+    const key = `${category}:${providerId}`;
+
+    let p = createProgram();
+    p = spGet(p, 'pluginregistry', key, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = del(b, 'pluginregistry', key);
+        return complete(b2, 'ok', { plugin: key });
+      },
+      (b) => complete(b, 'not_found', { type: category, name: providerId }),
     );
 
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;

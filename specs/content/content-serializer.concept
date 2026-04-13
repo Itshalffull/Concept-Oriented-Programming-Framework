@@ -119,6 +119,37 @@ concept ContentSerializer [S] {
       } -> error
     }
 
+    action deregister(provider: String, target: String) {
+      -> ok() {
+        Remove the registered serializer provider for the given target and
+        purge its index entry. After this call, serialize(target: ...) will
+        return no_provider until a replacement is registered.
+      }
+      -> not_found(target: String) {
+        No serializer provider is registered for this target; nothing was
+        removed.
+      }
+      -> error(message: String) {
+        Deregistration failed because target is an empty string or a
+        storage error occurred.
+      }
+
+      fixture deregister_ok {
+        provider: "micromark-serialize"
+        target: "markdown"
+      } after register_markdown
+      fixture deregister_not_found {
+        provider: "micromark-serialize"
+        target: "docx"
+      } -> not_found
+      fixture deregister_empty_target {
+        provider: "micromark-serialize"
+        target: ""
+      } -> error
+
+      reversal: register
+    }
+
     action listTargets() {
       -> ok(targets: list String) {
         Return the distinct set of output format targets for which at

@@ -1,0 +1,22 @@
+# Generic reverse deregistration: PluginRegistry → Highlight
+#
+# Mirrors register-highlight-provider-from-plugin-registry.sync.
+# When PluginRegistry/remove fires for type="highlight-provider"
+# (ProviderManifest/reload diff, UI plugin uninstaller, test teardown),
+# the named provider is removed from the Highlight concept for the given
+# language slot so that subsequent Highlight/highlight calls return no_provider.
+#
+# See docs/plans/virtual-provider-registry-prd.md §2 Layer C (reverse path)
+
+sync DeregisterHighlightProviderFromPluginRegistry [eager]
+  purpose: "Remove any highlight-provider from Highlight when PluginRegistry/remove fires, so that manifest-driven deregistration and runtime plugin removal reach Highlight without additional wiring"
+when {
+  PluginRegistry/remove: [ type: "highlight-provider"; name: ?n; slot: ?s ]
+    => ok(plugin: ?plugin)
+}
+then {
+  Highlight/deregister: [
+    provider: ?n;
+    language: ?s
+  ]
+}

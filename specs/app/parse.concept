@@ -101,6 +101,36 @@ concept Parse [P] {
       } -> no_provider
     }
 
+    action deregister(provider: String, language: String) {
+      -> ok() {
+        Remove the registered provider entry for the given language and purge
+        its index entry. After this call, parse(language: ...) will return
+        no_provider until a new provider is registered.
+      }
+      -> not_found(language: String) {
+        No provider is registered for this language; nothing was removed.
+      }
+      -> error(message: String) {
+        Deregistration failed because language is an empty string or a
+        storage error occurred.
+      }
+
+      fixture deregister_ok {
+        provider: "micromark-parse"
+        language: "markdown"
+      } after register_ok
+      fixture deregister_not_found {
+        provider: "micromark-parse"
+        language: "rust"
+      } -> not_found
+      fixture deregister_empty_language {
+        provider: "micromark-parse"
+        language: ""
+      } -> error
+
+      reversal: register
+    }
+
     action listLanguages() {
       -> ok(languages: list String) {
         Return the list of language identifiers for which a provider is

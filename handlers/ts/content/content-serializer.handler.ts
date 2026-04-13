@@ -7,7 +7,7 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, branch, complete, completeFrom,
+  createProgram, get, find, put, del, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -173,6 +173,30 @@ const _handler: FunctionalConceptHandler = {
           }
         }) as StorageProgram<Result>;
       },
+    ) as StorageProgram<Result>;
+  },
+
+  deregister(input: Record<string, unknown>) {
+    const target = input.target != null ? String(input.target) : '';
+
+    if (!target || target.trim() === '') {
+      return complete(createProgram(), 'error', {
+        message: 'target must be a non-empty string',
+      }) as StorageProgram<Result>;
+    }
+
+    // Look up the index entry for this target
+    let p = createProgram();
+    p = get(p, 'byTarget', target, 'existing');
+    return branch(p,
+      (b) => !!b.existing,
+      (b) => {
+        const id = String(b.existing);
+        let b2 = del(b, 'byTarget', target);
+        b2 = del(b2, 'providers', id);
+        return complete(b2, 'ok', {}) as StorageProgram<Result>;
+      },
+      (b) => complete(b, 'not_found', { target }) as StorageProgram<Result>,
     ) as StorageProgram<Result>;
   },
 

@@ -235,6 +235,92 @@ describe('Highlight functional handler', () => {
 
   });
 
+  describe('deregister', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = highlightHandler.deregister({ provider: "shiki", language: "typescript" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = highlightHandler.deregister({ provider: "shiki", language: "typescript" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = highlightHandler.deregister({ provider: "shiki", language: "typescript" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = highlightHandler.deregister({ provider: "shiki", language: "typescript" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = highlightHandler.deregister({ provider: "shiki", language: "typescript" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof highlightHandler.deregister !== 'function') return;
+      const result = await interpret(highlightHandler.deregister({ provider: "shiki", language: "typescript" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "deregister_ok" -> ok', async () => {
+      if (typeof highlightHandler.deregister !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_register_shiki = await interpret(highlightHandler.register({ provider: "shiki", language: "typescript", config: "{}" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_shiki?.output ?? {}));
+      const _fixtureInput = { provider: "shiki", language: "typescript" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(highlightHandler.deregister({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "deregister_not_found" -> not_found', async () => {
+      if (typeof highlightHandler.deregister !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(highlightHandler.deregister({ provider: "shiki", language: "cobol" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('not_found'));
+    });
+
+    it('fixture "deregister_empty_language" -> error', async () => {
+      if (typeof highlightHandler.deregister !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(highlightHandler.deregister({ provider: "shiki", language: "" }), storage);
+      expect(result.variant).not.toBe('ok');
+    });
+
+  });
+
   describe('listLanguages', () => {
     it('builds a valid StorageProgram', () => {
       const program = highlightHandler.listLanguages({  });
@@ -366,6 +452,7 @@ describe('Highlight functional handler', () => {
             fc.oneof(
               fc.record({ action: fc.constant('register'), input: fc.record({ provider: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string() }) }),
               fc.record({ action: fc.constant('highlight'), input: fc.record({ language: fc.string({ minLength: 1, maxLength: 50 }), text: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('deregister'), input: fc.record({ provider: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('listLanguages'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -399,6 +486,7 @@ describe('Highlight functional handler', () => {
             fc.oneof(
               fc.record({ action: fc.constant('register'), input: fc.record({ provider: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string({ minLength: 1, maxLength: 50 }), config: fc.string() }) }),
               fc.record({ action: fc.constant('highlight'), input: fc.record({ language: fc.string({ minLength: 1, maxLength: 50 }), text: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('deregister'), input: fc.record({ provider: fc.string({ minLength: 1, maxLength: 50 }), language: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('listLanguages'), input: fc.record({  }) }),
             ),
             { minLength: 1, maxLength: 5 },

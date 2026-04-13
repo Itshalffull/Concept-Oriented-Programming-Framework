@@ -1,0 +1,22 @@
+# Generic reverse deregistration: PluginRegistry → Parse
+#
+# Mirrors register-parse-provider-from-plugin-registry.sync.
+# When PluginRegistry/remove fires for type="parse-provider"
+# (ProviderManifest/reload diff, UI plugin uninstaller, test teardown),
+# the named provider is removed from the Parse concept for the given
+# language slot so that subsequent Parse/parse calls return no_provider.
+#
+# See docs/plans/virtual-provider-registry-prd.md §2 Layer C (reverse path)
+
+sync DeregisterParseProviderFromPluginRegistry [eager]
+  purpose: "Remove any parse-provider from Parse when PluginRegistry/remove fires, so that manifest-driven deregistration and runtime plugin removal reach Parse without additional wiring"
+when {
+  PluginRegistry/remove: [ type: "parse-provider"; name: ?n; slot: ?s ]
+    => ok(plugin: ?plugin)
+}
+then {
+  Parse/deregister: [
+    provider: ?n;
+    language: ?s
+  ]
+}

@@ -12,7 +12,7 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, branch, complete, completeFrom,
+  createProgram, get, find, put, del, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -111,6 +111,33 @@ const _highlightHandler: FunctionalConceptHandler = {
         }
         return complete(b, 'ok', { annotations }) as StorageProgram<Result>;
       },
+    ) as StorageProgram<Result>;
+  },
+
+  deregister(input: Record<string, unknown>) {
+    const language = input.language != null ? String(input.language) : '';
+
+    if (!language || language.trim() === '') {
+      return complete(createProgram(), 'error', {
+        message: 'language must be a non-empty string',
+      }) as StorageProgram<Result>;
+    }
+
+    // Look up the index entry for this language
+    let p = createProgram();
+    p = get(p, 'byLanguage', language, 'existing');
+    return branch(p,
+      (b) => !!b.existing,
+      (b) => {
+        const rec = (b.existing ?? {}) as { id?: string } | string;
+        const id = typeof rec === 'string' ? rec : (rec.id ?? '');
+        let b2 = del(b, 'byLanguage', language);
+        if (id) {
+          b2 = del(b2, 'definition', id);
+        }
+        return complete(b2, 'ok', {}) as StorageProgram<Result>;
+      },
+      (b) => complete(b, 'not_found', { language }) as StorageProgram<Result>,
     ) as StorageProgram<Result>;
   },
 

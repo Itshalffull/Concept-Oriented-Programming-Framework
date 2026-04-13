@@ -1,0 +1,27 @@
+# Generic reverse deregistration: PluginRegistry → ContentSerializer
+#
+# Mirrors register-content-serializer-from-plugin-registry.sync.
+# When PluginRegistry/remove fires for type="content-serializer"
+# (ProviderManifest/reload diff, UI plugin uninstaller, test teardown),
+# the named provider is removed from the ContentSerializer concept for the
+# given target slot so that subsequent ContentSerializer/serialize calls
+# return no_provider.
+#
+# Note: ContentSerializer uses "target" instead of "language" because
+# serialization outputs are identified by format target (markdown, html,
+# json, pdf) rather than by source language.
+#
+# See docs/plans/virtual-provider-registry-prd.md §2 Layer C (reverse path)
+
+sync DeregisterContentSerializerFromPluginRegistry [eager]
+  purpose: "Remove any content-serializer from ContentSerializer when PluginRegistry/remove fires, so that manifest-driven deregistration and runtime plugin removal reach ContentSerializer without additional wiring"
+when {
+  PluginRegistry/remove: [ type: "content-serializer"; name: ?n; slot: ?s ]
+    => ok(plugin: ?plugin)
+}
+then {
+  ContentSerializer/deregister: [
+    provider: ?n;
+    target: ?s
+  ]
+}

@@ -13,7 +13,7 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, find, get, put, branch, complete, completeFrom,
+  createProgram, find, get, put, del, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -140,6 +140,31 @@ export const parseHandler: FunctionalConceptHandler = {
         }) as StorageProgram<Result>;
       },
       (b) => complete(b, 'no_provider', { language }) as StorageProgram<Result>,
+    ) as StorageProgram<Result>;
+  },
+
+  deregister(input: Record<string, unknown>) {
+    const language = input.language != null ? String(input.language) : '';
+
+    if (!language || language.trim() === '') {
+      return complete(createProgram(), 'error', {
+        message: 'language is required',
+      }) as StorageProgram<Result>;
+    }
+
+    // Look up the index entry for this language
+    let p = createProgram();
+    p = get(p, 'byLanguage', language, 'existing');
+    return branch(p,
+      (b) => b.existing != null,
+      (b) => {
+        const entry = b.existing as { id?: string } | null;
+        const id = entry?.id ?? String(b.existing);
+        let b2 = del(b, 'byLanguage', language);
+        b2 = del(b2, 'providers', id);
+        return complete(b2, 'ok', {}) as StorageProgram<Result>;
+      },
+      (b) => complete(b, 'not_found', { language }) as StorageProgram<Result>,
     ) as StorageProgram<Result>;
   },
 
