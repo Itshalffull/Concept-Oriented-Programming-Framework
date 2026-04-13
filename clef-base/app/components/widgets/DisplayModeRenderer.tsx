@@ -374,7 +374,7 @@ const ComponentMappingRenderer: React.FC<{
               gap: 4,
               alignItems: 'center',
             }}>
-              {slot.sources.map((src, i) => (
+              {(Array.isArray(slot.sources) ? slot.sources : []).map((src, i) => (
                 <React.Fragment key={i}>
                   {resolveSource(src, entity, formatter).node}
                 </React.Fragment>
