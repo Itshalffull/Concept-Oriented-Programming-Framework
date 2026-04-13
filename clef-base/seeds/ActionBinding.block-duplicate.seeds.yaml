@@ -1,0 +1,29 @@
+# ActionBinding seeds — block-duplicate keyboard chord (PP-duplicate-block)
+#
+# Registers the Cmd+D / Ctrl+D keyboard shortcut for block duplication.
+# The handler (RecursiveBlockEditor.handleBlockDuplicate) invokes the
+# "block-duplicate" ActionBinding directly; this seed records the canonical
+# keyboard metadata consumed by the keyboard-help modal and CommandPalette.
+#
+# Single-block path:  duplicates focusedBlockId (appended immediately below).
+# Multi-select path:  duplicates every block in selectedBlockIds in order.
+#
+# The ActionBinding target (ContentNode/clone + Outline/addChild) is declared
+# in ActionBinding.block-handle.seeds.yaml.  This file adds the chord
+# annotation so the binding appears in the "Edit" section of the shortcut
+# cheat-sheet rendered by PP-keyboard-help.
+#
+# Architecture doc §clef-base — PP-duplicate-block
+
+concept: ActionBinding
+action: bind
+entries:
+  - name: block-duplicate-keyboard
+    binding: block-duplicate
+    target: "ContentNode/clone"
+    parameterMap: '{"node":"context.blockId","insertAfter":"context.blockId","parent":"context.parentId"}'
+    executionPolicy: "optimistic"
+    keyboard: "Meta+D"
+    label: "Duplicate block"
+    section: "Edit"
+    tags: ["editor_keyboard_chord"]

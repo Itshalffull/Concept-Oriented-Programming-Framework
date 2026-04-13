@@ -618,6 +618,52 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
     }
   }, [selectedBlockIds, anchorBlockId, children, canEdit, computeRange, clearSelection]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // =========================================================================
+  // Block duplicate — Cmd+D / Ctrl+D (PP-duplicate-block)
+  // =========================================================================
+  //
+  // Single-block path:  clone focusedBlockId via ActionBinding "block-duplicate".
+  // Multi-select path:  clone each selected block in order via the same binding.
+  //
+  // The binding target is ContentNode/clone + Outline/addChild wired through
+  // the sync that reads context.blockId / context.parentId / context.insertAfter.
+  // Each clone is appended immediately below its original (insertAfter = blockId).
+  //
+  // Undo: each clone+addChild pair is pushed onto UndoStack by the sync; the
+  // multi-select path results in N individual undo steps (one per block).
+  // =========================================================================
+
+  const handleBlockDuplicate = useCallback(async () => {
+    if (!canEdit) return;
+
+    const blockIds =
+      selectedBlockIds.size > 0
+        ? Array.from(selectedBlockIds)
+        : focusedBlockIdRef.current
+          ? [focusedBlockIdRef.current]
+          : [];
+
+    if (blockIds.length === 0) return;
+
+    // Determine the parent of each block from the children list.
+    // RecursiveBlockEditor manages top-level children whose parent is rootNodeId.
+    for (const blockId of blockIds) {
+      try {
+        await invoke('ActionBinding', 'invoke', {
+          binding: 'block-duplicate',
+          context: JSON.stringify({
+            blockId,
+            parentId: rootNodeId,
+          }),
+        });
+      } catch (err) {
+        console.error('[RecursiveBlockEditor] block-duplicate failed for block:', blockId, err);
+      }
+    }
+
+    loadChildren();
+  }, [selectedBlockIds, canEdit, rootNodeId, invoke, loadChildren]);
+
   const handleBatchDelete = useCallback(async () => {
     if (selectedBlockIds.size === 0 || !canEdit) return;
     const ids = Array.from(selectedBlockIds);
@@ -883,6 +929,13 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
       setVersionHistoryOpen((prev) => !prev);
       return;
     }
+    // Cmd+D / Ctrl+D — duplicate focused block or all selected blocks (PP-duplicate-block)
+    if (e.key === 'd' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleBlockDuplicate();
+      return;
+    }
     // Cmd+F / Ctrl+F — open find-replace overlay (PP-find-replace)
     if (e.key === 'f' && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
@@ -903,7 +956,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
     }
     // Multi-select keyboard handler runs unconditionally (handles Escape/arrows/delete)
     handleMultiSelectKeyDown(e);
-  }, [fsmState, findReplaceOpen, openExportDialog, openKeyboardHelp, openSlashMenu, closeSlashMenu, handleMultiSelectKeyDown, openCommandPalette]);
+  }, [fsmState, findReplaceOpen, openExportDialog, openKeyboardHelp, openSlashMenu, closeSlashMenu, handleMultiSelectKeyDown, openCommandPalette, handleBlockDuplicate]);
 
   // =========================================================================
   // Paste handler — clipboard image → MediaAsset/createMedia via ActionBinding
