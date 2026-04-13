@@ -23,11 +23,16 @@ const SOURCES = {
 // Agents that need a local references folder. Keyed by agent id; value is
 // the list of reference filenames (from SOURCES) to copy in.
 const AGENT_REFERENCES = {
-  'concept-parameter-update':   ['concept-grammar.md', 'jackson-methodology.md'],
-  'seed-data':                  ['creation-routing.md'],
-  'clef-base':                  ['creation-routing.md'],
-  'concept-scaffold-gen':       ['creation-routing.md'],
-  'content-type-scaffold-gen':  ['creation-routing.md'],
+  'concept-parameter-update':       ['concept-grammar.md', 'jackson-methodology.md'],
+  'seed-data':                      ['creation-routing.md'],
+  'clef-base':                      ['creation-routing.md'],
+  'concept-scaffold-gen':           ['creation-routing.md'],
+  'content-type-scaffold-gen':      ['creation-routing.md'],
+  // Surface agents author bespoke editor widgets (ViewEditor, SchemaEditor,
+  // FlowBuilder, FormBuilder, UserSyncEditor) which MUST implement the
+  // mode + context props contract per CUX-02 to participate in Tier 1a.
+  'surface-component-scaffold-gen': ['creation-routing.md'],
+  'surface-widget-handler-gen':     ['creation-routing.md'],
 };
 
 const AGENT_DIRS = [
