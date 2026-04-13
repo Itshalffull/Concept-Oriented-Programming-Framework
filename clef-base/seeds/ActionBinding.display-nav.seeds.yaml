@@ -1,0 +1,276 @@
+# ActionBinding seeds — display widget keyboard navigation (KB-18).
+#
+# PRD:  docs/plans/keybinding-prd.md Phase H §18
+# Card: KB-18
+#
+# Navigation ActionBindings for the three primary display widgets:
+#   DataTable (scope: app.display.table)
+#   BoardDisplay (scope: app.display.board)
+#   CardGridDisplay (scope: app.display.cardgrid)
+#
+# Each binding targets a DisplayNav surface action. DisplayNav/dispatch
+# fires a `clef:display-nav` CustomEvent on the focused element's
+# nearest ancestor with data-keybinding-scope set. The widget's
+# useEffect listener receives the event and updates its internal
+# selection state (selectedRow / selectedCol / selectedCard indices).
+#
+# This keeps concept-layer clean — no selection state lives in the
+# kernel. Widgets own their cursor state; ActionBindings own the
+# key → action mapping; the event bridge is the only coupling.
+#
+# parameterMap carries `action` — the semantic navigation direction
+# string consumed by the widget's event handler. Grid math (wrapping,
+# column count for cardgrid) is handled entirely in the widget.
+#
+# executionPolicy: "auto" — navigation is synchronous and safe to retry.
+# No toolbar_command / slash_command / context_menu exposure: these
+# are keyboard-only bindings not intended for the command palette.
+
+concept: ActionBinding
+action: bind
+entries:
+
+  # ==================================================================
+  # DataTable navigation (scope: app.display.table)
+  # ==================================================================
+
+  # ── Row navigation ────────────────────────────────────────────────
+
+  - name: table-row-prev
+    binding: table-row-prev
+    target: "DisplayNav/dispatch"
+    parameterMap: '{"action":"table-row-prev"}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    palette_command: false
+    context_menu: false
+    section: "Navigation"
+    label: "Table: previous row"
+    description: "Move keyboard focus to the row above the current selection"
+
+  - name: table-row-next
+    binding: table-row-next
+    target: "DisplayNav/dispatch"
+    parameterMap: '{"action":"table-row-next"}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    palette_command: false
+    context_menu: false
+    section: "Navigation"
+    label: "Table: next row"
+    description: "Move keyboard focus to the row below the current selection"
+
+  # ── Cell navigation ───────────────────────────────────────────────
+
+  - name: table-cell-prev
+    binding: table-cell-prev
+    target: "DisplayNav/dispatch"
+    parameterMap: '{"action":"table-cell-prev"}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    palette_command: false
+    context_menu: false
+    section: "Navigation"
+    label: "Table: previous cell"
+    description: "Move keyboard focus to the cell to the left of the current selection"
+
+  - name: table-cell-next
+    binding: table-cell-next
+    target: "DisplayNav/dispatch"
+    parameterMap: '{"action":"table-cell-next"}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    palette_command: false
+    context_menu: false
+    section: "Navigation"
+    label: "Table: next cell"
+    description: "Move keyboard focus to the cell to the right of the current selection"
+
+  # ── Row activation and expand ─────────────────────────────────────
+
+  - name: table-row-activate
+    binding: table-row-activate
+    target: "DisplayNav/dispatch"
+    parameterMap: '{"action":"table-row-activate"}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    palette_command: false
+    context_menu: false
+    section: "Navigation"
+    label: "Table: activate row"
+    description: "Activate (click) the currently focused table row"
+
+  - name: table-row-toggle-expand
+    binding: table-row-toggle-expand
+    target: "DisplayNav/dispatch"
+    parameterMap: '{"action":"table-row-toggle-expand"}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    palette_command: false
+    context_menu: false
+    section: "Navigation"
+    label: "Table: toggle row expand"
+    description: "Expand or collapse the currently focused expandable table row"
+
+  # ==================================================================
+  # BoardDisplay navigation (scope: app.display.board)
+  # ==================================================================
+
+  # ── Column navigation ─────────────────────────────────────────────
+
+  - name: board-col-prev
+    binding: board-col-prev
+    target: "DisplayNav/dispatch"
+    parameterMap: '{"action":"board-col-prev"}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    palette_command: false
+    context_menu: false
+    section: "Navigation"
+    label: "Board: previous column"
+    description: "Move keyboard focus to the previous board column"
+
+  - name: board-col-next
+    binding: board-col-next
+    target: "DisplayNav/dispatch"
+    parameterMap: '{"action":"board-col-next"}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    palette_command: false
+    context_menu: false
+    section: "Navigation"
+    label: "Board: next column"
+    description: "Move keyboard focus to the next board column"
+
+  # ── Card navigation within column ────────────────────────────────
+
+  - name: board-card-prev
+    binding: board-card-prev
+    target: "DisplayNav/dispatch"
+    parameterMap: '{"action":"board-card-prev"}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    palette_command: false
+    context_menu: false
+    section: "Navigation"
+    label: "Board: previous card"
+    description: "Move keyboard focus to the card above in the current column"
+
+  - name: board-card-next
+    binding: board-card-next
+    target: "DisplayNav/dispatch"
+    parameterMap: '{"action":"board-card-next"}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    palette_command: false
+    context_menu: false
+    section: "Navigation"
+    label: "Board: next card"
+    description: "Move keyboard focus to the card below in the current column"
+
+  # ── Card activation and move ──────────────────────────────────────
+
+  - name: board-card-activate
+    binding: board-card-activate
+    target: "DisplayNav/dispatch"
+    parameterMap: '{"action":"board-card-activate"}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    palette_command: false
+    context_menu: false
+    section: "Navigation"
+    label: "Board: activate card"
+    description: "Activate (click) the currently focused board card"
+
+  - name: board-card-move-right
+    binding: board-card-move-right
+    target: "DisplayNav/dispatch"
+    parameterMap: '{"action":"board-card-move-right"}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    palette_command: false
+    context_menu: false
+    section: "Navigation"
+    label: "Board: move card right"
+    description: "Move the currently focused card to the next column (uses board-card-move binding from DEAD-02)"
+
+  # ==================================================================
+  # CardGridDisplay navigation (scope: app.display.cardgrid)
+  # ==================================================================
+
+  - name: cardgrid-card-prev-row
+    binding: cardgrid-card-prev-row
+    target: "DisplayNav/dispatch"
+    parameterMap: '{"action":"cardgrid-card-prev-row"}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    palette_command: false
+    context_menu: false
+    section: "Navigation"
+    label: "Card grid: row up"
+    description: "Move keyboard focus up one grid row (grid column count handled by widget)"
+
+  - name: cardgrid-card-next-row
+    binding: cardgrid-card-next-row
+    target: "DisplayNav/dispatch"
+    parameterMap: '{"action":"cardgrid-card-next-row"}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    palette_command: false
+    context_menu: false
+    section: "Navigation"
+    label: "Card grid: row down"
+    description: "Move keyboard focus down one grid row (grid column count handled by widget)"
+
+  - name: cardgrid-card-prev
+    binding: cardgrid-card-prev
+    target: "DisplayNav/dispatch"
+    parameterMap: '{"action":"cardgrid-card-prev"}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    palette_command: false
+    context_menu: false
+    section: "Navigation"
+    label: "Card grid: previous card"
+    description: "Move keyboard focus to the previous card in the grid"
+
+  - name: cardgrid-card-next
+    binding: cardgrid-card-next
+    target: "DisplayNav/dispatch"
+    parameterMap: '{"action":"cardgrid-card-next"}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    palette_command: false
+    context_menu: false
+    section: "Navigation"
+    label: "Card grid: next card"
+    description: "Move keyboard focus to the next card in the grid"
+
+  - name: cardgrid-card-activate
+    binding: cardgrid-card-activate
+    target: "DisplayNav/dispatch"
+    parameterMap: '{"action":"cardgrid-card-activate"}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    palette_command: false
+    context_menu: false
+    section: "Navigation"
+    label: "Card grid: activate card"
+    description: "Activate (click) the currently focused card"

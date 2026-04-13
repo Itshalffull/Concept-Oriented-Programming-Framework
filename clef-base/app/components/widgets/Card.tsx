@@ -20,6 +20,9 @@ export interface CardProps {
   onClick?: () => void;
   className?: string;
   style?: React.CSSProperties;
+  /** Keyboard-navigation selection state (KB-18) */
+  'data-selected'?: string;
+  'aria-selected'?: boolean;
 }
 
 export const Card: React.FC<CardProps> = ({
@@ -34,6 +37,8 @@ export const Card: React.FC<CardProps> = ({
   onClick,
   className,
   style,
+  'data-selected': dataSelected,
+  'aria-selected': ariaSelected,
 }) => {
   const interactive = clickable || !!onClick;
 
@@ -41,10 +46,12 @@ export const Card: React.FC<CardProps> = ({
     <div
       role={interactive ? 'article' : 'region'}
       aria-labelledby={title ? 'card-title' : undefined}
+      aria-selected={ariaSelected}
       data-part="card"
       data-variant={variant}
       data-clickable={interactive ? 'true' : 'false'}
       data-padding={padding}
+      data-selected={dataSelected}
       tabIndex={interactive ? 0 : undefined}
       onClick={interactive ? onClick : undefined}
       className={className}

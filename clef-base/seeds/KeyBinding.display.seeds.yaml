@@ -1,0 +1,262 @@
+# KeyBinding seeds — display widget keyboard navigation (KB-18).
+#
+# PRD:  docs/plans/keybinding-prd.md Phase H §18
+# Card: KB-18
+#
+# Registers arrow-key and Enter/Space navigation bindings for the three
+# primary display widgets. Each widget sets a data-keybinding-scope
+# attribute on its root container so the global useKeyBindings dispatcher
+# can resolve the correct scope.
+#
+# Scope hierarchy:
+#   app.display.table    — DataTable root container
+#   app.display.board    — BoardDisplay root container
+#   app.display.cardgrid — CardGridDisplay root container
+#
+# All bindings use priority: 10 (higher than the default 0 so they win
+# over app-level arrow bindings but lower than modal bindings at 100).
+#
+# onlyOutsideTextInput: true for all — arrow keys inside a text input
+# should move the cursor, not the selection.
+#
+# phase: "capture" — navigation events should be intercepted before they
+# reach the browser's default scroll behaviour.
+#
+# Companion ActionBindings live in ActionBinding.display-nav.seeds.yaml.
+
+concept: KeyBinding
+action: register
+entries:
+
+  # ==================================================================
+  # DataTable navigation  (scope: app.display.table)
+  # ==================================================================
+
+  - binding: kb-table-row-up
+    label: "Table: Previous Row"
+    description: "Move keyboard selection to the row above"
+    category: "Navigation"
+    scope: "app.display.table"
+    priority: 10
+    chord: '[{"mod":[],"key":"ArrowUp","code":"ArrowUp"}]'
+    phase: "capture"
+    onlyOutsideTextInput: true
+    overridesBrowser: false
+    actionBinding: "table-row-prev"
+    params: ""
+
+  - binding: kb-table-row-down
+    label: "Table: Next Row"
+    description: "Move keyboard selection to the row below"
+    category: "Navigation"
+    scope: "app.display.table"
+    priority: 10
+    chord: '[{"mod":[],"key":"ArrowDown","code":"ArrowDown"}]'
+    phase: "capture"
+    onlyOutsideTextInput: true
+    overridesBrowser: false
+    actionBinding: "table-row-next"
+    params: ""
+
+  - binding: kb-table-cell-left
+    label: "Table: Previous Cell"
+    description: "Move keyboard selection to the cell on the left"
+    category: "Navigation"
+    scope: "app.display.table"
+    priority: 10
+    chord: '[{"mod":[],"key":"ArrowLeft","code":"ArrowLeft"}]'
+    phase: "capture"
+    onlyOutsideTextInput: true
+    overridesBrowser: false
+    actionBinding: "table-cell-prev"
+    params: ""
+
+  - binding: kb-table-cell-right
+    label: "Table: Next Cell"
+    description: "Move keyboard selection to the cell on the right"
+    category: "Navigation"
+    scope: "app.display.table"
+    priority: 10
+    chord: '[{"mod":[],"key":"ArrowRight","code":"ArrowRight"}]'
+    phase: "capture"
+    onlyOutsideTextInput: true
+    overridesBrowser: false
+    actionBinding: "table-cell-next"
+    params: ""
+
+  - binding: kb-table-row-click
+    label: "Table: Activate Row"
+    description: "Activate the currently focused table row (equivalent to click)"
+    category: "Navigation"
+    scope: "app.display.table"
+    priority: 10
+    chord: '[{"mod":[],"key":"Enter","code":"Enter"}]'
+    phase: "capture"
+    onlyOutsideTextInput: true
+    overridesBrowser: false
+    actionBinding: "table-row-activate"
+    params: ""
+
+  - binding: kb-table-row-expand
+    label: "Table: Toggle Row Expand"
+    description: "Expand or collapse the currently focused expandable row"
+    category: "Navigation"
+    scope: "app.display.table"
+    priority: 10
+    chord: '[{"mod":[],"key":" ","code":"Space"}]'
+    phase: "capture"
+    onlyOutsideTextInput: true
+    overridesBrowser: false
+    actionBinding: "table-row-toggle-expand"
+    params: ""
+
+  # ==================================================================
+  # BoardDisplay navigation  (scope: app.display.board)
+  # ==================================================================
+
+  - binding: kb-board-col-left
+    label: "Board: Previous Column"
+    description: "Move keyboard focus to the previous board column"
+    category: "Navigation"
+    scope: "app.display.board"
+    priority: 10
+    chord: '[{"mod":[],"key":"ArrowLeft","code":"ArrowLeft"}]'
+    phase: "capture"
+    onlyOutsideTextInput: true
+    overridesBrowser: false
+    actionBinding: "board-col-prev"
+    params: ""
+
+  - binding: kb-board-col-right
+    label: "Board: Next Column"
+    description: "Move keyboard focus to the next board column"
+    category: "Navigation"
+    scope: "app.display.board"
+    priority: 10
+    chord: '[{"mod":[],"key":"ArrowRight","code":"ArrowRight"}]'
+    phase: "capture"
+    onlyOutsideTextInput: true
+    overridesBrowser: false
+    actionBinding: "board-col-next"
+    params: ""
+
+  - binding: kb-board-card-up
+    label: "Board: Previous Card"
+    description: "Move keyboard focus to the card above in the current column"
+    category: "Navigation"
+    scope: "app.display.board"
+    priority: 10
+    chord: '[{"mod":[],"key":"ArrowUp","code":"ArrowUp"}]'
+    phase: "capture"
+    onlyOutsideTextInput: true
+    overridesBrowser: false
+    actionBinding: "board-card-prev"
+    params: ""
+
+  - binding: kb-board-card-down
+    label: "Board: Next Card"
+    description: "Move keyboard focus to the card below in the current column"
+    category: "Navigation"
+    scope: "app.display.board"
+    priority: 10
+    chord: '[{"mod":[],"key":"ArrowDown","code":"ArrowDown"}]'
+    phase: "capture"
+    onlyOutsideTextInput: true
+    overridesBrowser: false
+    actionBinding: "board-card-next"
+    params: ""
+
+  - binding: kb-board-card-click
+    label: "Board: Activate Card"
+    description: "Activate (click) the currently focused board card"
+    category: "Navigation"
+    scope: "app.display.board"
+    priority: 10
+    chord: '[{"mod":[],"key":"Enter","code":"Enter"}]'
+    phase: "capture"
+    onlyOutsideTextInput: true
+    overridesBrowser: false
+    actionBinding: "board-card-activate"
+    params: ""
+
+  - binding: kb-board-card-move-right
+    label: "Board: Move Card Right"
+    description: "Move the focused card to the next column (Cmd+Enter)"
+    category: "Navigation"
+    scope: "app.display.board"
+    priority: 20
+    chord: '[{"mod":["mod"],"key":"Enter","code":"Enter"}]'
+    phase: "capture"
+    onlyOutsideTextInput: true
+    overridesBrowser: false
+    actionBinding: "board-card-move-right"
+    params: ""
+
+  # ==================================================================
+  # CardGridDisplay navigation  (scope: app.display.cardgrid)
+  # ==================================================================
+
+  - binding: kb-card-up
+    label: "Card Grid: Row Up"
+    description: "Move keyboard focus up one grid row"
+    category: "Navigation"
+    scope: "app.display.cardgrid"
+    priority: 10
+    chord: '[{"mod":[],"key":"ArrowUp","code":"ArrowUp"}]'
+    phase: "capture"
+    onlyOutsideTextInput: true
+    overridesBrowser: false
+    actionBinding: "cardgrid-card-prev-row"
+    params: ""
+
+  - binding: kb-card-down
+    label: "Card Grid: Row Down"
+    description: "Move keyboard focus down one grid row"
+    category: "Navigation"
+    scope: "app.display.cardgrid"
+    priority: 10
+    chord: '[{"mod":[],"key":"ArrowDown","code":"ArrowDown"}]'
+    phase: "capture"
+    onlyOutsideTextInput: true
+    overridesBrowser: false
+    actionBinding: "cardgrid-card-next-row"
+    params: ""
+
+  - binding: kb-card-left
+    label: "Card Grid: Previous Card"
+    description: "Move keyboard focus to the previous card"
+    category: "Navigation"
+    scope: "app.display.cardgrid"
+    priority: 10
+    chord: '[{"mod":[],"key":"ArrowLeft","code":"ArrowLeft"}]'
+    phase: "capture"
+    onlyOutsideTextInput: true
+    overridesBrowser: false
+    actionBinding: "cardgrid-card-prev"
+    params: ""
+
+  - binding: kb-card-right
+    label: "Card Grid: Next Card"
+    description: "Move keyboard focus to the next card"
+    category: "Navigation"
+    scope: "app.display.cardgrid"
+    priority: 10
+    chord: '[{"mod":[],"key":"ArrowRight","code":"ArrowRight"}]'
+    phase: "capture"
+    onlyOutsideTextInput: true
+    overridesBrowser: false
+    actionBinding: "cardgrid-card-next"
+    params: ""
+
+  - binding: kb-card-click
+    label: "Card Grid: Activate Card"
+    description: "Activate (click) the currently focused card"
+    category: "Navigation"
+    scope: "app.display.cardgrid"
+    priority: 10
+    chord: '[{"mod":[],"key":"Enter","code":"Enter"}]'
+    phase: "capture"
+    onlyOutsideTextInput: true
+    overridesBrowser: false
+    actionBinding: "cardgrid-card-activate"
+    params: ""

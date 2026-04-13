@@ -6,9 +6,18 @@
  * Groups data rows into columns based on a grouping field. Each column
  * shows cards that can be clicked. The first field with a "badge" formatter
  * is used as the group-by field by default, or the first field if none.
+ *
+ * Keyboard navigation (KB-18):
+ * The root container carries data-keybinding-scope="app.display.board" so
+ * the global useKeyBindings dispatcher routes arrow-key events through the
+ * KeyBinding / ActionBinding pipeline. The widget listens for the resulting
+ * `clef:display-nav` CustomEvent and updates its column / card selection state.
+ *
+ * Navigation signals: board-col-prev, board-col-next, board-card-prev,
+ * board-card-next, board-card-activate, board-card-move-right.
  */
 
-import React, { useMemo, useState, useCallback, useRef } from 'react';
+import React, { useMemo, useState, useCallback, useRef, useEffect } from 'react';
 import type { FieldConfig } from './TableDisplay';
 import { resolveRowAction, type RowActionConfig } from '../../../lib/row-actions';
 import { ActionButtonCompact } from './ActionButton';
@@ -174,6 +183,11 @@ export const BoardDisplay: React.FC<BoardDisplayProps> = ({
 }) => {
   // Track which column is the current drag-over target for visual feedback
   const [dragOverCol, setDragOverCol] = useState<string | null>(null);
+
+  // Keyboard navigation state (KB-18)
+  const [selectedCol, setSelectedCol] = useState<number>(-1);
+  const [selectedCard, setSelectedCard] = useState<number>(-1);
+  const rootRef = useRef<HTMLDivElement>(null);
   // Determine the grouping field
   const groupField = useMemo(() => {
     if (groupBy) return groupBy;
@@ -199,6 +213,71 @@ export const BoardDisplay: React.FC<BoardDisplayProps> = ({
     return [...groups.entries()].map(([key, rows]) => ({ key, rows }));
   }, [data, groupField]);
 
+  // ── Keyboard navigation (KB-18) ───────────────────────────────────
+  // Stable refs so the event listener does not need to be re-registered
+  // on every render.
+  const columnsRef = useRef(columns);
+  columnsRef.current = columns;
+  const onRowClickRef = useRef(onRowClick);
+  onRowClickRef.current = onRowClick;
+  const onCardMoveRef = useRef(onCardMove);
+  onCardMoveRef.current = onCardMove;
+
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el) return;
+
+    const handleNav = (e: Event) => {
+      const { action } = (e as CustomEvent<{ action: string }>).detail;
+      const cols = columnsRef.current;
+
+      setSelectedCol(prevCol => {
+        const colCount = cols.length;
+        if (colCount === 0) return prevCol;
+        switch (action) {
+          case 'board-col-prev':
+            return prevCol <= 0 ? 0 : prevCol - 1;
+          case 'board-col-next':
+            return Math.min(colCount - 1, prevCol < 0 ? 0 : prevCol + 1);
+          default:
+            return prevCol;
+        }
+      });
+
+      setSelectedCard(prevCard => {
+        const colIdx = selectedCol >= 0 ? selectedCol : 0;
+        const col = cols[colIdx];
+        const cardCount = col?.rows.length ?? 0;
+        switch (action) {
+          case 'board-card-prev':
+            return prevCard <= 0 ? 0 : prevCard - 1;
+          case 'board-card-next':
+            return Math.min(cardCount - 1, prevCard < 0 ? 0 : prevCard + 1);
+          case 'board-card-activate': {
+            const row = col?.rows[prevCard >= 0 ? prevCard : 0];
+            if (row) onRowClickRef.current?.(row);
+            return prevCard;
+          }
+          case 'board-card-move-right': {
+            const colIdx2 = selectedCol >= 0 ? selectedCol : 0;
+            const col2 = cols[colIdx2];
+            const nextCol = cols[colIdx2 + 1];
+            if (!col2 || !nextCol) return prevCard;
+            const row = col2.rows[prevCard >= 0 ? prevCard : 0];
+            if (!row || !onCardMoveRef.current) return prevCard;
+            onCardMoveRef.current(rowId(row, []), nextCol.key);
+            return prevCard;
+          }
+          default:
+            return prevCard;
+        }
+      });
+    };
+
+    el.addEventListener('clef:display-nav', handleNav);
+    return () => el.removeEventListener('clef:display-nav', handleNav);
+  }, [selectedCol]); // selectedCol in dep array so board-card-* reads correct column
+
   if (columns.length === 0) {
     return (
       <div style={{
@@ -212,17 +291,23 @@ export const BoardDisplay: React.FC<BoardDisplayProps> = ({
   }
 
   return (
-    <div style={{
-      position: 'relative',
-      display: 'flex',
-      gap: 'var(--spacing-md)',
-      overflowX: 'auto',
-      padding: 'var(--spacing-sm)',
-      minHeight: 200,
-    }}>
-      {columns.map(col => (
+    <div
+      ref={rootRef}
+      data-keybinding-scope="app.display.board"
+      tabIndex={0}
+      style={{
+        position: 'relative',
+        display: 'flex',
+        gap: 'var(--spacing-md)',
+        overflowX: 'auto',
+        padding: 'var(--spacing-sm)',
+        minHeight: 200,
+      }}
+    >
+      {columns.map((col, colIdx) => (
         <div
           key={col.key}
+          data-selected-col={selectedCol === colIdx ? 'true' : undefined}
           data-drag-over={dragOverCol === col.key ? 'true' : undefined}
           onDragOver={onCardMove ? (e) => {
             e.preventDefault();
@@ -289,6 +374,8 @@ export const BoardDisplay: React.FC<BoardDisplayProps> = ({
             {col.rows.map((row, i) => (
               <div
                 key={i}
+                data-selected={selectedCol === colIdx && selectedCard === i ? 'true' : undefined}
+                aria-selected={selectedCol === colIdx && selectedCard === i}
                 draggable={onCardMove ? true : false}
                 onDragStart={onCardMove ? (e) => {
                   e.dataTransfer.effectAllowed = 'move';

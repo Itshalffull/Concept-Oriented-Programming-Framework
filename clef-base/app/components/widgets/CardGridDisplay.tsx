@@ -3,9 +3,22 @@
 /**
  * CardGridDisplay — renders View data as a grid of cards.
  * Display type component: receives data + field config from ViewRenderer.
+ *
+ * Keyboard navigation (KB-18):
+ * The root container carries data-keybinding-scope="app.display.cardgrid" so
+ * the global useKeyBindings dispatcher routes arrow-key events through the
+ * KeyBinding / ActionBinding pipeline. The widget listens for the resulting
+ * `clef:display-nav` CustomEvent and updates its card selection index.
+ *
+ * Grid math (row vs. column movement) is handled here because only the
+ * widget knows the rendered column count at runtime. The ActionBinding
+ * sends "prev-row" / "next-row" and the widget multiplies by column count.
+ *
+ * Navigation signals: cardgrid-card-prev-row, cardgrid-card-next-row,
+ * cardgrid-card-prev, cardgrid-card-next, cardgrid-card-activate.
  */
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Card } from './Card';
 import { Badge } from './Badge';
 import type { FieldConfig } from './TableDisplay';
@@ -149,12 +162,86 @@ function formatCardValue(value: unknown, formatter?: string): React.ReactNode {
 export const CardGridDisplay: React.FC<CardGridDisplayProps> = ({ data, fields, onRowClick, rowActions, onRowAction, renderItem }) => {
   const visibleFields = fields.filter(f => f.visible !== false);
 
+  // Keyboard navigation state (KB-18)
+  const [selectedCard, setSelectedCard] = useState<number>(-1);
+  const rootRef = useRef<HTMLDivElement>(null);
+  // CSS-grid column count is not directly queryable; use a heuristic based on
+  // computed container width. We approximate columns as floor(containerWidth / 260)
+  // clamped to [1, data.length]. Recalculated on resize via ResizeObserver.
+  const colCountRef = useRef<number>(1);
+
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el) return;
+
+    const updateCols = () => {
+      const w = el.getBoundingClientRect().width;
+      // Each card is ~260 px wide; keep at least 1, at most data.length
+      colCountRef.current = Math.max(1, Math.min(data.length, Math.floor(w / 260)));
+    };
+    updateCols();
+
+    const ro = typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(updateCols)
+      : null;
+    ro?.observe(el);
+    return () => ro?.disconnect();
+  }, [data.length]);
+
+  // ── Keyboard navigation (KB-18) ───────────────────────────────────
+  const dataRef = useRef(data);
+  dataRef.current = data;
+  const onRowClickRef = useRef(onRowClick);
+  onRowClickRef.current = onRowClick;
+
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el) return;
+
+    const handleNav = (e: Event) => {
+      const { action } = (e as CustomEvent<{ action: string }>).detail;
+
+      setSelectedCard(prev => {
+        const total = dataRef.current.length;
+        if (total === 0) return prev;
+        const cols = colCountRef.current;
+        const cur = prev < 0 ? 0 : prev;
+        switch (action) {
+          case 'cardgrid-card-prev':
+            return Math.max(0, cur - 1);
+          case 'cardgrid-card-next':
+            return Math.min(total - 1, cur + 1);
+          case 'cardgrid-card-prev-row':
+            return Math.max(0, cur - cols);
+          case 'cardgrid-card-next-row':
+            return Math.min(total - 1, cur + cols);
+          case 'cardgrid-card-activate': {
+            const row = dataRef.current[cur];
+            if (row) onRowClickRef.current?.(row);
+            return prev;
+          }
+          default:
+            return prev;
+        }
+      });
+    };
+
+    el.addEventListener('clef:display-nav', handleNav);
+    return () => el.removeEventListener('clef:display-nav', handleNav);
+  }, []);
+
   // First field is used as card title, rest as metadata
   const titleField = visibleFields[0];
   const metaFields = visibleFields.slice(1);
 
   return (
-    <div className="card-grid" data-surface="display-card-grid">
+    <div
+      ref={rootRef}
+      className="card-grid"
+      data-surface="display-card-grid"
+      data-keybinding-scope="app.display.cardgrid"
+      tabIndex={0}
+    >
       {data.map((row, i) => {
         // Custom renderItem from DisplayMode — replaces default card content
         if (renderItem) {
@@ -164,6 +251,8 @@ export const CardGridDisplay: React.FC<CardGridDisplayProps> = ({ data, fields, 
               variant="outlined"
               clickable={!!onRowClick}
               onClick={() => onRowClick?.(row)}
+              data-selected={selectedCard === i ? 'true' : undefined}
+              aria-selected={selectedCard === i}
             >
               {renderItem(row, onRowClick ? () => onRowClick(row) : undefined)}
               {rowActions && rowActions.length > 0 && (
@@ -186,6 +275,8 @@ export const CardGridDisplay: React.FC<CardGridDisplayProps> = ({ data, fields, 
             variant="outlined"
             clickable={!!onRowClick}
             onClick={() => onRowClick?.(row)}
+            data-selected={selectedCard === i ? 'true' : undefined}
+            aria-selected={selectedCard === i}
           >
             <strong data-part="card-title">
               {titleValue}
