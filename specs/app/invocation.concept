@@ -1,0 +1,263 @@
+@version(1)
+@category("app")
+@visibility("public")
+concept Invocation [I, K] {
+
+  purpose {
+    Track the observable lifecycle of every ActionBinding/invoke call as
+    first-class concept state. Provides pending, ok, and error feedback
+    to any UI surface or observer, replacing ad-hoc loading/error state
+    scattered across per-framework component stores. Supports retry (with
+    the original params preserved) and explicit dismissal for completed
+    invocations.
+  }
+
+  state {
+    invocations: set I
+    origin {
+      connection: I -> K
+      binding: I -> String
+      params: I -> Bytes
+    }
+    lifecycle {
+      startedAt: I -> DateTime
+      completedAt: I -> option DateTime
+      dismissedAt: I -> option DateTime
+    }
+    outcome {
+      result: I -> option Bytes
+      error: I -> option String
+    }
+    chain {
+      retriedFrom: I -> option I
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+
+    action start(invocation: I, connection: K, binding: String,
+                 params: Bytes, startedAt: DateTime) {
+      -> ok(invocation: I) {
+        Register a new invocation in the pending state. Stores the
+        connection, binding id, serialized params, and start timestamp.
+        The invocation enters the observable set with no result or error set.
+      }
+      -> duplicate(invocation: I) {
+        An invocation with this identifier already exists. The caller
+        must supply a unique id per ActionBinding/invoke call.
+      }
+      -> error(message: String) {
+        The invocation could not be registered due to a storage or
+        validation error (e.g., empty binding string).
+      }
+
+      fixture start_ok {
+        invocation: "inv-001",
+        connection: "conn-001",
+        binding: "binding-abc",
+        params: "eyJpZCI6InQxIn0=",
+        startedAt: "2026-04-13T10:00:00Z"
+      }
+      fixture start_duplicate {
+        invocation: "inv-001",
+        connection: "conn-001",
+        binding: "binding-abc",
+        params: "eyJpZCI6InQxIn0=",
+        startedAt: "2026-04-13T10:00:01Z"
+      } after start_ok -> duplicate
+      fixture start_empty_binding {
+        invocation: "inv-002",
+        connection: "conn-001",
+        binding: "",
+        params: "e30=",
+        startedAt: "2026-04-13T10:00:00Z"
+      } -> error
+    }
+
+    action complete(invocation: I, result: Bytes, completedAt: DateTime) {
+      -> ok(invocation: I) {
+        Record a successful outcome for the invocation. Sets the result
+        bytes and completedAt timestamp. The invocation transitions from
+        pending to the ok status (derivable from completedAt set and
+        error absent).
+      }
+      -> not_found(message: String) {
+        No invocation with this identifier is tracked. The start action
+        must be called first.
+      }
+      -> already_completed(message: String) {
+        The invocation already has a completedAt timestamp set. Each
+        invocation may only be completed once — use retry to re-run.
+      }
+
+      fixture complete_ok {
+        invocation: $start_ok.invocation,
+        result: "eyJzdGF0dXMiOiJkb25lIn0=",
+        completedAt: "2026-04-13T10:00:05Z"
+      } after start_ok
+      fixture complete_not_found {
+        invocation: "inv-missing",
+        result: "e30=",
+        completedAt: "2026-04-13T10:00:05Z"
+      } -> not_found
+      fixture complete_already_completed {
+        invocation: $start_ok.invocation,
+        result: "eyJzdGF0dXMiOiJkb25lIn0=",
+        completedAt: "2026-04-13T10:00:06Z"
+      } after complete_ok -> already_completed
+    }
+
+    action fail(invocation: I, error: String, completedAt: DateTime) {
+      -> ok(invocation: I) {
+        Record a failed outcome for the invocation. Sets the error
+        message and completedAt timestamp. The invocation transitions
+        from pending to the error status (derivable from completedAt
+        set and error present).
+      }
+      -> not_found(message: String) {
+        No invocation with this identifier is tracked. The start action
+        must be called first.
+      }
+      -> already_completed(message: String) {
+        The invocation already has a completedAt timestamp set.
+        An invocation can only be failed once; call retry on the
+        failed invocation to re-run the underlying action.
+      }
+
+      fixture fail_ok {
+        invocation: $start_ok.invocation,
+        error: "Kernel returned error: Not found",
+        completedAt: "2026-04-13T10:00:05Z"
+      } after start_ok
+      fixture fail_not_found {
+        invocation: "inv-missing",
+        error: "timeout",
+        completedAt: "2026-04-13T10:00:05Z"
+      } -> not_found
+      fixture fail_already_completed {
+        invocation: $start_ok.invocation,
+        error: "second error",
+        completedAt: "2026-04-13T10:00:06Z"
+      } after fail_ok -> already_completed
+    }
+
+    action retry(invocation: I, newInvocation: I, startedAt: DateTime) {
+      -> ok(invocation: I) {
+        Create a new pending invocation carrying the original's
+        connection, binding, and params. The new invocation's
+        retriedFrom field points to the predecessor. The predecessor
+        remains in its current completed (error) state for auditability.
+        The caller is responsible for also dispatching the underlying
+        ActionBinding/invoke — or a sync may perform that dispatch.
+      }
+      -> not_found(message: String) {
+        No invocation with this identifier is tracked.
+      }
+      -> not_failed(message: String) {
+        The predecessor invocation does not have an error set — only
+        failed invocations may be retried.
+      }
+
+      fixture retry_ok {
+        invocation: $fail_ok.invocation,
+        newInvocation: "inv-retry-001",
+        startedAt: "2026-04-13T10:00:10Z"
+      } after fail_ok
+      fixture retry_not_found {
+        invocation: "inv-missing",
+        newInvocation: "inv-retry-002",
+        startedAt: "2026-04-13T10:00:10Z"
+      } -> not_found
+      fixture retry_not_failed {
+        invocation: $start_ok.invocation,
+        newInvocation: "inv-retry-003",
+        startedAt: "2026-04-13T10:00:10Z"
+      } after start_ok -> not_failed
+    }
+
+    action dismiss(invocation: I, dismissedAt: DateTime) {
+      -> ok(invocation: I) {
+        Mark the invocation as dismissed. Dismissed invocations may be
+        garbage-collected from the observable set; this action enables
+        UI surfaces to signal that the user has acknowledged the outcome.
+      }
+      -> not_found(message: String) {
+        No invocation with this identifier is tracked.
+      }
+
+      fixture dismiss_ok {
+        invocation: $complete_ok.invocation,
+        dismissedAt: "2026-04-13T10:01:00Z"
+      } after complete_ok
+      fixture dismiss_not_found {
+        invocation: "inv-missing",
+        dismissedAt: "2026-04-13T10:01:00Z"
+      } -> not_found
+    }
+
+    action query(connection: K, binding: option String,
+                 since: option DateTime) {
+      -> ok(invocations: list I) {
+        Return all tracked invocations originated from the given connection,
+        optionally filtered to a specific binding id and/or to invocations
+        that started at or after the given timestamp. Results include
+        pending, completed, and failed invocations; dismissed invocations
+        may be included until gc'd.
+      }
+
+      fixture query_all {
+        connection: "conn-001",
+        binding: none,
+        since: none
+      } after start_ok
+      fixture query_by_binding {
+        connection: "conn-001",
+        binding: "binding-abc",
+        since: none
+      } after start_ok
+      fixture query_since {
+        connection: "conn-001",
+        binding: none,
+        since: "2026-04-13T10:00:00Z"
+      } after start_ok
+    }
+
+  }
+
+  example "start-then-complete" {
+    after start(invocation: "i1", connection: "c1", binding: "b1",
+                params: "e30=", startedAt: "2026-04-13T10:00:00Z") -> ok
+    then complete(invocation: "i1", result: "eyJvayI6dHJ1ZX0=",
+                  completedAt: "2026-04-13T10:00:05Z") -> ok
+    and query(connection: "c1", binding: none, since: none) -> ok(invocations: inv)
+  }
+
+  example "start-then-fail-then-retry" {
+    after start(invocation: "i2", connection: "c1", binding: "b1",
+                params: "e30=", startedAt: "2026-04-13T10:00:00Z") -> ok
+    then fail(invocation: "i2", error: "timeout",
+              completedAt: "2026-04-13T10:00:03Z") -> ok
+    and retry(invocation: "i2", newInvocation: "i3",
+              startedAt: "2026-04-13T10:00:04Z") -> ok(invocation: retried)
+  }
+
+  always "completed-has-result-or-error" {
+    forall i in invocations:
+    completedAt(i) != none implies (result(i) != none) or (error(i) != none)
+  }
+
+  never "retried-from-non-failed" {
+    exists i in invocations:
+    retriedFrom(i) != none and error(retriedFrom(i)) = none
+  }
+
+  never "complete-without-start" {
+    exists i in invocations:
+    completedAt(i) != none and startedAt(i) = none
+  }
+
+}
