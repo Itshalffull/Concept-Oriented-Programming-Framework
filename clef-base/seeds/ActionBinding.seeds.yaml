@@ -795,13 +795,15 @@ entries:
   # (source = "local-fs") fires after createMedia completes -> ok.
   # After MediaAsset/createMedia completes -> ok, the drop-file-to-block.sync fires
   # and inserts a new Outline child referencing the created asset.
-  # Context-threading gap: the drop position (parent / sibling) is not forwarded
-  # through createMedia. The sync therefore appends rather than inserts at the exact
-  # drop coordinates. A follow-up card should thread drop context.
+  # context.uploadContext is the JSON-encoded context object built by
+  # RecursiveBlockEditor's drop handler: { focusedDocId, cursorBlockId,
+  # cursorPosition }. Forwarded as the context (Bytes) parameter of
+  # MediaAsset/createMedia so drop-file-to-block.sync can extract focusedDocId
+  # via json(context, "focusedDocId") and resolve the correct parent block.
   - name: media-upload-from-drop
     binding: media-upload-from-drop
     target: "MediaAsset/createMedia"
-    parameterMap: '{"asset":"uuid()","source":"local-fs","file":"context.droppedFile"}'
+    parameterMap: '{"asset":"uuid()","source":"local-fs","file":"context.droppedFile","context":"context.uploadContext"}'
     executionPolicy: "auto"
     slash_command: false
     toolbar_command: false
