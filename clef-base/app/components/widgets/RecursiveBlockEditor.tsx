@@ -1632,7 +1632,8 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
                         isSelected={isSelected}
                         onFocus={() => handleBlockFocus(child.id, child.schema)}
                         onBlur={handleBlockBlur}
-                        onMutate={loadChildren}
+                        onBlockContentChange={undefined}
+                        onStructureChange={loadChildren}
                         onBlockClick={(e) => handleBlockClick(child.id, e)}
                         onSectionSelect={handleSectionSelect}
                         rootNodeId={rootNodeId}
@@ -2452,48 +2453,49 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
             preRange.selectNodeContents(el);
             preRange.setEnd(range.endContainer, range.endOffset);
             const before = preRange.toString();
-            const full = el.textContent ?? \'\';
+            const full = el.textContent ?? '';
             const after = full.slice(before.length);
 
-            // Truncate current block\'s DOM to `before`
+            // Truncate current block's DOM to `before`
             el.textContent = before;
 
             // Persist the truncation via update-block-content binding
-            void invoke(\'ActionBinding\', \'invoke\', {
-              binding: \'update-block-content\',
+            void invoke('ActionBinding', 'invoke', {
+              binding: 'update-block-content',
               context: JSON.stringify({ nodeId, rootNodeId, schema, content: before }),
             });
 
             // Insert new block after current with `after` as body.
             // afterBlockId is the convention used by smart-paste-converter
             // for positional insertion; content carries the split remainder.
-            void invoke(\'ActionBinding\', \'invoke\', {
-              binding: \'insert-block\',
+            void invoke('ActionBinding', 'invoke', {
+              binding: 'insert-block',
               context: JSON.stringify({
                 rootNodeId,
-                schema: \'paragraph\',
-                displayMode: \'block-editor\',
+                schema: 'paragraph',
+                displayMode: 'block-editor',
                 afterBlockId: nodeId,
                 content: after,
               }),
             }).then((result) => {
-              if (result.variant === \'ok\') {
-                onMutate();
+              if (result.variant === 'ok') {
+                // Block inserted — structural change, reload Outline.
+                onStructureChange();
                 // TODO: focus the new block — requires a second useEffect watching
                 // children and focusing the last-inserted block by position.
               }
             });
             return;
           }
-          if (e.key === \'Enter\' && e.shiftKey) {
+          if (e.key === 'Enter' && e.shiftKey) {
             // Soft line break within block
             e.preventDefault();
-            document.execCommand(\'insertLineBreak\');
+            document.execCommand('insertLineBreak');
             return;
           }
         }}
         style={{
-          padding: \'var(--spacing-xs) var(--spacing-sm)\',
+          padding: 'var(--spacing-xs) var(--spacing-sm)',
           borderRadius: '4px',
           outline: 'none',
           minHeight: '1.5em',
