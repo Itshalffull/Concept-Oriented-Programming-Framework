@@ -3,7 +3,7 @@
 // Template Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, put, putFrom, branch, complete, completeFrom, mapBindings,
+  createProgram, get as spGet, find, put, putFrom, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -82,6 +82,31 @@ const _templateHandler: FunctionalConceptHandler = {
       (b) => complete(b, 'notfound', { message: 'Template not found' }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
+  queryByTrigger(input: Record<string, unknown>) {
+    const trigger = (input.trigger as string) || '';
+    let p = createProgram();
+    p = find(p, 'template', {}, 'allTemplates');
+    p = mapBindings(p, (bindings) => {
+      const all = (bindings.allTemplates as Array<Record<string, unknown>>) || [];
+      const exact = all
+        .filter((t) => t.trigger === trigger)
+        .map((t) => t.template as string);
+      if (exact.length > 0) return { matches: exact, found: true };
+      const prefix = all
+        .filter((t) => typeof t.trigger === 'string' && (t.trigger as string).startsWith(trigger))
+        .map((t) => t.template as string);
+      if (prefix.length > 0) return { matches: prefix, found: true };
+      return { matches: [], found: false };
+    }, '_result');
+    return branch(p,
+      (bindings) => (bindings._result as { found: boolean }).found,
+      (b) => completeFrom(b, 'ok', (bindings) => ({
+        templates: (bindings._result as { matches: string[] }).matches,
+      })),
+      (b) => complete(b, 'not_found', { message: 'No template matches the given trigger' }),
+    ) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   mergeProperties(input: Record<string, unknown>) {

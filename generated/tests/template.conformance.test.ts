@@ -91,6 +91,20 @@ describe('Template functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
+    it('fixture "define_with_trigger" -> ok', async () => {
+      if (typeof templateHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(templateHandler.define({ template: "bold-snippet", body: "**{{text}}**", variables: "text", trigger: "**", trigger_kind: "prefix" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "define_with_slash_trigger" -> ok', async () => {
+      if (typeof templateHandler.define !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(templateHandler.define({ template: "callout-block", body: "> {{text}}", variables: "text", trigger: "/callout", trigger_kind: "slash" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
     it('fixture "duplicate_define" -> exists', async () => {
       if (typeof templateHandler.define !== 'function') return;
       const storage = createInMemoryStorage();
@@ -348,6 +362,119 @@ describe('Template functional handler', () => {
 
   });
 
+  describe('queryByTrigger', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = templateHandler.queryByTrigger({ trigger: "/callout" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = templateHandler.queryByTrigger({ trigger: "/callout" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = templateHandler.queryByTrigger({ trigger: "/callout" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = templateHandler.queryByTrigger({ trigger: "/callout" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = templateHandler.queryByTrigger({ trigger: "/callout" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof templateHandler.queryByTrigger !== 'function') return;
+      const result = await interpret(templateHandler.queryByTrigger({ trigger: "/callout" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "exact_match" -> ok', async () => {
+      if (typeof templateHandler.queryByTrigger !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_define_with_slash_trigger = await interpret(templateHandler.define({ template: "callout-block", body: "> {{text}}", variables: "text", trigger: "/callout", trigger_kind: "slash" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_with_slash_trigger?.output ?? {}));
+      const _fixtureInput = { trigger: "/callout" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(templateHandler.queryByTrigger({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "prefix_match" -> ok', async () => {
+      if (typeof templateHandler.queryByTrigger !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_define_with_trigger = await interpret(templateHandler.define({ template: "bold-snippet", body: "**{{text}}**", variables: "text", trigger: "**", trigger_kind: "prefix" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_with_trigger?.output ?? {}));
+      const _fixtureInput = { trigger: "**" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(templateHandler.queryByTrigger({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "prefix_fallback" -> ok', async () => {
+      if (typeof templateHandler.queryByTrigger !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_define_with_slash_trigger = await interpret(templateHandler.define({ template: "callout-block", body: "> {{text}}", variables: "text", trigger: "/callout", trigger_kind: "slash" }), storage);
+      const _pool = Object.assign({}, (afterResult_define_with_slash_trigger?.output ?? {}));
+      const _fixtureInput = { trigger: "/cal" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(templateHandler.queryByTrigger({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "no_match" -> not_found', async () => {
+      if (typeof templateHandler.queryByTrigger !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(templateHandler.queryByTrigger({ trigger: "/zzz" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('not_found'));
+    });
+
+  });
+
   describe('register()', () => {
     it('declares concept name', async () => {
       if (typeof templateHandler.register !== 'function') return;
@@ -381,10 +508,11 @@ describe('Template functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ template: fc.string(), body: fc.string({ minLength: 1, maxLength: 50 }), variables: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('define'), input: fc.record({ template: fc.string(), body: fc.string({ minLength: 1, maxLength: 50 }), variables: fc.string({ minLength: 1, maxLength: 50 }), trigger: fc.string(), trigger_kind: fc.string() }) }),
               fc.record({ action: fc.constant('instantiate'), input: fc.record({ template: fc.string(), values: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('registerTrigger'), input: fc.record({ template: fc.string(), trigger: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('mergeProperties'), input: fc.record({ template: fc.string(), properties: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('queryByTrigger'), input: fc.record({ trigger: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -414,10 +542,11 @@ describe('Template functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('define'), input: fc.record({ template: fc.string(), body: fc.string({ minLength: 1, maxLength: 50 }), variables: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('define'), input: fc.record({ template: fc.string(), body: fc.string({ minLength: 1, maxLength: 50 }), variables: fc.string({ minLength: 1, maxLength: 50 }), trigger: fc.string(), trigger_kind: fc.string() }) }),
               fc.record({ action: fc.constant('instantiate'), input: fc.record({ template: fc.string(), values: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('registerTrigger'), input: fc.record({ template: fc.string(), trigger: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('mergeProperties'), input: fc.record({ template: fc.string(), properties: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('queryByTrigger'), input: fc.record({ trigger: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -462,7 +591,7 @@ describe('Template functional handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ template: fc.string(), body: fc.string({ minLength: 1, maxLength: 50 }), variables: fc.string({ minLength: 1, maxLength: 50 }) }),
+          fc.record({ template: fc.string(), body: fc.string({ minLength: 1, maxLength: 50 }), variables: fc.string({ minLength: 1, maxLength: 50 }), trigger: fc.string(), trigger_kind: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
             const result = await safeInvoke(async () => {

@@ -67,6 +67,24 @@ concept Template [T] {
       fixture valid_merge { template: "welcome-email", properties: "greeting,signature" } after valid_define
       fixture merge_missing_template { template: "nonexistent", properties: "extra" } -> notfound
     }
+
+    action queryByTrigger(trigger: String) {
+      -> ok(templates: list String) {
+        Returns matching templates — first tries an exact trigger match, and if
+        none found, falls back to all templates whose trigger begins with the
+        given string. Exact matches take precedence; prefix results are returned
+        only when there is no exact match.
+      }
+      -> not_found(message: String) {
+        No template has a trigger that exactly matches or begins with the given
+        string.
+      }
+
+      fixture exact_match { trigger: "/callout" } after define_with_slash_trigger
+      fixture prefix_match { trigger: "**" } after define_with_trigger
+      fixture prefix_fallback { trigger: "/cal" } after define_with_slash_trigger
+      fixture no_match { trigger: "/zzz" } -> not_found
+    }
   }
 
   example "define-then-instantiate": {
