@@ -1,0 +1,64 @@
+# Register the built-in ContentSerializer providers for the markdown, html,
+# and json targets. Runs once per provider at boot when PluginRegistry
+# advertises the content-serializer plugin slot.
+#
+# The concrete rootNode->bytes functions install themselves into the
+# shared module-level registry
+# (handlers/ts/providers/content-serializer-provider-registry.ts) on
+# import; these syncs wire the concept-layer binding so
+# ContentSerializer/serialize { target: … } resolves to the right provider.
+#
+# See docs/plans/block-editor-loose-ends-prd.md §LE-13
+# (ContentSerializer providers) and ContentSerializer concept
+# (specs/content/content-serializer.concept).
+
+sync RegisterMarkdownContentSerializer [eager]
+  purpose: "Bind the micromark-serialize provider to target=markdown in the ContentSerializer concept once the content-serializer PluginRegistry slot is available, enabling ContentNode tree -> GFM markdown bytes dispatch."
+when {
+  PluginRegistry/register: [ type: "content-serializer"; name: ?name ]
+    => ok(plugin: ?plugin)
+}
+where {
+  eq(?name, "micromark-serialize")
+}
+then {
+  ContentSerializer/register: [
+    provider: "micromark-serialize";
+    target: "markdown";
+    config: "{}"
+  ]
+}
+
+sync RegisterHtmlContentSerializer [eager]
+  purpose: "Bind the html-serialize provider to target=html in the ContentSerializer concept once the content-serializer PluginRegistry slot is available, enabling ContentNode tree -> semantic HTML bytes dispatch."
+when {
+  PluginRegistry/register: [ type: "content-serializer"; name: ?name ]
+    => ok(plugin: ?plugin)
+}
+where {
+  eq(?name, "html-serialize")
+}
+then {
+  ContentSerializer/register: [
+    provider: "html-serialize";
+    target: "html";
+    config: "{\"selfClosing\":true}"
+  ]
+}
+
+sync RegisterJsonContentSerializer [eager]
+  purpose: "Bind the json-serialize provider to target=json in the ContentSerializer concept once the content-serializer PluginRegistry slot is available, enabling ContentNode tree -> raw JSON tree dump dispatch."
+when {
+  PluginRegistry/register: [ type: "content-serializer"; name: ?name ]
+    => ok(plugin: ?plugin)
+}
+where {
+  eq(?name, "json-serialize")
+}
+then {
+  ContentSerializer/register: [
+    provider: "json-serialize";
+    target: "json";
+    config: "{\"pretty\":true}"
+  ]
+}

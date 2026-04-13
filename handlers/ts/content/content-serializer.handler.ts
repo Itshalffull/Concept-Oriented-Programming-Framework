@@ -11,8 +11,57 @@ import {
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import {
+  getContentSerializerProvider,
+  type SerializerNode,
+  type FetchNode,
+} from '../providers/content-serializer-provider-registry.ts';
 
 type Result = { variant: string; [key: string]: unknown };
+
+function parseChildIds(raw: unknown): string[] {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw.map((v) => String(v));
+  if (typeof raw === 'string') {
+    if (raw.trim() === '') return [];
+    try {
+      const v = JSON.parse(raw);
+      return Array.isArray(v) ? v.map((x) => String(x)) : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+function buildFetchNode(
+  nodeRows: Array<Record<string, unknown>>,
+  outlineRows: Array<Record<string, unknown>>,
+): FetchNode {
+  const byNode = new Map<string, Record<string, unknown>>();
+  for (const r of nodeRows) {
+    const key = String((r.key ?? r.node ?? r.id) ?? '');
+    if (key) byNode.set(key, r);
+  }
+  const outlineByNode = new Map<string, Record<string, unknown>>();
+  for (const r of outlineRows) {
+    const key = String((r.key ?? r.node) ?? '');
+    if (key) outlineByNode.set(key, r);
+  }
+  return (id: string): SerializerNode | null => {
+    const node = byNode.get(id);
+    if (!node) return null;
+    const outline = outlineByNode.get(id);
+    const schema = String(
+      node.schema ?? node.type ?? (outline ? outline.schema : '') ?? '',
+    );
+    const body = String(
+      node.body ?? node.content ?? '',
+    );
+    const childIds = parseChildIds(outline ? outline.children : []);
+    return { id, schema, body, childIds };
+  };
+}
 
 let idCounter = 0;
 function nextId(): string {
@@ -67,16 +116,62 @@ const _handler: FunctionalConceptHandler = {
       }) as StorageProgram<Result>;
     }
 
-    // Look up registered provider for this target
+    // Look up registered provider for this target, then — if one exists —
+    // load ContentNode + Outline snapshots and hand them to the registered
+    // tree-walk provider function via the module-level registry.
     let p = createProgram();
     p = get(p, 'byTarget', target, 'providerId');
     return branch(p,
       (b) => !b.providerId,
       (b) => complete(b, 'no_provider', { target }) as StorageProgram<Result>,
       (b) => {
-        // Stub bytes — real provider walks the ContentNode tree via perform/sync wiring
-        const bytes = JSON.stringify({ target, rootNodeId, providerId: b.providerId });
-        return complete(b, 'ok', { bytes }) as StorageProgram<Result>;
+        const providerId = String(b.providerId);
+        // Load the provider record to get its name + config.
+        let b2 = get(b, 'providers', providerId, 'providerRecord');
+        // Load ContentNode + Outline snapshots. These live in other concepts'
+        // relations; we read them via storage-layer find() so the walk can
+        // assemble an in-memory tree and hand it to the provider function.
+        b2 = find(b2, 'node', {}, 'allNodes');
+        b2 = find(b2, 'outline', {}, 'allOutline');
+        return completeFrom(b2, 'ok', (bindings) => {
+          const record = (bindings.providerRecord ?? {}) as Record<string, unknown>;
+          const providerName = String(record.name ?? '');
+          const providerConfig = String(record.providerConfig ?? '');
+          const fn = providerName
+            ? getContentSerializerProvider(providerName)
+            : undefined;
+          if (!fn) {
+            // Fall back to stub bytes when the concrete provider function
+            // hasn't been loaded (e.g. kernel-only boot without providers).
+            const bytes = JSON.stringify({
+              target,
+              rootNodeId,
+              providerId,
+              provider: providerName,
+              stub: true,
+            });
+            return { variant: 'ok', bytes };
+          }
+          const nodeRows = (bindings.allNodes ?? []) as Array<Record<string, unknown>>;
+          const outlineRows = (bindings.allOutline ?? []) as Array<Record<string, unknown>>;
+          const fetchNode = buildFetchNode(nodeRows, outlineRows);
+          // If the root doesn't exist in the snapshot AND there is at least
+          // some content loaded, surface an error variant so callers can
+          // distinguish "missing root" from "empty store".
+          if (nodeRows.length > 0 && !fetchNode(rootNodeId)) {
+            return { variant: 'error', message: `root node not found: ${rootNodeId}` };
+          }
+          try {
+            const bytes = fn(rootNodeId, fetchNode, providerConfig);
+            return { variant: 'ok', bytes };
+          } catch (err) {
+            return {
+              variant: 'error',
+              message:
+                (err as Error)?.message ?? 'provider threw during serialize',
+            };
+          }
+        }) as StorageProgram<Result>;
       },
     ) as StorageProgram<Result>;
   },
