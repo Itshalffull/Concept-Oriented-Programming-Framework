@@ -1,0 +1,43 @@
+# Register the Clef-native ManifestReader adapters (YAML + JSON) with the
+# ManifestReader registry during kernel boot. Once these syncs fire,
+# ProviderManifest/load can dispatch .clef/providers.yaml and
+# .clef/providers.json files to the corresponding reader implementations
+# in handlers/ts/readers/.
+#
+# See docs/plans/virtual-provider-registry-prd.md §2 and VPR-04.
+
+sync RegisterClefYamlReader [eager]
+  purpose {
+    On kernel boot, register the clef-yaml ManifestReader adapter so
+    ProviderManifest can translate .clef/providers.yaml into normalized
+    provider entries.
+  }
+when {
+  KernelBoot/boot: [ projectRoot: ?projectRoot; manifestPath: ?manifestPath ]
+    => ok(kernel: ?kernel; concepts: ?concepts; syncs: ?syncs)
+}
+then {
+  ManifestReader/register: [
+    reader: "clef-yaml";
+    formats: [".clef/providers.yaml", ".clef/providers.yml"];
+    priority: 100
+  ]
+}
+
+sync RegisterClefJsonReader [eager]
+  purpose {
+    On kernel boot, register the clef-json ManifestReader adapter so
+    ProviderManifest can translate .clef/providers.json into normalized
+    provider entries.
+  }
+when {
+  KernelBoot/boot: [ projectRoot: ?projectRoot; manifestPath: ?manifestPath ]
+    => ok(kernel: ?kernel; concepts: ?concepts; syncs: ?syncs)
+}
+then {
+  ManifestReader/register: [
+    reader: "clef-json";
+    formats: [".clef/providers.json"];
+    priority: 100
+  ]
+}
