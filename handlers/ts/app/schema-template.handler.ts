@@ -67,7 +67,24 @@ const _schemaTemplateHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'schemaTemplate', name, 'existing');
     p = branch(p, 'existing',
-      (b) => complete(b, 'ok', { schema: targetSchemaName }),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const tmpl = bindings.existing as Record<string, unknown>;
+        // Parse the properties JSON blob into an object so syncs can use dot-access bindings
+        // (e.g. bind(?properties.displayWidget as ?dw)) without requiring Property/setBulk.
+        let propertiesObj: Record<string, unknown> = {};
+        try {
+          const raw = tmpl.properties as string | undefined;
+          if (raw) propertiesObj = JSON.parse(raw) as Record<string, unknown>;
+        } catch {
+          // Malformed JSON — propagate empty object; downstream Property/set calls will no-op
+        }
+        return {
+          schema: targetSchemaName,
+          // Surface the parsed properties object so the SchemaTemplatePropertiesToProperties
+          // sync can fan out fixed Property/set calls via dot-access bindings.
+          properties: propertiesObj,
+        };
+      }),
       (b) => complete(b, 'not_found', { message: `Template '${name}' does not exist` }),
     );
     return p as StorageProgram<Result>;

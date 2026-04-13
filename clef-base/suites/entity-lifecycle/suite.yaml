@@ -52,6 +52,9 @@ syncs:
     - path: ./syncs/schema-template-creates-fields.sync
       description: "Create FieldDefinition records when a SchemaTemplate is applied"
 
+    - path: ./syncs/schema-template-properties-to-properties.sync
+      description: "Fan out SchemaTemplate.properties blob (displayWidget, compilationProvider, childSchema, defaultTemplate, schemaIcon, schemaColor) into real Property/set calls on the instantiated schema — activates Tier 1b routing and content-native-schema.sync wiring"
+
     - path: ./syncs/field-create-updates-form.sync
       description: "Update FormBuilder placement when a field is created"
 

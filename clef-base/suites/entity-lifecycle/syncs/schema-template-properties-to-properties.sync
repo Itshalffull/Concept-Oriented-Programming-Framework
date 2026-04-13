@@ -1,0 +1,104 @@
+# Propagate SchemaTemplate.properties blob into real Property/set calls on the instantiated Schema.
+# When a user applies a template via SchemaTemplate/apply, the template's properties JSON object
+# (containing displayWidget, compilationProvider, childSchema, defaultTemplate, schemaIcon,
+# schemaColor) must be materialized as Property concept state so that:
+#   - Tier 1b routing (block-editor navigation) activates for schemas with displayWidget set
+#   - SchemaRegistersCompilationProvider fires for schemas with compilationProvider set
+#   - content-native-schema.sync general syncs activate for childSchema/defaultTemplate
+# See docs/plans/creation-ux-prd.md §Tier-1b, §CUX-08.
+
+sync SchemaTemplateDisplayWidgetToProperty [eager] [recommended]
+  purpose: "Set displayWidget Property on the instantiated schema so Tier 1b block-editor routing activates automatically"
+when {
+  SchemaTemplate/apply: [ name: ?template_name; targetSchemaName: ?schema ]
+    => ok(schema: ?schema; properties: ?properties)
+}
+where {
+  bind(?properties.displayWidget as ?displayWidget)
+  filter(?displayWidget != "")
+}
+then {
+  Property/set: [ entity: ?schema;
+                  key: "displayWidget";
+                  value: ?displayWidget ]
+}
+
+sync SchemaTemplateCompilationProviderToProperty [eager] [recommended]
+  purpose: "Register compilationProvider Property on the instantiated schema so ContentCompiler dispatch and PluginRegistry wiring activate automatically"
+when {
+  SchemaTemplate/apply: [ name: ?template_name; targetSchemaName: ?schema ]
+    => ok(schema: ?schema; properties: ?properties)
+}
+where {
+  bind(?properties.compilationProvider as ?compilationProvider)
+  filter(?compilationProvider != "")
+}
+then {
+  Property/set: [ entity: ?schema;
+                  key: "compilationProvider";
+                  value: ?compilationProvider ]
+}
+
+sync SchemaTemplateChildSchemaToProperty [eager] [recommended]
+  purpose: "Set childSchema Property on the instantiated schema so Outline child blocks receive the correct sub-schema overlay automatically"
+when {
+  SchemaTemplate/apply: [ name: ?template_name; targetSchemaName: ?schema ]
+    => ok(schema: ?schema; properties: ?properties)
+}
+where {
+  bind(?properties.childSchema as ?childSchema)
+  filter(?childSchema != "")
+}
+then {
+  Property/set: [ entity: ?schema;
+                  key: "childSchema";
+                  value: ?childSchema ]
+}
+
+sync SchemaTemplateDefaultTemplateToProperty [eager] [recommended]
+  purpose: "Set defaultTemplate Property on the instantiated schema so new pages scaffolded from this schema get the correct default block tree"
+when {
+  SchemaTemplate/apply: [ name: ?template_name; targetSchemaName: ?schema ]
+    => ok(schema: ?schema; properties: ?properties)
+}
+where {
+  bind(?properties.defaultTemplate as ?defaultTemplate)
+  filter(?defaultTemplate != "")
+}
+then {
+  Property/set: [ entity: ?schema;
+                  key: "defaultTemplate";
+                  value: ?defaultTemplate ]
+}
+
+sync SchemaTemplateSchemaIconToProperty [eager] [recommended]
+  purpose: "Persist the template's schemaIcon display hint as a Property so schema browsers and navigation chrome can render the correct icon without a separate lookup"
+when {
+  SchemaTemplate/apply: [ name: ?template_name; targetSchemaName: ?schema ]
+    => ok(schema: ?schema; properties: ?properties)
+}
+where {
+  bind(?properties.schemaIcon as ?schemaIcon)
+  filter(?schemaIcon != "")
+}
+then {
+  Property/set: [ entity: ?schema;
+                  key: "schemaIcon";
+                  value: ?schemaIcon ]
+}
+
+sync SchemaTemplateSchemaColorToProperty [eager] [recommended]
+  purpose: "Persist the template's schemaColor display hint as a Property so schema browsers and navigation chrome can render the correct accent color without a separate lookup"
+when {
+  SchemaTemplate/apply: [ name: ?template_name; targetSchemaName: ?schema ]
+    => ok(schema: ?schema; properties: ?properties)
+}
+where {
+  bind(?properties.schemaColor as ?schemaColor)
+  filter(?schemaColor != "")
+}
+then {
+  Property/set: [ entity: ?schema;
+                  key: "schemaColor";
+                  value: ?schemaColor ]
+}
