@@ -1,0 +1,18 @@
+# Register the math inline mark as a token-remap RenderTransform so that theme
+# switches automatically restyle math spans without any widget changes.
+# The transform targets [data-mark="math"] spans and renders their latex attribute
+# via KaTeX; the fallback renderer emits the raw text content when KaTeX is absent.
+
+sync RegisterMathInlineMark [eager]
+  purpose: "Register a token-remap RenderTransform for math inline marks so LaTeX spans are rendered via KaTeX (with raw-text fallback) and respect active theme tokens automatically."
+when {
+  PluginRegistry/register: [ type: "render-transform-provider"; name: ?name ]
+    => ok(plugin: ?plugin)
+}
+then {
+  RenderTransform/register: [
+    name: "mark-math";
+    kind: "token-remap";
+    spec: "{\"scope\":\"[data-mark=\\\"math\\\"]\",\"mappings\":{\"renderer\":\"katex\",\"fallback\":\"raw-text\",\"display\":\"inline\"}}"
+  ]
+}

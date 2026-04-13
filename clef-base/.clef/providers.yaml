@@ -152,10 +152,16 @@ format:
       - html
       - markdown
 
-  # Solidity — prettier-plugin-solidity (VPR-16) registered as its own slot
-  # so it can be deregistered independently without touching the prettier group.
+  # Solidity — prettier with prettier-plugin-solidity (VPR-16). Routed
+  # through the shared `prettier` provider; the embedded options select the
+  # solidity-parse parser and the prettier-plugin-solidity plugin at format
+  # time. format-dispatch.ts loads the plugin from the JSON config Bytes.
   - slot: solidity
-    provider: prettier-plugin-solidity
+    provider: prettier
+    options:
+      parser: solidity-parse
+      plugins:
+        - prettier-plugin-solidity
 
   # Rust — rustfmt (VPR-06).  Prefers wasm rustfmt; falls back to subprocess
   # if the binary is in PATH.  Missing binary → warn + skip per PRD §8.3.
@@ -179,8 +185,10 @@ format:
 
 content-serializer:
   # Markdown — default export for most content (lossless for block content).
+  # Provider name matches the runtime registration in
+  # handlers/ts/providers/content-serializer-md.provider.ts.
   - slot: markdown
-    provider: markdown-serialize
+    provider: micromark-serialize
 
   # HTML — for web export and clipboard copy with rich formatting.
   - slot: html
