@@ -34,7 +34,7 @@ describe('InteractionSpec functional handler', () => {
 
   describe('create', () => {
     it('builds a valid StorageProgram', () => {
-      const program = interactionSpecHandler.create({ name: "content-list-controls", createForm: {"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":"true"}]}, rowClick: {"navigateTo":"/content/{node}"}, rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null });
+      const program = interactionSpecHandler.create({ name: "content-list-controls", createForm: {"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":"true"}]}, rowClick: {"navigateTo":"/content/{node}"}, rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null, create_surface: null, create_mode_hint: null });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -42,21 +42,21 @@ describe('InteractionSpec functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = interactionSpecHandler.create({ name: "content-list-controls", createForm: {"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":"true"}]}, rowClick: {"navigateTo":"/content/{node}"}, rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null });
+      const program = interactionSpecHandler.create({ name: "content-list-controls", createForm: {"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":"true"}]}, rowClick: {"navigateTo":"/content/{node}"}, rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null, create_surface: null, create_mode_hint: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = interactionSpecHandler.create({ name: "content-list-controls", createForm: {"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":"true"}]}, rowClick: {"navigateTo":"/content/{node}"}, rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null });
+      const program = interactionSpecHandler.create({ name: "content-list-controls", createForm: {"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":"true"}]}, rowClick: {"navigateTo":"/content/{node}"}, rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null, create_surface: null, create_mode_hint: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = interactionSpecHandler.create({ name: "content-list-controls", createForm: {"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":"true"}]}, rowClick: {"navigateTo":"/content/{node}"}, rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null });
+      const program = interactionSpecHandler.create({ name: "content-list-controls", createForm: {"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":"true"}]}, rowClick: {"navigateTo":"/content/{node}"}, rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null, create_surface: null, create_mode_hint: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -69,7 +69,7 @@ describe('InteractionSpec functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = interactionSpecHandler.create({ name: "content-list-controls", createForm: {"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":"true"}]}, rowClick: {"navigateTo":"/content/{node}"}, rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null });
+      const program = interactionSpecHandler.create({ name: "content-list-controls", createForm: {"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":"true"}]}, rowClick: {"navigateTo":"/content/{node}"}, rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null, create_surface: null, create_mode_hint: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -77,7 +77,7 @@ describe('InteractionSpec functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof interactionSpecHandler.create !== 'function') return;
-      const result = await interpret(interactionSpecHandler.create({ name: "content-list-controls", createForm: {"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":"true"}]}, rowClick: {"navigateTo":"/content/{node}"}, rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null }), storage);
+      const result = await interpret(interactionSpecHandler.create({ name: "content-list-controls", createForm: {"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":"true"}]}, rowClick: {"navigateTo":"/content/{node}"}, rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null, create_surface: null, create_mode_hint: null }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -87,37 +87,58 @@ describe('InteractionSpec functional handler', () => {
     it('fixture "create_content_controls" -> ok', async () => {
       if (typeof interactionSpecHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(interactionSpecHandler.create({ name: "content-list-controls", createForm: {"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":"true"}]}, rowClick: {"navigateTo":"/content/{node}"}, rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null }), storage);
+      const result = await interpret(interactionSpecHandler.create({ name: "content-list-controls", createForm: {"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":"true"}]}, rowClick: {"navigateTo":"/content/{node}"}, rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null, create_surface: null, create_mode_hint: null }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_readonly" -> ok', async () => {
       if (typeof interactionSpecHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(interactionSpecHandler.create({ name: "readonly-controls", createForm: ",", rowClick: ",", rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null }), storage);
+      const result = await interpret(interactionSpecHandler.create({ name: "readonly-controls", createForm: ",", rowClick: ",", rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null, create_surface: null, create_mode_hint: null }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_picker" -> ok', async () => {
       if (typeof interactionSpecHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(interactionSpecHandler.create({ name: "picker-controls", createForm: ",", rowClick: ",", rowActions: [], pickerMode: "true", createProgram: null, actionProgram: null }), storage);
+      const result = await interpret(interactionSpecHandler.create({ name: "picker-controls", createForm: ",", rowClick: ",", rowActions: [], pickerMode: "true", createProgram: null, actionProgram: null, create_surface: null, create_mode_hint: null }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "create_with_program" -> ok', async () => {
       if (typeof interactionSpecHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(interactionSpecHandler.create({ name: "invoke-controls", createForm: ",", rowClick: ",", rowActions: [], pickerMode: "false", createProgram: "content-create-qprog", actionProgram: null }), storage);
+      const result = await interpret(interactionSpecHandler.create({ name: "invoke-controls", createForm: ",", rowClick: ",", rowActions: [], pickerMode: "false", createProgram: "content-create-qprog", actionProgram: null, create_surface: null, create_mode_hint: null }), storage);
       expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_with_surface" -> ok', async () => {
+      if (typeof interactionSpecHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interactionSpecHandler.create({ name: "view-editor-controls", createForm: ",", rowClick: ",", rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null, create_surface: "view-editor", create_mode_hint: "page" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_without_new_fields" -> ok', async () => {
+      if (typeof interactionSpecHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interactionSpecHandler.create({ name: "legacy-controls", createForm: ",", rowClick: ",", rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null, create_surface: null, create_mode_hint: null }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "create_invalid_mode_hint" -> error', async () => {
+      if (typeof interactionSpecHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(interactionSpecHandler.create({ name: "bad-hint-controls", createForm: ",", rowClick: ",", rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null, create_surface: "schema-editor", create_mode_hint: "fullscreen" }), storage);
+      expect(result.variant).not.toBe('ok');
     });
 
     it('fixture "create_duplicate" -> duplicate', async () => {
       if (typeof interactionSpecHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_create_content_controls = await interpret(interactionSpecHandler.create({ name: "content-list-controls", createForm: {"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":"true"}]}, rowClick: {"navigateTo":"/content/{node}"}, rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null }), storage);
+      const afterResult_create_content_controls = await interpret(interactionSpecHandler.create({ name: "content-list-controls", createForm: {"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":"true"}]}, rowClick: {"navigateTo":"/content/{node}"}, rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null, create_surface: null, create_mode_hint: null }), storage);
       const _pool = Object.assign({}, (afterResult_create_content_controls?.output ?? {}));
-      const _fixtureInput = { name: "content-list-controls", createForm: ",", rowClick: ",", rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null } as Record<string, unknown>;
+      const _fixtureInput = { name: "content-list-controls", createForm: ",", rowClick: ",", rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null, create_surface: null, create_mode_hint: null } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
           const cur = _fixtureInput[k];
@@ -133,7 +154,7 @@ describe('InteractionSpec functional handler', () => {
     it('fixture "create_empty_name" -> error', async () => {
       if (typeof interactionSpecHandler.create !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(interactionSpecHandler.create({ name: "", createForm: ",", rowClick: ",", rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null }), storage);
+      const result = await interpret(interactionSpecHandler.create({ name: "", createForm: ",", rowClick: ",", rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null, create_surface: null, create_mode_hint: null }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -194,7 +215,7 @@ describe('InteractionSpec functional handler', () => {
     it('fixture "get_existing" -> ok', async () => {
       if (typeof interactionSpecHandler.get !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_create_content_controls = await interpret(interactionSpecHandler.create({ name: "content-list-controls", createForm: {"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":"true"}]}, rowClick: {"navigateTo":"/content/{node}"}, rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null }), storage);
+      const afterResult_create_content_controls = await interpret(interactionSpecHandler.create({ name: "content-list-controls", createForm: {"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":"true"}]}, rowClick: {"navigateTo":"/content/{node}"}, rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null, create_surface: null, create_mode_hint: null }), storage);
       const _pool = Object.assign({}, (afterResult_create_content_controls?.output ?? {}));
       const _fixtureInput = { name: "content-list-controls" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
@@ -273,7 +294,7 @@ describe('InteractionSpec functional handler', () => {
     it('fixture "list_all" -> ok', async () => {
       if (typeof interactionSpecHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_create_content_controls = await interpret(interactionSpecHandler.create({ name: "content-list-controls", createForm: {"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":"true"}]}, rowClick: {"navigateTo":"/content/{node}"}, rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null }), storage);
+      const afterResult_create_content_controls = await interpret(interactionSpecHandler.create({ name: "content-list-controls", createForm: {"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":"true"}]}, rowClick: {"navigateTo":"/content/{node}"}, rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null, create_surface: null, create_mode_hint: null }), storage);
       const _pool = Object.assign({}, (afterResult_create_content_controls?.output ?? {}));
       const _fixtureInput = { ..._pool } as Record<string, unknown>;
       const result = await interpret(interactionSpecHandler.list({ ..._fixtureInput }), storage);
@@ -337,7 +358,7 @@ describe('InteractionSpec functional handler', () => {
     it('fixture "addRowAction_ok" -> ok', async () => {
       if (typeof interactionSpecHandler.addRowAction !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_create_content_controls = await interpret(interactionSpecHandler.create({ name: "content-list-controls", createForm: {"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":"true"}]}, rowClick: {"navigateTo":"/content/{node}"}, rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null }), storage);
+      const afterResult_create_content_controls = await interpret(interactionSpecHandler.create({ name: "content-list-controls", createForm: {"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":"true"}]}, rowClick: {"navigateTo":"/content/{node}"}, rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null, create_surface: null, create_mode_hint: null }), storage);
       const _pool = Object.assign({}, (afterResult_create_content_controls?.output ?? {}));
       const _fixtureInput = { name: "content-list-controls", binding: "action-binding-1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
@@ -362,7 +383,7 @@ describe('InteractionSpec functional handler', () => {
     it('fixture "addRowAction_empty_binding" -> error', async () => {
       if (typeof interactionSpecHandler.addRowAction !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_create_content_controls = await interpret(interactionSpecHandler.create({ name: "content-list-controls", createForm: {"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":"true"}]}, rowClick: {"navigateTo":"/content/{node}"}, rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null }), storage);
+      const afterResult_create_content_controls = await interpret(interactionSpecHandler.create({ name: "content-list-controls", createForm: {"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":"true"}]}, rowClick: {"navigateTo":"/content/{node}"}, rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null, create_surface: null, create_mode_hint: null }), storage);
       const _pool = Object.assign({}, (afterResult_create_content_controls?.output ?? {}));
       const _fixtureInput = { name: "content-list-controls", binding: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
@@ -433,7 +454,7 @@ describe('InteractionSpec functional handler', () => {
     it('fixture "setCreateBinding_ok" -> ok', async () => {
       if (typeof interactionSpecHandler.setCreateBinding !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_create_content_controls = await interpret(interactionSpecHandler.create({ name: "content-list-controls", createForm: {"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":"true"}]}, rowClick: {"navigateTo":"/content/{node}"}, rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null }), storage);
+      const afterResult_create_content_controls = await interpret(interactionSpecHandler.create({ name: "content-list-controls", createForm: {"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":"true"}]}, rowClick: {"navigateTo":"/content/{node}"}, rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null, create_surface: null, create_mode_hint: null }), storage);
       const _pool = Object.assign({}, (afterResult_create_content_controls?.output ?? {}));
       const _fixtureInput = { name: "content-list-controls", binding: "create-binding-1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
@@ -458,7 +479,7 @@ describe('InteractionSpec functional handler', () => {
     it('fixture "setCreateBinding_empty_binding" -> error', async () => {
       if (typeof interactionSpecHandler.setCreateBinding !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_create_content_controls = await interpret(interactionSpecHandler.create({ name: "content-list-controls", createForm: {"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":"true"}]}, rowClick: {"navigateTo":"/content/{node}"}, rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null }), storage);
+      const afterResult_create_content_controls = await interpret(interactionSpecHandler.create({ name: "content-list-controls", createForm: {"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":"true"}]}, rowClick: {"navigateTo":"/content/{node}"}, rowActions: [], pickerMode: "false", createProgram: null, actionProgram: null, create_surface: null, create_mode_hint: null }), storage);
       const _pool = Object.assign({}, (afterResult_create_content_controls?.output ?? {}));
       const _fixtureInput = { name: "content-list-controls", binding: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
@@ -507,6 +528,10 @@ describe('InteractionSpec functional handler', () => {
       const storage = createInMemoryStorage();
     });
 
+    it("create_surface and create_mode_hint are stored and retrieved", async () => {
+      const storage = createInMemoryStorage();
+    });
+
   });
 
   describe('state invariants (stateful PBT)', () => {
@@ -515,7 +540,7 @@ describe('InteractionSpec functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), createForm: fc.string({ minLength: 1, maxLength: 50 }), rowClick: fc.string({ minLength: 1, maxLength: 50 }), rowActions: fc.string({ minLength: 1, maxLength: 50 }), pickerMode: fc.boolean(), createProgram: fc.string(), actionProgram: fc.string() }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), createForm: fc.string({ minLength: 1, maxLength: 50 }), rowClick: fc.string({ minLength: 1, maxLength: 50 }), rowActions: fc.string({ minLength: 1, maxLength: 50 }), pickerMode: fc.boolean(), createProgram: fc.string(), actionProgram: fc.string(), create_surface: fc.string(), create_mode_hint: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
               fc.record({ action: fc.constant('addRowAction'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), binding: fc.string({ minLength: 1, maxLength: 50 }) }) }),
@@ -549,7 +574,7 @@ describe('InteractionSpec functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), createForm: fc.string({ minLength: 1, maxLength: 50 }), rowClick: fc.string({ minLength: 1, maxLength: 50 }), rowActions: fc.string({ minLength: 1, maxLength: 50 }), pickerMode: fc.boolean(), createProgram: fc.string(), actionProgram: fc.string() }) }),
+              fc.record({ action: fc.constant('create'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), createForm: fc.string({ minLength: 1, maxLength: 50 }), rowClick: fc.string({ minLength: 1, maxLength: 50 }), rowActions: fc.string({ minLength: 1, maxLength: 50 }), pickerMode: fc.boolean(), createProgram: fc.string(), actionProgram: fc.string(), create_surface: fc.string(), create_mode_hint: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({  }) }),
               fc.record({ action: fc.constant('addRowAction'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), binding: fc.string({ minLength: 1, maxLength: 50 }) }) }),
@@ -598,7 +623,7 @@ describe('InteractionSpec functional handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), createForm: fc.string({ minLength: 1, maxLength: 50 }), rowClick: fc.string({ minLength: 1, maxLength: 50 }), rowActions: fc.string({ minLength: 1, maxLength: 50 }), pickerMode: fc.boolean(), createProgram: fc.string(), actionProgram: fc.string() }),
+          fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), createForm: fc.string({ minLength: 1, maxLength: 50 }), rowClick: fc.string({ minLength: 1, maxLength: 50 }), rowActions: fc.string({ minLength: 1, maxLength: 50 }), pickerMode: fc.boolean(), createProgram: fc.string(), actionProgram: fc.string(), create_surface: fc.string(), create_mode_hint: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
             const result = await safeInvoke(async () => {

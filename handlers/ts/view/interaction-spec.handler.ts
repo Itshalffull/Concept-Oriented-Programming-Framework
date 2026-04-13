@@ -38,10 +38,19 @@ const _handler: FunctionalConceptHandler = {
     const pickerMode = (input.pickerMode ?? false) as boolean;
     const createProgramRef = (input.createProgram ?? null) as string | null;
     const actionProgramRef = (input.actionProgram ?? null) as string | null;
+    const createSurface = (input.create_surface ?? null) as string | null;
+    const createModeHint = (input.create_mode_hint ?? null) as string | null;
 
     if (!name || name.trim() === '') {
       return complete(createProgram(), 'error', {
         message: 'name is required',
+      }) as StorageProgram<Result>;
+    }
+
+    const validModeHints = ['modal', 'page', 'panel'];
+    if (createModeHint !== null && !validModeHints.includes(createModeHint)) {
+      return complete(createProgram(), 'error', {
+        message: `create_mode_hint must be one of "modal", "page", or "panel"; got "${createModeHint}"`,
       }) as StorageProgram<Result>;
     }
 
@@ -69,6 +78,8 @@ const _handler: FunctionalConceptHandler = {
           actionBindings: null,
           createBinding: null,
           bulkBindings: null,
+          create_surface: createSurface,
+          create_mode_hint: createModeHint,
         });
         return complete(b2, 'ok', { interaction: name });
       },
@@ -93,6 +104,10 @@ const _handler: FunctionalConceptHandler = {
             rowClick: existing.rowClick as string,
             rowActions: existing.rowActions as string,
             pickerMode: existing.pickerMode as boolean,
+            createProgram: (existing.createProgram ?? null) as string | null,
+            actionProgram: (existing.actionProgram ?? null) as string | null,
+            create_surface: (existing.create_surface ?? null) as string | null,
+            create_mode_hint: (existing.create_mode_hint ?? null) as string | null,
           };
         }),
       (b) =>
