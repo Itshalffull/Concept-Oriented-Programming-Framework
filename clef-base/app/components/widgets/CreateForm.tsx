@@ -405,6 +405,7 @@ export const CreateForm: React.FC<CreateFormProps> = ({
   return (
     <div
       data-surface="mag651-form-overlay"
+      data-keybinding-scope="app.form"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div data-surface="mag651-field-panel">

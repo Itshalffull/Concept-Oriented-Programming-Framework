@@ -1,0 +1,76 @@
+# ActionBinding seeds — form scope keyboard actions (KB-21).
+#
+# PRD:  docs/plans/keybinding-prd.md Phase H §21
+# Card: KB-21
+#
+# Companions to KeyBinding.form.seeds.yaml. Each entry is a named
+# ActionBinding that the KeyBinding dispatcher invokes when the
+# corresponding chord fires inside the "app.form" scope.
+#
+# Targets use synthetic surface action identifiers (Form/<action>).
+# The actual behavior is wired by the form components themselves:
+# FormRenderer calls onSubmit / onCancel; FormBuilder calls handleSave /
+# handleCancel. Components discover these bindings via ActionBinding/invoke
+# dispatched from the KeyBinding resolver — no additional coupling to the
+# dispatcher is needed beyond carrying data-keybinding-scope="app.form".
+
+concept: ActionBinding
+action: bind
+entries:
+  # ------------------------------------------------------------------
+  # form-save — triggered by Cmd+S in app.form scope.
+  # Causes the focused form to perform a save or submit operation.
+  # FormRenderer interprets this as a form submit; FormBuilder interprets
+  # it as an explicit save of the current FormSpec layout.
+  # ------------------------------------------------------------------
+  - name: form-save
+    binding: form-save
+    target: "Form/save"
+    parameterMap: '{}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    palette_command: false
+    context_menu: false
+    section: "Editing"
+    label: "Save Form"
+    icon: "save"
+    keyboard_shortcut: "Meta+s"
+
+  # ------------------------------------------------------------------
+  # form-cancel — triggered by Esc in app.form scope (priority 10,
+  # bubble phase; modal Esc at priority 100 in app.modal scope wins).
+  # Causes the focused form to cancel and close without saving.
+  # ------------------------------------------------------------------
+  - name: form-cancel
+    binding: form-cancel
+    target: "Form/cancel"
+    parameterMap: '{}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    palette_command: false
+    context_menu: false
+    section: "Editing"
+    label: "Cancel Form"
+    icon: "x"
+    keyboard_shortcut: "Escape"
+
+  # ------------------------------------------------------------------
+  # form-submit-close — triggered by Cmd+Enter in app.form scope.
+  # Submits the form and closes the container (modal or panel).
+  # Distinct from bare Enter (which adds a newline in textareas).
+  # ------------------------------------------------------------------
+  - name: form-submit-close
+    binding: form-submit-close
+    target: "Form/submitAndClose"
+    parameterMap: '{}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    palette_command: false
+    context_menu: false
+    section: "Editing"
+    label: "Submit and Close Form"
+    icon: "check"
+    keyboard_shortcut: "Meta+Enter"

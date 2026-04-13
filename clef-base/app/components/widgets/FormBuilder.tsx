@@ -1311,6 +1311,7 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({
       data-part="form-builder"
       data-schema-id={schemaId}
       data-form-name={formName}
+      data-keybinding-scope="app.form"
     >
       {/* Toolbar */}
       <div

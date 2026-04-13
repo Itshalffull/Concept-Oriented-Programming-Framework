@@ -829,7 +829,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
   const isLastStep = !hasSteps || currentStep === steps.length - 1;
 
   return (
-    <div data-part="form-renderer" data-schema-id={schemaId} data-mode={mode}>
+    <div data-part="form-renderer" data-schema-id={schemaId} data-mode={mode} data-keybinding-scope="app.form">
       {!compact && hasSteps && (
         <StepBar steps={steps} currentStep={currentStep} compact={compact} />
       )}

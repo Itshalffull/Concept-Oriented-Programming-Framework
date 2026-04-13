@@ -1,0 +1,101 @@
+# KeyBinding seeds — form scope bindings (KB-21).
+#
+# PRD:  docs/plans/keybinding-prd.md Phase H §21
+# Card: KB-21
+#
+# Registers keyboard shortcuts for the "app.form" scope. These bindings
+# replace (or formalize) keyboard behavior in FormRenderer, FormBuilder,
+# and CreateForm. The scope is set via data-keybinding-scope="app.form"
+# on each root container.
+#
+# Scope: app.form
+#   Activated whenever focus is inside an element whose closest ancestor
+#   (including itself) carries data-keybinding-scope="app.form". Because
+#   scope resolution walks upward and stops at the first match, form
+#   bindings are active inside form containers but do not bleed into the
+#   wider app scope.
+#
+# Binding notes:
+#
+#   kb-form-save (Cmd+S)
+#     Triggers a save/update on the active form. Works in both FormBuilder
+#     (explicit save) and FormRenderer (treated as submit). Priority 0.
+#     Phase: capture so it fires before any text editor inside the form
+#     intercepts the combination.
+#
+#   kb-form-cancel (Esc)
+#     Cancels / dismisses the active form. Priority lower than recorder and
+#     modal (priority 10) so that the recorder's Esc (which sets recorderActive
+#     to suppress the dispatcher entirely) and the modal-scope kb-modal-esc
+#     (priority 100, scope app.modal) both win. Phase: bubble so that any
+#     element-level handler that has already called event.defaultPrevented
+#     (e.g., the recorder) suppresses this binding.
+#
+#   kb-form-submit-and-close (Cmd+Enter)
+#     Submits the form and closes the container (modal/panel). Priority 0.
+#     Phase: capture. This is distinct from the bare Enter confirm binding in
+#     app.modal (kb-modal-enter) — Cmd+Enter is an explicit "I'm done" gesture
+#     that works even when focus is inside a textarea (Enter alone would add a
+#     newline there, Cmd+Enter always submits).
+#
+# Tab / Shift+Tab:
+#   NOT registered. Browser default focus traversal is correct behavior for
+#   form fields. Overriding it would break standard accessibility patterns.
+#
+# ActionBinding companions: clef-base/seeds/ActionBinding.form-keys.seeds.yaml
+
+concept: KeyBinding
+action: register
+entries:
+  # ------------------------------------------------------------------
+  # Cmd+S — save / submit the form
+  # ------------------------------------------------------------------
+  - binding: kb-form-save
+    label: "Save Form"
+    description: "Saves or submits the active form (Cmd+S)"
+    category: "Editing"
+    scope: "app.form"
+    priority: 0
+    chord: '[{"mod":["mod"],"key":"s","code":"KeyS"}]'
+    phase: "capture"
+    onlyOutsideTextInput: false
+    overridesBrowser: true
+    actionBinding: "form-save"
+    params: ""
+
+  # ------------------------------------------------------------------
+  # Esc — cancel / dismiss the form
+  # Lower priority (10) than modal Esc (100) and recorder (suppresses
+  # dispatcher entirely via recorderActive ref). Bubble phase so that
+  # event.defaultPrevented from a recorder capture stops this binding.
+  # ------------------------------------------------------------------
+  - binding: kb-form-cancel
+    label: "Cancel Form"
+    description: "Cancels or dismisses the active form (Escape)"
+    category: "Editing"
+    scope: "app.form"
+    priority: 10
+    chord: '[{"mod":[],"key":"Escape","code":"Escape"}]'
+    phase: "bubble"
+    onlyOutsideTextInput: false
+    overridesBrowser: false
+    actionBinding: "form-cancel"
+    params: ""
+
+  # ------------------------------------------------------------------
+  # Cmd+Enter — submit and close
+  # Works even when focus is inside a textarea (bare Enter adds newline;
+  # Cmd+Enter is the unambiguous "submit" gesture).
+  # ------------------------------------------------------------------
+  - binding: kb-form-submit-and-close
+    label: "Submit and Close Form"
+    description: "Submits the form and closes the container (Cmd+Enter)"
+    category: "Editing"
+    scope: "app.form"
+    priority: 0
+    chord: '[{"mod":["mod"],"key":"Enter","code":"Enter"}]'
+    phase: "capture"
+    onlyOutsideTextInput: false
+    overridesBrowser: false
+    actionBinding: "form-submit-close"
+    params: ""
