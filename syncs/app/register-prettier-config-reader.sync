@@ -1,0 +1,41 @@
+# Register the prettier-config ManifestReader adapter with the
+# ManifestReader registry during kernel boot. Once this sync fires,
+# ProviderManifest/load can dispatch .prettierrc*, prettier.config.*,
+# and package.json files to the prettier-config reader implementation
+# in handlers/ts/readers/prettier-config.reader.ts, which translates
+# them into Format entries using Prettier's own configuration
+# resolution semantics plus parser-to-language fan-out of overrides[].
+#
+# See docs/plans/virtual-provider-registry-prd.md §2 and VPR-05.
+
+sync RegisterPrettierConfigReader [eager]
+  purpose {
+    On kernel boot, register the prettier-config ManifestReader adapter
+    so ProviderManifest can translate Prettier configuration files into
+    normalized Format provider entries, with base config mapped to the
+    wildcard slot and overrides[] fanned out to language-specific slots.
+  }
+when {
+  KernelBoot/boot: [ projectRoot: ?projectRoot; manifestPath: ?manifestPath ]
+    => ok(kernel: ?kernel; concepts: ?concepts; syncs: ?syncs)
+}
+then {
+  ManifestReader/register: [
+    reader: "prettier-config";
+    formats: [
+      ".prettierrc",
+      ".prettierrc.json",
+      ".prettierrc.yaml",
+      ".prettierrc.yml",
+      ".prettierrc.js",
+      ".prettierrc.cjs",
+      ".prettierrc.mjs",
+      ".prettierrc.toml",
+      "prettier.config.js",
+      "prettier.config.cjs",
+      "prettier.config.mjs",
+      "package.json"
+    ];
+    priority: 80
+  ]
+}
