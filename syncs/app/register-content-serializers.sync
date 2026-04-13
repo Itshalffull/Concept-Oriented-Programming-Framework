@@ -62,3 +62,20 @@ then {
     config: "{\"pretty\":true}"
   ]
 }
+
+sync RegisterPdfContentSerializer [eager]
+  purpose: "Bind the pdf-serialize provider to target=pdf in the ContentSerializer concept once the content-serializer PluginRegistry slot is available, enabling ContentNode tree -> print-ready HTML (with @page A4 rules) and browser print-dialog trigger. Server-side Puppeteer fidelity is deferred per PRD §6."
+when {
+  PluginRegistry/register: [ type: "content-serializer"; name: ?name ]
+    => ok(plugin: ?plugin)
+}
+where {
+  eq(?name, "pdf-serialize")
+}
+then {
+  ContentSerializer/register: [
+    provider: "pdf-serialize";
+    target: "pdf";
+    config: "{\"pageSize\":\"A4\",\"margin\":\"20mm\"}"
+  ]
+}
