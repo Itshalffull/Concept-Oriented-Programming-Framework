@@ -26,6 +26,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useKernelInvoke } from '../../../lib/clef-provider';
 import { ActionButton } from './ActionButton';
 import { Badge } from './Badge';
+import { KeybindingHint } from './KeybindingHint';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -584,7 +585,7 @@ export const UserSyncEditor: React.FC<UserSyncEditorProps> = ({
         <ActionButton
           binding="user-sync-validate"
           context={{ syncId, name, sourceText, author }}
-          label={fsmState === 'validating' ? 'Validating…' : 'Validate (Ctrl+V)'}
+          label={fsmState === 'validating' ? 'Validating…' : 'Validate'}
           buttonVariant="default"
           disabled={validateDisabled}
           onSuccess={() => handleValidate()}
@@ -598,7 +599,7 @@ export const UserSyncEditor: React.FC<UserSyncEditorProps> = ({
             <ActionButton
               binding="user-sync-activate"
               context={{ syncId }}
-              label={fsmState === 'activating' ? 'Activating…' : 'Activate (Ctrl+Enter)'}
+              label={fsmState === 'activating' ? 'Activating…' : 'Activate'}
               buttonVariant="primary"
               disabled={activateDisabled}
               onSuccess={() => handleActivate()}
@@ -620,13 +621,22 @@ export const UserSyncEditor: React.FC<UserSyncEditorProps> = ({
           </>
         )}
 
-        {/* Keyboard hint */}
+        {/* Keyboard hint — TODO KB-16+: seed "user-sync-validate-kbd" and "user-sync-activate-kbd" bindings */}
         <span style={{
           marginLeft: 'auto',
           fontSize: 'var(--typography-body-sm-size, 0.75rem)',
           color: 'var(--palette-on-surface-variant)',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '0.25em',
+          flexWrap: 'wrap',
         }}>
-          Ctrl+S / Ctrl+V to validate · Ctrl+Enter to activate · Esc to reset
+          <KeybindingHint actionBindingId="user-sync-validate-kbd" variant="keycap-only" />
+          {' '}to validate
+          {' ·'}
+          {' '}
+          <KeybindingHint actionBindingId="user-sync-activate-kbd" variant="keycap-only" />
+          {' '}to activate · Esc to reset
         </span>
       </div>
     </div>

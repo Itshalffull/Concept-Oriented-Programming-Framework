@@ -12,6 +12,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useKernelInvoke } from '../../lib/clef-provider';
+import { KeybindingHint } from './widgets/KeybindingHint';
 
 export const QuickCapture: React.FC = () => {
   const invoke = useKernelInvoke();
@@ -22,6 +23,8 @@ export const QuickCapture: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errorVariant, setErrorVariant] = useState<string | null>(null);
+  // TODO KB-16+: seed actionBindingId "quick-capture-open" in KeyBinding seeds
+  const [fabChordText, setFabChordText] = useState<string | null>(null);
   const titleRef = useRef<HTMLInputElement>(null);
 
   const openForm = useCallback(() => {
@@ -98,10 +101,16 @@ export const QuickCapture: React.FC = () => {
   return (
     <>
       {/* Floating Action Button */}
+      {/* KeybindingHint tooltip variant — supplies chord text via onChordText */}
+      <KeybindingHint
+        actionBindingId="quick-capture-open"
+        variant="tooltip"
+        onChordText={setFabChordText}
+      />
       <button
         type="button"
-        aria-label="Quick capture (Ctrl+N)"
-        title="Quick capture (Ctrl+N)"
+        aria-label={fabChordText ? `Quick capture (${fabChordText})` : 'Quick capture'}
+        title={fabChordText ? `Quick capture (${fabChordText})` : 'Quick capture'}
         onClick={openForm}
         style={{
           position: 'fixed',
@@ -283,7 +292,10 @@ export const QuickCapture: React.FC = () => {
                 opacity: 0.5,
                 textAlign: 'right',
               }}>
-                Tip: press Ctrl+N (Cmd+N) from anywhere
+                {/* TODO KB-16+: "quick-capture-open" binding seed needed */}
+                Tip: press{' '}
+                <KeybindingHint actionBindingId="quick-capture-open" variant="keycap-only" />
+                {' '}from anywhere
               </div>
             </form>
           </div>
