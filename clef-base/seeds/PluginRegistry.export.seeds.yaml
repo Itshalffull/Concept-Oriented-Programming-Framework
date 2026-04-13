@@ -1,0 +1,41 @@
+# PluginRegistry seeds — export-dialog decoration-layer plugin (PP-export-dialog).
+#
+# Registers the export-dialog widget as a decoration-layer plugin so that
+# Score, the keyboard-help panel, and future slot-resolver auto-mount paths
+# can discover it alongside the other editor decoration layers.
+#
+# The dialog itself is mounted on-demand via ModalStackProvider — not through
+# the generic SlotMount loop — because it requires nodeId + title props
+# threaded from the current document context. This PluginRegistry entry
+# provides:
+#   1. Discovery: Score + command-palette can find "export-dialog" by type.
+#   2. Feature flag: the "defaultEnabled" field controls whether the
+#      keyboard binding is shown in the help modal shortcut list.
+#   3. openBinding: links to the "export-doc-open" ActionBinding declared in
+#      ActionBinding.export.seeds.yaml, which maps Cmd+Shift+E to the open
+#      action and is surfaced in slash-menu and command-palette search.
+#
+# PRD card: PP-export-dialog (5f37e323-3273-48b2-9b11-ac93071b530e)
+# Widget spec: surface/widgets/export-dialog.widget
+# React adapter: clef-base/app/components/widgets/ExportDialog.tsx
+
+concept: PluginRegistry
+action: register
+entries:
+  - type: decoration-layer
+    name: export-dialog
+    metadata: >
+      {
+        "widget": "export-dialog",
+        "label": "Export Document",
+        "icon": "export",
+        "availableContexts": ["markdown", "wiki", "notebook", "persona", "workflow"],
+        "defaultEnabled": true,
+        "openBinding": "export-doc-open",
+        "order": 90,
+        "mountMode": "modal",
+        "props": {
+          "nodeId": "$rootNodeId",
+          "title": "$pageTitle"
+        }
+      }

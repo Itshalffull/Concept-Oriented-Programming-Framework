@@ -1,0 +1,49 @@
+# ActionBinding seeds — command palette global keyboard bindings.
+#
+# command-palette-open (Cmd+K / Ctrl+K):
+#   Opens the command palette modal via ModalStackProvider. The binding is
+#   palette_command tagged so it also appears inside the palette's own
+#   Commands section (making it self-documenting). The parameterMap is
+#   empty because the palette is opened by RecursiveBlockEditor's onKeyDown
+#   handler directly — this seed exists to advertise the shortcut and
+#   enable palette_command-tag search.
+#
+# command-palette-confirm (Enter):
+#   Confirms the currently highlighted palette item. Dispatched internally
+#   by CommandPalette.tsx when the user presses Enter with a result
+#   highlighted. Registered as a seed so that future automation tests and
+#   interaction-spec queries can discover the binding.
+#
+# Widget spec: surface/widgets/command-palette.widget
+# Card: PP-command-palette (df2a224d-e059-4ab4-b4b1-7c07124bfec2)
+
+concept: ActionBinding
+action: bind
+entries:
+  - name: command-palette-open
+    binding: command-palette-open
+    target: "ModalStack/open"
+    parameterMap: '{}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    palette_command: true
+    context_menu: false
+    section: "Navigation"
+    label: "Open Command Palette"
+    icon: "command"
+    keyboard_shortcut: "Meta+k"
+
+  - name: command-palette-confirm
+    binding: command-palette-confirm
+    target: "CommandPalette/confirm"
+    parameterMap: '{}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    palette_command: false
+    context_menu: false
+    section: "Navigation"
+    label: "Confirm Selection"
+    icon: "check"
+    keyboard_shortcut: "Enter"

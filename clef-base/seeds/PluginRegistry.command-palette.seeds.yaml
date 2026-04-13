@@ -1,0 +1,37 @@
+# PluginRegistry seeds — command-palette decoration-layer plugin (PP-command-palette).
+#
+# Registers the command-palette widget as a decoration-layer plugin so the
+# SlotResolver infrastructure can discover it inside RecursiveBlockEditor.
+# The palette is opened on-demand by Cmd+K / Ctrl+K via ModalStackProvider —
+# it is not rendered inline in the decoration-layer slot but rather pushed
+# as a modal overlay. The "decoration-layer" type here makes the plugin
+# discoverable to the keyboard-help panel (for shortcut listing) and to
+# future slot-resolver auto-mount paths.
+#
+# openBinding references command-palette-open (ActionBinding.command-palette.seeds.yaml),
+# which advertises the Cmd+K shortcut. The binding is fired directly from
+# RecursiveBlockEditor's handleKeyDown rather than through slot auto-mount,
+# so "defaultEnabled: false" intentionally prevents eager instantiation.
+#
+# Widget spec: surface/widgets/command-palette.widget
+# Card: PP-command-palette (df2a224d-e059-4ab4-b4b1-7c07124bfec2)
+
+concept: PluginRegistry
+action: register
+entries:
+  - type: decoration-layer
+    name: command-palette
+    metadata: >
+      {
+        "widget": "command-palette",
+        "label": "Command Palette",
+        "icon": "command",
+        "availableContexts": ["markdown", "wiki", "notebook", "persona", "workflow"],
+        "defaultEnabled": false,
+        "openBinding": "command-palette-open",
+        "order": 10,
+        "props": {
+          "sectionsEnabled": ["pages", "commands", "recents"],
+          "maxResults": 30
+        }
+      }

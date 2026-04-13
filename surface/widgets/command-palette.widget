@@ -1,0 +1,312 @@
+@version(1)
+widget command-palette {
+
+  purpose {
+    Global command palette modal opened by Cmd+K (Meta+K). Presents a
+    unified fuzzy-search surface over three result sections: Pages
+    (ContentNode records), Commands (ActionBinding entries tagged
+    palette_command or slash_command), and Recents (recently visited
+    pages from per-user session state). Keyboard navigation selects
+    items with ArrowUp/ArrowDown; Enter confirms the highlighted item
+    and navigates or fires the bound action; Escape closes the palette
+    without taking any action. Distinct from the slash-menu, which
+    handles inline block insertion at the cursor — the palette handles
+    global navigation and command dispatch.
+  }
+
+  anatomy {
+    root:           container    { Top-level modal host; spans full viewport behind backdrop }
+    backdrop:       container    { Full-viewport translucent overlay behind the dialog panel }
+    dialog:         container    { Visible palette panel containing the search input and results }
+    searchInput:    interactive  { Text input where the user types a query to filter results }
+    clearButton:    action       { Icon button that clears the current query }
+    resultList:     container    { Scrollable ordered list of all visible result items }
+    sectionHeader:  text         { Label separating Pages, Commands, and Recents sections }
+    resultItem:     action       { Single selectable result row: icon + label + type badge }
+    itemIcon:       presentation { Icon indicating the result type (page, command, recent) }
+    itemLabel:      text         { Primary display label for the result }
+    itemMeta:       text         { Secondary metadata: page schema tag or command shortcut }
+    emptyState:     container    { Message shown when no results match the current query }
+    loadingSpinner: presentation { Spinner shown while async search is in flight }
+    highlightMark:  presentation { Visual highlight decoration on the matched query substring }
+  }
+
+  states {
+    closed [initial] {
+      on OPEN -> searching;
+    }
+
+    searching {
+      on CLOSE -> closed;
+      on QUERY_CHANGE -> searching;
+      on NAVIGATE_DOWN -> navigating;
+      on NAVIGATE_UP -> navigating;
+      on CONFIRM -> closed;
+      entry [focusSearchInput; loadRecents];
+      exit [clearQuery; releaseFocus];
+    }
+
+    navigating {
+      on CLOSE -> closed;
+      on QUERY_CHANGE -> searching;
+      on NAVIGATE_DOWN -> navigating;
+      on NAVIGATE_UP -> navigating;
+      on CONFIRM -> closed;
+      on SEARCH_FOCUS -> searching;
+    }
+
+    loading {
+      on RESULTS_READY -> searching;
+      on CLOSE -> closed;
+    }
+  }
+
+  accessibility {
+    role: dialog;
+    modal: true;
+    keyboard {
+      Escape -> CLOSE;
+      ArrowDown -> NAVIGATE_DOWN;
+      ArrowUp -> NAVIGATE_UP;
+      Enter -> CONFIRM;
+    }
+    focus {
+      trap: true;
+      initial: searchInput;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "dialog";
+        aria-modal: "true";
+        aria-label: "Command palette";
+        aria-describedby: "command-palette-search-hint";
+      };
+      backdrop -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      dialog -> {
+        role: "document";
+      };
+      searchInput -> {
+        role: "combobox";
+        aria-label: "Search pages and commands";
+        aria-autocomplete: "list";
+        aria-expanded: if state != "closed" then "true" else "false";
+        aria-controls: "command-palette-results";
+        aria-activedescendant: "command-palette-active-item";
+      };
+      resultList -> {
+        role: "listbox";
+        id: "command-palette-results";
+        aria-label: "Search results";
+      };
+      resultItem -> {
+        role: "option";
+        aria-selected: if ?highlighted then "true" else "false";
+      };
+      sectionHeader -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      emptyState -> {
+        role: "status";
+        aria-live: "polite";
+      };
+    }
+  }
+
+  props {
+    initialQuery: String = ""
+    maxResults: Int = 30
+    sectionsEnabled: list String = ["pages", "commands", "recents"]
+    placeholder: String = "Search pages, commands..."
+    onNavigate: option String
+    onCommand: option String
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: if state == "closed" then "closed" else "open";
+      hidden: if state == "closed" then true else false;
+      aria-modal: "true";
+      role: "dialog";
+      aria-label: "Command palette";
+    }
+
+    backdrop -> {
+      data-part: "backdrop";
+      aria-hidden: "true";
+      onClick: send(CLOSE);
+    }
+
+    dialog -> {
+      data-part: "dialog";
+      role: "document";
+      onClick: noop;
+    }
+
+    searchInput -> {
+      data-part: "search-input";
+      role: "combobox";
+      type: "text";
+      aria-label: "Search pages and commands";
+      aria-autocomplete: "list";
+      aria-expanded: if state != "closed" then "true" else "false";
+      aria-controls: "command-palette-results";
+      placeholder: ?placeholder;
+      autoFocus: if state != "closed" then true else false;
+      onInput: send(QUERY_CHANGE);
+      onFocus: send(SEARCH_FOCUS);
+    }
+
+    clearButton -> {
+      data-part: "clear-button";
+      aria-label: "Clear search query";
+      onClick: send(QUERY_CHANGE);
+    }
+
+    resultList -> {
+      data-part: "result-list";
+      id: "command-palette-results";
+      role: "listbox";
+      aria-label: "Search results";
+    }
+
+    sectionHeader -> {
+      data-part: "section-header";
+      role: "presentation";
+      aria-hidden: "true";
+    }
+
+    resultItem -> {
+      data-part: "result-item";
+      role: "option";
+      tabIndex: -1;
+      onClick: send(CONFIRM);
+    }
+
+    itemIcon -> {
+      data-part: "item-icon";
+      aria-hidden: "true";
+    }
+
+    itemLabel -> {
+      data-part: "item-label";
+    }
+
+    itemMeta -> {
+      data-part: "item-meta";
+      aria-hidden: "true";
+    }
+
+    emptyState -> {
+      data-part: "empty-state";
+      role: "status";
+      aria-live: "polite";
+    }
+
+    loadingSpinner -> {
+      data-part: "loading-spinner";
+      role: "status";
+      aria-label: "Searching...";
+      aria-live: "polite";
+    }
+
+    highlightMark -> {
+      data-part: "highlight-mark";
+      aria-hidden: "true";
+    }
+  }
+
+  affordance {
+    serves: overlay;
+    specificity: 10;
+    when {
+      feature: "command-palette";
+    }
+    bind {
+      initialQuery: searchQuery;
+    }
+  }
+
+  invariant {
+    example "open then close via Escape": {
+      after root -> { data-state: "open" }
+      then searchInput -> { aria-expanded: "true" }
+      and root -> { aria-modal: "true" }
+      then backdrop.click -> ok
+      then root -> { data-state: "closed" }
+    }
+
+    example "keyboard navigation down selects next item": {
+      after root -> { data-state: "open" }
+      then resultList -> { role: "listbox" }
+      and resultItem -> { role: "option" }
+    }
+
+    example "confirm fires and closes": {
+      after root -> { data-state: "open" }
+      then searchInput -> { aria-expanded: "true" }
+    }
+
+    always "dialog hidden when closed": {
+      if state == "closed" then root.hidden = true
+    }
+
+    always "search input focused on open": {
+      if state != "closed" then searchInput.autoFocus = true
+    }
+
+    always "aria-modal true while open": {
+      if state != "closed" then root["aria-modal"] = "true"
+    }
+
+    always "resultList has listbox role": {
+      resultList.role = "listbox"
+    }
+
+    always "searchInput has combobox role": {
+      searchInput.role = "combobox"
+    }
+
+    always "aria-expanded reflects open state": {
+      if state != "closed" then searchInput["aria-expanded"] = "true"
+    }
+
+    always "data-state on root reflects FSM": {
+      if state == "closed" then root["data-state"] = "closed"
+      and if state != "closed" then root["data-state"] = "open"
+    }
+
+    never "focus escapes trap while open": {
+      exists e in focusEvents:
+        e.target.outside(dialog) and state != "closed"
+    }
+
+    never "both closed and visible simultaneously": {
+      state == "closed" and root.hidden = false
+    }
+
+    never "empty state and results visible simultaneously": {
+      emptyState.visible = true and resultList.childCount > 0
+    }
+
+    "Cmd+K must dispatch OPEN and transition root to searching state";
+    "Escape must dispatch CLOSE from any non-closed state";
+    "ArrowDown must advance highlighted item index cyclically through results";
+    "ArrowUp must retreat highlighted item index cyclically through results";
+    "Enter must confirm the currently highlighted result item";
+    "Backdrop click must dispatch CLOSE and transition to closed state";
+    "Focus must be trapped inside dialog while state is not closed";
+    "searchInput must receive initial focus when palette opens";
+    "Results must be grouped under section headers: Pages, Commands, Recents";
+    "Fuzzy match must highlight matched substrings in itemLabel via highlightMark";
+    "emptyState must appear when query produces zero results across all sections";
+    "loadingSpinner must appear during async ContentNode/search in-flight";
+    "palette_command and slash_command tagged ActionBindings must appear in Commands section";
+  }
+
+}

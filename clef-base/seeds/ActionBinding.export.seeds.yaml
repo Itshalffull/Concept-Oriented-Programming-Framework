@@ -1,0 +1,86 @@
+# ActionBinding seeds — document export bindings (PP-export-dialog).
+#
+# export-doc-open: opens the ExportDialog modal via the ModalStackProvider.
+#   Triggered by Cmd+Shift+E (Meta+Shift+E) from RecursiveBlockEditor.
+#   The binding itself is handled directly in RecursiveBlockEditor.tsx;
+#   this entry declares it as a named command for slash-menu and command-
+#   palette discovery.
+#
+# export-doc-as-markdown: drives ContentSerializer/serialize for Markdown.
+#   Serializes context.nodeId recursively when context.includeChildren is
+#   true, then triggers a browser Blob download of the .md file.
+#
+# export-doc-as-html: same pattern as markdown but produces .html output.
+#
+# export-doc-as-pdf: routes to window.print() with page-scoped print CSS
+#   injected. Does not produce a file download — uses the browser PDF dialog.
+#
+# export-doc-as-json: same pattern as markdown but produces structured
+#   .json output from ContentSerializer/serialize(format:"json").
+#
+# All five bindings are discoverable via slash_command so users can trigger
+# them from the inline slash menu as well as via keyboard shortcut.
+
+concept: ActionBinding
+action: bind
+entries:
+  - name: export-doc-open
+    binding: export-doc-open
+    target: "ModalStack/open"
+    parameterMap: '{"widgetId":"export-dialog","nodeId":"context.rootNodeId","title":"context.pageTitle"}'
+    executionPolicy: "immediate"
+    toolbar_command: false
+    slash_command: true
+    context_menu: false
+    section: "Export"
+    label: "Export document…"
+    icon: "export"
+    keyboard_shortcut: "Meta+Shift+E"
+
+  - name: export-doc-as-markdown
+    binding: export-doc-as-markdown
+    target: "ContentSerializer/serialize"
+    parameterMap: '{"node":"context.rootNodeId","format":"markdown","recursive":"context.includeChildren"}'
+    executionPolicy: "immediate"
+    toolbar_command: false
+    slash_command: true
+    context_menu: false
+    section: "Export"
+    label: "Export as Markdown"
+    icon: "file-text"
+
+  - name: export-doc-as-html
+    binding: export-doc-as-html
+    target: "ContentSerializer/serialize"
+    parameterMap: '{"node":"context.rootNodeId","format":"html","recursive":"context.includeChildren"}'
+    executionPolicy: "immediate"
+    toolbar_command: false
+    slash_command: true
+    context_menu: false
+    section: "Export"
+    label: "Export as HTML"
+    icon: "code"
+
+  - name: export-doc-as-pdf
+    binding: export-doc-as-pdf
+    target: "BrowserPrint/trigger"
+    parameterMap: '{"title":"context.pageTitle"}'
+    executionPolicy: "immediate"
+    toolbar_command: false
+    slash_command: true
+    context_menu: false
+    section: "Export"
+    label: "Export as PDF"
+    icon: "printer"
+
+  - name: export-doc-as-json
+    binding: export-doc-as-json
+    target: "ContentSerializer/serialize"
+    parameterMap: '{"node":"context.rootNodeId","format":"json","recursive":"context.includeChildren"}'
+    executionPolicy: "immediate"
+    toolbar_command: false
+    slash_command: true
+    context_menu: false
+    section: "Export"
+    label: "Export as JSON"
+    icon: "braces"

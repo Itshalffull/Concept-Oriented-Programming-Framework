@@ -1,0 +1,305 @@
+@version(1)
+widget export-dialog {
+
+  purpose {
+    Modal dialog for exporting the current document or document tree to a
+    chosen target format. Presents a format picker (Markdown, HTML, PDF, JSON),
+    a scope picker (current page only vs page with all descendant children), and
+    an include-children toggle that mirrors the scope selection. For text-based
+    targets (Markdown, HTML, JSON) a "Copy to clipboard" secondary action is
+    offered alongside the primary download button. The PDF target routes through
+    the browser print subsystem with page-appropriate CSS rather than a file
+    download. The dialog blocks interaction with the underlying editor while open;
+    Escape always dismisses without action.
+  }
+
+  anatomy {
+    root:                 container    { Top-level dialog panel, rendered inside a modal layer }
+    header:               container    { Title bar holding the dialog heading and close button }
+    heading:              text         { "Export document" label identifying the dialog purpose }
+    closeButton:          action       { Icon button that dismisses the dialog without exporting }
+    body:                 container    { Main content area: format picker, scope picker, options }
+    formatSection:        container    { Labelled section grouping the four target format buttons }
+    formatSectionLabel:   text         { "Export as" section heading }
+    formatButton:         action       { Selectable button for one export target format }
+    formatButtonLabel:    text         { Human-readable name of the format (Markdown, HTML, PDF, JSON) }
+    formatButtonHint:     text         { Short description of what the format produces }
+    scopeSection:         container    { Labelled section grouping the scope picker options }
+    scopeSectionLabel:    text         { "Scope" section heading }
+    scopeButton:          action       { Selectable button for one scope option (page vs page+children) }
+    scopeButtonLabel:     text         { Human-readable name of the scope option }
+    includeChildrenRow:   container    { Row holding the include-children toggle and its label }
+    includeChildrenToggle: action      { Checkbox / toggle that enables exporting child pages }
+    includeChildrenLabel:  text        { "Include child pages" label for the toggle }
+    footer:               container    { Action bar holding download and copy-to-clipboard buttons }
+    downloadButton:       action       { Primary action: trigger download (or print for PDF) }
+    clipboardButton:      action       { Secondary action: copy serialized content to clipboard (hidden for PDF) }
+    statusMessage:        text         { Transient status feedback: "Copied!", "Exporting...", error text }
+  }
+
+  states {
+    // Overall open/close lifecycle
+    visibility {
+      closed [initial] {
+        on OPEN -> open;
+      }
+      open {
+        on CLOSE -> closed;
+        on DISMISS -> closed;
+      }
+    }
+
+    // Format selection — one of the four targets must always be active
+    format {
+      markdown [initial] {
+        on SELECT_MARKDOWN -> markdown;
+        on SELECT_HTML -> html;
+        on SELECT_PDF -> pdf;
+        on SELECT_JSON -> json;
+      }
+      html {
+        on SELECT_MARKDOWN -> markdown;
+        on SELECT_HTML -> html;
+        on SELECT_PDF -> pdf;
+        on SELECT_JSON -> json;
+      }
+      pdf {
+        on SELECT_MARKDOWN -> markdown;
+        on SELECT_HTML -> html;
+        on SELECT_PDF -> pdf;
+        on SELECT_JSON -> json;
+      }
+      json {
+        on SELECT_MARKDOWN -> markdown;
+        on SELECT_HTML -> html;
+        on SELECT_PDF -> pdf;
+        on SELECT_JSON -> json;
+      }
+    }
+
+    // Scope selection — page-only or page with children
+    scope {
+      page-only [initial] {
+        on SELECT_PAGE_ONLY -> page-only;
+        on SELECT_PAGE_WITH_CHILDREN -> page-with-children;
+        on TOGGLE_INCLUDE_CHILDREN -> page-with-children;
+      }
+      page-with-children {
+        on SELECT_PAGE_ONLY -> page-only;
+        on SELECT_PAGE_WITH_CHILDREN -> page-with-children;
+        on TOGGLE_INCLUDE_CHILDREN -> page-only;
+      }
+    }
+
+    // Export operation lifecycle
+    operation {
+      idle [initial] {
+        on EXPORT_START -> exporting;
+        on CLIPBOARD_START -> copying;
+      }
+      exporting {
+        on EXPORT_SUCCESS -> idle;
+        on EXPORT_ERROR -> error;
+        entry [lockButtons];
+        exit [unlockButtons];
+      }
+      copying {
+        on COPY_SUCCESS -> copied;
+        on COPY_ERROR -> error;
+        entry [lockButtons];
+        exit [unlockButtons];
+      }
+      copied {
+        on DISMISS_STATUS -> idle;
+        entry [scheduleCopiedReset];
+      }
+      error {
+        on DISMISS_STATUS -> idle;
+        on EXPORT_START -> exporting;
+        on CLIPBOARD_START -> copying;
+      }
+    }
+  }
+
+  accessibility {
+    role: dialog;
+    keyboard {
+      Escape -> CLOSE;
+      Tab -> FOCUS_NEXT;
+      Enter -> EXPORT_START;
+    }
+    focus {
+      trap: true;
+      initial: downloadButton;
+    }
+    aria {
+      root -> {
+        role: "dialog";
+        aria-modal: "true";
+        aria-labelledby: heading;
+      };
+      closeButton -> {
+        role: "button";
+        aria-label: "Close export dialog";
+      };
+      formatButton -> {
+        role: "radio";
+        aria-checked: if state.format == self.format then "true" else "false";
+      };
+      scopeButton -> {
+        role: "radio";
+        aria-checked: if state.scope == self.scope then "true" else "false";
+      };
+      includeChildrenToggle -> {
+        role: "checkbox";
+        aria-checked: if state.scope == "page-with-children" then "true" else "false";
+      };
+      downloadButton -> {
+        role: "button";
+        aria-disabled: if state.operation != "idle" then "true" else "false";
+      };
+      clipboardButton -> {
+        role: "button";
+        aria-disabled: if state.operation != "idle" then "true" else "false";
+        aria-hidden: if state.format == "pdf" then "true" else "false";
+      };
+      statusMessage -> {
+        role: "status";
+        aria-live: "polite";
+      };
+    }
+  }
+
+  props {
+    nodeId: String
+    title: String = "Untitled"
+    open: Bool = false
+    initialFormat: union "markdown" | "html" | "pdf" | "json" = "markdown"
+    initialScope: union "page-only" | "page-with-children" = "page-only"
+  }
+
+  connect {
+    root -> {
+      data-state: if state.visibility == "open" then "open" else "closed";
+      data-format: state.format;
+      data-scope: state.scope;
+      data-operation: state.operation;
+    }
+    closeButton -> {
+      onClick: send(CLOSE);
+    }
+    formatButton -> {
+      data-selected: if state.format == self.format then "true" else "false";
+    }
+    scopeButton -> {
+      data-selected: if state.scope == self.scope then "true" else "false";
+    }
+    includeChildrenToggle -> {
+      checked: if state.scope == "page-with-children" then true else false;
+      onClick: send(TOGGLE_INCLUDE_CHILDREN);
+    }
+    downloadButton -> {
+      onClick: send(EXPORT_START);
+      disabled: if state.operation != "idle" then true else false;
+    }
+    clipboardButton -> {
+      onClick: send(CLIPBOARD_START);
+      disabled: if state.operation != "idle" then true else false;
+      hidden: if state.format == "pdf" then true else false;
+    }
+  }
+
+  affordance {
+    serves: overlay;
+    specificity: 8;
+    when { widgetType: "export-dialog" }
+  }
+
+  invariant {
+    example "open and select markdown then close": {
+      after root -> { data-state: "closed" }
+      then send(OPEN) -> ok
+      and root -> { data-state: "open" }
+      then send(SELECT_MARKDOWN) -> ok
+      and root -> { data-format: "markdown" }
+      then send(CLOSE) -> ok
+      and root -> { data-state: "closed" }
+    }
+
+    example "format selection is mutually exclusive": {
+      after send(OPEN) -> ok
+      and send(SELECT_HTML) -> ok
+      then root -> { data-format: "html" }
+      and formatButton -> { data-selected: "true" }
+    }
+
+    example "scope toggle mirrors include-children toggle": {
+      after send(OPEN) -> ok
+      and send(SELECT_PAGE_ONLY) -> ok
+      then includeChildrenToggle -> { checked: false }
+      then send(TOGGLE_INCLUDE_CHILDREN) -> ok
+      then includeChildrenToggle -> { checked: true }
+      and root -> { data-scope: "page-with-children" }
+    }
+
+    example "clipboard button hidden for pdf": {
+      after send(OPEN) -> ok
+      and send(SELECT_PDF) -> ok
+      then clipboardButton -> { hidden: true }
+    }
+
+    example "clipboard button visible for markdown": {
+      after send(OPEN) -> ok
+      and send(SELECT_MARKDOWN) -> ok
+      then clipboardButton -> { hidden: false }
+    }
+
+    example "download button disabled during export": {
+      after send(OPEN) -> ok
+      and send(EXPORT_START) -> ok
+      then downloadButton -> { disabled: true }
+      then send(EXPORT_SUCCESS) -> ok
+      then downloadButton -> { disabled: false }
+    }
+
+    example "copy triggers copied state then resets": {
+      after send(OPEN) -> ok
+      and send(CLIPBOARD_START) -> ok
+      and send(COPY_SUCCESS) -> ok
+      then root -> { data-operation: "copied" }
+      then send(DISMISS_STATUS) -> ok
+      and root -> { data-operation: "idle" }
+    }
+
+    example "escape closes dialog": {
+      after send(OPEN) -> ok
+      then root -> { data-state: "open" }
+      then Escape -> ok
+      and root -> { data-state: "closed" }
+    }
+
+    always "format state is one of four values": {
+      forall f in [state.format]:
+        f in ["markdown", "html", "pdf", "json"]
+    }
+
+    always "scope state is one of two values": {
+      forall s in [state.scope]:
+        s in ["page-only", "page-with-children"]
+    }
+
+    always "download button disabled when operation in progress": {
+      forall op in [state.operation]:
+        op in ["exporting", "copying"] implies downloadButton.disabled = true
+    }
+
+    never "clipboard button visible during pdf format": {
+      state.format = "pdf" and clipboardButton.hidden = false
+    }
+
+    never "both scope buttons appear active simultaneously": {
+      exists s1 in scopeButtons, s2 in scopeButtons:
+        s1 != s2 and s1.data-selected = "true" and s2.data-selected = "true"
+    }
+  }
+}
