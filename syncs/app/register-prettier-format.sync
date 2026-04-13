@@ -64,6 +64,20 @@ then {
   ]
 }
 
+sync RegisterPrettierSolidity [eager]
+  purpose: "Bind the prettier provider with the solidity-parse parser and prettier-plugin-solidity as the formatter for solidity so Format/format dispatches .sol text through prettier."
+when {
+  PluginRegistry/register: [ type: "format-provider"; name: "prettier" ]
+    => ok(plugin: ?plugin)
+}
+then {
+  Format/register: [
+    provider: "prettier";
+    language: "solidity";
+    config: "{\"parser\":\"solidity-parse\",\"plugins\":[\"prettier-plugin-solidity\"]}"
+  ]
+}
+
 sync RegisterPrettierHtml [eager]
   purpose: "Bind the prettier provider with the html parser as the formatter for html so Format/format dispatches HTML text through prettier."
 when {

@@ -78,11 +78,29 @@ export async function formatWithRegisteredProvider(
 }
 
 function installDefaultProviders(): void {
-  // Prettier: the `config` Bytes field carries the parser name (babel,
-  // typescript, json, css, html) as set up by register-prettier-format.sync.
+  // Prettier: the `config` Bytes field carries either a bare parser name
+  // (backwards-compatible path used by the js/ts/json/css/html syncs) or a
+  // JSON object { parser, plugins, ...prettierOptions }. The JSON form is
+  // used by providers like prettier-plugin-solidity that require declaring
+  // plugin module names on the call. See syncs/app/register-prettier-format.sync.
   registerFormatProvider('prettier', async (text, _language, config) => {
-    const parser = config && config.length > 0 ? config : 'babel';
-    return formatWithPrettier(text, parser);
+    if (!config || config.length === 0) {
+      return formatWithPrettier(text, 'babel');
+    }
+    // Try JSON first — if it parses to an object, extract parser and forward
+    // the remaining keys (plugins, tabWidth, etc.) as config.
+    try {
+      const parsed = JSON.parse(config);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        const parser = typeof parsed.parser === 'string' && parsed.parser.length > 0
+          ? parsed.parser
+          : 'babel';
+        return formatWithPrettier(text, parser, config);
+      }
+    } catch {
+      // Fall through — treat as plain parser-name string.
+    }
+    return formatWithPrettier(text, config);
   });
 }
 

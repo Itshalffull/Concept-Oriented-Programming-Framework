@@ -22,9 +22,12 @@
     "katex": "^0.16.11",
     "micromark": "^4.0.2",
     "prettier": "^3.3.0",
+    "prettier-plugin-solidity": "^1.4.1",
     "shiki": "^1.24.0",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",
+    "vscode-oniguruma": "^2.0.1",
+    "vscode-textmate": "^9.3.2",
     "web-tree-sitter": "^0.24.4",
     "yaml": "^2.8.2"
   },

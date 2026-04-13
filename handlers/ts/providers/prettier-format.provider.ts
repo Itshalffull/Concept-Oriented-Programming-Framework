@@ -115,6 +115,21 @@ function decodeConfig(config: string | undefined): Record<string, unknown> {
 }
 
 /**
+ * Dynamic-import a list of prettier plugin module names and return the
+ * resolved plugin objects in the same order. Plugins failing to load are
+ * surfaced as thrown errors — callers (Format dispatch) translate to the
+ * format -> error variant.
+ */
+async function loadPlugins(names: string[]): Promise<unknown[]> {
+  const plugins: unknown[] = [];
+  for (const name of names) {
+    const mod = (await import(name)) as { default?: unknown };
+    plugins.push(mod.default ?? mod);
+  }
+  return plugins;
+}
+
+/**
  * Format `text` with prettier using the given `parser` (e.g. "typescript",
  * "babel", "json", "css", "html") and return a serialized Patch describing
  * the edit from input to formatted output.
@@ -135,10 +150,20 @@ export async function formatWithPrettier(
   config?: string,
 ): Promise<string> {
   const prettier = await loadPrettier();
-  const opts = {
+  const decoded = decodeConfig(config);
+  // plugins may be declared in options as string module names — dynamic-import
+  // each one and replace with resolved plugin objects before calling prettier.
+  const pluginNames = Array.isArray(decoded.plugins)
+    ? (decoded.plugins as unknown[]).filter((v): v is string => typeof v === 'string')
+    : [];
+  const resolvedPlugins = pluginNames.length > 0 ? await loadPlugins(pluginNames) : undefined;
+  const opts: Record<string, unknown> = {
     parser,
-    ...decodeConfig(config),
+    ...decoded,
   };
+  if (resolvedPlugins) {
+    opts.plugins = resolvedPlugins;
+  }
   const formatted = await prettier.format(text, opts);
   const ops = diffLines(text, formatted);
   return JSON.stringify(ops);
@@ -156,4 +181,5 @@ export const PRETTIER_LANGUAGE_PARSERS: Record<string, string> = {
   json: 'json',
   css: 'css',
   html: 'html',
+  solidity: 'solidity-parse',
 };
