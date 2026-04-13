@@ -228,9 +228,14 @@ Same shape for Vue (`useInvocation()` composable + `<InvocationStatusIndicator>`
 
 ## 9. Card Plan
 
-7 cards under epic "Invocation Lifecycle". See VK breakdown for blockers.
+7 cards under epic MAG-842 "Invocation Lifecycle". All shipped 2026-04-13.
 
-Phase ordering:
-- Phase 1 blocks Phase 2 (concept before widget binding)
-- Phase 2 blocks Phase 3 (hook before migration)
-- Phase 4 is end-to-end verification after Phase 3
+| Card | Title | Commit |
+|---|---|---|
+| INV-01 | Invocation[I, K] concept + handler + conformance | 71f07894 |
+| INV-02 | TrackInvocation syncs + ActionBinding pending/ok/error threading | ab247397 |
+| INV-03 | invocation-status.widget headless spec | 777b7e35 |
+| INV-04 | useInvocation hook + InvocationStatusIndicator | 689c8bbd |
+| INV-05 | Migrate ConceptBrowser / RecursiveBlockEditor / EntityDetail / Dashboard | dea75f7f |
+| INV-06 | Migrate ViewRenderer row + bulk + query retry | 81cf1ffa |
+| INV-07 | End-to-end fail → retry → complete lifecycle test | 9711dee1 |
