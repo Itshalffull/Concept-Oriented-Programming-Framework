@@ -252,7 +252,21 @@ The 4 reverse syncs handle deregistration; 4 forward syncs handle re-registratio
 
 Walks the existing parser's AST and emits `{start, end, kind, scope}` annotations where `kind` is one of `keyword | identifier | string | number | operator | comment | type | attribute`. Matches shiki's output shape so downstream widgets render both uniformly.
 
-### 4.8 rustfmt / swift-format subprocess vs wasm
+### 4.8 Composable provider extensions
+
+Entry schema supports `extensions: [...]` per row. The provider module knows how to compose its extensions; the manifest/registry are transparent pass-through.
+
+This matches how the ecosystem actually ships Parse/Highlight/Format capability:
+- **micromark/remark/rehype** — `extensions: [gfm, callout, math, ...]`
+- **shiki** — grammar injections + embedded languages
+- **tree-sitter** — combined highlight queries + language injections
+- **prettier** — `plugins: [...]`
+
+One concrete consequence: the 3 callout providers from Block Editor Loose Ends (LE-06) should be refactored into **micromark extensions** rather than standalone distinct-language Parse providers. One `markdown` slot, three optional extensions in `options`. Consumers of markdown parsing (smart-paste, etc.) make one call; the active extension set is determined by manifest/config, not by picking a language slot.
+
+Providers that don't support extensions (katex-parse, domparser-parse) ignore the field. No opt-in ceremony.
+
+### 4.9 rustfmt / swift-format subprocess vs wasm
 
 Prefer wasm where available (rustfmt has wasm builds); fall back to subprocess if the user's environment has the toolchain. Both paths return a Patch via the same line-diff pipeline as prettier-format.
 
