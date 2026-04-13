@@ -1,0 +1,48 @@
+derived Syntax [T] {
+
+  purpose {
+    Ergonomic facade over the three language-dispatch concepts — Parse,
+    Format, and Highlight — that together make up the block editor's
+    syntax surface. Each underlying concept remains independently
+    callable; Syntax exists as a single entry point so callers that want
+    "everything you can do with a language" do not need to know that
+    parsing, formatting, and highlighting are three separately registered
+    provider tables. Syntax itself owns no state — surface actions
+    delegate one-to-one to the corresponding underlying action via
+    composition syncs.
+  }
+
+  composes {
+    Parse [T]
+    Format [T]
+    Highlight [T]
+  }
+
+  syncs {
+    required: [
+      syntax-parse-delegate,
+      syntax-format-delegate,
+      syntax-highlight-delegate
+    ]
+  }
+
+  surface {
+    action parse(language: String, text: String) {
+      matches: Parse/parse
+    }
+
+    action format(language: String, text: String) {
+      matches: Format/format
+    }
+
+    action highlight(language: String, text: String) {
+      matches: Highlight/highlight
+    }
+  }
+
+  principle {
+    after parse(language: "markdown", text: "# Hello") -> ok(ast: _)
+    then format(language: "markdown", text: "# Hello") -> ok(patch: _)
+    then highlight(language: "markdown", text: "# Hello") -> ok(annotations: _)
+  }
+}

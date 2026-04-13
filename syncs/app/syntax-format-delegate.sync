@@ -1,0 +1,12 @@
+// Syntax/format surface action delegates to Format/format. Syntax is a
+// facade derived concept with no state; this sync is the composition
+// wiring that makes Syntax/format observable as Format/format.
+
+sync SyntaxFormatDelegate [eager]
+when {
+  Syntax/format: [ language: ?language; text: ?text ]
+    => []
+}
+then {
+  Format/format: [ language: ?language; text: ?text ]
+}

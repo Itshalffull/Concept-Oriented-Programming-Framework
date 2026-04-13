@@ -1,0 +1,12 @@
+// Syntax/highlight surface action delegates to Highlight/highlight. Syntax
+// is a facade derived concept with no state; this sync is the composition
+// wiring that makes Syntax/highlight observable as Highlight/highlight.
+
+sync SyntaxHighlightDelegate [eager]
+when {
+  Syntax/highlight: [ language: ?language; text: ?text ]
+    => []
+}
+then {
+  Highlight/highlight: [ language: ?language; text: ?text ]
+}

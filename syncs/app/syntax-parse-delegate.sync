@@ -1,0 +1,12 @@
+// Syntax/parse surface action delegates to Parse/parse. Syntax is a
+// facade derived concept with no state; this sync is the composition
+// wiring that makes Syntax/parse observable as Parse/parse.
+
+sync SyntaxParseDelegate [eager]
+when {
+  Syntax/parse: [ language: ?language; text: ?text ]
+    => []
+}
+then {
+  Parse/parse: [ language: ?language; text: ?text ]
+}
