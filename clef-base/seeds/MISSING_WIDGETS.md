@@ -35,12 +35,43 @@ replace `MISSING_WIDGET` placeholders with the real block widget IDs and verifie
 
 - **form-field-entity-picker-block** (needed for ContentNode.createdBy,
   TaxonomyTerm.vocab, TaxonomyTerm.parent, Article.author):
-  Single-entity reference picker. Accepts `entitySchema` config to scope
-  the search to one schema type. Renders a search-as-you-type combobox
-  that queries `ContentNode/listBySchema`. Emits the selected entity's node
-  ID as a string. Should support an optional `nullable` flag to allow clearing
-  the selection (for optional reference fields like TaxonomyTerm.parent).
-  Closest existing placeholder: `form-field-text-block`.
+
+  Single-entity reference picker. **The picker is architecturally a
+  ViewShell rendered as a dropdown** — same query pipeline, same
+  filter/sort/projection primitives, no new concepts. Configuration
+  follows the resolution hierarchy (cheapest → most expressive):
+
+  1. `entitySchema: "<name>"` — minimum constraint. Picker does
+     `ContentNode/listBySchema` with a result cap. Fine for small sets
+     (<100).
+  2. `entitySchema` + `filterSpec: "<named-filterspec>"` — applies a
+     named FilterSpec seed to scope results (e.g., "active-members"
+     when picking an assignee).
+  3. `dataSource: "<named-datasource>"` — picker delegates entirely to
+     a DataSourceSpec, covering federated queries, remote APIs, or
+     computed sets (including enum lists as a static DataSourceSpec,
+     which removes the need for a separate enum-picker widget).
+  4. `contextBindings: { <filterParam>: context.<runtimeField> }` —
+     runtime values from the user's current context (workspace, role,
+     selected row, etc.) flow into the filter's bound variables.
+
+  Optional configuration on top of any resolution mode:
+  - `sortSpec: "<named>"` — ordering (e.g. "recently-used")
+  - `projectionSpec: "<named>"` — which fields appear in dropdown rows
+  - `presentation: { displayField, secondaryField, avatarField,
+    max_results }` — dropdown row rendering hints
+  - `nullable: true` — allow clearing for optional reference fields
+    (TaxonomyTerm.parent)
+  - `multi: false` — single-select by default; `multi: true` would
+    split into a separate `form-field-entity-multi-picker-block`
+
+  Emits the selected entity's node ID as a string (or JSON array for
+  multi). Closest existing placeholder: `form-field-text-block`.
+
+  **Why ViewShell composition matters:** RBAC exclusions flow through
+  the filter layer (users can't pick what they can't see), custom
+  pickers are a config change not a new widget, performance is shared
+  with table views.
 
 - **form-field-datetime-block** (needed for ContentNode.createdAt,
   Article.publishedAt):
