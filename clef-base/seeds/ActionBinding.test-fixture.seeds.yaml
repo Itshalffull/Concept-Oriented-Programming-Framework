@@ -1,0 +1,27 @@
+# ActionBinding test-fixture seed — companion to KeyBinding.seeds.yaml.
+#
+# PRD:  docs/plans/keybinding-prd.md §4 Phase A
+# Card: KB-04
+#
+# Dispatch target for the kb-fixture-f12-test KeyBinding. Points at
+# Echo/send (a pure, side-effect-free no-op — it just stores a message)
+# so the smoke test can observe that the full pipeline fires without
+# triggering any user-visible behavior.
+#
+# Why Echo/send?
+#   - Exists in specs/app/echo.concept with a trivially-satisfiable
+#     signature (id: M, text: String).
+#   - Always returns ok, so Invocation/start always records a successful
+#     invocation — the smoke test's assertion target.
+#   - Has no side effects beyond its own state, so it will not perturb
+#     any other suite when the seed loads in production.
+
+concept: ActionBinding
+action: bind
+entries:
+  - name: test-fixture-f12
+    binding: test-fixture-f12
+    target: "Echo/send"
+    parameterMap: '{"id":"\"kb-fixture-f12-invocation\"","text":"\"KB-04 smoke test fired\""}'
+    executionPolicy: "auto"
+    label: "Test Fixture F12"

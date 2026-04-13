@@ -1,0 +1,39 @@
+# KeyBinding seeds — baseline default-scope registry (Phase A, KB-04).
+#
+# PRD:  docs/plans/keybinding-prd.md §4 Phase A
+# Card: KB-04
+#
+# This seed establishes the app-shell scope ("app") with a single fixture
+# entry used by the KB-04 end-to-end smoke test to verify the full dispatcher
+# pipeline: keydown → resolveKey → match → ActionBinding/invoke → Invocation
+# lifecycle.
+#
+# The fixture binding is F12 (no modifier) which intentionally does not
+# collide with any browser or OS shortcut in common desktop configurations
+# and is not used by any other Clef Base binding. It is scoped to "app" so
+# it resolves from any focused element.
+#
+# Subsequent Phase H seeds (KB-16..22) will layer real bindings onto this
+# registry (Cmd+K command palette, Cmd+B bold, etc.). Those seeds will not
+# collide with this fixture because they use modifier combinations.
+#
+# The companion ActionBinding entry lives in
+# clef-base/seeds/ActionBinding.test-fixture.seeds.yaml and dispatches to
+# a no-op target so the smoke test can confirm Invocation/start fires
+# without triggering any user-visible side effects.
+
+concept: KeyBinding
+action: register
+entries:
+  - binding: kb-fixture-f12-test
+    label: "Test Fixture (F12)"
+    description: "Used by KB-04 smoke test to confirm dispatcher → ActionBinding → Invocation lifecycle wiring"
+    category: "test"
+    scope: "app"
+    priority: 0
+    chord: '[{"mod":[],"key":"F12","code":"F12"}]'
+    phase: "bubble"
+    onlyOutsideTextInput: true
+    overridesBrowser: false
+    actionBinding: "test-fixture-f12"
+    params: ""
