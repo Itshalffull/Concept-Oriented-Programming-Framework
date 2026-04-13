@@ -2,7 +2,7 @@
 // @migrated dsl-constructs 2026-03-18
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, put, del, branch, complete, completeFrom, find,
+  createProgram, get as spGet, put, merge, del, branch, complete, completeFrom, find,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -118,7 +118,7 @@ const _outlineHandler: FunctionalConceptHandler = {
     p = spGet(p, 'outline', node, 'existing');
     p = branch(p, 'existing',
       (b) => {
-        let b2 = put(b, 'outline', node, { isCollapsed: true });
+        let b2 = merge(b, 'outline', node, { isCollapsed: true });
         return complete(b2, 'ok', { node });
       },
       (b) => complete(b, 'notfound', { message: 'Node not found' }),
@@ -134,7 +134,7 @@ const _outlineHandler: FunctionalConceptHandler = {
     p = spGet(p, 'outline', node, 'existing');
     p = branch(p, 'existing',
       (b) => {
-        let b2 = put(b, 'outline', node, { isCollapsed: false });
+        let b2 = merge(b, 'outline', node, { isCollapsed: false });
         return complete(b2, 'ok', { node });
       },
       (b) => complete(b, 'notfound', { message: 'Node not found' }),
@@ -154,7 +154,8 @@ const _outlineHandler: FunctionalConceptHandler = {
         let b2 = spGet(b, 'outline', newParent, 'newParentRecord');
         b2 = branch(b2, 'newParentRecord',
           (c) => {
-            let c2 = put(c, 'outline', node, { parent: newParent });
+            // merge (not put) preserves node/order/children/isCollapsed/createdAt.
+            let c2 = merge(c, 'outline', node, { parent: newParent });
             return complete(c2, 'ok', { node });
           },
           (c) => complete(c, 'notfound', { message: 'Parent not found' }),

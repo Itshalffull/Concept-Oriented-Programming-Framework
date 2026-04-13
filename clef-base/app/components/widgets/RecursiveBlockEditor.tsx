@@ -2804,8 +2804,12 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
             // client resolves the new parent itself and calls reparent.
             e.preventDefault();
             e.stopPropagation();
+            // Persist current buffer BEFORE reparent so loadChildren's
+            // re-mount doesn't read stale content from storage.
+            const currentText = blockContentRef.current?.textContent ?? '';
             void (async () => {
               try {
+                await invoke('ContentNode', 'update', { node: nodeId, content: currentText });
                 // Get my outline record to learn my parent + order.
                 const childrenResult = await invoke('Outline', 'children', {
                   parent: rootNodeId,
