@@ -80,3 +80,50 @@ replace `MISSING_WIDGET` placeholders with the real block widget IDs and verifie
   combined datetime-local `<input>` that emits an ISO-8601 datetime string.
   Should respect the user's locale for display but always store UTC.
   Closest existing placeholder: `form-field-date-block`.
+
+---
+
+## Discovered in Phase C — Continuation (AutomationRule edit form)
+
+- **form-field-binding-picker-block** (needed for AutomationRule.trigger):
+  Concept-action binding picker. The trigger field on an AutomationRule is a
+  dynamic string reference to a concept action installed in the current
+  workspace (e.g. `ContentNode/create`, `Workflow/transition`). Unlike a
+  static enum, the available options depend on which concepts are registered
+  in the kernel at runtime.
+
+  Architecture: **a ViewShell-backed picker** (same as form-field-entity-picker-block)
+  but querying `ScoreApi/listConcepts` + flattening to `concept/action` pairs
+  rather than ContentNode rows. The dropdown rows show concept name, action
+  name, and a short purpose snippet. Emits a `"Concept/action"` string.
+
+  Optional configuration:
+  - `filterKind: "trigger"` — limits to actions that are valid trigger points
+    (i.e. non-query, non-pure actions). Requires ScoreApi support for effect-based
+    filtering (post-Phase D).
+  - `allowFreeText: true` — fall back to plain text entry for custom trigger IDs
+    not yet modelled as concepts.
+
+  Until this widget ships, use `form-field-text-block` as placeholder with a
+  note in the overrides config.
+  Closest existing placeholder: `form-field-text-block`.
+
+- **form-field-condition-builder-block** (needed for AutomationRule.conditions):
+  Visual condition builder for the AutomationRule conditions JSON array. Each
+  condition is a `{ field, op, value }` triple. The widget renders a row-per-
+  condition UI with field-selector, operator dropdown, and value input. Emits a
+  JSON array string. Unlike the general-purpose `form-field-json-block`, this
+  widget validates structure and guides users away from raw JSON editing.
+
+  Until this widget ships, use `form-field-json-block` as placeholder.
+  Closest existing placeholder: `form-field-json-block`.
+
+- **form-field-action-builder-block** (needed for AutomationRule.actions):
+  Visual action step builder for the AutomationRule actions JSON array. Each
+  step is a `{ type, params }` object. The widget renders a step list with
+  type-picker (invoke-action-binding, webhook, set-field, etc.) and a
+  type-specific params sub-form. Emits a JSON array string. Conceptually
+  similar to the process-step editor but scoped to automation action types.
+
+  Until this widget ships, use `form-field-json-block` as placeholder.
+  Closest existing placeholder: `form-field-json-block`.

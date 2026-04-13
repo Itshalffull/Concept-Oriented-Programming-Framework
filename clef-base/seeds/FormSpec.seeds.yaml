@@ -1,4 +1,11 @@
 # FormSpec seeds — Phase C audit batch 1: ContentNode, TaxonomyTerm, Article.
+#                  Phase C audit batch 2: Canvas, ConnectorPort, ConstraintAnchor, DiagramNotation.
+#                  Phase C audit batch 3: Comment, File, Media, Page, Vocabulary.
+#                  Phase C continuation: AutomationRule edit-mode property pane.
+#                  Phase C continuation (admin/meta schemas): DisplayMode, ComponentMapping,
+#                    FieldPlacement, Theme, Suite.
+#                  Schemas skipped (Tier 1a — bespoke editor required): Concept, Derived,
+#                    Sync, Widget. See clef-base/seeds/TIER_1A_CANDIDATES.md.
 # Each FormSpec shell is created then updated with layout JSON and field widgets.
 # Field widget mapping uses ComponentMapping.form-field entries.
 # Widgets noted as MISSING_WIDGET are placeholders for Phase D — they map to
@@ -28,6 +35,177 @@ entries:
 
   - form: form-article-create
     schema: Article
+    name: create
+    mode: create
+
+  - form: form-canvas-create
+    schema: Canvas
+    name: create
+    mode: create
+
+  - form: form-connectorport-create
+    schema: ConnectorPort
+    name: create
+    mode: create
+
+  - form: form-constraintanchor-create
+    schema: ConstraintAnchor
+    name: create
+    mode: create
+
+  - form: form-diagramnotation-create
+    schema: DiagramNotation
+    name: create
+    mode: create
+
+  # ─── Batch 3: content-area schemas ─────────────────────────────────────────
+
+  # Comment — 5 fields after omitting system-managed createdAt from create-mode.
+  # create shell covers the authoring flow (body + target + author).
+  # edit-mode shell covers post-publish correction (body only).
+  - form: form-comment-create
+    schema: Comment
+    name: create
+    mode: create
+
+  - form: form-comment-edit
+    schema: Comment
+    name: edit
+    mode: edit
+
+  # File — 5 fields; hash is handler-computed on ingest so omitted from create-mode.
+  - form: form-file-create
+    schema: File
+    name: create
+    mode: create
+
+  - form: form-file-edit
+    schema: File
+    name: edit
+    mode: edit
+
+  # Media — 5 fields; all are user-supplied at upload time.
+  # No system-managed timestamps in Media schema.
+  - form: form-media-create
+    schema: Media
+    name: create
+    mode: create
+
+  # Page — 5 fields; no displayWidget Property set so Tier 1b does NOT fire.
+  # Both create-mode and edit-mode FormSpecs are needed.
+  # publishedAt is conditionally shown when template implies a publish workflow.
+  - form: form-page-create
+    schema: Page
+    name: create
+    mode: create
+
+  - form: form-page-edit
+    schema: Page
+    name: edit
+    mode: edit
+
+  # Vocabulary — 3 fields → flat layout.
+  # "terms" is a JSON array managed by TaxonomyTerm operations; shown in edit
+  # as a read-only summary. Omitted from create-mode (handler initialises to []).
+  - form: form-vocabulary-create
+    schema: Vocabulary
+    name: create
+    mode: create
+
+  - form: form-vocabulary-edit
+    schema: Vocabulary
+    name: edit
+    mode: edit
+
+  # ─── Phase C continuation: admin/meta schemas ────────────────────────────
+  #
+  # DisplayMode — create-mode: 3 user-supplied fields (schema, mode_id, name).
+  # The remaining fields (layout, component_mapping, placements, role_visibility,
+  # cacheable) are set via subsequent actions after the mode is created.
+  # 3 fields → flat layout.
+  - form: form-displaymode-create
+    schema: DisplayMode
+    name: create
+    mode: create
+
+  # ComponentMapping — create-mode: 6 concept-level fields mapped to the
+  # Schema.seeds field list (mapping, widget, concept, action) plus display_mode.
+  # The schema.seeds mapping field "concept" corresponds to concept-level "schema" and
+  # "action" to "display_mode"; "widget" to widget_id. "mapping" is the auto-generated ID.
+  # User-supplied at create time: name (label), widget_id, schema, display_mode,
+  # insertable (optional Bool), block_editor_context (optional list).
+  # 4 required + 2 optional → groups layout: "Identity" + "Block Editor".
+  - form: form-componentmapping-create
+    schema: ComponentMapping
+    name: create
+    mode: create
+
+  # FieldPlacement — create-mode: 2 required concept-level fields (source_field,
+  # formatter). Optional configuration (formatter_options, label_display,
+  # label_override, visible, role_visibility, field_mapping) is applied via the
+  # separate configure/set_visibility/set_field_mapping actions.
+  # 2 required + 5 optional → groups layout: "Field" + "Display".
+  - form: form-fieldplacement-create
+    schema: FieldPlacement
+    name: create
+    mode: create
+
+  # Theme — 5 schema fields: name, base, overrides, active, priority.
+  # "active" and "priority" govern activation state; the concept separates
+  # create (name + overrides) from activate (theme + priority).
+  # For the create form: name, base (optional extension), overrides (JSON token map).
+  # active and priority are set via Theme/activate, not the create action,
+  # so they are excluded from the create form.
+  # 3 create-mode fields → flat layout.
+  - form: form-theme-create
+    schema: Theme
+    name: create
+    mode: create
+
+  # Suite — 6 schema fields: name, version, description, conceptCount, syncCount, dependencies.
+  # conceptCount and syncCount are computed by the kernel from installed concepts/syncs
+  # and are omitted from the create form.
+  # User-supplied: name, version, description, dependencies.
+  # 4 fields → flat layout.
+  - form: form-suite-create
+    schema: Suite
+    name: create
+    mode: create
+
+  # ─── Phase C continuation: AutomationRule ─────────────────────────────────
+  # AutomationRule create flow is Tier 1a (user-sync-editor via CUX-06).
+  # This edit-mode shell serves the property pane / detail-view inline editor
+  # for already-existing rules — it does NOT replace the bespoke create surface.
+  #
+  # Fields: label (display name), description, trigger, conditions, actions, enabled.
+  # "rule" (the storage key / ID) is read-only identity — excluded from edit forms.
+  # system-managed fields (none beyond "rule") are omitted.
+  - form: form-automation-rule-edit
+    schema: AutomationRule
+    name: edit
+    mode: edit
+
+  # ─── Phase C continuation: versioning schemas ──────────────────────────────
+  #
+  # VersionSpace — 8 schema fields; 2 are system-managed and omitted from create:
+  #   overrideCount (incremented by handler on each override creation)
+  #   lastActivity  (updated by handler on any write to the space)
+  # User-editable fields for create: name, owner, status, visibility, parent, description.
+  # 6 fields → groups layout (heuristic: 5-7 fields, clear concern clusters).
+  # "Identity" group: name, owner — who owns this space.
+  # "Settings" group: status, visibility, parent, description — governance & topology.
+  - form: form-versionspace-create
+    schema: VersionSpace
+    name: create
+    mode: create
+
+  # VersionOverride — 5 schema fields; all user-supplied at creation time.
+  # No system-managed fields in the VersionOverride schema definition.
+  # 5 fields → groups layout.
+  # "Target" group: space, entity, operation — what is being overridden and how.
+  # "Change" group: fields, summary — what fields changed and human rationale.
+  - form: form-versionoverride-create
+    schema: VersionOverride
     name: create
     mode: create
 
@@ -74,3 +252,34 @@ entries:
     conditions: '{"publishedAt":{"show":{"field":"status","eq":"published"}}}'
     defaults: '{"status":"draft"}'
     overrides: '{"title":{"widget":"form-field-text-block","label":"Title","placeholder":"Article title","required":true},"body":{"widget":"form-field-richtext-block","label":"Body","required":true},"status":{"widget":"form-field-select-block","label":"Status","options":["draft","published","archived"],"required":true},"author":{"widget":"form-field-entity-picker-block","label":"Author","entitySchema":"User","required":false},"publishedAt":{"widget":"form-field-datetime-block","label":"Publish Date","required":false}}'
+
+  # ── AutomationRule (edit) ────────────────────────────────────────────────────
+  # Edit-mode property pane for already-existing automation rules.
+  # The create flow is Tier 1a (user-sync-editor); this FormSpec covers the
+  # inline edit surface (detail view / property sidebar) only.
+  #
+  # Layout: groups — "Basics" (label, description) | "Behavior" (trigger, conditions, actions, enabled)
+  # 6 fields total → groups is correct per the 5-7 field heuristic.
+  #
+  # "rule" (storage key / ID) is intentionally excluded: it is read-only identity,
+  # not editable in a detail pane.
+  #
+  # trigger: String field in the concept, but values are dynamic concept-action
+  # references (e.g. "ContentNode/create", "Workflow/transition") chosen at author
+  # time from whatever concepts are installed. A fixed-enum form-field-select-block
+  # would be too restrictive. Current placeholder is form-field-text-block.
+  # FUTURE WIDGET NEEDED: form-field-binding-picker-block — see MISSING_WIDGETS.md.
+  #
+  # conditions: JSON array of condition objects (e.g. field-equals, schema-matches).
+  # Placeholder: form-field-json-block (already in MISSING_WIDGETS.md batch 1).
+  #
+  # actions: JSON array of action step objects (type + params).
+  # Placeholder: form-field-json-block (same widget as conditions).
+  #
+  # enabled: Bool → form-field-checkbox-block (ships in the 6 baseline blocks).
+  - form: form-automation-rule-edit
+    layout: '{"type":"groups","groups":[{"id":"basics","label":"Basics","fieldIds":["label","description"]},{"id":"behavior","label":"Behavior","fieldIds":["trigger","conditions","actions","enabled"]}]}'
+    steps: null
+    conditions: null
+    defaults: null
+    overrides: '{"label":{"widget":"form-field-text-block","label":"Name","placeholder":"e.g. Notify on publish","required":true},"description":{"widget":"form-field-textarea-block","label":"Description","placeholder":"What does this rule do?","required":false},"trigger":{"widget":"form-field-text-block","label":"Trigger Event","placeholder":"e.g. ContentNode/create","required":true,"note":"PLACEHOLDER — replace with form-field-binding-picker-block when available"},"conditions":{"widget":"form-field-json-block","label":"Conditions (JSON)","placeholder":"[]","required":false,"note":"PLACEHOLDER — replace with form-field-condition-builder-block when available"},"actions":{"widget":"form-field-json-block","label":"Actions (JSON)","placeholder":"[]","required":true,"note":"PLACEHOLDER — replace with form-field-action-builder-block when available"},"enabled":{"widget":"form-field-checkbox-block","label":"Enabled","defaultChecked":false,"required":false}}'
