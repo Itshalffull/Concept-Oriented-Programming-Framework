@@ -85,3 +85,41 @@ entries:
   - entity: role-section
     key: isChildSchema
     value: "true"
+
+  # === displayWidget — Tier 1b create routing (CUX-07) ===
+  # These activate Tier 1b in the CreateForm dispatcher: when
+  # Property/get(schemaId, "displayWidget") returns a non-empty value,
+  # the create button fires ContentNode/createWithSchema then navigates
+  # to the entity detail page where the named widget (or the block editor
+  # for "block-editor") mounts with default Template blocks scaffolded.
+  #
+  # Tier 1a (InteractionSpec.create_surface) takes precedence over Tier 1b.
+  # For process-spec: Tier 1a is already wired via create_surface: flow-builder
+  # in InteractionSpec.process.seeds.yaml. Setting displayWidget: flow-builder
+  # here gives consistent Tier 1b coverage as a fallback for any code path
+  # that reaches Tier 1b resolution without a matching InteractionSpec.
+  #
+  # No specialized widget components exist for the other six schemas, so
+  # "block-editor" is the correct canonical value — it routes to the
+  # RecursiveBlockEditor on the entity detail page (see create-surfaces.ts).
+  - entity: agent-persona
+    key: displayWidget
+    value: block-editor
+  - entity: constitution
+    key: displayWidget
+    value: block-editor
+  - entity: process-spec
+    key: displayWidget
+    value: flow-builder
+  - entity: proposal
+    key: displayWidget
+    value: block-editor
+  - entity: circle
+    key: displayWidget
+    value: block-editor
+  - entity: policy
+    key: displayWidget
+    value: block-editor
+  - entity: role
+    key: displayWidget
+    value: block-editor
