@@ -1,0 +1,222 @@
+# KeyBinding seeds — block-editor keyboard shortcuts (KB-17, Phase H).
+#
+# PRD:  docs/plans/keybinding-prd.md §4 Phase H (card 17)
+# Card: KB-17
+#
+# This seed registers all keyboard bindings that were previously hardcoded as
+# onKeyDown handlers in RecursiveBlockEditor.tsx. After migration the editor
+# root carries data-keybinding-scope="app.editor" and list-block containers
+# carry data-keybinding-scope="app.editor.list". The useKeyBindings dispatcher
+# walks the scope chain and resolves bindings from this registry.
+#
+# Scope definitions:
+#   "app.editor"       — any focused element inside the block editor
+#   "app.editor.list"  — focused element inside a list-block container
+#
+# Chord format: JSON array of KeyStroke objects.
+#   mod = [] means no modifier; ["meta"] or ["ctrl"] for single modifier.
+#   "mod" (platform modifier) is NOT used here because the KeyBinding concept
+#   stores concrete mod values and the dispatcher normalises metaKey → "meta"
+#   and ctrlKey → "ctrl" at resolve time. Seeds must use the concrete values.
+#
+# onlyOutsideTextInput defaults:
+#   - true for pure modifier combos like Cmd+B (browser does not rely on these
+#     inside contentEditable for native behaviour)
+#   - false for "/" (slash typed inside contentEditable triggers the menu)
+#   - false for Tab / Shift+Tab inside list scope (we DO want to intercept Tab
+#     in list blocks to indent; Tab elsewhere is handled by the browser)
+#
+# The companion ActionBinding records live in:
+#   - clef-base/seeds/ActionBinding.seeds.yaml         (bold/italic/indent/undo)
+#   - clef-base/seeds/ActionBinding.editor-undo.seeds.yaml  (editor-undo/redo)
+#   - clef-base/seeds/ActionBinding.block-editor-keys.seeds.yaml (new bindings)
+
+concept: KeyBinding
+action: register
+entries:
+
+  # ── Cmd+B — bold ──────────────────────────────────────────────────────────
+  # Toggle bold on the current selection. ActionBinding "bold-toggle" is
+  # already seeded in ActionBinding.seeds.yaml (target: InlineMark/toggleMark,
+  # markKind="bold"). No duplicate ActionBinding needed.
+  - binding: kb-block-bold
+    label: "Bold"
+    description: "Toggle bold on the current text selection"
+    category: "format"
+    scope: "app.editor"
+    priority: 10
+    chord: '[{"mod":["meta"],"key":"b","code":"KeyB"},{"mod":["ctrl"],"key":"b","code":"KeyB"}]'
+    phase: "capture"
+    onlyOutsideTextInput: false
+    overridesBrowser: false
+    actionBinding: "bold-toggle"
+    params: ""
+
+  # ── Cmd+I — italic ────────────────────────────────────────────────────────
+  # Toggle italic on the current selection. ActionBinding "italic-toggle" is
+  # already seeded in ActionBinding.seeds.yaml.
+  - binding: kb-block-italic
+    label: "Italic"
+    description: "Toggle italic on the current text selection"
+    category: "format"
+    scope: "app.editor"
+    priority: 10
+    chord: '[{"mod":["meta"],"key":"i","code":"KeyI"},{"mod":["ctrl"],"key":"i","code":"KeyI"}]'
+    phase: "capture"
+    onlyOutsideTextInput: false
+    overridesBrowser: false
+    actionBinding: "italic-toggle"
+    params: ""
+
+  # ── Cmd+U — underline ─────────────────────────────────────────────────────
+  # Toggle underline on the current selection. ActionBinding "block-underline"
+  # is seeded in ActionBinding.block-editor-keys.seeds.yaml.
+  - binding: kb-block-underline
+    label: "Underline"
+    description: "Toggle underline on the current text selection"
+    category: "format"
+    scope: "app.editor"
+    priority: 10
+    chord: '[{"mod":["meta"],"key":"u","code":"KeyU"},{"mod":["ctrl"],"key":"u","code":"KeyU"}]'
+    phase: "capture"
+    onlyOutsideTextInput: false
+    overridesBrowser: false
+    actionBinding: "block-underline"
+    params: ""
+
+  # ── Cmd+` — inline code ───────────────────────────────────────────────────
+  # Toggle inline code on the current selection. ActionBinding
+  # "block-inline-code" is seeded in ActionBinding.block-editor-keys.seeds.yaml.
+  - binding: kb-block-code
+    label: "Inline Code"
+    description: "Toggle inline code on the current text selection"
+    category: "format"
+    scope: "app.editor"
+    priority: 10
+    chord: '[{"mod":["meta"],"key":"`","code":"Backquote"},{"mod":["ctrl"],"key":"`","code":"Backquote"}]'
+    phase: "capture"
+    onlyOutsideTextInput: false
+    overridesBrowser: false
+    actionBinding: "block-inline-code"
+    params: ""
+
+  # ── / — slash menu ────────────────────────────────────────────────────────
+  # Opens the slash-command insertion menu. "/" is typed inside contentEditable
+  # so onlyOutsideTextInput=false. The existing RecursiveBlockEditor.handleKeyDown
+  # handler matched on e.key === '/' without meta/ctrl, which is exactly what
+  # this binding models. ActionBinding "slash-menu-open" is seeded in
+  # ActionBinding.block-editor-keys.seeds.yaml.
+  - binding: kb-block-slash-menu
+    label: "Slash Menu"
+    description: "Open the slash-command block insertion menu"
+    category: "editor"
+    scope: "app.editor"
+    priority: 10
+    chord: '[{"mod":[],"key":"/","code":"Slash"}]'
+    phase: "capture"
+    onlyOutsideTextInput: false
+    overridesBrowser: false
+    actionBinding: "slash-menu-open"
+    params: ""
+
+  # ── Cmd+Z — undo ──────────────────────────────────────────────────────────
+  # Undo the last editor operation via UndoStack. ActionBinding "editor-undo"
+  # is already seeded in ActionBinding.editor-undo.seeds.yaml. The binding was
+  # previously wired directly in RecursiveBlockEditor.handleEditorUndo.
+  - binding: kb-block-undo
+    label: "Undo"
+    description: "Undo the last block-editor operation"
+    category: "editor"
+    scope: "app.editor"
+    priority: 10
+    chord: '[{"mod":["meta"],"key":"z","code":"KeyZ"},{"mod":["ctrl"],"key":"z","code":"KeyZ"}]'
+    phase: "capture"
+    onlyOutsideTextInput: false
+    overridesBrowser: true
+    actionBinding: "editor-undo"
+    params: ""
+
+  # ── Cmd+Shift+Z — redo ────────────────────────────────────────────────────
+  # Redo via UndoStack. ActionBinding "editor-redo" is seeded in
+  # ActionBinding.editor-undo.seeds.yaml.
+  - binding: kb-block-redo
+    label: "Redo"
+    description: "Redo the last undone block-editor operation"
+    category: "editor"
+    scope: "app.editor"
+    priority: 10
+    chord: '[{"mod":["meta","shift"],"key":"z","code":"KeyZ"},{"mod":["ctrl","shift"],"key":"z","code":"KeyZ"}]'
+    phase: "capture"
+    onlyOutsideTextInput: false
+    overridesBrowser: true
+    actionBinding: "editor-redo"
+    params: ""
+
+  # ── Cmd+Enter — toggle to-do ─────────────────────────────────────────────
+  # Toggle the checkbox state on the focused block (when it is a todo item).
+  # ActionBinding "block-toggle-todo" is seeded in
+  # ActionBinding.block-editor-keys.seeds.yaml.
+  - binding: kb-block-toggle-todo
+    label: "Toggle To-Do"
+    description: "Check or uncheck the focused to-do block"
+    category: "editor"
+    scope: "app.editor"
+    priority: 10
+    chord: '[{"mod":["meta"],"key":"Enter","code":"Enter"},{"mod":["ctrl"],"key":"Enter","code":"Enter"}]'
+    phase: "capture"
+    onlyOutsideTextInput: false
+    overridesBrowser: false
+    actionBinding: "block-toggle-todo"
+    params: ""
+
+  # ── Tab — list indent ─────────────────────────────────────────────────────
+  # Indent the focused list block one level deeper via Outline/indent.
+  # Scoped to "app.editor.list" so Tab only intercepts when the focused block
+  # is inside a list-block container (data-keybinding-scope="app.editor.list").
+  # Tab outside the list scope falls through to default browser behaviour
+  # (focus traversal). ActionBinding "indent" is seeded in ActionBinding.seeds.yaml.
+  - binding: kb-block-list-indent
+    label: "List Indent"
+    description: "Indent the focused list item one level deeper"
+    category: "editor"
+    scope: "app.editor.list"
+    priority: 10
+    chord: '[{"mod":[],"key":"Tab","code":"Tab"}]'
+    phase: "capture"
+    onlyOutsideTextInput: false
+    overridesBrowser: true
+    actionBinding: "indent"
+    params: ""
+
+  # ── Shift+Tab — list outdent ──────────────────────────────────────────────
+  # Outdent the focused list block one level up via Outline/outdent.
+  # Scoped to "app.editor.list" for the same reason as kb-block-list-indent.
+  # ActionBinding "outdent" is seeded in ActionBinding.seeds.yaml.
+  - binding: kb-block-list-outdent
+    label: "List Outdent"
+    description: "Outdent the focused list item one level up"
+    category: "editor"
+    scope: "app.editor.list"
+    priority: 10
+    chord: '[{"mod":["shift"],"key":"Tab","code":"Tab"}]'
+    phase: "capture"
+    onlyOutsideTextInput: false
+    overridesBrowser: true
+    actionBinding: "outdent"
+    params: ""
+
+  # ── Cmd+A — select all ────────────────────────────────────────────────────
+  # Select all blocks in the focused document. ActionBinding "block-select-all"
+  # is seeded in ActionBinding.block-editor-keys.seeds.yaml.
+  - binding: kb-block-select-all
+    label: "Select All Blocks"
+    description: "Select all blocks in the current document"
+    category: "editor"
+    scope: "app.editor"
+    priority: 10
+    chord: '[{"mod":["meta"],"key":"a","code":"KeyA"},{"mod":["ctrl"],"key":"a","code":"KeyA"}]'
+    phase: "capture"
+    onlyOutsideTextInput: false
+    overridesBrowser: true
+    actionBinding: "block-select-all"
+    params: ""

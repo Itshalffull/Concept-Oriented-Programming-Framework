@@ -1239,6 +1239,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
       data-state={fsmState}
       data-flavor={editorFlavor}
       data-can-edit={canEdit ? 'true' : 'false'}
+      data-keybinding-scope="app.editor"
       role="region"
       aria-label={`Block editor — ${editorFlavor}`}
       onKeyDown={handleKeyDown}
@@ -2260,6 +2261,12 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
     }
   }, [nodeId, rootNodeId, invoke, onMutate]);
 
+  // List schemas receive the narrower "app.editor.list" scope so that Tab /
+  // Shift+Tab KeyBinding entries (kb-block-list-indent, kb-block-list-outdent)
+  // only fire inside list-block containers and fall through to browser focus
+  // traversal everywhere else.
+  const isListSchema = schema === 'bullet-list' || schema === 'numbered-list';
+
   return (
     <>
     <div
@@ -2271,6 +2278,7 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
       data-selected={isSelected ? 'true' : 'false'}
       data-block-empty={blockEmpty ? 'true' : 'false'}
       data-block-focused={blockFocused ? 'true' : 'false'}
+      {...(isListSchema ? { 'data-keybinding-scope': 'app.editor.list' } : {})}
       onFocus={onFocus}
       onBlur={onBlur}
       onClick={handleSmartClick}

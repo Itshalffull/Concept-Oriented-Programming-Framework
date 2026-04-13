@@ -1,0 +1,105 @@
+# ActionBinding seeds — block-editor keyboard shortcut bindings (KB-17).
+#
+# This file declares the ActionBinding records needed by the block-editor
+# KeyBinding seeds (KeyBinding.block-editor.seeds.yaml). It only contains
+# bindings that are not already seeded elsewhere:
+#
+#   - block-bold       (Cmd+B) — alias to bold-toggle (seeded in ActionBinding.seeds.yaml)
+#   - block-italic     (Cmd+I) — alias to italic-toggle (seeded in ActionBinding.seeds.yaml)
+#   - block-underline  (Cmd+U) — new; InlineMark/toggleMark markKind="underline"
+#   - block-inline-code (Cmd+`) — new; InlineMark/toggleMark markKind="code"
+#   - slash-menu-open  (/)    — new; fires OpenSlashMenu/open intent
+#   - block-toggle-todo (Cmd+Enter) — new; toggles the focused block's checkbox
+#   - list-indent       (Tab)        — alias to "indent" (seeded in ActionBinding.seeds.yaml)
+#   - list-outdent      (Shift+Tab)  — alias to "outdent" (seeded in ActionBinding.seeds.yaml)
+#   - block-select-all  (Cmd+A)      — new; ContentNode/selectAll on the focused doc
+#
+# Bold, italic, editor-undo, editor-redo, indent, and outdent already have
+# ActionBinding records; the KeyBinding seeds reference those binding IDs
+# directly. This file only seeds the genuinely new bindings.
+#
+# Architecture: §clef-base — KB-17 (Phase H block-editor migration)
+
+concept: ActionBinding
+action: bind
+entries:
+
+  # ── block-underline ─────────────────────────────────────────────────────────
+  # Underline toggle for the current selection. Uses InlineMark/toggleMark
+  # with markKind="underline". The block-editor KeyBinding seeds trigger this
+  # via Cmd+U in the "app.editor" scope.
+  - name: block-underline
+    binding: block-underline
+    target: "InlineMark/toggleMark"
+    parameterMap: '{"markKind":"underline","blockId":"context.selection.blockId","rangeStart":"context.selection.rangeStart","rangeEnd":"context.selection.rangeEnd"}'
+    executionPolicy: "auto"
+    toolbar_command: true
+    keyboard: "Ctrl+U"
+    section: "Format"
+    label: "Underline"
+    icon: "underline"
+    tags: ["editor_keyboard_chord"]
+
+  # ── block-inline-code ───────────────────────────────────────────────────────
+  # Inline code toggle for the current selection. Cmd+` (backtick).
+  # Uses InlineMark/toggleMark with markKind="code". Distinct from the
+  # existing "code-toggle" binding (Ctrl+E) — this provides the Notion-style
+  # backtick shortcut while the toolbar button continues to use code-toggle.
+  - name: block-inline-code
+    binding: block-inline-code
+    target: "InlineMark/toggleMark"
+    parameterMap: '{"markKind":"code","blockId":"context.selection.blockId","rangeStart":"context.selection.rangeStart","rangeEnd":"context.selection.rangeEnd"}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    keyboard: "Ctrl+`"
+    section: "Format"
+    label: "Inline Code"
+    icon: "code"
+    tags: ["editor_keyboard_chord"]
+
+  # ── slash-menu-open ─────────────────────────────────────────────────────────
+  # Opens the slash-command insertion menu inside the block editor.
+  # Triggered by pressing "/" anywhere in the editor (onlyOutsideTextInput=false
+  # because "/" is typed inside contentEditable). The KeyBinding dispatcher
+  # routes this to the editor's openSlashMenu handler via ActionBinding/invoke.
+  # Target is Intent/dispatch with intent "slash-menu-open" which the block
+  # editor's effect handler picks up.
+  - name: slash-menu-open
+    binding: slash-menu-open
+    target: "Intent/dispatch"
+    parameterMap: '{"intent":"slash-menu-open","context":"context"}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    tags: ["editor_keyboard_chord", "slash_trigger"]
+    label: "Open Slash Menu"
+
+  # ── block-toggle-todo ───────────────────────────────────────────────────────
+  # Toggles the checkbox state on the focused block when it is a todo-list
+  # item. Cmd+Enter. Routes to ContentNode/update with schema-driven toggle
+  # semantics; the sync engine reads the current checked state and flips it.
+  - name: block-toggle-todo
+    binding: block-toggle-todo
+    target: "ContentNode/update"
+    parameterMap: '{"node":"context.focusedBlockId","toggleChecked":true}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    keyboard: "Ctrl+Enter"
+    section: "Block"
+    label: "Toggle To-Do"
+    icon: "check-square"
+    tags: ["editor_keyboard_chord"]
+
+  # ── block-select-all ────────────────────────────────────────────────────────
+  # Selects all blocks in the focused document. Cmd+A inside the editor scope.
+  # Routes to ContentNode/selectAll; the block editor's multi-select handler
+  # reads the invocation completion and adds every block ID to selectedBlockIds.
+  - name: block-select-all
+    binding: block-select-all
+    target: "ContentNode/selectAll"
+    parameterMap: '{"node":"context.rootNodeId"}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    keyboard: "Ctrl+A"
+    section: "Block"
+    label: "Select All Blocks"
+    tags: ["editor_keyboard_chord"]
