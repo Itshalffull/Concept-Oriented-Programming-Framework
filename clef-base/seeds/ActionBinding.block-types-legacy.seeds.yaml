@@ -1,0 +1,174 @@
+# ActionBinding seeds -- callout, block-embed, snippet-embed, and control block
+# toolbar commands (MAG-756).
+#
+# These blocks were previously handled by inline legacy components inside
+# BlockEditor.tsx. This file registers their toolbar bindings so the
+# ComponentMapping + EditSurface layer can resolve them declaratively.
+#
+# API gap notes:
+#   - callout-variant-picker uses Schema/applyTo as a placeholder for the
+#     anticipated callout-variant property setter; a dedicated action may
+#     refine this when the Callout concept is defined.
+#   - block-embed-navigate and snippet-embed-view-in-context both delegate to
+#     Navigator/navigate; the exact anchor format is resolved at runtime by
+#     the widget's connect bindings.
+#   - control-invoke dispatches to KernelInvoke which is the runtime primitive
+#     for all concept action dispatch from the surface layer.
+
+concept: ActionBinding
+action: bind
+entries:
+
+  # ── Callout block commands ──────────────────────────────────────────────
+
+  # Open a variant picker for the focused callout block.
+  # Anticipatory -- callout-variant-picker widget ships in a later card.
+  - name: callout-variant-picker
+    binding: callout-variant-picker
+    target: "Schema/applyTo"
+    parameterMap: '{"schema":"callout","entity_id":"context.focusedBlockId","variant":"context.selectedVariant"}'
+    executionPolicy: "auto"
+    toolbar_command: true
+    slash_command: false
+    context_menu: true
+    section: "Callout"
+    label: "Variant"
+    icon: "callout"
+    picker_ref: "callout-variant-picker"
+
+  # Dismiss (remove) the focused callout block from the content stream.
+  - name: callout-dismiss
+    binding: callout-dismiss
+    target: "ContentNode/delete"
+    parameterMap: '{"node":"context.focusedBlockId"}'
+    executionPolicy: "confirm"
+    toolbar_command: false
+    slash_command: false
+    context_menu: true
+    section: "Callout"
+    label: "Remove callout"
+    icon: "trash"
+
+  # ── Block-embed commands ────────────────────────────────────────────────
+
+  # Navigate to the source entity, anchored at the embedded block.
+  - name: block-embed-navigate
+    binding: block-embed-navigate
+    target: "Navigator/navigate"
+    parameterMap: '{"href":"context.blockEmbedSourceHref"}'
+    executionPolicy: "auto"
+    toolbar_command: true
+    slash_command: false
+    context_menu: true
+    section: "Block reference"
+    label: "Open source"
+    icon: "external-link"
+
+  # Reload the resolved block content (re-fetch from source entity).
+  - name: block-embed-refresh
+    binding: block-embed-refresh
+    target: "ContentNode/get"
+    parameterMap: '{"node":"context.blockEmbedEntityId"}'
+    executionPolicy: "auto"
+    toolbar_command: true
+    slash_command: false
+    context_menu: false
+    section: "Block reference"
+    label: "Refresh"
+    icon: "refresh"
+
+  # Remove the block-embed block from the current document.
+  - name: block-embed-remove
+    binding: block-embed-remove
+    target: "ContentNode/delete"
+    parameterMap: '{"node":"context.focusedBlockId"}'
+    executionPolicy: "confirm"
+    toolbar_command: false
+    slash_command: false
+    context_menu: true
+    section: "Block reference"
+    label: "Remove embed"
+    icon: "trash"
+
+  # ── Snippet-embed commands ──────────────────────────────────────────────
+
+  # Navigate to the source entity anchored at the span.
+  - name: snippet-embed-view-in-context
+    binding: snippet-embed-view-in-context
+    target: "Navigator/navigate"
+    parameterMap: '{"href":"context.snippetEmbedSourceHref"}'
+    executionPolicy: "auto"
+    toolbar_command: true
+    slash_command: false
+    context_menu: true
+    section: "Text snippet"
+    label: "View in context"
+    icon: "external-link"
+
+  # Re-resolve the span anchor text against the current source content.
+  - name: snippet-embed-refresh
+    binding: snippet-embed-refresh
+    target: "TextSpan/resolve"
+    parameterMap: '{"span":"context.snippetEmbedSpanId","currentContent":"context.snippetEmbedSourceContent"}'
+    executionPolicy: "auto"
+    toolbar_command: true
+    slash_command: false
+    context_menu: false
+    section: "Text snippet"
+    label: "Refresh"
+    icon: "refresh"
+
+  # Remove the snippet-embed block from the current document.
+  - name: snippet-embed-remove
+    binding: snippet-embed-remove
+    target: "ContentNode/delete"
+    parameterMap: '{"node":"context.focusedBlockId"}'
+    executionPolicy: "confirm"
+    toolbar_command: false
+    slash_command: false
+    context_menu: true
+    section: "Text snippet"
+    label: "Remove snippet"
+    icon: "trash"
+
+  # ── Control block commands ──────────────────────────────────────────────
+
+  # Invoke the concept action configured on the focused control block.
+  # The actual concept/action/params are read from the block meta at runtime.
+  - name: control-invoke
+    binding: control-invoke
+    target: "KernelInvoke/dispatch"
+    parameterMap: '{"concept":"context.controlBlockConcept","action":"context.controlBlockAction","params":"context.controlBlockParams"}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    context_menu: false
+    section: "Action button"
+    label: "Invoke"
+    icon: "play"
+
+  # Open the config panel for the focused control block to edit label/concept/action.
+  - name: control-configure
+    binding: control-configure
+    target: "Property/set"
+    parameterMap: '{"entity":"context.focusedBlockId","key":"configOpen","value":"true"}'
+    executionPolicy: "auto"
+    toolbar_command: true
+    slash_command: false
+    context_menu: true
+    section: "Action button"
+    label: "Configure"
+    icon: "settings"
+
+  # Remove the control block from the current document.
+  - name: control-remove
+    binding: control-remove
+    target: "ContentNode/delete"
+    parameterMap: '{"node":"context.focusedBlockId"}'
+    executionPolicy: "confirm"
+    toolbar_command: false
+    slash_command: false
+    context_menu: true
+    section: "Action button"
+    label: "Remove button"
+    icon: "trash"

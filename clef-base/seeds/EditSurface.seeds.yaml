@@ -429,3 +429,103 @@ entries:
     compile_action_ref: null
     compile_bundle_ref: null
     compile_status_field: null
+
+  # Callout block editor surface (MAG-756)
+  # Toolbar: inline-toolbar (shared mark toolbar) for inline marks inside callout prose.
+  # Command bindings: callout-variant-picker (select info/warning/danger/success/accent),
+  #   callout-dismiss (remove the callout block from the stream).
+  # Input rules: markdown-callout is anticipatory -- no markdown shortcut for callout
+  #   exists yet; the entry is reserved for a future /!note or /!warn shortcut.
+  - id: callout-block-editor
+    schema_ref: callout
+    context: block-editor
+    toolbar_widget: inline-toolbar
+    command_bindings:
+      - callout-variant-picker
+      - callout-dismiss
+    panel_widgets: []
+    context_menu_bindings:
+      - callout-variant-picker
+      - callout-dismiss
+    input_rule_refs: []
+    picker_refs: []
+    compile_action_ref: null
+    compile_bundle_ref: null
+    compile_status_field: null
+
+  # Block-embed block editor surface (MAG-756)
+  # Non-editable embed of a specific block from another ContentNode.
+  # Command bindings: block-embed-navigate (Enter to open source context),
+  #   block-embed-refresh (reload resolved block content),
+  #   block-embed-remove (delete the embed block).
+  # Picker refs: entity-picker (re-link block to a different source).
+  # input_rule_refs intentionally empty -- block-embed blocks are not editable.
+  - id: block-embed-block-editor
+    schema_ref: block-embed
+    context: block-editor
+    toolbar_widget: inline-toolbar
+    command_bindings:
+      - block-embed-navigate
+      - block-embed-refresh
+      - block-embed-remove
+    panel_widgets: []
+    context_menu_bindings:
+      - block-embed-navigate
+      - block-embed-remove
+    input_rule_refs: []
+    picker_refs:
+      - entity-picker
+    compile_action_ref: null
+    compile_bundle_ref: null
+    compile_status_field: null
+
+  # Snippet-embed block editor surface (MAG-756)
+  # Non-editable embed of a TextSpan excerpt from another ContentNode.
+  # Command bindings: snippet-embed-view-in-context (navigate to source entity
+  #   anchored at the span), snippet-embed-refresh (re-resolve span anchor text),
+  #   snippet-embed-remove (delete the snippet block).
+  # input_rule_refs intentionally empty -- snippet-embed blocks are not editable.
+  - id: snippet-embed-block-editor
+    schema_ref: snippet-embed
+    context: block-editor
+    toolbar_widget: inline-toolbar
+    command_bindings:
+      - snippet-embed-view-in-context
+      - snippet-embed-refresh
+      - snippet-embed-remove
+    panel_widgets: []
+    context_menu_bindings:
+      - snippet-embed-view-in-context
+      - snippet-embed-remove
+    input_rule_refs: []
+    picker_refs: []
+    compile_action_ref: null
+    compile_bundle_ref: null
+    compile_status_field: null
+
+  # Control block editor surface (MAG-756)
+  # Inline action button block that invokes a concept action from the kernel.
+  # Command bindings: control-invoke (trigger the configured action),
+  #   control-configure (open the config panel to edit label/concept/action/variant),
+  #   control-remove (delete the control block from the stream).
+  # Panel widgets: control-action-picker is anticipatory -- ships when an
+  #   autocomplete picker for concept/action pairs is available.
+  # input_rule_refs intentionally empty -- control blocks are not editable content.
+  - id: control-block-editor
+    schema_ref: control
+    context: block-editor
+    toolbar_widget: inline-toolbar
+    command_bindings:
+      - control-invoke
+      - control-configure
+      - control-remove
+    panel_widgets:
+      - control-action-picker
+    context_menu_bindings:
+      - control-configure
+      - control-remove
+    input_rule_refs: []
+    picker_refs: []
+    compile_action_ref: null
+    compile_bundle_ref: null
+    compile_status_field: null

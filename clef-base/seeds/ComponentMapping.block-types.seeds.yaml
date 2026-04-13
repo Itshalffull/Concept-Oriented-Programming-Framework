@@ -140,3 +140,63 @@ entries:
     section: "Advanced"
     icon: "columns"
     label: "Columns"
+
+  # Paragraph block -- default rich-text block; the entry point for all typed
+  # content and slash-command invocations. (MAG-756)
+  - id: paragraph-block-mapping
+    name: paragraph-block-mapping
+    widget_id: paragraph-block
+    schema: paragraph
+    display_mode: block-editor
+    insertable: true
+    section: "Basic"
+    icon: "text"
+    label: "Text"
+
+  # Callout block -- themed alert box driven by paletteRole (info/warning/danger/
+  # success/accent). SurfaceContract + paletteRole pattern. (MAG-756)
+  - id: callout-block-mapping
+    name: callout-block-mapping
+    widget_id: callout-block
+    schema: callout
+    display_mode: block-editor
+    insertable: true
+    section: "Basic"
+    icon: "callout"
+    label: "Callout"
+
+  # Block-embed block -- embeds a specific block from another ContentNode by
+  # (entityId, blockId) pair with VersionPin freshness decoration. (MAG-756)
+  - id: block-embed-mapping
+    name: block-embed-mapping
+    widget_id: block-embed-block
+    schema: block-embed
+    display_mode: block-editor
+    insertable: true
+    section: "Embeds"
+    icon: "block-ref"
+    label: "Block reference"
+
+  # Snippet-embed block -- embeds a TextSpan excerpt from another ContentNode
+  # with live/stale/broken span-status decoration. (MAG-756)
+  - id: snippet-embed-mapping
+    name: snippet-embed-mapping
+    widget_id: snippet-embed-block
+    schema: snippet-embed
+    display_mode: block-editor
+    insertable: true
+    section: "Embeds"
+    icon: "quote-ref"
+    label: "Text snippet"
+
+  # Control block -- inline action button that invokes a configured concept action
+  # from the kernel with loading/success/error feedback. (MAG-756)
+  - id: control-block-mapping
+    name: control-block-mapping
+    widget_id: control-block
+    schema: control
+    display_mode: block-editor
+    insertable: true
+    section: "Advanced"
+    icon: "button"
+    label: "Action button"

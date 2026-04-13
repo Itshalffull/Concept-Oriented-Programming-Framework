@@ -1,0 +1,330 @@
+@version(1)
+widget snippet-embed-block {
+
+  purpose {
+    Block-level text span transclusion that embeds a named TextSpan excerpt from
+    a source ContentNode into the current document. The widget resolves the span
+    anchor text, displays it with a kind badge and label, and decorates it with a
+    status indicator (live, stale, broken) reflecting whether the span anchor still
+    maps cleanly to the source content. Stale means the source text changed but the
+    anchor can be approximately re-located; broken means the anchor is orphaned and
+    cannot be resolved. A view-in-context link navigates to the source entity
+    anchored at the span. This widget is the canonical block-level rendering of the
+    ((entity-id#span=span-id)) paste syntax.
+  }
+
+  requires @1 {
+    fields {
+      spanId: String;
+      entityId: String;
+      spanKind: String;
+      spanStatus: String;
+    }
+    actions {
+      get(span: String);
+      resolve(span: String, currentContent: String);
+    }
+  }
+
+  anatomy {
+    root:              container     { Top-level wrapper; carries data-state reflecting both span-status and render FSMs }
+    headerBar:         container     { Top strip showing kind badge, span label, status indicator, view-in-context button, and remove button }
+    statusIndicator:   presentation  { Colour-coded dot: live (green), stale (amber), broken (red) }
+    kindBadge:         presentation  { Pill badge showing the TextSpan kind (e.g. citation, highlight, note) }
+    spanLabel:         text          { Truncated span ID or explicit span label shown in header }
+    excerptContainer:  container     { Renders the resolved span text as a read-only blockquote excerpt }
+    staleWarning:      container     { Banner shown in stale state explaining the anchor may have shifted }
+    brokenMessage:     container     { Banner shown in broken state explaining the span cannot be located }
+    viewInContextBtn:  action        { Link-button that navigates to the source entity page at the span anchor }
+    removeButton:      action        { Button that clears the entityId and spanId meta, removing the embed }
+    loadingIndicator:  presentation  { Placeholder shown while span metadata and content are being fetched }
+  }
+
+  states {
+    render {
+      loading [initial] {
+        on RESOLVED    -> resolved;
+        on FETCH_ERROR -> error;
+        entry [fetchSpanAndContent];
+      }
+      resolved {
+        on REMOVE -> loading;
+        on RELOAD -> loading;
+        entry [renderExcerpt];
+      }
+      error {
+        on RETRY  -> loading;
+        on REMOVE -> loading;
+        entry [showError];
+      }
+    }
+
+    spanStatus [parallel] {
+      live [initial] {
+        on STALE   -> stale;
+        on BROKEN  -> broken;
+      }
+      stale {
+        on LIVE    -> live;
+        on BROKEN  -> broken;
+        on REFRESH -> live;
+      }
+      broken {
+        on REFRESH -> live;
+        entry [markBroken];
+      }
+    }
+  }
+
+  accessibility {
+    role: figure;
+    keyboard {
+      Enter  -> VIEW_IN_CONTEXT;
+      Delete -> REMOVE;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      roving: false;
+      returnOnClose: root;
+    }
+    aria {
+      root -> {
+        role: "figure";
+        aria-label: "Text span snippet embed";
+        aria-busy: if state.render == "loading" then "true" else "false";
+      };
+      statusIndicator -> {
+        role: "img";
+        aria-label: if state.spanStatus == "live" then "Span anchor is current" else if state.spanStatus == "stale" then "Span anchor may have shifted — source text changed" else "Span anchor is broken — cannot locate in source";
+      };
+      excerptContainer -> {
+        role: "blockquote";
+        aria-label: "Embedded text excerpt";
+        aria-live: "polite";
+      };
+      staleWarning -> {
+        role: "alert";
+        aria-live: "polite";
+      };
+      brokenMessage -> {
+        role: "alert";
+        aria-live: "assertive";
+      };
+      viewInContextBtn -> {
+        role: "link";
+        aria-label: "View span in source context";
+        aria-keyshortcuts: "Enter";
+      };
+      removeButton -> {
+        role: "button";
+        aria-label: "Remove snippet embed";
+        aria-keyshortcuts: "Delete";
+      };
+      loadingIndicator -> {
+        role: "status";
+        aria-label: "Loading span excerpt";
+        aria-live: "polite";
+      };
+    }
+  }
+
+  props {
+    spanId: String
+    entityId: String
+    spanKind: String = ""
+    spanLabel: String = ""
+    resolvedText: String = ""
+    readOnly: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.render;
+      data-span-status: state.spanStatus;
+      data-span-id: ?spanId;
+      data-entity-id: ?entityId;
+      tabindex: "0";
+      onKeyDown-Enter: send(VIEW_IN_CONTEXT);
+      onKeyDown-Delete: if ?readOnly then noop else send(REMOVE);
+    }
+
+    headerBar -> {
+      data-part: "header-bar";
+    }
+
+    statusIndicator -> {
+      data-part: "status-indicator";
+      data-span-status: state.spanStatus;
+      title: if state.spanStatus == "live" then "Span anchor is current" else if state.spanStatus == "stale" then "Source text has changed — anchor may have shifted" else "Span anchor broken — cannot locate text in source";
+    }
+
+    kindBadge -> {
+      data-part: "kind-badge";
+      text: ?spanKind;
+      hidden: if ?spanKind == "" then true else false;
+    }
+
+    spanLabel -> {
+      data-part: "span-label";
+      text: ?spanLabel;
+    }
+
+    excerptContainer -> {
+      data-part: "excerpt-container";
+      hidden: if state.render != "resolved" then true else false;
+      aria-live: "polite";
+    }
+
+    staleWarning -> {
+      data-part: "stale-warning";
+      hidden: if state.spanStatus != "stale" then true else false;
+    }
+
+    brokenMessage -> {
+      data-part: "broken-message";
+      hidden: if state.spanStatus != "broken" then true else false;
+    }
+
+    viewInContextBtn -> {
+      data-part: "view-in-context-btn";
+      onClick: send(VIEW_IN_CONTEXT);
+      disabled: if state.render != "resolved" then true else false;
+    }
+
+    removeButton -> {
+      data-part: "remove-button";
+      hidden: if ?readOnly then true else false;
+      onClick: send(REMOVE);
+    }
+
+    loadingIndicator -> {
+      data-part: "loading-indicator";
+      hidden: if state.render != "loading" then true else false;
+    }
+  }
+
+  affordance {
+    serves: block-embed;
+    specificity: 9;
+    when schema = "snippet-embed";
+    bind {
+      spanId: spanId;
+      entityId: entityId;
+      spanKind: kind;
+    }
+  }
+
+  invariant {
+    example "RESOLVED event transitions render machine to resolved": {
+      after transition(from: "loading", event: "RESOLVED") -> ok
+      then state.render = "resolved"
+    }
+
+    example "FETCH_ERROR transitions render machine to error": {
+      after transition(from: "loading", event: "FETCH_ERROR") -> ok
+      then state.render = "error"
+    }
+
+    example "RETRY from error retriggers loading": {
+      after transition(from: "error", event: "RETRY") -> ok
+      then state.render = "loading"
+    }
+
+    example "STALE event moves spanStatus machine to stale": {
+      after transition(from: "live", event: "STALE") -> ok
+      then state.spanStatus = "stale"
+    }
+
+    example "BROKEN event moves spanStatus machine to broken from live": {
+      after transition(from: "live", event: "BROKEN") -> ok
+      then state.spanStatus = "broken"
+    }
+
+    example "BROKEN event moves spanStatus machine to broken from stale": {
+      after transition(from: "stale", event: "BROKEN") -> ok
+      then state.spanStatus = "broken"
+    }
+
+    example "REFRESH from stale returns spanStatus to live": {
+      after transition(from: "stale", event: "REFRESH") -> ok
+      then state.spanStatus = "live"
+    }
+
+    example "REFRESH from broken returns spanStatus to live": {
+      after transition(from: "broken", event: "REFRESH") -> ok
+      then state.spanStatus = "live"
+    }
+
+    example "data-span-status reflects spanStatus FSM": {
+      after transition(from: "live", event: "STALE") -> ok
+      then root.dataSpanStatus = "stale"
+    }
+
+    example "excerptContainer hidden while loading": {
+      after render(spanId: "s1", entityId: "e1") -> ok
+      then excerptContainer.hidden = true
+    }
+
+    example "staleWarning visible only when spanStatus is stale": {
+      after transition(from: "live", event: "STALE") -> ok
+      then staleWarning.hidden = false
+    }
+
+    example "brokenMessage visible only when spanStatus is broken": {
+      after transition(from: "live", event: "BROKEN") -> ok
+      then brokenMessage.hidden = false
+    }
+
+    example "kindBadge hidden when spanKind is empty": {
+      after render(spanKind: "") -> ok
+      then kindBadge.hidden = true
+    }
+
+    forall "all render states are reachable from initial": {
+      given s in renderStates
+      then s.reachable = true
+    }
+
+    forall "all spanStatus states are reachable from initial": {
+      given s in spanStatusStates
+      then s.reachable = true
+    }
+
+    always "data-state on root reflects render FSM": {
+      root.dataState = state.render
+    }
+
+    always "data-span-status on root reflects spanStatus FSM": {
+      root.dataSpanStatus = state.spanStatus
+    }
+
+    never "excerptContainer visible while loading": {
+      state.render = "loading" and excerptContainer.hidden = false
+    }
+
+    never "viewInContextBtn enabled when not resolved": {
+      state.render != "resolved" and viewInContextBtn.disabled = false
+    }
+
+    never "removeButton visible in readOnly mode": {
+      readOnly = true and removeButton.hidden = false
+    }
+
+    never "staleWarning and brokenMessage both visible simultaneously": {
+      staleWarning.hidden = false and brokenMessage.hidden = false
+    }
+
+    action viewInContextBtn {
+      requires: state.render = "resolved"
+      ensures ok: state.render = "resolved"
+    }
+
+    action removeButton {
+      requires: readOnly = false
+      ensures ok: state.render = "loading"
+    }
+  }
+
+}

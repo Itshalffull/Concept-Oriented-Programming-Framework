@@ -1,0 +1,320 @@
+@version(1)
+widget control-block {
+
+  purpose {
+    Inline action button block that links a named concept action to a clickable
+    button rendered inside the block stream. Authors configure the button label,
+    target concept, action name, optional action parameters (as JSON), and visual
+    variant (filled, outlined, text). On click the widget dispatches the configured
+    action to the kernel via KernelInvoke and transitions through a loading state
+    to a success flash or persistent error message. This widget is the block-editor
+    counterpart to the ActionBinding concept, enabling low-code automation triggers
+    to be embedded directly in content pages — e.g. a "Run analysis" button inside
+    a research page or a "Publish" button in a draft.
+  }
+
+  requires @1 {
+    fields {
+      concept: String;
+      action: String;
+      label: String;
+      variant: String;
+    }
+    actions {
+      invoke(concept: String, action: String, params: String);
+    }
+  }
+
+  anatomy {
+    root:           container     { Outer wrapper for the control block; carries data-state for the invocation FSM }
+    button:         action        { Primary action button; label, variant, and disabled state are bound to props and FSM }
+    successFlash:   presentation  { Transient success indicator (checkmark) shown for ~2 s after a successful invocation }
+    errorMessage:   text          { Error text shown when the invocation returns a non-ok variant or throws }
+    configPanel:    container     { Collapsible in-editor config grid for label, concept, action, variant, and params fields }
+    configToggle:   action        { Toggle button that expands/collapses the config panel in edit mode }
+    labelInput:     interactive   { Text input for the button label inside the config panel }
+    conceptInput:   interactive   { Text input for the target concept name inside the config panel }
+    actionInput:    interactive   { Text input for the target action name inside the config panel }
+    variantPicker:  interactive   { Select element for the visual variant (filled, outlined, text) inside the config panel }
+  }
+
+  states {
+    invocation {
+      idle [initial] {
+        on INVOKE  -> pending;
+      }
+      pending {
+        on SUCCESS -> success;
+        on FAILURE -> failed;
+        entry [dispatchInvoke];
+      }
+      success {
+        on RESET   -> idle;
+        entry [flashSuccess];
+      }
+      failed {
+        on RETRY   -> pending;
+        on DISMISS -> idle;
+        entry [showError];
+      }
+    }
+
+    config [parallel] {
+      closed [initial] {
+        on CONFIG_OPEN  -> open;
+      }
+      open {
+        on CONFIG_CLOSE -> closed;
+        on CONFIG_OPEN  -> closed;
+      }
+    }
+  }
+
+  accessibility {
+    role: group;
+    keyboard {
+      Enter -> INVOKE;
+      Escape -> DISMISS;
+    }
+    focus {
+      trap: false;
+      initial: button;
+      roving: false;
+      returnOnClose: button;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: "Action control block";
+      };
+      button -> {
+        role: "button";
+        aria-busy: if state.invocation == "pending" then "true" else "false";
+        aria-disabled: if state.invocation == "pending" then "true" else "false";
+        aria-label: "Execute action";
+      };
+      successFlash -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: "Action succeeded";
+      };
+      errorMessage -> {
+        role: "alert";
+        aria-live: "assertive";
+      };
+      configPanel -> {
+        role: "region";
+        aria-label: "Control block configuration";
+        aria-expanded: if state.config == "open" then "true" else "false";
+      };
+      configToggle -> {
+        role: "button";
+        aria-label: "Toggle control configuration";
+        aria-expanded: if state.config == "open" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    label: String = "Action"
+    concept: String = ""
+    action: String = ""
+    params: String = "{}"
+    variant: union "filled" | "outlined" | "text" = "filled"
+    readOnly: Bool = false
+    errorText: option String
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.invocation;
+      data-config: state.config;
+      data-variant: ?variant;
+    }
+
+    button -> {
+      data-part: "button";
+      data-variant: ?variant;
+      disabled: if state.invocation == "pending" or ?concept == "" or ?action == "" then true else false;
+      onClick: send(INVOKE);
+      text: if state.invocation == "success" then "✓" else if state.invocation == "pending" then "…" else ?label;
+    }
+
+    successFlash -> {
+      data-part: "success-flash";
+      hidden: if state.invocation != "success" then true else false;
+      aria-live: "polite";
+    }
+
+    errorMessage -> {
+      data-part: "error-message";
+      hidden: if state.invocation != "failed" then true else false;
+      text: ?errorText;
+    }
+
+    configPanel -> {
+      data-part: "config-panel";
+      hidden: if state.config == "closed" or ?readOnly then true else false;
+    }
+
+    configToggle -> {
+      data-part: "config-toggle";
+      hidden: if ?readOnly then true else false;
+      onClick: send(CONFIG_OPEN);
+      text: if state.config == "open" then "▲ config" else "▼ config";
+    }
+
+    labelInput -> {
+      data-part: "label-input";
+      placeholder: "Button label";
+    }
+
+    conceptInput -> {
+      data-part: "concept-input";
+      placeholder: "Concept name";
+    }
+
+    actionInput -> {
+      data-part: "action-input";
+      placeholder: "Action name";
+    }
+
+    variantPicker -> {
+      data-part: "variant-picker";
+    }
+  }
+
+  affordance {
+    serves: action;
+    specificity: 8;
+    when schema = "control";
+    bind {
+      label: label;
+      concept: concept;
+      action: action;
+      variant: variant;
+    }
+  }
+
+  invariant {
+    example "INVOKE transitions invocation machine from idle to pending": {
+      after transition(from: "idle", event: "INVOKE") -> ok
+      then state.invocation = "pending"
+    }
+
+    example "SUCCESS transitions from pending to success": {
+      after transition(from: "pending", event: "SUCCESS") -> ok
+      then state.invocation = "success"
+    }
+
+    example "FAILURE transitions from pending to failed": {
+      after transition(from: "pending", event: "FAILURE") -> ok
+      then state.invocation = "failed"
+    }
+
+    example "RESET from success returns to idle": {
+      after transition(from: "success", event: "RESET") -> ok
+      then state.invocation = "idle"
+    }
+
+    example "RETRY from failed re-enters pending": {
+      after transition(from: "failed", event: "RETRY") -> ok
+      then state.invocation = "pending"
+    }
+
+    example "DISMISS from failed returns to idle": {
+      after transition(from: "failed", event: "DISMISS") -> ok
+      then state.invocation = "idle"
+    }
+
+    example "CONFIG_OPEN transitions config machine from closed to open": {
+      after transition(from: "closed", event: "CONFIG_OPEN") -> ok
+      then state.config = "open"
+    }
+
+    example "CONFIG_OPEN from open closes the config panel (toggle)": {
+      after transition(from: "open", event: "CONFIG_OPEN") -> ok
+      then state.config = "closed"
+    }
+
+    example "button disabled when concept is empty": {
+      after render(concept: "", action: "create") -> ok
+      then button.disabled = true
+    }
+
+    example "button disabled when action is empty": {
+      after render(concept: "ContentNode", action: "") -> ok
+      then button.disabled = true
+    }
+
+    example "button disabled during pending state": {
+      after transition(from: "idle", event: "INVOKE") -> ok
+      then button.disabled = true
+    }
+
+    example "configPanel hidden in readOnly mode": {
+      after render(readOnly: true) -> ok
+      then configPanel.hidden = true
+    }
+
+    example "configToggle hidden in readOnly mode": {
+      after render(readOnly: true) -> ok
+      then configToggle.hidden = true
+    }
+
+    example "successFlash hidden during idle state": {
+      after render() -> ok
+      then successFlash.hidden = true
+    }
+
+    example "errorMessage hidden during idle state": {
+      after render() -> ok
+      then errorMessage.hidden = true
+    }
+
+    forall "all invocation states are reachable from initial": {
+      given s in invocationStates
+      then s.reachable = true
+    }
+
+    forall "all config states are reachable from initial": {
+      given s in configStates
+      then s.reachable = true
+    }
+
+    always "data-state on root reflects invocation FSM": {
+      root.dataState = state.invocation
+    }
+
+    always "button data-state reflects invocation FSM": {
+      button.dataState = state.invocation
+    }
+
+    always "configToggle data-config reflects config FSM": {
+      configToggle.dataConfig = state.config
+    }
+
+    never "successFlash visible outside of success state": {
+      state.invocation != "success" and successFlash.hidden = false
+    }
+
+    never "errorMessage visible outside of failed state": {
+      state.invocation != "failed" and errorMessage.hidden = false
+    }
+
+    never "button enabled while action is empty": {
+      action = "" and button.disabled = false
+    }
+
+    never "configPanel visible in readOnly mode": {
+      readOnly = true and configPanel.hidden = false
+    }
+
+    action button {
+      requires: state.invocation = "idle" and concept != "" and action != ""
+      ensures ok: state.invocation = "pending"
+    }
+  }
+
+}

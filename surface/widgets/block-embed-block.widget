@@ -1,0 +1,317 @@
+@version(1)
+widget block-embed-block {
+
+  purpose {
+    Block-level transclusion widget that renders a specific block from a source
+    ContentNode by resolving the (entityId, blockId) pair. Distinct from
+    entity-embed-block in that it targets a sub-block within a page rather than
+    the page itself, enabling granular content reuse such as copying a single
+    code snippet or table from another page into the current document. A freshness
+    indicator (current, outdated, orphaned) decorates the block header; the host
+    editor supplies the freshness via VersionPin reconciliation. The widget manages
+    its own async load cycle (loading, resolved, error, missing). Keyboard: Enter
+    navigates to the source block context, Delete removes the embed.
+  }
+
+  requires @1 {
+    fields {
+      entityId: String;
+      blockId: String;
+      freshness: String;
+    }
+    actions {
+      get(node: String);
+    }
+  }
+
+  anatomy {
+    root:               container     { Top-level wrapper; carries data-state for render FSM and data-freshness for VersionPin status }
+    headerBar:          container     { Top strip showing source entity label, block type badge, freshness indicator, and remove button }
+    freshnessIndicator: presentation  { Colour-coded badge: current (green), outdated (amber), orphaned (red) }
+    sourceLabel:        text          { Human-readable source entity node name used in header and aria-label }
+    blockTypeLabel:     text          { Block type badge showing the target block type (e.g. code, paragraph) }
+    bodyContainer:      container     { Renders the resolved block content as a read-only preview }
+    loadingIndicator:   presentation  { Placeholder skeleton shown while the source block is being fetched }
+    missingMessage:     text          { Shown in missing state when the source entity or block cannot be found }
+    errorMessage:       text          { Shown in error state when a network or storage failure prevents resolution }
+    navigateButton:     action        { Button that navigates to the source entity page anchored at the embedded block }
+    removeButton:       action        { Button that removes the block-embed from the current document }
+  }
+
+  states {
+    render {
+      loading [initial] {
+        on RESOLVED    -> resolved;
+        on NOT_FOUND   -> missing;
+        on FETCH_ERROR -> error;
+        entry [fetchBlock];
+      }
+      resolved {
+        on REMOVE -> loading;
+        on RELOAD -> loading;
+        entry [renderBlock];
+      }
+      error {
+        on RETRY  -> loading;
+        on REMOVE -> loading;
+        entry [showError];
+      }
+      missing {
+        on REMOVE -> loading;
+        entry [showMissing];
+      }
+    }
+
+    freshness [parallel] {
+      current [initial] {
+        on OUTDATED  -> outdated;
+        on ORPHANED  -> orphaned;
+      }
+      outdated {
+        on REFRESHED -> current;
+        on ORPHANED  -> orphaned;
+      }
+      orphaned {
+        on REFRESHED -> current;
+      }
+    }
+  }
+
+  accessibility {
+    role: figure;
+    keyboard {
+      Enter  -> NAVIGATE;
+      Delete -> REMOVE;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      roving: false;
+      returnOnClose: root;
+    }
+    aria {
+      root -> {
+        role: "figure";
+        aria-label: "Block embed from another page";
+        aria-busy: if state.render == "loading" then "true" else "false";
+      };
+      freshnessIndicator -> {
+        role: "img";
+        aria-label: if state.freshness == "current" then "Block content is current" else if state.freshness == "outdated" then "Block content is outdated — source has changed" else "Block orphaned — source block no longer exists";
+      };
+      navigateButton -> {
+        role: "button";
+        aria-label: "Navigate to source block";
+        aria-keyshortcuts: "Enter";
+      };
+      removeButton -> {
+        role: "button";
+        aria-label: "Remove block embed";
+        aria-keyshortcuts: "Delete";
+      };
+      loadingIndicator -> {
+        role: "status";
+        aria-label: "Loading block";
+        aria-live: "polite";
+      };
+      missingMessage -> {
+        role: "alert";
+        aria-live: "assertive";
+      };
+      errorMessage -> {
+        role: "alert";
+        aria-live: "assertive";
+      };
+    }
+  }
+
+  props {
+    blockId: String
+    entityId: String
+    entityLabel: String = "source"
+    blockType: String = "paragraph"
+    freshness: union "current" | "outdated" | "orphaned" = "current"
+    readOnly: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.render;
+      data-freshness: state.freshness;
+      data-entity-id: ?entityId;
+      data-block-id: ?blockId;
+      tabindex: "0";
+      onKeyDown-Enter: send(NAVIGATE);
+      onKeyDown-Delete: if ?readOnly then noop else send(REMOVE);
+    }
+
+    headerBar -> {
+      data-part: "header-bar";
+    }
+
+    freshnessIndicator -> {
+      data-part: "freshness-indicator";
+      data-freshness: state.freshness;
+      title: if state.freshness == "current" then "Block content is current" else if state.freshness == "outdated" then "Source has changed — content may be outdated" else "Source block no longer exists";
+    }
+
+    sourceLabel -> {
+      data-part: "source-label";
+      text: ?entityLabel;
+    }
+
+    blockTypeLabel -> {
+      data-part: "block-type-label";
+      text: ?blockType;
+    }
+
+    bodyContainer -> {
+      data-part: "body-container";
+      hidden: if state.render != "resolved" then true else false;
+      aria-live: "polite";
+    }
+
+    loadingIndicator -> {
+      data-part: "loading-indicator";
+      hidden: if state.render != "loading" then true else false;
+    }
+
+    missingMessage -> {
+      data-part: "missing-message";
+      hidden: if state.render != "missing" then true else false;
+      text: "Source block not found. The block may have been deleted or the source entity moved.";
+    }
+
+    errorMessage -> {
+      data-part: "error-message";
+      hidden: if state.render != "error" then true else false;
+      text: "Failed to load block. Check your connection or try reloading.";
+    }
+
+    navigateButton -> {
+      data-part: "navigate-button";
+      onClick: send(NAVIGATE);
+      disabled: if state.render != "resolved" then true else false;
+    }
+
+    removeButton -> {
+      data-part: "remove-button";
+      hidden: if ?readOnly then true else false;
+      onClick: send(REMOVE);
+    }
+  }
+
+  affordance {
+    serves: block-embed;
+    specificity: 9;
+    when schema = "block-embed";
+    bind {
+      entityId: entityId;
+      blockId: blockId;
+      freshness: freshness;
+    }
+  }
+
+  invariant {
+    example "RESOLVED event transitions render machine to resolved": {
+      after transition(from: "loading", event: "RESOLVED") -> ok
+      then state.render = "resolved"
+    }
+
+    example "NOT_FOUND event transitions render machine to missing": {
+      after transition(from: "loading", event: "NOT_FOUND") -> ok
+      then state.render = "missing"
+    }
+
+    example "FETCH_ERROR event transitions render machine to error": {
+      after transition(from: "loading", event: "FETCH_ERROR") -> ok
+      then state.render = "error"
+    }
+
+    example "RETRY from error retriggers loading": {
+      after transition(from: "error", event: "RETRY") -> ok
+      then state.render = "loading"
+    }
+
+    example "REMOVE from missing transitions to loading": {
+      after transition(from: "missing", event: "REMOVE") -> ok
+      then state.render = "loading"
+    }
+
+    example "OUTDATED event moves freshness machine to outdated": {
+      after transition(from: "current", event: "OUTDATED") -> ok
+      then state.freshness = "outdated"
+    }
+
+    example "ORPHANED event moves freshness machine to orphaned from current": {
+      after transition(from: "current", event: "ORPHANED") -> ok
+      then state.freshness = "orphaned"
+    }
+
+    example "ORPHANED event moves freshness machine to orphaned from outdated": {
+      after transition(from: "outdated", event: "ORPHANED") -> ok
+      then state.freshness = "orphaned"
+    }
+
+    example "REFRESHED event from outdated returns to current": {
+      after transition(from: "outdated", event: "REFRESHED") -> ok
+      then state.freshness = "current"
+    }
+
+    example "REFRESHED event from orphaned returns to current": {
+      after transition(from: "orphaned", event: "REFRESHED") -> ok
+      then state.freshness = "current"
+    }
+
+    example "data-freshness reflects freshness FSM on root": {
+      after transition(from: "current", event: "OUTDATED") -> ok
+      then root.dataFreshness = "outdated"
+    }
+
+    forall "all render states are reachable from initial": {
+      given s in renderStates
+      then s.reachable = true
+    }
+
+    forall "all freshness states are reachable from initial": {
+      given s in freshnessStates
+      then s.reachable = true
+    }
+
+    always "data-state on root reflects render FSM": {
+      root.dataState = state.render
+    }
+
+    always "data-freshness on root reflects freshness FSM": {
+      root.dataFreshness = state.freshness
+    }
+
+    always "data-entity-id on root reflects entityId prop": {
+      root.dataEntityId = entityId
+    }
+
+    always "data-block-id on root reflects blockId prop": {
+      root.dataBlockId = blockId
+    }
+
+    never "navigateButton enabled when render is not resolved": {
+      state.render != "resolved" and navigateButton.disabled = false
+    }
+
+    never "removeButton visible in readOnly mode": {
+      readOnly = true and removeButton.hidden = false
+    }
+
+    action navigateButton {
+      requires: state.render = "resolved"
+      ensures ok: state.render = "resolved"
+    }
+
+    action removeButton {
+      requires: readOnly = false
+      ensures ok: state.render = "loading"
+    }
+  }
+
+}
