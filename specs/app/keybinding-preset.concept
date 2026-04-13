@@ -1,0 +1,161 @@
+@version(1)
+@category("ui-core")
+@visibility("public")
+concept KeybindingPreset [P, K, U] {
+
+  purpose {
+    Manage named keyboard shortcut preset packs that bundle a set of
+    KeyBinding chord overrides under a single installable identity.
+    Tracks which preset (if any) is currently active for each user so
+    that a sync can apply or revoke the corresponding per-binding
+    overrides in bulk.
+  }
+
+  state {
+    presets: set P
+    meta {
+      name: P -> String
+      description: P -> String
+    }
+    bindings {
+      entries: P -> list { binding: K, chord: list { mod: list String, key: String, code: String } }
+    }
+    activation {
+      activePerUser: U -> option P
+    }
+  }
+
+  actions {
+    action register(preset: P, name: String, description: String) {
+      -> ok(preset: P) {
+        Record the preset with the given name and description. The preset
+        starts with no binding overrides; use addBinding to populate it.
+      }
+      -> duplicate(message: String) {
+        A preset with this identifier is already registered.
+      }
+      fixture register_vim { preset: "vim", name: "Vim", description: "Vim-style motion and editing bindings." }
+      fixture register_vscode { preset: "vscode", name: "VS Code", description: "VS Code compatible shortcuts." }
+      fixture register_duplicate { preset: "vim", name: "Vim again", description: "Duplicate." } -> duplicate
+    }
+
+    action addBinding(preset: P, binding: K, chord: list { mod: list String, key: String, code: String }) {
+      -> ok {
+        Associate the given KeyBinding id with the chord override in this
+        preset. If the preset already contains an entry for this binding id
+        the new chord replaces it; if not, a new entry is appended.
+      }
+      -> preset_not_found(message: String) {
+        No preset with this identifier is registered.
+      }
+      -> duplicate_binding(message: String) {
+        An entry for this binding id already exists in the preset. Remove it
+        first before adding a new chord.
+      }
+      fixture add_bold_override {
+        preset: "vim"
+        binding: "bold"
+        chord: [{ mod: [], key: "b", code: "KeyB" }]
+      } after register_vim
+      fixture add_save_override {
+        preset: "vim"
+        binding: "save"
+        chord: [{ mod: ["mod"], key: "s", code: "KeyS" }]
+      } after register_vim
+      fixture add_to_missing_preset {
+        preset: "does-not-exist"
+        binding: "bold"
+        chord: [{ mod: [], key: "b", code: "KeyB" }]
+      } -> preset_not_found
+      fixture add_chord_empty {
+        preset: "vim"
+        binding: "bold"
+        chord: []
+      } after register_vim -> duplicate_binding
+    }
+
+    action removeBinding(preset: P, binding: K) {
+      -> ok {
+        Remove the entry for the given binding id from this preset.
+      }
+      -> preset_not_found(message: String) {
+        No preset with this identifier is registered.
+      }
+      -> binding_not_in_preset(message: String) {
+        The preset does not contain an entry for this binding id.
+      }
+      fixture remove_ok { preset: "vim", binding: "bold" } after register_vim, add_bold_override
+      fixture remove_from_missing_preset { preset: "does-not-exist", binding: "bold" } -> preset_not_found
+      fixture remove_missing_binding { preset: "vim", binding: "nonexistent-binding" } after register_vim -> binding_not_in_preset
+    }
+
+    action listBindings(preset: P) {
+      -> ok(bindings: list { binding: K, chord: list { mod: list String, key: String, code: String } }) {
+        Return all binding-chord pairs stored in this preset in insertion order.
+      }
+      -> preset_not_found(message: String) {
+        No preset with this identifier is registered.
+      }
+      fixture list_ok { preset: "vim" } after register_vim, add_bold_override, add_save_override
+      fixture list_missing { preset: "does-not-exist" } -> preset_not_found
+    }
+
+    action activate(user: U, preset: P) {
+      -> ok {
+        Record that this preset is now active for the user, replacing any
+        previously active preset. Actual KeyBinding override application
+        is handled by the activate-preset sync.
+      }
+      -> preset_not_found(message: String) {
+        No preset with this identifier is registered.
+      }
+      fixture activate_vim { user: "user-1", preset: "vim" } after register_vim
+      fixture activate_vscode { user: "user-1", preset: "vscode" } after register_vscode
+      fixture activate_missing { user: "user-1", preset: "does-not-exist" } -> preset_not_found
+    }
+
+    action deactivate(user: U) {
+      -> ok {
+        Clear the active preset for this user. Actual override revocation
+        is handled by the deactivate-preset sync.
+      }
+      -> not_active(message: String) {
+        This user has no active preset to deactivate.
+      }
+      fixture deactivate_ok { user: "user-1" } after register_vim, activate_vim
+      fixture deactivate_not_active { user: "user-2" } -> not_active
+    }
+
+    action getActive(user: U) {
+      -> ok(preset: option P) {
+        Return the currently active preset id for this user, or none if
+        no preset is active.
+      }
+      fixture get_active_set { user: "user-1" } after register_vim, activate_vim
+      fixture get_active_none { user: "user-2" }
+    }
+  }
+
+  example "register-then-activate" {
+    after register(preset: "vim", name: "Vim", description: "Vim preset.") -> ok(preset: p)
+    and   activate(user: "u1", preset: p) -> ok
+    then  getActive(user: "u1") -> ok(preset: p)
+  }
+
+  example "addBinding-then-listBindings" {
+    after register(preset: "vscode", name: "VS Code", description: "VS Code preset.") -> ok(preset: q)
+    and   addBinding(preset: q, binding: "bold", chord: [{ mod: ["mod"], key: "b", code: "KeyB" }]) -> ok
+    and   addBinding(preset: q, binding: "save", chord: [{ mod: ["mod"], key: "s", code: "KeyS" }]) -> ok
+    then  listBindings(preset: q) -> ok(bindings: _)
+  }
+
+  never "two presets active for same user" {
+    exists u in activation:
+    u.activePerUser != none
+  }
+
+  always "chord is non-empty in any binding entry" {
+    forall p in presets:
+    p.entries != []
+  }
+}
