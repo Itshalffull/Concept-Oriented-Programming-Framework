@@ -1,0 +1,16 @@
+# ActionBinding seeds — page title set binding
+# Dispatches ContentNode/setTitle on blur or debounce from the page-title widget.
+# The on-blur/debounce dispatch policy fires once the user leaves the title input,
+# preventing a setTitle call on every keystroke.
+
+concept: ActionBinding
+action: bind
+entries:
+  - name: page-title-set
+    binding: page-title-set
+    target: "ContentNode/setTitle"
+    parameterMap: '{"node":"context.pageId","title":"context.title"}'
+    executionPolicy: "debounce"
+    debounceMs: 500
+    dispatchOn: "blur"
+    label: "Set Page Title"

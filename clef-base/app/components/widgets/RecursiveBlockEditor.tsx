@@ -39,6 +39,7 @@ import {
 } from '../../services/spell-check-dispatcher';
 import { SpellCheckSuggestionsPopover } from './SpellCheckSuggestionsPopover';
 import { useSlotResolver, SlotMount } from './SlotResolver';
+import { PageTitle } from './PageTitle';
 
 // ---------------------------------------------------------------------------
 // Selection tracking — populated from document selectionchange events
@@ -166,6 +167,9 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
   const [slashItems, setSlashItems] = useState<SlashMenuItem[]>([]);
   const [slashMenuLoading, setSlashMenuLoading] = useState(false);
 
+  // ------- page title — loaded from ContentNode/get on mount --------
+  const [pageTitle, setPageTitle] = useState<string>('');
+
   // ------- compile surface (page-level, compilable schemas) --------
   const [compileStatus, setCompileStatus] = useState<CompileStatus | null>(null);
   const [compiledPreview, setCompiledPreview] = useState<string | null>(null);
@@ -229,10 +233,15 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
 
     async function loadRoot() {
       try {
-        // 1. Get root node to determine its schema
+        // 1. Get root node to determine its schema and load the page title
         const nodeResult = await invoke('ContentNode', 'get', { node: rootNodeId });
         if (cancelled) return;
         if (nodeResult.variant === 'ok') {
+          // Load title from node record (stored by ContentNode/setTitle)
+          const titleField = (nodeResult as Record<string, unknown>).title;
+          if (!cancelled && typeof titleField === 'string') {
+            setPageTitle(titleField);
+          }
           const schemaResult = await invoke('Schema', 'getSchemasFor', { entity_id: rootNodeId });
           if (!cancelled && schemaResult.variant === 'ok') {
             const schemas: string[] = typeof schemaResult.schemas === 'string'
@@ -452,6 +461,19 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
       setActiveMarks({});
     }
   }, [fsmState]);
+
+  // Focus the first child block — called from PageTitle on Enter/Tab.
+  // Looks for the first [data-part="block-slot"] inside the center pane.
+  const handleFirstBlockFocus = useCallback(() => {
+    const firstBlock = document.querySelector<HTMLElement>(
+      '[data-part="block-list"] [data-part="block-slot"]',
+    );
+    if (firstBlock) {
+      // Try to focus the inner contenteditable within the block
+      const inner = firstBlock.querySelector<HTMLElement>('[contenteditable="true"]');
+      (inner ?? firstBlock).focus();
+    }
+  }, []);
 
   // =========================================================================
   // Slash menu — populated from ComponentMapping (insertable) + ActionBinding
@@ -941,6 +963,15 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
           position: 'relative',
         }}
       >
+        {/* Page title — rendered above the block tree, bound to rootNodeId title */}
+        <PageTitle
+          pageId={rootNodeId}
+          title={pageTitle}
+          readOnly={!canEdit}
+          onRequestFirstBlockFocus={handleFirstBlockFocus}
+          onTitleSaved={(saved) => setPageTitle(saved)}
+        />
+
         {/* Inline toolbar — from innermost EditSurface toolbar_widget */}
         {fsmState === 'focused' && innermostSurface?.toolbar_widget && (
           <div

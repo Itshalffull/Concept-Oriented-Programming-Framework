@@ -269,6 +269,29 @@ const _contentNodeHandler: FunctionalConceptHandler = {
     return completeFrom(p, 'ok', (bindings) => ({ items: bindings.enrichedItems as string })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
+  setTitle(input: Record<string, unknown>) {
+    const node = input.node as string;
+    const title = (input.title as string | undefined) ?? '';
+
+    if (!node || (typeof node === 'string' && node.trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'node is required' }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = spGet(p, 'node', node, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = put(b, 'node', node, {
+          title,
+          updatedAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', { node });
+      },
+      (b) => complete(b, 'notfound', { message: 'Node not found' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
   clone(input: Record<string, unknown>) {
     const source = (input.source as string | undefined) ?? '';
     const newId = (input.newId as string | undefined) ?? '';

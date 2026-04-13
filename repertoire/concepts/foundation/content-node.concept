@@ -16,6 +16,7 @@ concept ContentNode [N] {
     createdAt: N -> String
     updatedAt: N -> String
     createdBy: N -> String
+    title: N -> String
   }
 
   capabilities {
@@ -111,6 +112,23 @@ concept ContentNode [N] {
       fixture change_type_missing { node: "nonexistent", type: "page" } -> error
     }
 
+    action setTitle(node: N, title: String) {
+      -> ok(node: N) {
+        Store the title string on the node and update updatedAt. Returns the node id.
+      }
+      -> notfound(message: String) {
+        No ContentNode exists with this identifier.
+      }
+      -> error(message: String) {
+        The node id is empty.
+      }
+      reversal: setTitle
+
+      fixture set_title_ok { node: $create_page_node.node, title: "My Page Title" } after create_page_node
+      fixture set_title_empty_node { node: "", title: "Any Title" } -> error
+      fixture set_title_missing { node: "nonexistent-node", title: "Title" } -> notfound
+    }
+
     action clone(source: String, newId: String, includeChildren: Bool) {
       -> ok(node: N) {
         Copy the source node's type, content, metadata, and property annotations to newId.
@@ -133,6 +151,16 @@ concept ContentNode [N] {
       fixture clone_source_missing { source: "does-not-exist", newId: "node-new", includeChildren: false } -> source_not_found
       fixture clone_duplicate_target { source: $create_page_node.node, newId: $create_page_node.node, includeChildren: false } after create_page_node -> duplicate_target_id
     }
+  }
+
+  example "setTitle-then-get": {
+
+    after create(node: "title-node-1", type: "page", content: "", createdBy: "user1") -> ok(node: "title-node-1")
+
+        after setTitle(node: "title-node-1", title: "My New Title") -> ok(node: "title-node-1")
+
+        then get(node: "title-node-1") -> ok(node: "title-node-1", type: "page")
+
   }
 
   example "clone-then-get": {

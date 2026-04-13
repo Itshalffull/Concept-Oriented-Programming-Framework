@@ -534,6 +534,83 @@ describe('ContentNode functional handler', () => {
 
   });
 
+  describe('setTitle', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = contentNodeHandler.setTitle({ node: {"type":"ref","fixture":"create_page_node","field":"node"}, title: "My Page Title" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = contentNodeHandler.setTitle({ node: {"type":"ref","fixture":"create_page_node","field":"node"}, title: "My Page Title" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = contentNodeHandler.setTitle({ node: {"type":"ref","fixture":"create_page_node","field":"node"}, title: "My Page Title" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = contentNodeHandler.setTitle({ node: {"type":"ref","fixture":"create_page_node","field":"node"}, title: "My Page Title" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = contentNodeHandler.setTitle({ node: {"type":"ref","fixture":"create_page_node","field":"node"}, title: "My Page Title" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof contentNodeHandler.setTitle !== 'function') return;
+      const result = await interpret(contentNodeHandler.setTitle({ node: {"type":"ref","fixture":"create_page_node","field":"node"}, title: "My Page Title" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "set_title_ok" -> ok', async () => {
+      if (typeof contentNodeHandler.setTitle !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_page_node = await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
+      const result = await interpret(contentNodeHandler.setTitle({ node: afterResult_create_page_node?.output?.["node"], title: "My Page Title" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "set_title_empty_node" -> error', async () => {
+      if (typeof contentNodeHandler.setTitle !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contentNodeHandler.setTitle({ node: "", title: "Any Title" }), storage);
+      expect(result.variant).not.toBe('ok');
+    });
+
+    it('fixture "set_title_missing" -> notfound', async () => {
+      if (typeof contentNodeHandler.setTitle !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contentNodeHandler.setTitle({ node: "nonexistent-node", title: "Title" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
+    });
+
+  });
+
   describe('clone', () => {
     it('builds a valid StorageProgram', () => {
       const program = contentNodeHandler.clone({ source: {"type":"ref","fixture":"create_page_node","field":"node"}, newId: "node-clone-deep", includeChildren: "true" });
@@ -638,6 +715,10 @@ describe('ContentNode functional handler', () => {
   });
 
   describe('invariant examples', () => {
+    it("setTitle-then-get", async () => {
+      const storage = createInMemoryStorage();
+    });
+
     it("clone-then-get", async () => {
       const storage = createInMemoryStorage();
     });
@@ -681,6 +762,7 @@ describe('ContentNode functional handler', () => {
               fc.record({ action: fc.constant('setMetadata'), input: fc.record({ node: fc.string(), metadata: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('listBySchema'), input: fc.record({ schema: fc.string({ minLength: 1, maxLength: 50 }), limit: fc.string(), offset: fc.string() }) }),
               fc.record({ action: fc.constant('changeType'), input: fc.record({ node: fc.string(), type: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('setTitle'), input: fc.record({ node: fc.string(), title: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('clone'), input: fc.record({ source: fc.string({ minLength: 1, maxLength: 50 }), newId: fc.string({ minLength: 1, maxLength: 50 }), includeChildren: fc.boolean() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -718,6 +800,7 @@ describe('ContentNode functional handler', () => {
               fc.record({ action: fc.constant('setMetadata'), input: fc.record({ node: fc.string(), metadata: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('listBySchema'), input: fc.record({ schema: fc.string({ minLength: 1, maxLength: 50 }), limit: fc.string(), offset: fc.string() }) }),
               fc.record({ action: fc.constant('changeType'), input: fc.record({ node: fc.string(), type: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('setTitle'), input: fc.record({ node: fc.string(), title: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('clone'), input: fc.record({ source: fc.string({ minLength: 1, maxLength: 50 }), newId: fc.string({ minLength: 1, maxLength: 50 }), includeChildren: fc.boolean() }) }),
             ),
             { minLength: 1, maxLength: 5 },

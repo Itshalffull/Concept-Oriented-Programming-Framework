@@ -1,0 +1,176 @@
+@version(1)
+widget page-title {
+
+  purpose {
+    Editable page title rendered as a single contenteditable region above the
+    block tree. Provides keyboard shortcuts that integrate with the block editor:
+    Enter splits into the first paragraph block and moves focus there; Tab
+    moves focus to the first child block without creating a new block. Dispatches
+    ContentNode/setTitle on blur with a debounce guard so saves are batched and
+    not fired on every keystroke. Supports a read-only mode for published or
+    locked pages where the title is presentational only.
+  }
+
+  anatomy {
+    root:       container     { Top-level wrapper; carries data-state for FSM and data-read-only }
+    titleInput: interactive   { Single-line contenteditable region that accepts the page title text }
+  }
+
+  states {
+    edit {
+      idle [initial] {
+        on FOCUS -> focused;
+      }
+      focused {
+        on INPUT -> editing;
+        on BLUR  -> idle;
+        on ENTER -> idle;
+        on TAB   -> idle;
+        entry [placeholderVisible];
+      }
+      editing {
+        on BLUR      -> idle;
+        on ENTER     -> idle;
+        on TAB       -> idle;
+        on DEBOUNCED -> editing;
+        entry [scheduleSave];
+        exit [cancelSave];
+      }
+    }
+  }
+
+  accessibility {
+    role: textbox;
+    keyboard {
+      Enter  -> ENTER;
+      Tab    -> TAB;
+    }
+    focus {
+      trap: false;
+      initial: titleInput;
+      roving: false;
+    }
+    aria {
+      titleInput -> {
+        role: "textbox";
+        aria-label: "Page title";
+        aria-multiline: "false";
+        aria-readonly: if ?readOnly then "true" else "false";
+        aria-placeholder: ?placeholder;
+      };
+    }
+  }
+
+  props {
+    pageId:      String
+    title:       String = ""
+    placeholder: String = "Untitled"
+    focused:     Bool = false
+    readOnly:    Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part:      "root";
+      data-state:     if state.edit == "editing" then "editing" else if state.edit == "focused" then "focused" else "idle";
+      data-read-only: if ?readOnly then "true" else "false";
+    }
+    titleInput -> {
+      role:             "textbox";
+      contentEditable:  if ?readOnly then "false" else "true";
+      aria-label:       "Page title";
+      aria-multiline:   "false";
+      aria-readonly:    if ?readOnly then "true" else "false";
+      aria-placeholder: ?placeholder;
+      data-placeholder: ?placeholder;
+      onFocus:          send(FOCUS);
+      onBlur:           send(BLUR);
+      onInput:          send(INPUT);
+      onKeyDown:        send(ENTER);
+    }
+  }
+
+  invariant {
+    example "idle then focus enters focused state": {
+      after transition(from: "idle", event: "FOCUS") -> ok
+      then state.edit = "focused"
+    }
+
+    example "focus then input transitions to editing": {
+      after transition(from: "idle", event: "FOCUS") -> ok
+      and transition(from: "focused", event: "INPUT") -> ok
+      then state.edit = "editing"
+    }
+
+    example "blur from editing returns to idle": {
+      after transition(from: "idle", event: "FOCUS") -> ok
+      and transition(from: "focused", event: "INPUT") -> ok
+      and transition(from: "editing", event: "BLUR") -> ok
+      then state.edit = "idle"
+    }
+
+    example "blur from focused returns to idle": {
+      after transition(from: "idle", event: "FOCUS") -> ok
+      and transition(from: "focused", event: "BLUR") -> ok
+      then state.edit = "idle"
+    }
+
+    example "Enter from focused returns to idle": {
+      after transition(from: "idle", event: "FOCUS") -> ok
+      and transition(from: "focused", event: "ENTER") -> ok
+      then state.edit = "idle"
+    }
+
+    example "Tab from focused returns to idle": {
+      after transition(from: "idle", event: "FOCUS") -> ok
+      and transition(from: "focused", event: "TAB") -> ok
+      then state.edit = "idle"
+    }
+
+    example "Enter from editing returns to idle": {
+      after transition(from: "idle", event: "FOCUS") -> ok
+      and transition(from: "focused", event: "INPUT") -> ok
+      and transition(from: "editing", event: "ENTER") -> ok
+      then state.edit = "idle"
+    }
+
+    example "Tab from editing returns to idle": {
+      after transition(from: "idle", event: "FOCUS") -> ok
+      and transition(from: "focused", event: "INPUT") -> ok
+      and transition(from: "editing", event: "TAB") -> ok
+      then state.edit = "idle"
+    }
+
+    example "data-state on root reflects edit FSM in focused state": {
+      after transition(from: "idle", event: "FOCUS") -> ok
+      then root.dataState = "focused"
+    }
+
+    example "data-state on root reflects edit FSM in editing state": {
+      after transition(from: "idle", event: "FOCUS") -> ok
+      and transition(from: "focused", event: "INPUT") -> ok
+      then root.dataState = "editing"
+    }
+
+    always "data-state on root reflects FSM": {
+      root.dataState = state.edit
+    }
+
+    always "edit FSM starts in idle state": {
+      state.edit = "idle"
+    }
+
+    never "editing reached without focus predecessor": {
+      state.edit = "editing" and root.dataReadOnly = "true"
+    }
+
+    action FOCUS {
+      requires: state.edit = "idle"
+      ensures ok: state.edit = "focused"
+    }
+
+    action BLUR {
+      ensures ok: state.edit = "idle"
+    }
+  }
+}
