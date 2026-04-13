@@ -203,6 +203,7 @@ export const BlockHandle: React.FC<BlockHandleProps> = ({
     <button
       data-part="root"
       data-widget="block-handle"
+      data-keybinding-scope="app.editor.block-handle"
       data-state={fsmState}
       data-block-id={blockId}
       data-parent-id={parentId}

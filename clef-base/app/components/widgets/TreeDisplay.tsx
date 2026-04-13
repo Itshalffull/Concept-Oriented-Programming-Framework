@@ -353,71 +353,17 @@ export const TreeDisplay: React.FC<TreeDisplayProps> = ({ data, fields, onRowCli
   const expandAll = useCallback(() => setExpanded(new Set(allIds)), [allIds]);
   const collapseAll = useCallback(() => setExpanded(new Set()), []);
 
-  // Build a flat map of node IDs to node for keyboard navigation
-  const nodeMap = useMemo(() => {
-    const map = new Map<string, TreeNode>();
-    function walk(nodes: TreeNode[]) {
-      for (const n of nodes) {
-        map.set(n.id, n);
-        walk(n.children);
-      }
-    }
-    walk(tree);
-    return map;
-  }, [tree]);
-
-  const handleKeyDown = useCallback((e: React.KeyboardEvent, node: TreeNode) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent, _node: TreeNode) => {
+    // Arrow keys (ArrowLeft/Right/Up/Down), Enter, and Space are handled
+    // declaratively via KeyBinding seeds (scope: app.tree — KB-20):
+    //   clef-base/seeds/KeyBinding.tree.seeds.yaml
+    // The useKeyBindings dispatcher routes those keys to the tree-nav
+    // ActionBindings defined in ActionBinding.tree-nav.seeds.yaml.
+    //
+    // Home and End remain inline because they are not in the KB-20 seed set.
     const visibleIds = collectVisibleIds(tree, expanded);
-    const currentIndex = visibleIds.indexOf(node.id);
 
     switch (e.key) {
-      case 'ArrowDown': {
-        e.preventDefault();
-        const nextId = visibleIds[currentIndex + 1];
-        if (nextId) setFocusedId(nextId);
-        break;
-      }
-      case 'ArrowUp': {
-        e.preventDefault();
-        const prevId = visibleIds[currentIndex - 1];
-        if (prevId) setFocusedId(prevId);
-        break;
-      }
-      case 'ArrowRight': {
-        e.preventDefault();
-        const hasChildren = node.children.length > 0
-          || node.row.hasChildren === true
-          || ((node.row._children as unknown[])?.length ?? 0) > 0;
-        if (hasChildren && !expanded.has(node.id)) {
-          // Expand the node
-          setExpanded(prev => new Set([...prev, node.id]));
-        } else if (hasChildren && expanded.has(node.id)) {
-          // Move focus to first child
-          const firstChild = node.children[0];
-          if (firstChild) setFocusedId(firstChild.id);
-        }
-        break;
-      }
-      case 'ArrowLeft': {
-        e.preventDefault();
-        if (expanded.has(node.id) && node.children.length > 0) {
-          // Collapse the node
-          setExpanded(prev => {
-            const next = new Set(prev);
-            next.delete(node.id);
-            return next;
-          });
-        } else {
-          // Move focus to parent
-          for (const [parentId, parentNode] of nodeMap) {
-            if (parentNode.children.some(c => c.id === node.id)) {
-              setFocusedId(parentId);
-              break;
-            }
-          }
-        }
-        break;
-      }
       case 'Home': {
         e.preventDefault();
         const firstVisible = visibleIds[0];
@@ -430,18 +376,8 @@ export const TreeDisplay: React.FC<TreeDisplayProps> = ({ data, fields, onRowCli
         if (lastVisible) setFocusedId(lastVisible);
         break;
       }
-      case 'Enter': {
-        e.preventDefault();
-        onRowClick?.(node.row);
-        break;
-      }
-      case 'Escape': {
-        e.preventDefault();
-        // Deselect / blur: no-op in this implementation
-        break;
-      }
     }
-  }, [tree, expanded, nodeMap, onRowClick]);
+  }, [tree, expanded]);
 
   // Compute expansion state label for data-state
   const expansionState = useMemo(() => {
@@ -469,6 +405,7 @@ export const TreeDisplay: React.FC<TreeDisplayProps> = ({ data, fields, onRowCli
     <div
       data-part="root"
       data-state={expansionState}
+      data-keybinding-scope="app.tree"
       aria-busy="false"
     >
       {/* Toolbar */}

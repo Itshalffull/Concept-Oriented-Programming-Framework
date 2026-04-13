@@ -1,0 +1,86 @@
+# ActionBinding seeds — tree navigation actions (KB-20).
+#
+# PRD:  docs/plans/keybinding-prd.md §4 Phase H (card 20)
+# Card: KB-20
+#
+# Six ActionBinding entries for the tree-nav actions referenced by
+# clef-base/seeds/KeyBinding.tree.seeds.yaml.
+#
+# These actions dispatch into the TreeDisplay widget's local state machine via
+# the keybinding-scope dispatcher. The target uses a widget-local action
+# pattern: the ActionBinding target is the tree-display widget's scope handler,
+# which translates each action name into the appropriate focusedId / expanded
+# state update.
+#
+# In the current v1 architecture the dispatcher routes these through
+# ActionBinding/invoke with context carrying the data-keybinding-scope attribute
+# value. The TreeDisplay widget reads the dispatched action from the
+# useKeyBindings context and executes the corresponding state update locally
+# (matching the widget-local action dispatch pattern used by DataTable KB-18).
+#
+# BlockHandle Enter + Delete bindings (kb-blockhandle-actions, kb-blockhandle-delete)
+# reuse existing ActionBinding ids (block-actions-open, block-delete) from
+# clef-base/seeds/ActionBinding.block-handle.seeds.yaml — no new entries needed.
+
+concept: ActionBinding
+action: bind
+entries:
+  - name: tree-collapse-current
+    binding: tree-collapse-current
+    target: "TreeDisplay/collapseCurrentNode"
+    parameterMap: >
+      {
+        "scope": "context.scope"
+      }
+    executionPolicy: "auto"
+    label: "Collapse current tree node"
+
+  - name: tree-expand-current
+    binding: tree-expand-current
+    target: "TreeDisplay/expandCurrentNode"
+    parameterMap: >
+      {
+        "scope": "context.scope"
+      }
+    executionPolicy: "auto"
+    label: "Expand current tree node"
+
+  - name: tree-node-prev
+    binding: tree-node-prev
+    target: "TreeDisplay/focusPrevNode"
+    parameterMap: >
+      {
+        "scope": "context.scope"
+      }
+    executionPolicy: "auto"
+    label: "Focus previous tree node"
+
+  - name: tree-node-next
+    binding: tree-node-next
+    target: "TreeDisplay/focusNextNode"
+    parameterMap: >
+      {
+        "scope": "context.scope"
+      }
+    executionPolicy: "auto"
+    label: "Focus next tree node"
+
+  - name: tree-node-activate
+    binding: tree-node-activate
+    target: "TreeDisplay/activateCurrentNode"
+    parameterMap: >
+      {
+        "scope": "context.scope"
+      }
+    executionPolicy: "auto"
+    label: "Activate current tree node"
+
+  - name: tree-node-toggle
+    binding: tree-node-toggle
+    target: "TreeDisplay/toggleCurrentNode"
+    parameterMap: >
+      {
+        "scope": "context.scope"
+      }
+    executionPolicy: "auto"
+    label: "Toggle current tree node expand/collapse"

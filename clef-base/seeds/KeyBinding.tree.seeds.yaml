@@ -1,0 +1,146 @@
+# KeyBinding seeds — tree navigation + block-handle keyboard handlers (KB-20).
+#
+# PRD:  docs/plans/keybinding-prd.md §4 Phase H (card 20)
+# Card: KB-20
+#
+# Migrates inline onKeyDown handlers from TreeDisplay and BlockHandle to
+# declarative KeyBinding seeds so every keyboard shortcut participates in the
+# KeyBinding registry (discoverable, user-overridable, Score-queryable).
+#
+# Two scope groups:
+#
+#   TreeDisplay  — scope: "app.tree"
+#     ArrowLeft  → tree-collapse-current   (collapse focused node or focus parent)
+#     ArrowRight → tree-expand-current     (expand focused node or focus first child)
+#     ArrowUp    → tree-node-prev          (move focus to previous visible node)
+#     ArrowDown  → tree-node-next          (move focus to next visible node)
+#     Enter      → tree-node-activate      (activate / open focused node)
+#     Space      → tree-node-toggle        (toggle expand/collapse of focused node)
+#
+#   BlockHandle  — scope: "app.editor.block-handle"
+#     Enter      → block-actions-menu-open (open the block actions menu)
+#     Delete     → block-delete            (remove the focused block)
+#
+# Priority 10 chosen throughout — same as other Phase-H widget-cluster seeds.
+# These keys are all unambiguous within their scopes so no conflict is expected.
+#
+# Companion ActionBinding entries for the six tree-nav actions live in
+# clef-base/seeds/ActionBinding.tree-nav.seeds.yaml (created in this same card).
+# The block-handle Enter + Delete bindings reuse existing ActionBinding ids
+# (block-actions-open, block-delete) already declared in
+# clef-base/seeds/ActionBinding.block-handle.seeds.yaml.
+
+concept: KeyBinding
+action: register
+entries:
+  # ---------------------------------------------------------------------------
+  # TreeDisplay — scope: app.tree
+  # ---------------------------------------------------------------------------
+
+  - binding: kb-tree-collapse
+    label: "Collapse tree node"
+    description: "Collapse the focused tree node, or move focus to its parent if already collapsed"
+    category: "Navigation"
+    scope: "app.tree"
+    priority: 10
+    chord: '[{"mod":[],"key":"ArrowLeft","code":"ArrowLeft"}]'
+    phase: "bubble"
+    onlyOutsideTextInput: false
+    overridesBrowser: false
+    actionBinding: "tree-collapse-current"
+    params: ""
+
+  - binding: kb-tree-expand
+    label: "Expand tree node"
+    description: "Expand the focused tree node, or move focus to its first child if already expanded"
+    category: "Navigation"
+    scope: "app.tree"
+    priority: 10
+    chord: '[{"mod":[],"key":"ArrowRight","code":"ArrowRight"}]'
+    phase: "bubble"
+    onlyOutsideTextInput: false
+    overridesBrowser: false
+    actionBinding: "tree-expand-current"
+    params: ""
+
+  - binding: kb-tree-up
+    label: "Move focus to previous tree node"
+    description: "Move keyboard focus to the previous visible node in the tree"
+    category: "Navigation"
+    scope: "app.tree"
+    priority: 10
+    chord: '[{"mod":[],"key":"ArrowUp","code":"ArrowUp"}]'
+    phase: "bubble"
+    onlyOutsideTextInput: false
+    overridesBrowser: false
+    actionBinding: "tree-node-prev"
+    params: ""
+
+  - binding: kb-tree-down
+    label: "Move focus to next tree node"
+    description: "Move keyboard focus to the next visible node in the tree"
+    category: "Navigation"
+    scope: "app.tree"
+    priority: 10
+    chord: '[{"mod":[],"key":"ArrowDown","code":"ArrowDown"}]'
+    phase: "bubble"
+    onlyOutsideTextInput: false
+    overridesBrowser: false
+    actionBinding: "tree-node-next"
+    params: ""
+
+  - binding: kb-tree-activate
+    label: "Activate tree node"
+    description: "Activate (open or select) the currently focused tree node"
+    category: "Navigation"
+    scope: "app.tree"
+    priority: 10
+    chord: '[{"mod":[],"key":"Enter","code":"Enter"}]'
+    phase: "bubble"
+    onlyOutsideTextInput: false
+    overridesBrowser: false
+    actionBinding: "tree-node-activate"
+    params: ""
+
+  - binding: kb-tree-toggle
+    label: "Toggle tree node expand/collapse"
+    description: "Toggle the expand/collapse state of the currently focused tree node"
+    category: "Navigation"
+    scope: "app.tree"
+    priority: 10
+    chord: '[{"mod":[],"key":" ","code":"Space"}]'
+    phase: "bubble"
+    onlyOutsideTextInput: false
+    overridesBrowser: false
+    actionBinding: "tree-node-toggle"
+    params: ""
+
+  # ---------------------------------------------------------------------------
+  # BlockHandle — scope: app.editor.block-handle
+  # ---------------------------------------------------------------------------
+
+  - binding: kb-blockhandle-actions
+    label: "Open block actions menu"
+    description: "Open the block actions menu for the focused block handle"
+    category: "Editing"
+    scope: "app.editor.block-handle"
+    priority: 10
+    chord: '[{"mod":[],"key":"Enter","code":"Enter"}]'
+    phase: "bubble"
+    onlyOutsideTextInput: false
+    overridesBrowser: false
+    actionBinding: "block-actions-open"
+    params: ""
+
+  - binding: kb-blockhandle-delete
+    label: "Delete block"
+    description: "Delete the block associated with the focused block handle"
+    category: "Editing"
+    scope: "app.editor.block-handle"
+    priority: 10
+    chord: '[{"mod":[],"key":"Delete","code":"Delete"}]'
+    phase: "bubble"
+    onlyOutsideTextInput: false
+    overridesBrowser: false
+    actionBinding: "block-delete"
+    params: ""
