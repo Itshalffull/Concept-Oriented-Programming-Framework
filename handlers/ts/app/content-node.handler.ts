@@ -409,6 +409,46 @@ const _contentNodeHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
+  createWithSchema(input: Record<string, unknown>) {
+    const id = (input.id as string | undefined) ?? '';
+    const schema = (input.schema as string | undefined) ?? '';
+    const body = (input.body as string | undefined) ?? '';
+
+    if (!id || id.trim() === '') {
+      return complete(createProgram(), 'error', { message: 'id is required' }) as StorageProgram<Result>;
+    }
+    if (!schema || schema.trim() === '') {
+      return complete(createProgram(), 'error', { message: 'schema is required' }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = spGet(p, 'node', id, '_existing');
+    p = branch(p, '_existing',
+      (b) => complete(b, 'duplicate', { message: `A node with id '${id}' already exists` }),
+      (b) => {
+        const now = new Date().toISOString();
+        // Create the node AND record the schema membership atomically
+        let b2 = put(b, 'node', id, {
+          node: id,
+          type: schema.toLowerCase(),
+          content: body,
+          metadata: '',
+          createdBy: 'system',
+          createdAt: now,
+          updatedAt: now,
+        });
+        // Record schema membership so listBySchema can find this node
+        b2 = put(b2, 'membership', `${id}::${schema}`, {
+          entity_id: id,
+          schema,
+          appliedAt: now,
+        });
+        return complete(b2, 'ok', { node: id });
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
   changeType(input: Record<string, unknown>) {
     const node = input.node as string;
     const type = input.type as string;

@@ -129,6 +129,26 @@ concept ContentNode [N] {
       fixture set_title_missing { node: "nonexistent-node", title: "Title" } -> notfound
     }
 
+    action createWithSchema(id: N, schema: String, body: String) {
+      -> ok(node: N) {
+        Atomically create a new ContentNode with the given id and immediately
+        apply a schema classification to it in a single operation, eliminating
+        the race window that would exist between a standalone create and a
+        subsequent Schema/applyTo call.
+      }
+      -> duplicate(message: String) {
+        A ContentNode with this id already exists. No writes are performed.
+      }
+      -> error(message: String) {
+        The id is empty, schema is empty, or an unexpected storage error occurred.
+      }
+
+      fixture create_with_schema_ok { id: "node-schema-1", schema: "Page", body: "Initial content" }
+      fixture create_with_schema_empty_id { id: "", schema: "Page", body: "" } -> error
+      fixture create_with_schema_empty_schema { id: "node-schema-2", schema: "", body: "" } -> error
+      fixture create_with_schema_duplicate { id: $create_page_node.node, schema: "Page", body: "dup" } after create_page_node -> duplicate
+    }
+
     action clone(source: String, newId: String, includeChildren: Bool) {
       -> ok(node: N) {
         Copy the source node's type, content, metadata, and property annotations to newId.
@@ -151,6 +171,22 @@ concept ContentNode [N] {
       fixture clone_source_missing { source: "does-not-exist", newId: "node-new", includeChildren: false } -> source_not_found
       fixture clone_duplicate_target { source: $create_page_node.node, newId: $create_page_node.node, includeChildren: false } after create_page_node -> duplicate_target_id
     }
+  }
+
+  example "createWithSchema-then-get": {
+
+    after createWithSchema(id: "schema-node-1", schema: "Page", body: "Hello") -> ok(node: "schema-node-1")
+
+        then get(node: "schema-node-1") -> ok(node: "schema-node-1", type: "page", content: "Hello", metadata: "")
+
+  }
+
+  example "createWithSchema-duplicate": {
+
+    after createWithSchema(id: "dup-node-1", schema: "Page", body: "First") -> ok(node: "dup-node-1")
+
+        then createWithSchema(id: "dup-node-1", schema: "Page", body: "Second") -> duplicate(message: m)
+
   }
 
   example "setTitle-then-get": {
