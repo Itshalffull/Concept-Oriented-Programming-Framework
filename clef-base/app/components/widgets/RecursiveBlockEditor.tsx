@@ -565,6 +565,34 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
     setAnchorBlockId('');
   }, []);
 
+  // =========================================================================
+  // Section select — quad-click on a heading (PP-smart-selection)
+  //
+  // Walks forward through the children array starting from the clicked heading,
+  // collecting blocks until a heading of equal or higher rank (lower level
+  // number) is encountered. The clicked heading itself is always included.
+  // If the clicked block is NOT a heading, this is a no-op (count-4 falls
+  // back to count-3 / single-block select in BlockSlot).
+  // =========================================================================
+
+  const handleSectionSelect = useCallback((blockId: string, headingLevel: number) => {
+    const ids = children.map((c) => c.id);
+    const startIdx = ids.indexOf(blockId);
+    if (startIdx === -1) return;
+
+    const sectionIds: string[] = [blockId];
+    for (let i = startIdx + 1; i < children.length; i++) {
+      const sibling = children[i];
+      const siblingLevel = resolveHeadingLevel(sibling.schema);
+      // A heading with level <= current level ends the section.
+      if (siblingLevel !== null && siblingLevel <= headingLevel) break;
+      sectionIds.push(sibling.id);
+    }
+
+    setSelectedBlockIds(new Set(sectionIds));
+    setAnchorBlockId(blockId);
+  }, [children]);
+
   const handleMultiSelectKeyDown = useCallback((e: React.KeyboardEvent) => {
     const ids = children.map((c) => c.id);
 
@@ -1525,6 +1553,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
                     onBlur={handleBlockBlur}
                     onMutate={loadChildren}
                     onBlockClick={(e) => handleBlockClick(child.id, e)}
+                    onSectionSelect={handleSectionSelect}
                     rootNodeId={rootNodeId}
                     editorFlavor={editorFlavor}
                     decorationLayerEntries={decorationLayerEntries}
@@ -1798,6 +1827,45 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
 };
 
 // ===========================================================================
+// resolveHeadingLevel — extract numeric heading level from a schema name.
+//
+// Supported schema patterns (PP-smart-selection):
+//   'heading'   → 1  (bare heading treated as h1)
+//   'heading-1' → 1
+//   'heading-2' → 2
+//   'heading-3' → 3  (and so on up to 6)
+//   'h1'/'h2'   → 1/2  (shorthand aliases)
+// Returns null for non-heading schemas.
+// ===========================================================================
+
+function resolveHeadingLevel(schema: string): number | null {
+  if (!schema) return null;
+  // 'heading-N' or 'h-N'
+  const dashMatch = schema.match(/^(?:heading|h)-(\d)$/i);
+  if (dashMatch) {
+    const lvl = parseInt(dashMatch[1], 10);
+    return lvl >= 1 && lvl <= 6 ? lvl : null;
+  }
+  // 'hN' (e.g. 'h1', 'h2')
+  const hMatch = schema.match(/^h(\d)$/i);
+  if (hMatch) {
+    const lvl = parseInt(hMatch[1], 10);
+    return lvl >= 1 && lvl <= 6 ? lvl : null;
+  }
+  // bare 'heading' → treat as h1
+  if (schema === 'heading') return 1;
+  return null;
+}
+
+// ===========================================================================
+// CLICK_RESET_MS — maximum gap between successive clicks that counts as
+// part of the same multi-click sequence (double/triple/quad).
+// 400 ms matches most OS defaults; browser dblclick is typically 200-500 ms.
+// ===========================================================================
+
+const CLICK_RESET_MS = 400;
+
+// ===========================================================================
 // BlockSlot — generic block renderer (block-slot.widget analogue)
 // Mounts the resolved widget for a given (schema, displayMode) pair.
 // ===========================================================================
@@ -1815,6 +1883,13 @@ interface BlockSlotProps {
   onMutate: () => void;
   /** Called on click events to propagate multi-select modifier logic upward. */
   onBlockClick?: (e: React.MouseEvent) => void;
+  /**
+   * Called on quadruple-click when this block is a heading.
+   * The parent uses this to set selectedBlockIds to the section
+   * (heading + all blocks under it until the next same-or-higher-level heading).
+   * PP-smart-selection
+   */
+  onSectionSelect?: (blockId: string, headingLevel: number) => void;
   rootNodeId: string;
   editorFlavor: EditorFlavor;
   /** Decoration-layer slot entries resolved by the parent editor (shared across all blocks). */
@@ -1832,11 +1907,85 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
   onBlur,
   onMutate,
   onBlockClick,
+  onSectionSelect,
   rootNodeId,
   editorFlavor,
   decorationLayerEntries,
 }) => {
   const invoke = useKernelInvoke();
+
+  // -------------------------------------------------------------------------
+  // Multi-click tracking — double/triple/quad-click selection semantics
+  // (PP-smart-selection)
+  //
+  // We track click count + last-click timestamp in refs (not state) so the
+  // handler never causes a re-render and the count is always current at call
+  // time without stale-closure issues.
+  //
+  //   count 1 → plain click (handed to onBlockClick for multi-select logic)
+  //   count 2 → word select (native contentEditable behaviour; no action)
+  //   count 3 → select entire block body text via Selection API
+  //   count 4 → if heading: section-select via onSectionSelect; else: count-3
+  //
+  // Reset: if > CLICK_RESET_MS has elapsed since the last click, the sequence
+  // restarts at 1.
+  // -------------------------------------------------------------------------
+
+  const clickCountRef = useRef(0);
+  const lastClickTimeRef = useRef(0);
+
+  const handleSmartClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const now = Date.now();
+    if (now - lastClickTimeRef.current > CLICK_RESET_MS) {
+      clickCountRef.current = 0;
+    }
+    lastClickTimeRef.current = now;
+    clickCountRef.current += 1;
+    const count = clickCountRef.current;
+
+    if (count === 1) {
+      // Plain click — propagate to parent for multi-select modifier logic.
+      onBlockClick?.(e);
+      return;
+    }
+
+    if (count === 2) {
+      // Double-click: native contentEditable word-selection is sufficient.
+      // We only need to stop the event from bubbling into the block-level
+      // multi-select handler (which would overwrite the word selection with
+      // a single-block selection).
+      e.stopPropagation();
+      return;
+    }
+
+    if (count >= 3) {
+      // Triple-click (and beyond as fallback): select entire block body text.
+      e.preventDefault();
+      e.stopPropagation();
+
+      const blockEl = (e.currentTarget as HTMLDivElement).querySelector<HTMLElement>(
+        '[data-part="block-content"]',
+      );
+      if (blockEl) {
+        const sel = window.getSelection();
+        if (sel) {
+          const range = document.createRange();
+          range.selectNodeContents(blockEl);
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
+      }
+
+      if (count === 4) {
+        // Quad-click: section select when block is a heading; fall back to
+        // the triple-click full-body selection already applied above.
+        const headingLevel = resolveHeadingLevel(schema);
+        if (headingLevel !== null && onSectionSelect) {
+          onSectionSelect(nodeId, headingLevel);
+        }
+      }
+    }
+  }, [schema, nodeId, onBlockClick, onSectionSelect]);
 
   // -------------------------------------------------------------------------
   // Per-block focus + empty state — drives placeholder-decoration overlay
@@ -2003,7 +2152,7 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
       data-block-focused={blockFocused ? 'true' : 'false'}
       onFocus={onFocus}
       onBlur={onBlur}
-      onClick={onBlockClick}
+      onClick={handleSmartClick}
       style={{
         position: 'relative',
         outline: isSelected ? '2px solid var(--palette-primary)' : 'none',
