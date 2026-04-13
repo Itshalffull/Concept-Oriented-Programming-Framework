@@ -13,6 +13,7 @@
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import { createProgram, get, find, put, del, merge, branch, complete, completeFrom, mapBindings, pure, type StorageProgram } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import { parse as parseYaml } from 'yaml';
 
 export interface CompositionRule {
   when: string;          // trigger schema name (e.g., "Article")
@@ -111,6 +112,25 @@ export function parseCompositionYaml(raw: Record<string, unknown>): CompositionY
   }
 
   return { compositions, errors };
+}
+
+/**
+ * Parse a composition.yaml source string. Wraps parseCompositionYaml with
+ * a YAML deserialization step so callers (e.g. the clef-framework-parse
+ * meta provider, VPR-09) can pass raw file text.
+ */
+export function parseCompositionYamlSource(source: string): CompositionYamlParseResult {
+  let raw: unknown;
+  try {
+    raw = parseYaml(source);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return {
+      compositions: [],
+      errors: [{ message: `YAML parse error: ${message}`, path: '' }],
+    };
+  }
+  return parseCompositionYaml((raw ?? {}) as Record<string, unknown>);
 }
 
 /**

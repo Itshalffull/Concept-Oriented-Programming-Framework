@@ -17,6 +17,7 @@ import {
   createProgram, put, complete, type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import { parse as parseYaml } from 'yaml';
 
 type Result = { variant: string; [key: string]: unknown };
 
@@ -248,6 +249,25 @@ export function parseSchemaYaml(raw: Record<string, unknown>): SchemaYamlParseRe
   }
 
   return { schemas, errors };
+}
+
+/**
+ * Parse a schema.yaml source string. Wraps parseSchemaYaml with a YAML
+ * deserialization step so callers (e.g. the clef-framework-parse meta
+ * provider, VPR-09) can pass raw file text.
+ */
+export function parseSchemaYamlSource(source: string): SchemaYamlParseResult {
+  let raw: unknown;
+  try {
+    raw = parseYaml(source);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return {
+      schemas: [],
+      errors: [{ message: `YAML parse error: ${message}`, path: '' }],
+    };
+  }
+  return parseSchemaYaml((raw ?? {}) as Record<string, unknown>);
 }
 
 let counter = 0;

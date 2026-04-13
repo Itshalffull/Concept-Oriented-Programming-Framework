@@ -9,11 +9,14 @@
 // and §3.3.
 //
 // Slot → underlying framework parser:
-//   clef-concept → handlers/ts/framework/parser.ts               parseConceptFile
-//   clef-sync    → handlers/ts/framework/sync-parser.ts          parseSyncFile
-//   clef-widget  → handlers/ts/framework/widget-spec-parser.ts   parseWidgetFile
-//   clef-theme   → handlers/ts/framework/theme-spec-parser.ts    parseThemeFile
-//   clef-derived → handlers/ts/framework/derived-parser.ts       parseDerivedFile
+//   clef-concept     → handlers/ts/framework/parser.ts                        parseConceptFile
+//   clef-sync        → handlers/ts/framework/sync-parser.ts                   parseSyncFile
+//   clef-widget      → handlers/ts/framework/widget-spec-parser.ts            parseWidgetFile
+//   clef-theme       → handlers/ts/framework/theme-spec-parser.ts             parseThemeFile
+//   clef-derived     → handlers/ts/framework/derived-parser.ts                parseDerivedFile
+//   clef-view        → handlers/ts/framework/view-spec-parser.ts              parseViewFile
+//   clef-schema      → handlers/ts/framework/schema-yaml-parser.handler.ts    parseSchemaYamlSource
+//   clef-composition → handlers/ts/framework/composition-yaml-parser.handler.ts parseCompositionYamlSource
 //
 // Output contract: returns a JSON-encoded AST as a UTF-8 string (Bytes).
 // On parse error, returns a structured `{ ok: false, error }` envelope
@@ -46,6 +49,9 @@ import { parseSyncFile } from '../framework/sync-parser.ts';
 import { parseWidgetFile } from '../framework/widget-spec-parser.ts';
 import { parseThemeFile } from '../framework/theme-spec-parser.ts';
 import { parseDerivedFile } from '../framework/derived-parser.ts';
+import { parseViewFile } from '../framework/view-spec-parser.ts';
+import { parseSchemaYamlSource } from '../framework/schema-yaml-parser.handler.ts';
+import { parseCompositionYamlSource } from '../framework/composition-yaml-parser.handler.ts';
 import { registerParseProvider } from '../app/parse.handler.ts';
 
 export const PARSE_PROVIDER_ID = 'clef-framework-parse';
@@ -55,7 +61,10 @@ export type ClefDslLanguage =
   | 'clef-sync'
   | 'clef-widget'
   | 'clef-theme'
-  | 'clef-derived';
+  | 'clef-derived'
+  | 'clef-view'
+  | 'clef-schema'
+  | 'clef-composition';
 
 const DISPATCH: Record<ClefDslLanguage, (text: string) => unknown> = {
   'clef-concept': parseConceptFile,
@@ -63,6 +72,9 @@ const DISPATCH: Record<ClefDslLanguage, (text: string) => unknown> = {
   'clef-widget': parseWidgetFile,
   'clef-theme': parseThemeFile,
   'clef-derived': parseDerivedFile,
+  'clef-view': parseViewFile,
+  'clef-schema': parseSchemaYamlSource,
+  'clef-composition': parseCompositionYamlSource,
 };
 
 interface ParseOkEnvelope {

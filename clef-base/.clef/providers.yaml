@@ -65,6 +65,9 @@ parse:
       - clef-widget
       - clef-theme
       - clef-derived
+      - clef-view
+      - clef-schema
+      - clef-composition
 
   # Tree-sitter WASM grammars (VPR-21).
   #
@@ -377,6 +380,9 @@ highlight:
       - clef-widget
       - clef-theme
       - clef-derived
+      - clef-view
+      - clef-schema
+      - clef-composition
 
   # LaTeX display rendering via KaTeX highlight pass.
   - slot: latex

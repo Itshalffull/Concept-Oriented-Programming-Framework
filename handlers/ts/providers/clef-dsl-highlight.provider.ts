@@ -41,6 +41,9 @@ import {
 import { parseConceptFile } from '../framework/parser.ts';
 import { parseSyncFile } from '../framework/sync-parser.ts';
 import { parseDerivedFile } from '../framework/derived-parser.ts';
+import { parseViewFile } from '../framework/view-spec-parser.ts';
+import { parseSchemaYamlSource } from '../framework/schema-yaml-parser.handler.ts';
+import { parseCompositionYamlSource } from '../framework/composition-yaml-parser.handler.ts';
 
 type TokenKind =
   | 'keyword'
@@ -65,7 +68,10 @@ type ClefLanguage =
   | 'clef-sync'
   | 'clef-derived'
   | 'clef-widget'
-  | 'clef-theme';
+  | 'clef-theme'
+  | 'clef-view'
+  | 'clef-schema'
+  | 'clef-composition';
 
 const SUPPORTED_LANGUAGES: ReadonlySet<string> = new Set<ClefLanguage>([
   'clef-concept',
@@ -73,6 +79,9 @@ const SUPPORTED_LANGUAGES: ReadonlySet<string> = new Set<ClefLanguage>([
   'clef-derived',
   'clef-widget',
   'clef-theme',
+  'clef-view',
+  'clef-schema',
+  'clef-composition',
 ]);
 
 // --- Keyword inventories ---
@@ -114,6 +123,40 @@ const KEYWORDS_THEME = new Set([
   'ratio', 'reduced-motion', 'scale', 'tokens', 'purpose',
 ]);
 
+// .view DSL — mirrors view-spec-parser.ts KEYWORDS set.
+const KEYWORDS_VIEW = new Set([
+  'view', 'shell', 'purpose', 'invariants', 'features', 'fixture',
+  'always', 'never', 'example', 'forall', 'exists',
+  'in', 'implies', 'and', 'then', 'after', 'action',
+  'requires', 'ensures', 'compile', 'startsWith', 'subset',
+  'given', 'where', 'none', 'eventually',
+  'filter', 'sort', 'group', 'projection', 'interaction', 'pagination',
+  'dataSource', 'presentation',
+]);
+
+// .schema.yaml DSL — top-level sections and per-field / constraint / hook
+// keys recognised by schema-yaml-parser.handler.ts. Highlighting only needs
+// the authored vocabulary, not the enum value strings (those live inside
+// quoted scalars which the tokenizer classifies as strings anyway).
+const KEYWORDS_SCHEMA = new Set([
+  'schemas', 'concept', 'primary_set', 'manifest', 'extends', 'includes',
+  'fields', 'hooks', 'constraints', 'removal',
+  'from', 'type', 'mutability', 'required', 'cardinality', 'default',
+  'unique_within_schema', 'target_schema', 'target_vocabulary', 'hidden',
+  'on_save', 'on_apply', 'on_remove', 'on_delete',
+  'unique', 'required_schemas', 'incompatible_schemas',
+  'max_instances', 'max_per_user',
+  'policy', 'warn',
+  // YAML value literals that benefit from keyword colouring:
+  'true', 'false', 'null',
+]);
+
+// .composition.yaml DSL — keys recognised by composition-yaml-parser.handler.ts.
+const KEYWORDS_COMPOSITION = new Set([
+  'compositions', 'when', 'apply', 'default', 'condition',
+  'true', 'false', 'null',
+]);
+
 const CONTEXTUAL_TYPE_KEYWORDS = new Set(['set', 'list', 'option']);
 
 const PRIMITIVE_TYPES = new Set([
@@ -127,6 +170,9 @@ function keywordsFor(language: ClefLanguage): ReadonlySet<string> {
     case 'clef-derived': return KEYWORDS_DERIVED;
     case 'clef-widget': return KEYWORDS_WIDGET;
     case 'clef-theme': return KEYWORDS_THEME;
+    case 'clef-view': return KEYWORDS_VIEW;
+    case 'clef-schema': return KEYWORDS_SCHEMA;
+    case 'clef-composition': return KEYWORDS_COMPOSITION;
   }
 }
 
@@ -286,6 +332,15 @@ function validateWithParser(
       case 'clef-concept': parseConceptFile(text); return null;
       case 'clef-sync': parseSyncFile(text); return null;
       case 'clef-derived': parseDerivedFile(text); return null;
+      case 'clef-view': parseViewFile(text); return null;
+      case 'clef-schema': {
+        const r = parseSchemaYamlSource(text);
+        return r.errors.length > 0 ? r.errors[0].message : null;
+      }
+      case 'clef-composition': {
+        const r = parseCompositionYamlSource(text);
+        return r.errors.length > 0 ? r.errors[0].message : null;
+      }
       // The .widget and .theme parsers live as concept handlers and
       // operate on JSON-or-DSL text; for highlighting we skip structural
       // validation and rely entirely on the re-tokenizer.
