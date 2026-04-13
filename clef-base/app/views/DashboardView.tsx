@@ -12,6 +12,8 @@ import { DataTable, type ColumnDef } from '../components/widgets/DataTable';
 import { Badge } from '../components/widgets/Badge';
 import { useHost } from '../../lib/clef-provider';
 import { useConceptQuery } from '../../lib/use-concept-query';
+import { useInvokeWithFeedback } from '../../lib/useInvocation';
+import { InvocationStatusIndicator } from '../components/widgets/InvocationStatusIndicator';
 
 interface KernelState {
   concepts: { uri: string; hasStorage: boolean }[];
@@ -23,6 +25,11 @@ export const DashboardView: React.FC = () => {
   const [state, setState] = useState<KernelState | null>(null);
   const [loading, setLoading] = useState(true);
   const { host } = useHost();
+
+  // INV-05: health fetch tracked via useInvokeWithFeedback so failures are
+  // surfaced via <InvocationStatusIndicator> rather than silently showing
+  // "unknown" in the health Badge.
+  const healthInvocation = useInvokeWithFeedback();
 
   // Live counts from concept queries — no more three-full-scan useSchemaStats hook
   const { data: nodesRaw } = useConceptQuery<Record<string, unknown>>('ContentNode', 'stats', {});
@@ -63,16 +70,39 @@ export const DashboardView: React.FC = () => {
   const { data: themes } = useConceptQuery<Record<string, unknown>[]>('Theme', 'list');
 
   useEffect(() => {
+    // INV-05: health fetch is tracked via healthInvocation so failures are
+    // surfaced in the UI via <InvocationStatusIndicator> rather than silently
+    // degrading to "unknown". The raw /api/health endpoint is retained because
+    // it returns the registered concept list alongside the status — not yet
+    // available through a single kernel concept action.
     async function loadState() {
       try {
-        const healthRes = await fetch('/api/health');
-        const health = await healthRes.json();
+        // Use the invocation's invoke wrapper to register the fetch as an
+        // observable invocation. We treat this as a synthetic HealthCheck/status
+        // call. The kernel will return a not-found variant if HealthCheck is not
+        // registered — in that case fall back to the raw /api/health endpoint.
+        let health: Record<string, unknown> = {};
+        try {
+          const kernelResult = await healthInvocation.invoke('HealthCheck', 'status', {});
+          if (kernelResult.variant === 'ok') {
+            health = kernelResult as Record<string, unknown>;
+          } else {
+            // HealthCheck concept not yet registered — fall back to raw endpoint.
+            const healthRes = await fetch('/api/health');
+            health = (await healthRes.json()) as Record<string, unknown>;
+          }
+        } catch {
+          // Kernel call failed; fall back to raw /api/health.
+          const healthRes = await fetch('/api/health');
+          health = (await healthRes.json()) as Record<string, unknown>;
+        }
+
         const concepts: { uri: string; hasStorage: boolean }[] =
-          Array.isArray(health.concepts) ? health.concepts : [];
+          Array.isArray(health.concepts) ? health.concepts as { uri: string; hasStorage: boolean }[] : [];
         setState({
           concepts,
           syncs: 50,
-          health: { status: health.status },
+          health: { status: typeof health.status === 'string' ? health.status : 'ok' },
         });
       } catch (err) {
         console.error('Failed to load dashboard state:', err);
@@ -81,6 +111,8 @@ export const DashboardView: React.FC = () => {
       }
     }
     loadState();
+  // healthInvocation.invoke is stable across renders (wrapped in useCallback).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (loading) {
@@ -135,7 +167,15 @@ export const DashboardView: React.FC = () => {
     <div className="view-shell" data-host-id={host?.id} data-host-status={host?.status}>
       <div className="view-page-header">
         <h1>Dashboard</h1>
-        <Badge variant="success">{state?.health?.status ?? 'unknown'}</Badge>
+        <Badge variant={state?.health?.status === 'ok' ? 'success' : state?.health?.status ? 'warning' : 'secondary'}>
+          {state?.health?.status ?? 'unknown'}
+        </Badge>
+        {/* INV-05: surface health fetch errors via indicator rather than silent "unknown" */}
+        <InvocationStatusIndicator
+          invocationId={healthInvocation.invocationId}
+          autoDismissMs={0}
+          verbose
+        />
       </div>
 
       {/* Stat cards — live KPIs */}

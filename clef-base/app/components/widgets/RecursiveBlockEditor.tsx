@@ -43,6 +43,8 @@ import React, {
   useState,
 } from 'react';
 import { useKernelInvoke } from '../../../lib/clef-provider';
+import { useInvokeWithFeedback } from '../../../lib/useInvocation';
+import { InvocationStatusIndicator } from './InvocationStatusIndicator';
 import {
   notifyBlockEdit,
   getActiveAnnotations,
@@ -2510,6 +2512,17 @@ interface ToolbarCommandButtonProps {
   onMarkVariant: (bindingId: string, variant: 'ok' | 'removed') => void;
 }
 
+/**
+ * ToolbarCommandButton — INV-05 migration.
+ *
+ * Replaces the ad-hoc `useState(false)` executing flag with
+ * `useInvokeWithFeedback`, which generates a client-side invocation id
+ * immediately on click and registers it with the Invocation concept so
+ * <InvocationStatusIndicator> can surface pending/ok/error state.
+ *
+ * The `status === 'pending'` guard replaces the old `executing` boolean
+ * so the button is disabled while an invocation is in flight.
+ */
 const ToolbarCommandButton: React.FC<ToolbarCommandButtonProps> = ({
   bindingId,
   context,
@@ -2518,7 +2531,9 @@ const ToolbarCommandButton: React.FC<ToolbarCommandButtonProps> = ({
   onMarkVariant,
 }) => {
   const invoke = useKernelInvoke();
-  const [executing, setExecuting] = useState(false);
+  // INV-05: feedback slot replaces useState(false) executing flag.
+  // isPending is synchronous (no poll lag); status is the async version.
+  const { invocationId, invoke: invokeWithFeedback, isPending: executing } = useInvokeWithFeedback();
   const [label, setLabel] = useState(bindingId);
 
   // Load label from ActionBinding on mount
@@ -2538,7 +2553,6 @@ const ToolbarCommandButton: React.FC<ToolbarCommandButtonProps> = ({
 
   const handleClick = useCallback(async () => {
     if (executing) return;
-    setExecuting(true);
     try {
       if (MARK_TOGGLE_BINDINGS.has(bindingId)) {
         // Build the context enriched with selection fields so the ActionBinding
@@ -2563,6 +2577,7 @@ const ToolbarCommandButton: React.FC<ToolbarCommandButtonProps> = ({
         // We invoke the link-open-editor binding first; if it returns an href in its
         // result payload we proceed with toggleMark. If not (user dismissed), bail.
         if (bindingId === 'link-toggle') {
+          // link-open-editor is a UI step (not tracked as an invocation)
           const editorResult = await invoke('ActionBinding', 'invoke', {
             binding: 'link-open-editor',
             context: JSON.stringify({ ...context, selection: selectionCtx }),
@@ -2575,7 +2590,8 @@ const ToolbarCommandButton: React.FC<ToolbarCommandButtonProps> = ({
           // link-open-editor is expected to return href in result.href when the user
           // confirms. Pass it along as an attribute in the toggleMark context.
           const href = typeof editorResult.href === 'string' ? editorResult.href : '';
-          const markResult = await invoke('InlineMark', 'toggleMark', {
+          // INV-05: toggleMark tracked via invokeWithFeedback
+          const markResult = await invokeWithFeedback('InlineMark', 'toggleMark', {
             blockId: selectionCtx.blockId,
             rangeStart: selectionCtx.rangeStart,
             rangeEnd: selectionCtx.rangeEnd,
@@ -2591,9 +2607,8 @@ const ToolbarCommandButton: React.FC<ToolbarCommandButtonProps> = ({
         }
 
         // All other mark-toggle bindings: invoke ActionBinding/invoke with selection
-        // context fields populated. The ActionBinding resolver maps parameterMap
-        // "context.selection.blockId" etc. from the enriched context object.
-        const result = await invoke('ActionBinding', 'invoke', {
+        // context fields populated. INV-05: tracked via invokeWithFeedback.
+        const result = await invokeWithFeedback('ActionBinding', 'invoke', {
           binding: bindingId,
           context: JSON.stringify({ ...context, selection: selectionCtx }),
         });
@@ -2605,8 +2620,8 @@ const ToolbarCommandButton: React.FC<ToolbarCommandButtonProps> = ({
           console.warn(`[ToolbarCommandButton] ${bindingId} returned non-ok:`, result.variant);
         }
       } else {
-        // Non-mark binding: plain ActionBinding/invoke with base context
-        const result = await invoke('ActionBinding', 'invoke', {
+        // Non-mark binding: plain ActionBinding/invoke tracked via invokeWithFeedback.
+        const result = await invokeWithFeedback('ActionBinding', 'invoke', {
           binding: bindingId,
           context: JSON.stringify(context),
         });
@@ -2616,38 +2631,43 @@ const ToolbarCommandButton: React.FC<ToolbarCommandButtonProps> = ({
       }
     } catch (err) {
       console.warn('[ToolbarCommandButton] invoke error (possibly missing backing concept):', err);
-    } finally {
-      setExecuting(false);
     }
-  }, [executing, bindingId, context, selection, invoke, onMarkVariant]);
+  }, [executing, bindingId, context, selection, invoke, invokeWithFeedback, onMarkVariant]);
 
   return (
-    <button
-      data-part="toolbar-command"
-      data-binding={bindingId}
-      data-loading={executing ? 'true' : 'false'}
-      data-active={isActive ? 'true' : 'false'}
-      aria-pressed={MARK_TOGGLE_BINDINGS.has(bindingId) ? isActive : undefined}
-      disabled={executing}
-      aria-label={label}
-      onClick={handleClick}
-      style={{
-        fontSize: '13px',
-        padding: '2px 8px',
-        cursor: executing ? 'not-allowed' : 'pointer',
-        fontWeight: bindingId.includes('bold') ? 'bold' : 'normal',
-        fontStyle: bindingId.includes('italic') ? 'italic' : 'normal',
-        fontFamily: bindingId.includes('code') ? 'monospace' : 'inherit',
-        // Pressed state: invert surface/outline so the button looks depressed
-        background: isActive ? 'var(--palette-primary-container)' : undefined,
-        color: isActive ? 'var(--palette-on-primary-container)' : undefined,
-        outline: isActive ? '2px solid var(--palette-primary)' : undefined,
-        outlineOffset: isActive ? '-2px' : undefined,
-        borderRadius: '4px',
-      }}
-    >
-      {executing ? '…' : label}
-    </button>
+    <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+      <button
+        data-part="toolbar-command"
+        data-binding={bindingId}
+        data-loading={executing ? 'true' : 'false'}
+        data-active={isActive ? 'true' : 'false'}
+        aria-pressed={MARK_TOGGLE_BINDINGS.has(bindingId) ? isActive : undefined}
+        disabled={executing}
+        aria-label={label}
+        onClick={handleClick}
+        style={{
+          fontSize: '13px',
+          padding: '2px 8px',
+          cursor: executing ? 'not-allowed' : 'pointer',
+          fontWeight: bindingId.includes('bold') ? 'bold' : 'normal',
+          fontStyle: bindingId.includes('italic') ? 'italic' : 'normal',
+          fontFamily: bindingId.includes('code') ? 'monospace' : 'inherit',
+          // Pressed state: invert surface/outline so the button looks depressed
+          background: isActive ? 'var(--palette-primary-container)' : undefined,
+          color: isActive ? 'var(--palette-on-primary-container)' : undefined,
+          outline: isActive ? '2px solid var(--palette-primary)' : undefined,
+          outlineOffset: isActive ? '-2px' : undefined,
+          borderRadius: '4px',
+        }}
+      >
+        {executing ? '…' : label}
+      </button>
+      {/* INV-05: show invocation status indicator on error; auto-dismiss success */}
+      <InvocationStatusIndicator
+        invocationId={invocationId}
+        autoDismissMs={2000}
+      />
+    </div>
   );
 };
 

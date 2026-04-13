@@ -332,6 +332,7 @@ export interface UseInvokeWithFeedbackResult {
   /**
    * Dispatch a kernel action while tracking lifecycle in the Invocation concept.
    * Returns the raw kernel completion so callers can branch on variant.
+   * Throws if a concurrent invocation is already in flight.
    */
   invoke: (
     concept: string,
@@ -340,6 +341,13 @@ export interface UseInvokeWithFeedbackResult {
   ) => Promise<Record<string, unknown>>;
   /** Current lifecycle status derived from the Invocation record. */
   status: InvocationStatus;
+  /**
+   * Synchronous in-flight flag — true immediately on invoke() call, before
+   * the Invocation concept records the pending state. Use this to disable
+   * buttons without waiting for the poll cycle. `status === 'pending'` is
+   * the async equivalent (lags by one poll interval).
+   */
+  isPending: boolean;
 }
 
 function generateInvocationId(): string {
@@ -354,12 +362,28 @@ export function useInvokeWithFeedback(): UseInvokeWithFeedbackResult {
   const [invocationId, setInvocationId] = useState<string | null>(null);
   const invocationState = useInvocation(invocationId);
 
+  // Synchronous in-flight guard — prevents double-submission between the time
+  // setInvocationId triggers a re-render and useInvocation's poll confirms
+  // pending status. React state updates are async so the first re-render with
+  // status === 'pending' may lag behind the second click.
+  const inFlightRef = useRef(false);
+  // Mirror inFlightRef into React state so isPending triggers re-renders that
+  // disable buttons immediately.
+  const [isPending, setIsPending] = useState(false);
+
   const invoke = useCallback(
     async (
       concept: string,
       action: string,
       input: Record<string, unknown>,
     ): Promise<Record<string, unknown>> => {
+      // Guard: prevent concurrent calls with a synchronous ref.
+      if (inFlightRef.current) {
+        throw new Error('[useInvokeWithFeedback] concurrent invocation rejected');
+      }
+      inFlightRef.current = true;
+      setIsPending(true);
+
       const id = generateInvocationId();
       const startedAt = new Date().toISOString();
 
@@ -392,6 +416,8 @@ export function useInvokeWithFeedback(): UseInvokeWithFeedbackResult {
           error: msg,
           completedAt: new Date().toISOString(),
         }).catch(() => {});
+        inFlightRef.current = false;
+        setIsPending(false);
         throw err;
       }
 
@@ -415,14 +441,17 @@ export function useInvokeWithFeedback(): UseInvokeWithFeedbackResult {
         }).catch(() => {});
       }
 
+      inFlightRef.current = false;
+      setIsPending(false);
       return result;
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
 
   return useMemo(
-    () => ({ invocationId, invoke, status: invocationState.status }),
-    [invocationId, invoke, invocationState.status],
+    () => ({ invocationId, invoke, status: invocationState.status, isPending }),
+    [invocationId, invoke, invocationState.status, isPending],
   );
 }
 

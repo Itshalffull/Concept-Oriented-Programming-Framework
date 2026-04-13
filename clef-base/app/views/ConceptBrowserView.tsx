@@ -3,6 +3,11 @@
 /**
  * ConceptBrowserView — Browse and manage concept packages
  * Layout: Available packages (registry) + Installed packages
+ *
+ * INV-05: install and remove operations are tracked via useInvokeWithFeedback
+ * so <InvocationStatusIndicator> can surface pending/ok/error states inline
+ * near each triggering button, replacing the ad-hoc setStatusMessage pattern
+ * for those mutations.
  */
 
 import React, { useEffect, useState, useCallback } from 'react';
@@ -10,8 +15,9 @@ import { Card } from '../components/widgets/Card';
 import { DataTable, type ColumnDef } from '../components/widgets/DataTable';
 import { EmptyState } from '../components/widgets/EmptyState';
 import { Badge } from '../components/widgets/Badge';
-import { ActionButton } from '../components/widgets/ActionButton';
 import { useKernelInvoke } from '../../lib/clef-provider';
+import { useInvokeWithFeedback } from '../../lib/useInvocation';
+import { InvocationStatusIndicator } from '../components/widgets/InvocationStatusIndicator';
 
 interface InstalledPackage extends Record<string, unknown> {
   id: string;
@@ -26,6 +32,20 @@ interface InstalledPackage extends Record<string, unknown> {
   installedAt?: string | null;
 }
 
+// Per-package invocation tracking for install and remove operations (INV-05).
+// Each package gets its own useInvokeWithFeedback slot so indicators are
+// independent across concurrent install/remove triggers.
+interface PackageInvocationState {
+  invocationId: string | null;
+  isPending: boolean;
+  invoke: (concept: string, action: string, input: Record<string, unknown>) => Promise<Record<string, unknown>>;
+}
+
+function usePackageInvocation(): PackageInvocationState {
+  const { invocationId, isPending, invoke } = useInvokeWithFeedback();
+  return { invocationId, isPending, invoke };
+}
+
 export const ConceptBrowserView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'installed' | 'browse'>('installed');
   const [searchQuery, setSearchQuery] = useState('');
@@ -36,6 +56,13 @@ export const ConceptBrowserView: React.FC = () => {
   const [previewDetails, setPreviewDetails] = useState<Record<string, unknown> | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const invoke = useKernelInvoke();
+
+  // INV-05: shared invocation feedback slot for install/remove buttons in the
+  // browse tab and installed tab. A single slot is sufficient because only one
+  // operation can be in flight at a time from the user's perspective (they
+  // click one button at a time). The invocationId resets on each new call.
+  const installInvocation = usePackageInvocation();
+  const removeInvocation = usePackageInvocation();
 
   const loadInstalled = useCallback(async () => {
     const data = await invoke('ConceptBrowser', 'listInstalled', {});
@@ -229,21 +256,42 @@ export const ConceptBrowserView: React.FC = () => {
                     >
                       Preview
                     </button>
-                    <ActionButton
-                      binding="concept-install"
-                      context={{ package_name: pkg.name, version: pkg.version }}
-                      label={pkg.status === 'installed' ? 'Reinstall' : 'Install'}
-                      buttonVariant="primary"
-                      onSuccess={() => {
-                        loadInstalled();
-                        setStatusMessage(`Installed ${pkg.name} ${pkg.version}.`);
-                        setBrowseResults((prev) =>
-                          prev.map((entry) =>
-                            entry.name === pkg.name ? { ...entry, status: 'installed' } : entry,
-                          ),
-                        );
+                    {/* INV-05: install button wired to useInvokeWithFeedback */}
+                    <button
+                      data-part="button"
+                      data-variant="primary"
+                      disabled={installInvocation.isPending}
+                      onClick={async () => {
+                        try {
+                          const result = await installInvocation.invoke('ConceptBrowser', 'install', {
+                            package_name: pkg.name,
+                            version: pkg.version,
+                          });
+                          if (result.variant === 'ok') {
+                            await loadInstalled();
+                            setStatusMessage(`Installed ${pkg.name} ${pkg.version}.`);
+                            setBrowseResults((prev) =>
+                              prev.map((entry) =>
+                                entry.name === pkg.name ? { ...entry, status: 'installed' } : entry,
+                              ),
+                            );
+                          } else {
+                            setStatusMessage(
+                              typeof result.message === 'string'
+                                ? result.message
+                                : `Install failed for ${pkg.name}.`,
+                            );
+                          }
+                        } catch {
+                          setStatusMessage(`Install failed for ${pkg.name}.`);
+                        }
                       }}
-                      onError={(message) => setStatusMessage(message ?? `Install failed for ${pkg.name}.`)}
+                    >
+                      {pkg.status === 'installed' ? 'Reinstall' : 'Install'}
+                    </button>
+                    <InvocationStatusIndicator
+                      invocationId={installInvocation.invocationId}
+                      autoDismissMs={3000}
                     />
                   </div>
                 </Card>
@@ -311,19 +359,40 @@ export const ConceptBrowserView: React.FC = () => {
 
       {activeTab === 'installed' && filtered.length > 0 && (
         <div className="view-toolbar" style={{ marginTop: 'var(--spacing-lg)' }}>
+          {/* INV-05: remove buttons wired to useInvokeWithFeedback */}
           {filtered.map((pkg) => (
-            <ActionButton
-              key={`remove-${pkg.id}`}
-              binding="concept-remove"
-              context={{ package_name: pkg.name }}
-              label={`Remove ${pkg.name}`}
-              buttonVariant="ghost"
-              onSuccess={() => {
-                loadInstalled();
-                setStatusMessage(`Removed ${pkg.name}.`);
-              }}
-              onError={(message) => setStatusMessage(message ?? `Remove failed for ${pkg.name}.`)}
-            />
+            <div key={`remove-${pkg.id}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--spacing-xs)' }}>
+              <button
+                data-part="button"
+                data-variant="ghost"
+                disabled={removeInvocation.isPending}
+                onClick={async () => {
+                  try {
+                    const result = await removeInvocation.invoke('ConceptBrowser', 'remove', {
+                      package_name: pkg.name,
+                    });
+                    if (result.variant === 'ok') {
+                      await loadInstalled();
+                      setStatusMessage(`Removed ${pkg.name}.`);
+                    } else {
+                      setStatusMessage(
+                        typeof result.message === 'string'
+                          ? result.message
+                          : `Remove failed for ${pkg.name}.`,
+                      );
+                    }
+                  } catch {
+                    setStatusMessage(`Remove failed for ${pkg.name}.`);
+                  }
+                }}
+              >
+                {`Remove ${pkg.name}`}
+              </button>
+              <InvocationStatusIndicator
+                invocationId={removeInvocation.invocationId}
+                autoDismissMs={3000}
+              />
+            </div>
           ))}
         </div>
       )}

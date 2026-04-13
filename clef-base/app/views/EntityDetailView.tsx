@@ -18,12 +18,13 @@ import { Badge } from '../components/widgets/Badge';
 import { Card } from '../components/widgets/Card';
 import { EmptyState } from '../components/widgets/EmptyState';
 import { DisplayAsPicker } from '../components/widgets/DisplayAsPicker';
-import { ActionButton } from '../components/widgets/ActionButton';
 import { RecursiveBlockEditor, type EditorFlavor } from '../components/widgets/RecursiveBlockEditor';
 // LayoutRenderer import removed — RecursiveBlockEditor is now the sole editor (PP-delete-legacy).
 import { useConceptQuery } from '../../lib/use-concept-query';
 import { useNavigator } from '../../lib/clef-provider';
 import { useVersionPins, VersionPinInfo } from '../../lib/use-version-pins';
+import { useInvokeWithFeedback } from '../../lib/useInvocation';
+import { InvocationStatusIndicator } from '../components/widgets/InvocationStatusIndicator';
 
 /**
  * Pick the editorFlavor for RecursiveBlockEditor from the schema list.
@@ -72,6 +73,12 @@ export const EntityDetailView: React.FC<EntityDetailViewProps> = ({ id }) => {
   }, []);
 
   const [showSchemaManager, setShowSchemaManager] = useState(false);
+
+  // INV-05: schema apply and remove operations are tracked via useInvokeWithFeedback
+  // so <InvocationStatusIndicator> surfaces pending/ok/error states in the schema
+  // manager, replacing the silent ActionButton onSuccess-only feedback pattern.
+  const schemaApplyInvocation = useInvokeWithFeedback();
+  const schemaRemoveInvocation = useInvokeWithFeedback();
 
   // Parse schemas from the response
   const schemas: string[] = schemasResult?.schemas
@@ -184,33 +191,70 @@ export const EntityDetailView: React.FC<EntityDetailViewProps> = ({ id }) => {
               {schemas.map((s) => (
                 <div key={s} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <Badge variant={SCHEMA_COLORS[s] ?? 'secondary'}>{s}</Badge>
-                  <ActionButton
-                    binding="schema-remove"
-                    context={{ entity_id: id, schema: s }}
-                    label="remove"
-                    buttonVariant="ghost"
-                    onSuccess={() => refetchSchemas()}
-                  />
+                  {/* INV-05: schema remove wired to useInvokeWithFeedback */}
+                  <button
+                    data-part="button"
+                    data-variant="ghost"
+                    disabled={schemaRemoveInvocation.isPending}
+                    style={{ fontSize: '11px', padding: '1px 6px' }}
+                    onClick={async () => {
+                      try {
+                        const result = await schemaRemoveInvocation.invoke('Schema', 'remove', {
+                          entity_id: id,
+                          schema: s,
+                        });
+                        if (result.variant === 'ok') {
+                          refetchSchemas();
+                        }
+                      } catch { /* error surfaced via InvocationStatusIndicator */ }
+                    }}
+                  >
+                    remove
+                  </button>
                 </div>
               ))}
             </div>
           )}
+          {/* INV-05: remove invocation status */}
+          <InvocationStatusIndicator
+            invocationId={schemaRemoveInvocation.invocationId}
+            autoDismissMs={2000}
+            verbose
+          />
 
           {availableSchemas.length > 0 && (
             <>
               <h3 style={{ margin: '0 0 var(--spacing-sm) 0', fontSize: '14px' }}>Apply Schema</h3>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-sm)' }}>
                 {availableSchemas.map((s) => (
-                  <ActionButton
+                  /* INV-05: schema apply wired to useInvokeWithFeedback */
+                  <button
                     key={s}
-                    binding="schema-apply"
-                    context={{ entity_id: id, schema: s }}
-                    label={`+ ${s}`}
-                    buttonVariant="secondary"
-                    onSuccess={() => refetchSchemas()}
-                  />
+                    data-part="button"
+                    data-variant="secondary"
+                    disabled={schemaApplyInvocation.isPending}
+                    onClick={async () => {
+                      try {
+                        const result = await schemaApplyInvocation.invoke('Schema', 'applyTo', {
+                          entity_id: id,
+                          schema: s,
+                        });
+                        if (result.variant === 'ok') {
+                          refetchSchemas();
+                        }
+                      } catch { /* error surfaced via InvocationStatusIndicator */ }
+                    }}
+                  >
+                    {`+ ${s}`}
+                  </button>
                 ))}
               </div>
+              {/* INV-05: apply invocation status */}
+              <InvocationStatusIndicator
+                invocationId={schemaApplyInvocation.invocationId}
+                autoDismissMs={2000}
+                verbose
+              />
             </>
           )}
         </Card>
