@@ -34,7 +34,8 @@ replace `MISSING_WIDGET` placeholders with the real block widget IDs and verifie
   `form-field-textarea-block`.
 
 - **form-field-entity-picker-block** (needed for ContentNode.createdBy,
-  TaxonomyTerm.vocab, TaxonomyTerm.parent, Article.author):
+  TaxonomyTerm.vocab, TaxonomyTerm.parent, Article.author,
+  Comment.author, Comment.target, Page.template):
 
   Single-entity reference picker. **The picker is architecturally a
   ViewShell rendered as a dropdown** — same query pipeline, same
@@ -74,7 +75,7 @@ replace `MISSING_WIDGET` placeholders with the real block widget IDs and verifie
   with table views.
 
 - **form-field-datetime-block** (needed for ContentNode.createdAt,
-  Article.publishedAt):
+  Article.publishedAt, Page.publishedAt):
   Date-plus-time picker. The existing `form-field-date-block` captures only
   a calendar date (YYYY-MM-DD). This widget adds an hour:minute input or a
   combined datetime-local `<input>` that emits an ISO-8601 datetime string.
@@ -127,3 +128,48 @@ replace `MISSING_WIDGET` placeholders with the real block widget IDs and verifie
 
   Until this widget ships, use `form-field-json-block` as placeholder.
   Closest existing placeholder: `form-field-json-block`.
+
+---
+
+## Discovered in Phase C — Batch 2 (Canvas, ConnectorPort, ConstraintAnchor, DiagramNotation)
+
+- **form-field-entity-multi-picker-block** (needed for Canvas.items,
+  Canvas.connectors, ConstraintAnchor.items):
+
+  Multi-entity reference picker — the multi-valued counterpart to
+  `form-field-entity-picker-block`. Where the single picker emits one node ID
+  string, this widget manages an ordered list of node ID strings.
+
+  Architecture: **a ViewShell-backed picker rendered as a tag-list + search
+  dropdown**. The same resolution hierarchy as the single picker applies:
+
+  1. `entitySchema: "<name>"` — minimum constraint; queries
+     `ContentNode/listBySchema` with a result cap.
+  2. `entitySchema` + `filterSpec: "<named-filterspec>"` — narrows the pool
+     (e.g. only canvas items of a particular notation type).
+  3. `dataSource: "<named-datasource>"` — full DataSourceSpec delegation for
+     computed or federated sets.
+  4. `contextBindings: { <filterParam>: context.<runtimeField> }` — runtime
+     context values injected into filter parameters.
+
+  Optional configuration:
+  - `sortSpec: "<named>"` — ordering for the dropdown suggestion list.
+  - `projectionSpec: "<named>"` — which fields appear in dropdown rows and
+    in the selected-tag chips.
+  - `presentation: { displayField, secondaryField, avatarField, max_results }`
+    — dropdown row and chip rendering hints.
+  - `maxItems: <n>` — cap the maximum number of selected items (default
+    unbounded). Useful for constraints like "exactly 2 items to align".
+  - `minItems: <n>` — enforce a minimum selection count (e.g. ConstraintAnchor
+    requires at least 2 items to be meaningful).
+  - `orderable: true` — renders drag handles on selected chips so the user
+    can reorder the list (needed when item order is semantically significant).
+
+  Emits a JSON array of node ID strings. Closest existing placeholder:
+  `form-field-text-block` (comma-separated IDs as a degraded fallback).
+
+  **Why not just `multi: true` on the single picker?** The multi variant has
+  meaningfully different UX (chip display, reorder affordance, min/maxItems
+  validation) and distinct a11y requirements (multi-select listbox vs
+  combobox), so it warrants its own widget spec and block ID rather than a
+  prop on the single picker.

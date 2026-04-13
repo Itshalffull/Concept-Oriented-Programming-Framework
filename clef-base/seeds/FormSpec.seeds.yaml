@@ -283,3 +283,205 @@ entries:
     conditions: null
     defaults: null
     overrides: '{"label":{"widget":"form-field-text-block","label":"Name","placeholder":"e.g. Notify on publish","required":true},"description":{"widget":"form-field-textarea-block","label":"Description","placeholder":"What does this rule do?","required":false},"trigger":{"widget":"form-field-text-block","label":"Trigger Event","placeholder":"e.g. ContentNode/create","required":true,"note":"PLACEHOLDER — replace with form-field-binding-picker-block when available"},"conditions":{"widget":"form-field-json-block","label":"Conditions (JSON)","placeholder":"[]","required":false,"note":"PLACEHOLDER — replace with form-field-condition-builder-block when available"},"actions":{"widget":"form-field-json-block","label":"Actions (JSON)","placeholder":"[]","required":true,"note":"PLACEHOLDER — replace with form-field-action-builder-block when available"},"enabled":{"widget":"form-field-checkbox-block","label":"Enabled","defaultChecked":false,"required":false}}'
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Batch 2 — Diagramming schemas
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  # ── Canvas ──────────────────────────────────────────────────────────────────
+  # Schema fields: canvas, name, items, connectors, notation, layout
+  # canvas (system ID) omitted from create-mode.
+  # 5 user-facing fields → groups layout (5-7 heuristic).
+  # Two groups: "Identity" (name, notation) anchors what the canvas IS;
+  # "Content" (items, connectors, layout) holds what it CONTAINS and how it is
+  # arranged.
+  # notation → entity-picker (single DiagramNotation reference; nullable because
+  #   a blank canvas may precede notation selection).
+  # items, connectors → entity-multi-picker (multi-valued ContentNode refs;
+  #   new widget — see MISSING_WIDGETS.md).
+  # layout → json-block (layout algorithm config, e.g. {type:"force",options:{}}).
+  - form: form-canvas-create
+    layout: '{"type":"groups","groups":[{"id":"identity","label":"Identity","fieldIds":["name","notation"]},{"id":"content","label":"Content","fieldIds":["items","connectors","layout"]}]}'
+    steps: null
+    conditions: null
+    defaults: null
+    overrides: '{"name":{"widget":"form-field-text-block","label":"Canvas Name","placeholder":"e.g. System Architecture","required":true},"notation":{"widget":"form-field-entity-picker-block","label":"Notation","entitySchema":"DiagramNotation","nullable":true,"required":false},"items":{"widget":"form-field-entity-multi-picker-block","label":"Items","entitySchema":"ContentNode","required":false},"connectors":{"widget":"form-field-entity-multi-picker-block","label":"Connectors","entitySchema":"ContentNode","required":false},"layout":{"widget":"form-field-json-block","label":"Layout Config (JSON)","required":false}}'
+
+  # ── ConnectorPort ────────────────────────────────────────────────────────────
+  # Schema fields: port, owner, direction, type, capacity, position
+  # port (system ID) omitted from create-mode.
+  # 5 user-facing fields → groups layout (5-7 heuristic).
+  # Two groups: "Identity" (owner, type, direction) establishes what the port is
+  # and what it belongs to; "Geometry" (capacity, position) captures the
+  # connection budget and spatial placement hint.
+  # owner → entity-picker (the canvas item ContentNode this port is attached to).
+  # direction → select (fixed enum: in / out / both).
+  # type → text (opaque capability label, e.g. "data", "control", "trigger").
+  # capacity → number (max simultaneous connections; 0 = unlimited convention).
+  # position → json-block (placement hint, e.g. {side:"right",offset:0.5}).
+  - form: form-connectorport-create
+    layout: '{"type":"groups","groups":[{"id":"identity","label":"Identity","fieldIds":["owner","type","direction"]},{"id":"geometry","label":"Geometry","fieldIds":["capacity","position"]}]}'
+    steps: null
+    conditions: null
+    defaults: '{"direction":"out","capacity":1}'
+    overrides: '{"owner":{"widget":"form-field-entity-picker-block","label":"Owner (Canvas Item)","entitySchema":"ContentNode","required":true},"type":{"widget":"form-field-text-block","label":"Port Type","placeholder":"e.g. data, control, trigger","required":true},"direction":{"widget":"form-field-select-block","label":"Direction","options":["in","out","both"],"required":true},"capacity":{"widget":"form-field-number-block","label":"Capacity","min":0,"required":false},"position":{"widget":"form-field-json-block","label":"Position (JSON)","required":false}}'
+
+  # ── ConstraintAnchor ─────────────────────────────────────────────────────────
+  # Schema fields: anchor, canvasId, type, items, axis, value
+  # anchor (system ID) omitted from create-mode.
+  # 5 user-facing fields → groups layout (5-7 heuristic).
+  # Two groups: "Scope" (canvasId, items) identifies which canvas and items are
+  # involved; "Constraint" (type, axis, value) specifies the rule itself.
+  # canvasId → entity-picker (the Canvas this anchor lives on).
+  # items → entity-multi-picker (canvas items that participate; new widget —
+  #   see MISSING_WIDGETS.md).
+  # type → select (fixed enum: align / distribute / pin / spacing).
+  # axis → select (fixed enum: x / y / both).
+  # value → number (pixel offset or gap amount; optional for align/distribute).
+  - form: form-constraintanchor-create
+    layout: '{"type":"groups","groups":[{"id":"scope","label":"Scope","fieldIds":["canvasId","items"]},{"id":"constraint","label":"Constraint","fieldIds":["type","axis","value"]}]}'
+    steps: null
+    conditions: null
+    defaults: '{"type":"align","axis":"x"}'
+    overrides: '{"canvasId":{"widget":"form-field-entity-picker-block","label":"Canvas","entitySchema":"Canvas","required":true},"items":{"widget":"form-field-entity-multi-picker-block","label":"Items","entitySchema":"ContentNode","required":true},"type":{"widget":"form-field-select-block","label":"Constraint Type","options":["align","distribute","pin","spacing"],"required":true},"axis":{"widget":"form-field-select-block","label":"Axis","options":["x","y","both"],"required":true},"value":{"widget":"form-field-number-block","label":"Value (px)","required":false}}'
+
+  # ── DiagramNotation ──────────────────────────────────────────────────────────
+  # Schema fields: notation, name, nodeTypes, edgeTypes, connectionRules
+  # notation (system ID) omitted from create-mode.
+  # 4 user-facing fields → groups layout (just above the flat threshold of 4).
+  # Two groups: "Identity" (name only — a notation is fully identified by its
+  # name); "Type System" (nodeTypes, edgeTypes, connectionRules) holds the
+  # structural rules governing what diagrams using this notation may contain.
+  # name → text (human-readable label, e.g. "BPMN 2.0", "C4 Container").
+  # nodeTypes → json-block (JSON array of node type descriptors).
+  # edgeTypes → json-block (JSON array of edge type descriptors).
+  # connectionRules → json-block (JSON rules for valid source→target pairs).
+  # All three JSON fields default to empty arrays so the notation is valid
+  # but unconstrained immediately after creation.
+  - form: form-diagramnotation-create
+    layout: '{"type":"groups","groups":[{"id":"identity","label":"Identity","fieldIds":["name"]},{"id":"type-system","label":"Type System","fieldIds":["nodeTypes","edgeTypes","connectionRules"]}]}'
+    steps: null
+    conditions: null
+    defaults: '{"nodeTypes":"[]","edgeTypes":"[]","connectionRules":"[]"}'
+    overrides: '{"name":{"widget":"form-field-text-block","label":"Notation Name","placeholder":"e.g. BPMN 2.0, C4 Container","required":true},"nodeTypes":{"widget":"form-field-json-block","label":"Node Types (JSON)","required":false},"edgeTypes":{"widget":"form-field-json-block","label":"Edge Types (JSON)","required":false},"connectionRules":{"widget":"form-field-json-block","label":"Connection Rules (JSON)","required":false}}'
+
+  # ── Batch 3 updates: Comment, File, Media, Page, Vocabulary ─────────────────
+
+  # ── Comment (create) ─────────────────────────────────────────────────────────
+  # Schema: comment, author, body, target, createdAt
+  # 5 fields; createdAt is system-managed → omitted from create-mode → 4 user fields.
+  # Layout: groups (4 user fields fit one group each for authoring vs context).
+  # "Authoring" group: who wrote it (author) and the content itself (body).
+  # "Context" group: where it lives (target) and its internal ID (comment).
+  #
+  # author → entity-picker [MISSING_WIDGET: form-field-entity-picker-block; placeholder: form-field-text-block]
+  # body   → richtext [MISSING_WIDGET: form-field-richtext-block; placeholder: form-field-textarea-block]
+  # target → entity-picker [MISSING_WIDGET: form-field-entity-picker-block; placeholder: form-field-text-block]
+  - form: form-comment-create
+    layout: '{"type":"groups","groups":[{"id":"authoring","label":"Authoring","fieldIds":["author","body"]},{"id":"context","label":"Context","fieldIds":["target","comment"]}]}'
+    steps: null
+    conditions: null
+    defaults: null
+    overrides: '{"comment":{"widget":"form-field-text-block","label":"Comment ID","placeholder":"auto-generated if blank","required":false},"author":{"widget":"form-field-entity-picker-block","label":"Author","entitySchema":"User","required":true},"body":{"widget":"form-field-richtext-block","label":"Body","required":true},"target":{"widget":"form-field-entity-picker-block","label":"Target","entitySchema":"ContentNode","required":true}}'
+
+  # ── Comment (edit) ───────────────────────────────────────────────────────────
+  # Post-creation, only body is user-editable. comment ID, author, and target
+  # are frozen after creation (identity and provenance are immutable).
+  # createdAt shown read-only for reference.
+  - form: form-comment-edit
+    layout: '{"type":"flat","fieldIds":["body","createdAt"]}'
+    steps: null
+    conditions: null
+    defaults: null
+    overrides: '{"body":{"widget":"form-field-richtext-block","label":"Body","required":true},"createdAt":{"widget":"form-field-text-block","label":"Created At","readOnly":true,"required":false}}'
+
+  # ── File (create) ────────────────────────────────────────────────────────────
+  # Schema: file, path, mimeType, size, hash
+  # 5 fields; hash is handler-computed on ingest → omitted from create-mode → 4 fields.
+  # Layout: groups — "Identity" (file ID + path) | "Properties" (MIME + size).
+  #
+  # size → form-field-number-block (ships in the 6 baseline blocks).
+  - form: form-file-create
+    layout: '{"type":"groups","groups":[{"id":"identity","label":"Identity","fieldIds":["file","path"]},{"id":"properties","label":"Properties","fieldIds":["mimeType","size"]}]}'
+    steps: null
+    conditions: null
+    defaults: null
+    overrides: '{"file":{"widget":"form-field-text-block","label":"File ID","placeholder":"e.g. uploads:logo-2024","required":true},"path":{"widget":"form-field-text-block","label":"File Path","placeholder":"e.g. /uploads/logo-2024.png","required":true},"mimeType":{"widget":"form-field-text-block","label":"MIME Type","placeholder":"e.g. image/png","required":true},"size":{"widget":"form-field-number-block","label":"Size (bytes)","min":0,"required":true}}'
+
+  # ── File (edit) ──────────────────────────────────────────────────────────────
+  # path and mimeType may be corrected post-creation. size and hash are read-only
+  # once the file exists — changing them requires re-ingesting the binary.
+  - form: form-file-edit
+    layout: '{"type":"groups","groups":[{"id":"identity","label":"Identity","fieldIds":["file","path"]},{"id":"properties","label":"Properties","fieldIds":["mimeType","size","hash"]}]}'
+    steps: null
+    conditions: null
+    defaults: null
+    overrides: '{"file":{"widget":"form-field-text-block","label":"File ID","readOnly":true,"required":false},"path":{"widget":"form-field-text-block","label":"File Path","required":true},"mimeType":{"widget":"form-field-text-block","label":"MIME Type","required":true},"size":{"widget":"form-field-number-block","label":"Size (bytes)","min":0,"readOnly":true,"required":false},"hash":{"widget":"form-field-text-block","label":"Hash","readOnly":true,"required":false}}'
+
+  # ── Media (create) ───────────────────────────────────────────────────────────
+  # Schema: url, alt, mimeType, size, dimensions
+  # 5 fields; all are user-supplied → no create/edit divergence → one create shell.
+  # Layout: groups — "Source" (url + alt) | "Technical" (mimeType + size + dimensions).
+  #
+  # dimensions → JSON object {"width":N,"height":N}
+  # [MISSING_WIDGET: form-field-json-block; placeholder: form-field-textarea-block]
+  - form: form-media-create
+    layout: '{"type":"groups","groups":[{"id":"source","label":"Source","fieldIds":["url","alt"]},{"id":"technical","label":"Technical","fieldIds":["mimeType","size","dimensions"]}]}'
+    steps: null
+    conditions: null
+    defaults: null
+    overrides: '{"url":{"widget":"form-field-text-block","label":"URL","placeholder":"https://...","required":true},"alt":{"widget":"form-field-text-block","label":"Alt Text","placeholder":"Describe the media for screen readers","required":false},"mimeType":{"widget":"form-field-text-block","label":"MIME Type","placeholder":"e.g. image/jpeg","required":true},"size":{"widget":"form-field-number-block","label":"Size (bytes)","min":0,"required":false},"dimensions":{"widget":"form-field-json-block","label":"Dimensions (JSON)","placeholder":"{\"width\":1920,\"height\":1080}","required":false}}'
+
+  # ── Page (create) ────────────────────────────────────────────────────────────
+  # Schema: title, slug, body, template, publishedAt
+  # 5 fields → groups layout.
+  #
+  # Tier 1b audit result: no displayWidget Property exists for schema "Page" in
+  # Property.content-native.seeds.yaml. The 4-tier dispatcher falls through
+  # Tier 1a (no InteractionSpec.create_surface for Page) and Tier 1b (no
+  # displayWidget) and reaches Tier 2 (FormSpec). Both create and edit are needed.
+  #
+  # "Content" group:   title, slug (URL key), body.
+  # "Publishing" group: template picker, optional publish date.
+  #
+  # body        → richtext [MISSING_WIDGET: form-field-richtext-block; placeholder: form-field-textarea-block]
+  # template    → entity-picker (entitySchema Template) [MISSING_WIDGET: form-field-entity-picker-block; placeholder: form-field-text-block]
+  # publishedAt → datetime [MISSING_WIDGET: form-field-datetime-block; placeholder: form-field-date-block]
+  - form: form-page-create
+    layout: '{"type":"groups","groups":[{"id":"content","label":"Content","fieldIds":["title","slug","body"]},{"id":"publishing","label":"Publishing","fieldIds":["template","publishedAt"]}]}'
+    steps: null
+    conditions: null
+    defaults: null
+    overrides: '{"title":{"widget":"form-field-text-block","label":"Title","placeholder":"Page title","required":true},"slug":{"widget":"form-field-text-block","label":"Slug","placeholder":"e.g. about-us","required":true},"body":{"widget":"form-field-richtext-block","label":"Body","required":false},"template":{"widget":"form-field-entity-picker-block","label":"Template","entitySchema":"Template","required":false},"publishedAt":{"widget":"form-field-datetime-block","label":"Publish Date","required":false}}'
+
+  # ── Page (edit) ──────────────────────────────────────────────────────────────
+  # All five fields remain editable. Slug label warns that changes may break links.
+  - form: form-page-edit
+    layout: '{"type":"groups","groups":[{"id":"content","label":"Content","fieldIds":["title","slug","body"]},{"id":"publishing","label":"Publishing","fieldIds":["template","publishedAt"]}]}'
+    steps: null
+    conditions: null
+    defaults: null
+    overrides: '{"title":{"widget":"form-field-text-block","label":"Title","required":true},"slug":{"widget":"form-field-text-block","label":"Slug (changing this may break existing links)","required":true},"body":{"widget":"form-field-richtext-block","label":"Body","required":false},"template":{"widget":"form-field-entity-picker-block","label":"Template","entitySchema":"Template","required":false},"publishedAt":{"widget":"form-field-datetime-block","label":"Publish Date","required":false}}'
+
+  # ── Vocabulary (create) ──────────────────────────────────────────────────────
+  # Schema: vocab, name, terms
+  # 3 fields → flat layout (below the 5-field groups threshold).
+  # "terms" is initialised to [] by the handler on create → omitted from create-mode.
+  - form: form-vocabulary-create
+    layout: '{"type":"flat","fieldIds":["vocab","name"]}'
+    steps: null
+    conditions: null
+    defaults: null
+    overrides: '{"vocab":{"widget":"form-field-text-block","label":"Vocabulary ID","placeholder":"e.g. programming-languages","required":true},"name":{"widget":"form-field-text-block","label":"Display Name","placeholder":"e.g. Programming Languages","required":true}}'
+
+  # ── Vocabulary (edit) ────────────────────────────────────────────────────────
+  # vocab ID frozen; name editable; terms shown read-only (users add terms via
+  # TaxonomyTerm/create, not by editing the JSON array directly).
+  #
+  # terms → json read-only [MISSING_WIDGET: form-field-json-block; placeholder: form-field-textarea-block]
+  - form: form-vocabulary-edit
+    layout: '{"type":"flat","fieldIds":["vocab","name","terms"]}'
+    steps: null
+    conditions: null
+    defaults: null
+    overrides: '{"vocab":{"widget":"form-field-text-block","label":"Vocabulary ID","readOnly":true,"required":false},"name":{"widget":"form-field-text-block","label":"Display Name","required":true},"terms":{"widget":"form-field-json-block","label":"Terms (read-only — add terms via Term editor)","readOnly":true,"required":false}}'
