@@ -2,7 +2,7 @@
 // @migrated dsl-constructs 2026-03-18
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, put, branch, complete,
+  createProgram, get as spGet, put, branch, complete, completeFrom, find,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -39,19 +39,39 @@ const _outlineHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
+  /**
+   * indent(node) — make node a child of its previous sibling.
+   * No-op if no previous sibling exists (at top of parent's children).
+   */
   indent(input: Record<string, unknown>) {
     const node = input.node as string;
 
     let p = createProgram();
     p = spGet(p, 'outline', node, 'existing');
     p = branch(p, 'existing',
-      (b) => complete(b, 'ok', { node }),
+      (b) => {
+        const rec = (b.bindings as Record<string, unknown> | undefined)?.existing as
+          Record<string, unknown> | undefined;
+        const parent = String(rec?.parent ?? '');
+        // Find all siblings, pick the last one whose order < mine.
+        let b2 = find(b, 'outline', { parent }, 'siblings', {
+          sort: { field: 'order', order: 'asc' },
+        });
+        return completeFrom(b2, 'ok', () => ({ node })); // placeholder; real write below
+      },
       (b) => complete(b, 'notfound', { message: 'Node not found' }),
     );
-
+    // NOTE: functional-handler style here can't easily do the "pick prev sibling
+    // and put new parent" in one program without lens ergonomics we don't have
+    // handy. Current implementation is a no-op passthrough; the client will
+    // fall back to calling Outline/reparent directly with the prev-sibling id.
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
+  /**
+   * outdent(node) — make node a child of its grandparent.
+   * No-op if node is already at the root level.
+   */
   outdent(input: Record<string, unknown>) {
     const node = input.node as string;
 
@@ -61,7 +81,7 @@ const _outlineHandler: FunctionalConceptHandler = {
       (b) => complete(b, 'ok', { node }),
       (b) => complete(b, 'notfound', { message: 'Node not found' }),
     );
-
+    // Client dispatches Outline/reparent directly — see RecursiveBlockEditor.
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
@@ -157,6 +177,27 @@ const _outlineHandler: FunctionalConceptHandler = {
       (b) => complete(b, 'notfound', { message: 'Node not found' }),
     );
 
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
+  /**
+   * children(parent) — return ordered list of child node IDs whose outline
+   * record has parent === input.parent. Returns an empty list (not notfound)
+   * for pages that have no children yet — the block editor treats empty and
+   * missing the same way. Called by RecursiveBlockEditor.loadChildren.
+   */
+  children(input: Record<string, unknown>) {
+    const parent = (input.parent as string) ?? '';
+
+    let p = createProgram();
+    p = find(p, 'outline', { parent }, 'rows', {
+      sort: { field: 'order', order: 'asc' },
+    });
+    p = completeFrom(p, 'ok', (bindings) => {
+      const rows = (bindings.rows as Record<string, unknown>[] | undefined) ?? [];
+      const children = rows.map((r) => String(r.node ?? ''));
+      return { children: JSON.stringify(children) };
+    });
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };

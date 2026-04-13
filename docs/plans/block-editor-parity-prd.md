@@ -2,6 +2,54 @@
 
 ## Status: Draft
 ## Authors: 2026-04-13
+
+---
+
+## Addendum 2026-04-13 — Core Typing Loop Preconditions
+
+During Playwright-driven dogfooding after commit `beaca9ef` (PageTitle
+cursor fix + KeyBinding/ActionBinding/TextSpan kernel registrations), a
+deeper layer of failure surfaced: **the block editor's dispatch path had
+never worked end-to-end.** Every Phase 1–8 card below implicitly assumes
+block creation and body persistence work. They do not. Ship this
+addendum first.
+
+### Gaps discovered
+
+1. **`Outline/children` action doesn't exist** — the client
+   (RecursiveBlockEditor.loadChildren) calls `Outline/children`, but the
+   handler only implements `getChildren`. The request returns `Unknown
+   action: children`.
+
+2. **`insert-block` binding was never seeded** — client dispatches
+   through a binding that wasn't in any seed file. Added in beaca9ef.
+
+3. **`update-block-content` binding was never seeded** — same. Added
+   in beaca9ef.
+
+4. **No parent-child outline linkage on insert** — the binding now
+   creates a ContentNode but nothing creates an Outline record, so
+   `getChildren(root)` returns empty even after successful insert.
+
+5. **Cursor-reset-at-offset-0 in PageTitle.tsx** — rendering
+   `{localTitle}` as a JSX child of the contenteditable reconciles the
+   text node on every keystroke. Fixed in beaca9ef. May recur in other
+   contenteditable widgets; audit needed.
+
+### Parity-Precondition Cards (must ship before Phase 1)
+
+| ID | Title | Status | Commit |
+|----|-------|--------|--------|
+| BE-PREC-01 | Outline/children action (lists children by parent) | pending | — |
+| BE-PREC-02 | ContentNode/insertChildBlock compound action (creates node + Outline record) | pending | — |
+| BE-PREC-03 | Rewire insert-block binding → insertChildBlock; pass rootNodeId as parent | pending | — |
+| BE-PREC-04 | Outline/children empty-notfound fallback (fresh pages have no root outline record) | pending | — |
+| BE-PREC-05 | Playwright end-to-end typing verification (type, Enter, reload, verify) | pending | — |
+| BE-PREC-06 | Audit other contenteditable JSX-child patterns across clef-base | pending | — |
+
+Once BE-PREC-01..05 are green, Phase 1 below is viable.
+
+---
 ## Depends on:
 - Completed: Block Editor Recursive Views epic (MAG-708) — all 51 cards shipped
 - Completed: Block Editor Gap Closure (MAG-760) — all 6 backing-handler gaps closed

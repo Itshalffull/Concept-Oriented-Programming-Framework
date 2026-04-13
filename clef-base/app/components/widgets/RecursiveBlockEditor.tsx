@@ -813,18 +813,21 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
     if (!canEdit) return;
     try {
       const id = `${rootNodeId}:block:${Date.now()}`;
-      const result = await invoke('ActionBinding', 'invoke', {
-        binding: 'insert-block',
-        context: JSON.stringify({
-          id,
-          rootNodeId,
-          schema: 'paragraph',
-          displayMode: 'block-editor',
-          content: '',
-        }),
+      // NOTE: the ActionBinding/invoke + InvokeViaBinding sync layer is
+      // currently inert (the sync isn't loaded into this kernel), so
+      // dispatch directly to ContentNode + Outline. Long-term this should
+      // route through ActionBinding once the sync registry loads
+      // syncs/app/invoke-via-binding.sync.
+      const created = await invoke('ContentNode', 'createWithSchema', {
+        id,
+        schema: 'paragraph',
+        body: '',
       });
-      if (result.variant === 'ok' || (result.variant as string)?.startsWith('pending')) {
+      if (created.variant === 'ok') {
+        await invoke('Outline', 'create', { node: id, parent: rootNodeId });
         await loadChildren();
+      } else {
+        console.warn('[RecursiveBlockEditor] createWithSchema non-ok:', created);
       }
     } catch (err) {
       console.warn('[RecursiveBlockEditor] handleCreateFirstBlock failed:', err);
@@ -2323,20 +2326,20 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
 
   const handleContentEdit = useCallback(async (newContent: string) => {
     try {
-      const result = await invoke('ActionBinding', 'invoke', {
-        binding: 'update-block-content',
-        context: JSON.stringify({ nodeId, rootNodeId, schema, content: newContent }),
+      // Direct ContentNode/update — ActionBinding layer is inert; see
+      // RecursiveBlockEditor.handleCreateFirstBlock comment.
+      const result = await invoke('ContentNode', 'update', {
+        node: nodeId, content: newContent,
       });
       if (result.variant === 'ok') {
-        // Content update — does NOT trigger a structural reload.
         onBlockContentChange?.(nodeId, newContent);
       } else {
-        console.warn('[BlockSlot] update-block-content returned non-ok:', result.variant);
+        console.warn('[BlockSlot] ContentNode/update returned non-ok:', result.variant);
       }
     } catch (err) {
       console.error('[BlockSlot] content update failed:', err);
     }
-  }, [nodeId, rootNodeId, schema, invoke, onBlockContentChange]);
+  }, [nodeId, invoke, onBlockContentChange]);
 
   const handleDelete = useCallback(async () => {
     try {
@@ -2462,32 +2465,97 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
             // Truncate current block's DOM to `before`
             el.textContent = before;
 
-            // Persist the truncation via update-block-content binding
-            void invoke('ActionBinding', 'invoke', {
-              binding: 'update-block-content',
-              context: JSON.stringify({ nodeId, rootNodeId, schema, content: before }),
-            });
-
-            // Insert new block after current with `after` as body.
-            // afterBlockId is the convention used by smart-paste-converter
-            // for positional insertion; content carries the split remainder.
-            void invoke('ActionBinding', 'invoke', {
-              binding: 'insert-block',
-              context: JSON.stringify({
-                rootNodeId,
-                schema: 'paragraph',
-                displayMode: 'block-editor',
-                afterBlockId: nodeId,
-                content: after,
-              }),
-            }).then((result) => {
-              if (result.variant === 'ok') {
-                // Block inserted — structural change, reload Outline.
-                onStructureChange();
-                // TODO: focus the new block — requires a second useEffect watching
-                // children and focusing the last-inserted block by position.
+            // Serialize: persist truncation FIRST, then create new block + outline,
+            // THEN refresh children. (Direct concept invokes — see
+            // handleCreateFirstBlock for why ActionBinding is bypassed.)
+            const newBlockId = `${rootNodeId}:block:${Date.now()}`;
+            void (async () => {
+              try {
+                await invoke('ContentNode', 'update', { node: nodeId, content: before });
+                const insertResult = await invoke('ContentNode', 'createWithSchema', {
+                  id: newBlockId,
+                  schema: 'paragraph',
+                  body: after,
+                });
+                if (insertResult.variant === 'ok') {
+                  await invoke('Outline', 'create', {
+                    node: newBlockId,
+                    parent: rootNodeId,
+                  });
+                  onStructureChange();
+                  // Notion-style: move caret into the newly-created block.
+                  // BlockSlot mounts then asynchronously fetches ContentNode/get
+                  // (BEF-01), so focus must wait for both the DOM commit and the
+                  // content load. Retry every 30ms up to 500ms until the element
+                  // appears and is reachable.
+                  const focusNewBlock = (attempt = 0) => {
+                    const newEl = document.querySelector<HTMLDivElement>(
+                      `[data-part="block-slot"][data-node-id="${newBlockId}"] [data-part="block-content"]`,
+                    );
+                    if (newEl) {
+                      newEl.focus();
+                      const sel = window.getSelection();
+                      if (sel) {
+                        const r = document.createRange();
+                        r.setStart(newEl, 0);
+                        r.collapse(true);
+                        sel.removeAllRanges();
+                        sel.addRange(r);
+                      }
+                    } else if (attempt < 16) {
+                      setTimeout(() => focusNewBlock(attempt + 1), 30);
+                    }
+                  };
+                  focusNewBlock();
+                }
+              } catch (err) {
+                console.warn('[RecursiveBlockEditor] Enter-split failed:', err);
               }
-            });
+            })();
+            return;
+          }
+          if (e.key === 'Tab') {
+            // Notion-style indent/outdent. Shift+Tab = outdent (move up in
+            // hierarchy); Tab = indent (nest under previous sibling).
+            // Outline/indent and /outdent are stub no-ops today, so the
+            // client resolves the new parent itself and calls reparent.
+            e.preventDefault();
+            e.stopPropagation();
+            void (async () => {
+              try {
+                // Get my outline record to learn my parent + order.
+                const childrenResult = await invoke('Outline', 'children', {
+                  parent: rootNodeId,
+                });
+                // children returns only direct children of root. For nested
+                // blocks we need the immediate parent, which BlockSlot knows
+                // via its props chain — here rootNodeId IS the parent for
+                // top-level blocks. Siblings = children of rootNodeId.
+                const siblings: string[] = (() => {
+                  try {
+                    return JSON.parse((childrenResult.children as string) || '[]');
+                  } catch { return []; }
+                })();
+                const myIndex = siblings.indexOf(nodeId);
+                if (e.shiftKey) {
+                  // Outdent: if rootNodeId is already the page root we can't
+                  // go higher; bail quietly for MVP. Proper outdent requires
+                  // knowing grandparent, which we don't thread down yet.
+                  return;
+                }
+                // Indent under previous sibling.
+                if (myIndex <= 0) return; // no prev sibling
+                const prevSibling = siblings[myIndex - 1];
+                const result = await invoke('Outline', 'reparent', {
+                  node: nodeId, newParent: prevSibling,
+                });
+                if (result.variant === 'ok') {
+                  onStructureChange();
+                }
+              } catch (err) {
+                console.warn('[RecursiveBlockEditor] Tab indent failed:', err);
+              }
+            })();
             return;
           }
           if (e.key === 'Enter' && e.shiftKey) {
