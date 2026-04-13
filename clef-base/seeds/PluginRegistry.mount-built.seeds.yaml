@@ -1,0 +1,109 @@
+# PluginRegistry seeds — mounting built-but-unwired decoration-layer widgets (PP-mount-built)
+#
+# Registers three widgets that were built (e18549da, 8cbf267a, 48e8953b) but
+# had no PluginRegistry entries wiring them into the slot resolver:
+#
+#   comment-gutter-marker  — per-block gutter indicator; shown only on blocks
+#                            whose parent ContentNode has at least one Comment
+#                            attached (scope filter: hasComments=true).
+#   presence-decoration    — root-level peer cursor + selection overlay; one
+#                            instance per active remote peer; ordered last (z=top).
+#   track-changes-decoration — per-block inline insert/delete overlay; shown
+#                              only on blocks that carry at least one InlineAnnotation
+#                              with kind=insert or kind=delete.
+#
+# Metadata fields used by the slot resolver (SlotResolver.tsx):
+#   widget           — widgetId dispatched to the widget interpreter
+#   label            — human-readable name for plugin management UI
+#   icon             — icon token
+#   availableContexts — editorFlavor values this plugin is active in
+#   defaultEnabled   — rendered automatically when no EditSurface overrides
+#   order            — ascending z-render order (lower = rendered first)
+#   perBlock         — when true, BlockSlot iterates this entry per block
+#                      and passes blockId + block context to the mounted widget
+#   props            — $-prefixed tokens resolved by the widget host at mount time
+
+concept: PluginRegistry
+action: register
+entries:
+  # ─────────────────────────────────────────────────────────────────────────
+  # comment-gutter-marker (e18549da)
+  # Rendered once per visible block; hidden via CSS when block has no comments.
+  # The perBlock flag tells BlockSlot to iterate decoration-layer entries and
+  # mount one instance per block, passing blockId into the widget's props.
+  # ─────────────────────────────────────────────────────────────────────────
+  - type: decoration-layer
+    name: comment-gutter-marker
+    metadata: >
+      {
+        "widget": "comment-gutter-marker",
+        "label": "Comment Gutter Marker",
+        "icon": "comment",
+        "availableContexts": ["markdown", "wiki", "notebook", "persona", "database-record"],
+        "defaultEnabled": true,
+        "order": 20,
+        "perBlock": true,
+        "scope": "hasComments",
+        "props": {
+          "blockId": "$blockId",
+          "commentCount": "$commentCount",
+          "topAvatars": "$topCommentAvatars",
+          "focused": "$isGutterFocused",
+          "gutterPosition": "$schema.commentGutterPosition"
+        }
+      }
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # presence-decoration (8cbf267a)
+  # Root-level overlay (perBlock=false); one SlotMount per registered peer.
+  # Ordered last (order=90) so peer cursors always render on top of gutter
+  # markers and track-changes overlays.
+  # ─────────────────────────────────────────────────────────────────────────
+  - type: decoration-layer
+    name: presence-decoration
+    metadata: >
+      {
+        "widget": "presence-decoration",
+        "label": "Peer Presence",
+        "icon": "users",
+        "availableContexts": ["markdown", "wiki", "notebook", "persona", "database-record", "canvas"],
+        "defaultEnabled": true,
+        "order": 90,
+        "perBlock": false,
+        "props": {
+          "peerId": "$peer.id",
+          "peerName": "$peer.name",
+          "peerColor": "$peer.color",
+          "cursorOffset": "$peer.cursorOffset",
+          "selectionStart": "$peer.selectionStart",
+          "selectionEnd": "$peer.selectionEnd",
+          "lastActive": "$peer.lastActive",
+          "editorContainerRef": "$editorContainerRef"
+        }
+      }
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # track-changes-decoration (48e8953b)
+  # Per-block overlay; shown only on blocks that carry at least one
+  # InlineAnnotation with kind=insert or kind=delete.
+  # ─────────────────────────────────────────────────────────────────────────
+  - type: decoration-layer
+    name: track-changes-decoration
+    metadata: >
+      {
+        "widget": "track-changes-decoration",
+        "label": "Track Changes",
+        "icon": "git-diff",
+        "availableContexts": ["markdown", "wiki", "notebook"],
+        "defaultEnabled": false,
+        "order": 30,
+        "perBlock": true,
+        "scope": "hasInlineAnnotations",
+        "props": {
+          "annotationId": "$annotation.id",
+          "kind": "$annotation.kind",
+          "author": "$annotation.author",
+          "content": "$annotation.content",
+          "accepted": "$annotation.accepted"
+        }
+      }

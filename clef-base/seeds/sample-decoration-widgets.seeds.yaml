@@ -1,0 +1,79 @@
+# Sample seed data for end-to-end verification of decoration-layer widgets
+# (PP-mount-built).
+#
+# Creates a test ContentNode ("test-doc-decoration-widgets") with:
+#   1. A Comment attached to block "block-para-1" — exercises comment-gutter-marker
+#   2. An InlineAnnotation of kind insert on block "block-para-2" — exercises
+#      track-changes-decoration
+#
+# Replica/presence state for presence-decoration is volatile (peer cursors
+# live only while peers are connected) and cannot be seeded; use the dev
+# console to mock a peer: window.__clef?.kernel?.invoke('Replica', 'connect',
+# { replica: 'peer-test-1', author: 'Alice', color: '#7C3AED' })
+#
+# To exercise this data: open /docs/test-doc-decoration-widgets in the editor.
+
+# ---------------------------------------------------------------------------
+# ContentNode — test document for decoration widget verification
+# ---------------------------------------------------------------------------
+- concept: ContentNode
+  action: create
+  entries:
+    - node: test-doc-decoration-widgets
+      kind: page
+
+- concept: ContentNode
+  action: setTitle
+  entries:
+    - node: test-doc-decoration-widgets
+      title: "[Test] Decoration Widget Verification"
+
+# Child blocks for the test document
+- concept: ContentNode
+  action: create
+  entries:
+    - node: block-para-1
+      kind: paragraph
+
+    - node: block-para-2
+      kind: paragraph
+
+- concept: Outline
+  action: append
+  entries:
+    - parent: test-doc-decoration-widgets
+      child: block-para-1
+
+    - parent: test-doc-decoration-widgets
+      child: block-para-2
+
+# ---------------------------------------------------------------------------
+# Comment — attached to block-para-1, author alice
+# Exercises comment-gutter-marker: comment count = 1, top avatar = alice
+# ---------------------------------------------------------------------------
+- concept: Comment
+  action: addComment
+  entries:
+    - comment: comment-decoration-test-1
+      entity: block-para-1
+      content: "This block has a comment — you should see the gutter marker appear on the right edge."
+      author: alice
+
+- concept: Comment
+  action: publish
+  entries:
+    - comment: comment-decoration-test-1
+
+# ---------------------------------------------------------------------------
+# InlineAnnotation — insert change on block-para-2, author bob
+# Exercises track-changes-decoration: green highlight for kind=insert
+# Note: track-changes-decoration uses kind=insert|delete from its props;
+# the InlineAnnotation.annotate changeType maps to kind in the widget.
+# ---------------------------------------------------------------------------
+- concept: InlineAnnotation
+  action: annotate
+  entries:
+    - contentRef: block-para-2
+      changeType: insertion
+      scope: "added text for track-changes verification"
+      author: bob@example.com
