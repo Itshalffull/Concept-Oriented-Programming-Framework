@@ -37,10 +37,43 @@ import { useVersionPins, VersionPinInfo } from '../../lib/use-version-pins';
 /** User preference key stored in localStorage. */
 const EDITOR_FLAVOR_PREF_KEY = 'clef:preferBlockEditorFlavor';
 
-/** Schemas eligible for the recursive editor when the user opts in. */
+/** Schemas eligible for the recursive editor when the user opts in.
+ *  Mirror of clef-base/config/recursive-editor-allowlist.yaml (MAG-757).
+ *  Keep in sync manually until a server-side config reader is wired.
+ */
 const RECURSIVE_EDITOR_SCHEMA_ALLOWLIST: ReadonlySet<string> = new Set([
+  // Core text blocks
   'paragraph',
   'heading',
+  'bullet-list',
+  'numbered-list',
+  'quote',
+  'divider',
+  'toggle',
+  'code',
+  'callout',
+  // Structured / layout blocks
+  'table',
+  'columns',
+  // Embed blocks
+  'view-embed',
+  'entity-embed',
+  'block-embed',
+  'snippet-embed',
+  // Sync / live content
+  'synced-content',
+  // Interactive / execution blocks
+  'code-cell',
+  'control',
+  // Media blocks (both schema alias and canonical name)
+  'image',
+  'media-asset',
+  'video',
+  'video-asset',
+  'audio',
+  'audio-asset',
+  'math',
+  // Page-level schemas
   'agent-persona',
 ]);
 
@@ -48,15 +81,17 @@ type BlockEditorFlavor = 'legacy' | 'recursive';
 
 /**
  * Read the stored editor flavor preference.
- * Defaults to "legacy" when no preference is stored.
+ * Defaults to "recursive" (MAG-757: flip after all block schemas migrated).
+ * Users who previously stored "legacy" are respected; unset preference gets
+ * the new default. Legacy path remains fully reachable via the toggle button.
  */
 function readEditorFlavorPref(): BlockEditorFlavor {
-  if (typeof window === 'undefined') return 'legacy';
+  if (typeof window === 'undefined') return 'recursive';
   try {
     const raw = window.localStorage.getItem(EDITOR_FLAVOR_PREF_KEY);
     if (raw === 'recursive' || raw === 'legacy') return raw;
   } catch { /* localStorage may be blocked in some environments */ }
-  return 'legacy';
+  return 'recursive';
 }
 
 function writeEditorFlavorPref(value: BlockEditorFlavor): void {
@@ -119,7 +154,9 @@ export const EntityDetailView: React.FC<EntityDetailViewProps> = ({ id }) => {
   const versionPins = useVersionPins(id);
 
   // ------- editor flavor feature flag (PRD §9.1 resolution #3) --------
-  const [editorFlavorPref, setEditorFlavorPref] = useState<BlockEditorFlavor>('legacy');
+  // Default is now "recursive" (MAG-757); useState seeds SSR render, useEffect
+  // overwrites with the user's stored preference on mount.
+  const [editorFlavorPref, setEditorFlavorPref] = useState<BlockEditorFlavor>('recursive');
   useEffect(() => {
     setEditorFlavorPref(readEditorFlavorPref());
   }, []);
