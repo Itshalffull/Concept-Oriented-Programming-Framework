@@ -11,7 +11,8 @@ entries:
     trigger: Workflow/transition
     conditions: '[]'
     actions: '[{"type":"invoke-action-binding","binding":"process-resume","params":{"run":"context.runId"}}]'
-  - rule: cache-invalidate-on-save
-    trigger: ContentStorage/save
-    conditions: '[]'
-    actions: '[{"type":"log","message":"Invalidate cache entries when content is saved"}]'
+  # Cache invalidation on save is already handled by the infrastructure sync
+  # clef-base/suites/entity-lifecycle/syncs/save-invalidates-cache.sync, which
+  # invokes Cache/invalidateByTags directly. Duplicating it as a user-level
+  # AutomationRule would double-fire the invalidation. Add rules here that
+  # extend behavior beyond the built-in infrastructure syncs.
