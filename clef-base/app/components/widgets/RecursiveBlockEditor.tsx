@@ -1309,6 +1309,63 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
 }) => {
   const invoke = useKernelInvoke();
 
+  // -------------------------------------------------------------------------
+  // Spell-check popover state (PP-spell-check)
+  // -------------------------------------------------------------------------
+
+  interface SpellPopoverState {
+    annotationId: string;
+    suggestions: string[];
+    kind: 'spelling' | 'grammar';
+    anchorX: number;
+    anchorY: number;
+    currentText: string;
+    matchStart: number;
+    matchEnd: number;
+  }
+
+  const [spellPopover, setSpellPopover] = useState<SpellPopoverState | null>(null);
+
+  const handleContextMenu = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const annotations = getActiveAnnotations(nodeId);
+    if (annotations.length === 0) return;
+
+    const blockEl = e.currentTarget;
+    const blockText = blockEl.textContent ?? '';
+    let caretOffset = 0;
+    try {
+      const point =
+        typeof document !== 'undefined' && document.caretRangeFromPoint
+          ? document.caretRangeFromPoint(e.clientX, e.clientY)
+          : null;
+      if (point) {
+        const preRange = document.createRange();
+        preRange.selectNodeContents(blockEl);
+        preRange.setEnd(point.startContainer, point.startOffset);
+        caretOffset = preRange.toString().length;
+      }
+    } catch { /* fallback: first annotation */ }
+
+    const hit =
+      annotations.find((a) => a.scope.start <= caretOffset && caretOffset <= a.scope.end)
+      ?? annotations[0];
+    if (!hit) return;
+
+    e.preventDefault();
+    setSpellPopover({
+      annotationId: hit.annotationId,
+      suggestions: hit.scope.suggestions,
+      kind: hit.scope.kind,
+      anchorX: e.clientX,
+      anchorY: e.clientY,
+      currentText: blockText,
+      matchStart: hit.scope.start,
+      matchEnd: hit.scope.end,
+    });
+  }, [nodeId]);
+
+  const closeSpellPopover = useCallback(() => setSpellPopover(null), []);
+
   const handleContentEdit = useCallback(async (newContent: string) => {
     try {
       const result = await invoke('ActionBinding', 'invoke', {
@@ -1342,6 +1399,7 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
   }, [nodeId, rootNodeId, invoke, onMutate]);
 
   return (
+    <>
     <div
       data-part="block-slot"
       data-node-id={nodeId}
@@ -1382,6 +1440,13 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
         data-widget={resolvedWidget}
         contentEditable={canEdit}
         suppressContentEditableWarning
+        spellCheck={canEdit}
+        onContextMenu={handleContextMenu}
+        onInput={(e) => {
+          if (!canEdit) return;
+          const text = (e.currentTarget as HTMLDivElement).textContent ?? '';
+          notifyBlockEdit(nodeId, text, invoke);
+        }}
         onBlur={(e) => {
           const text = e.currentTarget.textContent ?? '';
           handleContentEdit(text);
@@ -1435,6 +1500,23 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
         </button>
       )}
     </div>
+
+    {/* Spell-check suggestions popover — rendered via portal when active */}
+    {spellPopover && (
+      <SpellCheckSuggestionsPopover
+        blockId={nodeId}
+        annotationId={spellPopover.annotationId}
+        suggestions={spellPopover.suggestions}
+        kind={spellPopover.kind}
+        anchorX={spellPopover.anchorX}
+        anchorY={spellPopover.anchorY}
+        currentText={spellPopover.currentText}
+        matchStart={spellPopover.matchStart}
+        matchEnd={spellPopover.matchEnd}
+        onClose={closeSpellPopover}
+      />
+    )}
+    </>
   );
 };
 
