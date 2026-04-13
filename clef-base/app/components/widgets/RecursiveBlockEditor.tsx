@@ -45,6 +45,7 @@ import React, {
 import { useKernelInvoke } from '../../../lib/clef-provider';
 import { useInvokeWithFeedback } from '../../../lib/useInvocation';
 import { InvocationStatusIndicator } from './InvocationStatusIndicator';
+import { safeParseJsonArray } from '../../../lib/safe-json';
 import {
   notifyBlockEdit,
   getActiveAnnotations,
@@ -305,9 +306,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
           }
           const schemaResult = await invoke('Schema', 'getSchemasFor', { entity_id: rootNodeId });
           if (!cancelled && schemaResult.variant === 'ok') {
-            const schemas: string[] = typeof schemaResult.schemas === 'string'
-              ? JSON.parse(schemaResult.schemas)
-              : (schemaResult.schemas as string[] ?? []);
+            const schemas = safeParseJsonArray<string>(schemaResult.schemas);
             setRootSchema(schemas[0] ?? '');
           }
         }
@@ -333,9 +332,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
       // Outline/children returns ordered child ContentNode ids
       const result = await invoke('Outline', 'children', { parent: rootNodeId });
       if (result.variant === 'ok') {
-        const ids: string[] = typeof result.children === 'string'
-          ? JSON.parse(result.children)
-          : (result.children as string[] ?? []);
+        const ids = safeParseJsonArray<string>(result.children);
 
         // For each child, get its schema to set up the BlockChild record
         const childRecords: BlockChild[] = await Promise.all(
@@ -343,9 +340,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
             try {
               const schemaResult = await invoke('Schema', 'getSchemasFor', { entity_id: childId });
               const schemas: string[] = schemaResult.variant === 'ok'
-                ? (typeof schemaResult.schemas === 'string'
-                  ? JSON.parse(schemaResult.schemas)
-                  : (schemaResult.schemas as string[] ?? []))
+                ? safeParseJsonArray<string>(schemaResult.schemas)
                 : [];
               return {
                 id: childId,
@@ -447,9 +442,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
           relation: 'consumes',
         });
         if (!cancelled && consumersResult.variant === 'ok') {
-          const cs: string[] = typeof consumersResult.backlinks === 'string'
-            ? JSON.parse(consumersResult.backlinks)
-            : (consumersResult.backlinks as string[] ?? []);
+          const cs = safeParseJsonArray<string>(consumersResult.backlinks);
           setConsumers(cs);
         }
       } catch {
@@ -761,9 +754,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
         context: editorFlavor,
       });
       if (mappingResult.variant === 'ok') {
-        const mappings: Array<Record<string, unknown>> = typeof mappingResult.items === 'string'
-          ? JSON.parse(mappingResult.items)
-          : (mappingResult.items as Array<Record<string, unknown>> ?? []);
+        const mappings = safeParseJsonArray<Record<string, unknown>>(mappingResult.items);
         for (const m of mappings) {
           items.push({
             id: String(m.id ?? m.name),
@@ -786,9 +777,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
         context: editorFlavor,
       });
       if (bindingResult.variant === 'ok') {
-        const bindings: Array<Record<string, unknown>> = typeof bindingResult.items === 'string'
-          ? JSON.parse(bindingResult.items)
-          : (bindingResult.items as Array<Record<string, unknown>> ?? []);
+        const bindings = safeParseJsonArray<Record<string, unknown>>(bindingResult.items);
         for (const b of bindings) {
           items.push({
             id: String(b.id ?? b.binding),

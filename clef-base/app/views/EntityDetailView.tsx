@@ -17,6 +17,7 @@ import React, { useState, useCallback } from 'react';
 import { Badge } from '../components/widgets/Badge';
 import { Card } from '../components/widgets/Card';
 import { EmptyState } from '../components/widgets/EmptyState';
+import { safeParseJsonArray } from '../../lib/safe-json';
 import { DisplayAsPicker } from '../components/widgets/DisplayAsPicker';
 import { RecursiveBlockEditor, type EditorFlavor } from '../components/widgets/RecursiveBlockEditor';
 // LayoutRenderer import removed — RecursiveBlockEditor is now the sole editor (PP-delete-legacy).
@@ -81,9 +82,7 @@ export const EntityDetailView: React.FC<EntityDetailViewProps> = ({ id }) => {
   const schemaRemoveInvocation = useInvokeWithFeedback();
 
   // Parse schemas from the response
-  const schemas: string[] = schemasResult?.schemas
-    ? (typeof schemasResult.schemas === 'string' ? JSON.parse(schemasResult.schemas) : schemasResult.schemas)
-    : [];
+  const schemas = safeParseJsonArray<string>(schemasResult?.schemas);
 
   // Available schemas for the apply dropdown
   const availableSchemas = (allSchemaDefs ?? [])
@@ -108,9 +107,7 @@ export const EntityDetailView: React.FC<EntityDetailViewProps> = ({ id }) => {
       interactor: null,
     },
   );
-  const recommendedWidgets = typeof widgetRegistryResult?.entries === 'string'
-    ? JSON.parse(widgetRegistryResult.entries as string) as Array<Record<string, unknown>>
-    : [];
+  const recommendedWidgets = safeParseJsonArray<Record<string, unknown>>(widgetRegistryResult?.entries);
 
   if (loading) {
     return (
