@@ -12,7 +12,9 @@ import { DisplayModesView } from '../../views/DisplayModesView';
 import { DynamicPage } from '../../components/DynamicPage';
 import { getAccessSnapshot } from '../../../lib/auth';
 import { FormBuilder } from '../../components/widgets/FormBuilder';
+import { FlowBuilder } from '../../components/widgets/FlowBuilder';
 import { SchemaFieldsEditor } from '../../components/widgets/SchemaFieldsEditor';
+import { UserSyncEditor } from '../../components/widgets/UserSyncEditor';
 import { CanvasBrowserView } from '../../views/CanvasBrowserView';
 import { FlowBuilderView } from '../../views/FlowBuilderView';
 import { UserSyncListView } from '../../views/UserSyncListView';
@@ -172,6 +174,50 @@ export default async function AdminPage({
     return (
       <HostedPage>
         <ViewRenderer viewId="views-list" />
+      </HostedPage>
+    );
+  }
+
+  // CUX-03: page-mode create routes — mounted by CreateForm when create_mode_hint="page".
+  // Each route mounts the corresponding editor widget with mode="create" and context={null}.
+  // Convention: /admin/<surface-id>/new → <WidgetComponent mode="create" context={null} />
+
+  if (slug[0] === 'view-editor' && slug[1] === 'new') {
+    return (
+      <HostedPage>
+        <ViewEditor mode="create" context={null} />
+      </HostedPage>
+    );
+  }
+
+  if (slug[0] === 'schema-editor' && slug[1] === 'new') {
+    return (
+      <HostedPage>
+        <SchemaFieldsEditor mode="create" context={null} />
+      </HostedPage>
+    );
+  }
+
+  if (slug[0] === 'flow-builder' && slug[1] === 'new') {
+    return (
+      <HostedPage>
+        <FlowBuilder mode="create" context={null} />
+      </HostedPage>
+    );
+  }
+
+  if (slug[0] === 'user-sync-editor' && slug[1] === 'new') {
+    return (
+      <HostedPage>
+        <UserSyncEditor mode="create" context={null} />
+      </HostedPage>
+    );
+  }
+
+  if (slug[0] === 'form-builder' && slug[1] === 'new') {
+    return (
+      <HostedPage>
+        <FormBuilder mode="create" context={null} />
       </HostedPage>
     );
   }

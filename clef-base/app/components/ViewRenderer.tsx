@@ -318,6 +318,12 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
     }
   }, [shellResult]);
 
+  // The InteractionSpec name for the active view — passed to CreateForm as destinationId
+  // so Tier 1a resolution (create_surface + create_mode_hint) fires for page-mode surfaces.
+  // e.g. "views-list-controls" has create_surface="view-editor" + create_mode_hint="page",
+  // which causes CreateForm to navigate to /admin/view-editor/new instead of opening a modal.
+  const interactionSpecName = hydratedSpecs?.interactionSpec?.name ?? null;
+
   // Build a ViewConfig from the hydrated specs. Each spec field maps to the
   // ViewConfig field that ViewRenderer already knows how to parse — we re-encode
   // the hydrated objects back to the JSON strings ViewConfig expects.
@@ -1298,6 +1304,7 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
           action={controls.create.action}
           title={`Create ${viewTitle.replace(/s$/, '')}`}
           fields={controls.create.fields as Array<{ name: string; label?: string; type?: 'text' | 'textarea' | 'select'; options?: string[]; required?: boolean; placeholder?: string }>}
+          destinationId={interactionSpecName ?? undefined}
         />
       )}
     </div>
