@@ -23,7 +23,7 @@ The goal of this PRD: ship every parity feature so RecursiveBlockEditor reaches 
 
 1. **Drag-reorder blocks** via block-handle (⠿) on hover — primary structural-edit interaction
 2. **Multi-select blocks** (Shift+click, Cmd+click, Shift+Arrow) — batch ops
-3. **Undo/redo** wired to Patch + ContentHash concepts with Ctrl+Z / Ctrl+Shift+Z
+3. **Undo/redo** — `UndoStack` concept already exists and is wired to Cmd+Z / Cmd+Shift+Z for action-level undo. Gap: text edits inside a paragraph aren't ActionBindings per keystroke. **Option A (this PRD):** treat each block-edit commit (on blur / debounce) as an `Outline/updateBlockContent` ActionBinding with declared reversal — one undo step per block edit, Notion-style. Reuses existing UndoStack with zero new concepts. **Option B (deferred follow-up):** Patch-based per-keystroke undo via the existing `Patch` concept
 4. **Block actions menu** (handle → Duplicate / Delete / Turn into / Copy link / Move to)
 5. **Placeholder text** mechanism + per-schema placeholders ("Type / for commands", "Click to add caption")
 6. **Smart paste** — markdown / HTML / rich text from clipboard → block tree
@@ -71,7 +71,9 @@ None. Every feature composes existing primitives.
 
 ### 3.2 Concept extensions (additive)
 
-- `Patch` — `apply` action needs an editor-binding integration; concept already has the algebra
+- `UndoStack` — already wired for action-level undo; this PRD adds block-edit ActionBindings so text edits become eligible (Option A in §2.1 #3)
+- `Outline` — add `updateBlockContent(block, body)` action with `reversal: undoUpdateBlockContent(block, prevBody)` if not already there; required for Option A undo coverage
+- `Patch` — used only for the deferred Option B per-keystroke undo follow-up; not in this PRD's scope
 - `Schema` Property keys (additive seed-only):
   - `placeholder: option String` — per-block-type placeholder text
   - `placeholderEmpty: option String` — placeholder shown only when block is empty
@@ -135,7 +137,7 @@ None. Every feature composes existing primitives.
 
 1. **block-handle.widget + drag-reorder + actions menu** — items 1, 4
 2. **Multi-select state + batch ops + multi-select-overlay** — item 2
-3. **Undo/redo bound to Patch + Ctrl+Z / Ctrl+Shift+Z** — item 3
+3. **Undo/redo Option A** — wire block-edit commits as `Outline/updateBlockContent` ActionBindings with reversal so existing UndoStack picks them up; verify Cmd+Z chord routes through ActionBinding/invoke → Outline/updateBlockContent reversal — item 3
 4. **placeholder-decoration + per-schema Property seeds** — item 5
 5. **Page title field above block tree** — item 7
 6. **Smart paste handler (markdown/HTML → blocks)** — item 6
@@ -211,7 +213,7 @@ None. Every feature composes existing primitives.
 
 1. **Drag-reorder visual feedback** — drop-zone line vs ghost block vs both?
 2. **Multi-select range semantics** — Shift+click extends to block-tree DFS order or visual order? (probably visual)
-3. **Patch granularity for undo** — every keystroke (verbose) or coalesced burst (smart)?
+3. **Undo granularity** — Option A (block-edit commit = one undo step) ships in this PRD. Option B (per-keystroke Patch undo) deferred. Open: should commit fire on blur, on debounce (e.g. 500ms idle), or both? Lean blur + 2s idle backstop.
 4. **Smart-paste markdown dialect** — CommonMark strict, GFM, or detect?
 5. **Export PDF rendering** — server-side via Puppeteer, client-side via print CSS, or both?
 6. **Spell-check provider** — browser native (limited control) vs external service (privacy implications)?
