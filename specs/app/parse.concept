@@ -1,0 +1,152 @@
+@version(1)
+@category("syntax")
+@visibility("public")
+concept Parse [P] {
+
+  purpose {
+    Dispatch text to language-specific parse providers that convert raw source
+    text into abstract syntax tree bytes. Each language has exactly one
+    registered provider; applications install providers for the languages they
+    need and call parse to obtain a portable AST representation.
+  }
+
+  state {
+    providers: set P
+    definition {
+      language:  P -> String
+      provider:  P -> String
+      config:    P -> Bytes
+    }
+    index {
+      byLanguage: String -> option P
+    }
+  }
+
+  actions {
+    action register(provider: String, language: String, config: Bytes) {
+      -> ok(id: P) {
+        Record the provider as the handler for the given language and make it
+        immediately available to parse calls. The provider identifier and
+        language are both stored for discovery.
+      }
+      -> duplicate(language: String) {
+        A provider for this language is already registered. Each language may
+        have at most one active provider; remove the existing one before
+        registering a replacement.
+      }
+      -> error(message: String) {
+        Registration failed because provider or language is an empty string, or
+        a storage error occurred.
+      }
+
+      fixture register_ok {
+        provider: "micromark-parse"
+        language: "markdown"
+        config: ""
+      }
+      fixture register_katex {
+        provider: "katex-parse"
+        language: "latex"
+        config: ""
+      }
+      fixture register_html {
+        provider: "domparser-parse"
+        language: "html"
+        config: ""
+      }
+      fixture register_empty_provider {
+        provider: ""
+        language: "markdown"
+        config: ""
+      } -> error
+      fixture register_empty_language {
+        provider: "micromark-parse"
+        language: ""
+        config: ""
+      } -> error
+      fixture register_duplicate {
+        provider: "micromark-parse-v2"
+        language: "markdown"
+        config: ""
+      } after register_ok -> duplicate
+    }
+
+    action parse(language: String, text: String) {
+      -> ok(ast: Bytes) {
+        Invoke the registered provider for the language and return the resulting
+        AST serialised as bytes. The encoding is provider-defined; callers
+        should treat the bytes as opaque unless they know the provider.
+      }
+      -> no_provider(language: String) {
+        No provider has been registered for this language. Register a suitable
+        provider before calling parse.
+      }
+      -> error(message: String) {
+        The provider was found but failed to parse the text — for example
+        because the text contained illegal byte sequences or the provider
+        encountered an internal error.
+      }
+
+      fixture parse_ok {
+        language: "markdown"
+        text: "# Hello\n\nParagraph text."
+      } after register_ok
+      fixture parse_empty_text {
+        language: "markdown"
+        text: ""
+      } after register_ok
+      fixture parse_no_provider {
+        language: "rust"
+        text: "fn main() {}"
+      } -> no_provider
+    }
+
+    action listLanguages() {
+      -> ok(languages: list String) {
+        Return the list of language identifiers for which a provider is
+        currently registered. The list is unordered and may be empty when no
+        providers have been registered yet.
+      }
+
+      fixture list_empty {}
+      fixture list_after_register {} after register_ok
+    }
+  }
+
+  example "register then parse returns bytes": {
+    after register(provider: "micromark-parse", language: "markdown", config: "") -> ok(id: p)
+    then parse(language: "markdown", text: "# Title") -> ok(ast: _)
+  }
+
+  example "parse unknown language returns no_provider": {
+    then parse(language: "unknown-lang", text: "hello") -> no_provider(language: "unknown-lang")
+  }
+
+  example "register then listLanguages includes language": {
+    after register(provider: "micromark-parse", language: "markdown", config: "") -> ok(id: _)
+    then listLanguages() -> ok(languages: ["markdown"])
+  }
+
+  example "duplicate registration is rejected": {
+    after register(provider: "micromark-parse", language: "markdown", config: "") -> ok(id: _)
+    then register(provider: "micromark-parse-v2", language: "markdown", config: "") -> duplicate(language: "markdown")
+  }
+
+  always "every provider has a non-empty language": {
+    forall p in providers: p.language != ""
+  }
+
+  always "every provider has a non-empty provider identifier": {
+    forall p in providers: p.provider != ""
+  }
+
+  never "two providers for the same language": {
+    exists p1 in providers, p2 in providers:
+      p1 != p2 and p1.language = p2.language
+  }
+
+  action register {
+    requires: provider.length > 0 and language.length > 0
+    ensures ok: id in providers
+  }
+}
