@@ -10,14 +10,65 @@
 
 ## 1. Problem Statement
 
-Block Editor Loose Ends landed four concept registries (Parse, Format, Highlight, ContentSerializer) with hand-written per-provider registration syncs: 1 for micromark-parse, 3 for callouts, 1 each for katex-parse/domparser-parse, 5 for prettier (one per language), 1 for micromark-format, 12 for shiki (one per language), 1 for katex-highlight, 3 for ContentSerializer md/html/json, 1 for pdf. That's ~28 sync files before we've added a single new language.
+Block Editor Loose Ends landed four concept registries (Parse, Format, Highlight, ContentSerializer) with hand-written per-provider registration syncs — ~28 sync files before we've added a single new language.
 
-The Clef ecosystem needs coverage well beyond that:
-- **Clef DSLs** — `.concept`, `.sync`, `.derived`, `.widget`, `.theme` have no Parse or Highlight providers despite shipping framework parsers that already produce ASTs (`handlers/ts/framework/*-parser.ts`)
-- **Codegen targets** — Solidity, Swift, Rust, Go, Python, Kotlin, C# all ship as codegen outputs but only a subset get syntax coloring
-- **User code** — any language a user's code-block holds should get highlighting; shiki alone supports 100+ grammars and adding each as a sync is absurd
+Two failure modes at scale:
+1. **Per-language sync-file overhead.** Shiki alone supports 100+ languages; writing a sync per language turns config into code.
+2. **Reinvention drift.** Every language we cover is already covered by a mature ecosystem — tree-sitter (parsing), TextMate grammars (highlighting), Prettier (formatting), LSP (format-on-save), shiki (tokenization). If our provider layer speaks a Clef-specific vocabulary, we maintain translation layers forever and re-solve what the ecosystem already solved.
 
-The right shape: a **ProviderManifest** concept that reads `.clef/providers.yaml` at boot and emits `PluginRegistry/register` calls, plus **four generic sync rules** (one per target concept) that dispatch `PluginRegistry/register` into the concept's `register` action. Adding a new language becomes a config edit, not a code change.
+### The core idea: connect, don't reinvent
+
+Clef's Parse/Format/Highlight/ContentSerializer concepts are the abstract interfaces. The providers plugged into them should be **thin adapters over existing industry-standard formats**, not bespoke Clef implementations. Specifically:
+
+| Ecosystem standard | Clef adapter | Coverage unlocked |
+|---|---|---|
+| Tree-sitter grammars (.wasm + node_modules) | `tree-sitter` Parse provider | 100+ languages via published grammar packages |
+| TextMate grammars (.tmLanguage.json) | `textmate` Highlight provider | Every VSCode-supported language |
+| Shiki (TextMate + themes) | `shiki` Highlight provider (already have) | 100+ languages with themeable output |
+| Prettier plugins (npm packages) | `prettier` Format provider | js/ts/json/css/html/markdown/solidity/java/... |
+| LSP servers (format/diagnostics endpoints) | `lsp` Format + Highlight provider | Any language with a language server |
+| .editorconfig | Applied as manifest overlay | Tab width, line endings, charset — standard |
+| Prettier config files (.prettierrc, etc.) | Passed through as `options` to prettier provider | Prettier's existing config semantics, unchanged |
+
+Once the adapters exist, adding a new language is always "add an entry to `.clef/providers.yaml` pointing at the already-published grammar/plugin/server." We never write a Clef-specific parser for a language that already has a tree-sitter grammar.
+
+### The architecture: three-layer registration
+
+The manifest format itself is pluggable. Users shouldn't have to migrate `.prettierrc` / `.editorconfig` / `package.json` language settings into a Clef-specific yaml just to get provider registrations — those files already describe what they want.
+
+```
+  ManifestReader registry      ← format adapters (yaml, prettier, editorconfig, vscode, ...)
+        ↓ normalized entries
+  ProviderManifest             ← aggregator; emits PluginRegistry/register per entry
+        ↓ PluginRegistry/register
+  4 generic syncs              ← type-filtered fan-out
+        ↓ <Concept>/register
+  Parse / Format / Highlight / ContentSerializer
+```
+
+**Layer A — ManifestReader [R]** registers format adapters. Each reader translates an external config format into normalized `{kind, slot, provider, options}` entries:
+
+| Reader | Source file(s) | Translates to |
+|---|---|---|
+| `clef-yaml` | `.clef/providers.yaml` | Native Clef manifest (1:1) |
+| `clef-json` | `.clef/providers.json` | Same schema, JSON |
+| `prettier-config` | `.prettierrc*`, `prettier.config.js`, `prettier` in `package.json` | Format entries with prettier's config shape as `options` |
+| `editorconfig` | `.editorconfig` | Format option overlays (tab width, EOL, charset) on matching slots |
+| `package-json` | `package.json` | Reads `clef`, `prettier`, `shiki`, `eslint` fields |
+| `vscode-settings` | `.vscode/settings.json` | Language-specific settings (`[typescript]`, `[rust]`) as slot options |
+| `vscode-extension` | Installed extension `package.json` `contributes.{languages,grammars}` | TextMate grammars → Highlight entries; language IDs → Parse hints |
+| `tree-sitter` | `node_modules/tree-sitter-*/package.json` with `tree-sitter` field | Auto-register each grammar as a `tree-sitter` Parse entry |
+
+**Layer B — ProviderManifest [M]** loads the configured list of readers in priority order, collects their normalized entries, deduplicates (later-priority reader wins on slot collision, same semantics as `.editorconfig`'s precedence), and emits one `PluginRegistry/register` per entry.
+
+**Layer C — four generic syncs** dispatch `PluginRegistry/register` to `Parse/register`, `Format/register`, `Highlight/register`, `ContentSerializer/register` by filtering on `type`.
+
+### Why this shape
+
+- **Zero-config onboarding.** A project with existing `.prettierrc` + `.editorconfig` + `node_modules/tree-sitter-typescript` boots with working Parse + Format for TypeScript without any Clef manifest written.
+- **Ecosystem tracking is free.** A new shiki release supporting Elixir lands; manifest entry for `elixir` slot appears; no code change in Clef. A new tree-sitter grammar published to npm; the `tree-sitter` reader finds it in `node_modules` on next boot; registered automatically.
+- **New *kinds* of config source = one reader.** Biome supports a new config format → one ManifestReader adapter. LSP servers announce formatters via the LSP `textDocument/formatting` capability → one reader queries running servers and registers them as Format providers.
+- **Nothing in the core changes.** Adding a language is config; adding a config format is one adapter module; neither touches the generic syncs or the target concepts.
 
 ---
 
@@ -115,11 +166,12 @@ Because the concept boundary is `PluginRegistry/register`, any code path that di
 
 ## 3. Scope
 
-### 3.1 New concepts (1)
+### 3.1 New concepts (2)
 
 | Concept | Purpose | Actions |
 |---|---|---|
-| `ProviderManifest [M]` | Read `.clef/providers.yaml`, fan out to PluginRegistry | `load(path)`, `reload()`, `listEntries()` |
+| `ManifestReader [R]` | Registry of format-specific config readers | `register(reader, formats)`, `read(path) -> entries`, `listReaders()` |
+| `ProviderManifest [M]` | Aggregate entries across readers; emit PluginRegistry/register | `load(sources)`, `reload()`, `listEntries()` |
 
 ### 3.2 New syncs (4 generic + 4 reverse = 8)
 
@@ -208,31 +260,45 @@ Prefer wasm where available (rustfmt has wasm builds); fall back to subprocess i
 
 ## 5. Phasing
 
-### Phase 1 — Core manifest + generic syncs (3 cards)
+### Phase 1 — Core concepts + generic syncs (3 cards)
 
-1. `ProviderManifest` concept + handler + conformance tests
+1. `ManifestReader` + `ProviderManifest` concepts + handlers + conformance tests
 2. Four generic forward syncs (`RegisterParseProviderFromPluginRegistry` + 3 parallel for Highlight/Format/ContentSerializer)
 3. Four generic reverse syncs (PluginRegistry/remove → <Concept>/deregister)
 
-### Phase 2 — Clef DSL parsers + highlighter (2 cards)
+### Phase 2 — Native ManifestReader + adapters for existing standards (5 cards)
 
-4. `clef-framework-parse` meta-provider wrapping the 5 framework parsers; each registered under its own language slot
-5. `clef-dsl-highlight` meta-provider emitting token annotations from the 5 framework parsers' ASTs
+4. `clef-yaml` + `clef-json` readers (native Clef manifest format)
+5. `prettier-config` reader (`.prettierrc*`, `prettier.config.js`, `package.json` prettier field)
+6. `editorconfig` reader (`.editorconfig` → Format option overlays)
+7. `vscode-settings` + `vscode-extension` readers (language settings + contributed grammars)
+8. `tree-sitter` reader (auto-discover `node_modules/tree-sitter-*` packages)
 
-### Phase 3 — Default manifest + retirement (2 cards)
+### Phase 3 — Clef DSL parsers + highlighter (2 cards)
 
-6. Write `clef-base/config/providers.yaml` covering every provider shipped today + Clef DSLs + shiki's broader language set
-7. Delete the ~28 per-language registration syncs and verify the manifest-driven path produces equivalent PluginRegistry state (conformance: same providers registered, same languages covered)
+9. `clef-framework-parse` meta-provider wrapping the 5 framework parsers; one language slot each
+10. `clef-dsl-highlight` meta-provider emitting token annotations from the 5 framework parsers' ASTs
 
-### Phase 4 — Codegen-target Format providers (3 cards)
+### Phase 4 — Generic provider adapters (3 cards)
 
-8. prettier-plugin-solidity Format provider + manifest entry
-9. rustfmt Format provider (wasm preferred) + manifest entry
-10. swift-format Format provider (subprocess) + manifest entry
+11. `tree-sitter` Parse adapter (consumes wasm grammars from `node_modules` or manifest-declared paths)
+12. `textmate` Highlight adapter (consumes `.tmLanguage.json` from VSCode extensions / manifest-declared paths)
+13. `lsp` Format + Highlight adapter (delegates to a running LSP server via `textDocument/formatting` and semantic tokens)
 
-### Phase 5 — Reload + file watch (1 card)
+### Phase 5 — Default manifest + retirement (2 cards)
 
-11. `ProviderManifest/reload()` with diff semantics + dev-mode file watcher integration
+14. Write `clef-base/config/providers.yaml` covering Clef DSLs + broad shiki language set + the codegen targets; configure default reader priority list (`clef-yaml` > `prettier-config` > `editorconfig` > `package-json` > `tree-sitter` auto-discovery)
+15. Delete the ~28 per-language registration syncs and verify the manifest-driven path produces equivalent PluginRegistry state (behavioral conformance test)
+
+### Phase 6 — Codegen-target Format providers (3 cards)
+
+16. prettier-plugin-solidity Format provider + manifest entry
+17. rustfmt Format provider (wasm preferred, subprocess fallback) + manifest entry
+18. swift-format Format provider (subprocess) + manifest entry
+
+### Phase 7 — Reload + file watch (1 card)
+
+19. `ProviderManifest/reload()` with diff semantics + dev-mode file watcher integration (watches every file any registered reader declared interest in)
 
 ---
 
@@ -268,11 +334,12 @@ Prefer wasm where available (rustfmt has wasm builds); fall back to subprocess i
 
 ## 9. Card Plan
 
-11 cards under epic "Virtual Provider Registry". See VK breakdown for per-card descriptions and blocking relationships.
+19 cards under epic "Virtual Provider Registry". See VK breakdown for per-card descriptions and blocking relationships.
 
 Phase ordering:
-- Phase 1 blocks Phase 2 (concept + generic syncs before meta-providers can register via them)
-- Phase 1 blocks Phase 3 (manifest loader + generic syncs before default manifest can replace per-provider syncs)
-- Phase 2 blocks Phase 3 (Clef DSL providers must exist before the default manifest references them)
-- Phase 4 is independent — can run in parallel after Phase 1
-- Phase 5 is independent after Phase 1
+- Phase 1 blocks Phases 2, 3, 4 (generic syncs + ManifestReader/ProviderManifest concepts before any reader or provider can register via them)
+- Phase 2 blocks Phase 5 (readers must exist before default manifest can be loaded through them)
+- Phase 3 blocks Phase 5 (Clef DSL providers must exist before default manifest references them)
+- Phase 4 can run parallel to Phases 2, 3 after Phase 1 lands
+- Phase 6 is independent after Phase 1
+- Phase 7 depends on Phase 5 (watches the actively-loaded reader set)
