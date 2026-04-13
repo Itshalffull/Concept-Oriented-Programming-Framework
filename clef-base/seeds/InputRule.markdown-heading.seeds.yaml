@@ -1,0 +1,63 @@
+# InputRule seeds -- markdown heading shortcuts for levels 1 and 3-6 (LE-22, §3.7).
+#
+# markdown-heading-1: fires when a paragraph line starts with "# " (one hash + space).
+#   Dispatches markdown-transform-to-heading-1 which applies schema "heading" with
+#   level=1 via Schema/applyTo on the focused block.
+#
+# markdown-heading-3 through markdown-heading-6: same shape at the respective hash depths.
+#
+# markdown-heading-2 is intentionally absent here -- it was seeded earlier in
+# InputRule.seeds.yaml (block-editor-recursive-views-prd §2.4 / P1.12).
+# All six heading rules are declared as action_refs in the heading-block-editor and
+# paragraph-block-editor EditSurface entries.
+#
+# Priority 100 matches the existing block-conversion rules.
+# scope: null means global -- active in any block-editor context.
+
+concept: InputRule
+action: register
+entries:
+  # H1 -- fires when a paragraph line starts with "# " (one hash + space).
+  - name: markdown-heading-1
+    rule: markdown-heading-1
+    kind: pattern
+    pattern: "^# "
+    action_ref: markdown-transform-to-heading-1
+    priority: 100
+    scope: null
+
+  # H3 -- fires when a paragraph line starts with "### " (three hashes + space).
+  - name: markdown-heading-3
+    rule: markdown-heading-3
+    kind: pattern
+    pattern: "^### "
+    action_ref: markdown-transform-to-heading-3
+    priority: 100
+    scope: null
+
+  # H4 -- fires when a paragraph line starts with "#### " (four hashes + space).
+  - name: markdown-heading-4
+    rule: markdown-heading-4
+    kind: pattern
+    pattern: "^#### "
+    action_ref: markdown-transform-to-heading-4
+    priority: 100
+    scope: null
+
+  # H5 -- fires when a paragraph line starts with "##### " (five hashes + space).
+  - name: markdown-heading-5
+    rule: markdown-heading-5
+    kind: pattern
+    pattern: "^##### "
+    action_ref: markdown-transform-to-heading-5
+    priority: 100
+    scope: null
+
+  # H6 -- fires when a paragraph line starts with "###### " (six hashes + space).
+  - name: markdown-heading-6
+    rule: markdown-heading-6
+    kind: pattern
+    pattern: "^###### "
+    action_ref: markdown-transform-to-heading-6
+    priority: 100
+    scope: null

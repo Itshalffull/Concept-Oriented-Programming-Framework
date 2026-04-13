@@ -1,0 +1,32 @@
+# InputRule seeds -- GitHub-flavored markdown callout shortcut (LE-22, §3.7).
+#
+# github-callout: fires when a paragraph line matches the GitHub callout syntax
+#   ^> \[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]
+#   capturedGroup1 contains the matched keyword (e.g. "NOTE", "WARNING").
+#
+# Dispatches markdown-transform-to-github-callout which calls Parse/parse with
+# language "markdown-github-callout" so the github-callout Parse provider
+# (shipped at commit abf84b3d, LE-06) processes the line. The completion sync
+# routes the parsed result to Schema/applyTo(schema="callout") and sets the
+# paletteRole property from the captured keyword.
+#
+# Priority 110 (higher than the generic markdown-quote rule at 100) so that
+# "> [!NOTE]" binds to this rule before the plain blockquote rule can fire.
+# scope: null means global -- active in any block-editor context.
+#
+# mkdocs and obsidian callout dialects do NOT get InputRule seeds here; they
+# register through their respective Parse providers at provider-registration
+# time per PRD §3.7.
+
+concept: InputRule
+action: register
+entries:
+  # GitHub callout syntax: > [!NOTE], > [!TIP], > [!IMPORTANT], > [!WARNING], > [!CAUTION].
+  # capturedGroup1 is the keyword in upper-case; used as paletteRole by the ActionBinding.
+  - name: github-callout
+    rule: github-callout
+    kind: pattern
+    pattern: "^> \\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\\]"
+    action_ref: markdown-transform-to-github-callout
+    priority: 110
+    scope: null
