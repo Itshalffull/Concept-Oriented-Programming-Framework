@@ -356,12 +356,17 @@ entries:
 
   # Dispatched by the paste InputRule when clipboard MIME matches ^image/.
   # context.clipboardFile carries the raw blob reference from the paste event.
+  # context.uploadContext is the JSON-encoded context object built by
+  # RecursiveBlockEditor's paste handler: { focusedDocId, cursorBlockId,
+  # cursorPosition }. Forwarded as the context (Bytes) parameter of
+  # MediaAsset/createMedia so paste-image-to-block.sync can extract focusedDocId
+  # via json(context, "focusedDocId") and place the new Outline child correctly.
   # After MediaAsset/createMedia completes -> ok, the paste-image-to-block.sync
   # fires and inserts a new Outline child referencing the created asset.
   - name: media-upload-from-clipboard
     binding: media-upload-from-clipboard
     target: "MediaAsset/createMedia"
-    parameterMap: '{"asset":"uuid()","source":"local-fs","file":"context.clipboardFile"}'
+    parameterMap: '{"asset":"uuid()","source":"local-fs","file":"context.clipboardFile","context":"context.uploadContext"}'
     executionPolicy: "auto"
     slash_command: false
     toolbar_command: false
@@ -381,7 +386,7 @@ entries:
   - name: bold-toggle
     binding: bold-toggle
     target: "InlineMark/toggleMark"
-    parameterMap: '{"markKind":"bold","selection":"context.selection"}'
+    parameterMap: '{"markKind":"bold","blockId":"context.selection.blockId","rangeStart":"context.selection.rangeStart","rangeEnd":"context.selection.rangeEnd"}'
     executionPolicy: "auto"
     toolbar_command: true
     keyboard: "Ctrl+B"
@@ -392,7 +397,7 @@ entries:
   - name: italic-toggle
     binding: italic-toggle
     target: "InlineMark/toggleMark"
-    parameterMap: '{"markKind":"italic","selection":"context.selection"}'
+    parameterMap: '{"markKind":"italic","blockId":"context.selection.blockId","rangeStart":"context.selection.rangeStart","rangeEnd":"context.selection.rangeEnd"}'
     executionPolicy: "auto"
     toolbar_command: true
     keyboard: "Ctrl+I"
@@ -403,7 +408,7 @@ entries:
   - name: code-toggle
     binding: code-toggle
     target: "InlineMark/toggleMark"
-    parameterMap: '{"markKind":"code","selection":"context.selection"}'
+    parameterMap: '{"markKind":"code","blockId":"context.selection.blockId","rangeStart":"context.selection.rangeStart","rangeEnd":"context.selection.rangeEnd"}'
     executionPolicy: "auto"
     toolbar_command: true
     keyboard: "Ctrl+E"
@@ -427,7 +432,11 @@ entries:
   - name: link-toggle
     binding: link-toggle
     target: "InlineMark/toggleMark"
-    parameterMap: '{"markKind":"link","selection":"context.selection"}'
+    # link-toggle is handled with a two-step flow in RecursiveBlockEditor:
+    # link-open-editor fires first to collect href, then toggleMark is invoked
+    # directly on InlineMark (not via ActionBinding/invoke). This parameterMap
+    # is kept for documentation of the expected final call shape.
+    parameterMap: '{"markKind":"link","blockId":"context.selection.blockId","rangeStart":"context.selection.rangeStart","rangeEnd":"context.selection.rangeEnd","attributes":"context.linkAttributes"}'
     executionPolicy: "auto"
     toolbar_command: true
     keyboard: "Ctrl+K"
@@ -438,7 +447,7 @@ entries:
   - name: link-open-editor
     binding: link-open-editor
     target: "InlineMark/openEditor"
-    parameterMap: '{"selection":"context.selection","widget":"link-editor"}'
+    parameterMap: '{"blockId":"context.selection.blockId","rangeStart":"context.selection.rangeStart","rangeEnd":"context.selection.rangeEnd","widget":"link-editor"}'
     executionPolicy: "auto"
     toolbar_command: true
     context_menu: true
@@ -449,7 +458,7 @@ entries:
   - name: link-remove
     binding: link-remove
     target: "InlineMark/toggleMark"
-    parameterMap: '{"markKind":"link","selection":"context.selection","force":"off"}'
+    parameterMap: '{"markKind":"link","blockId":"context.selection.blockId","rangeStart":"context.selection.rangeStart","rangeEnd":"context.selection.rangeEnd","force":"off"}'
     executionPolicy: "auto"
     toolbar_command: true
     visibleWhen: "context.selectionHasLinkMark"
@@ -460,7 +469,7 @@ entries:
   - name: link-wrap-selection-with-url
     binding: link-wrap-selection-with-url
     target: "InlineMark/toggleMark"
-    parameterMap: '{"markKind":"link","selection":"context.selection","href":"context.pastedText","force":"on"}'
+    parameterMap: '{"markKind":"link","blockId":"context.selection.blockId","rangeStart":"context.selection.rangeStart","rangeEnd":"context.selection.rangeEnd","href":"context.pastedText","force":"on"}'
     executionPolicy: "auto"
     slash_command: false
     toolbar_command: false
@@ -637,7 +646,7 @@ entries:
   - name: strikethrough-toggle
     binding: strikethrough-toggle
     target: "InlineMark/toggleMark"
-    parameterMap: '{"markKind":"strikethrough","selection":"context.selection"}'
+    parameterMap: '{"markKind":"strikethrough","blockId":"context.selection.blockId","rangeStart":"context.selection.rangeStart","rangeEnd":"context.selection.rangeEnd"}'
     executionPolicy: "auto"
     toolbar_command: true
     keyboard: "Ctrl+Shift+X"
@@ -648,7 +657,7 @@ entries:
   - name: subscript-toggle
     binding: subscript-toggle
     target: "InlineMark/toggleMark"
-    parameterMap: '{"markKind":"subscript","selection":"context.selection"}'
+    parameterMap: '{"markKind":"subscript","blockId":"context.selection.blockId","rangeStart":"context.selection.rangeStart","rangeEnd":"context.selection.rangeEnd"}'
     executionPolicy: "auto"
     toolbar_command: false
     keyboard: "Ctrl+Shift+-"
@@ -659,7 +668,7 @@ entries:
   - name: superscript-toggle
     binding: superscript-toggle
     target: "InlineMark/toggleMark"
-    parameterMap: '{"markKind":"superscript","selection":"context.selection"}'
+    parameterMap: '{"markKind":"superscript","blockId":"context.selection.blockId","rangeStart":"context.selection.rangeStart","rangeEnd":"context.selection.rangeEnd"}'
     executionPolicy: "auto"
     toolbar_command: false
     keyboard: "Ctrl+Shift+="

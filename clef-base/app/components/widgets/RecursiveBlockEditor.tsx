@@ -35,6 +35,16 @@ import React, {
 import { useKernelInvoke } from '../../../lib/clef-provider';
 
 // ---------------------------------------------------------------------------
+// Selection tracking — populated from document selectionchange events
+// ---------------------------------------------------------------------------
+
+export interface EditorSelection {
+  blockId: string;
+  rangeStart: number;
+  rangeEnd: number;
+}
+
+// ---------------------------------------------------------------------------
 // Public interface
 // ---------------------------------------------------------------------------
 
@@ -131,8 +141,20 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
   const [rootSchema, setRootSchema] = useState<string>('');
 
   // ------- active EditSurface bundles --------
+  const [focusedBlockId, setFocusedBlockId] = useState<string>('');
   const [focusedSchema, setFocusedSchema] = useState<string>('');
   const [activeSurfaces, setActiveSurfaces] = useState<EditSurfaceBundle[]>([]);
+
+  // ------- inline mark selection tracking --------
+  // Populated by document selectionchange listener whenever a block is focused.
+  // Threaded into ToolbarCommandButton context so mark-toggle bindings can
+  // resolve context.selection.blockId / rangeStart / rangeEnd at invoke time.
+  const [currentSelection, setCurrentSelection] = useState<EditorSelection | null>(null);
+  const focusedBlockIdRef = useRef(focusedBlockId);
+  useEffect(() => { focusedBlockIdRef.current = focusedBlockId; }, [focusedBlockId]);
+
+  // ------- mark active state — tracks pressed/unpressed per binding --------
+  const [activeMarks, setActiveMarks] = useState<Record<string, boolean>>({});
 
   // ------- slash menu --------
   const [slashItems, setSlashItems] = useState<SlashMenuItem[]>([]);
@@ -146,6 +168,51 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
   // ------- stable refs --------
   const rootNodeIdRef = useRef(rootNodeId);
   useEffect(() => { rootNodeIdRef.current = rootNodeId; }, [rootNodeId]);
+
+  // =========================================================================
+  // Selection tracking — captures caret/range on every selectionchange event
+  // so that InlineMark/toggleMark receives blockId + rangeStart + rangeEnd.
+  // =========================================================================
+
+  useEffect(() => {
+    function onSelectionChange() {
+      const blockId = focusedBlockIdRef.current;
+      if (!blockId) {
+        setCurrentSelection(null);
+        return;
+      }
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) {
+        setCurrentSelection((prev) =>
+          prev && prev.blockId === blockId
+            ? { blockId, rangeStart: 0, rangeEnd: 0 }
+            : null,
+        );
+        return;
+      }
+      const range = sel.getRangeAt(0);
+      // Walk the DOM to compute character offsets within the focused block's
+      // content-editable node (data-part="block-content", data-node-id=blockId).
+      const blockEl = document.querySelector(
+        `[data-part="block-slot"][data-node-id="${blockId}"] [data-part="block-content"]`,
+      );
+      if (!blockEl || !blockEl.contains(range.commonAncestorContainer)) {
+        // Selection left the focused block; keep last known selection
+        return;
+      }
+      const preRange = document.createRange();
+      preRange.selectNodeContents(blockEl);
+      preRange.setEnd(range.startContainer, range.startOffset);
+      const rangeStart = preRange.toString().length;
+      const rangeEnd = rangeStart + range.toString().length;
+      setCurrentSelection({ blockId, rangeStart, rangeEnd });
+    }
+
+    document.addEventListener('selectionchange', onSelectionChange);
+    return () => {
+      document.removeEventListener('selectionchange', onSelectionChange);
+    };
+  }, []); // stable — reads focusedBlockIdRef via ref
 
   // =========================================================================
   // Mount: load root schema + children
@@ -332,6 +399,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
   // =========================================================================
 
   const handleBlockFocus = useCallback(async (blockId: string, schema: string) => {
+    setFocusedBlockId(blockId);
     setFocusedSchema(schema);
     setFsmState('focused');
 
@@ -372,7 +440,10 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
     if (fsmState === 'focused') {
       setFsmState('idle');
       setActiveSurfaces([]);
+      setFocusedBlockId('');
       setFocusedSchema('');
+      setCurrentSelection(null);
+      setActiveMarks({});
     }
   }, [fsmState]);
 
@@ -495,6 +566,104 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
       }
     }
   }, [fsmState, openSlashMenu, closeSlashMenu]);
+
+  // =========================================================================
+  // Paste handler — clipboard image → MediaAsset/createMedia via ActionBinding
+  // =========================================================================
+  //
+  // When the user pastes and the clipboard contains an image/* item, we:
+  //   1. Build uploadContext JSON carrying focusedDocId (rootNodeId), the
+  //      focused block id, and the current selection offset so the
+  //      paste-image-to-block.sync can place the new Outline child correctly.
+  //   2. Invoke the ActionBinding "media-upload-from-clipboard" with that
+  //      context threaded in — the binding's parameterMap maps
+  //      context.uploadContext → MediaAsset/createMedia context parameter.
+  //   3. After upload completes the sync fires Outline/create(parent: focusedDocId).
+  //
+  // The handler only matches image/* items; other clipboard types fall through
+  // to the browser default. canEdit guard prevents read-only editor uploads.
+  // =========================================================================
+
+  const handlePaste = useCallback(async (e: React.ClipboardEvent) => {
+    if (!canEdit) return;
+
+    const items = Array.from(e.clipboardData?.items ?? []);
+    const imageItem = items.find((item) => item.type.startsWith('image/'));
+    if (!imageItem) return;
+
+    e.preventDefault();
+
+    const uploadContext = JSON.stringify({
+      focusedDocId: rootNodeId,
+      cursorBlockId: focusedBlockIdRef.current || null,
+      cursorPosition: currentSelection?.rangeStart ?? 0,
+    });
+
+    try {
+      const result = await invoke('ActionBinding', 'invoke', {
+        binding: 'media-upload-from-clipboard',
+        context: JSON.stringify({
+          clipboardFile: imageItem.type,
+          uploadContext,
+        }),
+      });
+      if (result.variant !== 'ok') {
+        console.warn('[RecursiveBlockEditor] media-upload-from-clipboard returned non-ok:', result.variant);
+      } else {
+        // The paste-image-to-block.sync will insert the block; reload children
+        // after a short tick to let the sync complete.
+        setTimeout(() => { loadChildren(); }, 300);
+      }
+    } catch (err) {
+      console.error('[RecursiveBlockEditor] paste image upload failed:', err);
+    }
+  }, [canEdit, rootNodeId, currentSelection, invoke, loadChildren]);
+
+  // =========================================================================
+  // Drop handler — file drop → MediaAsset/createMedia via ActionBinding
+  // =========================================================================
+  //
+  // Same pattern as paste but for drag-and-drop file events. All MIME types
+  // are accepted (matching the drop-file-generic InputRule pattern "*/*").
+  // uploadContext carries the same focusedDocId/cursorBlockId fields so the
+  // drop-file-to-block.sync can resolve the insertion parent.
+  // =========================================================================
+
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    if (!canEdit) return;
+
+    const files = Array.from(e.dataTransfer?.files ?? []);
+    if (files.length === 0) return;
+
+    e.preventDefault();
+
+    const uploadContext = JSON.stringify({
+      focusedDocId: rootNodeId,
+      cursorBlockId: focusedBlockIdRef.current || null,
+      cursorPosition: currentSelection?.rangeStart ?? 0,
+    });
+
+    // Process each dropped file sequentially through the same binding.
+    for (const file of files) {
+      try {
+        const result = await invoke('ActionBinding', 'invoke', {
+          binding: 'media-upload-from-drop',
+          context: JSON.stringify({
+            droppedFile: file.type || 'application/octet-stream',
+            uploadContext,
+          }),
+        });
+        if (result.variant !== 'ok') {
+          console.warn('[RecursiveBlockEditor] media-upload-from-drop returned non-ok:', result.variant, file.name);
+        }
+      } catch (err) {
+        console.error('[RecursiveBlockEditor] drop file upload failed:', err);
+      }
+    }
+
+    // Reload children after all uploads are dispatched.
+    setTimeout(() => { loadChildren(); }, 300);
+  }, [canEdit, rootNodeId, currentSelection, invoke, loadChildren]);
 
   // =========================================================================
   // Compile actions (page-level surface: agent-persona, etc.)
@@ -686,6 +855,9 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
         data-part="center-pane"
         role="main"
         aria-label="Content blocks"
+        onPaste={handlePaste}
+        onDrop={handleDrop}
+        onDragOver={(e) => { e.preventDefault(); }}
         style={{
           gridRow: hasCompileSurface && compileStatus ? 2 : '1 / -1',
           overflowY: 'auto',
@@ -718,6 +890,14 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
                 key={bindingId}
                 bindingId={bindingId}
                 context={{ rootNodeId, editorFlavor, focusedSchema }}
+                selection={currentSelection}
+                isActive={activeMarks[bindingId] ?? false}
+                onMarkVariant={(binding, variant) => {
+                  setActiveMarks((prev) => ({
+                    ...prev,
+                    [binding]: variant === 'ok',
+                  }));
+                }}
               />
             ))}
           </div>
@@ -1056,14 +1236,37 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
 // ToolbarCommandButton — invokes an ActionBinding from the toolbar
 // ===========================================================================
 
+// Mark-toggle binding IDs that require InlineMark/toggleMark dispatch with
+// selection context. link-toggle is handled specially (href collection step).
+const MARK_TOGGLE_BINDINGS = new Set([
+  'bold-toggle',
+  'italic-toggle',
+  'code-toggle',
+  'strikethrough-toggle',
+  'subscript-toggle',
+  'superscript-toggle',
+  'link-toggle',
+  'link-remove',
+  'link-wrap-selection-with-url',
+]);
+
 interface ToolbarCommandButtonProps {
   bindingId: string;
   context: Record<string, unknown>;
+  /** Current text selection in the focused block, or null if nothing is selected. */
+  selection: EditorSelection | null;
+  /** Whether this mark is currently active on the selection (pressed state). */
+  isActive: boolean;
+  /** Called after InlineMark/toggleMark completes with 'ok' (wrapped) or 'removed' (unwrapped). */
+  onMarkVariant: (bindingId: string, variant: 'ok' | 'removed') => void;
 }
 
 const ToolbarCommandButton: React.FC<ToolbarCommandButtonProps> = ({
   bindingId,
   context,
+  selection,
+  isActive,
+  onMarkVariant,
 }) => {
   const invoke = useKernelInvoke();
   const [executing, setExecuting] = useState(false);
@@ -1088,26 +1291,94 @@ const ToolbarCommandButton: React.FC<ToolbarCommandButtonProps> = ({
     if (executing) return;
     setExecuting(true);
     try {
-      const result = await invoke('ActionBinding', 'invoke', {
-        binding: bindingId,
-        context: JSON.stringify(context),
-      });
-      if (result.variant !== 'ok') {
-        // Phase 1: InlineMark concept not shipped yet; log but don't error out
-        console.warn(`[ToolbarCommandButton] ${bindingId} returned non-ok:`, result.variant, '— backing concept may not be shipped yet');
+      if (MARK_TOGGLE_BINDINGS.has(bindingId)) {
+        // Build the context enriched with selection fields so the ActionBinding
+        // resolver can populate parameterMap entries referencing context.selection.*
+        // (e.g. blockId, rangeStart, rangeEnd, markKind).
+        const selectionCtx = selection
+          ? {
+              blockId: selection.blockId,
+              rangeStart: selection.rangeStart,
+              rangeEnd: selection.rangeEnd,
+            }
+          : { blockId: '', rangeStart: 0, rangeEnd: 0 };
+
+        if (!selection || selection.rangeStart === selection.rangeEnd) {
+          // No range selected — mark toggles require a non-collapsed selection.
+          // Silently skip rather than sending a zero-length range to the concept.
+          console.info(`[ToolbarCommandButton] ${bindingId} skipped — no text selection`);
+          return;
+        }
+
+        // link-toggle: collect href via link-editor widget before invoking toggleMark.
+        // We invoke the link-open-editor binding first; if it returns an href in its
+        // result payload we proceed with toggleMark. If not (user dismissed), bail.
+        if (bindingId === 'link-toggle') {
+          const editorResult = await invoke('ActionBinding', 'invoke', {
+            binding: 'link-open-editor',
+            context: JSON.stringify({ ...context, selection: selectionCtx }),
+          });
+          if (editorResult.variant !== 'ok') {
+            // User dismissed the link editor or it isn't available yet
+            console.info('[ToolbarCommandButton] link-open-editor dismissed or unavailable:', editorResult.variant);
+            return;
+          }
+          // link-open-editor is expected to return href in result.href when the user
+          // confirms. Pass it along as an attribute in the toggleMark context.
+          const href = typeof editorResult.href === 'string' ? editorResult.href : '';
+          const markResult = await invoke('InlineMark', 'toggleMark', {
+            blockId: selectionCtx.blockId,
+            rangeStart: selectionCtx.rangeStart,
+            rangeEnd: selectionCtx.rangeEnd,
+            markKind: 'link',
+            attributes: JSON.stringify({ href }),
+          });
+          if (markResult.variant === 'ok' || markResult.variant === 'removed') {
+            onMarkVariant(bindingId, markResult.variant as 'ok' | 'removed');
+          } else {
+            console.warn(`[ToolbarCommandButton] InlineMark/toggleMark(link) returned:`, markResult.variant);
+          }
+          return;
+        }
+
+        // All other mark-toggle bindings: invoke ActionBinding/invoke with selection
+        // context fields populated. The ActionBinding resolver maps parameterMap
+        // "context.selection.blockId" etc. from the enriched context object.
+        const result = await invoke('ActionBinding', 'invoke', {
+          binding: bindingId,
+          context: JSON.stringify({ ...context, selection: selectionCtx }),
+        });
+
+        if (result.variant === 'ok' || result.variant === 'removed') {
+          // 'ok' = mark was applied (pressed); 'removed' = mark was unwrapped (unpressed)
+          onMarkVariant(bindingId, result.variant as 'ok' | 'removed');
+        } else {
+          console.warn(`[ToolbarCommandButton] ${bindingId} returned non-ok:`, result.variant);
+        }
+      } else {
+        // Non-mark binding: plain ActionBinding/invoke with base context
+        const result = await invoke('ActionBinding', 'invoke', {
+          binding: bindingId,
+          context: JSON.stringify(context),
+        });
+        if (result.variant !== 'ok') {
+          console.warn(`[ToolbarCommandButton] ${bindingId} returned non-ok:`, result.variant, '— backing concept may not be shipped yet');
+        }
       }
     } catch (err) {
       console.warn('[ToolbarCommandButton] invoke error (possibly missing backing concept):', err);
     } finally {
       setExecuting(false);
     }
-  }, [executing, bindingId, context, invoke]);
+  }, [executing, bindingId, context, selection, invoke, onMarkVariant]);
 
   return (
     <button
       data-part="toolbar-command"
       data-binding={bindingId}
       data-loading={executing ? 'true' : 'false'}
+      data-active={isActive ? 'true' : 'false'}
+      aria-pressed={MARK_TOGGLE_BINDINGS.has(bindingId) ? isActive : undefined}
       disabled={executing}
       aria-label={label}
       onClick={handleClick}
@@ -1118,6 +1389,12 @@ const ToolbarCommandButton: React.FC<ToolbarCommandButtonProps> = ({
         fontWeight: bindingId.includes('bold') ? 'bold' : 'normal',
         fontStyle: bindingId.includes('italic') ? 'italic' : 'normal',
         fontFamily: bindingId.includes('code') ? 'monospace' : 'inherit',
+        // Pressed state: invert surface/outline so the button looks depressed
+        background: isActive ? 'var(--palette-primary-container)' : undefined,
+        color: isActive ? 'var(--palette-on-primary-container)' : undefined,
+        outline: isActive ? '2px solid var(--palette-primary)' : undefined,
+        outlineOffset: isActive ? '-2px' : undefined,
+        borderRadius: '4px',
       }}
     >
       {executing ? '…' : label}
