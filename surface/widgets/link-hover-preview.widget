@@ -1,0 +1,194 @@
+@version(1)
+widget link-hover-preview {
+
+  purpose {
+    Floating popover that shows a content preview when the user hovers a
+    wikilink, plain hyperlink, mention, or entity-embed for at least 300 ms.
+    Displays the target ContentNode's title, a first-paragraph snippet, and a
+    jump button that navigates to the target. The popover dismisses 100 ms after
+    the cursor leaves the trigger element or the popover itself, giving the user
+    a brief grace window to move into the popover without it vanishing. Focus is
+    never trapped — the popover is informational, not a dialog.
+  }
+
+  anatomy {
+    root:       container    { Fixed-position popover shell; carries data-state reflecting the FSM }
+    header:     container    { Top strip holding the target-page icon and title }
+    titleIcon:  presentation { Small content-type icon (emoji or icon glyph) pulled from the target schema }
+    titleText:  text         { Target ContentNode title rendered as a single truncated line }
+    body:       container    { Scrollable area showing the first-paragraph text snippet }
+    snippet:    text         { Plain-text excerpt from the target page body, max 3 lines }
+    footer:     container    { Bottom action row }
+    jumpButton: action       { "Open" button that navigates the host to the target ContentNode }
+    loadingSpinner: presentation { Visible while the ContentNode/get fetch is in flight }
+    emptyState: text         { Shown when the target node has no body text to preview }
+  }
+
+  states {
+    hidden [initial] {
+      on HOVER_START  -> loading;
+    }
+
+    loading {
+      on LOAD_OK      -> visible;
+      on LOAD_ERROR   -> error;
+      on DISMISS      -> dismissed;
+      entry [fetchTargetNode];
+    }
+
+    visible {
+      on DISMISS      -> dismissed;
+      on JUMP         -> navigating;
+    }
+
+    navigating {
+      on NAV_COMPLETE -> dismissed;
+      on NAV_ERROR    -> visible;
+      entry [invokeNavigate];
+    }
+
+    dismissed {
+      on HOVER_START  -> loading;
+      entry [clearContent];
+    }
+
+    error {
+      on DISMISS      -> dismissed;
+      on HOVER_START  -> loading;
+    }
+  }
+
+  accessibility {
+    role: tooltip;
+    keyboard {
+      Escape   -> DISMISS;
+      Enter    -> JUMP;
+    }
+    focus {
+      trap: false;
+    }
+    aria {
+      root -> {
+        role: "tooltip";
+        aria-live: "polite";
+        aria-atomic: "true";
+      };
+      jumpButton -> {
+        role: "link";
+        aria-label: "Open linked page";
+      };
+    }
+  }
+
+  props {
+    targetNodeId: String
+    anchorRect: option { x: Int, y: Int, width: Int, height: Int }
+    placement: String = "bottom-start"
+    hoverDelayMs: Int = 300
+    dismissDelayMs: Int = 100
+    maxSnippetChars: Int = 240
+    open: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-state: if state.hidden == "hidden" then "hidden"
+                  else if state.loading == "loading" then "loading"
+                  else if state.visible == "visible" then "visible"
+                  else if state.navigating == "navigating" then "navigating"
+                  else if state.error == "error" then "error"
+                  else "dismissed";
+      data-target-node-id: ?targetNodeId;
+      role: "tooltip";
+      aria-live: "polite";
+    }
+
+    titleText -> {
+      data-part: "title-text";
+    }
+
+    snippet -> {
+      data-part: "snippet";
+    }
+
+    loadingSpinner -> {
+      aria-hidden: "true";
+      hidden: if state.loading != "loading" then true else false;
+    }
+
+    emptyState -> {
+      hidden: if state.visible != "visible" then true else false;
+    }
+
+    jumpButton -> {
+      onClick: send(JUMP);
+      data-part: "jump-button";
+      aria-label: "Open linked page";
+    }
+  }
+
+  compose {
+    _portal: widget("portal", { target: "body" })
+  }
+
+  invariant {
+    example "shows popover after hover start": {
+      after root -> { data-state: "hidden" }
+      then root -> { data-state: "hidden" }
+    }
+
+    example "jump sends JUMP event": {
+      after root -> { data-state: "visible" }
+      then jumpButton.click -> ok
+      and  root -> { data-state: "navigating" }
+    }
+
+    example "escape dismisses when visible": {
+      after root -> { data-state: "visible" }
+      then keyboard.Escape -> ok
+      and  root -> { data-state: "dismissed" }
+    }
+
+    example "escape dismisses when error": {
+      after root -> { data-state: "error" }
+      then keyboard.Escape -> ok
+      and  root -> { data-state: "dismissed" }
+    }
+
+    always "role is tooltip": {
+      root.role = "tooltip"
+    }
+
+    always "focus never trapped": {
+      accessibility.focus.trap = false
+    }
+
+    always "data-state present on root": {
+      root["data-state"] != none
+    }
+
+    always "loading spinner hidden when not loading": {
+      state != "loading" implies loadingSpinner.hidden = true
+    }
+
+    always "jump button has accessible label": {
+      jumpButton["aria-label"] != none
+    }
+
+    never "focus trap active": {
+      accessibility.focus.trap = true
+    }
+
+    never "jump fires when hidden": {
+      state = "hidden" and JUMP in activeEvents
+    }
+
+    forall s in ["hidden", "loading", "visible", "navigating", "dismissed", "error"]:
+      s.reachable = true
+
+    action jumpButton.click {
+      requires: state = "visible"
+      ensures ok: state = "navigating"
+    }
+  }
+}

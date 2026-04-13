@@ -1529,6 +1529,35 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
           </div>
         )}
 
+        {/* version-history-browser — pinned open via Cmd/Ctrl+Shift+H     */}
+        {/* (PP-version-history). When versionHistoryOpen is true the panel */}
+        {/* mounts directly here regardless of the slot resolver; when the  */}
+        {/* PluginRegistry entry is also enabled both will coexist.         */}
+        {versionHistoryOpen && (
+          <div
+            data-part="version-history-panel-mount"
+            style={{ borderBottom: '1px solid var(--palette-outline-variant)' }}
+          >
+            <VersionHistoryBrowser
+              currentNodeId={rootNodeId}
+              onRestore={(restoredContent) => {
+                // Re-snapshot the restored content as a new version entry so
+                // the current state is preserved before overwrite.
+                invoke('Version', 'snapshot', {
+                  version: `restore-${Date.now()}`,
+                  entity: rootNodeId,
+                  data: restoredContent,
+                  author: 'restore',
+                }).catch((err) => {
+                  console.warn('[RecursiveBlockEditor] version re-snapshot after restore failed:', err);
+                });
+                // Reload children so the editor reflects the restored body.
+                loadChildren();
+              }}
+            />
+          </div>
+        )}
+
         {/* Compiled output preview (agent-persona → PromptAssembly preview, etc.) */}
         {hasCompileSurface && compiledPreview && (
           <div
@@ -1962,32 +1991,42 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
         </button>
       )}
       {/* ------------------------------------------------------------------ */}
-      {/* Per-block decoration-layer slot — placeholder-decoration overlay    */}
-      {/* Each decoration-layer widget registered via PluginRegistry receives  */}
-      {/* blockId, schema, isEmpty, and focused so that placeholder-decoration */}
-      {/* can show/hide ghost text per block independently.                   */}
-      {/* PP-placeholder-integration (9dbd7a7b)                               */}
+      {/* Per-block decoration-layer slot (PP-mount-built)                   */}
+      {/* Iterates decoration-layer entries where perBlock !== false.        */}
+      {/* Entries with perBlock=false (e.g. presence-decoration) are        */}
+      {/* mounted once at editor-root level, not per block.                 */}
+      {/* Each SlotMount receives blockId, schema, isEmpty, focused, and    */}
+      {/* decoration-scope so block-scoped widgets can resolve per-block    */}
+      {/* data (comment count, InlineAnnotation ranges, etc.).              */}
+      {/* PP-placeholder-integration (9dbd7a7b), PP-mount-built            */}
       {/* ------------------------------------------------------------------ */}
-      {decorationLayerEntries.length > 0 && (
+      {decorationLayerEntries.filter((e) => e.metadata.perBlock !== false).length > 0 && (
         <div
           data-part="block-decoration-layer"
           aria-hidden="true"
           style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 2 }}
         >
-          {decorationLayerEntries.map((entry) => (
-            <SlotMount
-              key={entry.name}
-              entry={entry}
-              hostAttrs={{
-                'data-part': 'block-decoration-mount',
-                'data-block-id': nodeId,
-                'data-schema': schema,
-                'data-block-empty': blockEmpty ? 'true' : 'false',
-                'data-block-focused': blockFocused ? 'true' : 'false',
-              }}
-              style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
-            />
-          ))}
+          {decorationLayerEntries
+            .filter((entry) => entry.metadata.perBlock !== false)
+            .map((entry) => (
+              <SlotMount
+                key={entry.name}
+                entry={entry}
+                hostAttrs={{
+                  'data-part': 'block-decoration-mount',
+                  'data-block-id': nodeId,
+                  'data-node-id': nodeId,
+                  'data-schema': schema,
+                  'data-editor-flavor': editorFlavor,
+                  'data-block-empty': blockEmpty ? 'true' : 'false',
+                  'data-block-focused': blockFocused ? 'true' : 'false',
+                  'data-decoration-scope': typeof entry.metadata.scope === 'string'
+                    ? entry.metadata.scope
+                    : '',
+                }}
+                style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
+              />
+            ))}
         </div>
       )}
     </div>

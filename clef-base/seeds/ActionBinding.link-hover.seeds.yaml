@@ -1,0 +1,21 @@
+# ActionBinding seeds — link-hover-jump action (PP-link-hover)
+# Wires the jump button on the link-hover-preview popover to Navigator/navigate.
+# When the user clicks "Open" in the popover the LinkHoverPreview adapter
+# invokes ActionBinding/invoke with binding "link-hover-jump" and a context
+# containing { targetNodeId }. This binding resolves that event to Navigator/navigate
+# so the host application navigates to the target ContentNode's destination.
+
+concept: ActionBinding
+action: bind
+entries:
+  - name: link-hover-jump
+    binding: link-hover-jump
+    target: "Navigator/navigate"
+    parameterMap: '{"destination":"context.targetNodeId","destinationType":"content-node"}'
+    executionPolicy: "optimistic"
+    toolbar_command: false
+    slash_command: false
+    context_menu: false
+    section: "Navigation"
+    label: "Open Linked Page"
+    icon: "arrow-up-right"
