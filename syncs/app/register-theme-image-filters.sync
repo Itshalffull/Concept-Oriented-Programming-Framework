@@ -1,0 +1,84 @@
+# Per-theme image-filter preset registration syncs (MAG-753).
+# Each sync fires when ThemeRealizer/realize completes for a specific theme and
+# registers the associated ImageFilter preset into the RenderTransform pipeline,
+# scoped to [data-media-role="image"] elements.
+
+sync RegisterLightThemeImageFilter [eager]
+  purpose: "Register the identity (no-op) image-filter preset for the light theme so images render unmodified under the default theme."
+when {
+  ThemeRealizer/realize: [ theme: ?theme ]
+    => ok(realizer: ?realizer; output: ?output; manifest: ?manifest)
+}
+where {
+  filter(?theme = "light")
+}
+then {
+  RenderTransform/register: [
+    name: "image-filter-light";
+    kind: "image-filter";
+    spec: "{\"selector\":\"[data-media-role=\\\"image\\\"]\",\"filter\":\"none\",\"preset\":\"identity\"}" ]
+}
+
+sync RegisterDarkThemeImageFilter [eager]
+  purpose: "Register a slight-desaturation and contrast-boost image-filter preset for the dark theme so images remain comfortable against dark backgrounds."
+when {
+  ThemeRealizer/realize: [ theme: ?theme ]
+    => ok(realizer: ?realizer; output: ?output; manifest: ?manifest)
+}
+where {
+  filter(?theme = "dark")
+}
+then {
+  RenderTransform/register: [
+    name: "image-filter-dark";
+    kind: "image-filter";
+    spec: "{\"selector\":\"[data-media-role=\\\"image\\\"]\",\"filter\":\"saturate(0.75) contrast(1.15)\",\"preset\":\"dark-boost\"}" ]
+}
+
+sync RegisterHighContrastThemeImageFilter [eager]
+  purpose: "Register a saturation-boost and maximum-contrast image-filter preset for the high-contrast theme to ensure images meet WCAG enhanced contrast requirements."
+when {
+  ThemeRealizer/realize: [ theme: ?theme ]
+    => ok(realizer: ?realizer; output: ?output; manifest: ?manifest)
+}
+where {
+  filter(?theme = "high-contrast")
+}
+then {
+  RenderTransform/register: [
+    name: "image-filter-high-contrast";
+    kind: "image-filter";
+    spec: "{\"selector\":\"[data-media-role=\\\"image\\\"]\",\"filter\":\"saturate(1.8) contrast(2.0)\",\"preset\":\"high-contrast-max\"}" ]
+}
+
+sync RegisterEditorialThemeImageFilter [eager]
+  purpose: "Register a subtle desaturation and warm-shift image-filter preset for the editorial theme so images complement the editorial colour palette."
+when {
+  ThemeRealizer/realize: [ theme: ?theme ]
+    => ok(realizer: ?realizer; output: ?output; manifest: ?manifest)
+}
+where {
+  filter(?theme = "editorial")
+}
+then {
+  RenderTransform/register: [
+    name: "image-filter-editorial";
+    kind: "image-filter";
+    spec: "{\"selector\":\"[data-media-role=\\\"image\\\"]\",\"filter\":\"saturate(0.85) sepia(0.15)\",\"preset\":\"editorial-warm\"}" ]
+}
+
+sync RegisterSignalThemeImageFilter [eager]
+  purpose: "Register a high-saturation and vibrance-boost image-filter preset for the signal theme so images appear vivid and attention-catching."
+when {
+  ThemeRealizer/realize: [ theme: ?theme ]
+    => ok(realizer: ?realizer; output: ?output; manifest: ?manifest)
+}
+where {
+  filter(?theme = "signal")
+}
+then {
+  RenderTransform/register: [
+    name: "image-filter-signal";
+    kind: "image-filter";
+    spec: "{\"selector\":\"[data-media-role=\\\"image\\\"]\",\"filter\":\"saturate(1.6) brightness(1.05) contrast(1.1)\",\"preset\":\"signal-vibrant\"}" ]
+}

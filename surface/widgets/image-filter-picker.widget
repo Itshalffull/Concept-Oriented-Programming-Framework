@@ -1,0 +1,303 @@
+@version(1)
+widget image-filter-picker {
+
+  purpose {
+    Per-image filter override picker invoked from the image-block EditSurface
+    toolbar. Displays a row of preset thumbnails and optional custom sliders
+    for brightness, contrast, and saturation. The user selects a preset or
+    adjusts the sliders, then confirms or resets to the theme default. On
+    confirm the chosen filter identifier is stored as a ContentNode metadata
+    override via Property/set, scoped to the image block's assetId.
+  }
+
+  anatomy {
+    root:             container     { Top-level picker panel; carries data-state and data-asset-id }
+    previewImage:     presentation  { Live preview of the asset with the currently active filter applied }
+    filterList:       container     { Horizontal scroll row of preset filter option thumbnails }
+    filterOption:     action        { Individual preset thumbnail with label; one per available preset }
+    customSliders:    container     { Collapsible panel containing the manual adjustment sliders }
+    brightnessSlider: input         { Range input controlling brightness adjustment (0.5–2.0, default 1.0) }
+    contrastSlider:   input         { Range input controlling contrast adjustment (0.5–2.0, default 1.0) }
+    saturationSlider: input         { Range input controlling saturation adjustment (0.0–2.0, default 1.0) }
+    confirmButton:    action        { Applies the selected filter as a per-image override and closes the picker }
+    resetButton:      action        { Reverts to the theme-default preset and closes the picker }
+    cancelButton:     action        { Discards all changes and closes the picker without persisting }
+  }
+
+  states {
+    edit {
+      idle [initial] {
+        on SELECT_FILTER  -> filter-selected;
+        on OPEN_SLIDERS   -> customizing;
+      }
+
+      filter-selected {
+        on SELECT_FILTER  -> filter-selected;
+        on OPEN_SLIDERS   -> customizing;
+        on CONFIRM        -> idle;
+        on RESET          -> idle;
+        on CANCEL         -> idle;
+        entry [applyPreviewFilter];
+      }
+
+      customizing {
+        on CLOSE_SLIDERS  -> filter-selected;
+        on ADJUST         -> customizing;
+        on CONFIRM        -> idle;
+        on RESET          -> idle;
+        on CANCEL         -> idle;
+        entry [openSlidersPanel];
+        exit [closeSlidersPanel];
+      }
+    }
+  }
+
+  accessibility {
+    role: dialog;
+    modal: false;
+    keyboard {
+      Escape -> CANCEL;
+      Enter  -> CONFIRM;
+    }
+    focus {
+      trap: false;
+      initial: filterList;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "dialog";
+        aria-label: "Image filter picker";
+        aria-describedby: previewImage;
+      };
+      previewImage -> {
+        role: "img";
+        aria-label: "Filter preview";
+        aria-live: "polite";
+      };
+      filterList -> {
+        role: "listbox";
+        aria-label: "Filter presets";
+        aria-orientation: "horizontal";
+      };
+      filterOption -> {
+        role: "option";
+        aria-selected: if state.edit == "filter-selected" then "true" else "false";
+      };
+      customSliders -> {
+        role: "group";
+        aria-label: "Custom adjustments";
+        aria-expanded: if state.edit == "customizing" then "true" else "false";
+      };
+      brightnessSlider -> {
+        role: "slider";
+        aria-label: "Brightness";
+        aria-valuemin: "0.5";
+        aria-valuemax: "2.0";
+        aria-valuenow: ?brightnessValue;
+      };
+      contrastSlider -> {
+        role: "slider";
+        aria-label: "Contrast";
+        aria-valuemin: "0.5";
+        aria-valuemax: "2.0";
+        aria-valuenow: ?contrastValue;
+      };
+      saturationSlider -> {
+        role: "slider";
+        aria-label: "Saturation";
+        aria-valuemin: "0.0";
+        aria-valuemax: "2.0";
+        aria-valuenow: ?saturationValue;
+      };
+      confirmButton -> {
+        role: "button";
+        aria-label: "Apply filter";
+      };
+      resetButton -> {
+        role: "button";
+        aria-label: "Reset to theme default";
+      };
+      cancelButton -> {
+        role: "button";
+        aria-label: "Cancel";
+      };
+    }
+  }
+
+  props {
+    assetId: String
+    currentFilter: option String
+    onComplete: String
+    brightnessValue: String = "1.0"
+    contrastValue:   String = "1.0"
+    saturationValue: String = "1.0"
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.edit;
+      data-asset-id: ?assetId;
+    }
+
+    previewImage -> {
+      data-part: "preview-image";
+      data-asset-id: ?assetId;
+    }
+
+    filterList -> {
+      data-part: "filter-list";
+      role: "listbox";
+    }
+
+    filterOption -> {
+      data-part: "filter-option";
+      role: "option";
+      onClick: send(SELECT_FILTER);
+      onKeyDown-Enter: send(SELECT_FILTER);
+      onKeyDown-Space: send(SELECT_FILTER);
+    }
+
+    customSliders -> {
+      data-part: "custom-sliders";
+      hidden: if state.edit == "customizing" then false else true;
+      aria-expanded: if state.edit == "customizing" then "true" else "false";
+    }
+
+    brightnessSlider -> {
+      data-part: "brightness-slider";
+      type: "range";
+      min: "0.5";
+      max: "2.0";
+      step: "0.05";
+      value: ?brightnessValue;
+      onInput: send(ADJUST);
+    }
+
+    contrastSlider -> {
+      data-part: "contrast-slider";
+      type: "range";
+      min: "0.5";
+      max: "2.0";
+      step: "0.05";
+      value: ?contrastValue;
+      onInput: send(ADJUST);
+    }
+
+    saturationSlider -> {
+      data-part: "saturation-slider";
+      type: "range";
+      min: "0.0";
+      max: "2.0";
+      step: "0.05";
+      value: ?saturationValue;
+      onInput: send(ADJUST);
+    }
+
+    confirmButton -> {
+      data-part: "confirm-button";
+      onClick: send(CONFIRM);
+      disabled: if state.edit == "idle" then true else false;
+    }
+
+    resetButton -> {
+      data-part: "reset-button";
+      onClick: send(RESET);
+    }
+
+    cancelButton -> {
+      data-part: "cancel-button";
+      onClick: send(CANCEL);
+    }
+  }
+
+  affordance {
+    serves: image-filter-override;
+    specificity: 10;
+    when schema = "image";
+    bind {
+      assetId: assetId;
+      currentFilter: currentFilter;
+      onComplete: onComplete;
+    }
+  }
+
+  invariant {
+    example "initial state is idle": {
+      state.edit = "idle"
+    }
+
+    example "SELECT_FILTER transitions idle to filter-selected": {
+      after transition(from: "idle", event: "SELECT_FILTER") -> ok
+      then state.edit = "filter-selected"
+    }
+
+    example "SELECT_FILTER in filter-selected stays in filter-selected": {
+      after transition(from: "filter-selected", event: "SELECT_FILTER") -> ok
+      then state.edit = "filter-selected"
+    }
+
+    example "OPEN_SLIDERS from filter-selected transitions to customizing": {
+      after transition(from: "filter-selected", event: "OPEN_SLIDERS") -> ok
+      then state.edit = "customizing"
+    }
+
+    example "OPEN_SLIDERS from idle transitions to customizing": {
+      after transition(from: "idle", event: "OPEN_SLIDERS") -> ok
+      then state.edit = "customizing"
+    }
+
+    example "CLOSE_SLIDERS from customizing transitions to filter-selected": {
+      after transition(from: "customizing", event: "CLOSE_SLIDERS") -> ok
+      then state.edit = "filter-selected"
+    }
+
+    example "CONFIRM from filter-selected returns to idle": {
+      after transition(from: "filter-selected", event: "CONFIRM") -> ok
+      then state.edit = "idle"
+    }
+
+    example "CONFIRM from customizing returns to idle": {
+      after transition(from: "customizing", event: "CONFIRM") -> ok
+      then state.edit = "idle"
+    }
+
+    example "CANCEL from filter-selected returns to idle": {
+      after transition(from: "filter-selected", event: "CANCEL") -> ok
+      then state.edit = "idle"
+    }
+
+    example "RESET from customizing returns to idle": {
+      after transition(from: "customizing", event: "RESET") -> ok
+      then state.edit = "idle"
+    }
+
+    forall "all edit states are reachable": {
+      given s in editStates
+      then s.reachable = true
+    }
+
+    always "confirmButton disabled when no filter selected": {
+      state.edit != "idle" or confirmButton.disabled = true
+    }
+
+    always "customSliders hidden unless in customizing state": {
+      state.edit != "customizing" or customSliders.hidden = false
+    }
+
+    never "confirmButton and cancelButton both disabled simultaneously": {
+      confirmButton.disabled = true and cancelButton.disabled = true
+    }
+
+    never "customSliders visible and filterList hidden simultaneously": {
+      customSliders.hidden = false and filterList.hidden = true
+    }
+
+    "assetId must be non-empty when picker is mounted";
+    "previewImage must reflect the currently active filter in real time";
+    "CONFIRM must invoke onComplete callback with the chosen filter identifier";
+    "RESET must clear any override and invoke onComplete with the theme-default preset identifier";
+  }
+
+}

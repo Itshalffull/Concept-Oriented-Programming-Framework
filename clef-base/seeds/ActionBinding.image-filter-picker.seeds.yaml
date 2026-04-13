@@ -1,0 +1,31 @@
+# ActionBinding seeds — per-image filter override picker (MAG-753).
+# image-filter-picker-open: opens the image-filter-picker widget from the
+# image-block EditSurface toolbar. On confirm the chosen filter preset
+# identifier is stored as a metadata override on the ContentNode via
+# Property/set, keyed as "imageFilter" on the focused block's assetId.
+#
+# API gap note:
+#   Property/set is used to persist the override because ContentNode
+#   metadata overrides are stored as named properties on the entity.
+#   The parameterMap forwards context.selectedFilter (resolved from the
+#   image-filter-picker widget's onComplete callback) as the property value.
+
+concept: ActionBinding
+action: bind
+entries:
+  # Open the image-filter-picker widget for the currently focused image block.
+  # On picker completion, stores the selected filter preset as a Property
+  # override on the ContentNode, keyed "imageFilter", scoped to the block's
+  # assetId so the per-image choice survives theme changes.
+  - name: image-filter-picker-open
+    binding: image-filter-picker-open
+    target: "Property/set"
+    parameterMap: '{"entity":"context.focusedBlockId","key":"imageFilter","value":"context.selectedFilter"}'
+    executionPolicy: "pessimistic"
+    toolbar_command: true
+    slash_command: false
+    context_menu: false
+    section: "Image"
+    label: "Filter"
+    icon: "sliders"
+    picker_ref: "image-filter-picker"
