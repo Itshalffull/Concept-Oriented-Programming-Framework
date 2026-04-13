@@ -1,0 +1,37 @@
+# ComponentMapping seeds — form-field-binding-picker-block (CAP-04).
+# Wires the binding-picker form-field block to its slot sources.
+# Shipped at commit f707495a (ConceptActionPicker concept + widget).
+# Schema field type is String — trigger stores "Concept/action" as a string.
+# display_mode is "block-editor" (block editor context, same as all form-field blocks).
+
+concept: ComponentMapping
+action: create
+entries:
+  # binding-picker field block — wraps ConceptActionPicker for use in FormBuilder
+  - name: form-field-binding-picker-block
+    widget_id: form-field-binding-picker-block
+    schema: form-field-binding-picker
+    display_mode: block-editor
+
+---
+# Bind slots for form-field-binding-picker-block
+concept: ComponentMapping
+action: bindSlot
+entries:
+  # form-field-binding-picker-block — label + placeholder + required + filter
+  - mapping: form-field-binding-picker-block
+    slot_name: label
+    sources: ["entity_field:label"]
+  - mapping: form-field-binding-picker-block
+    slot_name: placeholder
+    sources: ["entity_field:placeholder"]
+  - mapping: form-field-binding-picker-block
+    slot_name: required
+    sources: ["entity_field:required"]
+  # filter controls which concept actions are shown:
+  #   "all" (default) — all registered actions
+  #   "mutating"      — non-query actions only (valid automation triggers)
+  #   "query"         — read-only actions only
+  - mapping: form-field-binding-picker-block
+    slot_name: filter
+    sources: ["entity_field:filter"]

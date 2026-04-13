@@ -264,17 +264,15 @@ entries:
   # "rule" (storage key / ID) is intentionally excluded: it is read-only identity,
   # not editable in a detail pane.
   #
-  # trigger: String field in the concept, but values are dynamic concept-action
-  # references (e.g. "ContentNode/create", "Workflow/transition") chosen at author
-  # time from whatever concepts are installed. A fixed-enum form-field-select-block
-  # would be too restrictive. Current placeholder is form-field-text-block.
-  # FUTURE WIDGET NEEDED: form-field-binding-picker-block — see MISSING_WIDGETS.md.
+  # trigger: form-field-binding-picker-block (CAP-04, shipped at f707495a).
+  #   filter:"mutating" restricts to non-query actions — the correct set for
+  #   automation trigger points. Emits a "Concept/action" string.
   #
   # conditions: JSON array of condition objects (e.g. field-equals, schema-matches).
-  # Placeholder: form-field-json-block (already in MISSING_WIDGETS.md batch 1).
+  # Placeholder: form-field-json-block (MISSING_WIDGETS.md batch 1, Phase D).
   #
   # actions: JSON array of action step objects (type + params).
-  # Placeholder: form-field-json-block (same widget as conditions).
+  # Placeholder: form-field-json-block (MISSING_WIDGETS.md, Phase D).
   #
   # enabled: Bool → form-field-checkbox-block (ships in the 6 baseline blocks).
   - form: form-automation-rule-edit
@@ -282,7 +280,7 @@ entries:
     steps: null
     conditions: null
     defaults: null
-    overrides: '{"label":{"widget":"form-field-text-block","label":"Name","placeholder":"e.g. Notify on publish","required":true},"description":{"widget":"form-field-textarea-block","label":"Description","placeholder":"What does this rule do?","required":false},"trigger":{"widget":"form-field-text-block","label":"Trigger Event","placeholder":"e.g. ContentNode/create","required":true,"note":"PLACEHOLDER — replace with form-field-binding-picker-block when available"},"conditions":{"widget":"form-field-json-block","label":"Conditions (JSON)","placeholder":"[]","required":false,"note":"PLACEHOLDER — replace with form-field-condition-builder-block when available"},"actions":{"widget":"form-field-json-block","label":"Actions (JSON)","placeholder":"[]","required":true,"note":"PLACEHOLDER — replace with form-field-action-builder-block when available"},"enabled":{"widget":"form-field-checkbox-block","label":"Enabled","defaultChecked":false,"required":false}}'
+    overrides: '{"label":{"widget":"form-field-text-block","label":"Name","placeholder":"e.g. Notify on publish","required":true},"description":{"widget":"form-field-textarea-block","label":"Description","placeholder":"What does this rule do?","required":false},"trigger":{"widget":"form-field-binding-picker-block","label":"Trigger Event","placeholder":"Select a concept action...","required":true,"filter":"mutating"},"conditions":{"widget":"form-field-json-block","label":"Conditions (JSON)","placeholder":"[]","required":false,"note":"PLACEHOLDER — replace with form-field-condition-builder-block when available"},"actions":{"widget":"form-field-json-block","label":"Actions (JSON)","placeholder":"[]","required":true,"note":"PLACEHOLDER — replace with form-field-action-builder-block when available"},"enabled":{"widget":"form-field-checkbox-block","label":"Enabled","defaultChecked":false,"required":false}}'
 
   # ─────────────────────────────────────────────────────────────────────────────
   # Batch 2 — Diagramming schemas

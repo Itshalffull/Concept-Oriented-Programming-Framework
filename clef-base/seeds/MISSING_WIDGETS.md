@@ -88,28 +88,14 @@ replace `MISSING_WIDGET` placeholders with the real block widget IDs and verifie
 
 ## Discovered in Phase C — Continuation (AutomationRule edit form)
 
-- **form-field-binding-picker-block** (needed for AutomationRule.trigger):
-  Concept-action binding picker. The trigger field on an AutomationRule is a
-  dynamic string reference to a concept action installed in the current
-  workspace (e.g. `ContentNode/create`, `Workflow/transition`). Unlike a
-  static enum, the available options depend on which concepts are registered
-  in the kernel at runtime.
-
-  Architecture: **a ViewShell-backed picker** (same as form-field-entity-picker-block)
-  but querying `ScoreApi/listConcepts` + flattening to `concept/action` pairs
-  rather than ContentNode rows. The dropdown rows show concept name, action
-  name, and a short purpose snippet. Emits a `"Concept/action"` string.
-
-  Optional configuration:
-  - `filterKind: "trigger"` — limits to actions that are valid trigger points
-    (i.e. non-query, non-pure actions). Requires ScoreApi support for effect-based
-    filtering (post-Phase D).
-  - `allowFreeText: true` — fall back to plain text entry for custom trigger IDs
-    not yet modelled as concepts.
-
-  Until this widget ships, use `form-field-text-block` as placeholder with a
-  note in the overrides config.
-  Closest existing placeholder: `form-field-text-block`.
+- **form-field-binding-picker-block** — SHIPPED (CAP-01/CAP-04, commit f707495a).
+  Widget spec: `surface/form-field-binding-picker-block.widget`.
+  ComponentMapping seed: `clef-base/seeds/ComponentMapping.form-field.binding-picker.seeds.yaml`.
+  The AutomationRule edit FormSpec (`form-automation-rule-edit`) has been updated to use
+  `form-field-binding-picker-block` for the trigger field with `filter: "mutating"`.
+  The `filter` prop accepts `"all"` | `"mutating"` | `"query"`, matching the
+  `concept-action-picker` widget prop of the same name. ~~TODO on AutomationRule FormSpec
+  seeds related to binding-picker — resolved.~~
 
 - **form-field-condition-builder-block** (needed for AutomationRule.conditions):
   Visual condition builder for the AutomationRule conditions JSON array. Each

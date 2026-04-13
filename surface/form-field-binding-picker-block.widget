@@ -1,0 +1,251 @@
+@version(1)
+widget form-field-binding-picker-block {
+
+  purpose {
+    Block-editor form-field wrapper that embeds the ConceptActionPicker widget
+    inside a standard form-field chrome (label, required indicator, validation
+    message, help text). Appears as a block node in the FormBuilderEditor
+    Outline tree when a form author drags a "Binding Picker" field onto a form.
+    Stores the selected value as a "Concept/action" string (e.g. "ContentNode/create").
+    The filter prop restricts which concept actions are selectable: "all" shows
+    every registered action, "mutating" limits to non-query actions (the correct
+    set for automation triggers and process step bindings), and "query" limits to
+    read-only actions.
+  }
+
+  anatomy {
+    root:              container    { Outer block wrapper; carries data-state and data-block-type }
+    label:             text         { Visible field label rendered above the picker }
+    requiredIndicator: presentation { Asterisk marking the field as required }
+    pickerContainer:   container    { Hosts the embedded concept-action-picker widget }
+    picker:            interactive  { The concept-action-picker instance }
+    helpText:          text         { Secondary descriptive hint shown below the picker }
+    validationMessage: text         { Inline validation error message }
+    validationIcon:    presentation { Icon reinforcing the validation state }
+  }
+
+  states {
+    idle [initial] {
+      on PICKER_OPEN    -> picking;
+      on DISABLE        -> disabled;
+    }
+
+    picking {
+      on ACTION_SELECTED -> filled;
+      on PICKER_CLOSE    -> idle;
+      on DISABLE         -> disabled;
+    }
+
+    filled {
+      on PICKER_OPEN  -> picking;
+      on CLEAR        -> idle;
+      on VALIDATE     -> valid;
+      on INVALID      -> invalid;
+      on DISABLE      -> disabled;
+    }
+
+    valid {
+      on PICKER_OPEN -> picking;
+      on CLEAR       -> idle;
+      on DISABLE     -> disabled;
+    }
+
+    invalid {
+      on PICKER_OPEN -> picking;
+      on CLEAR       -> idle;
+      on DISABLE     -> disabled;
+    }
+
+    disabled {
+      on ENABLE -> idle;
+    }
+  }
+
+  accessibility {
+    role: group;
+    keyboard {
+      Tab    -> FOCUS_NEXT;
+      Escape -> PICKER_CLOSE;
+    }
+    focus {
+      trap: false;
+      initial: picker;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: self.fieldLabel;
+        data-state: state;
+        data-block-type: "form-field-binding-picker-block";
+        data-required: if ?required then "true" else "false";
+        data-disabled: if state == "disabled" then "true" else "false";
+      };
+      label -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      requiredIndicator -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      picker -> {
+        aria-required: if ?required then "true" else "false";
+        aria-invalid: if state == "invalid" then "true" else "false";
+        aria-describedby: concat(self.fieldId, "-help ", self.fieldId, "-validation");
+        aria-disabled: if state == "disabled" then "true" else "false";
+      };
+      helpText -> {
+        role: "note";
+        id: concat(self.fieldId, "-help");
+        aria-live: "polite";
+      };
+      validationMessage -> {
+        role: "alert";
+        id: concat(self.fieldId, "-validation");
+        aria-live: "assertive";
+        aria-atomic: "true";
+      };
+      validationIcon -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    label: option String
+    placeholder: option String
+    required: Bool = false
+    filter: "mutating" | "query" | "all" = "all"
+    value: option String
+    onChange: option String
+    helpText: option String
+    disabled: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-block-type: "form-field-binding-picker-block";
+      data-required: if ?required then "true" else "false";
+      data-disabled: if state == "disabled" then "true" else "false";
+      data-filled: if state == "filled" or state == "valid" or state == "invalid" then "true" else "false";
+    }
+
+    label -> {
+      data-part: "label";
+      hidden: if ?label == "" then true else false;
+    }
+
+    requiredIndicator -> {
+      data-part: "required-indicator";
+      hidden: if not ?required then true else false;
+    }
+
+    pickerContainer -> {
+      data-part: "picker-container";
+    }
+
+    picker -> {
+      data-part: "picker";
+      data-widget: "concept-action-picker";
+      value: ?value;
+      filter: ?filter;
+      placeholder: if ?placeholder then ?placeholder else "Select a concept action...";
+      disabled: if ?disabled or state == "disabled" then true else false;
+      onChange: send(ACTION_SELECTED, { value: self.value });
+      onOpen: send(PICKER_OPEN);
+      onClose: send(PICKER_CLOSE);
+    }
+
+    helpText -> {
+      data-part: "help-text";
+      id: concat(self.fieldId, "-help");
+      hidden: if ?helpText == "" then true else false;
+    }
+
+    validationMessage -> {
+      data-part: "validation-message";
+      id: concat(self.fieldId, "-validation");
+      data-valid: if state == "valid" then "true" else "false";
+      hidden: if state != "invalid" then true else false;
+    }
+
+    validationIcon -> {
+      data-part: "validation-icon";
+      data-icon: if state == "valid" then "check" else "error";
+      hidden: if state != "valid" and state != "invalid" then true else false;
+    }
+  }
+
+  invariant {
+    example "selecting an action transitions to filled": {
+      after send(PICKER_OPEN) -> ok
+      then send(ACTION_SELECTED, { value: "ContentNode/create" }) -> ok
+      then root -> { data-state: "filled"; data-filled: "true" }
+    }
+
+    example "clear returns to idle from filled": {
+      after send(PICKER_OPEN) -> ok
+      then send(ACTION_SELECTED, { value: "ContentNode/create" }) -> ok
+      then send(CLEAR) -> ok
+      then root -> { data-state: "idle"; data-filled: "false" }
+    }
+
+    example "disabled state propagates to picker": {
+      after send(DISABLE) -> ok
+      then root -> { data-state: "disabled"; data-disabled: "true" }
+      and picker -> { disabled: true }
+    }
+
+    example "required indicator hidden when required is false": {
+      then requiredIndicator -> { hidden: true }
+    }
+
+    example "required indicator visible when required is true": {
+      then root -> { data-required: "true" }
+      and requiredIndicator -> { hidden: false }
+    }
+
+    example "validation message hidden when state is not invalid": {
+      then validationMessage -> { hidden: true }
+    }
+
+    example "help text hidden when helpText prop is empty": {
+      then helpText -> { hidden: true }
+    }
+
+    always "data-state on root reflects FSM": {
+      forall s in states:
+        root -> { data-state: s.name }
+    }
+
+    always "picker aria-invalid matches invalid state": {
+      if state == "invalid" then picker -> { aria-invalid: "true" }
+      and if state != "invalid" then picker -> { aria-invalid: "false" }
+    }
+
+    always "picker aria-required matches required prop": {
+      if ?required then picker -> { aria-required: "true" }
+      and if not ?required then picker -> { aria-required: "false" }
+    }
+
+    always "filter prop flows through to embedded picker": {
+      picker -> { filter: ?filter }
+    }
+
+    never "picker enabled when state is disabled": {
+      state == "disabled" and picker -> { disabled: false }
+    }
+
+    never "required indicator visible when required is false": {
+      not ?required and requiredIndicator -> { hidden: false }
+    }
+
+    "value emitted by onChange is always a 'Concept/action' string or empty string on clear";
+    "filter prop restricts visible actions in the embedded concept-action-picker: mutating for automation triggers, query for read-only lookups, all for unrestricted picks";
+    "the picker's onOpen/onClose events drive the picking FSM state so the block can reflect open/closed picker state in data attributes";
+  }
+}
