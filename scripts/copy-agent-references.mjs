@@ -27,7 +27,8 @@ const AGENT_REFERENCES = {
   'seed-data':                      ['creation-routing.md'],
   'clef-base':                      ['creation-routing.md'],
   'concept-scaffold-gen':           ['creation-routing.md'],
-  'content-type-scaffold-gen':      ['creation-routing.md'],
+  // content-type-scaffold-gen has no Claude Code agent .md file (it's
+  // exposed only as an MCP tool); skip until/unless an agent .md is added.
   // Surface agents author bespoke editor widgets (ViewEditor, SchemaEditor,
   // FlowBuilder, FormBuilder, UserSyncEditor) which MUST implement the
   // mode + context props contract per CUX-02 to participate in Tier 1a.

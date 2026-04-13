@@ -45,3 +45,4 @@ The default style is **functional** — each action returns a StorageProgram
 - **ARIA from spec** — all accessibility declarations must appear as aria() instructions
 - **Connect bindings as bind()** — every connect entry becomes a bind() instruction
 - **WidgetComponentTest integration** — after building the handler, generate component tests using the WidgetComponentTest concept to extract testable assertions from the widget spec
+- **Create/edit mode prop wiring** — when the widget spec declares it serves as an InteractionSpec.create_surface, the handler must propagate `mode` + `context` props through to the framework target. In create mode, the handler initializes empty state instead of fetching by entity id; the save action dispatches the concept's create/define action, not update. Read `.claude/agents/surface-widget-handler-gen/creation-routing.md` for the dispatcher contract and how the 5 shipped editors implement this pattern.

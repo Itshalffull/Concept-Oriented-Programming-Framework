@@ -77,3 +77,4 @@ Key patterns:
 - **PluginRegistry for extensibility** — any provider pattern must use PluginRegistry dispatch
 - **Entity lifecycle is free** — ContentStorage/save automatically triggers cache/search/alias/provenance via syncs
 - **Derived concept parser constraints** — surface queries MUST be single-line (no newline before ->). Principle blocks MUST use after/then/and syntax, NOT prose-style quoted strings
+- **Creation routing** — ANY work touching create flows (sidebar create buttons, destination wiring, new entity types, FormSpec authoring, InteractionSpec seeds) MUST first read `.claude/agents/clef-base/creation-routing.md`. It documents the 4-tier dispatcher (InteractionSpec.create_surface → Schema.displayWidget Property → FormSpec → primitive fallback) and tells you which tier applies. Local copy is regen-synced from `docs/agent-references/creation-routing.md` via `scripts/copy-agent-references.mjs`.

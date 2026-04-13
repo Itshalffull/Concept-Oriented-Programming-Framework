@@ -9635,6 +9635,7 @@ agent-annotations:
       - "ALWAYS use $fixture.field output references in reader fixture inputs instead of hardcoded placeholder IDs — e.g., `fixture get_ok { id: $register_ok.id } after register_ok` not `fixture get_ok { id: \"entity-1\" } after register_ok`"
       - "CRITICAL: Error-case fixtures MUST include `-> variant` annotation. A fixture named empty_name, invalid_input, duplicate_email, missing_id MUST end with `-> error` or the specific error variant. Omitting the arrow defaults to `-> ok`, generating conformance tests that expect success — the opposite of what's intended. This is the #1 most common fixture authoring mistake."
       - "**Reversal declarations** — every mutating action needs a reversal declaration. `reversal: <actionName>` for actions reversed by another action in the same concept (e.g., `assign` reversed by `unassign`). `reversal: none` for irreversible actions (send notification, publish, external webhook). The integration test generator uses these to generate cleanup steps, and ActionBinding uses them to offer runtime undo. Omit only for obvious naming pairs (create/delete, add/remove, enable/disable, pin/unpin, subscribe/unsubscribe, etc. — see the 14 built-in pairs in IntegrationTestGen). Read-only actions (get/list/search/validate) never need a reversal."
+      - "**Creation routing for new entity-type concepts** — if the new concept defines a user-creatable entity that needs a sidebar destination, the create flow must reach Tier 1 of the dispatcher (bespoke editor or content-native block editor) rather than falling through to the 3-type primitive form. Read `.claude/agents/concept-scaffold-gen/creation-routing.md` for the 4-tier matrix to decide whether the new concept needs an InteractionSpec.create_surface seed (Tier 1a), a Schema.displayWidget Property (Tier 1b), or a FormSpec seed (Tier 2)."
 
   SyncScaffoldGen:
     model: sonnet
@@ -9778,6 +9779,7 @@ agent-annotations:
       - "**data-state on root** — always bind data-state to the FSM state on the root part for test selectors"
       - "**Props with defaults** — every prop must have a sensible default value"
       - "**No framework references** — widget specs are framework-agnostic. No React, Vue, or Svelte in specs"
+      - "**Bespoke editor widgets MUST implement the create/edit mode contract** — when authoring a widget intended to serve as an InteractionSpec.create_surface (e.g. ViewEditor, SchemaEditor, FlowBuilder, FormBuilder, UserSyncEditor), it MUST accept `mode: 'create' | 'edit'` (default `'edit'`) and `context: option <entity>` props. Read `.claude/agents/surface-component-scaffold-gen/creation-routing.md` for the full 4-tier dispatcher pattern, the 5 shipped editors as references, and the create-mode empty-state expectations per editor type."
 
   SurfaceWidgetHandlerGen:
     model: sonnet
@@ -9811,6 +9813,7 @@ agent-annotations:
       - "**ARIA from spec** — all accessibility declarations must appear as aria() instructions"
       - "**Connect bindings as bind()** — every connect entry becomes a bind() instruction"
       - "**WidgetComponentTest integration** — after building the handler, generate component tests using the WidgetComponentTest concept to extract testable assertions from the widget spec"
+      - "**Create/edit mode prop wiring** — when the widget spec declares it serves as an InteractionSpec.create_surface, the handler must propagate `mode` + `context` props through to the framework target. In create mode, the handler initializes empty state instead of fetching by entity id; the save action dispatches the concept's create/define action, not update. Read `.claude/agents/surface-widget-handler-gen/creation-routing.md` for the dispatcher contract and how the 5 shipped editors implement this pattern."
 
   ContentTypeScaffoldGen:
     model: sonnet
@@ -9845,6 +9848,7 @@ agent-annotations:
       - "**compilationProvider requires a PluginRegistry provider** — a routing sync must exist for the provider"
       - "**displayWidget must exist** — ensure a matching widget spec exists with the right affordance"
       - "**Reuse before rebuilding** — check if existing schemas in the classification suite already cover the need"
+      - "**ALWAYS Property/set displayWidget — activates Tier 1b create routing** — a content-native schema without a `displayWidget` Property falls through to FormSpec or primitive form on Create rather than mounting the block editor with template-scaffolded blocks. This was the gap that required CUX-07 to retroactively patch 7 schemas. Read `.claude/agents/content-type-scaffold-gen/creation-routing.md` for the full 4-tier dispatcher and which Property keys (childSchema, defaultTemplate, compilationProvider, displayWidget) must be set together."
 
   ClefBase:
     model: sonnet
@@ -9910,6 +9914,7 @@ agent-annotations:
       - "**PluginRegistry for extensibility** — any provider pattern must use PluginRegistry dispatch"
       - "**Entity lifecycle is free** — ContentStorage/save automatically triggers cache/search/alias/provenance via syncs"
       - "**Derived concept parser constraints** — surface queries MUST be single-line (no newline before ->). Principle blocks MUST use after/then/and syntax, NOT prose-style quoted strings"
+      - "**Creation routing** — ANY work touching create flows (sidebar create buttons, destination wiring, new entity types, FormSpec authoring, InteractionSpec seeds) MUST first read `.claude/agents/clef-base/creation-routing.md`. It documents the 4-tier dispatcher (InteractionSpec.create_surface → Schema.displayWidget Property → FormSpec → primitive fallback) and tells you which tier applies. Local copy is regen-synced from `docs/agent-references/creation-routing.md` via `scripts/copy-agent-references.mjs`."
 
   InfrastructureCore:
     model: sonnet

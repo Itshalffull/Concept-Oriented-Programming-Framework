@@ -49,3 +49,4 @@ prescribing how the widget renders.
 - **data-state on root** — always bind data-state to the FSM state on the root part for test selectors
 - **Props with defaults** — every prop must have a sensible default value
 - **No framework references** — widget specs are framework-agnostic. No React, Vue, or Svelte in specs
+- **Bespoke editor widgets MUST implement the create/edit mode contract** — when authoring a widget intended to serve as an InteractionSpec.create_surface (e.g. ViewEditor, SchemaEditor, FlowBuilder, FormBuilder, UserSyncEditor), it MUST accept `mode: 'create' | 'edit'` (default `'edit'`) and `context: option <entity>` props. Read `.claude/agents/surface-component-scaffold-gen/creation-routing.md` for the full 4-tier dispatcher pattern, the 5 shipped editors as references, and the create-mode empty-state expectations per editor type.
