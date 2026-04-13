@@ -1,0 +1,207 @@
+@version(1)
+widget invocation-status {
+
+  purpose {
+    Feedback chip that tracks a single Invocation entity and reports its
+    lifecycle status (pending, ok, error) to the user. Observes the
+    Invocation concept via Connection/observe filtered by invocation id.
+    Presents an animated indicator while work is in flight, a success
+    indicator on completion, and an error panel with retry and dismiss
+    affordances on failure. Designed as a leaf widget — consumers place
+    it in their own layout. Framework-agnostic; adapters generate React,
+    Vue, Svelte, CLI, and MCP renderings from this spec.
+  }
+
+  anatomy {
+    root:         container    { Top-level status container, carries role=status and aria-live=polite }
+    indicator:    presentation { Visual status pill — spinner for pending, check for ok, X for error }
+    label:        text         { Human-readable description of the current invocation state }
+    progress:     presentation { Optional progress affordance shown during long-running pending states }
+    errorPanel:   container    { Collapsible panel showing error message and timestamp, visible only in error state }
+    retryButton:  action       { Button that triggers Invocation/retry, visible only in error state }
+    dismissButton: action      { Button that dismisses the notification, visible in ok and error states }
+    timestamp:    text         { Muted display of completion time (ok/error) or start time (pending) }
+  }
+
+  states {
+    idle [initial] {
+      on INVOKE_STARTED -> pending;
+    }
+
+    pending {
+      on INVOKE_OK    -> ok;
+      on INVOKE_ERROR -> error;
+      entry [startProgressAnimation];
+      exit  [stopProgressAnimation];
+    }
+
+    ok {
+      on AUTO_DISMISS -> idle;
+      on DISMISS      -> idle;
+      entry [scheduleAutoDismiss];
+      exit  [cancelAutoDismiss];
+    }
+
+    error {
+      on RETRY   -> pending;
+      on DISMISS -> idle;
+    }
+  }
+
+  accessibility {
+    role: status;
+    modal: false;
+
+    keyboard {
+      Enter  -> RETRY;
+      Escape -> DISMISS;
+    }
+
+    focus {
+      trap: false;
+      initial: retryButton;
+      roving: false;
+    }
+
+    aria {
+      root -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: "Invocation status";
+        aria-atomic: "true";
+      };
+      retryButton -> {
+        role: "button";
+        aria-label: "Retry failed operation";
+        aria-hidden: if state == "error" then "false" else "true";
+      };
+      dismissButton -> {
+        role: "button";
+        aria-label: "Dismiss notification";
+        aria-hidden: if state == "ok" or state == "error" then "false" else "true";
+      };
+      errorPanel -> {
+        role: "region";
+        aria-label: "Error details";
+        aria-expanded: if state == "error" then "true" else "false";
+      };
+      progress -> {
+        role: "progressbar";
+        aria-label: "Operation in progress";
+        aria-hidden: if state == "pending" then "false" else "true";
+      };
+    }
+  }
+
+  props {
+    invocationId: String
+    verbose: Bool = false
+    autoDismissMs: option Int
+    label: option String
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-invocation-id: ?invocationId;
+      data-status: state;
+      role: "status";
+      aria-live: "polite";
+      aria-atomic: "true";
+    }
+
+    indicator -> {
+      data-part: "indicator";
+      data-state: state;
+      hidden: if state == "idle" then true else false;
+    }
+
+    label -> {
+      data-part: "label";
+      text: if ?label then ?label else if state == "pending" then "Working..." else if state == "ok" then "Done" else if state == "error" then "Failed" else "";
+      hidden: if state == "idle" then true else false;
+    }
+
+    progress -> {
+      data-part: "progress";
+      aria-hidden: if state == "pending" then "false" else "true";
+      hidden: if state == "pending" then false else true;
+    }
+
+    errorPanel -> {
+      data-part: "error-panel";
+      aria-expanded: if state == "error" then "true" else "false";
+      hidden: if state == "error" then false else true;
+    }
+
+    retryButton -> {
+      data-part: "retry-button";
+      hidden: if state == "error" then false else true;
+      aria-hidden: if state == "error" then "false" else "true";
+      onClick: send(RETRY);
+    }
+
+    dismissButton -> {
+      data-part: "dismiss-button";
+      hidden: if state == "ok" or state == "error" then false else true;
+      aria-hidden: if state == "ok" or state == "error" then "false" else "true";
+      onClick: send(DISMISS);
+    }
+
+    timestamp -> {
+      data-part: "timestamp";
+      hidden: if state == "idle" then true else false;
+    }
+  }
+
+  invariant {
+    "root carries role=status and aria-live=polite in every state";
+    "retryButton is hidden in idle, pending, and ok states";
+    "dismissButton is hidden in idle and pending states";
+    "errorPanel is only expanded when state is error";
+    "indicator and errorPanel are mutually exclusive — at most one visually active per state";
+    "status is communicated via both icon and color, not color alone, satisfying WCAG 1.4.1";
+    "data-status on root always equals the FSM state name for automated test selectors";
+    "data-invocation-id on root equals the invocationId prop value";
+
+    always "retryButton aria-hidden true outside error state": {
+      state.name != "error"
+    }
+
+    always "errorPanel aria-expanded false outside error state": {
+      state.name != "error"
+    }
+
+    never "dismissButton visible while pending": {
+      state.name = "pending"
+    }
+
+    never "retryButton visible while idle": {
+      state.name = "idle"
+    }
+
+    never "retryButton visible while ok": {
+      state.name = "ok"
+    }
+
+    action retryButton {
+      requires: state = "error"
+      ensures ok: state = "pending"
+    }
+
+    action dismissButton {
+      requires: state = "ok"
+      ensures ok: state = "idle"
+    }
+  }
+
+  affordance {
+    serves: action;
+    specificity: 6;
+    bind {
+      invocationId: invocationId;
+    }
+  }
+
+}
