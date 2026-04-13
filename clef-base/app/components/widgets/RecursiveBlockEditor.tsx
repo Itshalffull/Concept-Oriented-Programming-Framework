@@ -61,6 +61,8 @@ import { LinkHoverPreview } from './LinkHoverPreview';
 import { ExportDialog } from './ExportDialog';
 import { VersionHistoryBrowser } from './VersionHistoryBrowser';
 import { KeyboardHelpModal } from './KeyboardHelpModal';
+import { SpanGutter } from './SpanGutter';
+import { useEntitySpans } from '../../../lib/use-entity-spans';
 
 // ---------------------------------------------------------------------------
 // Selection tracking — populated from document selectionchange events
@@ -87,6 +89,8 @@ export interface RecursiveBlockEditorProps {
   rootNodeId: string;
   editorFlavor: EditorFlavor;
   canEdit: boolean;
+  /** Called when the user clicks a span gutter indicator. Receives the span ID. */
+  onSpanClick?: (spanId: string) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -151,6 +155,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
   rootNodeId,
   editorFlavor,
   canEdit,
+  onSpanClick,
 }) => {
   const invoke = useKernelInvoke();
   const modalStack = useModalStack();
@@ -224,6 +229,12 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
   // dropPosition: 'before' | 'after' — where the drop zone line is shown.
   const [dragOverBlockId, setDragOverBlockId] = useState<string>('');
   const [dropPosition, setDropPosition] = useState<'before' | 'after'>('after');
+
+  // ------- span fragments — useEntitySpans (§4.5) --------
+  // Fetches all TextSpans for the root entity and resolves them to per-block
+  // fragment maps. Serialising children gives TextSpan/resolve the block IDs
+  // it needs to map span anchors to specific blocks.
+  const spanFragmentsByBlock = useEntitySpans(rootNodeId, JSON.stringify(children));
 
   // ------- stable refs --------
   const rootNodeIdRef = useRef(rootNodeId);
@@ -1554,22 +1565,32 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
                     </div>
                   )}
 
-                  <BlockSlot
-                    nodeId={child.id}
-                    schema={child.schema}
-                    displayMode={child.displayMode}
-                    resolvedWidget={resolved?.widgetId ?? 'block-slot'}
-                    canEdit={canEdit}
-                    isSelected={isSelected}
-                    onFocus={() => handleBlockFocus(child.id, child.schema)}
-                    onBlur={handleBlockBlur}
-                    onMutate={loadChildren}
-                    onBlockClick={(e) => handleBlockClick(child.id, e)}
-                    onSectionSelect={handleSectionSelect}
-                    rootNodeId={rootNodeId}
-                    editorFlavor={editorFlavor}
-                    decorationLayerEntries={decorationLayerEntries}
-                  />
+                  {/* Block row — span gutter + block content */}
+                  <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+                    {/* Span gutter indicators (§4.5) — 16px left margin strip */}
+                    <SpanGutter
+                      fragments={spanFragmentsByBlock.get(child.id) ?? []}
+                      onSpanClick={onSpanClick}
+                    />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <BlockSlot
+                        nodeId={child.id}
+                        schema={child.schema}
+                        displayMode={child.displayMode}
+                        resolvedWidget={resolved?.widgetId ?? 'block-slot'}
+                        canEdit={canEdit}
+                        isSelected={isSelected}
+                        onFocus={() => handleBlockFocus(child.id, child.schema)}
+                        onBlur={handleBlockBlur}
+                        onMutate={loadChildren}
+                        onBlockClick={(e) => handleBlockClick(child.id, e)}
+                        onSectionSelect={handleSectionSelect}
+                        rootNodeId={rootNodeId}
+                        editorFlavor={editorFlavor}
+                        decorationLayerEntries={decorationLayerEntries}
+                      />
+                    </div>
+                  </div>
 
                   {/* Drop zone indicator — below block during active drag-over */}
                   <BlockDropZoneIndicator active={isDragOver && dropPosition === 'after'} position="after" />
