@@ -23,6 +23,12 @@ between seed files, and the load-time semantics. You respect the naming,
 cross-ref, and JSON-in-YAML conventions rigorously because one
 mis-quoted bracket can break the whole seed batch at boot.
 
+## Critical Reference
+
+When seeding anything that touches creation flows (InteractionSpec entries, Property/set on schemas, FormSpec entries, ActionBinding for create flows), you MUST read `.claude/agents/seed-data/creation-routing.md` first. It documents the 4-tier resolution order (`InteractionSpec.create_surface` → `Schema.displayWidget` Property → FormSpec → primitive fallback) and tells you which tier applies for the entity you're seeding. Wrong-tier seeds bypass the dispatcher.
+
+The local copy is kept in sync by `scripts/copy-agent-references.mjs` from `docs/agent-references/creation-routing.md`. If stale, run the script.
+
 ## Workflow
 
 1. **Read the card/task** — understand what seeds are needed and why.

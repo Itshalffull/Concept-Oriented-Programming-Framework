@@ -12,17 +12,22 @@ import { fileURLToPath } from 'url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
-// Canonical source: the create-concept skill owns concept-grammar.md.
-// All other consumers copy from here.
+// Canonical sources. Edit the source files; this script propagates copies
+// to consumer agent folders.
 const SOURCES = {
-  'concept-grammar.md':   resolve(ROOT, '.claude/skills/create-concept/references/concept-grammar.md'),
+  'concept-grammar.md':     resolve(ROOT, '.claude/skills/create-concept/references/concept-grammar.md'),
   'jackson-methodology.md': resolve(ROOT, '.claude/skills/create-concept/references/jackson-methodology.md'),
+  'creation-routing.md':    resolve(ROOT, 'docs/agent-references/creation-routing.md'),
 };
 
 // Agents that need a local references folder. Keyed by agent id; value is
 // the list of reference filenames (from SOURCES) to copy in.
 const AGENT_REFERENCES = {
-  'concept-parameter-update': ['concept-grammar.md', 'jackson-methodology.md'],
+  'concept-parameter-update':   ['concept-grammar.md', 'jackson-methodology.md'],
+  'seed-data':                  ['creation-routing.md'],
+  'clef-base':                  ['creation-routing.md'],
+  'concept-scaffold-gen':       ['creation-routing.md'],
+  'content-type-scaffold-gen':  ['creation-routing.md'],
 };
 
 const AGENT_DIRS = [
