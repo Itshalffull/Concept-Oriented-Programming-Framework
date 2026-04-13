@@ -1,0 +1,26 @@
+# Generic forward registration: PluginRegistry → ContentSerializer
+#
+# Replaces all per-target content-serializer registration syncs. Any code path
+# that calls PluginRegistry/register with type="content-serializer"
+# (ProviderManifest/load, UI plugin installer, test setup) automatically wires
+# the named provider into the ContentSerializer concept for the given target slot.
+#
+# Note: ContentSerializer/register uses "target" instead of "language" because
+# serialization outputs are identified by format target (markdown, html, json,
+# pdf) rather than by source language.
+#
+# See docs/plans/virtual-provider-registry-prd.md §2 Layer C
+
+sync RegisterContentSerializerFromPluginRegistry [eager]
+  purpose: "Forward any content-serializer PluginRegistry registration to ContentSerializer/register so that one generic sync replaces all per-target serializer registration syncs"
+when {
+  PluginRegistry/register: [ type: "content-serializer"; name: ?n; slot: ?s; options: ?opts ]
+    => ok(plugin: ?plugin)
+}
+then {
+  ContentSerializer/register: [
+    provider: ?n;
+    target: ?s;
+    config: ?opts
+  ]
+}

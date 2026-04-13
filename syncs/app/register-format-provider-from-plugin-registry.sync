@@ -1,0 +1,22 @@
+# Generic forward registration: PluginRegistry → Format
+#
+# Replaces all per-language format registration syncs. Any code path that calls
+# PluginRegistry/register with type="format-provider" (ProviderManifest/load,
+# UI plugin installer, test setup) automatically wires the named provider into
+# the Format concept for the given language slot.
+#
+# See docs/plans/virtual-provider-registry-prd.md §2 Layer C
+
+sync RegisterFormatProviderFromPluginRegistry [eager]
+  purpose: "Forward any format-provider PluginRegistry registration to Format/register so that one generic sync replaces all per-language format registration syncs"
+when {
+  PluginRegistry/register: [ type: "format-provider"; name: ?n; slot: ?s; options: ?opts ]
+    => ok(plugin: ?plugin)
+}
+then {
+  Format/register: [
+    provider: ?n;
+    language: ?s;
+    config: ?opts
+  ]
+}

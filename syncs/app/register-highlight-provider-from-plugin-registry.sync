@@ -1,0 +1,22 @@
+# Generic forward registration: PluginRegistry → Highlight
+#
+# Replaces all per-language highlight registration syncs. Any code path that calls
+# PluginRegistry/register with type="highlight-provider" (ProviderManifest/load,
+# UI plugin installer, test setup) automatically wires the named provider into
+# the Highlight concept for the given language slot.
+#
+# See docs/plans/virtual-provider-registry-prd.md §2 Layer C
+
+sync RegisterHighlightProviderFromPluginRegistry [eager]
+  purpose: "Forward any highlight-provider PluginRegistry registration to Highlight/register so that one generic sync replaces all per-language highlight registration syncs"
+when {
+  PluginRegistry/register: [ type: "highlight-provider"; name: ?n; slot: ?s; options: ?opts ]
+    => ok(plugin: ?plugin)
+}
+then {
+  Highlight/register: [
+    provider: ?n;
+    language: ?s;
+    config: ?opts
+  ]
+}
