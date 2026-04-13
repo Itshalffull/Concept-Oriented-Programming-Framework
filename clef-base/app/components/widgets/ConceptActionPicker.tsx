@@ -206,10 +206,16 @@ export function ConceptActionPicker({
       _conceptCachePromise = invoke('ScoreApi', 'listConcepts', {}).then(
         (result: Record<string, unknown>) => {
           if (result.variant === 'ok') {
-            const raw =
-              typeof result.concepts === 'string'
-                ? JSON.parse(result.concepts)
-                : (result.concepts as ConceptSpec[]) ?? [];
+            let raw: ConceptSpec[] = [];
+            if (typeof result.concepts === 'string') {
+              const s = result.concepts.trim();
+              if (s !== '') {
+                try { raw = JSON.parse(s) as ConceptSpec[]; }
+                catch { raw = []; }
+              }
+            } else if (Array.isArray(result.concepts)) {
+              raw = result.concepts as ConceptSpec[];
+            }
             _conceptCache = raw;
             return raw;
           }
