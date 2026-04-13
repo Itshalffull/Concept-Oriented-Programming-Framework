@@ -1,0 +1,61 @@
+# Per-schema placeholder strings for the placeholder-decoration widget.
+# The placeholder key provides ghost-text shown when a block is focused + empty.
+# The placeholderEmpty key (optional) overrides placeholder for permanently
+# empty contexts such as caption slots (shown before the user ever types).
+#
+# These values are consumed by the placeholder-decoration widget via the
+# ComponentMapping / PluginRegistry dispatch chain wired in PP3.06.
+
+concept: Property
+action: set
+entries:
+  # === paragraph ===
+  - entity: paragraph
+    key: placeholder
+    value: "Type / for commands"
+
+  # === heading ===
+  - entity: heading
+    key: placeholder
+    value: "Heading"
+  - entity: heading
+    key: placeholderEmpty
+    value: "Heading {{level}}"
+
+  # === quote ===
+  - entity: quote
+    key: placeholder
+    value: "Quote text"
+
+  # === callout ===
+  - entity: callout
+    key: placeholder
+    value: "Callout text…"
+  - entity: callout
+    key: placeholderEmpty
+    value: "Empty callout"
+
+  # === code ===
+  - entity: code
+    key: placeholder
+    value: "Code…"
+
+  # === image ===
+  - entity: image
+    key: placeholderEmpty
+    value: "Add a caption…"
+
+  # === bullet-list ===
+  - entity: bullet-list
+    key: placeholder
+    value: "List item"
+
+  # === numbered-list ===
+  - entity: numbered-list
+    key: placeholder
+    value: "List item"
+
+  # === toggle ===
+  - entity: toggle
+    key: placeholder
+    value: "Toggle…"

@@ -1,0 +1,31 @@
+# PluginRegistry seed — placeholder-decoration decoration-layer plugin (PP-placeholder)
+# Registers the placeholder-decoration widget as a decoration-layer plugin so that
+# the ComponentMapping / PluginRegistry dispatch system can attach it to any block
+# type that carries a placeholder or placeholderEmpty Property.
+#
+# Wiring of per-block placeholder props into the widget props is handled by
+# PP3.06 (RecursiveBlockEditor integration). This seed covers baseline
+# registration so the plugin is discoverable before schema-scoped wiring fires.
+
+concept: PluginRegistry
+action: register
+entries:
+  - type: decoration-layer
+    name: placeholder-decoration
+    metadata: >
+      {
+        "widget": "placeholder-decoration",
+        "label": "Placeholder Decoration",
+        "icon": "text-cursor",
+        "availableContexts": ["markdown", "wiki", "notebook", "persona", "database-record"],
+        "defaultEnabled": true,
+        "order": 10,
+        "props": {
+          "blockId": "$blockId",
+          "schema": "$blockSchema",
+          "focused": "$isFocused",
+          "isEmpty": "$blockIsEmpty",
+          "placeholder": "$schema.placeholder",
+          "placeholderEmpty": "$schema.placeholderEmpty"
+        }
+      }

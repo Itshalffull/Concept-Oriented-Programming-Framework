@@ -1,0 +1,193 @@
+@version(1)
+widget placeholder-decoration {
+
+  purpose {
+    Decoration-layer overlay that renders ghost-text inside empty, focused
+    content blocks to guide users toward the expected input. The widget
+    projects a translucent placeholder string over the block surface without
+    inserting any content into the document model. Two visibility states model
+    the display contract: hidden (block is non-empty, or the block is not
+    focused) and shown (block is both empty and focused). An optional
+    placeholderEmpty prop overrides the primary placeholder string when the
+    block is permanently empty (e.g. an image caption slot), allowing
+    schemas to supply contextual cues such as "Add a caption…" that differ
+    from the typing-prompt copy shown during active editing.
+  }
+
+  anatomy {
+    root:      container  { Absolute-positioned wrapper that overlays the block surface; carries data-state and data-block-id for CSS and test selectors }
+    ghostText: text       { The placeholder string rendered in a muted, non-interactive style; hidden from screen readers via aria-hidden }
+  }
+
+  states {
+    visibility {
+      hidden [initial] {
+        on SHOW -> shown;
+      }
+      shown {
+        on HIDE -> hidden;
+        entry [renderGhostText];
+        exit [clearGhostText];
+      }
+    }
+  }
+
+  accessibility {
+    role: presentation;
+    keyboard {
+      Escape -> HIDE;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      roving: false;
+      returnOnClose: false;
+    }
+    aria {
+      root -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      ghostText -> {
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    blockId:          String = ""
+    schema:           String = ""
+    focused:          Bool = false
+    isEmpty:          Bool = true
+    placeholder:      String = ""
+    placeholderEmpty: option String
+  }
+
+  connect {
+    root -> {
+      data-part:     "root";
+      data-state:    state.visibility;
+      data-block-id: ?blockId;
+      data-schema:   ?schema;
+      hidden:        if state.visibility == "hidden" then true else false;
+      aria-hidden:   "true";
+    }
+
+    ghostText -> {
+      data-part:   "ghostText";
+      text:        if ?placeholderEmpty then ?placeholderEmpty else ?placeholder;
+      aria-hidden: "true";
+      visible:     if state.visibility == "shown" then true else false;
+    }
+  }
+
+  affordance {
+    serves: text-input;
+    specificity: 2;
+    bind {
+      blockId:          blockId;
+      schema:           schema;
+      focused:          isFocused;
+      isEmpty:          blockIsEmpty;
+      placeholder:      schemaPlaceholder;
+      placeholderEmpty: schemaPlaceholderEmpty;
+    }
+  }
+
+  invariant {
+    example "shown when isEmpty and focused": {
+      after render(focused: true, isEmpty: true, placeholder: "Type / for commands") -> ok
+      then state.visibility = "shown"
+    }
+
+    example "hidden when not focused": {
+      after render(focused: false, isEmpty: true, placeholder: "Type / for commands") -> ok
+      then state.visibility = "hidden"
+    }
+
+    example "hidden when not empty": {
+      after render(focused: true, isEmpty: false, placeholder: "Type / for commands") -> ok
+      then state.visibility = "hidden"
+    }
+
+    example "hidden when neither focused nor empty": {
+      after render(focused: false, isEmpty: false, placeholder: "Type / for commands") -> ok
+      then state.visibility = "hidden"
+    }
+
+    example "SHOW event transitions hidden to shown": {
+      after SHOW() -> ok
+      then state.visibility = "shown"
+    }
+
+    example "HIDE event transitions shown to hidden": {
+      after HIDE() -> ok
+      then state.visibility = "hidden"
+    }
+
+    example "ghostText renders placeholder when no placeholderEmpty": {
+      after render(placeholder: "Heading", isEmpty: true, focused: true) -> ok
+      then ghostText.text = "Heading"
+    }
+
+    example "placeholderEmpty overrides placeholder when provided": {
+      after render(placeholder: "Heading", placeholderEmpty: "Heading {{level}}", isEmpty: true, focused: true) -> ok
+      then ghostText.text = "Heading {{level}}"
+    }
+
+    example "root carries data-block-id from blockId prop": {
+      after render(blockId: "block-abc") -> ok
+      then root.dataBlockId = "block-abc"
+    }
+
+    example "root carries data-schema from schema prop": {
+      after render(schema: "paragraph") -> ok
+      then root.dataSchema = "paragraph"
+    }
+
+    example "root data-state reflects visibility FSM": {
+      after render(focused: true, isEmpty: true, placeholder: "Type / for commands") -> ok
+      then root.dataState = state.visibility
+    }
+
+    always "root data-state reflects visibility FSM": {
+      root.dataState = state.visibility
+    }
+
+    always "ghostText is always aria-hidden": {
+      ghostText.ariaHidden = "true"
+    }
+
+    always "root is always aria-hidden": {
+      root.ariaHidden = "true"
+    }
+
+    never "shown when isEmpty is false": {
+      state.visibility = "shown" and isEmpty = false
+    }
+
+    never "shown when focused is false": {
+      state.visibility = "shown" and focused = false
+    }
+
+    never "ghostText visible when root is hidden": {
+      state.visibility = "hidden" and ghostText.visible = true
+    }
+
+    forall "all visibility states are reachable from initial": {
+      given s in { "hidden", "shown" }
+      then s.reachable = true
+    }
+
+    action ghostText {
+      requires: state.visibility = "shown"
+      ensures ok: ghostText.visible = true
+    }
+
+    action ghostText {
+      requires: state.visibility = "hidden"
+      ensures ok: ghostText.visible = false
+    }
+  }
+
+}

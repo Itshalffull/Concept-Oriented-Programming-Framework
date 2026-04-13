@@ -38,6 +38,7 @@ import {
   getActiveAnnotations,
 } from '../../services/spell-check-dispatcher';
 import { SpellCheckSuggestionsPopover } from './SpellCheckSuggestionsPopover';
+import { useSlotResolver, SlotMount } from './SlotResolver';
 
 // ---------------------------------------------------------------------------
 // Selection tracking — populated from document selectionchange events
@@ -703,6 +704,44 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
     pageLevalSurface?.compile_action_ref || pageLevalSurface?.compile_bundle_ref
   );
 
+
+  // =========================================================================
+  // PluginRegistry slot resolvers — PP-slot-resolver (02c08cb0)
+  //
+  // Each hook queries PluginRegistry/getDefinitions for registered plugins of
+  // that type and returns a sorted SlotEntry[]. Registering a new widget via
+  // PluginRegistry/register with the matching type makes it auto-appear in
+  // the corresponding editor slot with zero additional React code.
+  //
+  // All hooks are called unconditionally (Rules of Hooks) before any
+  // conditional early returns.
+  // =========================================================================
+
+  const slotContext = { editorFlavor, rootNodeId };
+
+  // decoration-layer — overlays rendered inside the center pane
+  const decorationLayerEntries = useSlotResolver('decoration-layer', slotContext);
+
+  // editor-panel — right-rail side panels
+  // When an EditSurface is active, only show panels listed in panel_widgets;
+  // otherwise show all panels where defaultEnabled=true.
+  const allEditorPanelEntries = useSlotResolver('editor-panel', slotContext);
+  const editorPanelEntries =
+    innermostSurface?.panel_widgets && innermostSurface.panel_widgets.length > 0
+      ? allEditorPanelEntries.filter((e) =>
+          (innermostSurface.panel_widgets as string[]).includes(e.widgetId),
+        )
+      : allEditorPanelEntries.filter((e) => e.metadata.defaultEnabled === true);
+
+  // header-slot — widgets rendered above the block tree
+  const headerSlotEntries = useSlotResolver('header-slot', slotContext);
+
+  // footer-slot — widgets rendered below the block tree
+  const footerSlotEntries = useSlotResolver('footer-slot', slotContext);
+
+  // status-bar — narrow bar at the very bottom
+  const statusBarEntries = useSlotResolver('status-bar', slotContext);
+
   // Group slash items by section
   const slashItemsBySection = slashItems.reduce<Record<string, SlashMenuItem[]>>((acc, item) => {
     if (!acc[item.section]) acc[item.section] = [];
@@ -1021,13 +1060,19 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
           gap: 0,
         }}
       >
-        {/* Active surface panels from innermost EditSurface */}
-        {innermostSurface?.panel_widgets && innermostSurface.panel_widgets.length > 0 && (
+        {/* editor-panel slot — resolver-driven side panels                 */}
+        {/* Panels registered via PluginRegistry/register with              */}
+        {/* type="editor-panel" appear here automatically. When an          */}
+        {/* EditSurface is active, only panels listed in panel_widgets are  */}
+        {/* shown; otherwise panels with defaultEnabled=true are shown.    */}
+        {/* Examples: outline-panel, comments-panel, ai-chat-panel,        */}
+        {/*           backlinks-panel, changes-panel.                       */}
+        {editorPanelEntries.length > 0 && (
           <div data-part="surface-panels">
-            {innermostSurface.panel_widgets.map((panelWidgetId) => (
+            {editorPanelEntries.map((entry) => (
               <SidePanelSlot
-                key={panelWidgetId}
-                panelWidgetId={panelWidgetId}
+                key={entry.name}
+                panelWidgetId={entry.widgetId}
                 nodeId={rootNodeId}
                 schema={focusedSchema}
               />
