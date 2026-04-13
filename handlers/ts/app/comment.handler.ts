@@ -3,7 +3,7 @@
 // Comment Concept Implementation (Content Kit - Threaded Discussion)
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, putFrom, del, branch, complete, completeFrom, mapBindings,
+  createProgram, get as spGet, find, put, putFrom, mergeFrom, del, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -55,6 +55,9 @@ const _commentHandler: FunctionalConceptHandler = {
       parent: '',
       threadPath,
       published: false,
+      resolved: false,
+      resolvedAt: null,
+      resolvedBy: null,
     });
     return complete(p, 'ok', { comment }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
@@ -82,6 +85,9 @@ const _commentHandler: FunctionalConceptHandler = {
         parent,
         threadPath: `${parentThreadPath}/${comment}`,
         published: false,
+        resolved: false,
+        resolvedAt: null,
+        resolvedBy: null,
       };
     }, '_replyRecord');
     return branch(p, 'parentRecord',
@@ -157,6 +163,55 @@ const _commentHandler: FunctionalConceptHandler = {
       (b) => complete(b, 'notfound', { message: 'Comment not found' }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
+  resolve(input: Record<string, unknown>) {
+    const comment = input.comment as string;
+    const actor = input.actor as string;
+
+    let p = createProgram();
+    p = spGet(p, 'comment', comment, 'existing');
+    return branch(p, 'existing',
+      (b) => {
+        return branch(b,
+          (bindings) => !!(bindings.existing as Record<string, unknown> | null)?.resolved,
+          (b2) => complete(b2, 'already_resolved', { message: 'Comment is already resolved' }),
+          (b2) => {
+            let b3 = mergeFrom(b2, 'comment', comment, (_bindings) => ({
+              resolved: true,
+              resolvedAt: new Date().toISOString(),
+              resolvedBy: actor,
+            }));
+            return complete(b3, 'ok', {});
+          },
+        );
+      },
+      (b) => complete(b, 'not_found', { message: 'Comment not found' }),
+    ) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
+  unresolve(input: Record<string, unknown>) {
+    const comment = input.comment as string;
+
+    let p = createProgram();
+    p = spGet(p, 'comment', comment, 'existing');
+    return branch(p, 'existing',
+      (b) => {
+        return branch(b,
+          (bindings) => !(bindings.existing as Record<string, unknown> | null)?.resolved,
+          (b2) => complete(b2, 'not_resolved', { message: 'Comment is not resolved' }),
+          (b2) => {
+            let b3 = mergeFrom(b2, 'comment', comment, (_bindings) => ({
+              resolved: false,
+              resolvedAt: null,
+              resolvedBy: null,
+            }));
+            return complete(b3, 'ok', {});
+          },
+        );
+      },
+      (b) => complete(b, 'not_found', { message: 'Comment not found' }),
+    ) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
 

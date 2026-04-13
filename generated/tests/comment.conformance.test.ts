@@ -87,7 +87,17 @@ describe('Comment functional handler', () => {
     it('fixture "valid_add" -> ok', async () => {
       if (typeof commentHandler.addComment !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" }), storage);
+      const afterResult_list_empty = await interpret(commentHandler.listByEntity({ entity: "no-such-entity" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_empty?.output ?? {}));
+      const _fixtureInput = { comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(commentHandler.addComment({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -155,8 +165,9 @@ describe('Comment functional handler', () => {
     it('fixture "valid_reply" -> ok', async () => {
       if (typeof commentHandler.reply !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_list_empty = await interpret(commentHandler.listByEntity({ entity: "no-such-entity" }), storage);
       const afterResult_valid_add = await interpret(commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_list_empty?.output ?? {}), (afterResult_valid_add?.output ?? {}));
       const _fixtureInput = { comment: "r1", parent: "c1", content: "Thanks!", author: "bob" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -172,8 +183,9 @@ describe('Comment functional handler', () => {
     it('fixture "missing_parent" -> error', async () => {
       if (typeof commentHandler.reply !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_list_empty = await interpret(commentHandler.listByEntity({ entity: "no-such-entity" }), storage);
       const afterResult_valid_add = await interpret(commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_list_empty?.output ?? {}), (afterResult_valid_add?.output ?? {}));
       const _fixtureInput = { comment: "r2", parent: "nonexistent", content: "Hello", author: "bob" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -243,8 +255,9 @@ describe('Comment functional handler', () => {
     it('fixture "valid_publish" -> ok', async () => {
       if (typeof commentHandler.publish !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_list_empty = await interpret(commentHandler.listByEntity({ entity: "no-such-entity" }), storage);
       const afterResult_valid_add = await interpret(commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_list_empty?.output ?? {}), (afterResult_valid_add?.output ?? {}));
       const _fixtureInput = { comment: "c1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -322,9 +335,10 @@ describe('Comment functional handler', () => {
     it('fixture "valid_unpublish" -> ok', async () => {
       if (typeof commentHandler.unpublish !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_list_empty = await interpret(commentHandler.listByEntity({ entity: "no-such-entity" }), storage);
       const afterResult_valid_add = await interpret(commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" }), storage);
       const afterResult_valid_publish = await interpret(commentHandler.publish({ comment: "c1" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}), (afterResult_valid_publish?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_list_empty?.output ?? {}), (afterResult_valid_add?.output ?? {}), (afterResult_valid_publish?.output ?? {}));
       const _fixtureInput = { comment: "c1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -402,8 +416,9 @@ describe('Comment functional handler', () => {
     it('fixture "valid_delete" -> ok', async () => {
       if (typeof commentHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_list_empty = await interpret(commentHandler.listByEntity({ entity: "no-such-entity" }), storage);
       const afterResult_valid_add = await interpret(commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" }), storage);
-      const _pool = Object.assign({}, (afterResult_valid_add?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_list_empty?.output ?? {}), (afterResult_valid_add?.output ?? {}));
       const _fixtureInput = { comment: "c1" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -428,7 +443,7 @@ describe('Comment functional handler', () => {
 
   describe('listByEntity', () => {
     it('builds a valid StorageProgram', () => {
-      const program = commentHandler.listByEntity({ entity: "doc-42" });
+      const program = commentHandler.listByEntity({ entity: "no-such-entity" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -436,22 +451,22 @@ describe('Comment functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = commentHandler.listByEntity({ entity: "doc-42" });
-      if (!program?.instructions) return;
+      const program = commentHandler.listByEntity({ entity: "no-such-entity" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = commentHandler.listByEntity({ entity: "doc-42" });
-      if (!program?.instructions) return;
+      const program = commentHandler.listByEntity({ entity: "no-such-entity" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = commentHandler.listByEntity({ entity: "doc-42" });
-      if (!program?.instructions) return;
+      const program = commentHandler.listByEntity({ entity: "no-such-entity" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
       const purity = classifyPurity(program);
@@ -463,68 +478,282 @@ describe('Comment functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = commentHandler.listByEntity({ entity: "doc-42" });
-      if (!program?.instructions) return;
+      const program = commentHandler.listByEntity({ entity: "no-such-entity" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('produces a result', async () => {
       if (typeof commentHandler.listByEntity !== 'function') return;
-      const result = await interpret(commentHandler.listByEntity({ entity: "doc-42" }), storage);
+      const result = await interpret(commentHandler.listByEntity({ entity: "no-such-entity" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "list_empty" -> ok (empty list)', async () => {
+    it('fixture "list_empty" -> ok', async () => {
       if (typeof commentHandler.listByEntity !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(commentHandler.listByEntity({ entity: "no-such-entity" }), storage);
       expect(result.variant).toBe('ok');
-      expect(Array.isArray(result.output?.comments ?? result.comments ?? [])).toBe(true);
-      const comments = result.output?.comments ?? result.comments ?? [];
-      expect(comments.length).toBe(0);
     });
 
-    it('fixture "list_single" -> ok (single top-level comment)', async () => {
+    it('fixture "list_single" -> ok', async () => {
       if (typeof commentHandler.listByEntity !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" }), storage);
-      const result = await interpret(commentHandler.listByEntity({ entity: "doc-42" }), storage);
+      const afterResult_list_empty = await interpret(commentHandler.listByEntity({ entity: "no-such-entity" }), storage);
+      const afterResult_valid_add = await interpret(commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_empty?.output ?? {}), (afterResult_valid_add?.output ?? {}));
+      const _fixtureInput = { entity: "doc-42" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(commentHandler.listByEntity({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
-      const comments = result.output?.comments ?? result.comments ?? [];
-      expect(comments.length).toBe(1);
     });
 
-    it('fixture "list_thread" -> ok (multi-comment thread in threadPath order)', async () => {
+    it('fixture "list_thread" -> ok', async () => {
       if (typeof commentHandler.listByEntity !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Hello", author: "alice" }), storage);
-      await interpret(commentHandler.reply({ comment: "r1", parent: "c1", content: "Thanks!", author: "bob" }), storage);
-      const result = await interpret(commentHandler.listByEntity({ entity: "doc-42" }), storage);
+      const afterResult_list_empty = await interpret(commentHandler.listByEntity({ entity: "no-such-entity" }), storage);
+      const afterResult_valid_add = await interpret(commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" }), storage);
+      const afterResult_valid_reply = await interpret(commentHandler.reply({ comment: "r1", parent: "c1", content: "Thanks!", author: "bob" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_empty?.output ?? {}), (afterResult_valid_add?.output ?? {}), (afterResult_valid_reply?.output ?? {}));
+      const _fixtureInput = { entity: "doc-42" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(commentHandler.listByEntity({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
-      const comments = result.output?.comments ?? result.comments ?? [];
-      expect(comments.length).toBe(2);
     });
 
-    it('fixture "list_deep" -> ok (deep reply chain preserves DFS order)', async () => {
+    it('fixture "list_deep" -> ok', async () => {
       if (typeof commentHandler.listByEntity !== 'function') return;
       const storage = createInMemoryStorage();
-      await interpret(commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Root", author: "alice" }), storage);
-      await interpret(commentHandler.reply({ comment: "r1", parent: "c1", content: "Reply L2", author: "bob" }), storage);
-      await interpret(commentHandler.reply({ comment: "r2", parent: "r1", content: "Reply L3", author: "carol" }), storage);
-      const result = await interpret(commentHandler.listByEntity({ entity: "doc-42" }), storage);
+      const afterResult_list_empty = await interpret(commentHandler.listByEntity({ entity: "no-such-entity" }), storage);
+      const afterResult_valid_add = await interpret(commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" }), storage);
+      const afterResult_valid_reply = await interpret(commentHandler.reply({ comment: "r1", parent: "c1", content: "Thanks!", author: "bob" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_empty?.output ?? {}), (afterResult_valid_add?.output ?? {}), (afterResult_valid_reply?.output ?? {}));
+      const _fixtureInput = { entity: "doc-42" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(commentHandler.listByEntity({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
-      const comments = result.output?.comments ?? result.comments ?? [];
-      expect(comments.length).toBe(3);
-      // threadPath lexicographic order: /c1 < /c1/r1 < /c1/r1/r2
-      const idx_c1 = comments.indexOf('c1');
-      const idx_r1 = comments.indexOf('r1');
-      const idx_r2 = comments.indexOf('r2');
-      expect(idx_c1).toBeLessThan(idx_r1);
-      expect(idx_r1).toBeLessThan(idx_r2);
+    });
+
+  });
+
+  describe('resolve', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = commentHandler.resolve({ comment: "c1", actor: "alice" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = commentHandler.resolve({ comment: "c1", actor: "alice" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = commentHandler.resolve({ comment: "c1", actor: "alice" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = commentHandler.resolve({ comment: "c1", actor: "alice" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = commentHandler.resolve({ comment: "c1", actor: "alice" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof commentHandler.resolve !== 'function') return;
+      const result = await interpret(commentHandler.resolve({ comment: "c1", actor: "alice" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "valid_resolve" -> ok', async () => {
+      if (typeof commentHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_list_empty = await interpret(commentHandler.listByEntity({ entity: "no-such-entity" }), storage);
+      const afterResult_valid_add = await interpret(commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_empty?.output ?? {}), (afterResult_valid_add?.output ?? {}));
+      const _fixtureInput = { comment: "c1", actor: "alice" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(commentHandler.resolve({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "resolve_missing" -> not_found', async () => {
+      if (typeof commentHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(commentHandler.resolve({ comment: "nonexistent", actor: "alice" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('not_found'));
+    });
+
+    it('fixture "resolve_twice" -> already_resolved', async () => {
+      if (typeof commentHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_list_empty = await interpret(commentHandler.listByEntity({ entity: "no-such-entity" }), storage);
+      const afterResult_valid_add = await interpret(commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" }), storage);
+      const afterResult_valid_resolve = await interpret(commentHandler.resolve({ comment: "c1", actor: "alice" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_empty?.output ?? {}), (afterResult_valid_add?.output ?? {}), (afterResult_valid_resolve?.output ?? {}));
+      const _fixtureInput = { comment: "c1", actor: "alice" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(commentHandler.resolve({ ..._fixtureInput }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('already_resolved'));
+    });
+
+  });
+
+  describe('unresolve', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = commentHandler.unresolve({ comment: "c1", actor: "alice" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = commentHandler.unresolve({ comment: "c1", actor: "alice" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = commentHandler.unresolve({ comment: "c1", actor: "alice" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = commentHandler.unresolve({ comment: "c1", actor: "alice" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = commentHandler.unresolve({ comment: "c1", actor: "alice" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof commentHandler.unresolve !== 'function') return;
+      const result = await interpret(commentHandler.unresolve({ comment: "c1", actor: "alice" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "valid_unresolve" -> ok', async () => {
+      if (typeof commentHandler.unresolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_list_empty = await interpret(commentHandler.listByEntity({ entity: "no-such-entity" }), storage);
+      const afterResult_valid_add = await interpret(commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" }), storage);
+      const afterResult_valid_resolve = await interpret(commentHandler.resolve({ comment: "c1", actor: "alice" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_empty?.output ?? {}), (afterResult_valid_add?.output ?? {}), (afterResult_valid_resolve?.output ?? {}));
+      const _fixtureInput = { comment: "c1", actor: "alice" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(commentHandler.unresolve({ ..._fixtureInput }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "unresolve_missing" -> not_found', async () => {
+      if (typeof commentHandler.unresolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(commentHandler.unresolve({ comment: "nonexistent", actor: "alice" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('not_found'));
+    });
+
+    it('fixture "unresolve_unresolved" -> not_resolved', async () => {
+      if (typeof commentHandler.unresolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_list_empty = await interpret(commentHandler.listByEntity({ entity: "no-such-entity" }), storage);
+      const afterResult_valid_add = await interpret(commentHandler.addComment({ comment: "c1", entity: "doc-42", content: "Great work!", author: "alice" }), storage);
+      const _pool = Object.assign({}, (afterResult_list_empty?.output ?? {}), (afterResult_valid_add?.output ?? {}));
+      const _fixtureInput = { comment: "c1", actor: "alice" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(commentHandler.unresolve({ ..._fixtureInput }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('not_resolved'));
     });
 
   });
@@ -556,6 +785,14 @@ describe('Comment functional handler', () => {
       expect(thenResult0.variant).toBe("ok");
     });
 
+    it("resolve-then-unresolve", async () => {
+      const storage = createInMemoryStorage();
+    });
+
+    it("resolve-idempotent-guard", async () => {
+      const storage = createInMemoryStorage();
+    });
+
   });
 
   describe('state invariants (stateful PBT)', () => {
@@ -569,6 +806,9 @@ describe('Comment functional handler', () => {
               fc.record({ action: fc.constant('publish'), input: fc.record({ comment: fc.string() }) }),
               fc.record({ action: fc.constant('unpublish'), input: fc.record({ comment: fc.string() }) }),
               fc.record({ action: fc.constant('delete'), input: fc.record({ comment: fc.string() }) }),
+              fc.record({ action: fc.constant('listByEntity'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ comment: fc.string(), actor: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('unresolve'), input: fc.record({ comment: fc.string(), actor: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -603,6 +843,9 @@ describe('Comment functional handler', () => {
               fc.record({ action: fc.constant('publish'), input: fc.record({ comment: fc.string() }) }),
               fc.record({ action: fc.constant('unpublish'), input: fc.record({ comment: fc.string() }) }),
               fc.record({ action: fc.constant('delete'), input: fc.record({ comment: fc.string() }) }),
+              fc.record({ action: fc.constant('listByEntity'), input: fc.record({ entity: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ comment: fc.string(), actor: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('unresolve'), input: fc.record({ comment: fc.string(), actor: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

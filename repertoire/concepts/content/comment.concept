@@ -14,6 +14,9 @@ concept Comment [C] {
     parent: C -> C
     threadPath: C -> String
     published: C -> Bool
+    resolved: C -> Bool
+    resolvedAt: C -> option DateTime
+    resolvedBy: C -> option String
   }
 
   actions {
@@ -84,6 +87,41 @@ concept Comment [C] {
       fixture list_thread { entity: "doc-42" } after valid_reply
       fixture list_deep { entity: "doc-42" } after valid_reply
     }
+
+    action resolve(comment: C, actor: String) {
+      -> ok() {
+        Marks the comment as resolved, recording the actor and timestamp. Resolved threads
+        are hidden from the active comments panel but remain accessible for audit.
+      }
+      -> not_found(message: String) {
+        No comment exists with this identifier.
+      }
+      -> already_resolved(message: String) {
+        The comment is already in the resolved state; no change is made.
+      }
+      reversal: unresolve
+
+      fixture valid_resolve { comment: "c1", actor: "alice" } after valid_add
+      fixture resolve_missing { comment: "nonexistent", actor: "alice" } -> not_found
+      fixture resolve_twice { comment: "c1", actor: "alice" } after valid_resolve -> already_resolved
+    }
+
+    action unresolve(comment: C, actor: String) {
+      -> ok() {
+        Clears the resolved state, reopening the thread in the active comments panel.
+      }
+      -> not_found(message: String) {
+        No comment exists with this identifier.
+      }
+      -> not_resolved(message: String) {
+        The comment is not currently resolved; no change is made.
+      }
+      reversal: resolve
+
+      fixture valid_unresolve { comment: "c1", actor: "alice" } after valid_resolve
+      fixture unresolve_missing { comment: "nonexistent", actor: "alice" } -> not_found
+      fixture unresolve_unresolved { comment: "c1", actor: "alice" } after valid_add -> not_resolved
+    }
   }
 
   example "addComment-then-reply": {
@@ -91,6 +129,26 @@ concept Comment [C] {
     after addComment(comment: c, entity: e, content: "Hello", author: "alice") -> ok(comment: c)
 
         then reply(comment: r, parent: c, content: "Reply", author: "bob") -> ok(comment: r)
+
+  }
+
+  example "resolve-then-unresolve": {
+
+    after addComment(comment: c, entity: e, content: "Hello", author: "alice") -> ok(comment: c)
+
+    after resolve(comment: c, actor: "alice") -> ok()
+
+        then unresolve(comment: c, actor: "alice") -> ok()
+
+  }
+
+  example "resolve-idempotent-guard": {
+
+    after addComment(comment: c, entity: e, content: "Hello", author: "alice") -> ok(comment: c)
+
+    after resolve(comment: c, actor: "alice") -> ok()
+
+        then resolve(comment: c, actor: "bob") -> already_resolved()
 
   }
 
@@ -116,6 +174,22 @@ concept Comment [C] {
     requires: comment != ""
 
     ensures ok: comment != none
+
+  }
+
+  action resolve {
+
+    requires: comment != ""
+
+    ensures ok: resolved(comment) = true
+
+  }
+
+  action unresolve {
+
+    requires: comment != ""
+
+    ensures ok: resolved(comment) = false
 
   }
 }
