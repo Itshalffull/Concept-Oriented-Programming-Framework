@@ -25,6 +25,24 @@ entries:
     schema: media-asset
     display_mode: block-editor
 
+  # (video-asset, block-editor) — video asset in block-editor routes to video-block widget.
+  # Used when a ContentNode has schema "video-asset" (source in youtube/vimeo/local-fs/s3)
+  # and the view requests block-editor display mode.
+  - name: video-asset-block-editor
+    widget_id: video-block
+    schema: video-asset
+    display_mode: block-editor
+
+  # (video-asset, inline-media) — insertable video media block entry
+  - name: video-asset-inline-media
+    widget_id: video-block
+    schema: video-asset
+    display_mode: inline-media
+    insertable: true
+    section: "Media"
+    icon: "video"
+    label: "Video"
+
 ---
 # Bind slots to entity fields for each mapping above
 
@@ -56,5 +74,27 @@ entries:
     slot_name: alt
     sources: ["entity_field:altText"]
   - mapping: media-asset-block-editor
+    slot_name: caption
+    sources: ["entity_field:caption"]
+
+  # Slots for video-asset-block-editor (resolves to video-block parts)
+  - mapping: video-asset-block-editor
+    slot_name: blockId
+    sources: ["entity_field:node"]
+  - mapping: video-asset-block-editor
+    slot_name: assetId
+    sources: ["entity_field:asset"]
+  - mapping: video-asset-block-editor
+    slot_name: caption
+    sources: ["entity_field:caption"]
+
+  # Slots for video-asset-inline-media
+  - mapping: video-asset-inline-media
+    slot_name: blockId
+    sources: ["entity_field:node"]
+  - mapping: video-asset-inline-media
+    slot_name: assetId
+    sources: ["entity_field:asset"]
+  - mapping: video-asset-inline-media
     slot_name: caption
     sources: ["entity_field:caption"]

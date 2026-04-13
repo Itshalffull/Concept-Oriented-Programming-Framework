@@ -311,6 +311,33 @@ entries:
     compile_bundle_ref: null
     compile_status_field: null
 
+  # Video block editor surface (MAG-750)
+  # Widget: video-block. Plays YouTube, Vimeo, local-fs, and S3 assets.
+  # Command bindings: video-create-clip (create Clip at current playhead),
+  #   video-seek-to-cue (jump playhead to a cue-point timestamp),
+  #   video-toggle-captions (toggle caption track visibility),
+  #   video-replace (replace the referenced MediaAsset with a new pick).
+  # Picker refs: media-picker (select replacement video asset).
+  # input_rule_refs intentionally empty -- video blocks have no inline markdown scope.
+  - id: video-block-editor
+    schema_ref: video-asset
+    context: block-editor
+    toolbar_widget: inline-toolbar
+    command_bindings:
+      - video-create-clip
+      - video-seek-to-cue
+      - video-toggle-captions
+      - video-replace
+    panel_widgets: []
+    context_menu_bindings:
+      - video-replace
+    input_rule_refs: []
+    picker_refs:
+      - media-picker
+    compile_action_ref: null
+    compile_bundle_ref: null
+    compile_status_field: null
+
   # Code block editor surface (MAG-727)
   # Literal block scope: input_rule_refs is intentionally empty because
   # all markdown shortcuts and snippet triggers are suppressed inside code blocks.

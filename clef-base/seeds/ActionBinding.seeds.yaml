@@ -129,6 +129,35 @@ entries:
     label: "Delete"
     buttonVariant: "destructive"
 
+  # --- Video block actions (MAG-750) ---
+  - name: video-create-clip
+    binding: video-create-clip
+    target: "Clip/create"
+    parameterMap: '{"sourceEntity":"context.assetId","startTime":"context.currentTime","endTime":"context.currentTime","transcript":null,"transcriptText":null,"label":null,"kind":"excerpt"}'
+    executionPolicy: "auto"
+    label: "New Clip"
+
+  - name: video-seek-to-cue
+    binding: video-seek-to-cue
+    target: "MediaAsset/seekTo"
+    parameterMap: '{"asset":"context.assetId","time":"row.startTime"}'
+    executionPolicy: "auto"
+    label: "Seek to Cue"
+
+  - name: video-toggle-captions
+    binding: video-toggle-captions
+    target: "MediaAsset/toggleCaptions"
+    parameterMap: '{"asset":"context.assetId"}'
+    executionPolicy: "auto"
+    label: "Toggle Captions"
+
+  - name: video-replace
+    binding: video-replace
+    target: "MediaAsset/replace"
+    parameterMap: '{"node":"context.blockId","asset":"picker.assetId"}'
+    executionPolicy: "pessimistic"
+    label: "Replace Video"
+
   # --- FormSpec actions ---
   - name: formspec-update
     binding: formspec-update

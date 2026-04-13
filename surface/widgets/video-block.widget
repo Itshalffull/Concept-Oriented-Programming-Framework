@@ -1,0 +1,353 @@
+@version(1)
+widget video-block {
+
+  purpose {
+    Inline video block within a block-editor surface. Renders a MediaAsset
+    referenced by assetId using a source-appropriate player (YouTube, Vimeo,
+    local-fs, or S3). Supports parallel playback and clipping state machines:
+    playback tracks idle/playing/paused/buffering/ended/error lifecycle while
+    clipping tracks viewing/creating-clip for non-destructive clip authoring at
+    the current playhead position. A clip timeline below the controls shows
+    child Clip entities as scrubable timeline markers. Full keyboard control
+    (Space play/pause, arrow seek, F fullscreen, C captions, N new clip) ensures
+    the widget is fully operable without a pointing device.
+  }
+
+  requires @1 {
+    fields {
+      blockId: String;
+      assetId: String;
+      currentTime: String;
+      duration: String;
+      caption: option String;
+    }
+    actions {
+      get(asset: String);
+      create(clip: String, sourceEntity: String, startTime: String, endTime: String, transcript: option String, transcriptText: option String, label: option String, kind: option String);
+    }
+  }
+
+  anatomy {
+    root:                   container     { Top-level block wrapper; carries data-state compound reflecting playback and clipping machines }
+    videoElement:           presentation  { The video player element or embedded iframe for YouTube/Vimeo; source-type determined by assetId resolution }
+    controls:               container     { Control bar grouping all interactive playback affordances }
+    playButton:             action        { Toggle button that plays or pauses the video }
+    scrubBar:               interactive   { Range input representing current playhead position relative to total duration }
+    timeDisplay:            text          { Current-time/duration text display e.g. 0:42 / 3:15 }
+    volumeControl:          interactive   { Range slider controlling audio volume; also responds to ArrowUp/Down }
+    fullscreenButton:       action        { Toggle button entering or exiting fullscreen mode }
+    captionsToggle:         action        { Toggle button enabling or disabling caption tracks }
+    clipTimelineContainer:  container     { Horizontal timeline strip below controls showing Clip child entities as draggable markers; hosts recursive ViewShell over Clip/list filtered to this assetId }
+  }
+
+  states {
+    playback {
+      idle [initial] {
+        on PLAY       -> playing;
+        on LOAD_ERROR -> error;
+        entry [loadAsset];
+      }
+
+      playing {
+        on PAUSE      -> paused;
+        on BUFFER     -> buffering;
+        on END        -> ended;
+        on LOAD_ERROR -> error;
+        entry [startPlayback];
+        exit [stopPlayback];
+      }
+
+      paused {
+        on PLAY       -> playing;
+        on SEEK       -> paused;
+        on LOAD_ERROR -> error;
+      }
+
+      buffering {
+        on BUFFER_READY -> playing;
+        on PAUSE        -> paused;
+        on LOAD_ERROR   -> error;
+        entry [showBufferingIndicator];
+        exit [hideBufferingIndicator];
+      }
+
+      ended {
+        on PLAY  -> playing;
+        on SEEK  -> paused;
+        entry [showEndedOverlay];
+        exit [hideEndedOverlay];
+      }
+
+      error {
+        on RETRY -> idle;
+        entry [showErrorMessage];
+      }
+    }
+
+    clipping [parallel] {
+      viewing [initial] {
+        on NEW_CLIP -> creating-clip;
+      }
+
+      creating-clip {
+        on CLIP_SAVED    -> viewing;
+        on CLIP_CANCELED -> viewing;
+        entry [pausePlayback; captureClipStart];
+        exit [clearClipDraft];
+      }
+    }
+  }
+
+  accessibility {
+    role: application;
+    keyboard {
+      Space      -> PLAY;
+      ArrowLeft  -> SEEK_BACK;
+      ArrowRight -> SEEK_FORWARD;
+      ArrowUp    -> VOLUME_UP;
+      ArrowDown  -> VOLUME_DOWN;
+      F          -> FULLSCREEN_TOGGLE;
+      C          -> CAPTIONS_TOGGLE;
+      N          -> NEW_CLIP;
+      Escape     -> CLIP_CANCELED;
+    }
+    focus {
+      trap: false;
+      initial: playButton;
+      roving: false;
+      returnOnClose: playButton;
+    }
+    aria {
+      root -> {
+        role: "application";
+        aria-label: if ?caption != none then ?caption else "Video player";
+        aria-roledescription: "video player";
+      };
+      videoElement -> {
+        role: "presentation";
+        aria-hidden: "false";
+        tabindex: "-1";
+      };
+      playButton -> {
+        role: "button";
+        aria-label: if state.playback == "playing" then "Pause" else "Play";
+        aria-pressed: if state.playback == "playing" then "true" else "false";
+      };
+      scrubBar -> {
+        role: "slider";
+        aria-label: "Video progress";
+        aria-valuemin: "0";
+        aria-valuemax: ?duration;
+        aria-valuenow: ?currentTime;
+      };
+      volumeControl -> {
+        role: "slider";
+        aria-label: "Volume";
+        aria-valuemin: "0";
+        aria-valuemax: "1";
+      };
+      fullscreenButton -> {
+        role: "button";
+        aria-label: "Fullscreen";
+        aria-pressed: "false";
+      };
+      captionsToggle -> {
+        role: "button";
+        aria-label: "Toggle captions";
+        aria-pressed: if state.clipping == "creating-clip" then "false" else "false";
+      };
+      clipTimelineContainer -> {
+        role: "region";
+        aria-label: "Clip timeline";
+        aria-live: "polite";
+      };
+    }
+  }
+
+  props {
+    blockId: String
+    assetId: String
+    autoplay: Bool = false
+    muted: Bool = false
+    currentTime: Float = 0.0
+    duration: option Float
+    caption: option String
+    focused: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.playback;
+      data-clipping: state.clipping;
+      data-block-id: ?blockId;
+      data-asset-id: ?assetId;
+      tabindex: "0";
+      onKeyDown-Space: send(PLAY);
+      onKeyDown-ArrowLeft: send(SEEK_BACK);
+      onKeyDown-ArrowRight: send(SEEK_FORWARD);
+      onKeyDown-ArrowUp: send(VOLUME_UP);
+      onKeyDown-ArrowDown: send(VOLUME_DOWN);
+      onKeyDown-F: send(FULLSCREEN_TOGGLE);
+      onKeyDown-C: send(CAPTIONS_TOGGLE);
+      onKeyDown-N: send(NEW_CLIP);
+      onKeyDown-Escape: send(CLIP_CANCELED);
+    }
+
+    videoElement -> {
+      data-part: "video-element";
+      src: ?assetId;
+      autoplay: ?autoplay;
+      muted: ?muted;
+      onPlay: send(PLAY);
+      onPause: send(PAUSE);
+      onWaiting: send(BUFFER);
+      onCanPlay: send(BUFFER_READY);
+      onEnded: send(END);
+      onError: send(LOAD_ERROR);
+      onTimeUpdate: send(SEEK);
+    }
+
+    controls -> {
+      data-part: "controls";
+      hidden: if state.playback == "error" then true else false;
+    }
+
+    playButton -> {
+      data-part: "play-button";
+      onClick: send(PLAY);
+      aria-label: if state.playback == "playing" then "Pause" else "Play";
+      data-playing: if state.playback == "playing" then "true" else "false";
+    }
+
+    scrubBar -> {
+      data-part: "scrub-bar";
+      value: ?currentTime;
+      min: "0";
+      max: ?duration;
+      onInput: send(SEEK);
+      disabled: if state.playback == "idle" or state.playback == "error" then true else false;
+    }
+
+    timeDisplay -> {
+      data-part: "time-display";
+      text: ?currentTime;
+    }
+
+    volumeControl -> {
+      data-part: "volume-control";
+      onInput: send(VOLUME_UP);
+    }
+
+    fullscreenButton -> {
+      data-part: "fullscreen-button";
+      onClick: send(FULLSCREEN_TOGGLE);
+    }
+
+    captionsToggle -> {
+      data-part: "captions-toggle";
+      onClick: send(CAPTIONS_TOGGLE);
+    }
+
+    clipTimelineContainer -> {
+      data-part: "clip-timeline-container";
+      hidden: if state.clipping == "creating-clip" then false else false;
+      data-clipping: state.clipping;
+    }
+  }
+
+  affordance {
+    serves: block-media;
+    specificity: 10;
+    when schema = "video-asset";
+    bind {
+      blockId: blockId;
+      assetId: assetId;
+      caption: caption;
+    }
+  }
+
+  compose {
+    _clipCreator: widget("clip-creator", { assetId: ?assetId, currentTime: ?currentTime, active: if state.clipping == "creating-clip" then true else false })
+    clipTimelineContainer: widget("view-embed-block", { schema: "clip", filterField: "sourceEntity", filterValue: ?assetId })
+  }
+
+  invariant {
+    example "idle transitions to playing on PLAY": {
+      after transition(from: "idle", event: "PLAY") -> ok
+      then state.playback = "playing"
+    }
+
+    example "playing transitions to paused on PAUSE": {
+      after transition(from: "playing", event: "PAUSE") -> ok
+      then state.playback = "paused"
+    }
+
+    example "playing transitions to buffering on BUFFER": {
+      after transition(from: "playing", event: "BUFFER") -> ok
+      then state.playback = "buffering"
+    }
+
+    example "buffering resumes to playing on BUFFER_READY": {
+      after transition(from: "buffering", event: "BUFFER_READY") -> ok
+      then state.playback = "playing"
+    }
+
+    example "playing transitions to ended on END": {
+      after transition(from: "playing", event: "END") -> ok
+      then state.playback = "ended"
+    }
+
+    example "error retries to idle on RETRY": {
+      after transition(from: "error", event: "RETRY") -> ok
+      then state.playback = "idle"
+    }
+
+    example "viewing transitions to creating-clip on NEW_CLIP": {
+      after transition(from: "viewing", event: "NEW_CLIP") -> ok
+      then state.clipping = "creating-clip"
+    }
+
+    example "creating-clip returns to viewing on CLIP_SAVED": {
+      after transition(from: "creating-clip", event: "CLIP_SAVED") -> ok
+      then state.clipping = "viewing"
+    }
+
+    example "creating-clip cancels to viewing on CLIP_CANCELED": {
+      after transition(from: "creating-clip", event: "CLIP_CANCELED") -> ok
+      then state.clipping = "viewing"
+    }
+
+    forall "all playback states reachable": {
+      given s in playbackStates
+      then s.reachable = true
+    }
+
+    forall "all clipping states reachable": {
+      given s in clippingStates
+      then s.reachable = true
+    }
+
+    always "controls hidden when playback is in error": {
+      state.playback != "error"
+    }
+
+    always "scrubBar disabled when idle or error": {
+      state.playback != "idle" and state.playback != "error"
+    }
+
+    never "playButton and videoElement both show play and playing simultaneously when paused": {
+      state.playback = "paused" and playButton.aria-label = "Pause"
+    }
+
+    never "clipping creating-clip state entered without assetId": {
+      state.clipping = "creating-clip" and assetId.length = 0
+    }
+
+    action playButton {
+      requires: state.playback = "idle" or state.playback = "paused" or state.playback = "ended"
+      ensures ok: state.playback = "playing"
+    }
+  }
+
+}
