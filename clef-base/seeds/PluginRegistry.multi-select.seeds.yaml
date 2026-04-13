@@ -1,0 +1,39 @@
+# PluginRegistry seeds — multi-select overlay decoration-layer plugin (PP-multi-select)
+#
+# Registers multi-select-overlay as a decoration-layer plugin so that
+# useSlotResolver('decoration-layer', ...) inside RecursiveBlockEditor
+# automatically mounts it in the center-pane decoration layer alongside
+# other decoration plugins (presence-decoration, comment-gutter-marker, etc.).
+#
+# Props threading:
+#   $selectedBlockIds — the Set<string> of selected block IDs held in
+#                       RecursiveBlockEditor state, injected at mount time
+#                       by the SlotMount host via hostAttrs.
+#   $allBlockIds      — ordered list of all block IDs in the current page
+#                       (used by the widget to compute range highlights).
+#   $rootNodeId       — the root ContentNode being edited.
+#   $canEdit          — whether the editor is in edit mode.
+#
+# order: 50 places it above comment-gutter-marker (20) and presence (8)
+# so the selection highlight renders on top of those decoration layers.
+
+concept: PluginRegistry
+action: register
+entries:
+  - type: decoration-layer
+    name: multi-select-overlay
+    metadata: >
+      {
+        "widget": "multi-select-overlay",
+        "label": "Multi-select Overlay",
+        "icon": "selection",
+        "availableContexts": ["markdown", "wiki", "notebook", "persona", "workflow"],
+        "defaultEnabled": true,
+        "order": 50,
+        "props": {
+          "selectedBlockIds": "$selectedBlockIds",
+          "allBlockIds": "$allBlockIds",
+          "rootNodeId": "$rootNodeId",
+          "canEdit": "$canEdit"
+        }
+      }

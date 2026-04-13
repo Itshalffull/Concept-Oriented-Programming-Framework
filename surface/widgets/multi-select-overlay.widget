@@ -1,0 +1,295 @@
+@version(1)
+widget multi-select-overlay {
+
+  purpose {
+    Decoration-layer plugin that renders selection highlights over each
+    selected block and floats a batch-action toolbar above the selection
+    when one or more blocks are selected. The widget receives a set of
+    selected block IDs and the ordered list of all block IDs (to compute
+    contiguous ranges), paints a translucent highlight band behind each
+    selected block in the block-list DOM, and shows a floating toolbar
+    offering Delete, Duplicate, and Move buttons. The toolbar is
+    repositioned whenever the selection changes. All batch actions route
+    through ActionBinding/invoke — the widget emits events but never
+    mutates Outline state directly. Keyboard-accessible: Escape clears
+    the selection; Delete/Backspace fires the batch-delete action.
+    Registered with PluginRegistry as type decoration-layer, name
+    multi-select-overlay.
+  }
+
+  requires @1 {
+    fields {
+      selectedBlockIds: set String;
+      allBlockIds: list String;
+      rootNodeId: String;
+      canEdit: Bool;
+    }
+    actions {
+      clearSelection();
+      deleteSelected(blockIds: list String, rootNodeId: String);
+      duplicateSelected(blockIds: list String, rootNodeId: String);
+    }
+  }
+
+  anatomy {
+    root:           container     { Absolute-positioned overlay host; covers the full center-pane; pointer-events none so blocks remain interactive }
+    selectionLayer: container     { Child of root; renders one highlight band per selected block }
+    blockHighlight: presentation  { Translucent highlight band painted behind a single selected block; repeated per selected block }
+    batchToolbar:   container     { Floating action bar visible while selectedCount > 0; contains Delete, Duplicate, Move buttons }
+    selectionCount: text          { Label inside the toolbar showing count of selected blocks, e.g. "3 selected" }
+    deleteButton:   action        { Batch-delete button; sends DELETE_SELECTED event }
+    duplicateButton: action       { Batch-duplicate button; sends DUPLICATE_SELECTED event }
+    moveButton:     action        { Move-to-page button; sends MOVE_SELECTED event }
+    clearButton:    action        { Clear-selection X button; sends CLEAR_SELECTION event }
+  }
+
+  states {
+    selection {
+      empty [initial] {
+        on BLOCKS_SELECTED -> active;
+        entry [hideToolbar];
+      }
+      active {
+        on CLEAR_SELECTION -> empty;
+        on ALL_BLOCKS_DESELECTED -> empty;
+        on BLOCKS_SELECTED -> active;
+        on DELETE_SELECTED -> executing-delete;
+        on DUPLICATE_SELECTED -> executing-duplicate;
+        on MOVE_SELECTED -> executing-move;
+        entry [showToolbar; positionToolbar; paintHighlights];
+        exit [hideToolbar; clearHighlights];
+      }
+      executing-delete {
+        on EXECUTION_COMPLETE -> empty;
+        on EXECUTION_ERROR -> active;
+        entry [disableToolbar];
+        exit [enableToolbar];
+      }
+      executing-duplicate {
+        on EXECUTION_COMPLETE -> active;
+        on EXECUTION_ERROR -> active;
+        entry [disableToolbar];
+        exit [enableToolbar];
+      }
+      executing-move {
+        on EXECUTION_COMPLETE -> empty;
+        on EXECUTION_ERROR -> active;
+        entry [disableToolbar];
+        exit [enableToolbar];
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Escape      -> CLEAR_SELECTION;
+      Delete      -> DELETE_SELECTED;
+      Backspace   -> DELETE_SELECTED;
+    }
+    focus {
+      trap: false;
+      initial: none;
+      roving: false;
+      returnOnClose: false;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Block selection overlay";
+        aria-live: "polite";
+        aria-atomic: "false";
+      };
+      batchToolbar -> {
+        role: "toolbar";
+        aria-label: "Batch block actions";
+        hidden: if state.selection == "empty" then "true" else "false";
+      };
+      selectionCount -> {
+        role: "status";
+        aria-live: "polite";
+        aria-atomic: "true";
+      };
+      deleteButton -> {
+        role: "button";
+        aria-label: "Delete selected blocks";
+        aria-disabled: if state.selection == "executing-delete" then "true" else "false";
+      };
+      duplicateButton -> {
+        role: "button";
+        aria-label: "Duplicate selected blocks";
+        aria-disabled: if state.selection == "executing-duplicate" then "true" else "false";
+      };
+      moveButton -> {
+        role: "button";
+        aria-label: "Move selected blocks";
+        aria-disabled: if state.selection == "executing-move" then "true" else "false";
+      };
+      clearButton -> {
+        role: "button";
+        aria-label: "Clear selection";
+      };
+    }
+  }
+
+  props {
+    selectedBlockIds: set String
+    allBlockIds: list String
+    rootNodeId: String
+    canEdit: Bool = false
+    toolbarOffsetTop: Int = 8
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.selection;
+      data-selected-count: ?selectedBlockIds;
+      aria-live: "polite";
+    }
+
+    selectionLayer -> {
+      data-part: "selection-layer";
+      aria-hidden: "true";
+    }
+
+    blockHighlight -> {
+      data-part: "block-highlight";
+      aria-hidden: "true";
+    }
+
+    batchToolbar -> {
+      data-part: "batch-toolbar";
+      role: "toolbar";
+      aria-label: "Batch block actions";
+      hidden: if state.selection == "empty" then true else false;
+    }
+
+    selectionCount -> {
+      data-part: "selection-count";
+      role: "status";
+      aria-live: "polite";
+    }
+
+    deleteButton -> {
+      data-part: "delete-button";
+      aria-label: "Delete selected blocks";
+      aria-disabled: if state.selection == "executing-delete" then "true" else "false";
+      onClick: send(DELETE_SELECTED);
+      onKeyDown: send(DELETE_SELECTED);
+    }
+
+    duplicateButton -> {
+      data-part: "duplicate-button";
+      aria-label: "Duplicate selected blocks";
+      aria-disabled: if state.selection == "executing-duplicate" then "true" else "false";
+      onClick: send(DUPLICATE_SELECTED);
+    }
+
+    moveButton -> {
+      data-part: "move-button";
+      aria-label: "Move selected blocks";
+      aria-disabled: if state.selection == "executing-move" then "true" else "false";
+      onClick: send(MOVE_SELECTED);
+    }
+
+    clearButton -> {
+      data-part: "clear-button";
+      aria-label: "Clear selection";
+      onClick: send(CLEAR_SELECTION);
+    }
+  }
+
+  affordance {
+    serves: decoration-layer;
+    specificity: 9;
+    when pluginType = "decoration-layer";
+    bind {
+      selectedBlockIds: selectedBlockIds;
+      allBlockIds: allBlockIds;
+      rootNodeId: rootNodeId;
+      canEdit: canEdit;
+    }
+  }
+
+  invariant {
+    example "selecting blocks transitions empty to active": {
+      after BLOCKS_SELECTED() -> ok
+      then state.selection = "active"
+    }
+
+    example "clearing selection transitions active to empty": {
+      after BLOCKS_SELECTED() -> ok
+      then state.selection = "active"
+      and CLEAR_SELECTION() -> ok
+      then state.selection = "empty"
+    }
+
+    example "DELETE_SELECTED transitions active to executing-delete": {
+      after BLOCKS_SELECTED() -> ok
+      then state.selection = "active"
+      and DELETE_SELECTED() -> ok
+      then state.selection = "executing-delete"
+    }
+
+    example "EXECUTION_COMPLETE after delete transitions to empty": {
+      after BLOCKS_SELECTED() -> ok
+      and DELETE_SELECTED() -> ok
+      and EXECUTION_COMPLETE() -> ok
+      then state.selection = "empty"
+    }
+
+    example "DUPLICATE_SELECTED transitions active to executing-duplicate": {
+      after BLOCKS_SELECTED() -> ok
+      and DUPLICATE_SELECTED() -> ok
+      then state.selection = "executing-duplicate"
+    }
+
+    example "EXECUTION_ERROR after delete returns to active": {
+      after BLOCKS_SELECTED() -> ok
+      and DELETE_SELECTED() -> ok
+      and EXECUTION_ERROR() -> ok
+      then state.selection = "active"
+    }
+
+    always "batchToolbar is hidden in empty state": {
+      batchToolbar.hidden = true
+    }
+
+    always "data-state on root reflects selection FSM": {
+      root.dataState = state.selection
+    }
+
+    always "blockHighlight aria-hidden true prevents screen-reader clutter": {
+      blockHighlight.ariaHidden = "true"
+    }
+
+    never "batchToolbar shown while selection state is empty": {
+      state.selection = "empty" and batchToolbar.hidden = false
+    }
+
+    never "delete or duplicate buttons active while executing-delete": {
+      state.selection = "executing-delete" and deleteButton.ariaDisabled = "false"
+    }
+
+    forall "all selection states are reachable": {
+      given s in selectionStates
+      then s.reachable = true
+    }
+
+    action deleteButton {
+      requires: state.selection = "active"
+      ensures ok: state.selection = "executing-delete"
+    }
+
+    action clearButton {
+      requires: state.selection = "active"
+      ensures ok: state.selection = "empty"
+    }
+
+    "selectionCount label must reflect the current count of selected block IDs so screen-reader users always hear the correct count announced via aria-live polite region";
+    "toolbar must be repositioned whenever selectedBlockIds changes to stay visually proximate to the selection";
+  }
+
+}

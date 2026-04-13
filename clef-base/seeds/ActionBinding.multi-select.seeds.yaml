@@ -1,0 +1,54 @@
+# ActionBinding seeds — multi-block selection batch operations (PP-multi-select)
+#
+# Three bindings:
+#   multi-select-delete    — batch Outline/removeChild over every selected block ID
+#   multi-select-duplicate — batch ContentNode/clone over every selected block ID
+#   multi-select-clear     — clear the React-local selection state (Escape)
+#
+# Invoked by RecursiveBlockEditor's handleBatchDelete and keyboard handler.
+# The multi-select-overlay.widget Delete and Duplicate toolbar buttons also
+# invoke these bindings via ActionBinding/invoke.
+#
+# parameterMap conventions:
+#   context.nodeId      — the individual block ContentNode ID (looped by caller)
+#   context.rootNodeId  — the parent Outline node (needed by removeChild)
+#   context.blockIds    — JSON-encoded array for bulk-capable endpoints
+
+concept: ActionBinding
+action: bind
+entries:
+  # --- Batch delete: removes each selected block from its parent Outline ---
+  - name: multi-select-delete
+    binding: multi-select-delete
+    target: "Outline/removeChild"
+    parameterMap: '{"parent":"context.rootNodeId","child":"context.nodeId"}'
+    executionPolicy: "pessimistic"
+    confirmWhen: "false"
+    label: "Delete"
+    buttonVariant: "destructive"
+    tags: ["multi-select", "batch", "block-editor"]
+
+  # --- Batch duplicate: clones each selected block as a sibling ---
+  # Note: PP1.07 handles Cmd+D single-block duplicate; this binding covers
+  # the multi-select toolbar "Duplicate" button for batch scenarios.
+  - name: multi-select-duplicate
+    binding: multi-select-duplicate
+    target: "ContentNode/clone"
+    parameterMap: '{"node":"context.nodeId","parent":"context.rootNodeId"}'
+    executionPolicy: "auto"
+    confirmWhen: "false"
+    label: "Duplicate"
+    tags: ["multi-select", "batch", "block-editor"]
+
+  # --- Clear selection: no-op concept action; clears React selection state ---
+  # Escape key handling is done entirely in React (clearSelection()); this seed
+  # exists so the multi-select-overlay toolbar clear button has a registered
+  # binding and the ActionBinding catalog is self-consistent.
+  - name: multi-select-clear
+    binding: multi-select-clear
+    target: "Intent/dismiss"
+    parameterMap: '{"intent":"multi-select-clear"}'
+    executionPolicy: "auto"
+    confirmWhen: "false"
+    label: "Clear selection"
+    tags: ["multi-select", "block-editor"]

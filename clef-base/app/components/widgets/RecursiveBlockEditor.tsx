@@ -1261,16 +1261,89 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
             aria-label="Document blocks"
             style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}
           >
-            {children.map((child) => {
+            {children.map((child, childIndex) => {
               const resolved = resolvedWidgets.get(child.id);
               const isSelected = selectedBlockIds.has(child.id);
+              const isHovered = currentHoveredBlockId === child.id;
+              const isDragOver = dragOverBlockId === child.id;
               return (
                 <li
                   key={child.id}
                   data-part="block-list-item"
                   data-block-id={child.id}
                   data-selected={isSelected ? 'true' : 'false'}
+                  data-hovered={isHovered ? 'true' : 'false'}
+                  onPointerEnter={() => setCurrentHoveredBlockId(child.id)}
+                  onPointerLeave={() => setCurrentHoveredBlockId((prev) => prev === child.id ? '' : prev)}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                    const midY = rect.top + rect.height / 2;
+                    setDragOverBlockId(child.id);
+                    setDropPosition(e.clientY < midY ? 'before' : 'after');
+                  }}
+                  onDragLeave={(e) => {
+                    if (!(e.currentTarget as HTMLElement).contains(e.relatedTarget as Node)) {
+                      setDragOverBlockId((prev) => prev === child.id ? '' : prev);
+                    }
+                  }}
+                  onDrop={async (e) => {
+                    e.preventDefault();
+                    setDragOverBlockId('');
+                    const srcBlockId = e.dataTransfer.getData('text/clef-block-id');
+                    const srcParentId = e.dataTransfer.getData('text/clef-parent-id');
+                    const srcIdxStr = e.dataTransfer.getData('text/clef-block-index');
+                    const srcIndex = parseInt(srcIdxStr, 10);
+                    if (!srcBlockId || srcBlockId === child.id) return;
+                    const newIndex = dropPosition === 'before' ? childIndex : childIndex + 1;
+                    try {
+                      const result = await invoke('ActionBinding', 'invoke', {
+                        binding: 'block-drop',
+                        context: JSON.stringify({
+                          blockId: srcBlockId,
+                          fromParentId: srcParentId,
+                          fromIndex: srcIndex,
+                          toParentId: rootNodeId,
+                          toIndex: newIndex,
+                        }),
+                      });
+                      if (result.variant === 'ok') {
+                        loadChildren();
+                      } else {
+                        console.warn('[RecursiveBlockEditor] block-drop non-ok:', result.variant);
+                      }
+                    } catch (err) {
+                      console.error('[RecursiveBlockEditor] block-drop failed:', err);
+                    }
+                  }}
+                  style={{ position: 'relative' }}
                 >
+                  {/* Drop zone indicator — above block during active drag-over */}
+                  <BlockDropZoneIndicator active={isDragOver && dropPosition === 'before'} position="before" />
+
+                  {/* Block handle — left gutter, visible on hover */}
+                  {canEdit && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: '-28px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        pointerEvents: 'auto',
+                        zIndex: 6,
+                      }}
+                    >
+                      <BlockHandle
+                        blockId={child.id}
+                        parentId={rootNodeId}
+                        blockIndex={childIndex}
+                        canEdit={canEdit}
+                        onReorder={loadChildren}
+                      />
+                    </div>
+                  )}
+
                   <BlockSlot
                     nodeId={child.id}
                     schema={child.schema}
@@ -1286,6 +1359,9 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
                     editorFlavor={editorFlavor}
                     decorationLayerEntries={decorationLayerEntries}
                   />
+
+                  {/* Drop zone indicator — below block during active drag-over */}
+                  <BlockDropZoneIndicator active={isDragOver && dropPosition === 'after'} position="after" />
                 </li>
               );
             })}
@@ -1539,7 +1615,7 @@ interface BlockSlotProps {
   rootNodeId: string;
   editorFlavor: EditorFlavor;
   /** Decoration-layer slot entries resolved by the parent editor (shared across all blocks). */
-  decorationLayerEntries: import('./SlotResolver').SlotEntry[];
+  decorationLayerEntries: SlotEntry[];
 }
 
 const BlockSlot: React.FC<BlockSlotProps> = ({
@@ -1583,6 +1659,61 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
   }
 
   const [spellPopover, setSpellPopover] = useState<SpellPopoverState | null>(null);
+
+  // -------------------------------------------------------------------------
+  // Link hover preview state (PP-link-hover)
+  // -------------------------------------------------------------------------
+
+  interface LinkHoverState { targetNodeId: string; anchorRect: DOMRect; }
+  const [linkHoverState, setLinkHoverState] = useState<LinkHoverState | null>(null);
+  const [linkPreviewOpen, setLinkPreviewOpen] = useState(false);
+  const linkEnterTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const linkLeaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const resolveLinkId = useCallback((el: Element): string | null => {
+    const mark = el.getAttribute('data-mark');
+    if (mark === 'wikilink' || mark === 'link' || mark === 'mention') {
+      return el.getAttribute('data-target-node-id') || el.getAttribute('data-node-id') || el.getAttribute('data-href') || null;
+    }
+    if (el.getAttribute('data-resolved-widget') && el.hasAttribute('data-target-node-id')) {
+      return el.getAttribute('data-target-node-id');
+    }
+    return null;
+  }, []);
+
+  const handleLinkMouseEnter = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    let t = e.target as Element | null;
+    while (t && t !== e.currentTarget) {
+      const id = resolveLinkId(t);
+      if (id) {
+        const rect = t.getBoundingClientRect();
+        if (linkLeaveTimer.current !== null) { clearTimeout(linkLeaveTimer.current); linkLeaveTimer.current = null; }
+        if (linkEnterTimer.current !== null) clearTimeout(linkEnterTimer.current);
+        linkEnterTimer.current = setTimeout(() => {
+          linkEnterTimer.current = null;
+          setLinkHoverState({ targetNodeId: id, anchorRect: rect });
+          setLinkPreviewOpen(true);
+        }, 300);
+        return;
+      }
+      t = t.parentElement;
+    }
+  }, [resolveLinkId]);
+
+  const handleLinkMouseLeave = useCallback(() => {
+    if (linkEnterTimer.current !== null) { clearTimeout(linkEnterTimer.current); linkEnterTimer.current = null; }
+    linkLeaveTimer.current = setTimeout(() => { linkLeaveTimer.current = null; setLinkPreviewOpen(false); }, 100);
+  }, []);
+
+  useEffect(() => () => {
+    if (linkEnterTimer.current !== null) clearTimeout(linkEnterTimer.current);
+    if (linkLeaveTimer.current !== null) clearTimeout(linkLeaveTimer.current);
+  }, []);
+
+  const closeLinkPreview = useCallback(() => {
+    if (linkLeaveTimer.current !== null) { clearTimeout(linkLeaveTimer.current); linkLeaveTimer.current = null; }
+    setLinkPreviewOpen(false);
+  }, []);
 
   const handleContextMenu = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const annotations = getActiveAnnotations(nodeId);
