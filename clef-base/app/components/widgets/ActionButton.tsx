@@ -19,6 +19,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useKernelInvoke } from '../../../lib/clef-provider';
+import { useShortcutPeek } from '../../../lib/useShortcutPeek';
 
 // ---------------------------------------------------------------------------
 // Public interface
@@ -92,6 +93,10 @@ export const ActionButton: React.FC<ActionButtonProps> = ({
   disabled = false,
 }) => {
   const invoke = useKernelInvoke();
+  const { peek } = useShortcutPeek();
+
+  // Ref to the primary button element — used as anchor for the shortcut peek hint.
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   // ------- kernel-sourced config from ActionBinding --------
   const [resolvedLabel, setResolvedLabel] = useState<string>(labelProp ?? '');
@@ -220,8 +225,10 @@ export const ActionButton: React.FC<ActionButtonProps> = ({
   // 'confirming' the component transitions to the confirming state above.
   const handleClick = useCallback(() => {
     if (fsmState !== 'idle' || disabled) return;
+    // Show the ephemeral shortcut peek hint near the button (KB-15).
+    peek(binding, buttonRef.current);
     executeAction();
-  }, [fsmState, disabled, executeAction]);
+  }, [fsmState, disabled, binding, peek, executeAction]);
 
   // CONFIRM from confirming → executing via ActionBinding/confirm
   const handleConfirm = useCallback(async () => {
@@ -329,6 +336,7 @@ export const ActionButton: React.FC<ActionButtonProps> = ({
     >
       {/* Primary button — anatomy part: button */}
       <button
+        ref={buttonRef}
         data-part="button"
         data-variant={resolvedVariant}
         data-loading={showSpinner ? 'true' : 'false'}
@@ -477,6 +485,8 @@ export const ActionButtonCompact: React.FC<ActionButtonProps> = ({
   disabled = false,
 }) => {
   const invoke = useKernelInvoke();
+  const { peek } = useShortcutPeek();
+  const compactButtonRef = useRef<HTMLButtonElement>(null);
 
   const [resolvedLabel, setResolvedLabel] = useState<string>(labelProp ?? '');
   const [resolvedIcon, setResolvedIcon] = useState<string | undefined>(iconProp);
@@ -527,6 +537,8 @@ export const ActionButtonCompact: React.FC<ActionButtonProps> = ({
 
   const handleClick = useCallback(async () => {
     if (fsmState !== 'idle' || disabled) return;
+    // Show the ephemeral shortcut peek hint near the button (KB-15).
+    peek(binding, compactButtonRef.current);
     setFsmState('executing');
     try {
       const result = await invoke('ActionBinding', 'invoke', {
@@ -551,13 +563,14 @@ export const ActionButtonCompact: React.FC<ActionButtonProps> = ({
       setFsmState('idle');
       onError?.('error', msg);
     }
-  }, [fsmState, disabled, binding, invoke, onSuccess, onError]);
+  }, [fsmState, disabled, binding, peek, invoke, onSuccess, onError]);
 
   const isExecuting = fsmState === 'executing';
   const showIcon    = !!resolvedIcon;
 
   return (
     <button
+      ref={compactButtonRef}
       data-part="button"
       data-state={fsmState}
       data-variant={resolvedVariant}

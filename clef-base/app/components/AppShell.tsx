@@ -91,6 +91,8 @@ export const AppShell: React.FC<{ children: React.ReactNode; sessionUser?: strin
       data-keybinding-scope="app"
       style={{ paddingTop: isInSpace ? 32 : 0 }}
     >
+      {/* First-run keybinding onboarding toast — mounts once, dismissed persistently (KB-15) */}
+      {firstRunToast}
       {isInSpace && currentSpace && (
         <div className="space-indicator-bar">
           <div className="space-indicator-bar__context">
