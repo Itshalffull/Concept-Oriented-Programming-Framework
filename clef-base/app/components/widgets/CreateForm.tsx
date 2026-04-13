@@ -214,6 +214,8 @@ export const CreateForm: React.FC<CreateFormProps> = ({
           const specResult = await invoke('InteractionSpec', 'get', {
             name: destinationId,
           });
+          // eslint-disable-next-line no-console
+          console.log('[CreateForm Tier 1a probe]', { destinationId, specResult });
           if (specResult.variant === 'ok') {
             const cs = specResult.create_surface as string | undefined;
             const cmh = specResult.create_mode_hint as string | undefined;
@@ -225,9 +227,13 @@ export const CreateForm: React.FC<CreateFormProps> = ({
                 'modal';
             }
           }
-        } catch {
-          // InteractionSpec/get failure → skip Tier 1a
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.warn('[CreateForm Tier 1a probe] failed', { destinationId, err });
         }
+      } else {
+        // eslint-disable-next-line no-console
+        console.log('[CreateForm Tier 1a probe] no destinationId provided');
       }
 
       // ------ Tier 1b: Schema displayWidget Property -----------------------
