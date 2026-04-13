@@ -1,14 +1,19 @@
 # InputRule seeds -- GitHub-flavored markdown callout shortcut (LE-22, §3.7).
+# Updated VPR-14: after VPR-20 refactor the three callout dialects are
+# micromark extensions on the single "markdown" slot; the standalone
+# "markdown-github-callout" language slot no longer exists.  The companion
+# ActionBinding (markdown-transform-to-github-callout) now dispatches
+# Parse/parse with language:"markdown" and options.extensions containing
+# "micromark-extension-github-callout" rather than a distinct language key.
 #
 # github-callout: fires when a paragraph line matches the GitHub callout syntax
 #   ^> \[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]
 #   capturedGroup1 contains the matched keyword (e.g. "NOTE", "WARNING").
 #
 # Dispatches markdown-transform-to-github-callout which calls Parse/parse with
-# language "markdown-github-callout" so the github-callout Parse provider
-# (shipped at commit abf84b3d, LE-06) processes the line. The completion sync
-# routes the parsed result to Schema/applyTo(schema="callout") and sets the
-# paletteRole property from the captured keyword.
+# language "markdown" + extensions:["micromark-extension-github-callout"].
+# The completion sync routes the parsed result to Schema/applyTo(schema="callout")
+# and sets the paletteRole property from the captured keyword.
 #
 # Priority 110 (higher than the generic markdown-quote rule at 100) so that
 # "> [!NOTE]" binds to this rule before the plain blockquote rule can fire.

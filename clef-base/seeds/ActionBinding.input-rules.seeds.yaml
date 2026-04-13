@@ -1,5 +1,8 @@
 # ActionBinding seeds -- companion bindings for InputRule.markdown-heading.seeds.yaml
 # and InputRule.github-callout.seeds.yaml (LE-22, §3.7).
+# Updated VPR-14: markdown-transform-to-github-callout migrated from the retired
+# "markdown-github-callout" language slot to language:"markdown" with
+# options.extensions:["micromark-extension-github-callout"] per VPR-20 refactor.
 #
 # markdown-transform-to-heading-{1,3,4,5,6}: dispatched by the corresponding
 #   markdown-heading-N InputRule when a paragraph line starts with N hashes + space.
@@ -9,10 +12,12 @@
 #
 # markdown-transform-to-github-callout: dispatched by the github-callout InputRule
 #   when a paragraph line matches ^> \[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\].
-#   Calls Parse/parse with language "markdown-github-callout" so the provider
-#   (shipped at commit abf84b3d, LE-06) processes the captured line. A downstream
-#   sync applies schema "callout" via Schema/applyTo and sets paletteRole from
-#   capturedGroup1 (the keyword in upper-case, e.g. "NOTE" -> paletteRole "info").
+#   Calls Parse/parse with language "markdown" + extensions:["micromark-extension-
+#   github-callout"]. The standalone "markdown-github-callout" provider was retired
+#   at commit 13ff5cfa (VPR-20) when all three callout dialects were refactored into
+#   micromark extensions on the single "markdown" slot. A downstream sync applies
+#   schema "callout" via Schema/applyTo and sets paletteRole from capturedGroup1
+#   (the keyword in upper-case, e.g. "NOTE" -> paletteRole "info").
 #   The paletteRole mapping is performed by the sync's guard; the ActionBinding
 #   passes the raw capturedGroup1 and the focusedBlockId for routing.
 
@@ -79,15 +84,18 @@ entries:
 
   # Dispatched by the github-callout InputRule when a paragraph line matches
   # ^> \[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\].
-  # Routes to Parse/parse with language "markdown-github-callout" so the provider
-  # registered at LE-06 (commit abf84b3d) processes the line and emits a callout
-  # completion. capturedGroup1 carries the keyword (NOTE/TIP/IMPORTANT/WARNING/CAUTION).
-  # A downstream sync applies Schema/applyTo(schema="callout") and sets paletteRole
-  # from the keyword via the sync guard's keyword-to-role mapping.
+  # Routes to Parse/parse with language "markdown" and
+  # options.extensions:["micromark-extension-github-callout"] (VPR-14/VPR-20).
+  # The standalone "markdown-github-callout" language slot was retired when the
+  # three callout dialects were refactored into micromark extensions on the single
+  # "markdown" slot (commit 13ff5cfa).  The micromark-parse provider selects the
+  # extension from its KNOWN_EXTENSIONS registry; the completion sync applies
+  # Schema/applyTo(schema="callout") and sets paletteRole from capturedGroup1
+  # (the keyword in upper-case, e.g. "NOTE" -> paletteRole "info").
   - name: markdown-transform-to-github-callout
     binding: markdown-transform-to-github-callout
     target: "Parse/parse"
-    parameterMap: '{"language":"markdown-github-callout","text":"context.matchedText","keyword":"context.capturedGroup1","entity_id":"context.focusedBlockId"}'
+    parameterMap: '{"language":"markdown","options":{"extensions":["micromark-extension-github-callout"]},"text":"context.matchedText","keyword":"context.capturedGroup1","entity_id":"context.focusedBlockId"}'
     executionPolicy: "auto"
     slash_command: false
     toolbar_command: false

@@ -2,6 +2,7 @@ node_modules/
 dist/
 .playwright-mcp/
 .clef/
+!clef-base/.clef/
 skill-packs/
 generated/schemas/
 generated/typescript/

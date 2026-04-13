@@ -1,0 +1,195 @@
+# Clef Base — Default Provider Manifest
+# VPR-14: Default manifest covering all built-in provider slots.
+#
+# Three-layer architecture (PRD §2):
+#   Layer A  ManifestReader registry  — format-specific config readers
+#   Layer B  ProviderManifest         — aggregates readers, emits PluginRegistry/register per entry
+#   Layer C  Four generic syncs       — fan out to Parse / Format / Highlight / ContentSerializer
+#
+# ManifestReader priority order (highest wins on slot collision):
+#   clef-yaml > prettier-config > editorconfig > package-json > vscode-settings
+#   > vscode-extension > tree-sitter (auto-discovery, lowest priority)
+#
+# Slot naming:
+#   parse / format / highlight  →  slot = language identifier
+#   content-serializer          →  slot = target format identifier
+#
+# slot-group is a manifest-level convenience: expands to N individual
+# PluginRegistry/register calls (one per language) at load time (PRD §4.3).
+# The registry itself only sees individual slots.
+#
+# options are provider-opaque and passed verbatim to the provider function (PRD §4.4).
+# extensions compose provider capability; providers that don't support the field
+# ignore it with no opt-in ceremony required (PRD §4.8).
+
+version: 1
+
+# ── Parse ─────────────────────────────────────────────────────────────────────
+#
+# Providers registered here handle raw-text → AST transformations.
+# micromark-parse is the markdown host; the three callout dialects are
+# micromark extensions composed onto the single "markdown" slot (VPR-20).
+# Standalone per-dialect slots (markdown-github-callout, etc.) were retired.
+# clef-framework-parse meta-provider wraps the five framework parsers so
+# Clef DSL code blocks get a real AST, not just tokenized text (VPR-09).
+
+parse:
+  # Markdown with composable dialect extensions (VPR-20 callout refactor).
+  # github-callout  → > [!NOTE|TIP|IMPORTANT|WARNING|CAUTION]
+  # mkdocs-callout  → !!! keyword "Optional title"
+  # obsidian-callout → > [!keyword]+/- (foldable)
+  - slot: markdown
+    provider: micromark-parse
+    options:
+      extensions:
+        - micromark-extension-github-callout
+        - micromark-extension-mkdocs-callout
+        - micromark-extension-obsidian-callout
+
+  # LaTeX math via KaTeX (no extensions needed).
+  - slot: latex
+    provider: katex-parse
+
+  # HTML via the platform DOM parser (browser or server JSDOM).
+  - slot: html
+    provider: domparser-parse
+
+  # Five Clef DSLs — meta-provider wrapping the framework parsers (VPR-09).
+  # Each sub-slot gets the full AST from the corresponding parser:
+  #   handlers/ts/framework/{parser,sync-parser,widget-parser,theme-parser,derived-parser}.ts
+  - slot-group: clef-dsls
+    provider: clef-framework-parse
+    languages:
+      - clef-concept
+      - clef-sync
+      - clef-widget
+      - clef-theme
+      - clef-derived
+
+# ── Highlight ─────────────────────────────────────────────────────────────────
+#
+# Providers registered here handle AST / source text → token annotations.
+# shiki covers the broad mainstream language set using TextMate grammars
+# with themed output.  clef-dsl-highlight emits keyword/identifier/string/
+# operator/comment annotations by walking the framework parsers' ASTs (VPR-10).
+# katex-highlight covers LaTeX display blocks.
+# textmate is registered as a wildcard fallback: the vscode-extension reader
+# discovers installed extension grammars at boot and registers them here; any
+# language slot not already claimed by shiki or clef-dsl-highlight falls through
+# to textmate using the grammar path the extension declared (VPR-12, VPR-07).
+
+highlight:
+  # Shiki — mainstream languages (TextMate grammars, themeable output).
+  - slot-group: shiki-mainstream
+    provider: shiki
+    languages:
+      - typescript
+      - javascript
+      - rust
+      - solidity
+      - swift
+      - go
+      - python
+      - sql
+      - bash
+      - yaml
+      - json
+      - html
+      - css
+      - markdown
+      - java
+      - kotlin
+      - csharp
+      - cpp
+      - ruby
+      - php
+      - elixir
+
+  # Clef DSL highlighter — token annotations from framework parser ASTs (VPR-10).
+  # Output shape matches shiki (start/end/kind/scope) so downstream widgets
+  # render both uniformly.  Token kinds: keyword | identifier | string | number
+  # | operator | comment | type | attribute (PRD §4.7).
+  - slot-group: clef-dsls
+    provider: clef-dsl-highlight
+    languages:
+      - clef-concept
+      - clef-sync
+      - clef-widget
+      - clef-theme
+      - clef-derived
+
+  # LaTeX display rendering via KaTeX highlight pass.
+  - slot: latex
+    provider: katex-highlight
+
+  # TextMate fallback — covers any language slot discovered by the
+  # vscode-extension ManifestReader from installed extension grammars.
+  # Registered last so shiki and clef-dsl-highlight always take priority
+  # on the 21 + 5 slots they own (PRD §4.3 slot-group order wins).
+  - slot: "*"
+    provider: textmate
+    options:
+      fallbackOnly: true
+
+# ── Format ────────────────────────────────────────────────────────────────────
+#
+# Providers registered here handle source text → Patch (line-diff) transformations.
+# prettier covers web-tier languages.  Language-specific formatters handle the
+# codegen targets.  micromark-format provides a lossless round-trip formatter for
+# markdown (normalizes whitespace, fence styles, list markers) without touching prose.
+# All Format providers return a Patch via the same line-diff pipeline (PRD §4.9).
+
+format:
+  # Prettier — web-tier languages via a single plugin (VPR-05 reads .prettierrc
+  # and package.json prettier field to overlay user options at runtime).
+  - slot-group: prettier-web
+    provider: prettier
+    languages:
+      - javascript
+      - typescript
+      - json
+      - css
+      - html
+      - markdown
+
+  # Solidity — prettier-plugin-solidity (VPR-16) registered as its own slot
+  # so it can be deregistered independently without touching the prettier group.
+  - slot: solidity
+    provider: prettier-plugin-solidity
+
+  # Rust — rustfmt (VPR-06).  Prefers wasm rustfmt; falls back to subprocess
+  # if the binary is in PATH.  Missing binary → warn + skip per PRD §8.3.
+  - slot: rust
+    provider: rustfmt
+
+  # Swift — swift-format (VPR-18) via subprocess.  Requires swift-format in PATH.
+  - slot: swift
+    provider: swift-format
+
+  # Markdown round-trip normalizer.  Runs after micromark-parse to reconstruct
+  # canonical markdown from the AST — normalizes fence styles, list markers,
+  # and heading whitespace without altering prose content.
+  - slot: markdown
+    provider: micromark-format
+
+# ── ContentSerializer ──────────────────────────────────────────────────────────
+#
+# Providers registered here handle ContentNode trees → serialized output in a
+# target format.  Each slot corresponds to a target format identifier.
+
+content-serializer:
+  # Markdown — default export for most content (lossless for block content).
+  - slot: markdown
+    provider: markdown-serialize
+
+  # HTML — for web export and clipboard copy with rich formatting.
+  - slot: html
+    provider: html-serialize
+
+  # JSON — for API responses and inter-service transfer.
+  - slot: json
+    provider: json-serialize
+
+  # PDF — for print/export workflows.
+  - slot: pdf
+    provider: pdf-serialize
