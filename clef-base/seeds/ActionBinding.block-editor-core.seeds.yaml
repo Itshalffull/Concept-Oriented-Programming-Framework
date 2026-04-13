@@ -1,0 +1,26 @@
+# ActionBinding seeds — block-editor core dispatch
+#
+# Two bindings the RecursiveBlockEditor dispatches on every edit/insert:
+#
+#   update-block-content — called on contentEditable blur to persist block body
+#   insert-block         — called on Enter-in-block or slash-menu to create a new child
+#
+# These bindings back the core block-editor typing and structure loop.
+# Without them, typing in a block has no persistence path and Enter silently fails.
+
+concept: ActionBinding
+action: bind
+entries:
+  - name: update-block-content
+    binding: update-block-content
+    target: "ContentNode/update"
+    parameterMap: '{"node":"context.nodeId","content":"context.content"}'
+    executionPolicy: "auto"
+    label: "Update block content"
+
+  - name: insert-block
+    binding: insert-block
+    target: "ContentNode/createWithSchema"
+    parameterMap: '{"id":"context.id","schema":"context.schema","body":"context.content"}'
+    executionPolicy: "auto"
+    label: "Insert block"

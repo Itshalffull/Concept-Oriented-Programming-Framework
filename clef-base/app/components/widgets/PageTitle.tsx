@@ -87,6 +87,16 @@ export const PageTitle: React.FC<PageTitleProps> = ({
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latestTitleRef = useRef(localTitle);
   useEffect(() => { latestTitleRef.current = localTitle; }, [localTitle]);
+  const hasInitializedRef = useRef(false);
+
+  // Seed DOM once on mount so React never reconciles children on subsequent renders
+  // (rendering {localTitle} as a JSX child resets the caret on every keystroke).
+  useEffect(() => {
+    if (inputRef.current && !hasInitializedRef.current) {
+      inputRef.current.textContent = titleProp || '';
+      hasInitializedRef.current = true;
+    }
+  }, [titleProp]);
 
   // Auto-focus on mount when requested
   useEffect(() => {
@@ -241,9 +251,10 @@ export const PageTitle: React.FC<PageTitleProps> = ({
           // (actual placeholder rendered via data-placeholder + CSS)
         }}
       >
-        {/* Initial render populates via titleProp; thereafter the DOM is
-            owned by contenteditable. We set textContent in a useEffect. */}
-        {localTitle || ''}
+        {/* IMPORTANT: no JSX children. DOM content is seeded once in a mount
+            useEffect and thereafter owned by contentEditable. Rendering
+            {localTitle} here would replace the text node on every keystroke
+            and reset the caret to offset 0. */}
       </div>
     </div>
   );

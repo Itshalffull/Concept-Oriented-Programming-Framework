@@ -812,12 +812,15 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
   const handleCreateFirstBlock = useCallback(async () => {
     if (!canEdit) return;
     try {
+      const id = `${rootNodeId}:block:${Date.now()}`;
       const result = await invoke('ActionBinding', 'invoke', {
         binding: 'insert-block',
         context: JSON.stringify({
+          id,
           rootNodeId,
           schema: 'paragraph',
           displayMode: 'block-editor',
+          content: '',
         }),
       });
       if (result.variant === 'ok' || (result.variant as string)?.startsWith('pending')) {
