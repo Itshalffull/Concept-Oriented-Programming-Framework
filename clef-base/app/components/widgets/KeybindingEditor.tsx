@@ -77,12 +77,25 @@ export interface KeyStroke {
 export interface KeyBindingRecord {
   binding: string;
   actionBinding: string;
+  /** Seed default chord. */
   chord: KeyStroke[];
   scope: string;
   label: string;
   category?: string;
+  /**
+   * True when a user-scope override exists for this binding (KB-11).
+   * Populated by listByScope joining the userOverrides relation.
+   */
   isModified?: boolean;
+  /**
+   * Deprecated: use userChord/workspaceChord instead.
+   * Kept for backwards compatibility with display-only callers.
+   */
   defaultChord?: KeyStroke[];
+  /** User-scoped override chord, or null if none. Populated by listByScope. */
+  userChord?: KeyStroke[] | null;
+  /** Workspace-scoped override chord, or null if none. Populated by listByScope. */
+  workspaceChord?: KeyStroke[] | null;
 }
 
 /** FSM states matching keybinding-editor.widget */
@@ -191,6 +204,16 @@ function KeycapChip({ text }: { text: string }): React.ReactElement {
       {text}
     </kbd>
   );
+}
+
+/**
+ * Walk the override chain for a binding record (KB-11 §3.6):
+ *   1. userChord (user Property override)
+ *   2. workspaceChord (workspace Property override)
+ *   3. chord (seed default)
+ */
+function resolveEffectiveChord(record: KeyBindingRecord): KeyStroke[] {
+  return record.userChord ?? record.workspaceChord ?? record.chord;
 }
 
 function ChordChips({ chord }: { chord: KeyStroke[] }): React.ReactElement {
@@ -377,13 +400,18 @@ export function KeybindingEditor({
       // Persist.
       try {
         if (mode === 'edit' && context) {
+          // Write user-scoped override. The handler stores this in both the
+          // internal userOverrides relation and the cross-concept propertyOverrides
+          // relation (keybinding-override:<id>:user), making it observable by
+          // other concepts via Property-keyed queries (KB-11 §3.6).
           await kernelCall('KeyBinding', 'setOverride', {
             binding: context,
-            chord: JSON.stringify(chord),
+            scope: 'user',
+            chord,
           });
         } else if (mode === 'create') {
           await kernelCall('KeyBinding', 'register', {
-            chord: JSON.stringify(chord),
+            chord,
             scope: scopeFilter ?? 'app',
           });
         }
@@ -540,18 +568,21 @@ export function KeybindingEditor({
   const handleResolveReplace = useCallback(async () => {
     if (!conflict) return;
     try {
-      await kernelCall('KeyBinding', 'setOverride', {
+      // Clear the conflicting binding's user override by using clearOverride
+      // (more correct than setOverride with empty chord, which would error).
+      await kernelCall('KeyBinding', 'clearOverride', {
         binding: conflict.existingBindingId,
-        chord: JSON.stringify([]), // clear existing
+        scope: 'user',
       });
       if (mode === 'edit' && context) {
         await kernelCall('KeyBinding', 'setOverride', {
           binding: context,
-          chord: JSON.stringify(recordedStrokes),
+          scope: 'user',
+          chord: recordedStrokes,
         });
       } else if (mode === 'create') {
         await kernelCall('KeyBinding', 'register', {
-          chord: JSON.stringify(recordedStrokes),
+          chord: recordedStrokes,
           scope: scopeFilter ?? 'app',
         });
       }
@@ -570,12 +601,13 @@ export function KeybindingEditor({
       if (mode === 'edit' && context) {
         await kernelCall('KeyBinding', 'setOverride', {
           binding: context,
-          chord: JSON.stringify(recordedStrokes),
+          scope: 'user',
+          chord: recordedStrokes,
           priorityBump: true,
         });
       } else if (mode === 'create') {
         await kernelCall('KeyBinding', 'register', {
-          chord: JSON.stringify(recordedStrokes),
+          chord: recordedStrokes,
           scope: scopeFilter ?? 'app',
           priorityBump: true,
         });
@@ -600,9 +632,10 @@ export function KeybindingEditor({
   const handleResetBinding = useCallback(async () => {
     if (!context) return;
     try {
-      await kernelCall('KeyBinding', 'resetOverride', { binding: context });
+      // Clear user-scope override — falls back to workspace then seed default.
+      await kernelCall('KeyBinding', 'clearOverride', { binding: context, scope: 'user' });
     } catch {
-      // Non-fatal.
+      // Non-fatal — binding may have no user override (not_found is expected).
     }
   }, [context, kernelCall]);
 
@@ -640,7 +673,7 @@ export function KeybindingEditor({
         data-binding-id={b.binding}
         role="option"
         aria-selected={isSelected}
-        aria-label={`${b.label}, chord: ${renderChord(b.chord, isMac())}, scope: ${b.scope}`}
+        aria-label={`${b.label}, chord: ${renderChord(resolveEffectiveChord(b), isMac())}, scope: ${b.scope}`}
         tabIndex={0}
         style={{
           display: 'flex',
@@ -673,19 +706,22 @@ export function KeybindingEditor({
           data-part="keycap-chips"
           style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
         >
-          {b.chord.length > 0 ? (
-            <ChordChips chord={b.chord} />
-          ) : (
-            <span
-              style={{
-                fontSize: '0.75rem',
-                color: 'var(--color-text-muted, #888)',
-                fontStyle: 'italic',
-              }}
-            >
-              unbound
-            </span>
-          )}
+          {(() => {
+            const effective = resolveEffectiveChord(b);
+            return effective.length > 0 ? (
+              <ChordChips chord={effective} />
+            ) : (
+              <span
+                style={{
+                  fontSize: '0.75rem',
+                  color: 'var(--color-text-muted, #888)',
+                  fontStyle: 'italic',
+                }}
+              >
+                unbound
+              </span>
+            );
+          })()}
         </div>
         <div
           data-part="scope-path"
@@ -880,20 +916,23 @@ export function KeybindingEditor({
               <span style={{ fontSize: '0.8rem', display: 'block', marginBottom: '4px' }}>
                 Current chord:
               </span>
-              {selectedBinding.chord.length > 0 ? (
-                <ChordChips chord={selectedBinding.chord} />
-              ) : (
-                <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted, #888)', fontStyle: 'italic' }}>
-                  unbound
-                </span>
-              )}
+              {(() => {
+                const effective = resolveEffectiveChord(selectedBinding);
+                return effective.length > 0 ? (
+                  <ChordChips chord={effective} />
+                ) : (
+                  <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted, #888)', fontStyle: 'italic' }}>
+                    unbound
+                  </span>
+                );
+              })()}
             </div>
-            {selectedBinding.isModified && selectedBinding.defaultChord && (
+            {selectedBinding.isModified && (
               <div style={{ margin: '8px 0' }}>
                 <span style={{ fontSize: '0.8rem', display: 'block', marginBottom: '4px' }}>
                   Default chord:
                 </span>
-                <ChordChips chord={selectedBinding.defaultChord} />
+                <ChordChips chord={selectedBinding.chord} />
               </div>
             )}
             <button

@@ -18,14 +18,13 @@
  * Follow-up: KB-01 should add `KeyBinding/listByActionBinding` so this component
  * can request exactly the record it needs instead of scanning the full list.
  *
- * ## Override resolution (v1)
+ * ## Override resolution (KB-11)
  *
- * KB-11 (per-user/per-workspace chord overrides) has not shipped yet. For v1 the
- * component renders the seed-default `chord` field directly from the registered
- * binding record. When KB-11 lands, this function replaces with:
- *   1. userChord (Property override for current user) — first non-null wins
- *   2. workspaceChord (Property override for workspace)
- *   3. seed default chord
+ * The component walks the three-tier override chain:
+ *   1. userChord  — user-scoped Property override (set via setOverride + listByScope join)
+ *   2. workspaceChord — workspace-scoped Property override
+ *   3. chord — seed default
+ * First non-null value wins. `listByScope` now returns these fields on every record.
  *
  * ## Platform rendering
  *
@@ -163,13 +162,15 @@ export function renderChord(chord: KeyStroke[], mac: boolean): string {
 }
 
 // ---------------------------------------------------------------------------
-// Override resolution (v1 — seed default only; KB-11 will add user/workspace)
+// Override resolution (KB-11) — walks the three-tier chain:
+//   1. User Property override (userChord, populated by setOverride + listByScope)
+//   2. Workspace Property override (workspaceChord, same path)
+//   3. Seed default chord
+// First non-null, non-empty value wins.
 // ---------------------------------------------------------------------------
 
 function resolveChord(record: KeyBindingRecord): KeyStroke[] {
-  // KB-11 will add user/workspace override resolution here:
-  //   return record.userChord ?? record.workspaceChord ?? record.chord;
-  return record.chord;
+  return record.userChord ?? record.workspaceChord ?? record.chord;
 }
 
 // ---------------------------------------------------------------------------

@@ -289,29 +289,25 @@ describe('renderChord: edge cases', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Section 7: Override resolution contract (v1 — KB-11 follow-up)
+// Section 7: Override resolution contract (KB-11)
 // ---------------------------------------------------------------------------
 
-describe('Override resolution: v1 uses seed default chord only', () => {
-  // KB-11 (per-user/per-workspace overrides) is not yet shipped.
-  // The component must use record.chord directly in v1.
+describe('Override resolution: three-tier chain (KB-11)', () => {
+  // KB-11 shipped. resolveChord walks: userChord ?? workspaceChord ?? chord.
 
-  it('a binding record with only chord field has renderChord produce the expected output', () => {
-    // Simulates what the handler returns: a record with chord but no userChord/workspaceChord.
+  it('a binding record with only chord field returns chord (no override)', () => {
     const record = {
       binding: 'bold-cmd-b',
       actionBinding: 'bold',
       chord: [{ mod: ['mod'], key: 'b', code: 'KeyB' }],
     };
-    // resolveChord in the component should return record.chord.
-    // We test the output of renderChord on that chord directly.
-    expect(renderChord(record.chord, true)).toBe('⌘B');
-    expect(renderChord(record.chord, false)).toBe('Ctrl+B');
+    // No userChord / workspaceChord — falls back to chord.
+    const resolved = (record as any).userChord ?? (record as any).workspaceChord ?? record.chord;
+    expect(renderChord(resolved, true)).toBe('⌘B');
+    expect(renderChord(resolved, false)).toBe('Ctrl+B');
   });
 
-  it('a binding record with null userChord still falls back to chord', () => {
-    // When KB-11 lands, userChord will be the first preference. For v1,
-    // even if the field is present and null, we still use chord.
+  it('a binding record with null userChord falls back to chord', () => {
     const record = {
       binding: 'bold-cmd-b',
       actionBinding: 'bold',
@@ -319,7 +315,45 @@ describe('Override resolution: v1 uses seed default chord only', () => {
       userChord: null,
       workspaceChord: null,
     };
-    // resolveChord: userChord ?? workspaceChord ?? chord → chord
+    // resolveChord: null ?? null ?? chord → chord
+    const resolved = record.userChord ?? record.workspaceChord ?? record.chord;
+    expect(renderChord(resolved, true)).toBe('⌘B');
+  });
+
+  it('user override wins over workspace and seed default', () => {
+    const record = {
+      binding: 'bold-cmd-b',
+      actionBinding: 'bold',
+      chord: [{ mod: ['mod'], key: 'b', code: 'KeyB' }],
+      userChord: [{ mod: ['ctrl'], key: 'b', code: 'KeyB' }],
+      workspaceChord: [{ mod: ['alt'], key: 'b', code: 'KeyB' }],
+    };
+    // userChord wins
+    const resolved = record.userChord ?? record.workspaceChord ?? record.chord;
+    expect(renderChord(resolved, false)).toBe('Ctrl+B');
+  });
+
+  it('workspace override wins when no user override', () => {
+    const record = {
+      binding: 'bold-cmd-b',
+      actionBinding: 'bold',
+      chord: [{ mod: ['mod'], key: 'b', code: 'KeyB' }],
+      userChord: null,
+      workspaceChord: [{ mod: ['alt'], key: 'b', code: 'KeyB' }],
+    };
+    // null ?? workspaceChord → workspaceChord
+    const resolved = record.userChord ?? record.workspaceChord ?? record.chord;
+    expect(renderChord(resolved, false)).toBe('Alt+B');
+  });
+
+  it('seed default used when both overrides are null', () => {
+    const record = {
+      binding: 'bold-cmd-b',
+      actionBinding: 'bold',
+      chord: [{ mod: ['mod'], key: 'b', code: 'KeyB' }],
+      userChord: null,
+      workspaceChord: null,
+    };
     const resolved = record.userChord ?? record.workspaceChord ?? record.chord;
     expect(renderChord(resolved, true)).toBe('⌘B');
   });

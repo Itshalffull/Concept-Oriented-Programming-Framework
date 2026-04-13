@@ -220,6 +220,11 @@ const _handler: FunctionalConceptHandler = {
   },
 
   // ─── Concept action: resolveKey ──────────────────────────────────────────
+  // Walks the override chain per §3.6 of the PRD (KB-11):
+  //   1. User override chord (userOverrides relation)
+  //   2. Workspace override chord (workspaceOverrides relation)
+  //   3. Seed default chord (bindings relation)
+  // First non-null wins. Resolution uses the effective chord for matching.
   resolveKey(input: Record<string, unknown>) {
     const scope = String(input.scope ?? '');
     const eventKey = String(input.eventKey ?? '');
@@ -244,11 +249,37 @@ const _handler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'bindings', {}, 'allBindings');
+    p = find(p, 'userOverrides', {}, 'allUserOverrides');
+    p = find(p, 'workspaceOverrides', {}, 'allWorkspaceOverrides');
 
-    // Compute the resolution result from the bindings at runtime
+    // Build effective bindings: override chain applied per record.
     p = mapBindings(p, (bindings) => {
       const all = (bindings.allBindings as Array<Record<string, unknown>>) ?? [];
-      return resolveAgainstBindings(all, scope, eventKey, eventCode, modifiers, prefix);
+      const userOverrides = new Map(
+        ((bindings.allUserOverrides as Array<Record<string, unknown>>) ?? []).map(
+          (o) => [String((o as any).id ?? ''), (o as any).chord as KeyStroke[] | undefined],
+        ),
+      );
+      const workspaceOverrides = new Map(
+        ((bindings.allWorkspaceOverrides as Array<Record<string, unknown>>) ?? []).map(
+          (o) => [String((o as any).id ?? ''), (o as any).chord as KeyStroke[] | undefined],
+        ),
+      );
+      // Produce a copy of each binding with its effective chord substituted.
+      return all.map((rec) => {
+        const id = String((rec as any).id ?? '');
+        const effectiveChord =
+          userOverrides.get(id) ??
+          workspaceOverrides.get(id) ??
+          ((rec as any).chord as KeyStroke[]);
+        return { ...(rec as object), chord: effectiveChord };
+      });
+    }, '_effectiveBindings');
+
+    // Compute the resolution result from the effective bindings at runtime
+    p = mapBindings(p, (bindings) => {
+      const effective = (bindings._effectiveBindings as Array<Record<string, unknown>>) ?? [];
+      return resolveAgainstBindings(effective, scope, eventKey, eventCode, modifiers, prefix);
     }, '_resolution');
 
     // Branch on the resolution type
@@ -270,13 +301,27 @@ const _handler: FunctionalConceptHandler = {
   },
 
   // ─── Concept action: listByScope ─────────────────────────────────────────
+  // Returns full binding records (not just ids) so callers can read
+  // userChord / workspaceChord override fields for display (KB-11).
   listByScope(input: Record<string, unknown>) {
     const scope = String(input.scope ?? '');
 
     let p = createProgram();
     p = find(p, 'bindings', {}, 'allBindings');
+    p = find(p, 'userOverrides', {}, 'allUserOverrides');
+    p = find(p, 'workspaceOverrides', {}, 'allWorkspaceOverrides');
     return completeFrom(p, 'ok', (bindings) => {
       const all = (bindings.allBindings as Array<Record<string, unknown>>) ?? [];
+      const userOverrides = new Map(
+        ((bindings.allUserOverrides as Array<Record<string, unknown>>) ?? []).map(
+          (o) => [String((o as any).id ?? ''), (o as any).chord as KeyStroke[] | undefined],
+        ),
+      );
+      const workspaceOverrides = new Map(
+        ((bindings.allWorkspaceOverrides as Array<Record<string, unknown>>) ?? []).map(
+          (o) => [String((o as any).id ?? ''), (o as any).chord as KeyStroke[] | undefined],
+        ),
+      );
       const scopeParts = scope.split('.');
       const matched = all
         .filter((rec) => {
@@ -285,7 +330,19 @@ const _handler: FunctionalConceptHandler = {
           return bParts.every((part: string, i: number) => part === scopeParts[i]);
         })
         .sort((a, c) => Number((c as any).priority ?? 0) - Number((a as any).priority ?? 0))
-        .map((r) => String((r as any).id ?? ''));
+        .map((r) => {
+          const id = String((r as any).id ?? '');
+          const userChord = userOverrides.get(id) ?? null;
+          const workspaceChord = workspaceOverrides.get(id) ?? null;
+          return {
+            ...(r as object),
+            binding: id,
+            userChord,
+            workspaceChord,
+            // isModified: true when user has an active override
+            isModified: userChord !== null,
+          };
+        });
       return { bindings: matched };
     }) as StorageProgram<Result>;
   },
@@ -307,6 +364,13 @@ const _handler: FunctionalConceptHandler = {
   },
 
   // ─── Concept action: setOverride ─────────────────────────────────────────
+  // Writes the override to:
+  //   1. Internal relation (userOverrides / workspaceOverrides) — used by
+  //      resolveKey and listByScope for fast in-handler lookups.
+  //   2. A cross-concept-readable propertyOverrides relation keyed by
+  //      "keybinding-override:<binding-id>:<scope>" so that external concepts
+  //      (e.g. a sync that calls Property/set) can observe override state
+  //      without coupling directly to KeyBinding storage (KB-11 §3.6).
   setOverride(input: Record<string, unknown>) {
     const binding = String(input.binding ?? '');
     const scope = String(input.scope ?? '');
@@ -329,8 +393,18 @@ const _handler: FunctionalConceptHandler = {
       'existing',
       (b) => {
         const relation = scope === 'user' ? 'userOverrides' : 'workspaceOverrides';
-        const stored = put(b, relation, binding, { chord });
-        return complete(stored, 'ok', {}) as StorageProgram<Result>;
+        // Internal override storage — fast lookup for resolveKey / listByScope.
+        let b2 = put(b, relation, binding, { id: binding, chord });
+        // Cross-concept Property key: "keybinding-override:<binding-id>".
+        // Scope is embedded in the relation key so user and workspace don't collide.
+        const propertyKey = `keybinding-override:${binding}:${scope}`;
+        b2 = put(b2, 'propertyOverrides', propertyKey, {
+          key: propertyKey,
+          bindingId: binding,
+          overrideScope: scope,
+          chord,
+        });
+        return complete(b2, 'ok', {}) as StorageProgram<Result>;
       },
       (b) => complete(b, 'error', {
         message: `No binding '${binding}' is registered.`,
@@ -339,6 +413,8 @@ const _handler: FunctionalConceptHandler = {
   },
 
   // ─── Concept action: clearOverride ───────────────────────────────────────
+  // Removes the override from both the internal relation and the cross-concept
+  // propertyOverrides relation (keeping the two stores in sync with setOverride).
   clearOverride(input: Record<string, unknown>) {
     const binding = String(input.binding ?? '');
     const scope = String(input.scope ?? '');
@@ -353,7 +429,10 @@ const _handler: FunctionalConceptHandler = {
         return branch(b2,
           'override',
           (b3) => {
-            const cleared = del(b3, relation, binding);
+            let cleared = del(b3, relation, binding);
+            // Also clear from cross-concept property store.
+            const propertyKey = `keybinding-override:${binding}:${scope}`;
+            cleared = del(cleared, 'propertyOverrides', propertyKey);
             return complete(cleared, 'ok', {}) as StorageProgram<Result>;
           },
           (b3) => complete(b3, 'not_found', {
