@@ -1,0 +1,56 @@
+# Table orchestration — insert a new column to the right of a given column index
+# For each existing table-row, creates one new table-cell ContentNode and inserts
+# it at colIndex+1, then wraps the whole operation as one UndoStack entry.
+
+sync TableInsertColumnRight [eager]
+  purpose: "When the table-insert-column-right binding fires, add a new table-cell at colIndex+1 into every existing table-row, then push one undo entry so the entire column insertion is a single undo step"
+when {
+  ActionBinding/invoke: [ binding: "table-insert-column-right"; context: ?ctx ]
+    => [ result: ?result ]
+}
+where {
+  bind(?ctx.tableId as ?tableId)
+  bind(?ctx.colIndex as ?colIndex)
+  bind(?colIndex + 1 as ?insertIndex)
+  Outline: { ?tableId children: ?rows }
+  Outline: { ?rows children: ?existingCells }
+}
+then {
+  ContentNode/createWithSchema: [
+    id: uuid();
+    schema: "table-cell";
+    body: "{}";
+    forRow: ?rows ]
+}
+then {
+  Outline/addChild: [
+    parent: ?rows;
+    child: uuid();
+    position: ?insertIndex ]
+}
+then {
+  UndoStack/push: [
+    action: "table-insert-column-right";
+    params: ?ctx;
+    result: ?result;
+    reversalAction: "table-delete-column" ]
+}
+
+# Reverse sync — undo a table-insert-column-right by removing the cell at colIndex+1 from each row
+sync TableInsertColumnRightReverse [eager]
+  purpose: "Remove the column inserted at colIndex+1 by table-insert-column-right from every row when UndoStack replays the reversal"
+when {
+  UndoStack/undo: [ stack: ?s ]
+    => ok(reversalAction: "table-delete-column-right"; params: ?ctx)
+}
+where {
+  bind(?ctx.tableId as ?tableId)
+  bind(?ctx.colIndex as ?colIndex)
+  bind(?colIndex + 1 as ?insertIndex)
+  Outline: { ?tableId children: ?rows }
+  Outline: { ?rows children: ?rowCells }
+  bind(?rowCells[?insertIndex] as ?targetCell)
+}
+then {
+  Outline/removeChild: [ parent: ?rows; child: ?targetCell ]
+}

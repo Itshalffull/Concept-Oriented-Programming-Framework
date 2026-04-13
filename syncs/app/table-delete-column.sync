@@ -1,0 +1,53 @@
+# Table orchestration — delete the column at a given column index across all rows
+# Iterates every table-row and removes the cell at colIndex via Outline/removeChild,
+# wrapping the whole operation as one UndoStack entry.
+
+sync TableDeleteColumn [eager]
+  purpose: "When the table-delete-column binding fires, remove the cell at colIndex from every table-row, pushing one undo entry so the entire column deletion is a single undo step"
+when {
+  ActionBinding/invoke: [ binding: "table-delete-column"; context: ?ctx ]
+    => [ result: ?result ]
+}
+where {
+  bind(?ctx.tableId as ?tableId)
+  bind(?ctx.colIndex as ?colIndex)
+  Outline: { ?tableId children: ?rows }
+  Outline: { ?rows children: ?rowCells }
+  bind(?rowCells[?colIndex] as ?targetCell)
+}
+then {
+  Outline/removeChild: [ parent: ?rows; child: ?targetCell ]
+}
+then {
+  UndoStack/push: [
+    action: "table-delete-column";
+    params: ?ctx;
+    result: ?result;
+    reversalAction: "table-insert-column-left" ]
+}
+
+# Reverse sync — undo a table-delete-column by re-inserting a cell at colIndex in each row
+sync TableDeleteColumnReverse [eager]
+  purpose: "Re-create a table-cell at the original colIndex in every row when UndoStack replays the reversal for table-delete-column"
+when {
+  UndoStack/undo: [ stack: ?s ]
+    => ok(reversalAction: "table-insert-column-left"; params: ?ctx)
+}
+where {
+  bind(?ctx.tableId as ?tableId)
+  bind(?ctx.colIndex as ?colIndex)
+  Outline: { ?tableId children: ?rows }
+}
+then {
+  ContentNode/createWithSchema: [
+    id: uuid();
+    schema: "table-cell";
+    body: "{}";
+    forRow: ?rows ]
+}
+then {
+  Outline/addChild: [
+    parent: ?rows;
+    child: uuid();
+    position: ?colIndex ]
+}

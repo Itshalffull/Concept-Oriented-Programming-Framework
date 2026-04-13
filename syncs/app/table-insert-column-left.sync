@@ -1,0 +1,54 @@
+# Table orchestration — insert a new column to the left of a given column index
+# For each existing table-row, creates one new table-cell ContentNode and inserts
+# it at colIndex, then wraps the whole operation as one UndoStack entry.
+
+sync TableInsertColumnLeft [eager]
+  purpose: "When the table-insert-column-left binding fires, add a new table-cell at colIndex into every existing table-row, then push one undo entry so the entire column insertion is a single undo step"
+when {
+  ActionBinding/invoke: [ binding: "table-insert-column-left"; context: ?ctx ]
+    => [ result: ?result ]
+}
+where {
+  bind(?ctx.tableId as ?tableId)
+  bind(?ctx.colIndex as ?colIndex)
+  Outline: { ?tableId children: ?rows }
+  Outline: { ?rows children: ?existingCells }
+}
+then {
+  ContentNode/createWithSchema: [
+    id: uuid();
+    schema: "table-cell";
+    body: "{}";
+    forRow: ?rows ]
+}
+then {
+  Outline/addChild: [
+    parent: ?rows;
+    child: uuid();
+    position: ?colIndex ]
+}
+then {
+  UndoStack/push: [
+    action: "table-insert-column-left";
+    params: ?ctx;
+    result: ?result;
+    reversalAction: "table-delete-column" ]
+}
+
+# Reverse sync — undo a table-insert-column-left by removing the cell at colIndex from each row
+sync TableInsertColumnLeftReverse [eager]
+  purpose: "Remove the column inserted at colIndex by table-insert-column-left from every row when UndoStack replays the reversal"
+when {
+  UndoStack/undo: [ stack: ?s ]
+    => ok(reversalAction: "table-delete-column-left"; params: ?ctx)
+}
+where {
+  bind(?ctx.tableId as ?tableId)
+  bind(?ctx.colIndex as ?colIndex)
+  Outline: { ?tableId children: ?rows }
+  Outline: { ?rows children: ?rowCells }
+  bind(?rowCells[?colIndex] as ?targetCell)
+}
+then {
+  Outline/removeChild: [ parent: ?rows; child: ?targetCell ]
+}

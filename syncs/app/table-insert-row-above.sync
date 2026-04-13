@@ -1,0 +1,67 @@
+# Table orchestration — insert a new row above a given row index
+# Expands one ActionBinding/invoke into N ContentNode.createWithSchema +
+# Outline/addChild calls, then wraps the whole operation as one UndoStack entry.
+
+sync TableInsertRowAbove [eager]
+  purpose: "When the table-insert-row-above binding fires, create a new table-row node and N table-cell children at rowIndex, then push one undo entry so the entire insertion is a single undo step"
+when {
+  ActionBinding/invoke: [ binding: "table-insert-row-above"; context: ?ctx ]
+    => [ result: ?result ]
+}
+where {
+  bind(?ctx.tableId as ?tableId)
+  bind(?ctx.rowIndex as ?rowIndex)
+  bind(uuid() as ?newRowId)
+  Outline: { ?tableId children: ?existingRows }
+  bind(?existingRows[0] as ?firstRowId)
+  Outline: { ?firstRowId children: ?firstRowCells }
+  bind(length(?firstRowCells) as ?columnCount)
+}
+then {
+  ContentNode/createWithSchema: [
+    id: ?newRowId;
+    schema: "table-row";
+    body: "{}" ]
+}
+then {
+  Outline/addChild: [
+    parent: ?tableId;
+    child: ?newRowId;
+    position: ?rowIndex ]
+}
+then {
+  ContentNode/createWithSchema: [
+    id: uuid();
+    schema: "table-cell";
+    body: "{}";
+    parent: ?newRowId;
+    columnCount: ?columnCount ]
+}
+then {
+  UndoStack/push: [
+    action: "table-insert-row-above";
+    params: ?ctx;
+    result: ?result;
+    reversalAction: "table-delete-row" ]
+}
+
+# Reverse sync — undo a table-insert-row-above by removing the row it created
+sync TableInsertRowAboveReverse [eager]
+  purpose: "Remove the row inserted by table-insert-row-above when UndoStack replays the reversal, removing all cells then the row itself"
+when {
+  UndoStack/undo: [ stack: ?s ]
+    => ok(reversalAction: "table-delete-row"; params: ?ctx)
+}
+where {
+  bind(?ctx.tableId as ?tableId)
+  bind(?ctx.rowIndex as ?rowIndex)
+  Outline: { ?tableId children: ?rows }
+  bind(?rows[?rowIndex] as ?targetRowId)
+  Outline: { ?targetRowId children: ?cells }
+}
+then {
+  Outline/removeChild: [ parent: ?targetRowId; child: ?cells ]
+}
+then {
+  Outline/removeChild: [ parent: ?tableId; child: ?targetRowId ]
+}

@@ -1,0 +1,134 @@
+# ActionBinding seeds — table row/column orchestration bindings (PRD: block-editor-loose-ends §3.5)
+#
+# Six bindings dispatch table structural operations. Each binding targets a
+# dedicated orchestration sync (table-insert-row-above.sync, etc.) rather than
+# a single concept action, because the operation expands into N ContentNode
+# creates + Outline addChild/removeChild calls. The orchestration sync
+# (TableInsertRowAbove, etc.) owns the multi-step expansion and issues a single
+# UndoStack/push so the entire operation is one undo step.
+#
+# reversalAction is declared on each binding so PushUndoOnReversible also has
+# the inverse available if needed, and to document the intended undo pairing.
+#
+# Architecture doc §block-editor-loose-ends §3.5 / §4.3
+
+concept: ActionBinding
+action: bind
+entries:
+  # ---- Insert row above -------------------------------------------------------
+
+  - name: table-insert-row-above
+    binding: table-insert-row-above
+    target: "TableInsertRowAbove/invoke"
+    parameterMap: >
+      {
+        "tableId": "context.tableId",
+        "rowIndex": "context.rowIndex"
+      }
+    executionPolicy: "optimistic"
+    reversalAction: "table-delete-row"
+    label: "Insert row above"
+    section: "Table"
+    icon: "row-insert-above"
+    toolbar_command: true
+    slash_command: false
+    context_menu: true
+
+  # ---- Insert row below -------------------------------------------------------
+
+  - name: table-insert-row-below
+    binding: table-insert-row-below
+    target: "TableInsertRowBelow/invoke"
+    parameterMap: >
+      {
+        "tableId": "context.tableId",
+        "rowIndex": "context.rowIndex"
+      }
+    executionPolicy: "optimistic"
+    reversalAction: "table-delete-row"
+    label: "Insert row below"
+    section: "Table"
+    icon: "row-insert-below"
+    toolbar_command: true
+    slash_command: false
+    context_menu: true
+
+  # ---- Insert column left -----------------------------------------------------
+
+  - name: table-insert-column-left
+    binding: table-insert-column-left
+    target: "TableInsertColumnLeft/invoke"
+    parameterMap: >
+      {
+        "tableId": "context.tableId",
+        "colIndex": "context.colIndex"
+      }
+    executionPolicy: "optimistic"
+    reversalAction: "table-delete-column"
+    label: "Insert column left"
+    section: "Table"
+    icon: "column-insert-left"
+    toolbar_command: true
+    slash_command: false
+    context_menu: true
+
+  # ---- Insert column right ----------------------------------------------------
+
+  - name: table-insert-column-right
+    binding: table-insert-column-right
+    target: "TableInsertColumnRight/invoke"
+    parameterMap: >
+      {
+        "tableId": "context.tableId",
+        "colIndex": "context.colIndex"
+      }
+    executionPolicy: "optimistic"
+    reversalAction: "table-delete-column"
+    label: "Insert column right"
+    section: "Table"
+    icon: "column-insert-right"
+    toolbar_command: true
+    slash_command: false
+    context_menu: true
+
+  # ---- Delete row -------------------------------------------------------------
+
+  - name: table-delete-row
+    binding: table-delete-row
+    target: "TableDeleteRow/invoke"
+    parameterMap: >
+      {
+        "tableId": "context.tableId",
+        "rowIndex": "context.rowIndex"
+      }
+    executionPolicy: "pessimistic"
+    confirmWhen: "false"
+    reversalAction: "table-insert-row-above"
+    label: "Delete row"
+    section: "Table"
+    icon: "row-delete"
+    buttonVariant: "destructive"
+    toolbar_command: true
+    slash_command: false
+    context_menu: true
+
+  # ---- Delete column ----------------------------------------------------------
+
+  - name: table-delete-column
+    binding: table-delete-column
+    target: "TableDeleteColumn/invoke"
+    parameterMap: >
+      {
+        "tableId": "context.tableId",
+        "colIndex": "context.colIndex"
+      }
+    executionPolicy: "pessimistic"
+    confirmWhen: "false"
+    reversalAction: "table-insert-column-left"
+    label: "Delete column"
+    section: "Table"
+    icon: "column-delete"
+    buttonVariant: "destructive"
+    toolbar_command: true
+    slash_command: false
+    context_menu: true

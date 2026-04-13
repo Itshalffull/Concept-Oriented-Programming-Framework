@@ -1,0 +1,65 @@
+# Table orchestration — delete a row at a given row index
+# Finds the row at rowIndex, removes all its cell children via Outline/removeChild,
+# then removes the row itself, wrapping the whole operation as one UndoStack entry.
+
+sync TableDeleteRow [eager]
+  purpose: "When the table-delete-row binding fires, remove every cell child from the target row then remove the row from the table, pushing one undo entry so the entire deletion is a single undo step"
+when {
+  ActionBinding/invoke: [ binding: "table-delete-row"; context: ?ctx ]
+    => [ result: ?result ]
+}
+where {
+  bind(?ctx.tableId as ?tableId)
+  bind(?ctx.rowIndex as ?rowIndex)
+  Outline: { ?tableId children: ?rows }
+  bind(?rows[?rowIndex] as ?targetRowId)
+  Outline: { ?targetRowId children: ?cells }
+}
+then {
+  Outline/removeChild: [ parent: ?targetRowId; child: ?cells ]
+}
+then {
+  Outline/removeChild: [ parent: ?tableId; child: ?targetRowId ]
+}
+then {
+  UndoStack/push: [
+    action: "table-delete-row";
+    params: ?ctx;
+    result: ?result;
+    reversalAction: "table-insert-row-above" ]
+}
+
+# Reverse sync — undo a table-delete-row by re-inserting the row and its cells at rowIndex
+sync TableDeleteRowReverse [eager]
+  purpose: "Re-create the deleted row and its cells at the original rowIndex when UndoStack replays the reversal for table-delete-row"
+when {
+  UndoStack/undo: [ stack: ?s ]
+    => ok(reversalAction: "table-insert-row-above"; params: ?ctx)
+}
+where {
+  bind(?ctx.tableId as ?tableId)
+  bind(?ctx.rowIndex as ?rowIndex)
+  bind(?ctx.savedRowId as ?restoredRowId)
+  bind(?ctx.savedCells as ?savedCells)
+  bind(length(?savedCells) as ?columnCount)
+}
+then {
+  ContentNode/createWithSchema: [
+    id: ?restoredRowId;
+    schema: "table-row";
+    body: "{}" ]
+}
+then {
+  Outline/addChild: [
+    parent: ?tableId;
+    child: ?restoredRowId;
+    position: ?rowIndex ]
+}
+then {
+  ContentNode/createWithSchema: [
+    id: uuid();
+    schema: "table-cell";
+    body: "{}";
+    parent: ?restoredRowId;
+    columnCount: ?columnCount ]
+}
