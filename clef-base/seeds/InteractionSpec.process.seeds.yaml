@@ -11,6 +11,8 @@ entries:
     rowClick: '{"navigateTo":"/admin/processes/{spec}"}'
     rowActions: '[]'
     pickerMode: false
+    create_surface: flow-builder
+    create_mode_hint: page
   # process-runs-list
   - name: process-runs-list-controls
     createForm: '{}'

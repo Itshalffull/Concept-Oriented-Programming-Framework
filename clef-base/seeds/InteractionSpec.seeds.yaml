@@ -17,18 +17,29 @@ entries:
     rowClick: '{"navigateTo":"/admin/schemas/{schema}"}'
     rowActions: '[]'
     pickerMode: false
+    create_surface: schema-editor
+    create_mode_hint: page
   # workflows-list
   - name: workflows-list-controls
     createForm: '{"concept":"Workflow","action":"defineState","fields":[{"name":"workflow","label":"Workflow Name","required":true},{"name":"name","label":"Initial State Name","required":true},{"name":"flags","label":"Flags","placeholder":"initial"}]}'
     rowClick: '{}'
     rowActions: '[]'
     pickerMode: false
+    create_surface: flow-builder
+    create_mode_hint: page
   # Shared by: automations-list, automations-rules-list
+  # NOTE: user-sync-editor is reused here because automation rules and user-authored syncs share
+  # substantially overlapping authoring surfaces (trigger/condition/action triple structure).
+  # If the user-sync-editor shape doesn't fit all AutomationRule cases — e.g., rules with complex
+  # multi-action bodies or conditional branching that the sync editor doesn't express — a dedicated
+  # automation-rule-editor widget should be created and this create_surface updated to point at it.
   - name: automation-rule-create
     createForm: '{"concept":"AutomationRule","action":"define","fields":[{"name":"rule","label":"Rule ID","required":true},{"name":"trigger","label":"Trigger Event","required":true},{"name":"conditions","label":"Conditions"},{"name":"actions","label":"Actions","required":true}]}'
     rowClick: '{}'
     rowActions: '[]'
     pickerMode: false
+    create_surface: user-sync-editor
+    create_mode_hint: page
   # taxonomy-list
   - name: taxonomy-list-controls
     createForm: '{"concept":"Taxonomy","action":"createVocabulary","fields":[{"name":"vocab","label":"Vocabulary ID","required":true},{"name":"name","label":"Display Name","required":true}]}'
@@ -53,6 +64,8 @@ entries:
     rowClick: '{"navigateTo":"/view-builder/{view}"}'
     rowActions: '[]'
     pickerMode: false
+    create_surface: view-editor
+    create_mode_hint: page
   # mappings-list
   - name: mappings-list-controls
     createForm: '{"concept":"ComponentMapping","action":"create","fields":[{"name":"name","label":"Mapping Name","required":true},{"name":"widget_id","label":"Widget ID","required":true},{"name":"schema","label":"Schema"},{"name":"display_mode","label":"Display Mode"}]}'
@@ -125,6 +138,8 @@ entries:
     rowClick: '{"navigateTo":"/admin/forms/{schema}"}'
     rowActions: '[]'
     pickerMode: false
+    create_surface: form-builder
+    create_mode_hint: page
   # form-editor
   - name: form-editor-controls
     createForm: '{}'
