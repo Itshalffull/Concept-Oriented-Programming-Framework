@@ -1,0 +1,380 @@
+# KeybindingPreset seeds — five named preset packs for Phase F (KB-13).
+#
+# Each preset is first registered (name + description), then populated
+# with addBinding entries that record per-binding chord overrides.
+#
+# IMPORTANT: The `binding` field in every addBinding entry references an
+# ActionBinding id that will be defined when KB-16..22 seeds land (Phase H
+# seed migration). Those KeyBindings do not need to exist at this seed's
+# load time — addBinding only records the override mapping; live resolution
+# happens at KeyBinding/resolveKey call time.
+#
+# Chord format mirrors KeyStroke notation: modifier prefix "mod+" resolves
+# to Cmd on macOS and Ctrl elsewhere. Chord sequences are expressed as a
+# JSON array of KeyStroke strings (each element = one chord stage).
+#
+# Vim preset limitations (v1):
+#   - Only key REMAPPINGS are registered here. No mode state machine is
+#     implemented in v1. hjkl/n/N/etc. are bound globally (outside
+#     contentEditable) but the bindings carry no "normal mode" guard — they
+#     fire whenever the dispatcher sees the key and the focused element is not
+#     a text input. Full modal insert/visual/command mode FSM is out of scope
+#     for v1 (KB-13 comment in PRD §4 Phase F).
+#   - Bindings that would conflict with typing (single letter keys) rely on
+#     KeyBinding's `onlyOutsideTextInput: true` flag which is set by the
+#     KB-16..22 seeds; the preset just records the chord override.
+#   - "i" for insert mode entry is intentionally omitted: without a mode
+#     state machine there is no mode to enter.
+#
+# Card: KB-13 (Phase F — Preset packs)
+
+---
+concept: KeybindingPreset
+action: register
+entries:
+  # -------------------------------------------------------------------------
+  # 1. vscode-default
+  #    Mirrors the current Clef Base shortcut set, which is already VS Code
+  #    flavoured. Registering it as a named preset lets users explicitly
+  #    revert to this baseline after switching to another preset.
+  # -------------------------------------------------------------------------
+  - name: vscode-default
+    preset: vscode-default
+    name: "VS Code Default"
+    description: >
+      The standard Clef Base keybinding set, modelled on VS Code conventions.
+      Register this preset so users can explicitly revert to it after trying
+      another preset. Bindings come from the base KeyBinding seeds (KB-16..22);
+      this preset itself carries no overrides.
+
+  # -------------------------------------------------------------------------
+  # 2. vim
+  #    Shallow vim-flavoured rebinds: hjkl navigation, n/N find traversal,
+  #    colon for command palette. No full modal state machine in v1.
+  # -------------------------------------------------------------------------
+  - name: vim
+    preset: vim
+    name: "Vim"
+    description: >
+      Vim-inspired keybindings. Rebinds hjkl to directional navigation,
+      n/N to find-next/prev, and : to the command palette. Letter-key
+      bindings only fire when focus is outside a text input
+      (onlyOutsideTextInput guard). No modal insert/visual mode state
+      machine in v1 — full modal FSM is out of scope for this release.
+
+  # -------------------------------------------------------------------------
+  # 3. emacs
+  #    Emacs-flavoured shortcuts: Cmd+X as a chord prefix for major commands,
+  #    Cmd+S for incremental search, Cmd+G for cancel/abort.
+  # -------------------------------------------------------------------------
+  - name: emacs
+    preset: emacs
+    name: "Emacs"
+    description: >
+      Emacs-inspired keybindings. Provides a Cmd+X chord prefix for major
+      commands (save, close, etc.), Cmd+S for incremental search (rebinds the
+      existing find action), and Cmd+G to cancel the current operation or
+      dismiss an overlay.
+
+  # -------------------------------------------------------------------------
+  # 4. notion-default
+  #    Matches Notion's published keyboard shortcut conventions.
+  # -------------------------------------------------------------------------
+  - name: notion-default
+    preset: notion-default
+    name: "Notion Default"
+    description: >
+      Keybindings matching Notion's published shortcut conventions. Includes
+      Cmd+P for the quick switcher, / for the slash-menu (already the Clef
+      default but confirmed here), Cmd+/ for keyboard help, and
+      Tab/Shift+Tab for list indent/outdent.
+
+  # -------------------------------------------------------------------------
+  # 5. linear-default
+  #    Matches Linear's published keyboard shortcut conventions.
+  # -------------------------------------------------------------------------
+  - name: linear-default
+    preset: linear-default
+    name: "Linear Default"
+    description: >
+      Keybindings matching Linear's published shortcut conventions. Includes
+      C for new content/issue creation, G then I as a two-stage chord to go
+      to the inbox, and Cmd+K for the command menu.
+
+---
+concept: KeybindingPreset
+action: addBinding
+entries:
+  # =========================================================================
+  # vscode-default — no chord overrides; bindings come from base seeds.
+  # This preset is intentionally empty: all default bindings registered by
+  # KB-16..22 already match VS Code conventions. A named preset with zero
+  # overrides is still useful as a revert target.
+  # =========================================================================
+
+  # =========================================================================
+  # vim — chord overrides
+  # =========================================================================
+
+  # Navigation: h / j / k / l  →  move left / down / up / right
+  # These rebind the cursor/selection navigation actions. The base binding
+  # seeds (KB-18) will define bindings for DataTable arrow-key navigation and
+  # block editor line movement; the Vim preset overrides their chords.
+  - name: vim-nav-left
+    preset: vim
+    binding: navigate-left
+    chord: '["h"]'
+
+  - name: vim-nav-down
+    preset: vim
+    binding: navigate-down
+    chord: '["j"]'
+
+  - name: vim-nav-up
+    preset: vim
+    binding: navigate-up
+    chord: '["k"]'
+
+  - name: vim-nav-right
+    preset: vim
+    binding: navigate-right
+    chord: '["l"]'
+
+  # Find traversal: n / N  →  find-next / find-prev
+  - name: vim-find-next
+    preset: vim
+    binding: find-replace-find-next
+    chord: '["n"]'
+
+  - name: vim-find-prev
+    preset: vim
+    binding: find-replace-find-prev
+    chord: '["N"]'
+
+  # Command palette: :  →  command-palette-open
+  # Vim users expect : to open the ex-command line; mapping it to the command
+  # palette is the closest v1 analogue.
+  - name: vim-command-palette
+    preset: vim
+    binding: command-palette-open
+    chord: '[":"]'
+
+  # Block movement: Ctrl+U / Ctrl+D  →  scroll / block-level move up / down
+  # Maps to the block navigation bindings for moving focus between blocks.
+  - name: vim-block-move-up
+    preset: vim
+    binding: navigate-block-up
+    chord: '["ctrl+u"]'
+
+  - name: vim-block-move-down
+    preset: vim
+    binding: navigate-block-down
+    chord: '["ctrl+d"]'
+
+  # Undo / redo: u / Ctrl+R  (VS Code default is Cmd+Z / Cmd+Shift+Z)
+  - name: vim-undo
+    preset: vim
+    binding: editor-undo
+    chord: '["u"]'
+
+  - name: vim-redo
+    preset: vim
+    binding: editor-redo
+    chord: '["ctrl+r"]'
+
+  # Search open: /  →  find-replace-open
+  # In Vim, / enters forward search. Outside contentEditable this fires the
+  # find panel; inside contentEditable the dispatcher skips it (letter key).
+  - name: vim-search-open
+    preset: vim
+    binding: find-replace-open
+    chord: '["/"]'
+
+  # =========================================================================
+  # emacs — chord overrides
+  # =========================================================================
+
+  # Incremental search: Cmd+S  →  find-replace-open
+  # Emacs C-s is incremental search forward. mod+s maps to save in VS Code
+  # default; Emacs preset intentionally rebinds it to search (users who
+  # choose this preset expect Emacs semantics). Auto-save makes manual save
+  # less critical.
+  - name: emacs-isearch
+    preset: emacs
+    binding: find-replace-open
+    chord: '["mod+s"]'
+
+  # Cancel / abort: Cmd+G  →  dismiss current overlay (closest to C-g)
+  # KB-16 seeds will define a generic "dismiss-overlay" binding; this
+  # preset rebinds it to mod+g.
+  - name: emacs-cancel
+    preset: emacs
+    binding: dismiss-overlay
+    chord: '["mod+g"]'
+
+  # Cmd+X Cmd+S  →  save (Emacs C-x C-s)
+  # Two-stage chord. Stage 1: mod+x; Stage 2: mod+s. The dispatcher's chord
+  # state machine handles the 2-second timeout between stages.
+  - name: emacs-save
+    preset: emacs
+    binding: editor-save
+    chord: '["mod+x","mod+s"]'
+
+  # Cmd+X Cmd+C  →  close / exit current panel (Emacs C-x C-c)
+  - name: emacs-close
+    preset: emacs
+    binding: dismiss-overlay
+    chord: '["mod+x","mod+c"]'
+
+  # Cmd+X B  →  quick switcher / page picker (Emacs C-x b = switch buffer)
+  - name: emacs-switch-buffer
+    preset: emacs
+    binding: command-palette-open
+    chord: '["mod+x","b"]'
+
+  # Cmd+X K  →  close current tab / pane (Emacs C-x k = kill buffer)
+  - name: emacs-kill-buffer
+    preset: emacs
+    binding: tab-close
+    chord: '["mod+x","k"]'
+
+  # Find next: Cmd+S (when find panel is open) is handled by
+  # find-replace-find-next within the find-replace-overlay context.
+  # No override needed here — the context scope handles disambiguation.
+
+  # =========================================================================
+  # notion-default — chord overrides
+  # =========================================================================
+
+  # Quick switcher: Cmd+P  →  command-palette-open
+  # Notion uses Cmd+P for its quick-find modal. Map to the command palette
+  # which serves the same role in Clef Base.
+  - name: notion-quick-switcher
+    preset: notion-default
+    binding: command-palette-open
+    chord: '["mod+p"]'
+
+  # Keyboard help: Cmd+/  →  keyboard-help-open
+  # Notion uses Cmd+/ to show keyboard shortcuts. This matches the existing
+  # Clef Base default so no chord change is technically required, but
+  # registering it here makes the preset self-documenting and ensures it
+  # survives if the base seed ever changes.
+  - name: notion-keyboard-help
+    preset: notion-default
+    binding: keyboard-help-open
+    chord: '["mod+/"]'
+
+  # Slash menu: /  →  slash-menu-open
+  # Notion's primary block-creation trigger. Already the Clef Base default,
+  # registered here for completeness.
+  - name: notion-slash-menu
+    preset: notion-default
+    binding: slash-menu-open
+    chord: '["/"]'
+
+  # List indent: Tab  →  indent
+  # Notion: Tab in a list indents the block. Clef Base default already does
+  # this; included to make the preset explicit.
+  - name: notion-indent
+    preset: notion-default
+    binding: indent
+    chord: '["Tab"]'
+
+  # List outdent: Shift+Tab  →  outdent
+  - name: notion-outdent
+    preset: notion-default
+    binding: outdent
+    chord: '["shift+Tab"]'
+
+  # Bold: Cmd+B  →  bold-toggle (Notion default, matches VS Code default)
+  - name: notion-bold
+    preset: notion-default
+    binding: bold-toggle
+    chord: '["mod+b"]'
+
+  # Italic: Cmd+I  →  italic-toggle
+  - name: notion-italic
+    preset: notion-default
+    binding: italic-toggle
+    chord: '["mod+i"]'
+
+  # Strikethrough: Cmd+Shift+S  →  strikethrough-toggle
+  # Notion uses Cmd+Shift+S for strikethrough.
+  - name: notion-strikethrough
+    preset: notion-default
+    binding: strikethrough-toggle
+    chord: '["mod+shift+s"]'
+
+  # Inline code: Cmd+E  →  code-toggle
+  # Notion uses Cmd+E for inline code.
+  - name: notion-inline-code
+    preset: notion-default
+    binding: code-toggle
+    chord: '["mod+e"]'
+
+  # =========================================================================
+  # linear-default — chord overrides
+  # =========================================================================
+
+  # New issue / content: C  →  content-create
+  # Linear's single-key shortcut for creating a new issue. Maps to the
+  # generic content creation action in Clef Base (KB-16 seeds will define
+  # a "content-create" binding). Fires only outside text inputs.
+  - name: linear-new-content
+    preset: linear-default
+    binding: content-create
+    chord: '["c"]'
+
+  # Command menu: Cmd+K  →  command-palette-open
+  # Linear uses Cmd+K for its command menu — identical to VS Code default.
+  # Registered explicitly so the preset is self-contained.
+  - name: linear-command-menu
+    preset: linear-default
+    binding: command-palette-open
+    chord: '["mod+k"]'
+
+  # Go to Inbox: G then I  →  navigate-to-inbox (two-stage chord)
+  # Linear's Gmail-style navigation chord. Stage 1: g; Stage 2: i.
+  # KB-16/17 seeds will define "navigate-to-inbox".
+  - name: linear-go-inbox
+    preset: linear-default
+    binding: navigate-to-inbox
+    chord: '["g","i"]'
+
+  # Go to My Issues: G then M
+  - name: linear-go-my-issues
+    preset: linear-default
+    binding: navigate-to-my-issues
+    chord: '["g","m"]'
+
+  # Go to All Issues / Home: G then A
+  - name: linear-go-all
+    preset: linear-default
+    binding: navigate-to-home
+    chord: '["g","a"]'
+
+  # Search: Cmd+F  →  find-replace-open (Linear uses Cmd+F for search)
+  - name: linear-search
+    preset: linear-default
+    binding: find-replace-open
+    chord: '["mod+f"]'
+
+  # Cancel / dismiss: Escape  →  dismiss-overlay
+  # Linear uses Escape to close modals and cancel operations. Matches the
+  # VS Code default; registered here to make the preset explicit.
+  - name: linear-dismiss
+    preset: linear-default
+    binding: dismiss-overlay
+    chord: '["Escape"]'
+
+  # Previous item / up: K  →  navigate-up (Linear uses J/K for list nav)
+  - name: linear-nav-up
+    preset: linear-default
+    binding: navigate-up
+    chord: '["k"]'
+
+  # Next item / down: J  →  navigate-down
+  - name: linear-nav-down
+    preset: linear-default
+    binding: navigate-down
+    chord: '["j"]'
