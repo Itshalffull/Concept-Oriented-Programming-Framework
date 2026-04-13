@@ -1,0 +1,162 @@
+@version(1)
+@category("content")
+@visibility("public")
+concept ContentSerializer [S] {
+
+  purpose {
+    Walk ContentNode trees from a given root and produce output bytes in a
+    registered target format (e.g. markdown, html, json, pdf). Decouples
+    tree traversal from export format so new targets can be added without
+    modifying the core; each target maps to exactly one registered provider.
+    Replaces ExportDialog's local-traversal fallback with a kernel-managed,
+    testable dispatch layer.
+  }
+
+  state {
+    providers: set S
+
+    identity {
+      name:   S -> String
+      target: S -> String
+    }
+
+    config {
+      providerConfig: S -> Bytes
+    }
+
+    index {
+      byTarget: String -> option S
+    }
+  }
+
+  actions {
+
+    action register(provider: String, target: String, config: Bytes) {
+      -> ok(id: S) {
+        A new provider is registered for the given target and becomes
+        immediately available for serialize dispatch. The provider name
+        and target together identify the entry; re-registering the same
+        (provider, target) pair is rejected as duplicate.
+      }
+      -> duplicate(provider: String, target: String) {
+        A provider already exists for this (provider, target) pair.
+        Call serialize with the existing registration or remove it first.
+      }
+      -> error(message: String) {
+        Registration failed because the provider or target name is empty,
+        or a storage error occurred.
+      }
+
+      fixture register_markdown {
+        provider: "micromark-serialize",
+        target: "markdown",
+        config: "{}"
+      }
+      fixture register_html {
+        provider: "html-serialize",
+        target: "html",
+        config: "{\"selfClosing\":true}"
+      }
+      fixture register_json {
+        provider: "json-serialize",
+        target: "json",
+        config: "{}"
+      }
+      fixture register_pdf {
+        provider: "pdf-serialize",
+        target: "pdf",
+        config: "{\"pageSize\":\"A4\"}"
+      }
+      fixture empty_provider {
+        provider: "",
+        target: "markdown",
+        config: "{}"
+      } -> error
+      fixture empty_target {
+        provider: "micromark-serialize",
+        target: "",
+        config: "{}"
+      } -> error
+      fixture duplicate_provider {
+        provider: "micromark-serialize",
+        target: "markdown",
+        config: "{}"
+      } -> duplicate
+    }
+
+    action serialize(target: String, rootNodeId: String) {
+      -> ok(bytes: Bytes) {
+        The ContentNode tree rooted at rootNodeId has been walked in
+        depth-first order and serialized to the requested target format.
+        The returned bytes are the complete output; encoding is
+        provider-specific (UTF-8 text for markdown/html/json, binary for pdf).
+      }
+      -> no_provider(target: String) {
+        No provider is registered for the requested target. Register one
+        first via register() before attempting serialization.
+      }
+      -> error(message: String) {
+        Serialization failed because rootNodeId was not found, the tree
+        contains unsupported node types for this provider, or the provider
+        encountered an internal error.
+      }
+
+      fixture serialize_markdown {
+        target: "markdown",
+        rootNodeId: $register_markdown.id
+      } after register_markdown
+      fixture serialize_html {
+        target: "html",
+        rootNodeId: $register_html.id
+      } after register_html
+      fixture no_provider_target {
+        target: "latex",
+        rootNodeId: "node-abc"
+      } -> no_provider
+      fixture missing_root {
+        target: "markdown",
+        rootNodeId: "nonexistent-node-xyz"
+      } -> error
+    }
+
+    action listTargets() {
+      -> ok(targets: list String) {
+        Return the distinct set of output format targets for which at
+        least one provider is registered, in alphabetical order.
+      }
+
+      fixture list_after_register {} after register_markdown
+      fixture list_empty {}
+    }
+
+  }
+
+  example "register then serialize": {
+    after register(provider: "micromark-serialize", target: "markdown", config: "{}") -> ok(id: p)
+    then serialize(target: "markdown", rootNodeId: "page-root-1") -> ok(bytes: b)
+  }
+
+  example "register then list": {
+    after register(provider: "html-serialize", target: "html", config: "{}") -> ok(id: p)
+    then listTargets() -> ok(targets: ts)
+  }
+
+  example "duplicate rejected": {
+    after register(provider: "json-serialize", target: "json", config: "{}") -> ok(id: p)
+    then register(provider: "json-serialize", target: "json", config: "{}") -> duplicate
+  }
+
+  example "no_provider for unregistered target": {
+    after listTargets() -> ok(targets: ts)
+    then serialize(target: "docx", rootNodeId: "page-root-1") -> no_provider
+  }
+
+  always "byTarget index consistent": {
+    forall s in providers: byTarget(target(s)) = s
+  }
+
+  never "orphan index entry": {
+    exists t in byTarget: byTarget(t) not in providers
+  }
+
+}
