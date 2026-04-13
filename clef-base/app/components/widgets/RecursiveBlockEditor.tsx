@@ -183,6 +183,12 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
   const [compiledPreview, setCompiledPreview] = useState<string | null>(null);
   const [consumers, setConsumers] = useState<string[]>([]);
 
+  // ------- version history panel state (PP-version-history) --------
+  // versionHistoryOpen: true when the version-history-browser side-panel is pinned open.
+  // Toggled by Cmd/Ctrl+Shift+H. The panel also appears automatically via the
+  // PluginRegistry editor-panel slot resolver when the user manually enables it.
+  const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
+
   // ------- multi-select state (PP-multi-select) --------
   // selectedBlockIds: the Set of currently selected block IDs.
   // anchorBlockId: the block that initiated the current range (Shift+click anchor).
@@ -787,12 +793,50 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
     });
   }, [modalStack, rootNodeId, editorFlavor]);
 
+  // =========================================================================
+  // Export dialog — Cmd+Shift+E / Ctrl+Shift+E (PP-export-dialog)
+  // =========================================================================
+
+  const openExportDialog = useCallback(() => {
+    const modalId = `export-dialog-${rootNodeId}`;
+    modalStack.pushModal({
+      id: modalId,
+      widgetId: 'export-dialog',
+      dismissOnBackdrop: true,
+      focusTrapped: true,
+      onClose: () => {},
+      props: {
+        children: (
+          <ExportDialog
+            nodeId={rootNodeId}
+            title={pageTitle || 'document'}
+            onClose={() => modalStack.popModal(modalId)}
+          />
+        ),
+      },
+    });
+  }, [modalStack, rootNodeId, pageTitle]);
+
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    // Cmd+Shift+E / Ctrl+Shift+E — open export dialog (PP-export-dialog)
+    if (e.key === 'e' && e.shiftKey && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      e.stopPropagation();
+      openExportDialog();
+      return;
+    }
     // Cmd+K / Ctrl+K — open command palette (PP-command-palette)
     if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
       e.stopPropagation();
       openCommandPalette();
+      return;
+    }
+    // Cmd+Shift+H / Ctrl+Shift+H — toggle version history panel (PP-version-history)
+    if (e.key === 'h' && e.shiftKey && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      e.stopPropagation();
+      setVersionHistoryOpen((prev) => !prev);
       return;
     }
     // Cmd+F / Ctrl+F — open find-replace overlay (PP-find-replace)
@@ -815,7 +859,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
     }
     // Multi-select keyboard handler runs unconditionally (handles Escape/arrows/delete)
     handleMultiSelectKeyDown(e);
-  }, [fsmState, findReplaceOpen, openSlashMenu, closeSlashMenu, handleMultiSelectKeyDown, openCommandPalette]);
+  }, [fsmState, findReplaceOpen, openExportDialog, openSlashMenu, closeSlashMenu, handleMultiSelectKeyDown, openCommandPalette]);
 
   // =========================================================================
   // Paste handler — clipboard image → MediaAsset/createMedia via ActionBinding
@@ -837,6 +881,35 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
   const handlePaste = useCallback(async (e: React.ClipboardEvent) => {
     if (!canEdit) return;
 
+    // -------------------------------------------------------------------------
+    // Smart-paste path (PP-smart-paste): runs BEFORE the image-paste path.
+    // Intercepts clipboard content containing structured HTML or Markdown and
+    // converts it into block-tree nodes. When at least one block is inserted,
+    // the event is consumed and the image-paste path is skipped entirely.
+    // -------------------------------------------------------------------------
+    if (e.clipboardData && hasStructuredContent(e.clipboardData)) {
+      e.preventDefault();
+      const ctx = {
+        rootNodeId,
+        cursorBlockId: focusedBlockIdRef.current || null,
+        cursorPosition: currentSelection?.rangeStart ?? 0,
+      };
+      try {
+        const count = await convertAndInsert(e.clipboardData, ctx, invoke);
+        if (count > 0) {
+          setTimeout(() => { loadChildren(); }, 300);
+          return;
+        }
+      } catch (err) {
+        console.error('[RecursiveBlockEditor] smart-paste failed:', err);
+        // Fall through to image-paste / native paste on error.
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // Original image-paste path (PP-2 / MAG-717): only runs when smart-paste
+    // did not consume the event (no structured text content detected).
+    // -------------------------------------------------------------------------
     const items = Array.from(e.clipboardData?.items ?? []);
     const imageItem = items.find((item) => item.type.startsWith('image/'));
     if (!imageItem) return;
@@ -1809,25 +1882,9 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
         background: isSelected ? 'var(--palette-primary-container, rgba(99,102,241,0.08))' : 'transparent',
       }}
     >
-      {/* Block handle (drag + context menu affordance) */}
-      {canEdit && (
-        <div
-          data-part="block-handle"
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            left: '-24px',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            opacity: 0,
-            cursor: 'grab',
-            fontSize: '14px',
-          }}
-          title="Drag to reorder or click for options"
-        >
-          ⠿
-        </div>
-      )}
+      {/* Block handle (drag + context menu affordance) — now mounted in the
+          parent block-list-item by RecursiveBlockEditor. BlockSlot no longer
+          owns this placeholder; removing it avoids duplicate handles. */}
 
       {/* The actual block widget rendering surface.
           In Phase 1, this renders a content-editable div as a placeholder.
@@ -1841,6 +1898,8 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
         suppressContentEditableWarning
         spellCheck={canEdit}
         onContextMenu={handleContextMenu}
+        onMouseOver={handleLinkMouseEnter}
+        onMouseLeave={handleLinkMouseLeave}
         onFocus={() => setBlockFocused(true)}
         onInput={(e) => {
           if (!canEdit) return;
@@ -1946,6 +2005,16 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
         matchStart={spellPopover.matchStart}
         matchEnd={spellPopover.matchEnd}
         onClose={closeSpellPopover}
+      />
+    )}
+
+    {/* Link hover preview — rendered via portal; not focus-trapped (tooltip) */}
+    {linkHoverState && (
+      <LinkHoverPreview
+        targetNodeId={linkHoverState.targetNodeId}
+        anchorRect={linkHoverState.anchorRect}
+        open={linkPreviewOpen}
+        onDismiss={closeLinkPreview}
       />
     )}
     </>
