@@ -1,0 +1,28 @@
+# preset-activate-sets-overrides.sync
+#
+# When KeybindingPreset/activate completes for a user+preset pair,
+# fan out KeyBinding/setOverride calls for every binding entry in the
+# preset so the per-user chord overrides take effect immediately.
+#
+# PRD:  docs/plans/keybinding-prd.md Phase F (KB-14)
+# Card: KB-14 — activate sync deferred from KB-02
+
+sync PresetActivateSetsOverrides [eager]
+  purpose {
+    After a preset is activated for a user, fetch all binding-chord pairs
+    in that preset and call KeyBinding/setOverride for each one so the
+    user's per-binding overrides are updated in bulk.
+  }
+when {
+  KeybindingPreset/activate: [ user: ?user; preset: ?preset ] => []
+}
+where {
+  KeybindingPreset/listBindings: [ preset: ?preset ] => [ bindings: ?entries ]
+}
+then {
+  KeyBinding/setOverride: [
+    binding: ?entry.binding;
+    scope: "user";
+    chord: ?entry.chord;
+    userId: ?user ]
+}

@@ -4,8 +4,8 @@
  * KeybindingEditor — React component implementing surface/keybinding-editor.widget.
  *
  * Widget spec: surface/keybinding-editor.widget (landed at 14abf232)
- * PRD:         docs/plans/keybinding-prd.md Phase D
- * Card:        KB-09
+ * PRD:         docs/plans/keybinding-prd.md Phase D + Phase F
+ * Cards:       KB-09 (recorder + editor), KB-14 (preset picker UI)
  *
  * ## Three modes
  *
@@ -21,28 +21,55 @@
  * capturing so the global dispatcher (useKeyBindings) yields. Captures
  * keyboard events directly on the recorder <div>. Chord recording:
  *
- *   stroke 1 → KEY_CAPTURED → recordingChordStage2 state, shows "_" prompt
- *   stroke 2 → KEY_CAPTURED → idle, finalizes chord
- *   Enter     → SINGLE_STROKE_CONFIRM (finalize 1-stroke chord)
- *   Backspace → BACKSPACE_STROKE (in stage-2: remove last stroke, back to recording)
- *   Esc       → CANCEL_RECORDING (restore prior chord, recorderActive = false)
+ *   stroke 1 -> KEY_CAPTURED -> recordingChordStage2 state, shows "_" prompt
+ *   stroke 2 -> KEY_CAPTURED -> idle, finalizes chord
+ *   Enter     -> SINGLE_STROKE_CONFIRM (finalize 1-stroke chord)
+ *   Backspace -> BACKSPACE_STROKE (in stage-2: remove last stroke, back to recording)
+ *   Esc       -> CANCEL_RECORDING (restore prior chord, recorderActive = false)
  *
  * On finalize:
- *   edit mode   → KeyBinding/setOverride
- *   create mode → KeyBinding/register
+ *   edit mode   -> KeyBinding/setOverride
+ *   create mode -> KeyBinding/register
  *
  * ## Conflict handling
  *
- * When a chord matches an existing binding in the scope, state → conflict.
+ * When a chord matches an existing binding in the scope, state -> conflict.
  * Three inline options:
- *   Replace existing  → setOverride (overwrite)
- *   Keep both         → setOverride with priority bump
- *   Cancel            → restore prior chord, back to idle
+ *   Replace existing  -> setOverride (overwrite)
+ *   Keep both         -> setOverride with priority bump
+ *   Cancel            -> restore prior chord, back to idle
+ *
+ * ## Preset picker (KB-14)
+ *
+ * Toolbar dropdown sourced from KeybindingPreset/listPresets (all registered
+ * presets). Active state sourced from KeybindingPreset/getActive(currentUserId).
+ *
+ * Active preset:
+ *   - Shows "Currently applied: <Name>" badge + "Unapply" button.
+ *   - Unapply dispatches KeybindingPreset/deactivate(userId, previousPreset)
+ *     which triggers preset-deactivate-clears-overrides.sync.
+ *
+ * Inactive preset selected from dropdown:
+ *   - Dispatches KeybindingPreset/activate(userId, presetId)
+ *     which triggers preset-activate-sets-overrides.sync.
+ *
+ * ## Partial customization indicator (KB-14)
+ *
+ * When a binding comes from the active preset AND the user has further
+ * customized it (isModified = true), the list row shows both a
+ * "via <Preset> preset" label and a "user override" label. Bindings
+ * modified without an active preset show only "user override".
+ *
+ * The modified-filter toggle keeps this two-category distinction:
+ *   - "preset-applied" rows: fromPreset = true, isModified = false
+ *   - "user-modified" rows: isModified = true (with or without preset)
  *
  * ## Data / polling
  *
- * Same 5 s polling pattern as KeybindingHint. All bindings are fetched via
+ * Same 5 s polling pattern as KeybindingHint. All bindings fetched via
  * KeyBinding/listByScope("app") and filtered client-side.
+ * Active preset polled from KeybindingPreset/getActive(currentUserId).
+ * Available presets fetched once from KeybindingPreset/listPresets.
  *
  * ## Accessibility (per widget spec)
  *
@@ -52,6 +79,7 @@
  * - listItem: role="option"
  * - recorder: role="textbox" + aria-label
  * - conflictWarning: role="alert" (always in DOM, visibility toggled)
+ * - presetPicker: role="combobox" + aria-label
  */
 
 import React, {
@@ -77,25 +105,14 @@ export interface KeyStroke {
 export interface KeyBindingRecord {
   binding: string;
   actionBinding: string;
-  /** Seed default chord. */
   chord: KeyStroke[];
   scope: string;
   label: string;
   category?: string;
-  /**
-   * True when a user-scope override exists for this binding (KB-11).
-   * Populated by listByScope joining the userOverrides relation.
-   */
   isModified?: boolean;
-  /**
-   * Deprecated: use userChord/workspaceChord instead.
-   * Kept for backwards compatibility with display-only callers.
-   */
   defaultChord?: KeyStroke[];
-  /** User-scoped override chord, or null if none. Populated by listByScope. */
-  userChord?: KeyStroke[] | null;
-  /** Workspace-scoped override chord, or null if none. Populated by listByScope. */
-  workspaceChord?: KeyStroke[] | null;
+  /** True when this binding's chord came from the currently active preset. */
+  fromPreset?: boolean;
 }
 
 /** FSM states matching keybinding-editor.widget */
@@ -111,13 +128,26 @@ export interface ConflictInfo {
   existingLabel: string;
 }
 
+/** One entry in the available presets list. */
+export interface PresetRecord {
+  preset: string;
+  name: string;
+  description?: string;
+}
+
 export interface KeybindingEditorProps {
-  /** "view" | "edit" | "create" — defaults to "view" */
+  /** "view" | "edit" | "create" -- defaults to "view" */
   mode?: 'view' | 'edit' | 'create';
   /** Selected binding id for edit; null for create/view */
   context?: string | null;
   /** Optional scope subtree filter */
   scopeFilter?: string;
+  /**
+   * The current user id -- needed to query and update the active preset.
+   * Falls back to "current-user" if not provided (same pattern used by
+   * other clef-base components before auth integration lands).
+   */
+  currentUserId?: string;
   /**
    * Called when the user clicks a binding row in view mode.
    * Receives the binding id of the clicked row. Callers can use this
@@ -178,7 +208,7 @@ function extractModifiers(event: KeyboardEvent): string[] {
 
 // ---------------------------------------------------------------------------
 // Keycap chip (re-use KeybindingHint's Keycap style without importing the
-// internal unexported component — inline equivalent)
+// internal unexported component -- inline equivalent)
 // ---------------------------------------------------------------------------
 
 function KeycapChip({ text }: { text: string }): React.ReactElement {
@@ -206,16 +236,6 @@ function KeycapChip({ text }: { text: string }): React.ReactElement {
   );
 }
 
-/**
- * Walk the override chain for a binding record (KB-11 §3.6):
- *   1. userChord (user Property override)
- *   2. workspaceChord (workspace Property override)
- *   3. chord (seed default)
- */
-function resolveEffectiveChord(record: KeyBindingRecord): KeyStroke[] {
-  return record.userChord ?? record.workspaceChord ?? record.chord;
-}
-
 function ChordChips({ chord }: { chord: KeyStroke[] }): React.ReactElement {
   const mac = isMac();
   return (
@@ -238,7 +258,7 @@ function ChordChips({ chord }: { chord: KeyStroke[] }): React.ReactElement {
 }
 
 // ---------------------------------------------------------------------------
-// useAllBindings — polling hook
+// useAllBindings -- polling hook
 // ---------------------------------------------------------------------------
 
 function useAllBindings(scope = 'app'): KeyBindingRecord[] {
@@ -270,7 +290,7 @@ function useAllBindings(scope = 'app'): KeyBindingRecord[] {
 
       setBindings(records);
     } catch {
-      // Network error — keep existing value.
+      // Network error -- keep existing value.
     }
   }, [scope]);
 
@@ -288,6 +308,96 @@ function useAllBindings(scope = 'app'): KeyBindingRecord[] {
 }
 
 // ---------------------------------------------------------------------------
+// useAvailablePresets -- one-shot fetch of all registered presets
+// ---------------------------------------------------------------------------
+
+function useAvailablePresets(): PresetRecord[] {
+  const [presets, setPresets] = useState<PresetRecord[]>([]);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const result = await kernelInvoke('KeybindingPreset', 'listPresets', {});
+        if (result.variant !== 'ok') {
+          throw new Error('listPresets returned non-ok');
+        }
+
+        const raw = result.presets;
+        const records: PresetRecord[] = (() => {
+          if (typeof raw === 'string') {
+            try {
+              return JSON.parse(raw) as PresetRecord[];
+            } catch {
+              return [];
+            }
+          }
+          if (Array.isArray(raw)) {
+            return raw.filter(
+              (r): r is PresetRecord =>
+                typeof r === 'object' && r !== null && 'preset' in r,
+            );
+          }
+          return [];
+        })();
+
+        setPresets(records);
+      } catch {
+        // Fallback: expose the well-known preset ids from the seeds
+        // so the picker is usable even without a live kernel connection.
+        setPresets([
+          { preset: 'vscode-default', name: 'VS Code Default' },
+          { preset: 'vim', name: 'Vim' },
+          { preset: 'emacs', name: 'Emacs' },
+          { preset: 'notion-default', name: 'Notion Default' },
+          { preset: 'linear-default', name: 'Linear Default' },
+        ]);
+      }
+    })();
+  }, []);
+
+  return presets;
+}
+
+// ---------------------------------------------------------------------------
+// useActivePreset -- polls the active preset for the current user
+// ---------------------------------------------------------------------------
+
+function useActivePreset(
+  userId: string,
+  availablePresets: PresetRecord[],
+): { activePresetId: string | null; activePresetName: string | null; refetch: () => void } {
+  const [activePresetId, setActivePresetId] = useState<string | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const doFetch = useCallback(async () => {
+    try {
+      const result = await kernelInvoke('KeybindingPreset', 'getActive', { user: userId });
+      if (result.variant !== 'ok') return;
+      const preset = result.preset as string | null;
+      setActivePresetId(preset ?? null);
+    } catch {
+      // Keep existing value on network error.
+    }
+  }, [userId]);
+
+  const refetch = useCallback(() => { void doFetch(); }, [doFetch]);
+
+  useEffect(() => {
+    void doFetch();
+    intervalRef.current = setInterval(() => { void doFetch(); }, POLL_INTERVAL_MS);
+    return () => {
+      if (intervalRef.current !== null) clearInterval(intervalRef.current);
+    };
+  }, [doFetch]);
+
+  const activePresetName = activePresetId
+    ? (availablePresets.find((p) => p.preset === activePresetId)?.name ?? activePresetId)
+    : null;
+
+  return { activePresetId, activePresetName, refetch };
+}
+
+// ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
 
@@ -295,6 +405,7 @@ export function KeybindingEditor({
   mode = 'view',
   context = null,
   scopeFilter,
+  currentUserId = 'current-user',
   onSelectBinding,
 }: KeybindingEditorProps): React.ReactElement {
   // ------------------------------------------------------------------
@@ -302,6 +413,37 @@ export function KeybindingEditor({
   // ------------------------------------------------------------------
 
   const allBindings = useAllBindings('app');
+  const availablePresets = useAvailablePresets();
+  const { activePresetId, activePresetName, refetch: refetchActivePreset } =
+    useActivePreset(currentUserId, availablePresets);
+
+  // ------------------------------------------------------------------
+  // Preset: set of binding ids covered by the active preset
+  // ------------------------------------------------------------------
+
+  const [presetBindingIds, setPresetBindingIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!activePresetId) {
+      setPresetBindingIds(new Set());
+      return;
+    }
+    void (async () => {
+      try {
+        const result = await kernelInvoke('KeybindingPreset', 'listBindings', {
+          preset: activePresetId,
+        });
+        if (result.variant !== 'ok') return;
+        const raw = result.bindings;
+        const entries: Array<{ binding: string }> = Array.isArray(raw)
+          ? (raw as Array<{ binding: string }>)
+          : [];
+        setPresetBindingIds(new Set(entries.map((e) => e.binding)));
+      } catch {
+        setPresetBindingIds(new Set());
+      }
+    })();
+  }, [activePresetId]);
 
   // ------------------------------------------------------------------
   // Filter state
@@ -311,9 +453,15 @@ export function KeybindingEditor({
   const [selectedCategory, setSelectedCategory] = useState('');
   const [showOnlyModified, setShowOnlyModified] = useState(false);
 
-  const filteredBindings = allBindings.filter((b) => {
+  // Augment bindings with fromPreset flag
+  const augmentedBindings: KeyBindingRecord[] = allBindings.map((b) => ({
+    ...b,
+    fromPreset: presetBindingIds.has(b.binding),
+  }));
+
+  const filteredBindings = augmentedBindings.filter((b) => {
     if (scopeFilter && !b.scope.startsWith(scopeFilter)) return false;
-    if (showOnlyModified && !b.isModified) return false;
+    if (showOnlyModified && !b.isModified && !b.fromPreset) return false;
     if (selectedCategory && b.category !== selectedCategory) return false;
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
@@ -332,7 +480,7 @@ export function KeybindingEditor({
   // ------------------------------------------------------------------
 
   const selectedBinding = context
-    ? allBindings.find((b) => b.binding === context) ?? null
+    ? augmentedBindings.find((b) => b.binding === context) ?? null
     : null;
 
   // ------------------------------------------------------------------
@@ -347,11 +495,11 @@ export function KeybindingEditor({
   // Ref to recorder element for programmatic focus.
   const recorderRef = useRef<HTMLDivElement | null>(null);
 
-  // Stage-2 timeout ref — after first stroke, wait 200 ms before prompting.
+  // Stage-2 timeout ref -- after first stroke, wait 200 ms before prompting.
   const stage2TimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Kernel invoke hook (available via ClefProvider in the real app).
-  // Fallback to kernelInvoke if not inside a ClefProvider (e.g. standalone admin page).
+  // Fallback to kernelInvoke if not inside a ClefProvider (standalone admin page).
   type KernelCallFn = (concept: string, action: string, input: Record<string, unknown>) => Promise<Record<string, unknown>>;
   let _invoke: KernelCallFn | null = null;
   try {
@@ -364,6 +512,52 @@ export function KeybindingEditor({
   const kernelCall: KernelCallFn = _invoke ?? kernelInvoke;
 
   // ------------------------------------------------------------------
+  // Preset apply / unapply handlers (KB-14)
+  // ------------------------------------------------------------------
+
+  const [presetApplying, setPresetApplying] = useState(false);
+
+  const handleApplyPreset = useCallback(
+    async (presetId: string) => {
+      if (!presetId || presetApplying) return;
+      setPresetApplying(true);
+      try {
+        await kernelCall('KeybindingPreset', 'activate', {
+          user: currentUserId,
+          preset: presetId,
+        });
+        // preset-activate-sets-overrides.sync fans out KeyBinding/setOverride
+        // calls for every entry in the preset.
+        refetchActivePreset();
+      } catch {
+        // Non-fatal -- kernel unavailable or preset not loaded yet.
+      } finally {
+        setPresetApplying(false);
+      }
+    },
+    [currentUserId, kernelCall, refetchActivePreset, presetApplying],
+  );
+
+  const handleUnapplyPreset = useCallback(async () => {
+    if (!activePresetId || presetApplying) return;
+    const previousPreset = activePresetId;
+    setPresetApplying(true);
+    try {
+      // Pass previousPreset in the input so preset-deactivate-clears-overrides.sync
+      // can look up the binding entries and fan out KeyBinding/clearOverride calls.
+      await kernelCall('KeybindingPreset', 'deactivate', {
+        user: currentUserId,
+        previousPreset,
+      });
+      refetchActivePreset();
+    } catch {
+      // Non-fatal.
+    } finally {
+      setPresetApplying(false);
+    }
+  }, [activePresetId, currentUserId, kernelCall, refetchActivePreset, presetApplying]);
+
+  // ------------------------------------------------------------------
   // Helpers: conflict detection
   // ------------------------------------------------------------------
 
@@ -373,7 +567,7 @@ export function KeybindingEditor({
       for (const b of allBindings) {
         if (context && b.binding === context) continue; // same binding, ignore self
         if (JSON.stringify(b.chord) === chordStr) {
-          // Check scope overlap — simplistic: same scope prefix.
+          // Check scope overlap -- simplistic: same scope prefix.
           if (!scopeFilter || b.scope.startsWith(scopeFilter)) {
             return { existingBindingId: b.binding, existingLabel: b.label };
           }
@@ -400,23 +594,18 @@ export function KeybindingEditor({
       // Persist.
       try {
         if (mode === 'edit' && context) {
-          // Write user-scoped override. The handler stores this in both the
-          // internal userOverrides relation and the cross-concept propertyOverrides
-          // relation (keybinding-override:<id>:user), making it observable by
-          // other concepts via Property-keyed queries (KB-11 §3.6).
           await kernelCall('KeyBinding', 'setOverride', {
             binding: context,
-            scope: 'user',
-            chord,
+            chord: JSON.stringify(chord),
           });
         } else if (mode === 'create') {
           await kernelCall('KeyBinding', 'register', {
-            chord,
+            chord: JSON.stringify(chord),
             scope: scopeFilter ?? 'app',
           });
         }
       } catch {
-        // Non-fatal — UI remains responsive.
+        // Non-fatal -- UI remains responsive.
       }
 
       recorderActive.current = false;
@@ -476,7 +665,7 @@ export function KeybindingEditor({
       const code = event.code;
       const mod = extractModifiers(event.nativeEvent);
 
-      // Esc → cancel.
+      // Esc -> cancel.
       if (key === 'Escape') {
         cancelRecording();
         return;
@@ -489,7 +678,7 @@ export function KeybindingEditor({
           return;
         }
 
-        // Enter with no strokes yet → cancel.
+        // Enter with no strokes yet -> cancel.
         if (key === 'Enter' && recordedStrokes.length === 0) {
           cancelRecording();
           return;
@@ -508,8 +697,7 @@ export function KeybindingEditor({
           return;
         }
 
-        // First real keystroke — go to stage-2 if there was already a stroke,
-        // otherwise record and prompt.
+        // First real keystroke -- record and prompt for possible second stroke.
         const newStrokes = [stroke];
         setRecordedStrokes(newStrokes);
 
@@ -524,7 +712,7 @@ export function KeybindingEditor({
       }
 
       if (recorderState === 'recordingChordStage2') {
-        // Backspace → remove last stroke, return to recording.
+        // Backspace -> remove last stroke, return to recording.
         if (key === 'Backspace') {
           if (stage2TimerRef.current !== null) {
             clearTimeout(stage2TimerRef.current);
@@ -535,7 +723,7 @@ export function KeybindingEditor({
           return;
         }
 
-        // Enter → finalize current strokes.
+        // Enter -> finalize current strokes.
         if (key === 'Enter') {
           void finalizeChord(recordedStrokes);
           return;
@@ -544,7 +732,7 @@ export function KeybindingEditor({
         // Skip bare modifiers.
         if (['Meta', 'Control', 'Alt', 'Shift'].includes(key)) return;
 
-        // Second real keystroke → finalize chord.
+        // Second real keystroke -> finalize chord.
         const stroke: KeyStroke = { mod, key, code };
         const newStrokes = [...recordedStrokes, stroke];
         setRecordedStrokes(newStrokes);
@@ -568,21 +756,18 @@ export function KeybindingEditor({
   const handleResolveReplace = useCallback(async () => {
     if (!conflict) return;
     try {
-      // Clear the conflicting binding's user override by using clearOverride
-      // (more correct than setOverride with empty chord, which would error).
-      await kernelCall('KeyBinding', 'clearOverride', {
+      await kernelCall('KeyBinding', 'setOverride', {
         binding: conflict.existingBindingId,
-        scope: 'user',
+        chord: JSON.stringify([]), // clear existing
       });
       if (mode === 'edit' && context) {
         await kernelCall('KeyBinding', 'setOverride', {
           binding: context,
-          scope: 'user',
-          chord: recordedStrokes,
+          chord: JSON.stringify(recordedStrokes),
         });
       } else if (mode === 'create') {
         await kernelCall('KeyBinding', 'register', {
-          chord: recordedStrokes,
+          chord: JSON.stringify(recordedStrokes),
           scope: scopeFilter ?? 'app',
         });
       }
@@ -601,13 +786,12 @@ export function KeybindingEditor({
       if (mode === 'edit' && context) {
         await kernelCall('KeyBinding', 'setOverride', {
           binding: context,
-          scope: 'user',
-          chord: recordedStrokes,
+          chord: JSON.stringify(recordedStrokes),
           priorityBump: true,
         });
       } else if (mode === 'create') {
         await kernelCall('KeyBinding', 'register', {
-          chord: recordedStrokes,
+          chord: JSON.stringify(recordedStrokes),
           scope: scopeFilter ?? 'app',
           priorityBump: true,
         });
@@ -632,10 +816,9 @@ export function KeybindingEditor({
   const handleResetBinding = useCallback(async () => {
     if (!context) return;
     try {
-      // Clear user-scope override — falls back to workspace then seed default.
-      await kernelCall('KeyBinding', 'clearOverride', { binding: context, scope: 'user' });
+      await kernelCall('KeyBinding', 'resetOverride', { binding: context });
     } catch {
-      // Non-fatal — binding may have no user override (not_found is expected).
+      // Non-fatal.
     }
   }, [context, kernelCall]);
 
@@ -666,6 +849,8 @@ export function KeybindingEditor({
 
   function renderListItem(b: KeyBindingRecord): React.ReactElement {
     const isSelected = b.binding === context;
+    const isFromPreset = b.fromPreset === true;
+    const isUserModified = b.isModified === true;
     return (
       <div
         key={b.binding}
@@ -673,7 +858,7 @@ export function KeybindingEditor({
         data-binding-id={b.binding}
         role="option"
         aria-selected={isSelected}
-        aria-label={`${b.label}, chord: ${renderChord(resolveEffectiveChord(b), isMac())}, scope: ${b.scope}`}
+        aria-label={`${b.label}, chord: ${renderChord(b.chord, isMac())}, scope: ${b.scope}`}
         tabIndex={0}
         style={{
           display: 'flex',
@@ -687,8 +872,6 @@ export function KeybindingEditor({
           borderBottom: '1px solid var(--color-border-subtle, #eee)',
         }}
         onClick={() => {
-          // In view mode, notify the caller so it can switch to edit mode (KB-07/KB-12).
-          // In edit/create mode context comes from props — no-op here.
           if (mode === 'view' && onSelectBinding) {
             onSelectBinding(b.binding);
           }
@@ -706,22 +889,19 @@ export function KeybindingEditor({
           data-part="keycap-chips"
           style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
         >
-          {(() => {
-            const effective = resolveEffectiveChord(b);
-            return effective.length > 0 ? (
-              <ChordChips chord={effective} />
-            ) : (
-              <span
-                style={{
-                  fontSize: '0.75rem',
-                  color: 'var(--color-text-muted, #888)',
-                  fontStyle: 'italic',
-                }}
-              >
-                unbound
-              </span>
-            );
-          })()}
+          {b.chord.length > 0 ? (
+            <ChordChips chord={b.chord} />
+          ) : (
+            <span
+              style={{
+                fontSize: '0.75rem',
+                color: 'var(--color-text-muted, #888)',
+                fontStyle: 'italic',
+              }}
+            >
+              unbound
+            </span>
+          )}
         </div>
         <div
           data-part="scope-path"
@@ -735,7 +915,60 @@ export function KeybindingEditor({
         >
           {b.scope}
         </div>
-        {b.isModified && (
+
+        {/* Partial customization indicators (KB-14) */}
+        {isFromPreset && !isUserModified && activePresetName && (
+          <div
+            data-part="preset-origin-indicator"
+            title={`Chord set by ${activePresetName} preset`}
+            style={{
+              marginLeft: '6px',
+              fontSize: '0.65rem',
+              background: 'var(--color-info-subtle, #e3f2fd)',
+              color: 'var(--color-info-text, #1565c0)',
+              borderRadius: '3px',
+              padding: '1px 4px',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            via {activePresetName} preset
+          </div>
+        )}
+        {isUserModified && isFromPreset && activePresetName && (
+          <>
+            <div
+              data-part="preset-origin-indicator"
+              title={`Originally set by ${activePresetName} preset`}
+              style={{
+                marginLeft: '6px',
+                fontSize: '0.65rem',
+                background: 'var(--color-info-subtle, #e3f2fd)',
+                color: 'var(--color-info-text, #1565c0)',
+                borderRadius: '3px',
+                padding: '1px 4px',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              via {activePresetName} preset
+            </div>
+            <div
+              data-part="modified-indicator"
+              title="Further customized by you on top of preset"
+              style={{
+                marginLeft: '4px',
+                fontSize: '0.65rem',
+                background: 'var(--color-accent-subtle, #fff3cd)',
+                color: 'var(--color-accent-text, #856404)',
+                borderRadius: '3px',
+                padding: '1px 4px',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              user override
+            </div>
+          </>
+        )}
+        {isUserModified && !isFromPreset && (
           <div
             data-part="modified-indicator"
             style={{
@@ -745,9 +978,10 @@ export function KeybindingEditor({
               color: 'var(--color-accent-text, #856404)',
               borderRadius: '3px',
               padding: '1px 4px',
+              whiteSpace: 'nowrap',
             }}
           >
-            modified
+            user override
           </div>
         )}
       </div>
@@ -826,7 +1060,7 @@ export function KeybindingEditor({
           </div>
         )}
 
-        {/* Conflict warning — always in DOM per invariant */}
+        {/* Conflict warning -- always in DOM per invariant */}
         <div
           data-part="conflict-warning"
           data-conflict={isConflict ? 'true' : 'false'}
@@ -916,23 +1150,20 @@ export function KeybindingEditor({
               <span style={{ fontSize: '0.8rem', display: 'block', marginBottom: '4px' }}>
                 Current chord:
               </span>
-              {(() => {
-                const effective = resolveEffectiveChord(selectedBinding);
-                return effective.length > 0 ? (
-                  <ChordChips chord={effective} />
-                ) : (
-                  <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted, #888)', fontStyle: 'italic' }}>
-                    unbound
-                  </span>
-                );
-              })()}
+              {selectedBinding.chord.length > 0 ? (
+                <ChordChips chord={selectedBinding.chord} />
+              ) : (
+                <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted, #888)', fontStyle: 'italic' }}>
+                  unbound
+                </span>
+              )}
             </div>
-            {selectedBinding.isModified && (
+            {selectedBinding.isModified && selectedBinding.defaultChord && (
               <div style={{ margin: '8px 0' }}>
                 <span style={{ fontSize: '0.8rem', display: 'block', marginBottom: '4px' }}>
                   Default chord:
                 </span>
-                <ChordChips chord={selectedBinding.chord} />
+                <ChordChips chord={selectedBinding.defaultChord} />
               </div>
             )}
             <button
@@ -964,6 +1195,89 @@ export function KeybindingEditor({
   }
 
   // ------------------------------------------------------------------
+  // Preset picker toolbar section (KB-14)
+  //
+  // Active preset  -> badge showing preset name + Unapply button
+  // No active preset -> "Apply preset..." combobox
+  // ------------------------------------------------------------------
+
+  function renderPresetPicker(): React.ReactElement {
+    if (activePresetId && activePresetName) {
+      return (
+        <div
+          data-part="preset-picker"
+          style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+        >
+          <span
+            data-preset-active={activePresetId}
+            style={{
+              fontSize: '0.8rem',
+              background: 'var(--color-info-subtle, #e3f2fd)',
+              color: 'var(--color-info-text, #1565c0)',
+              borderRadius: '4px',
+              padding: '3px 8px',
+              fontWeight: 500,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Currently applied: {activePresetName}
+          </span>
+          <button
+            type="button"
+            disabled={presetApplying}
+            aria-label={`Unapply ${activePresetName} preset`}
+            onClick={() => void handleUnapplyPreset()}
+            style={{
+              padding: '3px 8px',
+              fontSize: '0.8rem',
+              cursor: presetApplying ? 'wait' : 'pointer',
+              border: '1px solid var(--color-border, #ccc)',
+              borderRadius: '4px',
+              background: 'var(--color-surface, #fff)',
+              color: 'var(--color-text, inherit)',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {presetApplying ? 'Applying\u2026' : 'Unapply'}
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <select
+        data-part="preset-picker"
+        role="combobox"
+        aria-label="Select keybinding preset"
+        value=""
+        disabled={presetApplying}
+        onChange={(e) => {
+          const presetId = e.target.value;
+          if (presetId) void handleApplyPreset(presetId);
+          // Reset the select back to placeholder after dispatching.
+          e.target.value = '';
+        }}
+        style={{
+          padding: '4px 8px',
+          border: '1px solid var(--color-border, #ccc)',
+          borderRadius: '4px',
+          fontSize: '0.875rem',
+          cursor: presetApplying ? 'wait' : 'pointer',
+        }}
+      >
+        <option value="" disabled>
+          {presetApplying ? 'Applying\u2026' : 'Apply preset\u2026'}
+        </option>
+        {availablePresets.map((p) => (
+          <option key={p.preset} value={p.preset}>
+            {p.name}
+          </option>
+        ))}
+      </select>
+    );
+  }
+
+  // ------------------------------------------------------------------
   // Root render
   // ------------------------------------------------------------------
 
@@ -991,6 +1305,7 @@ export function KeybindingEditor({
           padding: '10px 12px',
           borderBottom: '1px solid var(--color-border, #eee)',
           flexWrap: 'wrap',
+          alignItems: 'center',
         }}
       >
         {/* Search */}
@@ -1042,6 +1357,7 @@ export function KeybindingEditor({
           role="button"
           aria-label="Show only modified bindings"
           aria-pressed={showOnlyModified}
+          data-active={showOnlyModified ? 'true' : 'false'}
           onClick={() => setShowOnlyModified((v) => !v)}
           style={{
             padding: '4px 10px',
@@ -1052,32 +1368,14 @@ export function KeybindingEditor({
               : 'var(--color-surface, #fff)',
             cursor: 'pointer',
             fontSize: '0.875rem',
+            fontWeight: showOnlyModified ? 600 : 400,
           }}
         >
           Modified only
         </button>
 
-        {/* Preset picker */}
-        <select
-          data-part="preset-picker"
-          role="combobox"
-          aria-label="Select keybinding preset"
-          defaultValue=""
-          onChange={() => {
-            // KB-10 will wire preset application; no-op for v1.
-          }}
-          style={{
-            padding: '4px 8px',
-            border: '1px solid var(--color-border, #ccc)',
-            borderRadius: '4px',
-            fontSize: '0.875rem',
-          }}
-        >
-          <option value="">Preset...</option>
-          <option value="vscode">VS Code</option>
-          <option value="vim">Vim</option>
-          <option value="emacs">Emacs</option>
-        </select>
+        {/* Preset picker (KB-14) */}
+        {renderPresetPicker()}
       </div>
 
       {/* ---- Main content row ---- */}

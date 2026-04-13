@@ -1,0 +1,32 @@
+# preset-deactivate-clears-overrides.sync
+#
+# When KeybindingPreset/deactivate completes for a user, the UI passes
+# the previously active preset id so this sync can look up its entries
+# and fan out KeyBinding/clearOverride calls for each one.
+#
+# The deactivate action input carries `previousPreset` (the id recorded
+# by the UI before dispatching deactivate). This is bound in the `when`
+# clause from the invocation input (not the completion output) so that
+# the preset id remains available to the `where` lookup.
+#
+# PRD:  docs/plans/keybinding-prd.md Phase F (KB-14)
+# Card: KB-14
+
+sync PresetDeactivateClearsOverrides [eager]
+  purpose {
+    After a preset is deactivated for a user, look up the binding entries
+    in the previously active preset and call KeyBinding/clearOverride for
+    each one, reverting those chords to their workspace or seed defaults.
+  }
+when {
+  KeybindingPreset/deactivate: [ user: ?user; previousPreset: ?preset ] => []
+}
+where {
+  KeybindingPreset/listBindings: [ preset: ?preset ] => [ bindings: ?entries ]
+}
+then {
+  KeyBinding/clearOverride: [
+    binding: ?entry.binding;
+    scope: "user";
+    userId: ?user ]
+}
