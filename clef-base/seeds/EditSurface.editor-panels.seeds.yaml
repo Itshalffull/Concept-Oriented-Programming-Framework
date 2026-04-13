@@ -1,0 +1,67 @@
+# EditSurface seeds -- editor-panel plugin widget activations (§3.6)
+#
+# These entries confirm that the eight editor-panel widgets specified in
+# PluginRegistry.editor-panels.seeds.yaml are now live and should be
+# included in the panel_widgets list for their respective block editor
+# surfaces. The panel_widgets lists below are complete -- they extend the
+# anticipatory entries already declared in EditSurface.seeds.yaml and
+# EditSurface.image.seeds.yaml with any additional panels that ship here.
+#
+# Surface IDs must match the IDs registered in EditSurface.seeds.yaml and
+# EditSurface.image.seeds.yaml so the runtime merges them correctly.
+
+concept: EditSurface
+action: update
+entries:
+  # Image block -- confirm image-metadata-panel and exif-panel are live.
+  # The anticipatory registration in EditSurface.image.seeds.yaml already
+  # declares both panels; this entry adds no new panels but marks the
+  # ship status explicitly in this file for audit clarity.
+  - id: image-block-editor
+    schema_ref: image
+    context: block-editor
+    panel_widgets:
+      - image-metadata-panel
+      - exif-panel
+
+  # Heading block -- anchor-link-panel is now live.
+  - id: heading-block-editor
+    schema_ref: heading
+    context: block-editor
+    panel_widgets:
+      - anchor-link-panel
+
+  # Entity-embed block -- entity-metadata-panel is now live.
+  - id: entity-embed-block-editor
+    schema_ref: entity-embed
+    context: block-editor
+    panel_widgets:
+      - entity-metadata-panel
+
+  # View-embed block -- view-embed-filter-override-panel is now live.
+  - id: view-embed-block-editor
+    schema_ref: view-embed
+    context: block-editor
+    panel_widgets:
+      - view-embed-filter-override-panel
+
+  # Code block -- code-syntax-error-panel is now live.
+  - id: code-block-editor
+    schema_ref: code
+    context: block-editor
+    panel_widgets:
+      - code-syntax-error-panel
+
+  # Columns block -- columns-layout-panel is now live.
+  - id: columns-block-editor
+    schema_ref: columns
+    context: block-editor
+    panel_widgets:
+      - columns-layout-panel
+
+  # Control block -- control-action-picker is now live.
+  - id: control-block-editor
+    schema_ref: control
+    context: block-editor
+    panel_widgets:
+      - control-action-picker

@@ -1,0 +1,314 @@
+@version(1)
+widget control-action-picker {
+
+  purpose {
+    Side-panel mounted on control blocks that lets authors bind the block
+    to a kernel concept action. Provides a two-level picker: first the
+    author selects a concept from a searchable list, then selects an
+    action from that concept action catalogue. The resolved binding is
+    shown as a summary chip. A label input allows the author to override
+    the default button label derived from the action name. The panel also
+    exposes a variant selector so the author can choose which completion
+    variant the control block success state corresponds to.
+  }
+
+  anatomy {
+    root:            container   { Top-level panel wrapper }
+    header:          container   { Panel header area }
+    headerTitle:     text        { Panel heading -- "Action Binding" }
+    bindingChip:     container   { Read-only chip showing the currently bound concept/action }
+    conceptName:     text        { Concept identifier within the binding chip }
+    actionName:      text        { Action identifier within the binding chip }
+    clearButton:     action      { Removes the current binding, returns to concept picker }
+    conceptSearch:   interactive { Search input filtering the concept list }
+    conceptList:     container   { Scrollable list of selectable concepts }
+    conceptItem:     action      { Row for a single concept option }
+    conceptLabel:    text        { Display name of the concept }
+    actionList:      container   { Scrollable list of actions for the chosen concept }
+    actionItem:      action      { Row for a single action option }
+    actionLabel:     text        { Display name of the action }
+    variantSection:  container   { Variant picker section }
+    variantLabel:    text        { Label -- "Success variant" }
+    variantSelect:   interactive { Dropdown to pick the success-variant mapping }
+    labelSection:    container   { Label override section }
+    labelFieldLabel: text        { Label -- "Button label" }
+    labelInput:      interactive { Text input for overriding the control button label }
+  }
+
+  states {
+    picker {
+      idle [initial] {
+        on PANEL_OPEN   -> conceptPicker;
+        on BINDING_SET  -> bound;
+      }
+      conceptPicker {
+        on CONCEPT_SELECTED -> actionPicker;
+        on PANEL_CLOSE      -> idle;
+        entry [focusConceptSearch];
+      }
+      actionPicker {
+        on ACTION_SELECTED -> bound;
+        on BACK            -> conceptPicker;
+        on PANEL_CLOSE     -> idle;
+      }
+      bound {
+        on CLEAR_BINDING -> conceptPicker;
+        on PANEL_CLOSE   -> idle;
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Tab       -> FOCUS_NEXT;
+      Shift+Tab -> FOCUS_PREV;
+      ArrowDown -> FOCUS_NEXT_ITEM;
+      ArrowUp   -> FOCUS_PREV_ITEM;
+      Enter     -> SELECT_ITEM;
+      Escape    -> BACK;
+      Backspace -> CLEAR_BINDING;
+    }
+    focus {
+      trap: false;
+      initial: conceptSearch;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Action binding picker";
+      };
+      conceptSearch -> {
+        role: "searchbox";
+        aria-label: "Search concepts";
+        aria-controls: "concept-list";
+        aria-autocomplete: "list";
+      };
+      conceptList -> {
+        role: "listbox";
+        aria-label: "Available concepts";
+      };
+      conceptItem -> {
+        role: "option";
+        aria-label: self.conceptLabel;
+      };
+      actionList -> {
+        role: "listbox";
+        aria-label: "Available actions";
+      };
+      actionItem -> {
+        role: "option";
+        aria-label: self.actionLabel;
+      };
+      variantSelect -> {
+        role: "combobox";
+        aria-label: "Success variant";
+      };
+      clearButton -> {
+        aria-label: "Clear action binding";
+      };
+    }
+  }
+
+  props {
+    boundConcept:  option String
+    boundAction:   option String
+    boundVariant:  option String
+    buttonLabel:   option String
+    concepts:      list String = []
+    searchQuery:   String = ""
+  }
+
+  connect {
+    root -> {
+      data-part:  "root";
+      data-state: if state.picker == "conceptPicker"  then "concept-picker"
+                  else if state.picker == "actionPicker"   then "action-picker"
+                  else if state.picker == "bound"          then "bound"
+                  else "idle";
+      role: "region";
+      aria-label: "Action binding picker";
+    }
+
+    header -> {
+      data-part: "header";
+    }
+
+    headerTitle -> {
+      data-part: "header-title";
+      text: "Action Binding";
+    }
+
+    bindingChip -> {
+      data-part: "binding-chip";
+      hidden: if state.picker != "bound" then true else false;
+    }
+
+    conceptName -> {
+      data-part: "concept-name";
+      text: ?boundConcept;
+    }
+
+    actionName -> {
+      data-part: "action-name";
+      text: ?boundAction;
+    }
+
+    clearButton -> {
+      data-part:  "clear-button";
+      aria-label: "Clear action binding";
+      hidden: if state.picker != "bound" then true else false;
+      onClick: send(CLEAR_BINDING);
+    }
+
+    conceptSearch -> {
+      data-part:       "concept-search";
+      role:            "searchbox";
+      aria-label:      "Search concepts";
+      aria-controls:   "concept-list";
+      aria-autocomplete: "list";
+      value: ?searchQuery;
+      hidden: if state.picker == "actionPicker" then true
+              else if state.picker == "bound"   then true
+              else false;
+      onInput: send(SEARCH_CHANGED, { query: self.value });
+    }
+
+    conceptList -> {
+      data-part:  "concept-list";
+      role:       "listbox";
+      aria-label: "Available concepts";
+      hidden: if state.picker == "actionPicker" then true
+              else if state.picker == "bound"   then true
+              else false;
+    }
+
+    conceptItem -> {
+      data-part:  "concept-item";
+      role:       "option";
+      aria-label: self.conceptLabel;
+      tabindex:   "0";
+      onClick: send(CONCEPT_SELECTED, { concept: self.conceptId });
+    }
+
+    conceptLabel -> {
+      data-part: "concept-label";
+      text: self.conceptLabel;
+    }
+
+    actionList -> {
+      data-part:  "action-list";
+      role:       "listbox";
+      aria-label: "Available actions";
+      hidden: if state.picker != "actionPicker" then true else false;
+    }
+
+    actionItem -> {
+      data-part:  "action-item";
+      role:       "option";
+      aria-label: self.actionLabel;
+      tabindex:   "0";
+      onClick: send(ACTION_SELECTED, { action: self.actionId });
+    }
+
+    actionLabel -> {
+      data-part: "action-label";
+      text: self.actionLabel;
+    }
+
+    variantSection -> {
+      data-part: "variant-section";
+      hidden: if state.picker != "bound" then true else false;
+    }
+
+    variantLabel -> {
+      data-part: "variant-label";
+      text: "Success variant";
+    }
+
+    variantSelect -> {
+      data-part:  "variant-select";
+      role:       "combobox";
+      aria-label: "Success variant";
+      value: ?boundVariant;
+      onChange: send(VARIANT_CHANGED, { variant: self.value });
+    }
+
+    labelSection -> {
+      data-part: "label-section";
+      hidden: if state.picker != "bound" then true else false;
+    }
+
+    labelFieldLabel -> {
+      data-part: "label-field-label";
+      text: "Button label";
+    }
+
+    labelInput -> {
+      data-part:  "label-input";
+      role:       "textbox";
+      aria-label: "Button label";
+      value: if ?buttonLabel != null then ?buttonLabel else ?boundAction;
+      onChange: send(LABEL_CHANGED, { label: self.value });
+    }
+  }
+
+
+  invariant {
+    "Selecting a concept advances the picker to the action picker state";
+    "Selecting an action from the action picker advances to the bound state";
+    "The binding chip is visible only when a concept and action are bound";
+    "The concept list is hidden when in action picker or bound state";
+    "The action list is hidden when not in action picker state";
+    "data-state on root mirrors the picker FSM state at all times";
+
+    always "concept list hidden in action picker": {
+      state.picker = "actionPicker"
+    }
+
+    never "binding chip visible when not bound": {
+      state.picker != "bound"
+    }
+
+    action clearButton {
+      requires: state.picker = "bound"
+      ensures ok: state.picker = "conceptPicker"
+    }
+
+    action applyButton {
+      requires: state.picker = "actionPicker"
+      ensures ok: state.picker = "bound"
+    }
+
+    always "root data-state mirrors picker FSM": {
+      state.picker != "idle"
+    }
+  }
+
+      and bindingChip -> { hidden: false }
+      and conceptList -> { hidden: true }
+      and actionList -> { hidden: true }
+    }
+
+    always "concept list hidden in action picker": {
+      state.picker = "actionPicker"
+    }
+
+    never "binding chip visible when not bound": {
+      state.picker != "bound"
+    }
+
+    action clearButton {
+      requires: state.picker = "bound"
+      ensures ok: state.picker = "conceptPicker"
+    }
+    "Every FSM state is reachable from the initial state";
+
+    always "root data-state mirrors picker FSM": {
+      state.picker != "idle"
+    }
+  }
+
+}

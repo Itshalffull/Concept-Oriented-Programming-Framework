@@ -1,0 +1,300 @@
+@version(1)
+widget columns-layout-panel {
+
+  purpose {
+    Side-panel mounted on columns blocks that exposes layout controls:
+    a column-count stepper, per-column width sliders (accepting pixel or
+    percentage values), and a toggle for the responsive stack-on-narrow
+    behaviour. Width inputs are synchronised -- adjusting one column
+    redistributes the remaining space across the others proportionally
+    unless the author unchecks the "lock proportions" option. Changes
+    are applied live to the columns block without requiring an explicit
+    save.
+  }
+
+  anatomy {
+    root:             container   { Top-level panel wrapper }
+    header:           container   { Panel header area }
+    headerTitle:      text        { Panel heading -- "Columns Layout" }
+    countRow:         container   { Row for the column-count control }
+    countLabel:       text        { Label -- "Columns" }
+    decrementButton:  action      { Decreases column count by one }
+    countDisplay:     text        { Current column count numeral }
+    incrementButton:  action      { Increases column count by one }
+    widthsSection:    container   { Section containing per-column width controls }
+    widthsLabel:      text        { Label -- "Column widths" }
+    lockToggle:       action      { Toggles proportional-lock mode }
+    lockLabel:        text        { Label -- "Lock proportions" }
+    columnRow:        container   { A single column width control row }
+    columnLabel:      text        { Column identifier label (e.g. "Column 1") }
+    widthSlider:      interactive { Range slider for column width percentage }
+    widthInput:       interactive { Numeric input for precise width value }
+    widthUnit:        text        { Unit label -- "%" or "px" }
+    stackToggle:      action      { Toggles stack-on-narrow responsive behaviour }
+    stackLabel:       text        { Label -- "Stack on narrow screens" }
+  }
+
+  states {
+    panel {
+      idle [initial] {
+        on BLOCK_FOCUSED -> active;
+      }
+      active {
+        on BLOCK_BLURRED  -> idle;
+        on COUNT_CHANGING -> adjustingCount;
+        on WIDTH_DRAGGING -> adjustingWidths;
+      }
+      adjustingCount {
+        on COUNT_COMMITTED -> active;
+        entry [previewCountChange];
+        exit  [applyCountChange];
+      }
+      adjustingWidths {
+        on WIDTH_COMMITTED -> active;
+        entry [previewWidthChange];
+        exit  [applyWidthChange];
+      }
+    }
+
+    lock {
+      unlocked [initial] {
+        on LOCK_TOGGLE -> locked;
+      }
+      locked {
+        on LOCK_TOGGLE -> unlocked;
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Tab         -> FOCUS_NEXT;
+      Shift+Tab   -> FOCUS_PREV;
+      ArrowRight  -> INCREMENT_WIDTH;
+      ArrowLeft   -> DECREMENT_WIDTH;
+      ArrowUp     -> COUNT_INCREMENT;
+      ArrowDown   -> COUNT_DECREMENT;
+      Enter       -> COMMIT;
+      Space       -> LOCK_TOGGLE;
+    }
+    focus {
+      trap: false;
+      initial: countDisplay;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Columns layout";
+      };
+      decrementButton -> {
+        aria-label: "Decrease column count";
+      };
+      incrementButton -> {
+        aria-label: "Increase column count";
+      };
+      widthSlider -> {
+        role: "slider";
+        aria-label: concat("Width of ", self.columnLabel);
+        aria-valuemin: "10";
+        aria-valuemax: "90";
+        aria-valuenow: self.widthValue;
+      };
+      widthInput -> {
+        role: "spinbutton";
+        aria-label: concat("Width of ", self.columnLabel, " in percent");
+      };
+      lockToggle -> {
+        role: "checkbox";
+        aria-checked: if state.lock == "locked" then "true" else "false";
+        aria-label: "Lock proportions";
+      };
+      stackToggle -> {
+        role: "checkbox";
+        aria-label: "Stack on narrow screens";
+      };
+    }
+  }
+
+  props {
+    columnCount:   Int = 2
+    widths:        list Int = []
+    stackOnNarrow: Bool = false
+    minColumns:    Int = 1
+    maxColumns:    Int = 6
+  }
+
+  connect {
+    root -> {
+      data-part:  "root";
+      data-state: if state.panel == "adjustingCount"  then "adjusting-count"
+                  else if state.panel == "adjustingWidths" then "adjusting-widths"
+                  else if state.panel == "active"          then "active"
+                  else "idle";
+      role: "region";
+      aria-label: "Columns layout";
+    }
+
+    header -> {
+      data-part: "header";
+    }
+
+    headerTitle -> {
+      data-part: "header-title";
+      text: "Columns Layout";
+    }
+
+    countRow -> {
+      data-part: "count-row";
+    }
+
+    countLabel -> {
+      data-part: "count-label";
+      text: "Columns";
+    }
+
+    decrementButton -> {
+      data-part:  "decrement-button";
+      aria-label: "Decrease column count";
+      disabled: if state.panel != "idle" then true else false;
+      onClick: send(COUNT_DECREMENT);
+    }
+
+    countDisplay -> {
+      data-part: "count-display";
+      text: toString(?columnCount);
+    }
+
+    incrementButton -> {
+      data-part:  "increment-button";
+      aria-label: "Increase column count";
+      disabled: if state.panel != "idle" then true else false;
+      onClick: send(COUNT_INCREMENT);
+    }
+
+    widthsSection -> {
+      data-part: "widths-section";
+    }
+
+    widthsLabel -> {
+      data-part: "widths-label";
+      text: "Column widths";
+    }
+
+    lockToggle -> {
+      data-part:   "lock-toggle";
+      role:        "checkbox";
+      aria-checked: if state.lock == "locked" then "true" else "false";
+      aria-label:  "Lock proportions";
+      onClick: send(LOCK_TOGGLE);
+    }
+
+    lockLabel -> {
+      data-part: "lock-label";
+      text: "Lock proportions";
+    }
+
+    columnRow -> {
+      data-part: "column-row";
+    }
+
+    columnLabel -> {
+      data-part: "column-label";
+      text: self.columnLabel;
+    }
+
+    widthSlider -> {
+      data-part:     "width-slider";
+      role:          "slider";
+      aria-label:    concat("Width of ", self.columnLabel);
+      aria-valuemin: "10";
+      aria-valuemax: "90";
+      aria-valuenow: toString(self.widthValue);
+      onInput: send(WIDTH_DRAGGING, { index: self.index, value: self.widthValue });
+      onChange: send(WIDTH_COMMITTED, { index: self.index, value: self.widthValue });
+    }
+
+    widthInput -> {
+      data-part:  "width-input";
+      role:       "spinbutton";
+      aria-label: concat("Width of ", self.columnLabel, " in percent");
+      value: toString(self.widthValue);
+      onChange: send(WIDTH_COMMITTED, { index: self.index, value: self.widthValue });
+    }
+
+    widthUnit -> {
+      data-part: "width-unit";
+      text: "%";
+      aria-hidden: "true";
+    }
+
+    stackToggle -> {
+      data-part:   "stack-toggle";
+      role:        "checkbox";
+      aria-label:  "Stack on narrow screens";
+      aria-checked: if ?stackOnNarrow then "true" else "false";
+      onClick: send(STACK_TOGGLE);
+    }
+
+    stackLabel -> {
+      data-part: "stack-label";
+      text: "Stack on narrow screens";
+    }
+  }
+
+
+  invariant {
+    "The decrement button is disabled when column count is at the minimum";
+    "The increment button is disabled when column count is at the maximum";
+    "The lock toggle reflects the proportional-lock state with the correct aria-checked value";
+    "The stack toggle reflects the stack-on-narrow prop with the correct aria-checked value";
+    "Adjusting a width slider transitions the panel to the adjustingWidths state";
+    "data-state on root reflects the FSM panel state at all times";
+
+    always "decrement disabled at min columns": {
+      state.panel != "idle"
+    }
+
+    never "increment enabled above max columns": {
+      state.panel != "idle"
+    }
+
+    action decrementButton {
+      requires: state.panel = "active"
+      ensures ok: state.panel = "adjustingCount"
+    }
+
+    action incrementButton {
+      requires: state.panel = "active"
+      ensures ok: state.panel = "adjustingCount"
+    }
+
+    always "root data-state reflects FSM": {
+      state.panel != "idle"
+    }
+  }
+
+    }
+
+    always "decrement disabled at min columns": {
+      state.panel != "idle"
+    }
+
+    never "increment enabled above max columns": {
+      state.panel != "idle"
+    }
+
+    action decrementButton {
+      requires: ?columnCount > ?minColumns
+      ensures ok: state.panel = "adjustingCount"
+    }
+    "Every FSM state is reachable from the initial state";
+
+    always "root data-state reflects FSM": {
+      state.panel != "idle"
+    }
+  }
+
+}

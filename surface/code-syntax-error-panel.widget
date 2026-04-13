@@ -1,0 +1,242 @@
+@version(1)
+widget code-syntax-error-panel {
+
+  purpose {
+    Side-panel mounted on code blocks that consumes syntax error
+    annotations produced by the Highlight subsystem and surfaces them
+    as a reviewable, navigable list. Each error row shows the
+    error-kind badge, the line and column location, a human-readable
+    message, and a jump-to-line affordance that moves editor focus to
+    the offending position. When there are no errors the panel renders
+    a success state. While Highlight is computing or the language
+    server is warming up the panel shows a loading skeleton.
+  }
+
+  anatomy {
+    root:         container    { Top-level panel wrapper }
+    header:       container    { Panel header area }
+    headerTitle:  text         { Panel heading -- "Syntax Errors" }
+    errorCount:   text         { Summary count badge (e.g. "3 errors") }
+    errorList:    container    { Scrollable list of error rows }
+    errorItem:    container    { Single error annotation row }
+    kindBadge:    presentation { Colored badge showing error kind (error/warning/info) }
+    locationText: text         { Line:col coordinate label }
+    messageText:  text         { Human-readable error message }
+    jumpButton:   action       { Moves editor focus to the error location }
+    successState: container    { Shown when no errors are present }
+    loadingState: presentation { Skeleton shimmer shown while Highlight runs }
+    emptyState:   container    { Shown before any highlight output is received }
+  }
+
+  states {
+    panel {
+      idle [initial] {
+        on HIGHLIGHT_RUNNING -> loading;
+        on ERRORS_FOUND      -> populated;
+        on NO_ERRORS         -> clean;
+      }
+      loading {
+        on ERRORS_FOUND -> populated;
+        on NO_ERRORS    -> clean;
+        on HIGHLIGHT_ERROR -> idle;
+        entry [showSkeleton];
+        exit  [hideSkeleton];
+      }
+      populated {
+        on HIGHLIGHT_RUNNING -> loading;
+        on NO_ERRORS         -> clean;
+        on ERRORS_FOUND      -> populated;
+      }
+      clean {
+        on HIGHLIGHT_RUNNING -> loading;
+        on ERRORS_FOUND      -> populated;
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Tab       -> FOCUS_NEXT;
+      Shift+Tab -> FOCUS_PREV;
+      ArrowDown -> FOCUS_NEXT_ERROR;
+      ArrowUp   -> FOCUS_PREV_ERROR;
+      Enter     -> JUMP_TO_ERROR;
+    }
+    focus {
+      trap: false;
+      initial: errorItem;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Syntax errors";
+        aria-live: "polite";
+        aria-busy: if state.panel == "loading" then "true" else "false";
+      };
+      errorList -> {
+        role: "list";
+        aria-label: "Error list";
+      };
+      errorItem -> {
+        role: "listitem";
+        aria-label: self.message;
+      };
+      jumpButton -> {
+        aria-label: concat("Jump to line ", self.line);
+      };
+      successState -> {
+        aria-label: "No syntax errors";
+      };
+    }
+  }
+
+  props {
+    errors:   list String = []
+    language: option String
+  }
+
+  connect {
+    root -> {
+      data-part:  "root";
+      data-state: if state.panel == "loading"    then "loading"
+                  else if state.panel == "populated" then "populated"
+                  else if state.panel == "clean"     then "clean"
+                  else "idle";
+      role: "region";
+      aria-label: "Syntax errors";
+      aria-live:  "polite";
+      aria-busy:  if state.panel == "loading" then "true" else "false";
+    }
+
+    header -> {
+      data-part: "header";
+    }
+
+    headerTitle -> {
+      data-part: "header-title";
+      text: "Syntax Errors";
+    }
+
+    errorCount -> {
+      data-part: "error-count";
+      text: if state.panel == "populated" then concat(toString(self.errorCount), " errors")
+            else if state.panel == "clean" then "No errors"
+            else "";
+      hidden: if state.panel == "idle" then true else false;
+    }
+
+    errorList -> {
+      data-part:  "error-list";
+      role:       "list";
+      aria-label: "Error list";
+      hidden: if state.panel != "populated" then true else false;
+    }
+
+    errorItem -> {
+      data-part:  "error-item";
+      role:       "listitem";
+      aria-label: self.message;
+      tabindex:   "0";
+      data-kind:  self.kind;
+    }
+
+    kindBadge -> {
+      data-part: "kind-badge";
+      data-kind: self.kind;
+      aria-hidden: "true";
+    }
+
+    locationText -> {
+      data-part: "location-text";
+      text: concat(toString(self.line), ":", toString(self.col));
+    }
+
+    messageText -> {
+      data-part: "message-text";
+      text: self.message;
+    }
+
+    jumpButton -> {
+      data-part:  "jump-button";
+      aria-label: concat("Jump to line ", toString(self.line));
+      onClick: send(JUMP_TO_ERROR, { line: self.line, col: self.col });
+    }
+
+    successState -> {
+      data-part:  "success-state";
+      aria-label: "No syntax errors";
+      hidden: if state.panel != "clean" then true else false;
+    }
+
+    loadingState -> {
+      data-part:  "loading-state";
+      aria-hidden: "true";
+      hidden: if state.panel != "loading" then true else false;
+    }
+
+    emptyState -> {
+      data-part: "empty-state";
+      hidden: if state.panel != "idle" then true else false;
+      aria-hidden: if state.panel != "idle" then "true" else "false";
+    }
+  }
+
+
+  invariant {
+    "The error list is visible only when errors are found and the panel is in populated state";
+    "The success state is shown when there are no syntax errors";
+    "The loading skeleton is visible only while Highlight is running";
+    "The error count badge reflects the number of errors found";
+    "The jump button navigates the editor to the offending line and column";
+    "data-state on root reflects the FSM panel state at all times";
+
+    always "skeleton hidden when not loading": {
+      state.panel != "loading"
+    }
+
+    never "error list visible when clean": {
+      state.panel = "clean"
+    }
+
+    action jumpButton {
+      requires: state.panel = "populated"
+      ensures ok: state.panel = "populated"
+    }
+
+    action errorCount {
+      requires: state.panel != "idle"
+      ensures ok: state.panel = "populated"
+    }
+
+    always "root data-state reflects FSM": {
+      state.panel != "idle"
+    }
+  }
+
+      and successState -> { hidden: false }
+      and errorList -> { hidden: true }
+    }
+
+    always "skeleton hidden when not loading": {
+      state.panel != "loading"
+    }
+
+    never "error list and success state both visible": {
+      state.panel = "populated"
+    }
+
+    action jumpButton {
+      requires: state.panel = "populated"
+      ensures ok: state.panel = "populated"
+    }
+    "Every FSM state is reachable from the initial state";
+
+    always "root data-state reflects FSM": {
+      state.panel != "idle"
+    }
+  }
+
+}

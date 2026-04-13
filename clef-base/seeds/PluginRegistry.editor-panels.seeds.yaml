@@ -1,0 +1,212 @@
+# PluginRegistry seeds -- editor-panel plugin widgets (§3.6)
+#
+# Registers eight side-panel widgets as editor-panel-layer plugins so that
+# EditSurface's slot resolver mounts them automatically into the right-rail
+# panel when a block of the matching schema type is focused.
+#
+# Slot type: editor-panel
+#   Each entry is mounted by the panel slot resolver when the focused block
+#   schema matches one of the schemaScopes listed in the metadata.
+#   The slot resolver passes blockId, blockSchema, and any additional
+#   $-prefixed host attrs declared in props.
+#
+# Metadata fields:
+#   widget          -- widgetId dispatched to the widget interpreter
+#   label           -- human-readable name for the panel management UI
+#   icon            -- icon token for the panel tab/header
+#   schemaScopes    -- block schema types that activate this panel
+#   defaultEnabled  -- mounted automatically without explicit EditSurface opt-in
+#   order           -- ascending render order (lower = rendered first in rail)
+#   props           -- $-prefixed tokens resolved by the widget host at mount time
+
+concept: PluginRegistry
+action: register
+entries:
+  # ─────────────────────────────────────────────────────────────────────────
+  # image-metadata-panel
+  # Shows pixel dimensions, file size, color space and bit depth for image blocks.
+  # ─────────────────────────────────────────────────────────────────────────
+  - type: editor-panel
+    name: image-metadata-panel
+    metadata: >
+      {
+        "widget": "image-metadata-panel",
+        "label": "Image Metadata",
+        "icon": "image-info",
+        "schemaScopes": ["image"],
+        "defaultEnabled": true,
+        "order": 10,
+        "props": {
+          "assetId": "$block.assetId",
+          "widthPx": "$block.widthPx",
+          "heightPx": "$block.heightPx",
+          "fileSizeBytes": "$block.fileSizeBytes",
+          "colorSpace": "$block.colorSpace",
+          "bitDepth": "$block.bitDepth"
+        }
+      }
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # exif-panel
+  # Surfaces camera / lens / exposure / GPS / timestamp EXIF metadata
+  # for image blocks. Grouped into collapsible sections.
+  # ─────────────────────────────────────────────────────────────────────────
+  - type: editor-panel
+    name: exif-panel
+    metadata: >
+      {
+        "widget": "exif-panel",
+        "label": "EXIF Data",
+        "icon": "camera",
+        "schemaScopes": ["image"],
+        "defaultEnabled": true,
+        "order": 20,
+        "props": {
+          "assetId": "$block.assetId",
+          "cameraMake": "$exif.cameraMake",
+          "cameraModel": "$exif.cameraModel",
+          "lens": "$exif.lens",
+          "aperture": "$exif.aperture",
+          "shutterSpeed": "$exif.shutterSpeed",
+          "iso": "$exif.iso",
+          "focalLength": "$exif.focalLength",
+          "gpsLat": "$exif.gpsLat",
+          "gpsLon": "$exif.gpsLon",
+          "capturedAt": "$exif.capturedAt"
+        }
+      }
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # anchor-link-panel
+  # Displays the auto-generated heading anchor slug and provides a
+  # copy-URL affordance plus a custom-slug override input.
+  # ─────────────────────────────────────────────────────────────────────────
+  - type: editor-panel
+    name: anchor-link-panel
+    metadata: >
+      {
+        "widget": "anchor-link-panel",
+        "label": "Anchor Link",
+        "icon": "link",
+        "schemaScopes": ["heading"],
+        "defaultEnabled": true,
+        "order": 10,
+        "props": {
+          "autoSlug": "$block.anchorId",
+          "customSlug": "$block.customAnchorId",
+          "pageUrl": "$page.canonicalUrl"
+        }
+      }
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # entity-metadata-panel
+  # Shows summary, schema type, and backlinks for an embedded entity.
+  # ─────────────────────────────────────────────────────────────────────────
+  - type: editor-panel
+    name: entity-metadata-panel
+    metadata: >
+      {
+        "widget": "entity-metadata-panel",
+        "label": "Entity",
+        "icon": "entity",
+        "schemaScopes": ["entity-embed"],
+        "defaultEnabled": true,
+        "order": 10,
+        "props": {
+          "entityId": "$block.entityId",
+          "entityName": "$entity.displayName",
+          "entityType": "$entity.schemaType",
+          "summary": "$entity.summary",
+          "backlinksCount": "$entity.backlinksCount",
+          "backlinks": "$entity.backlinks"
+        }
+      }
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # view-embed-filter-override-panel
+  # Provides per-embed filter override editing on top of the inherited
+  # FilterSpec from the source ViewShell.
+  # ─────────────────────────────────────────────────────────────────────────
+  - type: editor-panel
+    name: view-embed-filter-override-panel
+    metadata: >
+      {
+        "widget": "view-embed-filter-override-panel",
+        "label": "Filter Overrides",
+        "icon": "filter",
+        "schemaScopes": ["view-embed"],
+        "defaultEnabled": true,
+        "order": 10,
+        "props": {
+          "inheritedFilter": "$block.inheritedFilterSpec",
+          "overrides": "$block.filterOverrides",
+          "availableFields": "$viewShell.availableFields"
+        }
+      }
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # code-syntax-error-panel
+  # Surfaces syntax error annotations from Highlight as a reviewable list.
+  # ─────────────────────────────────────────────────────────────────────────
+  - type: editor-panel
+    name: code-syntax-error-panel
+    metadata: >
+      {
+        "widget": "code-syntax-error-panel",
+        "label": "Syntax Errors",
+        "icon": "warning-circle",
+        "schemaScopes": ["code"],
+        "defaultEnabled": true,
+        "order": 10,
+        "props": {
+          "errors": "$highlight.errors",
+          "language": "$block.language"
+        }
+      }
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # columns-layout-panel
+  # Exposes column-count stepper, per-column width sliders, and the
+  # stack-on-narrow responsive toggle for columns blocks.
+  # ─────────────────────────────────────────────────────────────────────────
+  - type: editor-panel
+    name: columns-layout-panel
+    metadata: >
+      {
+        "widget": "columns-layout-panel",
+        "label": "Columns Layout",
+        "icon": "columns",
+        "schemaScopes": ["columns"],
+        "defaultEnabled": true,
+        "order": 10,
+        "props": {
+          "columnCount": "$block.columnCount",
+          "widths": "$block.columnWidths",
+          "stackOnNarrow": "$block.stackOnNarrow",
+          "minColumns": 1,
+          "maxColumns": 6
+        }
+      }
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # control-action-picker
+  # Two-level picker that binds a control block to a kernel concept action.
+  # ─────────────────────────────────────────────────────────────────────────
+  - type: editor-panel
+    name: control-action-picker
+    metadata: >
+      {
+        "widget": "control-action-picker",
+        "label": "Action Binding",
+        "icon": "zap",
+        "schemaScopes": ["control"],
+        "defaultEnabled": true,
+        "order": 10,
+        "props": {
+          "boundConcept": "$block.conceptRef",
+          "boundAction": "$block.actionRef",
+          "boundVariant": "$block.variantRef",
+          "buttonLabel": "$block.label",
+          "concepts": "$kernel.registeredConcepts"
+        }
+      }

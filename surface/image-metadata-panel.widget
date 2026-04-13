@@ -1,0 +1,196 @@
+@version(1)
+widget image-metadata-panel {
+
+  purpose {
+    Side-panel that displays technical metadata for an image block: pixel
+    dimensions (width x height), file size in human-readable units, color
+    space, and bit depth. Mounts automatically when an image block is
+    focused in the editor, reads values from the block MediaAsset attrs,
+    and provides a copy-to-clipboard affordance for the dimension string.
+    While the asset is resolving the panel shows a skeleton loading state.
+  }
+
+  anatomy {
+    root:           container     { Top-level panel wrapper }
+    header:         container     { Panel header with title }
+    headerTitle:    text          { Panel heading -- "Image Metadata" }
+    body:           container     { Scrollable metadata field list }
+    fieldRow:       container     { Single label-value pair row }
+    fieldLabel:     text          { Label for the metadata field (e.g. "Width") }
+    fieldValue:     text          { Displayed value for the metadata field }
+    copyButton:     action        { Copy dimension string to clipboard }
+    emptyState:     container     { Placeholder shown when no asset is resolved }
+    loadingState:   presentation  { Skeleton shimmer shown while asset resolves }
+    errorState:     container     { Error message shown when metadata fetch fails }
+  }
+
+  states {
+    panel {
+      idle [initial] {
+        on ASSET_LOADING -> loading;
+        on ASSET_LOADED  -> populated;
+        on ASSET_MISSING -> empty;
+      }
+      loading {
+        on ASSET_LOADED  -> populated;
+        on ASSET_ERROR   -> error;
+        on ASSET_MISSING -> empty;
+        entry [showSkeleton];
+        exit  [hideSkeleton];
+      }
+      populated {
+        on ASSET_LOADING -> loading;
+        on ASSET_MISSING -> empty;
+        on COPY_DIM      -> copying;
+      }
+      copying {
+        on COPY_DONE -> populated;
+        entry [writeDimToClipboard];
+      }
+      empty {
+        on ASSET_LOADING -> loading;
+        on ASSET_LOADED  -> populated;
+      }
+      error {
+        on ASSET_LOADING -> loading;
+        on ASSET_MISSING -> empty;
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Tab       -> FOCUS_NEXT;
+      Shift+Tab -> FOCUS_PREV;
+      Enter     -> COPY_DIM;
+    }
+    focus {
+      trap: false;
+      initial: copyButton;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Image metadata";
+        aria-busy: if state.panel == "loading" then "true" else "false";
+      };
+      copyButton -> {
+        aria-label: "Copy dimensions to clipboard";
+        aria-disabled: if state.panel != "populated" then "true" else "false";
+      };
+      loadingState -> {
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    assetId:       option String
+    widthPx:       option Int
+    heightPx:      option Int
+    fileSizeBytes: option Int
+    colorSpace:    option String
+    bitDepth:      option Int
+  }
+
+  connect {
+    root -> {
+      data-part:  "root";
+      data-state: if state.panel == "loading"   then "loading"
+                  else if state.panel == "populated" then "populated"
+                  else if state.panel == "copying"   then "copying"
+                  else if state.panel == "error"     then "error"
+                  else "empty";
+      role: "region";
+      aria-label: "Image metadata";
+      aria-busy: if state.panel == "loading" then "true" else "false";
+    }
+
+    header -> {
+      data-part: "header";
+    }
+
+    headerTitle -> {
+      data-part: "header-title";
+      text: "Image Metadata";
+    }
+
+    body -> {
+      data-part: "body";
+      hidden: if state.panel == "loading" then true
+              else if state.panel == "empty"   then true
+              else if state.panel == "error"   then true
+              else false;
+    }
+
+    fieldRow -> {
+      data-part: "field-row";
+    }
+
+    fieldLabel -> {
+      data-part: "field-label";
+    }
+
+    fieldValue -> {
+      data-part: "field-value";
+    }
+
+    copyButton -> {
+      data-part: "copy-button";
+      aria-label: "Copy dimensions to clipboard";
+      disabled: if state.panel != "populated" then true else false;
+      onClick: send(COPY_DIM);
+    }
+
+    emptyState -> {
+      data-part: "empty-state";
+      hidden: if state.panel != "empty" then true else false;
+      aria-hidden: if state.panel != "empty" then "true" else "false";
+    }
+
+    loadingState -> {
+      data-part: "loading-state";
+      aria-hidden: "true";
+      hidden: if state.panel != "loading" then true else false;
+    }
+
+    errorState -> {
+      data-part: "error-state";
+      hidden: if state.panel != "error" then true else false;
+      role: "alert";
+    }
+  }
+
+  invariant {
+    "When an image asset is loaded the panel enters populated state and the copy button becomes active";
+    "While the asset is resolving the panel must be in loading state and the skeleton is shown";
+    "When no asset is resolved the panel is in empty state and the body is hidden";
+    "The copy button must be disabled in any state other than populated";
+    "After COPY_DIM fires the panel transitions to copying and then returns to populated on COPY_DONE";
+    "data-state on root must reflect the FSM panel state at all times";
+
+    always "copy button disabled outside populated": {
+      state.panel != "populated"
+    }
+
+    never "error state visible when populated": {
+      state.panel = "populated"
+    }
+
+    action copyButton {
+      requires: state.panel = "populated"
+      ensures ok: state.panel = "copying"
+    }
+
+    action errorState {
+      requires: state.panel = "loading"
+      ensures ok: state.panel = "error"
+    }
+
+    "Every state in the FSM must be reachable from the initial idle state";
+  }
+
+}

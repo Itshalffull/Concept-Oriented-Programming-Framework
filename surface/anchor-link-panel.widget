@@ -1,0 +1,226 @@
+@version(1)
+widget anchor-link-panel {
+
+  purpose {
+    Side-panel mounted on heading blocks that displays the auto-generated
+    anchor slug (e.g. `#my-heading-text`) used for deep-linking within
+    a document. Provides a read-only slug display and a one-click
+    copy-URL affordance that assembles the full page URL plus the
+    fragment and writes it to the clipboard. Briefly shows a copied
+    confirmation state before returning to idle. Also shows a custom
+    slug override input so the author can override the auto-generated id.
+  }
+
+  anatomy {
+    root:          container   { Top-level panel wrapper }
+    header:        container   { Panel header area }
+    headerTitle:   text        { Panel heading -- "Anchor Link" }
+    slugRow:       container   { Row showing current slug value }
+    slugLabel:     text        { Label -- "Slug" }
+    slugValue:     text        { Read-only auto-generated or custom slug }
+    copyButton:    action      { Button that copies the full deep-link URL }
+    overrideRow:   container   { Row containing the slug override input }
+    overrideLabel: text        { Label -- "Custom slug" }
+    overrideInput: interactive { Text input for overriding the auto-generated slug }
+    saveButton:    action      { Saves the custom slug override }
+    resetButton:   action      { Clears the override and reverts to auto-generated slug }
+    feedback:      text        { Transient "Copied!" confirmation message }
+  }
+
+  states {
+    panel {
+      idle [initial] {
+        on COPY_URL   -> copying;
+        on EDIT_START -> editing;
+      }
+      copying {
+        on COPY_DONE -> idle;
+        entry [writeUrlToClipboard];
+        exit  [hideFeedback];
+      }
+      editing {
+        on SAVE_OVERRIDE  -> idle;
+        on RESET_OVERRIDE -> idle;
+        on CANCEL_EDIT    -> idle;
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Tab       -> FOCUS_NEXT;
+      Shift+Tab -> FOCUS_PREV;
+      Enter     -> COPY_URL;
+      Escape    -> CANCEL_EDIT;
+    }
+    focus {
+      trap: false;
+      initial: copyButton;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Anchor link";
+      };
+      copyButton -> {
+        aria-label: "Copy deep-link URL to clipboard";
+        aria-pressed: if state.panel == "copying" then "true" else "false";
+      };
+      overrideInput -> {
+        role: "textbox";
+        aria-label: "Custom slug override";
+      };
+      feedback -> {
+        aria-live: "polite";
+        aria-atomic: "true";
+      };
+    }
+  }
+
+  props {
+    autoSlug:      String = ""
+    customSlug:    option String
+    pageUrl:       String = ""
+  }
+
+  connect {
+    root -> {
+      data-part:  "root";
+      data-state: if state.panel == "copying" then "copying"
+                  else if state.panel == "editing" then "editing"
+                  else "idle";
+      role: "region";
+      aria-label: "Anchor link";
+    }
+
+    header -> {
+      data-part: "header";
+    }
+
+    headerTitle -> {
+      data-part: "header-title";
+      text: "Anchor Link";
+    }
+
+    slugRow -> {
+      data-part: "slug-row";
+    }
+
+    slugLabel -> {
+      data-part: "slug-label";
+      text: "Slug";
+    }
+
+    slugValue -> {
+      data-part: "slug-value";
+      text: if ?customSlug != null then ?customSlug else ?autoSlug;
+      data-override: if ?customSlug != null then "true" else "false";
+    }
+
+    copyButton -> {
+      data-part:   "copy-button";
+      aria-label:  "Copy deep-link URL to clipboard";
+      aria-pressed: if state.panel == "copying" then "true" else "false";
+      onClick: send(COPY_URL);
+    }
+
+    overrideRow -> {
+      data-part: "override-row";
+    }
+
+    overrideLabel -> {
+      data-part: "override-label";
+      text: "Custom slug";
+    }
+
+    overrideInput -> {
+      data-part:  "override-input";
+      role:       "textbox";
+      aria-label: "Custom slug override";
+      value: if ?customSlug != null then ?customSlug else ?autoSlug;
+      onFocus: send(EDIT_START);
+    }
+
+    saveButton -> {
+      data-part:   "save-button";
+      aria-label:  "Save custom slug";
+      disabled: if state.panel != "editing" then true else false;
+      onClick: send(SAVE_OVERRIDE);
+    }
+
+    resetButton -> {
+      data-part:   "reset-button";
+      aria-label:  "Reset to auto-generated slug";
+      disabled: if ?customSlug == null then true else false;
+      onClick: send(RESET_OVERRIDE);
+    }
+
+    feedback -> {
+      data-part:  "feedback";
+      aria-live:  "polite";
+      aria-atomic: "true";
+      text: if state.panel == "copying" then "Copied!" else "";
+      hidden: if state.panel != "copying" then true else false;
+    }
+  }
+
+
+  invariant {
+    "The copy button transitions the panel to copying state and writes the full URL to the clipboard";
+    "The feedback message is visible only while the panel is in copying state";
+    "The save button is disabled when the panel is not in editing state";
+    "Pressing Escape in editing state cancels the edit and returns to idle";
+    "The slug value displays the custom override when one is set and the auto-generated slug otherwise";
+    "data-state on root mirrors the FSM panel state at all times";
+
+    always "feedback hidden when not copying": {
+      state.panel != "copying"
+    }
+
+    never "save button enabled when not editing": {
+      state.panel != "editing"
+    }
+
+    action copyButton {
+      requires: state.panel = "idle"
+      ensures ok: state.panel = "copying"
+    }
+
+    action saveButton {
+      requires: state.panel = "editing"
+      ensures ok: state.panel = "idle"
+    }
+
+    always "root data-state mirrors FSM": {
+      state.panel != "idle"
+    }
+  }
+
+      and saveButton -> { disabled: false }
+      then SAVE_OVERRIDE() -> idle
+      then root -> { data-state: "idle" }
+    }
+
+    always "feedback hidden when not copying": {
+      state.panel != "copying"
+    }
+
+    never "save button enabled when not editing": {
+      state.panel != "editing"
+    }
+
+    action copyButton {
+      requires: state.panel = "idle"
+      ensures ok: state.panel = "copying"
+    }
+    "Every FSM state is reachable from the initial state";
+
+    always "root data-state mirrors FSM": {
+      state.panel != "idle"
+    }
+  }
+
+}

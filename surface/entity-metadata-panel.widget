@@ -1,0 +1,286 @@
+@version(1)
+widget entity-metadata-panel {
+
+  purpose {
+    Side-panel that shows a contextual summary of an embedded entity when
+    an entity-embed block is focused in the editor. Displays the entity
+    display name, schema type, short summary excerpt, and a count of
+    backlinks (other documents that reference this entity). Provides a
+    navigate affordance to open the entity canonical page and a backlink
+    list that can be expanded to reveal all referencing nodes. Shows a
+    loading skeleton while the entity record is fetched and gracefully
+    handles the case where the referenced entity no longer exists.
+  }
+
+  anatomy {
+    root:            container    { Top-level panel wrapper }
+    header:          container    { Panel header area }
+    headerTitle:     text         { Panel heading -- "Entity" }
+    entityName:      text         { Display name of the referenced entity }
+    entityType:      text         { Schema type label (e.g. "Person", "Concept") }
+    summaryBlock:    container    { Excerpt / summary text area }
+    summaryText:     text         { Short description or first-paragraph excerpt }
+    openButton:      action       { Navigate to the entity canonical page }
+    backlinksHeader: container    { Backlinks section header }
+    backlinksLabel:  text         { Label -- "Backlinks" }
+    backlinksCount:  text         { Numeric count of referencing documents }
+    backlinksToggle: action       { Expand/collapse the backlinks list }
+    backlinksList:   container    { Scrollable list of backlink items }
+    backlinkItem:    action       { Clickable row navigating to a referencing page }
+    backlinkTitle:   text         { Title of the referencing document }
+    emptyState:      container    { Shown when entity cannot be resolved }
+    loadingState:    presentation { Skeleton shown while entity data is loading }
+    errorState:      container    { Error shown when entity fetch fails }
+  }
+
+  states {
+    panel {
+      idle [initial] {
+        on ENTITY_LOADING -> loading;
+        on ENTITY_LOADED  -> populated;
+        on ENTITY_MISSING -> empty;
+      }
+      loading {
+        on ENTITY_LOADED  -> populated;
+        on ENTITY_MISSING -> empty;
+        on ENTITY_ERROR   -> error;
+        entry [showSkeleton];
+        exit  [hideSkeleton];
+      }
+      populated {
+        on ENTITY_LOADING -> loading;
+        on ENTITY_MISSING -> empty;
+      }
+      empty {
+        on ENTITY_LOADING -> loading;
+        on ENTITY_LOADED  -> populated;
+      }
+      error {
+        on ENTITY_LOADING -> loading;
+        on ENTITY_MISSING -> empty;
+      }
+    }
+
+    backlinks {
+      collapsed [initial] {
+        on BACKLINKS_EXPAND -> expanded;
+      }
+      expanded {
+        on BACKLINKS_COLLAPSE -> collapsed;
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Tab       -> FOCUS_NEXT;
+      Shift+Tab -> FOCUS_PREV;
+      Enter     -> ACTIVATE;
+      Space     -> BACKLINKS_EXPAND;
+    }
+    focus {
+      trap: false;
+      initial: openButton;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Entity metadata";
+        aria-busy: if state.panel == "loading" then "true" else "false";
+      };
+      openButton -> {
+        aria-label: "Open entity page";
+      };
+      backlinksToggle -> {
+        aria-expanded: if state.backlinks == "expanded" then "true" else "false";
+        aria-controls: "backlinks-list";
+      };
+      backlinksList -> {
+        role: "list";
+        aria-label: "Backlinks";
+      };
+      backlinkItem -> {
+        role: "listitem";
+        aria-label: self.backlinkTitle;
+      };
+    }
+  }
+
+  props {
+    entityId:      option String
+    entityName:    option String
+    entityType:    option String
+    summary:       option String
+    backlinksCount: Int = 0
+    backlinks:     list String = []
+  }
+
+  connect {
+    root -> {
+      data-part:  "root";
+      data-state: if state.panel == "loading"    then "loading"
+                  else if state.panel == "populated" then "populated"
+                  else if state.panel == "error"     then "error"
+                  else "empty";
+      role: "region";
+      aria-label: "Entity metadata";
+      aria-busy: if state.panel == "loading" then "true" else "false";
+    }
+
+    header -> {
+      data-part: "header";
+    }
+
+    headerTitle -> {
+      data-part: "header-title";
+      text: "Entity";
+    }
+
+    entityName -> {
+      data-part: "entity-name";
+      text: ?entityName;
+      hidden: if state.panel != "populated" then true else false;
+    }
+
+    entityType -> {
+      data-part: "entity-type";
+      text: ?entityType;
+      hidden: if state.panel != "populated" then true else false;
+    }
+
+    summaryBlock -> {
+      data-part: "summary-block";
+      hidden: if state.panel != "populated" then true else false;
+    }
+
+    summaryText -> {
+      data-part: "summary-text";
+      text: ?summary;
+    }
+
+    openButton -> {
+      data-part:  "open-button";
+      aria-label: "Open entity page";
+      disabled: if state.panel != "populated" then true else false;
+      onClick: send(NAVIGATE_ENTITY);
+    }
+
+    backlinksHeader -> {
+      data-part: "backlinks-header";
+      hidden: if state.panel != "populated" then true else false;
+    }
+
+    backlinksLabel -> {
+      data-part: "backlinks-label";
+      text: "Backlinks";
+    }
+
+    backlinksCount -> {
+      data-part: "backlinks-count";
+      text: toString(?backlinksCount);
+    }
+
+    backlinksToggle -> {
+      data-part:    "backlinks-toggle";
+      aria-expanded: if state.backlinks == "expanded" then "true" else "false";
+      aria-controls: "backlinks-list";
+      onClick: send(BACKLINKS_EXPAND);
+    }
+
+    backlinksList -> {
+      data-part:   "backlinks-list";
+      role:        "list";
+      aria-label:  "Backlinks";
+      hidden: if state.backlinks == "collapsed" then true else false;
+    }
+
+    backlinkItem -> {
+      data-part:  "backlink-item";
+      role:       "listitem";
+      aria-label: self.backlinkTitle;
+      tabindex:   "0";
+      onClick: send(NAVIGATE_BACKLINK, { id: self.id });
+    }
+
+    backlinkTitle -> {
+      data-part: "backlink-title";
+      text: self.backlinkTitle;
+    }
+
+    emptyState -> {
+      data-part: "empty-state";
+      hidden: if state.panel != "empty" then true else false;
+      aria-hidden: if state.panel != "empty" then "true" else "false";
+    }
+
+    loadingState -> {
+      data-part: "loading-state";
+      aria-hidden: "true";
+      hidden: if state.panel != "loading" then true else false;
+    }
+
+    errorState -> {
+      data-part: "error-state";
+      hidden: if state.panel != "error" then true else false;
+      role: "alert";
+    }
+  }
+
+
+  invariant {
+    "The open button navigates to the entity canonical page and is disabled when the panel is not in populated state";
+    "The empty state is shown when the referenced entity cannot be resolved";
+    "The backlinks list is hidden when the backlinks group is in collapsed state";
+    "The loading skeleton is visible only while entity data is being fetched";
+    "The error state is shown when the entity fetch fails";
+    "data-state on root matches the FSM panel state at all times";
+
+    always "open button disabled outside populated": {
+      state.panel != "populated"
+    }
+
+    never "backlinks list visible when collapsed": {
+      state.backlinks = "collapsed"
+    }
+
+    action backlinksToggle {
+      requires: state.backlinks = "collapsed"
+      ensures ok: state.backlinks = "expanded"
+    }
+
+    action errorState {
+      requires: state.panel = "loading"
+      ensures ok: state.panel = "error"
+    }
+
+    always "root data-state matches panel FSM state": {
+      state.panel != "idle"
+    }
+  }
+
+      and emptyState -> { hidden: false }
+    }
+
+    always "open button disabled when not populated": {
+      state.panel != "populated"
+    }
+
+    never "backlinks list visible when collapsed": {
+      state.backlinks = "collapsed"
+    }
+
+    action backlinksToggle {
+      requires: state.backlinks = "collapsed"
+      ensures ok: state.backlinks = "expanded"
+    }
+    "Every FSM state is reachable from the initial state";
+
+    always "root data-state matches panel FSM state": {
+      state.panel != "idle"
+    }
+  }
+
+}

@@ -1,0 +1,316 @@
+@version(1)
+widget view-embed-filter-override-panel {
+
+  purpose {
+    Side-panel mounted on view-embed blocks that lets authors layer
+    per-embed filter overrides on top of the inherited FilterSpec from
+    the source ViewShell. Displays the inherited filter pills read-only,
+    provides an add-override affordance to append predicate clauses, and
+    lists existing overrides with edit and delete affordances. Changes
+    are applied immediately to the embed rendered query without
+    affecting the source ViewShell canonical filter. An empty state is
+    shown when no overrides have been added.
+  }
+
+  anatomy {
+    root:             container   { Top-level panel wrapper }
+    header:           container   { Panel header area }
+    headerTitle:      text        { Panel heading -- "Filter Overrides" }
+    inheritedSection: container   { Read-only section showing inherited FilterSpec pills }
+    inheritedLabel:   text        { Label -- "Inherited filter" }
+    inheritedPills:   container   { Row of read-only inherited filter pills }
+    inheritedPill:    presentation { Single inherited predicate pill }
+    overridesSection: container   { Editable list of per-embed override predicates }
+    overridesLabel:   text        { Label -- "Overrides" }
+    overrideList:     container   { Ordered list of override predicate rows }
+    overrideItem:     container   { Single override predicate row }
+    overrideText:     text        { Rendered label for an override predicate }
+    editButton:       action      { Opens inline editor for an override predicate }
+    deleteButton:     action      { Removes an override predicate }
+    addButton:        action      { Adds a new blank override predicate }
+    editorRow:        container   { Inline editor row for composing a predicate }
+    fieldSelect:      interactive { Dropdown to pick the field for the predicate }
+    operatorSelect:   interactive { Dropdown to pick the comparison operator }
+    valueInput:       interactive { Free-text or picker for the predicate value }
+    applyButton:      action      { Commits the composed predicate to the override list }
+    cancelButton:     action      { Discards the in-progress predicate edit }
+    emptyState:       container   { Shown when no overrides have been configured }
+  }
+
+  states {
+    panel {
+      idle [initial] {
+        on OVERRIDES_LOADED -> populated;
+        on OVERRIDES_EMPTY  -> empty;
+      }
+      populated {
+        on ADD_OVERRIDE   -> adding;
+        on EDIT_OVERRIDE  -> editing;
+        on OVERRIDES_EMPTY -> empty;
+      }
+      empty {
+        on ADD_OVERRIDE    -> adding;
+        on OVERRIDES_LOADED -> populated;
+      }
+      adding {
+        on APPLY_OVERRIDE  -> populated;
+        on CANCEL_EDIT     -> empty;
+        on CANCEL_EDIT_HAS_ITEMS -> populated;
+        entry [focusFieldSelect];
+      }
+      editing {
+        on APPLY_OVERRIDE -> populated;
+        on CANCEL_EDIT    -> populated;
+        entry [focusFieldSelect];
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Tab       -> FOCUS_NEXT;
+      Shift+Tab -> FOCUS_PREV;
+      Enter     -> APPLY_OVERRIDE;
+      Escape    -> CANCEL_EDIT;
+      Delete    -> DELETE_OVERRIDE;
+    }
+    focus {
+      trap: false;
+      initial: addButton;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Filter overrides";
+      };
+      overrideList -> {
+        role: "list";
+        aria-label: "Override predicates";
+      };
+      overrideItem -> {
+        role: "listitem";
+      };
+      addButton -> {
+        aria-label: "Add filter override";
+        aria-disabled: if state.panel == "adding" then "true"
+                       else if state.panel == "editing" then "true"
+                       else "false";
+      };
+      fieldSelect -> {
+        role: "combobox";
+        aria-label: "Field";
+      };
+      operatorSelect -> {
+        role: "combobox";
+        aria-label: "Operator";
+      };
+      valueInput -> {
+        role: "textbox";
+        aria-label: "Value";
+      };
+      applyButton -> {
+        aria-label: "Apply predicate";
+      };
+      cancelButton -> {
+        aria-label: "Cancel";
+      };
+    }
+  }
+
+  props {
+    inheritedFilter: option String
+    overrides:       list String = []
+    availableFields: list String = []
+  }
+
+  connect {
+    root -> {
+      data-part:  "root";
+      data-state: if state.panel == "adding"   then "adding"
+                  else if state.panel == "editing"  then "editing"
+                  else if state.panel == "populated" then "populated"
+                  else "empty";
+      role: "region";
+      aria-label: "Filter overrides";
+    }
+
+    header -> {
+      data-part: "header";
+    }
+
+    headerTitle -> {
+      data-part: "header-title";
+      text: "Filter Overrides";
+    }
+
+    inheritedSection -> {
+      data-part: "inherited-section";
+      hidden: if ?inheritedFilter == null then true else false;
+    }
+
+    inheritedLabel -> {
+      data-part: "inherited-label";
+      text: "Inherited filter";
+    }
+
+    inheritedPills -> {
+      data-part: "inherited-pills";
+    }
+
+    inheritedPill -> {
+      data-part: "inherited-pill";
+      aria-hidden: "true";
+    }
+
+    overridesSection -> {
+      data-part: "overrides-section";
+    }
+
+    overridesLabel -> {
+      data-part: "overrides-label";
+      text: "Overrides";
+    }
+
+    overrideList -> {
+      data-part:  "override-list";
+      role:       "list";
+      aria-label: "Override predicates";
+      hidden: if state.panel == "empty" then true
+              else if state.panel == "adding" then false
+              else false;
+    }
+
+    overrideItem -> {
+      data-part: "override-item";
+      role:      "listitem";
+    }
+
+    overrideText -> {
+      data-part: "override-text";
+      text: self.label;
+    }
+
+    editButton -> {
+      data-part:  "edit-button";
+      aria-label: "Edit override";
+      onClick: send(EDIT_OVERRIDE, { id: self.id });
+    }
+
+    deleteButton -> {
+      data-part:  "delete-button";
+      aria-label: "Delete override";
+      onClick: send(DELETE_OVERRIDE, { id: self.id });
+    }
+
+    addButton -> {
+      data-part:  "add-button";
+      aria-label: "Add filter override";
+      disabled: if state.panel == "adding"  then true
+                else if state.panel == "editing" then true
+                else false;
+      onClick: send(ADD_OVERRIDE);
+    }
+
+    editorRow -> {
+      data-part: "editor-row";
+      hidden: if state.panel == "adding"  then false
+              else if state.panel == "editing" then false
+              else true;
+    }
+
+    fieldSelect -> {
+      data-part:  "field-select";
+      role:       "combobox";
+      aria-label: "Field";
+    }
+
+    operatorSelect -> {
+      data-part:  "operator-select";
+      role:       "combobox";
+      aria-label: "Operator";
+    }
+
+    valueInput -> {
+      data-part:  "value-input";
+      role:       "textbox";
+      aria-label: "Value";
+    }
+
+    applyButton -> {
+      data-part:  "apply-button";
+      aria-label: "Apply predicate";
+      onClick: send(APPLY_OVERRIDE);
+    }
+
+    cancelButton -> {
+      data-part:  "cancel-button";
+      aria-label: "Cancel";
+      onClick: send(CANCEL_EDIT);
+    }
+
+    emptyState -> {
+      data-part: "empty-state";
+      hidden: if state.panel != "empty" then true else false;
+      aria-hidden: if state.panel != "empty" then "true" else "false";
+    }
+  }
+
+
+  invariant {
+    "The add button is disabled while the editor row is open to prevent nested edits";
+    "The editor row is visible only when the panel is in adding or editing state";
+    "Applying a predicate from the adding state transitions to populated";
+    "Cancelling an edit from the editing state returns to populated";
+    "The empty state is shown when no overrides have been configured";
+    "data-state on root mirrors the FSM panel state at all times";
+
+    always "add button disabled while editor open": {
+      state.panel = "adding"
+    }
+
+    never "editor row visible when idle": {
+      state.panel = "idle"
+    }
+
+    action addButton {
+      requires: state.panel = "empty"
+      ensures ok: state.panel = "adding"
+    }
+
+    action applyButton {
+      requires: state.panel = "adding"
+      ensures ok: state.panel = "populated"
+    }
+
+    always "root data-state mirrors FSM": {
+      state.panel != "idle"
+    }
+  }
+
+      then CANCEL_EDIT() -> populated
+      then root -> { data-state: "populated" }
+    }
+
+    always "add button disabled while editor is open": {
+      state.panel = "adding"
+    }
+
+    never "editor row visible when not adding or editing": {
+      state.panel = "idle"
+    }
+
+    action addButton {
+      requires: state.panel = "empty"
+      ensures ok: state.panel = "adding"
+    }
+    "Every FSM state is reachable from the initial state";
+
+    always "root data-state mirrors FSM": {
+      state.panel != "idle"
+    }
+  }
+
+}

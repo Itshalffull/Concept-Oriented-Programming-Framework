@@ -1,0 +1,265 @@
+@version(1)
+widget exif-panel {
+
+  purpose {
+    Side-panel that surfaces EXIF metadata extracted from image blocks:
+    camera make and model, lens, aperture, shutter speed, ISO, focal
+    length, GPS coordinates with a map-link affordance, and capture
+    timestamp. Groups fields into collapsible sections (Camera, Exposure,
+    Location, Timestamps) so users can focus on the category they care
+    about. Shows a loading skeleton while EXIF data is parsed from the
+    raw asset and gracefully presents an empty state if the image has
+    no embedded EXIF.
+  }
+
+  anatomy {
+    root:           container    { Top-level panel wrapper }
+    header:         container    { Panel header area }
+    headerTitle:    text         { Panel heading -- "EXIF Data" }
+    sectionList:    container    { Container for collapsible field groups }
+    section:        container    { Collapsible EXIF category group }
+    sectionTrigger: action       { Heading button that toggles section expand/collapse }
+    sectionTitle:   text         { Human-readable section name (Camera, Exposure, etc.) }
+    sectionContent: container    { Expanded list of fields within a section }
+    fieldRow:       container    { Single label-value metadata pair }
+    fieldLabel:     text         { Name of the EXIF field }
+    fieldValue:     text         { Parsed value of the EXIF field }
+    mapLink:        action       { External link to open GPS coordinates in a map service }
+    emptyState:     container    { Shown when image has no EXIF data }
+    loadingState:   presentation { Skeleton shown while EXIF is being parsed }
+    errorState:     container    { Error message when EXIF extraction fails }
+  }
+
+  states {
+    panel {
+      idle [initial] {
+        on EXIF_LOADING -> loading;
+        on EXIF_LOADED  -> populated;
+        on EXIF_EMPTY   -> empty;
+      }
+      loading {
+        on EXIF_LOADED -> populated;
+        on EXIF_EMPTY  -> empty;
+        on EXIF_ERROR  -> error;
+        entry [showSkeleton];
+        exit  [hideSkeleton];
+      }
+      populated {
+        on EXIF_LOADING -> loading;
+        on EXIF_EMPTY   -> empty;
+      }
+      empty {
+        on EXIF_LOADING -> loading;
+        on EXIF_LOADED  -> populated;
+      }
+      error {
+        on EXIF_LOADING -> loading;
+        on EXIF_EMPTY   -> empty;
+      }
+    }
+
+    section {
+      collapsed [initial] {
+        on SECTION_EXPAND -> expanded;
+      }
+      expanded {
+        on SECTION_COLLAPSE -> collapsed;
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Tab       -> FOCUS_NEXT;
+      Shift+Tab -> FOCUS_PREV;
+      Enter     -> SECTION_EXPAND;
+      Space     -> SECTION_EXPAND;
+      ArrowDown -> FOCUS_NEXT_SECTION;
+      ArrowUp   -> FOCUS_PREV_SECTION;
+    }
+    focus {
+      trap: false;
+      initial: sectionTrigger;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "EXIF data";
+        aria-busy: if state.panel == "loading" then "true" else "false";
+      };
+      sectionTrigger -> {
+        aria-expanded: if state.section == "expanded" then "true" else "false";
+        aria-controls: sectionContent;
+      };
+      sectionContent -> {
+        role: "region";
+        aria-label: self.sectionTitle;
+      };
+      mapLink -> {
+        aria-label: "Open location in map";
+      };
+    }
+  }
+
+  props {
+    cameraMake:     option String
+    cameraModel:    option String
+    lens:           option String
+    aperture:       option String
+    shutterSpeed:   option String
+    iso:            option Int
+    focalLength:    option String
+    gpsLat:         option String
+    gpsLon:         option String
+    capturedAt:     option String
+    sections:       list String = ["Camera", "Exposure", "Location", "Timestamps"]
+  }
+
+  connect {
+    root -> {
+      data-part:  "root";
+      data-state: if state.panel == "loading"    then "loading"
+                  else if state.panel == "populated" then "populated"
+                  else if state.panel == "error"     then "error"
+                  else "empty";
+      role: "region";
+      aria-label: "EXIF data";
+      aria-busy: if state.panel == "loading" then "true" else "false";
+    }
+
+    header -> {
+      data-part: "header";
+    }
+
+    headerTitle -> {
+      data-part: "header-title";
+      text: "EXIF Data";
+    }
+
+    sectionList -> {
+      data-part: "section-list";
+      hidden: if state.panel == "loading" then true
+              else if state.panel == "empty"   then true
+              else if state.panel == "error"   then true
+              else false;
+    }
+
+    section -> {
+      data-part:  "section";
+      data-state: if state.section == "expanded" then "expanded" else "collapsed";
+    }
+
+    sectionTrigger -> {
+      data-part:     "section-trigger";
+      aria-expanded: if state.section == "expanded" then "true" else "false";
+      aria-controls: "section-content";
+      onClick: send(SECTION_EXPAND);
+    }
+
+    sectionTitle -> {
+      data-part: "section-title";
+      text: self.sectionTitle;
+    }
+
+    sectionContent -> {
+      data-part: "section-content";
+      role: "region";
+      aria-label: self.sectionTitle;
+      hidden: if state.section == "collapsed" then true else false;
+    }
+
+    fieldRow -> {
+      data-part: "field-row";
+    }
+
+    fieldLabel -> {
+      data-part: "field-label";
+    }
+
+    fieldValue -> {
+      data-part: "field-value";
+    }
+
+    mapLink -> {
+      data-part:  "map-link";
+      aria-label: "Open location in map";
+      hidden: if ?gpsLat == null then true else false;
+    }
+
+    emptyState -> {
+      data-part: "empty-state";
+      hidden: if state.panel != "empty" then true else false;
+      aria-hidden: if state.panel != "empty" then "true" else "false";
+    }
+
+    loadingState -> {
+      data-part: "loading-state";
+      aria-hidden: "true";
+      hidden: if state.panel != "loading" then true else false;
+    }
+
+    errorState -> {
+      data-part: "error-state";
+      hidden: if state.panel != "error" then true else false;
+      role: "alert";
+    }
+  }
+
+
+  invariant {
+    "Sections are collapsed by default and can be expanded by clicking the section trigger";
+    "The empty state is shown when the image has no EXIF data";
+    "The loading skeleton is visible only while EXIF data is being parsed";
+    "Section content is hidden when the section is in collapsed state";
+    "The map link is hidden when no GPS coordinates are available";
+    "data-state on root reflects the FSM panel state at all times";
+
+    always "skeleton hidden when not loading": {
+      state.panel != "loading"
+    }
+
+    never "section content visible when collapsed": {
+      state.section = "collapsed"
+    }
+
+    action sectionTrigger {
+      requires: state.section = "collapsed"
+      ensures ok: state.section = "expanded"
+    }
+
+    action errorState {
+      requires: state.panel = "loading"
+      ensures ok: state.panel = "error"
+    }
+
+    always "root data-state reflects FSM panel state": {
+      state.panel != "idle"
+    }
+  }
+
+      and emptyState -> { hidden: false }
+    }
+
+    always "skeleton hidden when not loading": {
+      state.panel != "loading"
+    }
+
+    never "section content visible when collapsed": {
+      state.section = "collapsed"
+    }
+
+    action sectionTrigger {
+      requires: state.section = "collapsed"
+      ensures ok: state.section = "expanded"
+    }
+    "Every FSM state is reachable from the initial state";
+
+    always "root data-state reflects FSM panel state": {
+      state.panel != "idle"
+    }
+  }
+
+}
