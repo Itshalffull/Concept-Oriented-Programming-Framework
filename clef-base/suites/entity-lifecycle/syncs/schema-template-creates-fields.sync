@@ -1,29 +1,20 @@
-# Materialise all FieldDefinitions and content-native Properties when a template is applied.
-# Translates the template's embedded field list and property map into
-# first-class concept state in one atomic step.
-# See §2.4 of the schema-editor-plan.md.
-
-sync SchemaTemplateCreatesFields [eventual]
-  purpose: "Create FieldDefinition records and set content-native Properties for each entry declared in the template, completing the one-click schema bootstrap"
-when {
-  SchemaTemplate/apply: [ name: ?template_name;
-                           targetSchemaName: ?schema ] => [ ok: ?template ]
-}
-where {
-  bind(?template.fields as ?fields)
-  bind(?template.properties as ?properties)
-}
-then {
-  FieldDefinition/create: [ schema: ?schema;
-                             fieldId: ?fields.fieldId;
-                             label: ?fields.label;
-                             fieldType: ?fields.fieldType;
-                             cardinality: ?fields.cardinality;
-                             required: ?fields.required;
-                             sortOrder: ?fields.sortOrder ]
-}
-then {
-  Property/set: [ schema: ?schema;
-                  key: ?properties.key;
-                  value: ?properties.value ]
-}
+# SchemaTemplateCreatesFields — RETIRED (CUX-09)
+#
+# Field fan-out for SchemaTemplate/apply was previously declared here but had
+# two unfixable bugs:
+#   1. The when clause used `=> [ ok: ?template ]` (literal-field syntax) instead
+#      of `=> ok(...)` (variant syntax), so the sync never fired.
+#   2. The then clause used `?fields.<key>` dot-access on an array, which the sync
+#      grammar cannot iterate — the grammar supports fixed-key dot-access on objects
+#      only, not variable-length array fan-out.
+#
+# Because the sync grammar has no mechanism for iterating a variable-length array
+# returned in a completion output, the fan-out has been moved into the
+# SchemaTemplate/apply handler itself (handlers/ts/app/schema-template.handler.ts).
+# The handler uses mapBindings + traverse to write one 'field' relation entry per
+# entry in the template's fields JSON array, matching the storage contract of
+# FieldDefinition/create (key: `${schema}::${fieldId}`).
+#
+# This file is retained as an archive placeholder so that the suite manifest entry
+# still resolves. The suite manifest entry can be removed if desired — the file
+# parses as an empty sync list.

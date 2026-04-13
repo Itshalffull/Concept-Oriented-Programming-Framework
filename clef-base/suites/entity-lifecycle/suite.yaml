@@ -49,8 +49,9 @@ syncs:
     - path: ./syncs/field-removal-checks-usage.sync
       description: "Block field removal when SchemaUsage records exist"
 
-    - path: ./syncs/schema-template-creates-fields.sync
-      description: "Create FieldDefinition records when a SchemaTemplate is applied"
+    # schema-template-creates-fields.sync retired (CUX-09): field fan-out moved into
+    # SchemaTemplate/apply handler via mapBindings + traverse + put to the 'field'
+    # relation. The sync grammar cannot iterate variable-length completion arrays.
 
     - path: ./syncs/schema-template-properties-to-properties.sync
       description: "Fan out SchemaTemplate.properties blob (displayWidget, compilationProvider, childSchema, defaultTemplate, schemaIcon, schemaColor) into real Property/set calls on the instantiated schema — activates Tier 1b routing and content-native-schema.sync wiring"
