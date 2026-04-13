@@ -1,0 +1,132 @@
+# ActionBinding seeds — block-handle drag-reorder + actions menu bindings
+# (PP-block-handle, card 9f205280-2b73-40ff-9b1a-5a58c73dfa15)
+#
+# Six bindings wire the block-handle interaction surface to kernel concepts:
+#   block-drag-start  — records drag initiation (telemetry / annotation)
+#   block-drag-over   — records drag-over position (telemetry)
+#   block-drop        — reorders block via Outline/moveChild
+#   block-actions-open — opens block-actions-menu via ModalStackProvider
+#   block-duplicate   — clones block via ContentNode/clone + Outline/addChild
+#   block-delete      — removes block via Outline/removeChild
+#   block-turn-into   — opens schema-picker, then Schema/applyTo
+#   block-copy-link   — writes deep-link anchor to clipboard
+
+concept: ActionBinding
+action: bind
+entries:
+  # ---- Drag lifecycle -------------------------------------------------------
+
+  - name: block-drag-start
+    binding: block-drag-start
+    target: "ActionBinding/recordEvent"
+    parameterMap: >
+      {
+        "event": "block-drag-start",
+        "blockId": "context.blockId",
+        "blockIndex": "context.blockIndex",
+        "parentId": "context.parentId"
+      }
+    executionPolicy: "auto"
+    label: "Block drag start"
+
+  - name: block-drag-over
+    binding: block-drag-over
+    target: "ActionBinding/recordEvent"
+    parameterMap: >
+      {
+        "event": "block-drag-over",
+        "blockId": "context.blockId",
+        "targetIndex": "context.targetIndex"
+      }
+    executionPolicy: "auto"
+    label: "Block drag over"
+
+  - name: block-drop
+    binding: block-drop
+    target: "Outline/moveChild"
+    parameterMap: >
+      {
+        "child": "context.blockId",
+        "fromParent": "context.fromParentId",
+        "toParent": "context.toParentId",
+        "toIndex": "context.toIndex"
+      }
+    executionPolicy: "auto"
+    label: "Reorder block"
+
+  # ---- Actions menu trigger -------------------------------------------------
+
+  - name: block-actions-open
+    binding: block-actions-open
+    target: "ModalStackProvider/push"
+    parameterMap: >
+      {
+        "widgetId": "block-actions-menu",
+        "blockId": "context.blockId",
+        "parentId": "context.parentId",
+        "blockIndex": "context.blockIndex"
+      }
+    executionPolicy: "auto"
+    label: "Open block actions"
+
+  # ---- Block actions menu commands ------------------------------------------
+
+  - name: block-duplicate
+    binding: block-duplicate
+    target: "ContentNode/clone"
+    parameterMap: >
+      {
+        "node": "context.blockId",
+        "insertAfter": "context.blockId",
+        "parent": "context.parentId"
+      }
+    executionPolicy: "optimistic"
+    label: "Duplicate"
+
+  - name: block-delete
+    binding: block-delete
+    target: "Outline/removeChild"
+    parameterMap: >
+      {
+        "parent": "context.parentId",
+        "child": "context.blockId"
+      }
+    executionPolicy: "pessimistic"
+    confirmWhen: "false"
+    label: "Delete"
+    buttonVariant: "destructive"
+
+  - name: block-turn-into
+    binding: block-turn-into
+    target: "Schema/applyTo"
+    parameterMap: >
+      {
+        "entity_id": "context.blockId",
+        "schema": "context.targetSchema"
+      }
+    executionPolicy: "optimistic"
+    label: "Turn into…"
+
+  - name: block-copy-link
+    binding: block-copy-link
+    target: "Clipboard/writeText"
+    parameterMap: >
+      {
+        "text": "context.deepLink",
+        "blockId": "context.blockId"
+      }
+    executionPolicy: "auto"
+    label: "Copy link"
+
+  - name: block-move-to
+    binding: block-move-to
+    target: "Outline/moveChild"
+    parameterMap: >
+      {
+        "child": "context.blockId",
+        "fromParent": "context.parentId",
+        "toParent": "context.targetParentId",
+        "toIndex": "context.toIndex"
+      }
+    executionPolicy: "pessimistic"
+    label: "Move to…"

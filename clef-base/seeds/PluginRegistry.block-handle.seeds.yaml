@@ -1,0 +1,35 @@
+# PluginRegistry seeds — block-handle decoration-layer plugin
+# (PP-block-handle, card 9f205280-2b73-40ff-9b1a-5a58c73dfa15)
+#
+# Registers block-handle as a decoration-layer plugin so that
+# RecursiveBlockEditor's useSlotResolver('decoration-layer') loop picks it up
+# automatically. The SlotResolver passes editorFlavor and rootNodeId as host
+# attrs; props resolve per-block when BlockHandle mounts in the block list.
+#
+# Note: the actual per-block mount is handled directly in the block-list-item
+# loop (not through the generic slot mount) because block-handle needs blockId
+# + blockIndex props that vary per row. This PluginRegistry entry serves as
+# the canonical registration record so Score can find the widget, and as the
+# feature flag that controls whether block-handle is available at all.
+
+concept: PluginRegistry
+action: register
+entries:
+  - type: decoration-layer
+    name: block-handle
+    metadata: >
+      {
+        "widget": "block-handle",
+        "label": "Block Handle",
+        "icon": "drag-handle",
+        "availableContexts": ["markdown", "wiki", "notebook", "persona", "workflow"],
+        "defaultEnabled": true,
+        "order": 5,
+        "mountMode": "per-block",
+        "props": {
+          "blockId": "$blockId",
+          "parentId": "$parentId",
+          "blockIndex": "$blockIndex",
+          "canEdit": "$canEdit"
+        }
+      }

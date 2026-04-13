@@ -1,0 +1,252 @@
+@version(1)
+widget block-actions-menu {
+
+  purpose {
+    Popover menu that appears when the block-handle ⠿ icon is clicked, offering
+    per-block commands: Duplicate, Delete, Turn into (schema picker), and Copy link
+    (deep-link to anchor). The menu is positioned flush with the handle in the left
+    gutter, dismisses on Escape or an outside click, and traps focus while open.
+    Each menu item dispatches through ActionBinding/invoke so commands are wired
+    declaratively via seed data. Turn into opens a nested schema-picker overlay
+    via ModalStackProvider.
+  }
+
+  anatomy {
+    root:        container    { Absolute-positioned popover shell; anchored to the block-handle trigger; traps focus while open }
+    menu:        container    { Vertical list of command items rendered as a WAI-ARIA menu role }
+    duplicateItem: action     { Menu item that invokes ContentNode/clone + Outline/addChild to duplicate the block below its current position }
+    deleteItem:    action     { Menu item that invokes Outline/removeChild to remove the block; includes a destructive visual treatment }
+    turnIntoItem:  action     { Menu item that opens a schema-picker nested overlay; once a schema is selected invokes Schema/applyTo }
+    copyLinkItem:  action     { Menu item that writes a deep-link anchor URL for the block to the system clipboard }
+    moveToItem:    action     { Menu item that opens a page-picker overlay so the block can be moved to a different parent Outline via Outline/moveChild with a new parent }
+    separator:     presentation { Horizontal rule visually separating non-destructive commands from the destructive Delete item }
+  }
+
+  states {
+    visibility {
+      closed [initial] {
+        on OPEN   -> open;
+      }
+      open {
+        on CLOSE  -> closed;
+        on ESCAPE -> closed;
+        entry [trapFocus; positionMenu];
+        exit [releaseFocus; returnFocusToHandle];
+      }
+    }
+
+    itemFocus {
+      none [initial] {
+        on FOCUS_ITEM -> focused;
+      }
+      focused {
+        on BLUR_ITEM -> none;
+        on NAVIGATE_NEXT -> focused;
+        on NAVIGATE_PREV -> focused;
+      }
+    }
+  }
+
+  accessibility {
+    role: menu;
+    modal: false;
+    keyboard {
+      Escape    -> ESCAPE;
+      ArrowDown -> NAVIGATE_NEXT;
+      ArrowUp   -> NAVIGATE_PREV;
+      Enter     -> SELECT;
+      Space     -> SELECT;
+      Tab       -> CLOSE;
+    }
+    focus {
+      trap: true;
+      initial: duplicateItem;
+      roving: true;
+      returnOnClose: root;
+    }
+    aria {
+      root -> {
+        role: "dialog";
+        aria-modal: "false";
+        aria-label: "Block actions";
+      };
+      menu -> {
+        role: "menu";
+        aria-label: "Block actions";
+        aria-orientation: "vertical";
+      };
+      duplicateItem -> {
+        role: "menuitem";
+        tabindex: if state.itemFocus == "focused" then "0" else "-1";
+      };
+      deleteItem -> {
+        role: "menuitem";
+        tabindex: "-1";
+        aria-label: "Delete block";
+      };
+      turnIntoItem -> {
+        role: "menuitem";
+        tabindex: "-1";
+        aria-haspopup: "dialog";
+      };
+      copyLinkItem -> {
+        role: "menuitem";
+        tabindex: "-1";
+      };
+      moveToItem -> {
+        role: "menuitem";
+        tabindex: "-1";
+        aria-haspopup: "dialog";
+      };
+    }
+  }
+
+  props {
+    blockId: String
+    parentId: String
+    blockIndex: Int = 0
+    open: Bool = false
+    anchorX: Int = 0
+    anchorY: Int = 0
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.visibility;
+      data-block-id: ?blockId;
+      hidden: if state.visibility == "closed" then true else false;
+      onKeyDown-Escape: send(ESCAPE);
+      onKeyDown-ArrowDown: send(NAVIGATE_NEXT);
+      onKeyDown-ArrowUp: send(NAVIGATE_PREV);
+    }
+
+    menu -> {
+      data-part: "menu";
+      role: "menu";
+      aria-label: "Block actions";
+    }
+
+    duplicateItem -> {
+      data-part: "duplicate-item";
+      role: "menuitem";
+      onClick: send(DUPLICATE);
+      onKeyDown-Enter: send(DUPLICATE);
+      tabindex: "0";
+    }
+
+    deleteItem -> {
+      data-part: "delete-item";
+      role: "menuitem";
+      onClick: send(DELETE);
+      onKeyDown-Enter: send(DELETE);
+      tabindex: "-1";
+    }
+
+    turnIntoItem -> {
+      data-part: "turn-into-item";
+      role: "menuitem";
+      onClick: send(TURN_INTO);
+      onKeyDown-Enter: send(TURN_INTO);
+      tabindex: "-1";
+      aria-haspopup: "dialog";
+    }
+
+    copyLinkItem -> {
+      data-part: "copy-link-item";
+      role: "menuitem";
+      onClick: send(COPY_LINK);
+      onKeyDown-Enter: send(COPY_LINK);
+      tabindex: "-1";
+    }
+
+    moveToItem -> {
+      data-part: "move-to-item";
+      role: "menuitem";
+      onClick: send(MOVE_TO);
+      onKeyDown-Enter: send(MOVE_TO);
+      tabindex: "-1";
+      aria-haspopup: "dialog";
+    }
+
+    separator -> {
+      data-part: "separator";
+      role: "separator";
+      aria-hidden: "true";
+    }
+  }
+
+  affordance {
+    serves: overlay;
+    specificity: 7;
+    when { context: "block-actions" }
+    bind {
+      blockId: blockId;
+      parentId: parentId;
+      blockIndex: blockIndex;
+    }
+  }
+
+  invariant {
+    example "menu opens on OPEN event": {
+      after OPEN() -> ok
+      then state.visibility = "open"
+    }
+
+    example "menu closes on ESCAPE": {
+      after OPEN() -> ok
+      then ESCAPE() -> ok
+      then state.visibility = "closed"
+    }
+
+    example "menu closes on CLOSE event": {
+      after OPEN() -> ok
+      then CLOSE() -> ok
+      then state.visibility = "closed"
+    }
+
+    example "initial state is closed": {
+      then state.visibility = "closed"
+    }
+
+    example "NAVIGATE_NEXT moves item focus": {
+      after OPEN() -> ok
+      then NAVIGATE_NEXT() -> ok
+      then state.itemFocus = "focused"
+    }
+
+    example "NAVIGATE_PREV moves item focus": {
+      after OPEN() -> ok
+      then NAVIGATE_PREV() -> ok
+      then state.itemFocus = "focused"
+    }
+
+    always "root hidden when visibility is closed": {
+      state.visibility = "closed" and root.hidden = true
+    }
+
+    always "data-state on root reflects visibility FSM": {
+      root.dataState = state.visibility
+    }
+
+    always "menu role is present on menu part": {
+      menu.role = "menu"
+    }
+
+    always "all menu items have menuitem role": {
+      forall i in [duplicateItem, deleteItem, turnIntoItem, copyLinkItem, moveToItem]:
+        i.role = "menuitem"
+    }
+
+    "moveToItem must carry aria-haspopup='dialog' to indicate it opens a nested overlay picker";
+
+    never "open state with no focusable item": {
+      state.visibility = "open" and focusableItems.length = 0
+    }
+
+    "positionMenu entry action must compute top/left CSS values relative to the block-handle anchor element so the popover appears flush with the ⠿ icon without overlapping block content";
+    "deleteItem must carry a destructive visual treatment (e.g. data-variant=destructive) so themes can apply a danger color without widget-level hardcoding";
+    "trapFocus entry action must ensure Tab and Shift+Tab cycle only within the four menu items while the menu is open";
+  }
+
+}

@@ -1,0 +1,213 @@
+@version(1)
+widget block-handle {
+
+  purpose {
+    Decoration-layer widget that renders a drag-handle icon (⠿) in the left
+    gutter of each content block. The handle is hidden by default and becomes
+    visible when the user hovers over the containing block. Dragging the handle
+    reorders the block within its parent Outline via HTML5 drag-and-drop events
+    wired to Outline/moveChild. Clicking the handle opens the block-actions-menu
+    popover, giving access to Duplicate, Delete, Turn into, and Copy link commands.
+    Registered with PluginRegistry as type decoration-layer, name block-handle.
+  }
+
+  anatomy {
+    root:        container    { Absolute-positioned gutter host; hidden by default, visible on block hover; carries data-state and data-block-id }
+    handleIcon:  presentation { The ⠿ (six-dot braille pattern) drag-handle glyph that acts as the visual affordance for dragging and as the click target for the actions menu }
+    dropZone:    presentation { Thin horizontal indicator line rendered between blocks during an active drag-over, indicating where the dragged block will land }
+  }
+
+  states {
+    handle {
+      hidden [initial] {
+        on BLOCK_HOVER_ENTER -> visible;
+      }
+      visible {
+        on BLOCK_HOVER_LEAVE -> hidden;
+        on DRAG_START        -> dragging;
+        on CLICK             -> menuOpen;
+      }
+      dragging {
+        on DRAG_END          -> hidden;
+        on DROP              -> hidden;
+        entry [setDraggingClass];
+        exit [clearDraggingClass];
+      }
+      menuOpen {
+        on MENU_CLOSE        -> visible;
+        on ESCAPE            -> visible;
+        on BLOCK_HOVER_LEAVE -> visible;
+      }
+    }
+
+    dropTarget {
+      none [initial] {
+        on DRAG_OVER  -> active;
+      }
+      active {
+        on DRAG_LEAVE -> none;
+        on DROP       -> none;
+        on DRAG_END   -> none;
+        entry [showDropIndicator];
+        exit [hideDropIndicator];
+      }
+    }
+  }
+
+  accessibility {
+    role: button;
+    modal: false;
+    keyboard {
+      Enter  -> CLICK;
+      Space  -> CLICK;
+      Escape -> ESCAPE;
+    }
+    focus {
+      trap: false;
+      initial: handleIcon;
+      roving: false;
+      returnOnClose: handleIcon;
+    }
+    aria {
+      root -> {
+        role: "button";
+        aria-label: "Block handle — drag to reorder or click for actions";
+        aria-haspopup: "menu";
+        aria-expanded: if state.handle == "menuOpen" then "true" else "false";
+        tabindex: "0";
+      };
+      handleIcon -> {
+        aria-hidden: "true";
+      };
+      dropZone -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    blockId: String
+    parentId: String
+    blockIndex: Int = 0
+    canEdit: Bool = true
+    draggable: Bool = true
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.handle;
+      data-block-id: ?blockId;
+      data-parent-id: ?parentId;
+      data-block-index: ?blockIndex;
+      aria-haspopup: "menu";
+      aria-expanded: if state.handle == "menuOpen" then "true" else "false";
+      hidden: if ?canEdit == false then true else false;
+      draggable: if ?draggable then "true" else "false";
+      onPointerEnter: send(BLOCK_HOVER_ENTER);
+      onPointerLeave: send(BLOCK_HOVER_LEAVE);
+      onDragStart: send(DRAG_START);
+      onDragEnd: send(DRAG_END);
+      onDragOver: send(DRAG_OVER);
+      onDragLeave: send(DRAG_LEAVE);
+      onDrop: send(DROP);
+      onClick: send(CLICK);
+      onKeyDown-Enter: send(CLICK);
+      onKeyDown-Escape: send(ESCAPE);
+    }
+
+    handleIcon -> {
+      data-part: "handle-icon";
+      aria-hidden: "true";
+    }
+
+    dropZone -> {
+      data-part: "drop-zone";
+      aria-hidden: "true";
+      hidden: if state.dropTarget == "none" then true else false;
+      data-state: state.dropTarget;
+    }
+  }
+
+  affordance {
+    serves: decoration-layer;
+    specificity: 8;
+    when pluginType = "decoration-layer";
+    bind {
+      blockId: blockId;
+      parentId: parentId;
+      blockIndex: blockIndex;
+    }
+  }
+
+  invariant {
+    example "handle hidden by default then visible on hover": {
+      after BLOCK_HOVER_ENTER() -> ok
+      then state.handle = "visible"
+    }
+
+    example "hover-leave from visible returns to hidden": {
+      after BLOCK_HOVER_ENTER() -> ok
+      then BLOCK_HOVER_LEAVE() -> ok
+      then state.handle = "hidden"
+    }
+
+    example "CLICK from visible transitions to menuOpen": {
+      after BLOCK_HOVER_ENTER() -> ok
+      then CLICK() -> ok
+      then state.handle = "menuOpen"
+    }
+
+    example "MENU_CLOSE from menuOpen returns to visible": {
+      after BLOCK_HOVER_ENTER() -> ok
+      then CLICK() -> ok
+      then MENU_CLOSE() -> ok
+      then state.handle = "visible"
+    }
+
+    example "DRAG_START from visible enters dragging": {
+      after BLOCK_HOVER_ENTER() -> ok
+      then DRAG_START() -> ok
+      then state.handle = "dragging"
+    }
+
+    example "DROP from dragging returns to hidden": {
+      after BLOCK_HOVER_ENTER() -> ok
+      then DRAG_START() -> ok
+      then DROP() -> ok
+      then state.handle = "hidden"
+    }
+
+    example "DRAG_OVER activates drop-zone indicator": {
+      after DRAG_OVER() -> ok
+      then state.dropTarget = "active"
+    }
+
+    example "DRAG_LEAVE deactivates drop-zone indicator": {
+      after DRAG_OVER() -> ok
+      then DRAG_LEAVE() -> ok
+      then state.dropTarget = "none"
+    }
+
+    always "data-state on root reflects handle FSM": {
+      root.dataState = state.handle
+    }
+
+    always "dropZone hidden when dropTarget state is none": {
+      state.dropTarget = "none" and dropZone.hidden = true
+    }
+
+    always "root hidden when canEdit is false": {
+      canEdit = false and root.hidden = true
+    }
+
+    never "menuOpen state while dragging": {
+      state.handle = "dragging" and state.handle = "menuOpen"
+    }
+
+    "handleIcon must render the ⠿ glyph (U+28FF or equivalent six-dot pattern) at all times when root is visible";
+    "drag-start event must set blockId and blockIndex in the DataTransfer object as 'text/clef-block-id' and 'text/clef-block-index' so the drop handler can read target position";
+  }
+
+}
