@@ -583,3 +583,49 @@ entries:
     conditions: null
     defaults: '{"version":"1.0.0","dependencies":"[]"}'
     overrides: '{"name":{"widget":"form-field-text-block","label":"Suite Name","placeholder":"e.g. auth-suite","required":true},"version":{"widget":"form-field-text-block","label":"Version","placeholder":"1.0.0","required":true},"description":{"widget":"form-field-textarea-block","label":"Description","placeholder":"What does this suite provide?","required":false},"dependencies":{"widget":"form-field-textarea-block","label":"Dependencies (JSON array)","placeholder":"[\"identity-suite\"]","required":false,"note":"PLACEHOLDER — replace with form-field-json-block when available"}}'
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Phase C continuation — versioning schemas (VersionSpace, VersionOverride)
+  # ─────────────────────────────────────────────────────────────────────────────
+
+  # ── VersionSpace (create) ─────────────────────────────────────────────────
+  # Two-group layout: "Identity" (name, owner) | "Settings" (status, visibility,
+  # parent, description).
+  #
+  # System-managed fields excluded from create:
+  #   overrideCount — handler initialises to 0.
+  #   lastActivity  — handler writes current timestamp.
+  #
+  # Enum fields use form-field-select-block (ships in baseline 6).
+  # Defaults: status → "active"; visibility → "private" (safe default — owner
+  # can promote to shared after creation).
+  #
+  # Missing widgets (placeholder used; see MISSING_WIDGETS.md batch 4):
+  #   owner  — form-field-entity-picker-block (→ User)
+  #   parent — form-field-entity-picker-block (self-ref to VersionSpace, nullable)
+  - form: form-versionspace-create
+    layout: '{"type":"groups","groups":[{"id":"identity","label":"Identity","fieldIds":["name","owner"]},{"id":"settings","label":"Settings","fieldIds":["status","visibility","parent","description"]}]}'
+    steps: null
+    conditions: null
+    defaults: '{"status":"active","visibility":"private"}'
+    overrides: '{"name":{"widget":"form-field-text-block","label":"Space Name","placeholder":"e.g. Editorial Pass","required":true},"owner":{"widget":"form-field-entity-picker-block","label":"Owner","entitySchema":"User","required":true},"status":{"widget":"form-field-select-block","label":"Status","options":["active","review","archived"],"required":true},"visibility":{"widget":"form-field-select-block","label":"Visibility","options":["private","shared"],"required":true},"parent":{"widget":"form-field-entity-picker-block","label":"Parent Space (optional)","entitySchema":"VersionSpace","required":false,"nullable":true},"description":{"widget":"form-field-textarea-block","label":"Description","placeholder":"What is this version space for?","required":false}}'
+
+  # ── VersionOverride (create) ──────────────────────────────────────────────
+  # Two-group layout: "Target" (space, entity, operation) | "Change" (fields, summary).
+  #
+  # All 5 schema fields are user-supplied at creation time — no system-managed
+  # fields exist on VersionOverride.
+  #
+  # Default: operation → "update" (most overrides modify existing entities).
+  #
+  # Missing widgets (placeholder used; see MISSING_WIDGETS.md batch 4):
+  #   space  — form-field-entity-picker-block (→ VersionSpace)
+  #   fields — form-field-string-list-block (JSON array of field names).
+  #             Closest placeholder: form-field-textarea-block (user types
+  #             comma-separated; Phase D replaces with string-list widget).
+  - form: form-versionoverride-create
+    layout: '{"type":"groups","groups":[{"id":"target","label":"Target","fieldIds":["space","entity","operation"]},{"id":"change","label":"Change","fieldIds":["fields","summary"]}]}'
+    steps: null
+    conditions: null
+    defaults: '{"operation":"update"}'
+    overrides: '{"space":{"widget":"form-field-entity-picker-block","label":"Version Space","entitySchema":"VersionSpace","required":true},"entity":{"widget":"form-field-text-block","label":"Entity Path","placeholder":"e.g. content:Article","required":true},"operation":{"widget":"form-field-select-block","label":"Operation","options":["update","insert","delete"],"required":true},"fields":{"widget":"form-field-textarea-block","label":"Affected Fields (comma-separated)","placeholder":"e.g. title, summary","required":false},"summary":{"widget":"form-field-textarea-block","label":"Change Summary","placeholder":"Describe what this override does","required":false}}'

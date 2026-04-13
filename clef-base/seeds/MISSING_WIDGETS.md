@@ -204,3 +204,81 @@ All fields across the 5 schemas map to either:
 | terms | Vocabulary (edit) | form-field-json-block |
 
 All occurrences are captured in the updated need-lists for those four Batch 1 entries above.
+
+---
+
+## Discovered in Phase C — Continuation (VersionSpace, VersionOverride)
+
+No new widget categories beyond those already catalogued, except one new
+primitive-list widget needed for VersionOverride.fields.
+
+**Fields mapped to existing missing widgets:**
+
+| Field | Schema | Missing widget |
+|-------|--------|---------------|
+| owner | VersionSpace | form-field-entity-picker-block |
+| parent | VersionSpace | form-field-entity-picker-block (nullable self-ref) |
+| space | VersionOverride | form-field-entity-picker-block |
+
+**New missing widget:**
+
+- **form-field-string-list-block** (needed for VersionOverride.fields):
+  Ordered list of plain string values with add/remove/reorder affordance.
+  The `fields` property on VersionOverride is a JSON array of field name
+  strings (e.g. `["title","summary"]`). The general-purpose
+  `form-field-json-block` accepts this but exposes raw JSON editing — poor
+  UX for a list of simple identifiers.
+
+  This widget renders the list as a tag-chip row with:
+  - A text input to type a new field name and press Enter / comma to add.
+  - A remove (×) button on each chip.
+  - Optional drag-handle for reordering (field order is not semantically
+    significant here, but the widget should support it for consistency with
+    `form-field-entity-multi-picker-block`).
+  - Emits a JSON array string (e.g. `'["title","summary"]'`).
+
+  Validation: each item is a non-empty string; duplicates within the same
+  list are silently deduplicated on emit.
+
+  Until this widget ships, use `form-field-textarea-block` as placeholder
+  (user types comma-separated field names; the FormRenderer layer parses
+  on save).
+  Closest existing placeholder: `form-field-textarea-block`.
+
+---
+
+## Discovered in Phase C — Continuation (admin/meta schemas: ComponentMapping, FieldPlacement)
+
+- **form-field-widget-picker-block** (needed for ComponentMapping.widget_id):
+  Single-entity picker scoped to the Widget schema. Lists registered widget
+  IDs from `Widget/list`. Dropdown rows show the widget name and framework
+  badge. Architecturally follows the same ViewShell-as-picker pattern as
+  `form-field-entity-picker-block` with `entitySchema: "Widget"`. Listed
+  separately because widget records may not be ContentNode-stored in all
+  deployments — the picker queries `Widget/list` directly.
+  Emits the selected widget's `name` (widget_id) string.
+  Closest existing placeholder: `form-field-text-block`.
+
+- **form-field-schema-picker-block** (needed for ComponentMapping.schema):
+  Single-entity picker scoped to the Schema schema. Lists defined schemas via
+  `Schema/listSchemas`. Dropdown rows show the schema name. Emits the schema
+  name string. Listed separately from `form-field-entity-picker-block` because
+  Schema entities live in Schema concept state, not necessarily in the
+  ContentNode pool — the picker should query `Schema/listSchemas`, not
+  `ContentNode/listBySchema("Schema")`.
+  Closest existing placeholder: `form-field-text-block`.
+
+- **form-field-display-mode-picker-block** (needed for ComponentMapping.display_mode):
+  Dependent single-entity picker: the schema field must be selected first,
+  then this picker lists the mode_ids registered for that schema via
+  `DisplayMode/list_for_schema`. The picker is disabled until a schema value
+  is present. Emits the mode_id string.
+  Closest existing placeholder: `form-field-text-block`.
+
+- **form-field-mapping-picker-block** (needed for FieldPlacement.field_mapping):
+  Single-entity picker scoped to ComponentMapping. Lists registered mappings
+  from `ComponentMapping/list`. Dropdown rows show the mapping name and
+  widget_id badge. Used to assign a full ComponentMapping for custom field-
+  level widget takeover inside a FieldPlacement.
+  Emits the mapping entity ID string.
+  Closest existing placeholder: `form-field-text-block`.
