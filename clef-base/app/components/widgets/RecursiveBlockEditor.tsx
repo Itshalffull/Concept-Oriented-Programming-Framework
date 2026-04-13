@@ -2504,7 +2504,9 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
         data-part="block-content"
         data-widget={resolvedWidget}
         data-placeholder={
-          schema === 'heading' ? 'Heading' :
+          schema === 'heading' ? 'Heading 1' :
+          schema === 'heading-2' ? 'Heading 2' :
+          schema === 'heading-3' ? 'Heading 3' :
           schema === 'code' ? '// code' :
           schema === 'quote' ? 'Quote' :
           schema === 'callout' ? 'Callout' :
@@ -2534,8 +2536,8 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
           if (schema === 'paragraph') {
             const markdownRule: Record<string, string> = {
               '# ': 'heading',
-              '## ': 'heading',
-              '### ': 'heading',
+              '## ': 'heading-2',
+              '### ': 'heading-3',
               '- ': 'bullet-list',
               '* ': 'bullet-list',
               '1. ': 'numbered-list',
@@ -2901,23 +2903,17 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
           borderRadius: '4px',
           outline: 'none',
           minHeight: '1.5em',
-          lineHeight: 1.6,
-          fontSize:
-            schema === 'heading' ? '1.5em' :
-            schema === 'code'    ? '0.875em' :
-            '1em',
-          fontFamily:
-            schema === 'code' ? 'var(--typography-family-mono, monospace)' : 'inherit',
-          fontWeight:
-            schema === 'heading' ? 'var(--typography-weight-bold, 700)' : 'inherit',
+          // lineHeight / fontSize / fontWeight / fontFamily / background /
+          // borderLeft for schema-specific visuals now live in globals.css
+          // keyed on [data-schema="..."]. CSS wins over removed inline
+          // overrides, so heading-2 / heading-3 can be styled without
+          // touching this file.
           background:
             schema === 'callout' ? 'var(--palette-surface-container)' :
             schema === 'code'    ? 'var(--palette-surface-container-high)' :
             'transparent',
-          borderLeft:
-            schema === 'callout' ? '4px solid var(--palette-primary)' :
-            schema === 'quote'   ? '4px solid var(--palette-outline)' :
-            'none',
+          fontFamily:
+            schema === 'code' ? 'var(--typography-family-mono, monospace)' : 'inherit',
         }}
       />
 
