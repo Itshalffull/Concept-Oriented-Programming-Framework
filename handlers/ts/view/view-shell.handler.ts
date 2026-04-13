@@ -16,7 +16,7 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, find, put, branch, complete, completeFrom, mapBindings,
+  createProgram, get, find, put, putFrom, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -211,6 +211,31 @@ const _handler: FunctionalConceptHandler = {
       }));
       return { views: JSON.stringify(views) };
     }) as StorageProgram<Result>;
+  },
+
+  refresh(input: Record<string, unknown>) {
+    const shell = input.shell as string;
+
+    // Guard: empty shell id → error
+    if (!shell || (typeof shell === 'string' && shell.trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'shell id is required' }) as StorageProgram<Result>;
+    }
+
+    // Check shell exists → branch: notfound or update lastRenderedAt
+    const timestamp = new Date().toISOString();
+    let p = createProgram();
+    p = get(p, 'view', shell, 'existing');
+    return branch(p,
+      (b) => b.existing == null,
+      (b) => complete(b, 'notfound', { message: `View shell "${shell}" not found` }),
+      (b) => {
+        const b2 = putFrom(b, 'view', shell, (bindings) => {
+          const rec = bindings.existing as Record<string, unknown>;
+          return { ...rec, lastRenderedAt: timestamp };
+        });
+        return complete(b2, 'ok', { shell });
+      },
+    ) as StorageProgram<Result>;
   },
 
   // resolveHydrated — functional base (returns ref names, same as resolve).

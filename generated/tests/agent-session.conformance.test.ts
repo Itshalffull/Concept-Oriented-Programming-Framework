@@ -547,6 +547,93 @@ describe('AgentSession functional handler', () => {
 
   });
 
+  describe('cancel', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = agentSessionHandler.cancel({ session: {"type":"ref","fixture":"spawn_research_bot","field":"session"} });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = agentSessionHandler.cancel({ session: {"type":"ref","fixture":"spawn_research_bot","field":"session"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = agentSessionHandler.cancel({ session: {"type":"ref","fixture":"spawn_research_bot","field":"session"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = agentSessionHandler.cancel({ session: {"type":"ref","fixture":"spawn_research_bot","field":"session"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = agentSessionHandler.cancel({ session: {"type":"ref","fixture":"spawn_research_bot","field":"session"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof agentSessionHandler.cancel !== 'function') return;
+      const result = await interpret(agentSessionHandler.cancel({ session: {"type":"ref","fixture":"spawn_research_bot","field":"session"} }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "cancel_running" -> ok', async () => {
+      if (typeof agentSessionHandler.cancel !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_spawn_research_bot = await interpret(agentSessionHandler.spawn({ personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers" }), storage);
+      const result = await interpret(agentSessionHandler.cancel({ session: afterResult_spawn_research_bot?.output?.["session"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "cancel_not_running" -> not_running', async () => {
+      if (typeof agentSessionHandler.cancel !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_spawn_research_bot = await interpret(agentSessionHandler.spawn({ personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers" }), storage);
+      const afterResult_terminate_session = await interpret(agentSessionHandler.terminate({ session: afterResult_spawn_research_bot?.output?.["session"] }), storage);
+      const result = await interpret(agentSessionHandler.cancel({ session: afterResult_terminate_session?.output?.["session"] }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('not_running'));
+    });
+
+    it('fixture "cancel_missing" -> notfound', async () => {
+      if (typeof agentSessionHandler.cancel !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(agentSessionHandler.cancel({ session: "nonexistent" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
+    });
+
+    it('fixture "cancel_empty" -> error', async () => {
+      if (typeof agentSessionHandler.cancel !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(agentSessionHandler.cancel({ session: "" }), storage);
+      expect(result.variant).not.toBe('ok');
+    });
+
+  });
+
   describe('register()', () => {
     it('declares concept name', async () => {
       if (typeof agentSessionHandler.register !== 'function') return;
@@ -609,6 +696,7 @@ describe('AgentSession functional handler', () => {
               fc.record({ action: fc.constant('terminate'), input: fc.record({ session: fc.string() }) }),
               fc.record({ action: fc.constant('getStatus'), input: fc.record({ session: fc.string() }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({ personaPageId: fc.string(), status: fc.string() }) }),
+              fc.record({ action: fc.constant('cancel'), input: fc.record({ session: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -645,6 +733,7 @@ describe('AgentSession functional handler', () => {
               fc.record({ action: fc.constant('terminate'), input: fc.record({ session: fc.string() }) }),
               fc.record({ action: fc.constant('getStatus'), input: fc.record({ session: fc.string() }) }),
               fc.record({ action: fc.constant('list'), input: fc.record({ personaPageId: fc.string(), status: fc.string() }) }),
+              fc.record({ action: fc.constant('cancel'), input: fc.record({ session: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

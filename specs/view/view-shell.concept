@@ -122,6 +122,25 @@ concept ViewShell [V] {
       fixture resolve_hydrated_missing { name: "nonexistent" } -> notfound
     }
 
+    action refresh(shell: V) {
+      -> ok(shell: V) {
+        Re-run the underlying query by reading the DataSourceSpec, FilterSpec,
+        SortSpec, and all other registered child specs anew, then update
+        lastRenderedAt. Triggers downstream render observations so any bound
+        surface components receive the fresh results.
+      }
+      -> notfound(message: String) {
+        No shell exists with this identifier.
+      }
+      -> error(message: String) {
+        The shell identifier is empty and cannot be resolved.
+      }
+      fixture refresh_existing { shell: $create_content_list.view } after create_content_list
+      fixture refresh_missing { shell: "nonexistent" } -> notfound
+      fixture refresh_empty { shell: "" } -> error
+      reversal: none
+    }
+
   }
 
   example "create then get returns view": {

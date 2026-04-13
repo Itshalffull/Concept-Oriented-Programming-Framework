@@ -137,6 +137,29 @@ concept AgentSession [A] {
       fixture list_all { personaPageId: "", status: "" } after spawn_research_bot
       fixture list_by_persona { personaPageId: "persona-research-bot", status: "" } after spawn_research_bot
     }
+
+    action cancel(session: A) {
+      -> ok(session: A) {
+        Transitions the session status from "active" to "cancelled". Any
+        in-flight AgentLoop iteration is marked for abort on next tick.
+      }
+      -> not_running(session: A) {
+        The session exists but is not in "active" status. No state change.
+      }
+      -> notfound(message: String) {
+        No session exists with this identifier.
+      }
+      -> error(message: String) {
+        Invalid session id.
+      }
+
+      fixture cancel_running { session: $spawn_research_bot.session } after spawn_research_bot
+      fixture cancel_not_running { session: $terminate_session.session } after terminate_session -> not_running
+      fixture cancel_missing { session: "nonexistent" } -> notfound
+      fixture cancel_empty { session: "" } -> error
+
+      reversal: none
+    }
   }
 
   example "spawn-then-invoke": {

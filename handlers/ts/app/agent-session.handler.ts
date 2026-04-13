@@ -251,6 +251,44 @@ const _agentSessionHandler: FunctionalConceptHandler = {
       sessions: JSON.stringify((bindings.results as Array<Record<string, unknown>>) || []),
     })) as StorageProgram<Result>;
   },
+
+  cancel(input: Record<string, unknown>) {
+    const session = input.session as string;
+
+    // Guard: empty session id -> error
+    if (!session || typeof session !== 'string' || session.trim() === '') {
+      return complete(createProgram(), 'error', { message: 'session id is required' }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = spGet(p, 'session', session, 'existing');
+    p = mapBindings(p, (bindings) => {
+      const rec = bindings.existing as Record<string, unknown> | null;
+      return rec ? (rec.status as string) : null;
+    }, '_status');
+
+    p = branch(p, 'existing',
+      (b) => {
+        // Session found — check if status is "active" (running)
+        return branch(b,
+          (bindings) => (bindings._status as string) !== 'active',
+          (notRunning) => completeFrom(notRunning, 'not_running', (_bindings) => ({
+            session,
+          })) as StorageProgram<Result>,
+          (ok) => {
+            const now = new Date().toISOString();
+            let b2 = mergeFrom(ok, 'session', session, (_bindings) => ({
+              status: 'cancelled',
+              updatedAt: now,
+            }));
+            return complete(b2, 'ok', { session }) as StorageProgram<Result>;
+          },
+        );
+      },
+      (b) => complete(b, 'notfound', { message: 'No session exists with this identifier' }),
+    );
+    return p as StorageProgram<Result>;
+  },
 };
 
 export const agentSessionHandler = autoInterpret(_agentSessionHandler);
