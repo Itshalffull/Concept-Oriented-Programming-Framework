@@ -79,31 +79,112 @@ parse:
 # to textmate using the grammar path the extension declared (VPR-12, VPR-07).
 
 highlight:
-  # Shiki — mainstream languages (TextMate grammars, themeable output).
-  - slot-group: shiki-mainstream
+  # Shiki — curated extended language set (TextMate grammars, themeable output).
+  #
+  # This covers the ~70 most common real-world languages so that virtually
+  # any code block in user content gets proper syntax highlighting without
+  # paying the startup cost of all 303 bundled shiki grammars.
+  #
+  # IMPORTANT: shiki lazy-loads grammars on first use — listing more languages
+  # here only registers them as available; it does NOT bloat startup time.
+  # Only grammars that are actually rendered are loaded into memory.
+  #
+  # To add further languages (e.g. niche DSLs, enterprise languages), create
+  # a project-level .clef/providers.yaml that extends this manifest with
+  # additional highlight slot-group entries referencing shiki's full 303-language
+  # bundled set. Project-level entries take priority over this default manifest.
+  - slot-group: shiki-extended
     provider: shiki
     languages:
+      # ── Web / scripting (mainstream core) ──────────────────────────────────
       - typescript
       - javascript
-      - rust
-      - solidity
-      - swift
-      - go
       - python
-      - sql
-      - bash
-      - yaml
-      - json
-      - html
-      - css
-      - markdown
-      - java
-      - kotlin
-      - csharp
-      - cpp
       - ruby
       - php
       - elixir
+      - lua
+      - perl
+      - tcl
+      # ── Systems / compiled ─────────────────────────────────────────────────
+      - rust
+      - go
+      - cpp
+      - c
+      - swift
+      - java
+      - kotlin
+      - csharp
+      - scala
+      - dart
+      - zig
+      - nim
+      - crystal
+      - objective-c
+      # ── Functional ─────────────────────────────────────────────────────────
+      - haskell
+      - ocaml
+      - fsharp
+      - clojure
+      - scheme
+      - common-lisp
+      - erlang
+      - julia
+      - r
+      - wolfram
+      # ── Smart contracts / blockchain ───────────────────────────────────────
+      - solidity
+      # ── Data / query ───────────────────────────────────────────────────────
+      - sql
+      - graphql
+      - proto
+      - prisma
+      # ── Data formats / config ──────────────────────────────────────────────
+      - json
+      - jsonc
+      - json5
+      - yaml
+      - toml
+      - xml
+      - csv
+      - tsv
+      - ini
+      - hcl
+      - terraform
+      # ── Markup / document ──────────────────────────────────────────────────
+      - html
+      - css
+      - markdown
+      - latex
+      - bibtex
+      # ── Shell / scripting ──────────────────────────────────────────────────
+      - bash
+      - shellscript
+      - powershell
+      # ── Build / infra ──────────────────────────────────────────────────────
+      - docker
+      - nginx
+      - apache
+      - make
+      - cmake
+      # ── Version control / patch ────────────────────────────────────────────
+      - diff
+      - git-commit
+      - git-rebase
+      # ── Low-level / hardware ───────────────────────────────────────────────
+      - asm
+      - wasm
+      - verilog
+      - vhdl
+      - system-verilog
+      # ── Groovy / JVM adjacent ──────────────────────────────────────────────
+      - groovy
+      - vb
+      - fortran-fixed-form
+      - fortran-free-form
+      # ── Misc ───────────────────────────────────────────────────────────────
+      - regexp
+      - viml
 
   # Clef DSL highlighter — token annotations from framework parser ASTs (VPR-10).
   # Output shape matches shiki (start/end/kind/scope) so downstream widgets
@@ -124,8 +205,8 @@ highlight:
 
   # TextMate fallback — covers any language slot discovered by the
   # vscode-extension ManifestReader from installed extension grammars.
-  # Registered last so shiki and clef-dsl-highlight always take priority
-  # on the 21 + 5 slots they own (PRD §4.3 slot-group order wins).
+  # Registered last so shiki-extended and clef-dsl-highlight always take
+  # priority on the slots they own (PRD §4.3 slot-group order wins).
   - slot: "*"
     provider: textmate
     options:
