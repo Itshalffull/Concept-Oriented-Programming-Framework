@@ -21,13 +21,15 @@ replace `MISSING_WIDGET` placeholders with the real block widget IDs and verifie
 
 ## Discovered in Phase C — Batch 1 (ContentNode, TaxonomyTerm, Article)
 
-- **form-field-richtext-block** (needed for ContentNode.content, Article.body):
+- **form-field-richtext-block** (needed for ContentNode.content, Article.body,
+  Comment.body, Page.body):
   Micro block-editor embedded inside a form field. Supports inline marks
   (bold, italic, code, link) and basic block types (paragraph, heading, list).
   Should accept and emit a Clef block-tree JSON string. Closest existing
   placeholder: `form-field-textarea-block`.
 
-- **form-field-json-block** (needed for ContentNode.metadata):
+- **form-field-json-block** (needed for ContentNode.metadata,
+  Media.dimensions, Vocabulary.terms):
   Validated JSON editor with syntax highlighting and parse-error display.
   Accepts any arbitrary JSON object; emits a JSON string. Should show a
   Monaco-lite or CodeMirror editor panel. Closest existing placeholder:
@@ -173,3 +175,32 @@ replace `MISSING_WIDGET` placeholders with the real block widget IDs and verifie
   validation) and distinct a11y requirements (multi-select listbox vs
   combobox), so it warrants its own widget spec and block ID rather than a
   prop on the single picker.
+
+---
+
+## Discovered in Phase C — Batch 3 (Comment, File, Media, Page, Vocabulary)
+
+No new missing widgets beyond the 4 already catalogued in Batch 1.
+
+All fields across the 5 schemas map to either:
+- An existing baseline block (form-field-text-block, form-field-number-block,
+  form-field-textarea-block, form-field-checkbox-block, form-field-date-block,
+  form-field-select-block), or
+- A widget already recorded in Batch 1 (form-field-richtext-block,
+  form-field-json-block, form-field-entity-picker-block,
+  form-field-datetime-block).
+
+**Fields mapped to existing Batch 1 missing widgets:**
+
+| Field | Schema | Missing widget |
+|-------|--------|---------------|
+| body | Comment | form-field-richtext-block |
+| author | Comment | form-field-entity-picker-block |
+| target | Comment | form-field-entity-picker-block |
+| dimensions | Media | form-field-json-block |
+| body | Page | form-field-richtext-block |
+| template | Page | form-field-entity-picker-block |
+| publishedAt | Page | form-field-datetime-block |
+| terms | Vocabulary (edit) | form-field-json-block |
+
+All occurrences are captured in the updated need-lists for those four Batch 1 entries above.
