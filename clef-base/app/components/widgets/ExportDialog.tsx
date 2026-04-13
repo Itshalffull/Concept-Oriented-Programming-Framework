@@ -101,81 +101,40 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
   // ---------------------------------------------------------------------------
 
   const serializeContent = useCallback(async (): Promise<string | null> => {
-    // Attempt ContentSerializer/serialize if available
+    // LE-16 wiring: ContentSerializer/serialize is the only export path.
+    // The local-traversal fallback has been removed; all four targets
+    // (markdown, html, json, pdf) are handled exclusively by the kernel.
+    // The 'target' field maps directly to the ContentSerializer concept's
+    // target parameter (LE-13 + LE-14 registered providers).
+    // 'recursive' is passed via the target suffix convention so providers
+    // can opt into tree traversal — ContentSerializer walks from rootNodeId.
     try {
       const result = await invoke('ContentSerializer', 'serialize', {
-        node:     nodeId,
-        format,
-        recursive: scope === 'page-with-children',
+        target:     format,
+        rootNodeId: nodeId,
+        recursive:  scope === 'page-with-children',
       });
 
       if (result.variant === 'ok') {
-        const raw = result.content ?? result.output ?? result.result;
+        const raw = result.bytes ?? result.content ?? result.output ?? result.result;
+        if (raw instanceof Uint8Array || ArrayBuffer.isView(raw)) {
+          return new TextDecoder().decode(raw as Uint8Array);
+        }
         return typeof raw === 'string' ? raw : JSON.stringify(raw, null, 2);
       }
 
-      // Non-ok but not a throw — concept may exist but returned an error variant.
-      // Fall through to the local fallback.
+      if (result.variant === 'no_provider') {
+        console.warn('[ExportDialog] ContentSerializer: no provider for target:', format);
+        return null;
+      }
+
       console.warn('[ExportDialog] ContentSerializer/serialize returned non-ok:', result.variant);
-    } catch {
-      // ContentSerializer not registered — fall through to local fallback
-    }
-
-    // -----------------------------------------------------------------------
-    // Local fallback: collect raw block data via Outline + ContentNode queries.
-    // Produces a minimal but usable export when ContentSerializer is absent.
-    // -----------------------------------------------------------------------
-    try {
-      const blocks: Array<Record<string, unknown>> = [];
-
-      const collectBlocks = async (parentId: string) => {
-        const outlineResult = await invoke('Outline', 'children', { parent: parentId });
-        const childIds: string[] = outlineResult.variant === 'ok'
-          ? (typeof outlineResult.children === 'string'
-              ? JSON.parse(outlineResult.children)
-              : (outlineResult.children as string[] ?? []))
-          : [];
-
-        for (const childId of childIds) {
-          try {
-            const nodeResult = await invoke('ContentNode', 'get', { node: childId });
-            if (nodeResult.variant === 'ok') {
-              blocks.push({ id: childId, ...(nodeResult as Record<string, unknown>) });
-            }
-          } catch { /* non-fatal */ }
-
-          if (scope === 'page-with-children') {
-            await collectBlocks(childId);
-          }
-        }
-      };
-
-      const rootResult = await invoke('ContentNode', 'get', { node: nodeId });
-      if (rootResult.variant === 'ok') {
-        blocks.push({ id: nodeId, ...(rootResult as Record<string, unknown>) });
-      }
-      await collectBlocks(nodeId);
-
-      if (format === 'json') {
-        return JSON.stringify({ exportedAt: new Date().toISOString(), nodeId, blocks }, null, 2);
-      }
-
-      // Minimal Markdown/HTML from raw block data
-      const lines = blocks.map((b) => {
-        const text = String(b.text ?? b.title ?? b.name ?? b.id ?? '');
-        return format === 'html' ? `<p>${escapeHtml(text)}</p>` : text;
-      });
-
-      if (format === 'html') {
-        return `<!DOCTYPE html>\n<html>\n<head><meta charset="utf-8"><title>${escapeHtml(title)}</title></head>\n<body>\n${lines.join('\n')}\n</body>\n</html>`;
-      }
-
-      return `# ${title}\n\n${lines.join('\n\n')}`;
+      return null;
     } catch (err) {
-      console.error('[ExportDialog] Local fallback serialization failed:', err);
+      console.error('[ExportDialog] ContentSerializer/serialize failed:', err);
       return null;
     }
-  }, [invoke, nodeId, format, scope, title]);
+  }, [invoke, nodeId, format, scope]);
 
   // ---------------------------------------------------------------------------
   // Download handler
@@ -530,17 +489,6 @@ function sanitizeFilename(raw: string): string {
   return raw.replace(/[<>:"/\\|?*\x00-\x1f]/g, '_').slice(0, 120) || 'document';
 }
 
-// ---------------------------------------------------------------------------
-// Utility: minimal HTML entity escaping
-// ---------------------------------------------------------------------------
-
-function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
 
 // ---------------------------------------------------------------------------
 // Style helpers (inline — keeps the component self-contained)

@@ -2023,6 +2023,92 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
   const [spellPopover, setSpellPopover] = useState<SpellPopoverState | null>(null);
 
   // -------------------------------------------------------------------------
+  // Syntax highlight decorations (LE-16)
+  // Dispatches Syntax/highlight on code/latex block body changes and renders
+  // the returned InlineAnnotation-shaped annotations as inline decorations.
+  // -------------------------------------------------------------------------
+
+  interface HighlightAnnotation {
+    range: { start: number; end: number };
+    kind: string;
+    meta: string;
+  }
+
+  const [highlightAnnotations, setHighlightAnnotations] = useState<HighlightAnnotation[]>([]);
+  const highlightDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const isHighlightableSchema = schema === 'code' || schema === 'latex' || schema === 'math';
+
+  const dispatchHighlight = useCallback(async (text: string, language: string) => {
+    if (!text.trim()) {
+      setHighlightAnnotations([]);
+      return;
+    }
+    try {
+      const result = await invoke('Syntax', 'highlight', { language, text });
+      if (result.variant === 'ok') {
+        const raw = result.annotations;
+        if (typeof raw === 'string' && raw) {
+          try {
+            const parsed = JSON.parse(raw) as HighlightAnnotation[];
+            setHighlightAnnotations(Array.isArray(parsed) ? parsed : []);
+          } catch {
+            setHighlightAnnotations([]);
+          }
+        } else {
+          setHighlightAnnotations([]);
+        }
+      } else if (result.variant !== 'no_provider') {
+        console.warn('[BlockSlot] Syntax/highlight returned non-ok:', result.variant);
+      }
+    } catch (err) {
+      console.warn('[BlockSlot] Syntax/highlight dispatch failed:', err);
+    }
+  }, [invoke]);
+
+  // -------------------------------------------------------------------------
+  // Code-block format handler (LE-16)
+  // Dispatches Syntax/format and applies the returned Patch via Patch/apply,
+  // which produces a single UndoStack entry through PushUndoOnReversible.
+  // -------------------------------------------------------------------------
+
+  const [isFormatting, setIsFormatting] = useState(false);
+
+  const handleCodeFormat = useCallback(async () => {
+    if (!canEdit || isFormatting) return;
+    const blockEl = document.querySelector<HTMLElement>(
+      `[data-node-id="${nodeId}"] [data-part="block-content"]`
+    );
+    const text = blockEl?.textContent ?? '';
+    if (!text.trim()) return;
+
+    // Derive language from block meta stored as data attribute or fall back to 'text'.
+    const language = blockEl?.getAttribute('data-lang') ?? (schema === 'latex' || schema === 'math' ? 'latex' : 'text');
+
+    setIsFormatting(true);
+    try {
+      const fmtResult = await invoke('Syntax', 'format', { language, text });
+      if (fmtResult.variant === 'ok' && fmtResult.patch) {
+        // Apply the Patch via kernel — the PushUndoOnReversible sync turns this
+        // into a single UndoStack entry so Cmd+Z reverses the format in one step.
+        await invoke('Patch', 'apply', {
+          nodeId,
+          patch: fmtResult.patch,
+        });
+        onMutate();
+      } else if (fmtResult.variant === 'no_provider') {
+        console.info('[BlockSlot] Syntax/format: no provider for language:', language);
+      } else if (fmtResult.variant !== 'ok') {
+        console.warn('[BlockSlot] Syntax/format returned non-ok:', fmtResult.variant);
+      }
+    } catch (err) {
+      console.error('[BlockSlot] Syntax/format dispatch failed:', err);
+    } finally {
+      setIsFormatting(false);
+    }
+  }, [canEdit, isFormatting, invoke, nodeId, schema, onMutate]);
+
+  // -------------------------------------------------------------------------
   // Link hover preview state (PP-link-hover)
   // -------------------------------------------------------------------------
 
@@ -2070,6 +2156,8 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
   useEffect(() => () => {
     if (linkEnterTimer.current !== null) clearTimeout(linkEnterTimer.current);
     if (linkLeaveTimer.current !== null) clearTimeout(linkLeaveTimer.current);
+    // LE-16: clean up pending highlight debounce on unmount
+    if (highlightDebounceRef.current !== null) clearTimeout(highlightDebounceRef.current);
   }, []);
 
   const closeLinkPreview = useCallback(() => {
@@ -2195,6 +2283,16 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
           const text = (e.currentTarget as HTMLDivElement).textContent ?? '';
           setBlockEmpty(text.trim() === '');
           notifyBlockEdit(nodeId, text, invoke);
+          // LE-16: debounced syntax highlight dispatch for code/latex blocks
+          if (isHighlightableSchema && text.trim()) {
+            if (highlightDebounceRef.current !== null) clearTimeout(highlightDebounceRef.current);
+            const lang = (e.currentTarget as HTMLDivElement).getAttribute('data-lang')
+              ?? (schema === 'latex' || schema === 'math' ? 'latex' : 'text');
+            highlightDebounceRef.current = setTimeout(() => {
+              highlightDebounceRef.current = null;
+              void dispatchHighlight(text, lang);
+            }, 400);
+          }
         }}
         onBlur={(e) => {
           setBlockFocused(false);
@@ -2202,6 +2300,16 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
           setBlockEmpty(text.trim() === '');
           handleContentEdit(text);
           onBlur();
+          // LE-16: trigger highlight on blur so decorations are current when block loses focus
+          if (isHighlightableSchema && text.trim()) {
+            if (highlightDebounceRef.current !== null) {
+              clearTimeout(highlightDebounceRef.current);
+              highlightDebounceRef.current = null;
+            }
+            const lang = e.currentTarget.getAttribute('data-lang')
+              ?? (schema === 'latex' || schema === 'math' ? 'latex' : 'text');
+            void dispatchHighlight(text, lang);
+          }
         }}
         style={{
           padding: 'var(--spacing-xs) var(--spacing-sm)',
@@ -2227,6 +2335,59 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
             'none',
         }}
       />
+
+      {/* LE-16: Code-block format button — Syntax/format dispatch */}
+      {canEdit && isHighlightableSchema && (
+        <button
+          data-part="block-format"
+          aria-label={`Format ${schema} block`}
+          aria-disabled={isFormatting}
+          disabled={isFormatting}
+          onClick={(e) => { e.stopPropagation(); void handleCodeFormat(); }}
+          title="Format code (Syntax/format)"
+          style={{
+            position: 'absolute',
+            right: '28px',
+            top: '4px',
+            opacity: 0,
+            fontSize: '11px',
+            cursor: isFormatting ? 'not-allowed' : 'pointer',
+            background: 'var(--palette-surface-container-high)',
+            border: '1px solid var(--palette-outline-variant)',
+            borderRadius: '3px',
+            color: 'var(--palette-on-surface-variant)',
+            padding: '1px 6px',
+            lineHeight: '18px',
+          }}
+        >
+          {isFormatting ? '…' : '{ }'}
+        </button>
+      )}
+
+      {/* LE-16: Syntax highlight decoration overlay for code/latex blocks */}
+      {isHighlightableSchema && highlightAnnotations.length > 0 && (
+        <div
+          data-part="block-highlight-layer"
+          aria-hidden="true"
+          style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1 }}
+        >
+          {highlightAnnotations.map((ann, i) => (
+            <mark
+              key={i}
+              data-highlight-kind={ann.kind}
+              data-highlight-meta={ann.meta}
+              style={{
+                position: 'absolute',
+                background: 'transparent',
+                // Error annotations (katex syntax errors) get a red underline;
+                // other kinds get a faint background tint keyed by kind.
+                borderBottom: ann.kind === 'error' ? '2px solid var(--palette-error, #b00020)' : 'none',
+                opacity: 0.75,
+              }}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Delete affordance */}
       {canEdit && (

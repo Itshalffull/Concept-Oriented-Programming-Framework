@@ -4,8 +4,10 @@
  * Outline/create + Schema/applyTo, inserting children under rootNodeId
  * starting after cursorBlockId.
  *
- * Parser: micromark + micromark-extension-gfm (smallest footprint)
- * GFM extensions: tables, strikethrough, task-list-item, autolink literals.
+ * Parser: Syntax/parse(language:"markdown") kernel dispatch.
+ *   The micromark-parse provider registered at boot handles the actual parse;
+ *   this file no longer imports micromark directly — all dispatch goes through
+ *   the kernel so the provider can be swapped without touching client code.
  *
  * Architecture note:
  *   Block insertion follows the same pattern as the slash-menu insert-block
@@ -21,14 +23,8 @@
  *     HTML/MD content is detected)
  *
  * Card: PP-smart-paste (id 40ee59db-a043-4d46-85d3-515254a10eb6)
+ * LE-16 wiring: direct micromark import replaced with Syntax/parse dispatch.
  */
-
-// ---------------------------------------------------------------------------
-// Micromark imports — tree-sitter-free, ES-module-compatible Markdown parser
-// ---------------------------------------------------------------------------
-
-import { micromark } from 'micromark';
-import { gfm, gfmHtml } from 'micromark-extension-gfm';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -109,21 +105,47 @@ function escHtml(text: string): string {
 }
 
 /**
- * Convert Markdown source to a ParsedBlock array using micromark + GFM.
+ * Convert Markdown source to a ParsedBlock array via Syntax/parse kernel dispatch.
  *
- * Strategy: micromark renders to HTML, then we parse that HTML via
- * parseHtmlToBlocks (the shared HTML parser). This gives us GFM support
- * (tables, strikethrough, task lists) for free.
+ * Strategy: dispatch to Syntax/parse(language:"markdown", text) so the
+ * registered micromark-parse provider handles the actual parse.  The returned
+ * AST bytes are a micromark-rendered HTML string (provider contract), which we
+ * then pass to parseHtmlToBlocks.  Falls back to parsePlainTextToBlocks when
+ * the kernel call fails or the provider is absent.
+ *
+ * This function is async because it dispatches through the kernel; callers
+ * (convertAndInsert) are already async.
  */
-export function parseMarkdownToBlocks(markdown: string): ParsedBlock[] {
+export async function parseMarkdownToBlocks(
+  markdown: string,
+  invoke: KernelInvokeFn,
+): Promise<ParsedBlock[]> {
   if (!markdown.trim()) return [];
 
-  const html = micromark(markdown, {
-    extensions: [gfm()],
-    htmlExtensions: [gfmHtml()],
-  });
+  try {
+    const result = await invoke('Syntax', 'parse', {
+      language: 'markdown',
+      text: markdown,
+    });
 
-  return parseHtmlToBlocks(html);
+    if (result.variant === 'ok') {
+      // The micromark-parse provider returns rendered HTML as the ast bytes string.
+      const html = typeof result.ast === 'string' ? result.ast : '';
+      if (html) {
+        const blocks = parseHtmlToBlocks(html);
+        if (blocks.length > 0) return blocks;
+      }
+    }
+    // no_provider or error — fall through to plain-text split
+    if (result.variant !== 'no_provider') {
+      console.warn('[smart-paste] Syntax/parse non-ok variant:', result.variant);
+    }
+  } catch (err) {
+    console.warn('[smart-paste] Syntax/parse dispatch failed, falling back:', err);
+  }
+
+  // Fallback: split on double newlines into paragraphs
+  return parsePlainTextToBlocks(markdown);
 }
 
 // ---------------------------------------------------------------------------
@@ -431,10 +453,10 @@ export async function convertAndInsert(
   ctx: SmartPasteContext,
   invoke: KernelInvokeFn,
 ): Promise<number> {
-  // 1. Markdown
+  // 1. Markdown — dispatch through Syntax/parse(language:"markdown")
   const md = clipboardData.getData('text/markdown') || clipboardData.getData('text/x-markdown');
   if (md && md.trim().length > 0) {
-    const blocks = parseMarkdownToBlocks(md);
+    const blocks = await parseMarkdownToBlocks(md, invoke);
     if (blocks.length > 0) {
       return insertParsedBlocks(blocks, ctx, invoke);
     }
