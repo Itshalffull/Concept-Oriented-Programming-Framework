@@ -281,11 +281,29 @@ Callers import `Syntax/parse` instead of `Parse/parse` if they want a single nam
 
 ## 9. Card Plan
 
-22 cards under epic "Block Editor Loose Ends". See VK breakdown for per-card descriptions, assignments, and blocking relationships.
+22 cards under epic MAG-794 "Block Editor Loose Ends". All shipped 2026-04-13.
 
-Phase ordering constraints:
-- Phase 1 blocks Phase 2 (concepts before providers)
-- Phase 1 blocks Phase 3 (concepts before Shell composition)
-- Phase 2 blocks Phase 3 (providers registered before Shell dispatches to them)
-- Phase 3 can start once Phase 1 + at least one provider per concept lands
-- Phases 4, 5, 6, 7 are independent of each other and can run in parallel once their individual prerequisites are met
+| Card | Title | Commit |
+|---|---|---|
+| MAG-795 | LE-01 Parse concept + handler | 698075c3 |
+| MAG-796 | LE-02 Format concept + handler | 443080ee |
+| MAG-797 | LE-03 Highlight concept + handler | d44dca9c |
+| MAG-798 | LE-04 ContentSerializer concept + handler | 38140757 |
+| MAG-799 | LE-05 micromark-parse provider | 0ec0d780 |
+| MAG-800 | LE-06 GitHub/mkdocs/obsidian callout providers | abf84b3d |
+| MAG-801 | LE-07 katex-parse provider | 8918327e |
+| MAG-802 | LE-08 domparser-parse provider | 1021f59a |
+| MAG-803 | LE-09 prettier Format provider | 5a143751 |
+| MAG-804 | LE-10 micromark-format Format provider | 1b1d93da |
+| MAG-805 | LE-11 shiki Highlight provider | 03fc177e |
+| MAG-806 | LE-12 katex Highlight provider | 0289ddc8 |
+| MAG-807 | LE-13 ContentSerializer md/html/json providers | 5db05cb6 |
+| MAG-808 | LE-14 ContentSerializer pdf provider | 5838258a |
+| MAG-809 | LE-15 Syntax derived shell + delegate syncs | 430b5d4b |
+| MAG-810 | LE-16 Syntax + ContentSerializer wiring | 87b84ea5 |
+| MAG-811 | LE-17 Comment resolve/unresolve | dfbb9cfa |
+| MAG-812 | LE-18 ContentNode/createWithSchema | dd49a1a0 |
+| MAG-813 | LE-19 Template/queryByTrigger | 9a72d00e |
+| MAG-814 | LE-20 Table orchestration syncs | a56bc73c |
+| MAG-815 | LE-21 Eight panel widgets + seeds | 64810394 |
+| MAG-816 | LE-22 InputRule seeds (heading + callout) | e12a23b3 |
