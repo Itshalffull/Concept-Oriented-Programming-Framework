@@ -30,7 +30,40 @@ export function resetParseIds(): void {
   idCounter = 0;
 }
 
-const parseHandler: FunctionalConceptHandler = {
+// -------------------------------------------------------------------------
+// Module-level provider registry
+//
+// The Parse concept's state records (provider: String, language: String)
+// pairs, but the actual parser function lives in a provider module (e.g.,
+// handlers/ts/providers/micromark-parse.provider.ts). Provider modules
+// self-register their implementation function here as an import-time
+// side-effect; Parse/parse looks up the function by the provider name
+// stored in state and invokes it during completeFrom at interpret time.
+//
+// See docs/plans/block-editor-loose-ends-prd.md §LE-05 and
+// specs/app/parse.concept.
+// -------------------------------------------------------------------------
+
+export type ParseProviderFn = (text: string, config?: string) => string;
+
+const providerRegistry: Map<string, ParseProviderFn> = new Map();
+
+/** Register a parse provider implementation by its registered id string. */
+export function registerParseProvider(name: string, fn: ParseProviderFn): void {
+  providerRegistry.set(name, fn);
+}
+
+/** Look up a registered parse provider implementation. */
+export function getParseProvider(name: string): ParseProviderFn | undefined {
+  return providerRegistry.get(name);
+}
+
+/** Clear the provider registry (for testing). */
+export function clearParseProviders(): void {
+  providerRegistry.clear();
+}
+
+export const parseHandler: FunctionalConceptHandler = {
 
   register(input: Record<string, unknown>) {
     const provider = input.provider != null ? String(input.provider) : '';
@@ -57,7 +90,7 @@ const parseHandler: FunctionalConceptHandler = {
       (b) => {
         const id = nextId();
         const config = input.config != null ? String(input.config) : '';
-        let b2 = put(b, 'byLanguage', language, id);
+        let b2 = put(b, 'byLanguage', language, { id });
         b2 = put(b2, 'providers', id, { id, provider, language, config });
         return complete(b2, 'ok', { id }) as StorageProgram<Result>;
       },
@@ -68,17 +101,43 @@ const parseHandler: FunctionalConceptHandler = {
     const language = input.language != null ? String(input.language) : '';
     const text     = input.text     != null ? String(input.text)     : '';
 
-    // Look up the registered provider id for this language
+    // Two-step lookup: byLanguage -> providers[id] to obtain the provider
+    // name, then dispatch to the module-level provider registry. The
+    // dispatch happens at interpret time via completeFrom so the program
+    // remains pure data during construction.
     let p = createProgram();
-    p = get(p, 'byLanguage', language, 'providerId');
+    p = get(p, 'byLanguage', language, 'byLangEntry');
     return branch(p,
-      (b) => b.providerId != null,
+      (b) => b.byLangEntry != null,
       (b) => {
-        // Provider found — produce a portable AST encoding.
-        // Real dispatch to the provider implementation happens at runtime
-        // via PluginRegistry; the handler layer returns a stable serialisation.
-        const ast = Buffer.from(JSON.stringify({ language, text })).toString('base64');
-        return complete(b, 'ok', { ast }) as StorageProgram<Result>;
+        const entry = b.byLangEntry as { id?: string } | null;
+        const id = entry?.id ?? '';
+        let q = createProgram();
+        q = get(q, 'providers', id, 'providerRec');
+        return completeFrom(q, 'ok', (bindings) => {
+          const rec = bindings.providerRec as
+            | { provider?: string; config?: string }
+            | null;
+          const providerName = rec?.provider ?? '';
+          const config = rec?.config ?? '';
+          const fn = providerRegistry.get(providerName);
+          if (fn == null) {
+            // Provider registered in state but no implementation is loaded —
+            // fall back to a stable placeholder encoding so callers still get
+            // bytes back. This preserves the ok variant per the concept spec.
+            const ast = Buffer.from(
+              JSON.stringify({ language, text, provider: providerName, unbound: true }),
+            ).toString('base64');
+            return { variant: 'ok', ast };
+          }
+          try {
+            const ast = fn(text, config);
+            return { variant: 'ok', ast };
+          } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : String(err);
+            return { variant: 'error', message };
+          }
+        }) as StorageProgram<Result>;
       },
       (b) => complete(b, 'no_provider', { language }) as StorageProgram<Result>,
     ) as StorageProgram<Result>;
@@ -96,9 +155,6 @@ const parseHandler: FunctionalConceptHandler = {
     }) as StorageProgram<Result>;
   },
 
-  concept() {
-    return 'Parse';
-  },
 };
 
 export const handler = autoInterpret(parseHandler);
