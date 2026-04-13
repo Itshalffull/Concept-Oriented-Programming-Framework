@@ -804,6 +804,31 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
   }, [fsmState, focusedSchema]);
 
   // =========================================================================
+  // Empty-state: create first paragraph block on click or keypress so user
+  // has somewhere to start typing. Reuses the insert-block ActionBinding
+  // (same path the slash menu uses).
+  // =========================================================================
+
+  const handleCreateFirstBlock = useCallback(async () => {
+    if (!canEdit) return;
+    try {
+      const result = await invoke('ActionBinding', 'invoke', {
+        binding: 'insert-block',
+        context: JSON.stringify({
+          rootNodeId,
+          schema: 'paragraph',
+          displayMode: 'block-editor',
+        }),
+      });
+      if (result.variant === 'ok' || (result.variant as string)?.startsWith('pending')) {
+        await loadChildren();
+      }
+    } catch (err) {
+      console.warn('[RecursiveBlockEditor] handleCreateFirstBlock failed:', err);
+    }
+  }, [canEdit, rootNodeId, invoke, loadChildren]);
+
+  // =========================================================================
   // Slash menu item activation
   // =========================================================================
 
@@ -1453,19 +1478,48 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
             Loading blocks...
           </div>
         ) : children.length === 0 ? (
-          <div
-            data-part="blocks-empty"
-            style={{
-              color: 'var(--palette-on-surface-variant)',
-              padding: 'var(--spacing-xl)',
-              textAlign: 'center',
-              fontSize: '14px',
-            }}
-          >
-            {canEdit
-              ? "Type '/' to insert a block or start typing..."
-              : 'No blocks yet.'}
-          </div>
+          canEdit ? (
+            <button
+              type="button"
+              data-part="blocks-empty"
+              onClick={handleCreateFirstBlock}
+              onKeyDown={(e) => {
+                // Any printable key or Enter → create the first block.
+                // The user's keystroke is lost (the new block starts empty)
+                // but the focus follows automatically after loadChildren.
+                if (e.key === 'Enter' || e.key.length === 1) {
+                  e.preventDefault();
+                  void handleCreateFirstBlock();
+                }
+              }}
+              style={{
+                display: 'block',
+                width: '100%',
+                color: 'var(--palette-on-surface-variant)',
+                padding: 'var(--spacing-xl)',
+                textAlign: 'left',
+                fontSize: '14px',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'text',
+                fontFamily: 'inherit',
+              }}
+            >
+              Click or press a key to start writing…
+            </button>
+          ) : (
+            <div
+              data-part="blocks-empty"
+              style={{
+                color: 'var(--palette-on-surface-variant)',
+                padding: 'var(--spacing-xl)',
+                textAlign: 'center',
+                fontSize: '14px',
+              }}
+            >
+              No blocks yet.
+            </div>
+          )
         ) : (
           <ol
             data-part="block-list"

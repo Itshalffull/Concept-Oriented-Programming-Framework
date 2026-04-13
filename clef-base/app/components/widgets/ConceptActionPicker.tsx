@@ -206,18 +206,52 @@ export function ConceptActionPicker({
       _conceptCachePromise = invoke('ScoreApi', 'listConcepts', {}).then(
         (result: Record<string, unknown>) => {
           if (result.variant === 'ok') {
-            let raw: ConceptSpec[] = [];
+            let rawList: Array<Record<string, unknown>> = [];
             if (typeof result.concepts === 'string') {
               const s = result.concepts.trim();
               if (s !== '') {
-                try { raw = JSON.parse(s) as ConceptSpec[]; }
-                catch { raw = []; }
+                try { rawList = JSON.parse(s); }
+                catch { rawList = []; }
               }
             } else if (Array.isArray(result.concepts)) {
-              raw = result.concepts as ConceptSpec[];
+              rawList = result.concepts as Array<Record<string, unknown>>;
             }
-            _conceptCache = raw;
-            return raw;
+            // ScoreApi/listConcepts returns {name, purpose, actions: string[],
+            // stateFields, file}. Adapt to the ConceptSpec shape the picker
+            // needs (description, category, actions as ConceptActionSpec[]).
+            // Action names come back as strings; wrap each as a minimal spec
+            // with no description/variants. Category derived from purpose
+            // heuristics won't be reliable, so default to "domain" to land in
+            // Common bucket — users see concepts instead of an empty picker.
+            const adapted: ConceptSpec[] = rawList.map((c) => {
+              const actionsRaw = c.actions;
+              let actionList: ConceptActionSpec[] = [];
+              if (Array.isArray(actionsRaw)) {
+                actionList = (actionsRaw as unknown[]).map((a) => {
+                  if (typeof a === 'string') {
+                    return { name: a, description: undefined, variants: [] };
+                  }
+                  const ao = a as Record<string, unknown>;
+                  return {
+                    name: String(ao.name ?? ''),
+                    description: typeof ao.description === 'string' ? ao.description : undefined,
+                    variants: Array.isArray(ao.variants)
+                      ? (ao.variants as Array<{ tag: string; fields?: Record<string, string> }>)
+                      : [],
+                  };
+                }).filter((a) => a.name !== '');
+              }
+              return {
+                name: String(c.name ?? c.conceptName ?? ''),
+                description: typeof c.description === 'string'
+                  ? c.description
+                  : (typeof c.purpose === 'string' ? c.purpose : undefined),
+                category: typeof c.category === 'string' ? c.category : 'domain',
+                actions: actionList,
+              };
+            }).filter((c) => c.name !== '');
+            _conceptCache = adapted;
+            return adapted;
           }
           _conceptCache = [];
           return [];
