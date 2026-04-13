@@ -1,0 +1,20 @@
+# Wire ActionBinding/invoke pending completions into Invocation/start so every
+# user-initiated action call has an observable pending lifecycle record.
+
+sync TrackInvocationStart [eager]
+  purpose: "Create a pending Invocation record the moment ActionBinding/invoke emits pending, giving UI surfaces and observers a first-class lifecycle entry before the transport call completes"
+when {
+  ActionBinding/invoke: [ binding: ?b; context: ?ctx ]
+    => pending(invocation: ?i)
+}
+where {
+  bind(now() as ?t)
+}
+then {
+  Invocation/start: [
+    invocation: ?i;
+    connection: ?ctx;
+    binding: ?b;
+    params: ?ctx;
+    startedAt: ?t ]
+}

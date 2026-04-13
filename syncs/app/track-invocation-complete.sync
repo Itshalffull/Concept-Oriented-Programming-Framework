@@ -1,0 +1,35 @@
+# Close out the Invocation lifecycle when ActionBinding/invoke resolves.
+# Two syncs cover the two terminal variants (ok and error) that carry the
+# invocation id allocated during the preceding pending completion.
+
+sync TrackInvocationSuccess [eager]
+  purpose: "Record a successful outcome on the tracked Invocation when ActionBinding/invoke completes with ok, transitioning the lifecycle record from pending to completed"
+when {
+  ActionBinding/invoke: [ binding: ?b ]
+    => ok(invocation: ?i; result: ?r)
+}
+where {
+  bind(now() as ?t)
+}
+then {
+  Invocation/complete: [
+    invocation: ?i;
+    result: ?r;
+    completedAt: ?t ]
+}
+
+sync TrackInvocationFailure [eager]
+  purpose: "Record a failed outcome on the tracked Invocation when ActionBinding/invoke completes with error, transitioning the lifecycle record from pending to error so callers can surface retry affordance"
+when {
+  ActionBinding/invoke: [ binding: ?b ]
+    => error(invocation: ?i; message: ?m)
+}
+where {
+  bind(now() as ?t)
+}
+then {
+  Invocation/fail: [
+    invocation: ?i;
+    error: ?m;
+    completedAt: ?t ]
+}

@@ -144,29 +144,41 @@ concept ActionBinding [B] {
     }
 
     action invoke(binding: B, context: String) {
-      -> ok(result: String, trace: String) {
-        Resolve parameters against context, check precondition, and execute
-        the target action via transport. Returns the action result and a
-        FlowTrace identifier. If executionPolicy is "auto", the system
-        derives optimistic vs pessimistic from the target action's variant set.
+      -> pending(invocation: String) {
+        A unique invocation identifier has been allocated and pre-flight checks
+        have passed. The actual dispatch to the target action is now in progress.
+        Emitted before the transport call so observers (Invocation concept, syncs)
+        can record a pending lifecycle entry. The same invocation id is threaded
+        through to the ok, error, and invalid completions.
       }
-      -> error(variant: String, message: String, trace: String) {
-        The target action returned a non-ok variant. The variant field contains
-        the specific error variant tag, message contains the error detail.
+      -> ok(invocation: String, result: String, trace: String) {
+        Resolve parameters against context, check precondition, and execute
+        the target action via transport. Returns the invocation id, action
+        result, and a FlowTrace identifier. If executionPolicy is "auto", the
+        system derives optimistic vs pessimistic from the target action's
+        variant set.
+      }
+      -> error(invocation: String, variant: String, message: String, trace: String) {
+        The target action returned a non-ok variant. The invocation id matches
+        the one emitted in the preceding pending completion. The variant field
+        contains the specific error variant tag, message contains the error detail.
       }
       -> invalid(violations: String, trace: String) {
         Pre-flight validation failed. Violations is a JSON array of field-level
         errors from the Validator concept. The target action was not attempted.
+        No pending completion is emitted for invalid — the invocation id is not
+        allocated because dispatch never begins.
       }
       -> unauthorized(reason: String) {
         The binding's precondition evaluated to false for the given context,
         or the user lacks permission to invoke the target action.
+        No pending completion is emitted — the invocation id is not allocated.
       }
       -> confirming(binding: B, message: String) {
         The binding requires confirmation before executing. The message is
         auto-generated for irreversible actions (target declares reversal: none)
         or derived from the confirmWhen expression. Caller must follow up with
-        confirm or cancel.
+        confirm or cancel. No pending completion is emitted until confirmed.
       }
 
       fixture invoke_simple {
