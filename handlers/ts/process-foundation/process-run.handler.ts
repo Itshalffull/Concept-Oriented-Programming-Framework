@@ -4,7 +4,7 @@
 // failure, or cancellation, including parent-child relationships for subprocess nesting.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, branch, complete, completeFrom, putFrom,
+  createProgram, get, find, put, branch, complete, completeFrom, putFrom, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -251,6 +251,21 @@ const _handler: FunctionalConceptHandler = {
       },
       (b) => complete(b, 'error', { message: `run ${originalRunId} not found` }),
     ) as StorageProgram<Result>;
+  },
+
+  listBySpec(input: Record<string, unknown>) {
+    const specRef = input.spec_ref as string;
+    let p = createProgram();
+    p = find(p, 'process-run', {}, '_allRuns');
+    p = mapBindings(p, (bindings) => {
+      const all = (bindings._allRuns as Array<Record<string, unknown>>) ?? [];
+      return all
+        .filter((rec) => rec.spec_ref === specRef)
+        .map((rec) => rec.id as string);
+    }, '_matchedRuns');
+    return completeFrom(p, 'ok', (bindings) => ({
+      runs: bindings._matchedRuns as string[],
+    })) as StorageProgram<Result>;
   },
 
   attachContext(input: Record<string, unknown>) {

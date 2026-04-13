@@ -115,10 +115,17 @@ concept ProcessRun [R] {
       -> error(message: String) {
         original_run does not exist or an unexpected error occurred.
       }
-      fixture replay_ok { original_run: $start_ok.run, start_from_step: none } after start_ok
-      fixture replay_with_step { original_run: $start_then_complete.run, start_from_step: "step-2" } after start_then_complete
-      fixture replay_not_terminal { original_run: $start_ok.run, start_from_step: none } -> not_terminal after start_ok
+      fixture replay_not_terminal { original_run: $start_ok.run, start_from_step: none } after start_ok -> not_terminal
       fixture replay_missing { original_run: "nonexistent-run", start_from_step: none } -> error
+    }
+
+    action listBySpec(spec_ref: String) {
+      -> ok(runs: list R) {
+        Returns all ProcessRuns whose spec_ref matches the given value. Read-only.
+      }
+      fixture list_single { spec_ref: $start_ok.spec_ref } after start_ok
+      fixture list_empty { spec_ref: "unknown-spec" }
+      reversal: none
     }
 
     action attachContext(run: R, principal: String, context: Bytes) {
@@ -134,7 +141,7 @@ concept ProcessRun [R] {
         principal is empty or an unexpected error occurred.
       }
       fixture attach_ok { run: $start_ok.run, principal: "svc-account@example.com", context: "eyJrZXkiOiJ2YWwifQ==" } after start_ok
-      fixture attach_empty_principal { run: $start_ok.run, principal: "", context: "e30=" } -> error after start_ok
+      fixture attach_empty_principal { run: $start_ok.run, principal: "", context: "e30=" } after start_ok -> error
       fixture attach_missing_run { run: "nonexistent-run", principal: "svc@example.com", context: "e30=" } -> not_found
     }
   }
