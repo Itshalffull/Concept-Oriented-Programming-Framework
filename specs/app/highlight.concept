@@ -1,0 +1,115 @@
+@version(1)
+@category("domain")
+concept Highlight [H] {
+
+  purpose {
+    Produce decoration annotations for a text span given a language,
+    dispatching to a registered provider (e.g. shiki for syntax coloring,
+    katex for LaTeX error markers). Each provider is keyed by language so
+    callers never need to know which library handles a given language.
+    Output is InlineAnnotation-shaped bytes: a serialized list of
+    { range, kind, meta } records consumed directly by renderers.
+  }
+
+  state {
+    providers: set H
+    registry {
+      providerName: H -> String
+      language: H -> String
+      config: H -> Bytes
+    }
+  }
+
+  actions {
+    action register(provider: String, language: String, config: Bytes) {
+      -> ok(id: H) {
+        Provider recorded for the given language. Subsequent highlight
+        calls for that language will be dispatched to this provider.
+      }
+      -> duplicate(provider: String, language: String) {
+        A provider is already registered for this language. Deregister
+        it first or use a different language key.
+      }
+      -> error(message: String) {
+        Registration failed because provider or language is empty, or
+        the config bytes could not be validated.
+      }
+      fixture register_shiki { provider: "shiki", language: "typescript", config: "{}" }
+      fixture register_katex { provider: "katex", language: "latex", config: "{}" }
+      fixture register_duplicate { provider: "shiki", language: "typescript", config: "{}" } after register_shiki -> duplicate
+      fixture register_empty_provider { provider: "", language: "typescript", config: "{}" } -> error
+      fixture register_empty_language { provider: "shiki", language: "", config: "{}" } -> error
+    }
+
+    action highlight(language: String, text: String) {
+      -> ok(annotations: Bytes) {
+        Provider for the given language ran successfully. Annotations is
+        a serialized list of { range: { start: Int, end: Int }, kind: String,
+        meta: String } records ready for renderer consumption.
+      }
+      -> no_provider(language: String) {
+        No provider has been registered for this language. The caller
+        should either register a provider or fall back to unstyled rendering.
+      }
+      -> error(message: String) {
+        The provider was found but failed to process the text — for example,
+        a network timeout, an internal library error, or a malformed text
+        input the provider could not handle.
+      }
+      fixture highlight_ts { language: "typescript", text: "const x = 1;" } after register_shiki
+      fixture highlight_latex { language: "latex", text: "E = mc^2" } after register_katex
+      fixture highlight_unknown { language: "cobol", text: "IDENTIFICATION DIVISION." } -> no_provider
+      fixture highlight_empty_language { language: "", text: "hello" } -> error
+    }
+
+    action listLanguages() {
+      -> ok(languages: list String) {
+        Returns the sorted list of language keys for which a provider is
+        currently registered. Empty list when no providers have been registered.
+      }
+      fixture list_none { }
+      fixture list_after_register { } after register_shiki, register_katex
+    }
+  }
+
+  example "register then highlight" {
+    after register(provider: "shiki", language: "typescript", config: b) -> ok(id: h)
+    then  highlight(language: "typescript", text: "const x = 1;") -> ok(annotations: _)
+  }
+
+  example "duplicate registration rejected" {
+    after register(provider: "shiki", language: "typescript", config: b) -> ok(id: h)
+    then  register(provider: "shiki", language: "typescript", config: b) -> duplicate(provider: _, language: _)
+  }
+
+  example "unknown language returns no_provider" {
+    after register(provider: "shiki", language: "typescript", config: b) -> ok(id: h)
+    then  highlight(language: "python", text: "x = 1") -> no_provider(language: "python")
+  }
+
+  example "listLanguages reflects registrations" {
+    after register(provider: "shiki", language: "typescript", config: b1) -> ok(id: h1)
+    and   register(provider: "katex", language: "latex", config: b2) -> ok(id: h2)
+    then  listLanguages() -> ok(languages: langs)
+  }
+
+  never "orphaned provider record" {
+    exists h in providers:
+    h.language = none
+  }
+
+  never "provider name absent" {
+    exists h in providers:
+    h.providerName = none
+  }
+
+  action register {
+    requires: provider != ""
+    ensures ok: language != none
+  }
+
+  action highlight {
+    requires: language != ""
+    ensures ok: annotations != none
+  }
+}
