@@ -17,6 +17,7 @@ import { useActiveSpace } from '../../lib/use-active-space';
 import { logoutAdminAction } from '../admin/actions';
 import { useKeyBindings } from '../../lib/useKeyBindings';
 import { useFirstRunToast } from '../../lib/useFirstRunToast';
+import { ModalStackProvider } from './widgets/ModalStackProvider';
 
 export const AppShell: React.FC<{ children: React.ReactNode; sessionUser?: string }> = ({
   children,
@@ -82,6 +83,7 @@ export const AppShell: React.FC<{ children: React.ReactNode; sessionUser?: strin
     : 'Clef Base';
 
   return (
+    <ModalStackProvider>
     <div
       className="app-shell"
       data-shell-status={shell.status}
@@ -173,6 +175,7 @@ export const AppShell: React.FC<{ children: React.ReactNode; sessionUser?: strin
       </div>
       <QuickCapture />
     </div>
+    </ModalStackProvider>
   );
 };
 
