@@ -1,0 +1,255 @@
+@version(1)
+widget math-block {
+
+  purpose {
+    Literal math block for displaying and editing LaTeX expressions within a
+    content document. Renders compiled LaTeX output using KaTeX (with MathJax
+    as a fallback) in either block display mode ($$...$$) or inline mode
+    ($...$). Because this is a literal block, all markdown shortcut and snippet
+    InputRules are disabled inside the editable pane -- only the block-scoped
+    keyboard bindings are active (Enter to confirm and render, Escape to cancel
+    edits, Tab to cycle through common LaTeX symbol shortcuts). An error
+    message part surfaces KaTeX parse failures while preserving the raw source
+    so the user can correct it. Backed by the markdown-math-block and
+    markdown-math-inline InputRules and the math-block-mapping ComponentMapping.
+  }
+
+  anatomy {
+    root:          container    { Outer wrapper; carries data-state and data-display-mode for CSS and test selectors }
+    renderedOutput: presentation { KaTeX-compiled LaTeX output; shown when not editing and no error exists }
+    editablePane:  interactive  { Raw LaTeX source textarea; active during editing state; literal block scope disables InputRules }
+    errorMessage:  container    { Error banner displayed when KaTeX compilation fails; hidden on success }
+  }
+
+  states {
+    edit {
+      idle [initial] {
+        on FOCUS           -> focused;
+        on CLICK_TO_EDIT   -> editing;
+      }
+      focused {
+        on BLUR            -> idle;
+        on ENTER           -> rendering;
+        on START_EDIT      -> editing;
+        on ESCAPE          -> idle;
+      }
+      editing {
+        on ENTER           -> rendering;
+        on ESCAPE          -> idle;
+        on BLUR            -> rendering;
+        entry [disableInputRules];
+      }
+      rendering {
+        on RENDER_SUCCESS  -> idle;
+        on RENDER_ERROR    -> error;
+        entry [compileLaTeX];
+      }
+      error {
+        on START_EDIT      -> editing;
+        on ESCAPE          -> idle;
+      }
+    }
+  }
+
+  accessibility {
+    role: group;
+    keyboard {
+      Enter      -> ENTER;
+      Escape     -> ESCAPE;
+      Tab        -> NEXT_SYMBOL;
+    }
+    focus {
+      trap: false;
+      initial: editablePane;
+      roving: false;
+      returnOnClose: editablePane;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: "math block";
+        aria-roledescription: "math block";
+      };
+      renderedOutput -> {
+        role: "img";
+        aria-label: if ?latex != "" then ?latex else "empty math expression";
+        aria-hidden: if state.edit == "editing" then "true" else "false";
+      };
+      editablePane -> {
+        role: "textbox";
+        aria-multiline: "true";
+        aria-label: "LaTeX editor";
+        aria-readonly: if state.edit == "idle" then "true" else "false";
+      };
+      errorMessage -> {
+        role: "alert";
+        aria-live: "assertive";
+        aria-label: "LaTeX error";
+      };
+    }
+  }
+
+  props {
+    blockId:     String
+    latex:       String = ""
+    displayMode: String = "block"
+    focused:     Bool   = false
+  }
+
+  connect {
+    root -> {
+      data-part:         "root";
+      data-state:        state.edit;
+      data-display-mode: ?displayMode;
+      onFocus:           send(FOCUS);
+      onBlur:            send(BLUR);
+      onClick:           send(CLICK_TO_EDIT);
+    }
+
+    renderedOutput -> {
+      data-part: "rendered-output";
+      hidden:    if state.edit == "editing" or state.edit == "error" then true else false;
+    }
+
+    editablePane -> {
+      data-part:      "editable-pane";
+      role:           "textbox";
+      aria-multiline: "true";
+      aria-label:     "LaTeX editor";
+      text:           ?latex;
+      hidden:         if state.edit == "idle" or state.edit == "rendering" then true else false;
+      onFocus:        send(FOCUS);
+      onBlur:         send(BLUR);
+      onInput:        send(START_EDIT);
+      onKeyDown-Enter: send(ENTER);
+      onKeyDown-Escape: send(ESCAPE);
+      onKeyDown-Tab:  send(NEXT_SYMBOL);
+      autofocus:      if state.edit == "editing" then true else false;
+    }
+
+    errorMessage -> {
+      data-part: "error-message";
+      hidden:    if state.edit != "error" then true else false;
+      aria-live: "assertive";
+    }
+  }
+
+  affordance {
+    serves: math-block;
+    specificity: 9;
+    when concept = "ContentNode";
+    bind {
+      latex:       latex;
+      displayMode: displayMode;
+    }
+  }
+
+  compose {
+    _latexEditor: widget("latex-editor", { initialLatex: ?latex, open: if state.edit == "editing" then true else false });
+  }
+
+  invariant {
+    example "FOCUS transitions edit machine from idle to focused": {
+      after FOCUS() -> ok
+      then state.edit = "focused"
+    }
+
+    example "ENTER from focused triggers rendering": {
+      after ENTER() -> ok
+      then state.edit = "rendering"
+    }
+
+    example "RENDER_SUCCESS from rendering returns to idle": {
+      after RENDER_SUCCESS() -> ok
+      then state.edit = "idle"
+    }
+
+    example "RENDER_ERROR from rendering enters error state": {
+      after RENDER_ERROR() -> ok
+      then state.edit = "error"
+    }
+
+    example "ESCAPE from editing returns to idle": {
+      after ESCAPE() -> ok
+      then state.edit = "idle"
+    }
+
+    example "editablePane hidden in idle state": {
+      after render() -> ok
+      then editablePane.hidden = true
+    }
+
+    example "renderedOutput hidden while editing": {
+      after render(state: "editing") -> ok
+      then renderedOutput.hidden = true
+    }
+
+    example "errorMessage visible in error state": {
+      after RENDER_ERROR() -> ok
+      then errorMessage.hidden = false
+    }
+
+    example "displayMode block sets data-display-mode on root": {
+      after render(displayMode: "block") -> ok
+      then root.dataDisplayMode = "block"
+    }
+
+    example "displayMode inline sets data-display-mode on root": {
+      after render(displayMode: "inline") -> ok
+      then root.dataDisplayMode = "inline"
+    }
+
+    example "START_EDIT from focused transitions to editing": {
+      after START_EDIT() -> ok
+      then state.edit = "editing"
+    }
+
+    example "error state allows re-entering editing via START_EDIT": {
+      after START_EDIT() -> ok
+      then state.edit = "editing"
+    }
+
+    forall "all edit states reachable from initial": {
+      given s in editStates
+      then s.reachable = true
+    }
+
+    forall "both display modes bind correctly to data-display-mode": {
+      given mode in { "block", "inline" }
+      then root.dataDisplayMode = mode
+    }
+
+    always "root data-state reflects edit FSM": {
+      root.dataState = state.edit
+    }
+
+    always "editablePane role is textbox": {
+      editablePane.role = "textbox"
+    }
+
+    always "renderedOutput role is img": {
+      renderedOutput.role = "img"
+    }
+
+    never "renderedOutput and editablePane both visible simultaneously": {
+      renderedOutput.hidden = false and editablePane.hidden = false
+    }
+
+    never "InputRules active inside editablePane": {
+      state.edit = "editing" and inputRules.active = true
+    }
+
+    never "errorMessage visible when not in error state": {
+      state.edit != "error" and errorMessage.hidden = false
+    }
+
+    action editablePane {
+      requires: state.edit = "focused"
+      ensures ok: state.edit = "editing"
+    }
+
+    "literal block scope disables all InputRule markdown shortcuts and snippet triggers inside the editablePane part";
+    "KaTeX compilation failure must populate errorMessage text and transition to error state without losing the raw latex source";
+  }
+
+}
