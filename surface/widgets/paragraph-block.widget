@@ -214,10 +214,18 @@ widget paragraph-block {
     # wiring the block editor through direct concept invocation. See
     # docs/plans/block-editor-parity-prd.md Addendum.
 
-    # Cursor stability — body MUST own its own DOM text via ref-seeded
-    # contentEditable, never via a React-reconciled child expression.
-    never "body text driven by react children": {
-      state.edit = "editing" and body.textContentDrivenByReactChildren = true
+    # Cursor stability — typing N keys MUST produce them in that order in
+    # the DOM. Observable test for the contentEditable JSX-child
+    # antipattern: reconciling a text-child expression on every keystroke
+    # resets the caret to offset 0 ("Hello" → "olleH"). The grammar
+    # extension `body.type("h") -> ok` makes this portable across React,
+    # Vue, Svelte, Playwright, and (future) WinUI/SwiftUI/Jetpack renderers.
+    example "typing preserves key order": {
+      after render(readOnly: false) -> ok
+      and body.focus() -> ok
+      and body.type("h") -> ok
+      and body.type("i") -> ok
+      then body.textContent = "hi"
     }
 
     # Enter-splits-at-caret: pressing Enter (no Shift) in an editing block

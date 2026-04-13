@@ -2606,6 +2606,63 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
             })();
             return;
           }
+          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+            // Notion/Roam-style vertical caret nav. When the caret is on the
+            // first visual line of the block and user presses ArrowUp, move
+            // to the end of the previous sibling block. Symmetric for
+            // ArrowDown on the last visual line. We approximate "first line"
+            // by rect comparison between the caret and the block element.
+            const sel = window.getSelection();
+            if (!sel || sel.rangeCount === 0) return;
+            const range = sel.getRangeAt(0);
+            if (!range.collapsed) return;
+            const caretRect = range.getBoundingClientRect();
+            const blockRect = blockContentRef.current!.getBoundingClientRect();
+            const lineHeight = parseFloat(
+              getComputedStyle(blockContentRef.current!).lineHeight || '20',
+            ) || 20;
+            const onFirstLine = caretRect.top - blockRect.top < lineHeight * 0.9;
+            const onLastLine = blockRect.bottom - caretRect.bottom < lineHeight * 0.9;
+            if (e.key === 'ArrowUp' && !onFirstLine) return;
+            if (e.key === 'ArrowDown' && !onLastLine) return;
+            e.preventDefault();
+            void (async () => {
+              try {
+                const siblingsRes = await invoke('Outline', 'children', { parent: rootNodeId });
+                if (siblingsRes.variant !== 'ok') return;
+                const siblings: string[] = (() => {
+                  try { return JSON.parse((siblingsRes.children as string) || '[]'); }
+                  catch { return []; }
+                })();
+                const myIndex = siblings.indexOf(nodeId);
+                const targetIndex = e.key === 'ArrowUp' ? myIndex - 1 : myIndex + 1;
+                if (targetIndex < 0 || targetIndex >= siblings.length) return;
+                const targetId = siblings[targetIndex];
+                const targetEl = document.querySelector<HTMLDivElement>(
+                  `[data-part="block-slot"][data-node-id="${targetId}"] [data-part="block-content"]`,
+                );
+                if (!targetEl) return;
+                targetEl.focus();
+                const s = window.getSelection();
+                if (!s) return;
+                const r = document.createRange();
+                if (e.key === 'ArrowUp') {
+                  // Place caret at end of previous block
+                  r.selectNodeContents(targetEl);
+                  r.collapse(false);
+                } else {
+                  // Place caret at start of next block
+                  r.setStart(targetEl, 0);
+                  r.collapse(true);
+                }
+                s.removeAllRanges();
+                s.addRange(r);
+              } catch (err) {
+                console.warn('[RecursiveBlockEditor] Arrow nav failed:', err);
+              }
+            })();
+            return;
+          }
           if (e.key === 'Backspace') {
             // Notion-style: Backspace at offset 0 of a non-first block merges
             // this block's content into the end of the previous sibling, then

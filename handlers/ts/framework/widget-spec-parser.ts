@@ -211,6 +211,7 @@ function tokenize(source: string): Token[] {
 
 class WidgetSpecParser {
   private pos = 0;
+  private positionalArgCounter = 0;
   private tokens: Token[];
 
   constructor(tokens: Token[]) {
@@ -1298,7 +1299,19 @@ class WidgetSpecParser {
   }
 
   private parseActionPattern(): ActionPattern {
-    const actionName = this.advance().value;
+    // Accept either `EVENT_NAME(args)` or `part.method(args)`. The dotted
+    // form is a platform-agnostic canonical method invocation on a named
+    // anatomy part (e.g. `body.type("h")`, `trigger.click()`). Framework-
+    // specific renderers translate these to native test primitives
+    // (React: userEvent.type; Playwright: pressSequentially; SwiftUI:
+    // XCUIElement.typeText; etc.).
+    let actionName = this.advance().value;
+    if (this.match('DOT')) {
+      this.advance();
+      const method = this.advance().value;
+      actionName = `${actionName}.${method}`;
+    }
+    this.positionalArgCounter = 0;
     this.expect('LPAREN');
     const inputArgs = this.parseArgPatterns();
     this.expect('RPAREN');
@@ -1327,6 +1340,20 @@ class WidgetSpecParser {
   }
 
   private parseArgPattern(): ArgPattern {
+    // Accept either `name: value` (named) or a bare literal (positional).
+    // Positional args are synthesized into names "_0", "_1", ... so the
+    // AST stays uniform. Test renderers interpret dotted-method calls
+    // like `body.type("h")` by reading _0 as the first positional arg.
+    const tok = this.peek();
+    const isPositional =
+      tok.type === 'STRING_LIT' ||
+      tok.type === 'INT_LIT' ||
+      tok.type === 'BOOL_LIT' ||
+      (tok.type === 'KEYWORD' && tok.value === 'none');
+    if (isPositional) {
+      const value = this.parseArgPatternValue();
+      return { name: `_${this.positionalArgCounter++}`, value };
+    }
     const name = this.advance().value;
     this.expect('COLON');
     const value = this.parseArgPatternValue();

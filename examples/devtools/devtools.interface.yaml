@@ -4735,10 +4735,29 @@ workflows:
 
           ```
           invariant {
-            # example: concrete before/after scenario
+            # example: concrete before/after scenario. Action patterns
+            # accept either a plain event name or a dotted part.method form:
+            #   after EVENT_NAME(arg: value) -> variant_tag
+            #   after part.method("positional") -> variant_tag
+            # Positional args (bare literals, no `name:`) are synthesized into
+            # _0, _1, ... slots so renderers can interpret them as positional.
+            # Canonical methods: type, focus, blur, click, press, selectRange.
+            # Each framework renderer translates them: React →
+            # userEvent.type/focus/click; Playwright → pressSequentially/focus;
+            # Vue → trigger("keydown"); Svelte → userEvent.type; SwiftUI →
+            # XCUIElement.typeText; WinUI → UIAutomation.SendKeys.
             example "name of the scenario" {
               after EVENT_NAME() -> variant_tag
               then OTHER_EVENT() -> variant_tag
+            }
+
+            # Example using dotted method + positional literals:
+            example "typing preserves key order" {
+              after render(readOnly: false) -> ok
+              and body.focus() -> ok
+              and body.type("h") -> ok
+              and body.type("i") -> ok
+              then body.textContent = "hi"
             }
 
             # always: temporal invariant with optional forall quantifier
