@@ -2,8 +2,9 @@
 # toolbar commands (MAG-756).
 #
 # These blocks were previously handled by inline legacy components inside
-# BlockEditor.tsx. This file registers their toolbar bindings so the
-# ComponentMapping + EditSurface layer can resolve them declaratively.
+# the monolith BlockEditor (removed in PP-delete-legacy). This file registers
+# their toolbar bindings so the ComponentMapping + EditSurface layer can
+# resolve them declaratively via RecursiveBlockEditor.
 #
 # API gap notes:
 #   - callout-variant-picker uses Schema/applyTo as a placeholder for the

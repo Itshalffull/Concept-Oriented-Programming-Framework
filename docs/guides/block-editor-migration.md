@@ -2,13 +2,17 @@
 
 **Audience:** Clef Base contributors adding new block types, slash commands, or markdown shortcuts, or building new compilable derived editors.
 
-**Status:** Phase 1–5 in flight. Phase 6 (legacy deletion) is blocked pending gap closure — see §5.
+**Status: Monolith deleted (2026-04-13).** All 25 Block Editor Parity Pass cards (MAG-767 waves 1–3) shipped. `BlockEditor.tsx` is gone. `RecursiveBlockEditor` is the sole editor. The §5 gaps listed below are resolved — see individual gap notes for the closing card reference.
 
 ---
 
 ## 1. Overview
 
 The block editor has been refactored from a ~2,900-line monolith (`BlockEditor.tsx`) into a recursive `ViewShell` over content primitives. Each block is a `ViewShell` with `PresentationSpec = "blocks"` over the children of a `ContentNode`, resolved by `ComponentMapping` to a widget keyed on `(schema, display_mode)`. Blocks are content. There is no separate block-type registry — there is only the content pool.
+
+### Legacy feature flag (removed)
+
+The `preferBlockEditorFlavor` user preference key and `clef-base/config/recursive-editor-allowlist.yaml` were deleted in PP-delete-legacy (2026-04-13). `RecursiveBlockEditor` now mounts unconditionally for all schemas. The per-schema allowlist and opt-back toggle UI are gone.
 
 ### The five planes
 
@@ -158,17 +162,9 @@ entries:
 
 The four `compile_*` fields are only set for compilable schemas — see §6. Set them to `null` for ordinary block types.
 
-### Step 5: Add to the allowlist
+### Step 5: (Removed) — no allowlist required
 
-Open `clef-base/config/recursive-editor-allowlist.yaml` and add the schema name under the appropriate comment group:
-
-```yaml
-allowlist:
-  # ... existing entries ...
-  - my-block
-```
-
-Both conditions in §1 must hold for `RecursiveBlockEditor` to mount for a document with this schema as its primary schema. If the schema is a block type embedded inside another document (not a page-level schema), the allowlist entry is not needed — the block is resolved by `ComponentMapping` regardless.
+The `clef-base/config/recursive-editor-allowlist.yaml` file was deleted in PP-delete-legacy. `RecursiveBlockEditor` mounts unconditionally for all schemas. No allowlist step is needed for new block types — `ComponentMapping` resolution is the only gate.
 
 ### Step 6: Restart the kernel
 
@@ -260,11 +256,11 @@ If `action_ref` points to an ActionBinding that does not yet exist, create it fi
 
 ---
 
-## 5. Known Gaps — Do Not Delete `BlockEditor.tsx` Until Closed
+## 5. Known Gaps — All Resolved (PP-delete-legacy, 2026-04-13)
 
-The audit at commit `f60b0540` (MAG-757) identified the following gaps between the recursive editor and the legacy monolith. Until each gap is closed and verified, `BlockEditor.tsx` must remain as the fallback. The legacy editor provides correct behavior for these paths; the recursive editor degrades gracefully (warning logged, action is a no-op) rather than crashing.
+The audit at commit `f60b0540` (MAG-757) identified the following gaps between the recursive editor and the legacy monolith. All gaps were closed across PP waves 1–3 (MAG-767). `BlockEditor.tsx` has been deleted. The notes below are preserved for historical reference and post-mortem review.
 
-### Gap 1: InlineMark concept wiring — bold/italic/code are no-ops
+### Gap 1: InlineMark concept wiring — bold/italic/code are no-ops [RESOLVED: PP1.03]
 
 **What fails:** Ctrl+B / Ctrl+I / Ctrl+E (code) in `RecursiveBlockEditor` log a warning and do nothing. Bold, italic, and code mark toggles in the inline toolbar are also inert.
 
@@ -278,7 +274,7 @@ The audit at commit `f60b0540` (MAG-757) identified the following gaps between t
 
 ---
 
-### Gap 2: ContentNode/clone — persona-duplicate and meeting-notes-duplicate are broken
+### Gap 2: ContentNode/clone — persona-duplicate and meeting-notes-duplicate are broken [RESOLVED: PP3.03]
 
 **What fails:** "Duplicate page" actions for `agent-persona` and `meeting-notes` documents opened in `RecursiveBlockEditor` do not clone the document.
 
@@ -292,7 +288,7 @@ The audit at commit `f60b0540` (MAG-757) identified the following gaps between t
 
 ---
 
-### Gap 3: MediaAsset context threading — paste/drop image insert is broken
+### Gap 3: MediaAsset context threading — paste/drop image insert is broken [RESOLVED: PP7.01]
 
 **What fails:** Pasting an image from the clipboard or dropping a file onto `RecursiveBlockEditor` does not insert an image block. The paste and drop InputRules fire correctly (dispatching to `media-upload-from-clipboard` and `media-upload-from-drop` ActionBindings), but `MediaAsset/createMedia` receives `focusedDocId: null` and fails to associate the new media asset with the current document.
 
@@ -306,7 +302,7 @@ The audit at commit `f60b0540` (MAG-757) identified the following gaps between t
 
 ---
 
-### Gap 4: ViewShell/refresh not declared
+### Gap 4: ViewShell/refresh not declared [RESOLVED: PP7.03]
 
 **What fails:** The `view-embed-block` component (MAG-731) issues a `ViewShell/refresh` invocation after an inline edit action completes. The `ViewShell` concept does not declare a `refresh` action, so the invocation resolves to `notfound` and the embedded view does not re-render.
 
@@ -318,7 +314,7 @@ The audit at commit `f60b0540` (MAG-757) identified the following gaps between t
 
 ---
 
-### Gap 5: ProcessRun/listBySpec not declared
+### Gap 5: ProcessRun/listBySpec not declared [RESOLVED: PP7.04]
 
 **What fails:** The `consumers_panel_ref` widget for the `workflow` compilable schema (part of `WorkflowEditor.derived`) attempts to list active ProcessRuns for a given ProcessSpec page via `ProcessRun/listBySpec`. The action is not declared on the `ProcessRun` concept.
 
@@ -330,7 +326,7 @@ The audit at commit `f60b0540` (MAG-757) identified the following gaps between t
 
 ---
 
-### Gap 6: AgentSession/cancel not declared
+### Gap 6: AgentSession/cancel not declared [RESOLVED: PP7.05/06]
 
 **What fails:** The `ai-chat-panel.widget` (MAG-744, commit `4173ba71`) exposes a "Stop" button that dispatches `AgentSession/cancel`. The action is not declared on the `AgentSession` concept.
 

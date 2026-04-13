@@ -3,13 +3,14 @@
 /**
  * ContentBodyDisplay — block editor display type for the unstructured zone.
  *
- * Wraps the BlockEditor component, handling content parsing (legacy JSON/text
- * → blocks) and save-back (blocks → content string for ContentNode/update).
+ * Mounts RecursiveBlockEditor for the entity identified by data[0].node.
+ * Replaces the legacy BlockEditor wrapper that was removed when the
+ * BlockEditor monolith was deleted (PP-delete-legacy).
  */
 
-import React, { useCallback, useMemo } from 'react';
+import React from 'react';
 import type { FieldConfig } from './TableDisplay';
-import { BlockEditor, contentToBlocks, blocksToContent, type Block } from './BlockEditor';
+import { RecursiveBlockEditor } from './RecursiveBlockEditor';
 
 interface ContentBodyDisplayProps {
   data: Record<string, unknown>[];
@@ -20,33 +21,18 @@ interface ContentBodyDisplayProps {
   context?: Record<string, string>;
 }
 
-export const ContentBodyDisplay: React.FC<ContentBodyDisplayProps> = ({ data, onFieldSave, context }) => {
+export const ContentBodyDisplay: React.FC<ContentBodyDisplayProps> = ({ data, onFieldSave }) => {
   const entity = data[0];
   if (!entity) return null;
 
-  const content = entity.content;
-
-  const blocks = useMemo(() => contentToBlocks(content), [content]);
-
-  const handleChange = useCallback((newBlocks: Block[]) => {
-    if (!onFieldSave) return;
-    onFieldSave('content', blocksToContent(newBlocks));
-  }, [onFieldSave]);
-
-  // Build context from entity data if not provided
-  const editorContext = useMemo(() => {
-    if (context) return context;
-    const entityId = entity.node as string | undefined;
-    if (entityId) return { entityId };
-    return undefined;
-  }, [context, entity.node]);
+  const rootNodeId = entity.node as string | undefined;
+  if (!rootNodeId) return null;
 
   return (
-    <BlockEditor
-      blocks={blocks}
-      onChange={handleChange}
-      readOnly={!onFieldSave}
-      context={editorContext}
+    <RecursiveBlockEditor
+      rootNodeId={rootNodeId}
+      editorFlavor="markdown"
+      canEdit={!!onFieldSave}
     />
   );
 };

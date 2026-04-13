@@ -6,7 +6,7 @@
  * the tree while preserving immutability.
  */
 
-import type { Block, BlockType } from '../app/components/widgets/BlockEditor';
+import type { Block, BlockType } from './block-serialization';
 
 // ─── Types ────────────────────────────────────────────────────────────────
 
