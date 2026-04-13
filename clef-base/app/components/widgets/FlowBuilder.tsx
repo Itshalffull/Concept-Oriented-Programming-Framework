@@ -71,6 +71,8 @@ export interface FlowBuilderProps {
   initialView?: ViewState;
   /** Controlled: caller can observe selection changes */
   onStepSelected?: (stepId: string | null) => void;
+  mode?: 'create' | 'edit';
+  context?: { processSpecId?: string; steps?: StepRecord[] } | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -1118,8 +1120,11 @@ export const FlowBuilder: React.FC<FlowBuilderProps> = ({
   processSpecId,
   initialView = 'steps',
   onStepSelected,
+  mode = 'edit',
+  context,
 }) => {
   const invoke = useKernelInvoke();
+  const isCreate = mode === 'create';
 
   // ---- FSM state ----
   const [interactionState, setInteractionState] = useState<InteractionState>('idle');
@@ -1127,13 +1132,18 @@ export const FlowBuilder: React.FC<FlowBuilderProps> = ({
 
   // ---- Data state (kernel-sourced) ----
   const [selectedStepId, setSelectedStepId] = useState<string | null>(null);
-  const [steps, setSteps] = useState<StepRecord[]>([]);
+  // In create mode: start with a single "start" trigger node and no edges
+  const [steps, setSteps] = useState<StepRecord[]>(
+    isCreate
+      ? [{ stepId: 'start', stepKind: 'trigger', stepLabel: 'Start', stepIndex: 0, isCollapsible: false, isCollapsed: false }]
+      : [],
+  );
   const [collapsedBranches, setCollapsedBranches] = useState<string[]>([]);
   const [dragPayload, setDragPayload] = useState<{ nodeType: string } | null>(null);
 
-  // ---- Load steps from kernel ----
+  // ---- Load steps from kernel (skipped in create mode — starts with single "start" node) ----
   useEffect(() => {
-    if (!processSpecId) return;
+    if (isCreate || !processSpecId) return;
     let cancelled = false;
 
     invoke('ProcessSpec', 'getSteps', { spec: processSpecId })
@@ -1154,7 +1164,7 @@ export const FlowBuilder: React.FC<FlowBuilderProps> = ({
       .catch(() => { /* non-fatal — steps stay empty */ });
 
     return () => { cancelled = true; };
-  }, [processSpecId, invoke]);
+  }, [processSpecId, invoke, isCreate]);
 
   // ---- FSM transitions ----
 
@@ -1442,6 +1452,11 @@ export const FlowBuilder: React.FC<FlowBuilderProps> = ({
           background: 'var(--palette-surface)',
           flexShrink: 0,
         }}>
+          {isCreate && (
+            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--palette-on-surface)', marginRight: 'var(--spacing-xs)' }}>
+              Create Flow
+            </span>
+          )}
           {/* View toggle — anatomy part: viewToggle */}
           <button
             data-part="view-toggle"
@@ -1483,20 +1498,32 @@ export const FlowBuilder: React.FC<FlowBuilderProps> = ({
           <div style={{ flex: 1 }} />
 
           {/* Save / Publish / Cancel — ActionBinding-mediated */}
-          <ActionButton
-            binding="process-spec-save"
-            context={{ spec: processSpecId }}
-            label="Save"
-            buttonVariant="default"
-            onSuccess={() => {/* saved */}}
-          />
-          <ActionButton
-            binding="process-spec-publish"
-            context={{ spec: processSpecId }}
-            label="Publish"
-            buttonVariant="primary"
-            onSuccess={() => {/* published */}}
-          />
+          {isCreate ? (
+            <ActionButton
+              binding="process-spec-create"
+              context={{ spec: processSpecId, steps }}
+              label="Create Flow"
+              buttonVariant="primary"
+              onSuccess={() => {/* created */}}
+            />
+          ) : (
+            <>
+              <ActionButton
+                binding="process-spec-save"
+                context={{ spec: processSpecId }}
+                label="Save"
+                buttonVariant="default"
+                onSuccess={() => {/* saved */}}
+              />
+              <ActionButton
+                binding="process-spec-publish"
+                context={{ spec: processSpecId }}
+                label="Publish"
+                buttonVariant="primary"
+                onSuccess={() => {/* published */}}
+              />
+            </>
+          )}
           <ActionButton
             binding="process-spec-cancel"
             context={{ spec: processSpecId }}

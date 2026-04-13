@@ -28,6 +28,8 @@ import { FIELD_TYPE_REGISTRY } from './FieldWidget';
 export interface SchemaFieldsEditorProps {
   schemaId: string;
   onFieldSelect?: (fieldId: string) => void;
+  mode?: 'create' | 'edit';
+  context?: { schemaId?: string; fields?: FieldRow[] } | null;
 }
 
 // ─── Local types ────────────────────────────────────────────────────────────────
@@ -295,15 +297,21 @@ const FieldTypePicker: React.FC<TypePickerProps> = ({ anchorPos, onSelect, onClo
 export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
   schemaId,
   onFieldSelect,
+  mode = 'edit',
+  context,
 }) => {
   const invoke = useKernelInvoke();
+  const isCreate = mode === 'create';
 
-  // Load fields from kernel
+  // Load fields from kernel (skipped in create mode — field list starts empty)
   const { data: rawFields, loading, error, refetch } = useConceptQuery<FieldRow[]>(
-    'FieldDefinition', 'list', { schema: schemaId },
+    isCreate ? '__none__' : 'FieldDefinition',
+    isCreate ? '__none__' : 'list',
+    isCreate ? {} : { schema: schemaId },
   );
 
-  const [fields, setFields] = useState<FieldRow[]>([]);
+  // In create mode, start with an empty field list
+  const [fields, setFields] = useState<FieldRow[]>(isCreate ? [] : []);
   const [typePickerOpen, setTypePickerOpen] = useState(false);
   const [typePickerPos, setTypePickerPos] = useState({ top: 0, left: 0 });
   const [deleteWarning, setDeleteWarning] = useState<string | null>(null);
@@ -447,7 +455,7 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
-  if (loading) {
+  if (!isCreate && loading) {
     return (
       <div style={{ padding: 'var(--spacing-md)', color: 'var(--palette-on-surface-variant)', fontSize: 'var(--typography-body-sm-size)' }}>
         Loading fields...
@@ -455,7 +463,7 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
     );
   }
 
-  if (error) {
+  if (!isCreate && error) {
     return (
       <div style={{ padding: 'var(--spacing-md)', color: 'var(--palette-error)', fontSize: 'var(--typography-body-sm-size)' }}>
         Failed to load fields: {error}
@@ -472,7 +480,7 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
           fontWeight: 'var(--typography-label-md-weight)' as React.CSSProperties['fontWeight'],
           color: 'var(--palette-on-surface)',
         }}>
-          Fields
+          {isCreate ? 'New Schema Fields' : 'Fields'}
         </span>
         <span style={{
           fontSize: 'var(--typography-body-sm-size)',

@@ -64,6 +64,8 @@ export interface UserSyncEditorProps {
   onActivated?: (syncId: string) => void;
   /** Called after successful suspend */
   onSuspended?: (syncId: string) => void;
+  mode?: 'create' | 'edit';
+  context?: { syncId?: string; name?: string; source?: string; status?: string; author?: string } | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -102,7 +104,10 @@ export const UserSyncEditor: React.FC<UserSyncEditorProps> = ({
   onSaved,
   onActivated,
   onSuspended,
+  mode = 'edit',
+  context,
 }) => {
+  const isCreate = mode === 'create';
   const invoke = useKernelInvoke();
 
   // ------- form fields --------
@@ -358,7 +363,7 @@ export const UserSyncEditor: React.FC<UserSyncEditorProps> = ({
         }}
       >
         <h2 style={{ margin: 0, fontSize: 'var(--typography-heading-sm-size, 1rem)', fontWeight: 600 }}>
-          {syncId ? 'Edit User Sync' : 'New User Sync'}
+          {isCreate ? 'Create Sync' : syncId ? 'Edit User Sync' : 'New User Sync'}
         </h2>
         <span data-part="statusBadge">
           <Badge variant={statusBadgeVariant(displayStatus)}>{displayStatus}</Badge>
@@ -562,6 +567,19 @@ export const UserSyncEditor: React.FC<UserSyncEditorProps> = ({
           alignItems: 'center',
         }}
       >
+        {/* Create mode: primary save button dispatches define to create the entity */}
+        {isCreate && (
+          <ActionButton
+            binding="user-sync-define"
+            context={{ name, sourceText, author }}
+            label="Create Sync"
+            buttonVariant="primary"
+            disabled={!name.trim() || !sourceText.trim()}
+            onSuccess={() => handleDefine().then(() => { /* created */ })}
+            onError={() => { /* handled inside handleDefine */ }}
+          />
+        )}
+
         {/* Validate — ActionButton wired to user-sync-validate seed */}
         <ActionButton
           binding="user-sync-validate"
@@ -573,28 +591,33 @@ export const UserSyncEditor: React.FC<UserSyncEditorProps> = ({
           onError={() => { /* handled inside handleValidate */ }}
         />
 
-        {/* Activate — ActionButton wired to user-sync-activate seed */}
-        <ActionButton
-          binding="user-sync-activate"
-          context={{ syncId }}
-          label={fsmState === 'activating' ? 'Activating…' : 'Activate (Ctrl+Enter)'}
-          buttonVariant="primary"
-          disabled={activateDisabled}
-          onSuccess={() => handleActivate()}
-          onError={() => { /* no-op */ }}
-        />
+        {/* Activate and Suspend — only shown in edit mode after a sync exists */}
+        {!isCreate && (
+          <>
+            {/* Activate — ActionButton wired to user-sync-activate seed */}
+            <ActionButton
+              binding="user-sync-activate"
+              context={{ syncId }}
+              label={fsmState === 'activating' ? 'Activating…' : 'Activate (Ctrl+Enter)'}
+              buttonVariant="primary"
+              disabled={activateDisabled}
+              onSuccess={() => handleActivate()}
+              onError={() => { /* no-op */ }}
+            />
 
-        {/* Suspend — only shown when active */}
-        {showSuspendButton && (
-          <ActionButton
-            binding="user-sync-suspend"
-            context={{ syncId }}
-            label={fsmState === 'suspending' ? 'Suspending…' : 'Suspend'}
-            buttonVariant="destructive"
-            disabled={fsmState === 'suspending'}
-            onSuccess={() => handleSuspend()}
-            onError={() => { /* no-op */ }}
-          />
+            {/* Suspend — only shown when active */}
+            {showSuspendButton && (
+              <ActionButton
+                binding="user-sync-suspend"
+                context={{ syncId }}
+                label={fsmState === 'suspending' ? 'Suspending…' : 'Suspend'}
+                buttonVariant="destructive"
+                disabled={fsmState === 'suspending'}
+                onSuccess={() => handleSuspend()}
+                onError={() => { /* no-op */ }}
+              />
+            )}
+          </>
         )}
 
         {/* Keyboard hint */}

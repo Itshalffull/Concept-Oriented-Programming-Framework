@@ -103,6 +103,8 @@ interface ControlsConfig {
 
 interface ViewEditorProps {
   viewId: string;
+  mode?: 'create' | 'edit';
+  context?: ViewConfig | null;
 }
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -944,15 +946,21 @@ const ControlsConfigurator: React.FC<{
 
 // ── Main ViewEditor ──────────────────────────────────────────────────────────
 
-export const ViewEditor: React.FC<ViewEditorProps> = ({ viewId }) => {
+export const ViewEditor: React.FC<ViewEditorProps> = ({ viewId, mode = 'edit', context }) => {
   const invoke = useKernelInvoke();
   const { navigateToHref } = useNavigator();
 
-  // Load the current view config
-  const { data: viewConfig, loading, error, refetch } =
-    useConceptQuery<ViewConfig>('View', 'get', { view: viewId });
+  const isCreate = mode === 'create';
 
-  // Editor state — initialized from loaded config
+  // Load the current view config (skipped in create mode — no entity to load yet)
+  const { data: viewConfig, loading, error, refetch } =
+    useConceptQuery<ViewConfig>(
+      isCreate ? '__none__' : 'View',
+      isCreate ? '__none__' : 'get',
+      isCreate ? {} : { view: viewId },
+    );
+
+  // Editor state — empty defaults for create mode, loaded from config for edit mode
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [dataSource, setDataSource] = useState<DataSourceConfig>({ concept: '', action: 'list' });
@@ -962,7 +970,7 @@ export const ViewEditor: React.FC<ViewEditorProps> = ({ viewId }) => {
   const [sorts, setSorts] = useState<SortConfig[]>([]);
   const [groups, setGroups] = useState('');
   const [controls, setControls] = useState<ControlsConfig>({});
-  const [initialized, setInitialized] = useState(false);
+  const [initialized, setInitialized] = useState(isCreate); // create mode is pre-initialized with empty defaults
 
   // Save state
   const [saving, setSaving] = useState(false);
@@ -1027,18 +1035,20 @@ export const ViewEditor: React.FC<ViewEditorProps> = ({ viewId }) => {
     );
   }, [viewConfig, initialized, buildConfig]);
 
-  // Save handler
+  // Save handler — create path when mode === 'create', update path otherwise
   const handleSave = useCallback(async () => {
     setSaving(true);
     setSaveError(null);
     setSaveSuccess(false);
     try {
       const config = buildConfig();
-      const result = await invoke('View', 'update', config);
+      const result = isCreate
+        ? await invoke('View', 'create', config)
+        : await invoke('View', 'update', config);
       if (result.variant === 'ok') {
         setSaveSuccess(true);
         setPreviewKey((k) => k + 1);
-        refetch();
+        if (!isCreate) refetch();
         setTimeout(() => setSaveSuccess(false), 2000);
       } else {
         setSaveError(result.message as string ?? `Save failed: ${result.variant}`);
@@ -1048,10 +1058,10 @@ export const ViewEditor: React.FC<ViewEditorProps> = ({ viewId }) => {
     } finally {
       setSaving(false);
     }
-  }, [buildConfig, invoke, refetch]);
+  }, [buildConfig, invoke, refetch, isCreate]);
 
-  // Loading state
-  if (loading && !viewConfig) {
+  // Loading state (only in edit mode — create mode has no entity to load)
+  if (!isCreate && loading && !viewConfig) {
     return (
       <div>
         <div className="page-header"><h1>Loading view...</h1></div>
@@ -1060,7 +1070,7 @@ export const ViewEditor: React.FC<ViewEditorProps> = ({ viewId }) => {
     );
   }
 
-  if (error || !viewConfig) {
+  if (!isCreate && (error || !viewConfig)) {
     return (
       <div>
         <div className="page-header">
@@ -1084,8 +1094,8 @@ export const ViewEditor: React.FC<ViewEditorProps> = ({ viewId }) => {
           <button data-part="button" data-variant="outlined" onClick={() => navigateToHref('/view-builder')}>
             Back
           </button>
-          <h1 style={{ margin: 0 }}>Edit View</h1>
-          <Badge variant="info">{viewId}</Badge>
+          <h1 style={{ margin: 0 }}>{isCreate ? 'Create View' : 'Edit View'}</h1>
+          {!isCreate && <Badge variant="info">{viewId}</Badge>}
           {isDirty && <Badge variant="warning">Unsaved</Badge>}
         </div>
         <div style={{ display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'center' }}>
@@ -1102,7 +1112,7 @@ export const ViewEditor: React.FC<ViewEditorProps> = ({ viewId }) => {
             onClick={handleSave}
             disabled={saving || !isDirty}
           >
-            {saving ? 'Saving...' : saveSuccess ? 'Saved' : 'Save'}
+            {saving ? 'Saving...' : saveSuccess ? 'Saved' : isCreate ? 'Create View' : 'Save'}
           </button>
         </div>
       </div>

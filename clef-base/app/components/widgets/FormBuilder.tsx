@@ -38,6 +38,8 @@ export interface FormBuilderProps {
   schemaId: string;
   /** If editing an existing FormSpec by name, or "default" for new. */
   formName?: string;
+  mode?: 'create' | 'edit';
+  context?: { schemaId?: string; formName?: string; spec?: FormSpec } | null;
 }
 
 type SelectionTarget =
@@ -876,15 +878,29 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
 export const FormBuilder: React.FC<FormBuilderProps> = ({
   schemaId,
   formName = 'default',
+  mode = 'edit',
+  context,
 }) => {
   const invoke = useKernelInvoke();
+  const isCreate = mode === 'create';
 
   // ── Loading ──
-  const [formSpec, setFormSpec] = useState<FormSpec | null>(null);
+  const [formSpec, setFormSpec] = useState<FormSpec | null>(
+    // In create mode, start with an empty form layout (single default section)
+    isCreate
+      ? {
+          name: formName,
+          schemaId,
+          mode: 'create',
+          groups: [{ id: 'section-1', label: 'Details', type: 'section', fieldIds: [] }],
+          steps: [],
+        }
+      : null,
+  );
   const [fieldDefs, setFieldDefs] = useState<FieldDefinition[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!isCreate);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [initialized, setInitialized] = useState(false);
+  const [initialized, setInitialized] = useState(isCreate); // create mode skips the load step
 
   // ── UI state ──
   const [selection, setSelection] = useState<SelectionTarget>(null);
@@ -898,8 +914,25 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({
 
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // ── Load ──
+  // ── Load ── (skipped in create mode — defaults are pre-set in useState)
   useEffect(() => {
+    if (isCreate) {
+      // In create mode, still load the field definitions for the palette
+      let cancelled = false;
+      invoke('FieldDefinition', 'list', { schemaId }).then((defsResult) => {
+        if (cancelled) return;
+        const defs: FieldDefinition[] =
+          defsResult.variant === 'ok'
+            ? (typeof defsResult.items === 'string'
+                ? (JSON.parse(defsResult.items) as FieldDefinition[])
+                : (defsResult.items as FieldDefinition[]))
+            : [];
+        defs.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+        setFieldDefs(defs);
+      }).catch(() => { /* non-fatal */ });
+      return () => { cancelled = true; };
+    }
+
     let cancelled = false;
 
     async function load() {
@@ -943,7 +976,7 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({
 
     load();
     return () => { cancelled = true; };
-  }, [schemaId, formName, invoke]);
+  }, [schemaId, formName, invoke, isCreate]);
 
   // ── Derived ──
   const fieldDefMap = useMemo(
@@ -966,11 +999,9 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({
       setSaving(true);
       setSaveError(null);
       try {
-        const result = await invoke('FormSpec', 'update', {
-          schemaId,
-          name: formName,
-          spec,
-        });
+        const result = isCreate
+          ? await invoke('FormSpec', 'create', { schemaId, name: formName, spec })
+          : await invoke('FormSpec', 'update', { schemaId, name: formName, spec });
         if (result.variant !== 'ok') {
           setSaveError((result.message as string | undefined) ?? 'Save failed');
         } else {
@@ -982,7 +1013,7 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({
         setSaving(false);
       }
     }, 1000);
-  }, [invoke, schemaId, formName]);
+  }, [invoke, schemaId, formName, isCreate]);
 
   const updateFormSpec = useCallback((updater: (prev: FormSpec) => FormSpec) => {
     setFormSpec((prev) => {
@@ -1172,18 +1203,16 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({
     setDragSubject({ kind: 'canvas-field', fieldId, sourceGroupId: groupId });
   }, []);
 
-  // ── Save button ──
+  // ── Save button — create path when mode === 'create', update path otherwise ──
   const handleSave = useCallback(async () => {
     if (!formSpec) return;
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     setSaving(true);
     setSaveError(null);
     try {
-      const result = await invoke('FormSpec', 'update', {
-        schemaId,
-        name: formName,
-        spec: formSpec,
-      });
+      const result = isCreate
+        ? await invoke('FormSpec', 'create', { schemaId, name: formName, spec: formSpec })
+        : await invoke('FormSpec', 'update', { schemaId, name: formName, spec: formSpec });
       if (result.variant !== 'ok') {
         setSaveError((result.message as string | undefined) ?? 'Save failed');
       } else {
@@ -1194,7 +1223,7 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({
     } finally {
       setSaving(false);
     }
-  }, [formSpec, invoke, schemaId, formName]);
+  }, [formSpec, invoke, schemaId, formName, isCreate]);
 
   // ── Render: loading ──
   if (loading) {
@@ -1296,7 +1325,7 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({
         data-part="toolbar"
       >
         <span style={{ fontWeight: 'var(--typography-label-md-weight)', color: 'var(--palette-on-surface)' }}>
-          Form Builder
+          {isCreate ? 'Create Form' : 'Form Builder'}
         </span>
         <span style={{ color: 'var(--palette-on-surface-variant)', fontSize: 'var(--typography-label-sm-size)' }}>
           {schemaId} / {formName}
@@ -1361,7 +1390,7 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({
           disabled={saving}
           data-part="save-button"
         >
-          {saving ? 'Saving...' : 'Save'}
+          {saving ? 'Saving...' : isCreate ? 'Create Form' : 'Save'}
         </button>
 
         {lastSaved && !saving && (
