@@ -1,0 +1,126 @@
+# KeyBinding seeds — app-shell scope bindings (KB-16).
+#
+# PRD:  docs/plans/keybinding-prd.md Phase H
+# Card: KB-16
+#
+# Registers keyboard shortcuts for the root "app" scope and the
+# "app.modal" scope. These bindings replace the hardcoded onKeyDown
+# handlers in AppShell and ModalStackProvider with the unified
+# KeyBinding dispatcher.
+#
+# Scope hierarchy:
+#   app            — root; matches any focused element unless a narrower
+#                    scope is set on an ancestor element
+#   app.modal      — active when focus is inside a modal layer that carries
+#                    data-keybinding-scope="app.modal.<name>". Because scope
+#                    resolution walks upward and stops at the first matching
+#                    attribute, modal bindings win over app bindings when a
+#                    modal is open.
+#
+# ActionBinding companions:
+#   command-palette-open  — already in ActionBinding.command-palette.seeds.yaml
+#   keyboard-help-open    — already in ActionBinding.keyboard-help.seeds.yaml
+#   close-modal           — new, in ActionBinding.app-shell.seeds.yaml
+#   submit-modal          — new, in ActionBinding.app-shell.seeds.yaml
+#   quick-capture-open    — new, in ActionBinding.app-shell.seeds.yaml
+
+concept: KeyBinding
+action: register
+entries:
+  # ------------------------------------------------------------------
+  # Cmd+K — open command palette
+  # ------------------------------------------------------------------
+  - binding: kb-app-cmd-k
+    label: "Open Command Palette"
+    description: "Opens the command palette modal for navigation and commands"
+    category: "Navigation"
+    scope: "app"
+    priority: 0
+    chord: '[{"mod":["mod"],"key":"k","code":"KeyK"}]'
+    phase: "capture"
+    onlyOutsideTextInput: false
+    overridesBrowser: false
+    actionBinding: "command-palette-open"
+    params: ""
+
+  # ------------------------------------------------------------------
+  # Cmd+/ — open keyboard help (primary)
+  # ------------------------------------------------------------------
+  - binding: kb-app-cmd-slash
+    label: "Keyboard Shortcuts Help"
+    description: "Opens the keyboard shortcuts cheat-sheet overlay (Cmd+/)"
+    category: "Help"
+    scope: "app"
+    priority: 0
+    chord: '[{"mod":["mod"],"key":"/","code":"Slash"}]'
+    phase: "capture"
+    onlyOutsideTextInput: false
+    overridesBrowser: false
+    actionBinding: "keyboard-help-open"
+    params: ""
+
+  # ------------------------------------------------------------------
+  # ? (Shift+/) — open keyboard help (alternate, only outside text input)
+  # ------------------------------------------------------------------
+  - binding: kb-app-cmd-question
+    label: "Keyboard Shortcuts Help (?)"
+    description: "Opens the keyboard shortcuts cheat-sheet overlay (Shift+/)"
+    category: "Help"
+    scope: "app"
+    priority: 0
+    chord: '[{"mod":["shift"],"key":"?","code":"Slash"}]'
+    phase: "capture"
+    onlyOutsideTextInput: true
+    overridesBrowser: false
+    actionBinding: "keyboard-help-open"
+    params: ""
+
+  # ------------------------------------------------------------------
+  # Escape — close top modal
+  # High priority (100) and capture phase so it wins over any content
+  # inside the modal.
+  # ------------------------------------------------------------------
+  - binding: kb-modal-esc
+    label: "Close Modal"
+    description: "Dismisses the top-most modal overlay (Escape)"
+    category: "Navigation"
+    scope: "app.modal"
+    priority: 100
+    chord: '[{"mod":[],"key":"Escape","code":"Escape"}]'
+    phase: "capture"
+    onlyOutsideTextInput: false
+    overridesBrowser: false
+    actionBinding: "close-modal"
+    params: ""
+
+  # ------------------------------------------------------------------
+  # Enter — submit/confirm top modal
+  # ------------------------------------------------------------------
+  - binding: kb-modal-enter
+    label: "Submit Modal"
+    description: "Confirms or submits the top-most modal overlay (Enter)"
+    category: "Navigation"
+    scope: "app.modal"
+    priority: 50
+    chord: '[{"mod":[],"key":"Enter","code":"Enter"}]'
+    phase: "capture"
+    onlyOutsideTextInput: false
+    overridesBrowser: false
+    actionBinding: "submit-modal"
+    params: ""
+
+  # ------------------------------------------------------------------
+  # Cmd+N — open quick-capture
+  # ------------------------------------------------------------------
+  - binding: kb-quick-capture-open
+    label: "Quick Capture"
+    description: "Opens the quick-capture overlay for rapid content creation (Cmd+N)"
+    category: "Editing"
+    scope: "app"
+    priority: 0
+    chord: '[{"mod":["mod"],"key":"n","code":"KeyN"}]'
+    phase: "capture"
+    onlyOutsideTextInput: true
+    overridesBrowser: false
+    actionBinding: "quick-capture-open"
+    params: ""

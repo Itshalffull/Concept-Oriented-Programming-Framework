@@ -23,7 +23,10 @@ export const QuickCapture: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errorVariant, setErrorVariant] = useState<string | null>(null);
-  // TODO KB-16+: seed actionBindingId "quick-capture-open" in KeyBinding seeds
+  // KB-16: "quick-capture-open" ActionBinding + KeyBinding seeds are now registered.
+  // The hardcoded Cmd+N handler below remains as the actual open implementation
+  // until QuickCapture/open is wired as a real kernel concept action. The seed
+  // allows KeybindingHint and the keyboard-help overlay to advertise the shortcut.
   const [fabChordText, setFabChordText] = useState<string | null>(null);
   const titleRef = useRef<HTMLInputElement>(null);
 
@@ -38,7 +41,13 @@ export const QuickCapture: React.FC = () => {
     if (!submitting) setOpen(false);
   }, [submitting]);
 
-  // Keyboard shortcut: Ctrl+N / Cmd+N
+  // Keyboard shortcut: Ctrl+N / Cmd+N → open quick capture.
+  // The global KeyBinding dispatcher (installed at AppShell via useKeyBindings)
+  // handles kb-quick-capture-open in the "app" scope. That seed advertises the
+  // shortcut but dispatches to the synthetic QuickCapture/open action which has
+  // no kernel handler yet. This local listener remains as the real implementation
+  // until QuickCapture/open is wired. Both co-exist safely — the dispatcher fires
+  // first (capture phase) and no-ops; this listener fires on bubble.
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
@@ -292,7 +301,7 @@ export const QuickCapture: React.FC = () => {
                 opacity: 0.5,
                 textAlign: 'right',
               }}>
-                {/* TODO KB-16+: "quick-capture-open" binding seed needed */}
+                {/* KB-16: quick-capture-open binding seed is now registered */}
                 Tip: press{' '}
                 <KeybindingHint actionBindingId="quick-capture-open" variant="keycap-only" />
                 {' '}from anywhere

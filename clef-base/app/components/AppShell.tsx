@@ -15,6 +15,8 @@ import { QuickCapture } from './QuickCapture';
 import { useClef, useKernelInvoke } from '../../lib/clef-provider';
 import { useActiveSpace } from '../../lib/use-active-space';
 import { logoutAdminAction } from '../admin/actions';
+import { useKeyBindings } from '../../lib/useKeyBindings';
+import { useFirstRunToast } from '../../lib/useFirstRunToast';
 
 export const AppShell: React.FC<{ children: React.ReactNode; sessionUser?: string }> = ({
   children,
@@ -23,6 +25,16 @@ export const AppShell: React.FC<{ children: React.ReactNode; sessionUser?: strin
   const { groupedDestinations, navigator, shell, theme } = useClef();
   const { isInSpace, currentSpace, spaceStack } = useActiveSpace(sessionUser || 'current-user');
   const invoke = useKernelInvoke();
+
+  // Install the global key-binding dispatcher (KB-16).
+  // Listens at document level (capture phase) so all keybinding scopes
+  // beneath this root are covered. Must be called once at the app shell.
+  useKeyBindings(invoke);
+
+  // First-run keybinding onboarding toast (KB-15).
+  // Returns a banner element on first session; null after dismissal.
+  const firstRunToast = useFirstRunToast();
+
   const [leaveConfirming, setLeaveConfirming] = useState(false);
   const [leavePending, setLeavePending] = useState(false);
   const [leaveError, setLeaveError] = useState<string | null>(null);
@@ -76,6 +88,7 @@ export const AppShell: React.FC<{ children: React.ReactNode; sessionUser?: strin
       data-theme-density={theme.density ?? undefined}
       data-theme-motif={theme.motif ?? undefined}
       data-theme-style-profile={theme.styleProfile ?? undefined}
+      data-keybinding-scope="app"
       style={{ paddingTop: isInSpace ? 32 : 0 }}
     >
       {isInSpace && currentSpace && (

@@ -1,0 +1,73 @@
+# ActionBinding seeds — app-shell scope actions (KB-16).
+#
+# PRD:  docs/plans/keybinding-prd.md Phase H
+# Card: KB-16
+#
+# These ActionBindings are companions to KeyBinding.app-shell.seeds.yaml.
+# They cover the app-shell and modal-scope operations that were previously
+# handled by hardcoded onKeyDown callbacks in AppShell, ModalStackProvider,
+# and QuickCapture.
+#
+# Already-present bindings (NOT duplicated here):
+#   command-palette-open  → ActionBinding.command-palette.seeds.yaml
+#   keyboard-help-open    → ActionBinding.keyboard-help.seeds.yaml
+
+concept: ActionBinding
+action: bind
+entries:
+  # ------------------------------------------------------------------
+  # close-modal — dismiss the top-most ModalStackProvider entry.
+  # Dispatched by the Escape KeyBinding in the "app.modal" scope.
+  # The target is the synthetic ModalStack/close surface action; the
+  # actual close is performed by ModalStackProvider's existing Escape
+  # listener until the dispatcher integration is complete.
+  # ------------------------------------------------------------------
+  - name: close-modal
+    binding: close-modal
+    target: "ModalStack/close"
+    parameterMap: '{}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    palette_command: false
+    context_menu: false
+    section: "Navigation"
+    label: "Close Modal"
+    icon: "x"
+
+  # ------------------------------------------------------------------
+  # submit-modal — confirm/submit the top-most ModalStackProvider entry.
+  # Dispatched by the Enter KeyBinding in the "app.modal" scope.
+  # ------------------------------------------------------------------
+  - name: submit-modal
+    binding: submit-modal
+    target: "ModalStack/submit"
+    parameterMap: '{}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    palette_command: false
+    context_menu: false
+    section: "Navigation"
+    label: "Submit Modal"
+    icon: "check"
+
+  # ------------------------------------------------------------------
+  # quick-capture-open — open the QuickCapture overlay.
+  # Dispatched by Cmd+N in the "app" scope (onlyOutsideTextInput).
+  # Target is a synthetic QuickCapture/open surface action; the
+  # actual open is performed by QuickCapture.tsx's openForm callback.
+  # ------------------------------------------------------------------
+  - name: quick-capture-open
+    binding: quick-capture-open
+    target: "QuickCapture/open"
+    parameterMap: '{}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    palette_command: true
+    context_menu: false
+    section: "Editing"
+    label: "Quick Capture"
+    icon: "plus"
+    keyboard_shortcut: "Meta+n"

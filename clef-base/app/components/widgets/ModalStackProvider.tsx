@@ -107,7 +107,17 @@ export const ModalStackProvider: React.FC<ModalStackProviderProps> = ({ children
     return stack[stack.length - 1] ?? null;
   }, [stack]);
 
-  // Keyboard: Escape closes top of stack
+  // Keyboard: Escape closes top of stack.
+  //
+  // KB-16 registers a "kb-modal-esc" KeyBinding seed in the "app.modal" scope
+  // so the keyboard-help overlay and future automation can discover this
+  // shortcut. The actual close logic remains here because the ActionBinding
+  // target (ModalStack/close) is a synthetic surface action that does not yet
+  // have a kernel handler. Once a ModalStack handler is wired the hardcoded
+  // listener below can be retired. Until then both co-exist safely: this
+  // handler fires in the document capture phase; the global dispatcher from
+  // useKeyBindings (installed at AppShell) also fires in capture phase but
+  // invokes ActionBinding/invoke which no-ops against the synthetic target.
   useEffect(() => {
     if (stack.length === 0) return;
 
@@ -195,6 +205,13 @@ interface ModalLayerProps {
   isTop: boolean;
   zIndex: number;
   onPop: (id: string) => void;
+}
+
+// Derive a sanitised scope segment from a modal widget ID.
+// e.g. "command-palette" → "app.modal.command-palette"
+function modalScope(widgetId: string): string {
+  const segment = widgetId.replace(/[^a-z0-9-]/gi, '-').toLowerCase();
+  return `app.modal.${segment}`;
 }
 
 const ModalLayer: React.FC<ModalLayerProps> = ({ entry, isTop, zIndex, onPop }) => {
@@ -288,6 +305,7 @@ const ModalLayer: React.FC<ModalLayerProps> = ({ entry, isTop, zIndex, onPop }) 
         ref={contentRef}
         data-part="modal-content"
         data-widget={entry.widgetId}
+        data-keybinding-scope={isTop ? modalScope(entry.widgetId) : undefined}
         role="dialog"
         aria-modal={isTop ? 'true' : 'false'}
         tabIndex={-1}
