@@ -1,0 +1,76 @@
+# FormSpec seeds — Phase C audit batch 1: ContentNode, TaxonomyTerm, Article.
+# Each FormSpec shell is created then updated with layout JSON and field widgets.
+# Field widget mapping uses ComponentMapping.form-field entries.
+# Widgets noted as MISSING_WIDGET are placeholders for Phase D — they map to
+# the closest existing widget until the real widget is built.
+#
+# Missing widgets discovered in this batch — see clef-base/seeds/MISSING_WIDGETS.md
+# for the canonical Phase C → Phase D handoff list.
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Schema 1: ContentNode
+# fields: node, content, metadata, createdBy, createdAt, updatedAt
+# Layout: tabs — "Content" (node, content) | "Metadata" (metadata, createdBy, createdAt)
+# ─────────────────────────────────────────────────────────────────────────────
+
+concept: FormSpec
+action: create
+entries:
+  - form: form-contentnode-create
+    schema: ContentNode
+    name: create
+    mode: create
+
+  - form: form-taxonomyterm-create
+    schema: TaxonomyTerm
+    name: create
+    mode: create
+
+  - form: form-article-create
+    schema: Article
+    name: create
+    mode: create
+
+---
+# Apply layout and field-widget overrides to each FormSpec.
+# layout JSON shape: {"type":"tabs","tabs":[{"id":string,"label":string,"fieldIds":[...]}]}
+#   or flat: {"type":"groups","groups":[{"id":string,"label":string,"fieldIds":[...]}]}
+# overrides JSON shape: {"fieldId":{"widget":"<block-widget-id>"}, ...}
+#   — identifies which FormBuilder field-block widget renders each field.
+#   Widgets marked MISSING_WIDGET are placeholders; real widgets land in Phase D.
+
+concept: FormSpec
+action: update
+entries:
+  # ── ContentNode ─────────────────────────────────────────────────────────────
+  # Two-tab layout separating content authoring from metadata administration.
+  # "Content" tab: the entity's identity (node ID) and its prose body.
+  # "Metadata" tab: provenance fields (creator, timestamps, structured metadata).
+  - form: form-contentnode-create
+    layout: '{"type":"tabs","tabs":[{"id":"content","label":"Content","fieldIds":["node","content"]},{"id":"metadata","label":"Metadata","fieldIds":["metadata","createdBy","createdAt"]}]}'
+    steps: null
+    conditions: null
+    defaults: '{"createdAt":"{{now}}"}'
+    overrides: '{"node":{"widget":"form-field-text-block","label":"Node ID","placeholder":"e.g. article:my-post","required":true},"content":{"widget":"form-field-richtext-block","label":"Content","required":false},"metadata":{"widget":"form-field-json-block","label":"Metadata (JSON)","required":false},"createdBy":{"widget":"form-field-entity-picker-block","label":"Created By","entitySchema":"User","required":false},"createdAt":{"widget":"form-field-datetime-block","label":"Created At","required":false}}'
+
+  # ── TaxonomyTerm ────────────────────────────────────────────────────────────
+  # Flat layout — only 3 fields, no grouping needed.
+  # "term" is the slug/ID, "vocab" selects the owning Vocabulary,
+  # "parent" optionally nests this term under another term in the hierarchy.
+  - form: form-taxonomyterm-create
+    layout: '{"type":"flat","fieldIds":["term","vocab","parent"]}'
+    steps: null
+    conditions: null
+    defaults: null
+    overrides: '{"term":{"widget":"form-field-text-block","label":"Term ID","placeholder":"e.g. programming-languages","required":true},"vocab":{"widget":"form-field-entity-picker-block","label":"Vocabulary","entitySchema":"Vocabulary","required":true},"parent":{"widget":"form-field-entity-picker-block","label":"Parent Term (optional)","entitySchema":"TaxonomyTerm","required":false}}'
+
+  # ── Article ─────────────────────────────────────────────────────────────────
+  # Two-section layout: "Content" for the creative work, "Publishing" for workflow.
+  # status uses select because Article status is a fixed enum (draft/published/archived).
+  # publishedAt and author are publishing-side concerns grouped together.
+  - form: form-article-create
+    layout: '{"type":"groups","groups":[{"id":"content","label":"Content","fieldIds":["title","body"]},{"id":"publishing","label":"Publishing","fieldIds":["status","author","publishedAt"]}]}'
+    steps: null
+    conditions: '{"publishedAt":{"show":{"field":"status","eq":"published"}}}'
+    defaults: '{"status":"draft"}'
+    overrides: '{"title":{"widget":"form-field-text-block","label":"Title","placeholder":"Article title","required":true},"body":{"widget":"form-field-richtext-block","label":"Body","required":true},"status":{"widget":"form-field-select-block","label":"Status","options":["draft","published","archived"],"required":true},"author":{"widget":"form-field-entity-picker-block","label":"Author","entitySchema":"User","required":false},"publishedAt":{"widget":"form-field-datetime-block","label":"Publish Date","required":false}}'
