@@ -16,7 +16,7 @@ const _mediaAssetHandler: FunctionalConceptHandler = {
     const file = input.file as string;
     // context is opaque Bytes (stored as a string); callers pass JSON such as
     // {"focusedDocId":"doc-123","cursorPosition":42} for paste/drop dispatch syncs.
-    // MediaAsset does not interpret the value — it stores and echoes it unchanged.
+    // MediaAsset does not interpret the value -- it stores and echoes it unchanged.
     const context = (input.context as string) ?? '';
 
     let p = createProgram();
@@ -86,6 +86,30 @@ const _mediaAssetHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
+  setDimensions(input: Record<string, unknown>) {
+    const asset = input.asset as string;
+    const width = Number(input.width);
+    const height = Number(input.height);
+
+    if (!Number.isFinite(width) || width <= 0 || !Number.isFinite(height) || height <= 0) {
+      let p0 = createProgram();
+      return complete(p0, 'error', { message: 'width and height must be positive integers' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    }
+
+    let p = createProgram();
+    p = spGet(p, 'mediaAsset', asset, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        const now = new Date().toISOString();
+        let b2 = put(b, 'mediaAsset', asset, { width, height, updatedAt: now });
+        return complete(b2, 'ok', { asset, width, height });
+      },
+      (b) => complete(b, 'notfound', { message: 'Asset does not exist' }),
+    );
+
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
   getMedia(input: Record<string, unknown>) {
     const asset = input.asset as string;
 
@@ -104,4 +128,3 @@ const _mediaAssetHandler: FunctionalConceptHandler = {
 };
 
 export const mediaAssetHandler = autoInterpret(_mediaAssetHandler);
-

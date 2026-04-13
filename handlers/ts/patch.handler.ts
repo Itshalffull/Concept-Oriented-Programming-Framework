@@ -317,6 +317,32 @@ const _handler: FunctionalConceptHandler = {
     }) as StorageProgram<Result>;
   },
 
+  applyInverse(input: Record<string, unknown>) {
+    const patchId = input.patchId as string;
+    const content = input.content as string;
+
+    let p = createProgram();
+    p = get(p, 'patch', patchId, 'record');
+
+    return branch(p,
+      (bindings) => !bindings.record,
+      (bp) => complete(bp, 'error', { message: `Patch '${patchId}' not found` }),
+      (bp) => completeFrom(bp, 'ok', (bindings) => {
+        const record = bindings.record as Record<string, unknown>;
+        const effect = record.effect as string;
+        const inverted = invertEffect(effect);
+        if (inverted === null) {
+          return { variant: 'error', message: 'Cannot invert patch effect' };
+        }
+        const result = applyEffect(content, inverted);
+        if (result === null) {
+          return { variant: 'error', message: 'Content does not match inverse patch context. Cannot apply.' };
+        }
+        return { result };
+      }),
+    ) as StorageProgram<Result>;
+  },
+
   commute(input: Record<string, unknown>) {
     const p1 = input.p1 as string;
     const p2 = input.p2 as string;

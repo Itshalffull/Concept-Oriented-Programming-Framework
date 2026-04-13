@@ -1,0 +1,23 @@
+# ActionBinding seeds — media resize handle commit action (PP-media-resize).
+# Registers the drag-end commit binding that invokes MediaAsset/setDimensions
+# with the final width and height computed by the media-resize-handle widget
+# after a resize drag operation completes.
+
+concept: ActionBinding
+action: bind
+entries:
+  # Commit the resized dimensions to MediaAsset/setDimensions on drag-end.
+  # The parameterMap forwards context.assetId (the focused media block's asset
+  # identifier), context.finalWidth, and context.finalHeight (computed by the
+  # widget from the pointer delta relative to the drag origin) to the action.
+  - name: media-resize-commit
+    binding: media-resize-commit
+    target: "MediaAsset/setDimensions"
+    parameterMap: '{"asset":"context.assetId","width":"context.finalWidth","height":"context.finalHeight"}'
+    executionPolicy: "optimistic"
+    toolbar_command: false
+    slash_command: false
+    context_menu: false
+    section: "Media"
+    label: "Resize media"
+    icon: "resize"

@@ -264,6 +264,84 @@ describe('MediaAsset functional handler', () => {
 
   });
 
+  describe('setDimensions', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = mediaAssetHandler.setDimensions({ asset: {"type":"ref","fixture":"create_image","field":"asset"}, width: "800", height: "600" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = mediaAssetHandler.setDimensions({ asset: {"type":"ref","fixture":"create_image","field":"asset"}, width: "800", height: "600" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = mediaAssetHandler.setDimensions({ asset: {"type":"ref","fixture":"create_image","field":"asset"}, width: "800", height: "600" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = mediaAssetHandler.setDimensions({ asset: {"type":"ref","fixture":"create_image","field":"asset"}, width: "800", height: "600" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = mediaAssetHandler.setDimensions({ asset: {"type":"ref","fixture":"create_image","field":"asset"}, width: "800", height: "600" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof mediaAssetHandler.setDimensions !== 'function') return;
+      const result = await interpret(mediaAssetHandler.setDimensions({ asset: {"type":"ref","fixture":"create_image","field":"asset"}, width: "800", height: "600" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "set_dims_ok" -> ok', async () => {
+      if (typeof mediaAssetHandler.setDimensions !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_image = await interpret(mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg", context: "" }), storage);
+      const result = await interpret(mediaAssetHandler.setDimensions({ asset: afterResult_create_image?.output?.["asset"], width: "800", height: "600" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "set_dims_missing" -> notfound', async () => {
+      if (typeof mediaAssetHandler.setDimensions !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(mediaAssetHandler.setDimensions({ asset: "missing", width: "100", height: "100" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
+    });
+
+    it('fixture "set_dims_invalid" -> error', async () => {
+      if (typeof mediaAssetHandler.setDimensions !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_image = await interpret(mediaAssetHandler.createMedia({ asset: "img-001", source: "local-fs", file: "photo.jpg", context: "" }), storage);
+      const result = await interpret(mediaAssetHandler.setDimensions({ asset: afterResult_create_image?.output?.["asset"], width: "-1", height: "100" }), storage);
+      expect(result.variant).not.toBe('ok');
+    });
+
+  });
+
   describe('getMedia', () => {
     it('builds a valid StorageProgram', () => {
       const program = mediaAssetHandler.getMedia({ asset: {"type":"ref","fixture":"create_image","field":"asset"} });
@@ -376,6 +454,7 @@ describe('MediaAsset functional handler', () => {
               fc.record({ action: fc.constant('createMedia'), input: fc.record({ asset: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), file: fc.string({ minLength: 1, maxLength: 50 }), context: fc.string() }) }),
               fc.record({ action: fc.constant('extractMetadata'), input: fc.record({ asset: fc.string() }) }),
               fc.record({ action: fc.constant('generateThumbnail'), input: fc.record({ asset: fc.string() }) }),
+              fc.record({ action: fc.constant('setDimensions'), input: fc.record({ asset: fc.string(), width: fc.integer({ min: 1, max: 1000 }), height: fc.integer({ min: 1, max: 1000 }) }) }),
               fc.record({ action: fc.constant('getMedia'), input: fc.record({ asset: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -409,6 +488,7 @@ describe('MediaAsset functional handler', () => {
               fc.record({ action: fc.constant('createMedia'), input: fc.record({ asset: fc.string(), source: fc.string({ minLength: 1, maxLength: 50 }), file: fc.string({ minLength: 1, maxLength: 50 }), context: fc.string() }) }),
               fc.record({ action: fc.constant('extractMetadata'), input: fc.record({ asset: fc.string() }) }),
               fc.record({ action: fc.constant('generateThumbnail'), input: fc.record({ asset: fc.string() }) }),
+              fc.record({ action: fc.constant('setDimensions'), input: fc.record({ asset: fc.string(), width: fc.integer({ min: 1, max: 1000 }), height: fc.integer({ min: 1, max: 1000 }) }) }),
               fc.record({ action: fc.constant('getMedia'), input: fc.record({ asset: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
@@ -503,6 +583,39 @@ describe('MediaAsset functional handler', () => {
             const storage = createInMemoryStorage();
             const result = await safeInvoke(async () => {
               const program = mediaAssetHandler.generateThumbnail(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
+              seen = true;
+              expect(result.output).toBeDefined();
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('setDimensions handles empty input: ', async () => {
+      if (typeof mediaAssetHandler.setDimensions !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await safeInvoke(async () => await interpret(mediaAssetHandler.setDimensions({  }), storage));
+      // Empty input should produce a defined result with a variant
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('setDimensions ensures on ok: ', async () => {
+      if (typeof mediaAssetHandler.setDimensions !== 'function') return;
+      let seen = false;
+      await fc.assert(
+        fc.asyncProperty(
+          fc.record({ asset: fc.string(), width: fc.integer({ min: 1, max: 1000 }), height: fc.integer({ min: 1, max: 1000 }) }),
+          async (input) => {
+            const storage = createInMemoryStorage();
+            const result = await safeInvoke(async () => {
+              const program = mediaAssetHandler.setDimensions(input as Record<string, unknown>);
               return interpret(program, storage);
             });
             if (result?.variant === "ok") {

@@ -376,6 +376,75 @@ describe('Patch functional handler', () => {
 
   });
 
+  describe('applyInverse', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = patchHandler.applyInverse({ patchId: {"type":"ref","fixture":"create_patch","field":"patchId"}, content: "hello\nworld" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = patchHandler.applyInverse({ patchId: {"type":"ref","fixture":"create_patch","field":"patchId"}, content: "hello\nworld" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = patchHandler.applyInverse({ patchId: {"type":"ref","fixture":"create_patch","field":"patchId"}, content: "hello\nworld" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = patchHandler.applyInverse({ patchId: {"type":"ref","fixture":"create_patch","field":"patchId"}, content: "hello\nworld" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = patchHandler.applyInverse({ patchId: {"type":"ref","fixture":"create_patch","field":"patchId"}, content: "hello\nworld" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof patchHandler.applyInverse !== 'function') return;
+      const result = await interpret(patchHandler.applyInverse({ patchId: {"type":"ref","fixture":"create_patch","field":"patchId"}, content: "hello\nworld" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "apply_inverse_ok" -> ok', async () => {
+      if (typeof patchHandler.applyInverse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_patch = await interpret(patchHandler.create({ base: "sha256:aaa111", target: "sha256:bbb222", effect: "[{\"type\":\"equal\",\"line\":0,\"content\":\"hello\"}]" }), storage);
+      const result = await interpret(patchHandler.applyInverse({ patchId: afterResult_create_patch?.output?.["patchId"], content: "hello\nworld" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "apply_inverse_missing" -> error', async () => {
+      if (typeof patchHandler.applyInverse !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(patchHandler.applyInverse({ patchId: "patch-nonexistent", content: "hello" }), storage);
+      expect(result.variant).not.toBe('ok');
+    });
+
+  });
+
   describe('register()', () => {
     it('declares concept name', async () => {
       if (typeof patchHandler.register !== 'function') return;
@@ -428,6 +497,7 @@ describe('Patch functional handler', () => {
               fc.record({ action: fc.constant('invert'), input: fc.record({ patchId: fc.string() }) }),
               fc.record({ action: fc.constant('compose'), input: fc.record({ first: fc.string(), second: fc.string() }) }),
               fc.record({ action: fc.constant('commute'), input: fc.record({ p1: fc.string(), p2: fc.string() }) }),
+              fc.record({ action: fc.constant('applyInverse'), input: fc.record({ patchId: fc.string(), content: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -462,6 +532,7 @@ describe('Patch functional handler', () => {
               fc.record({ action: fc.constant('invert'), input: fc.record({ patchId: fc.string() }) }),
               fc.record({ action: fc.constant('compose'), input: fc.record({ first: fc.string(), second: fc.string() }) }),
               fc.record({ action: fc.constant('commute'), input: fc.record({ p1: fc.string(), p2: fc.string() }) }),
+              fc.record({ action: fc.constant('applyInverse'), input: fc.record({ patchId: fc.string(), content: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

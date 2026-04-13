@@ -1,0 +1,349 @@
+@version(1)
+widget media-resize-handle {
+
+  purpose {
+    Decoration-layer overlaid on a focused image or video block that exposes
+    eight directional resize handles (corners and edge midpoints) and a
+    dimension label showing the current width and height. Dragging a corner
+    handle resizes both axes simultaneously; dragging an edge handle resizes
+    a single axis. Holding Shift while dragging a corner locks the aspect
+    ratio. On pointer-up the widget commits the new dimensions via
+    MediaAsset/setDimensions. The widget is only interactive when the
+    focused prop is true and disappears when the block loses focus.
+  }
+
+  requires @1 {
+    fields {
+      assetId: String;
+      width: Int;
+      height: Int;
+    }
+    actions {
+      setDimensions(asset: String, width: Int, height: Int);
+    }
+  }
+
+  anatomy {
+    root:           container    { Outer positioning wrapper overlaid on the media block; carries data-state and data-focused attributes }
+    handleNW:       action       { Northwest corner resize handle; dragging resizes width and height from the top-left }
+    handleN:        action       { North edge midpoint handle; dragging resizes height from the top }
+    handleNE:       action       { Northeast corner resize handle; dragging resizes width and height from the top-right }
+    handleE:        action       { East edge midpoint handle; dragging resizes width from the right }
+    handleSE:       action       { Southeast corner resize handle; dragging resizes width and height from the bottom-right }
+    handleS:        action       { South edge midpoint handle; dragging resizes height from the bottom }
+    handleSW:       action       { Southwest corner resize handle; dragging resizes width and height from the bottom-left }
+    handleW:        action       { West edge midpoint handle; dragging resizes width from the left }
+    dimensionLabel: text         { Live readout showing current width x height during drag and at rest }
+  }
+
+  states {
+    resize {
+      idle [initial] {
+        on DRAG_START_CORNER -> dragging-corner;
+        on DRAG_START_EDGE   -> dragging-edge;
+      }
+      dragging-corner {
+        on DRAG_MOVE         -> dragging-corner;
+        on DRAG_END          -> committing;
+        on ESCAPE            -> idle;
+        entry [capturePointer; recordDragOrigin];
+        exit [releasePointer];
+      }
+      dragging-edge {
+        on DRAG_MOVE         -> dragging-edge;
+        on DRAG_END          -> committing;
+        on ESCAPE            -> idle;
+        entry [capturePointer; recordDragOrigin];
+        exit [releasePointer];
+      }
+      committing {
+        on COMMIT_OK         -> idle;
+        on COMMIT_ERROR      -> idle;
+        entry [submitSetDimensions];
+      }
+    }
+  }
+
+  accessibility {
+    role: group;
+    modal: false;
+    keyboard {
+      Escape     -> ESCAPE;
+      ArrowUp    -> DRAG_MOVE;
+      ArrowDown  -> DRAG_MOVE;
+      ArrowLeft  -> DRAG_MOVE;
+      ArrowRight -> DRAG_MOVE;
+      Enter      -> DRAG_END;
+    }
+    focus {
+      trap: false;
+      initial: handleSE;
+      roving: true;
+      returnOnClose: root;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: "Resize handles";
+      };
+      handleNW -> {
+        role: "button";
+        aria-label: "Resize from northwest corner";
+        tabindex: "0";
+      };
+      handleN -> {
+        role: "button";
+        aria-label: "Resize from north edge";
+        tabindex: "-1";
+      };
+      handleNE -> {
+        role: "button";
+        aria-label: "Resize from northeast corner";
+        tabindex: "-1";
+      };
+      handleE -> {
+        role: "button";
+        aria-label: "Resize from east edge";
+        tabindex: "-1";
+      };
+      handleSE -> {
+        role: "button";
+        aria-label: "Resize from southeast corner";
+        tabindex: "-1";
+      };
+      handleS -> {
+        role: "button";
+        aria-label: "Resize from south edge";
+        tabindex: "-1";
+      };
+      handleSW -> {
+        role: "button";
+        aria-label: "Resize from southwest corner";
+        tabindex: "-1";
+      };
+      handleW -> {
+        role: "button";
+        aria-label: "Resize from west edge";
+        tabindex: "-1";
+      };
+      dimensionLabel -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: "Current dimensions";
+      };
+    }
+  }
+
+  props {
+    assetId: String
+    width: Int = 0
+    height: Int = 0
+    aspectRatioLocked: Bool = false
+    focused: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.resize;
+      data-focused: if ?focused then "true" else "false";
+      hidden: if ?focused then false else true;
+      aria-label: "Resize handles";
+      onKeyDown: send(ESCAPE);
+    }
+
+    handleNW -> {
+      data-part: "handle-nw";
+      data-handle: "nw";
+      role: "button";
+      aria-label: "Resize from northwest corner";
+      tabindex: "0";
+      onPointerDown: send(DRAG_START_CORNER, { handle: "nw" });
+      onPointerMove: send(DRAG_MOVE);
+      onPointerUp: send(DRAG_END);
+    }
+
+    handleN -> {
+      data-part: "handle-n";
+      data-handle: "n";
+      role: "button";
+      aria-label: "Resize from north edge";
+      tabindex: "-1";
+      onPointerDown: send(DRAG_START_EDGE, { handle: "n" });
+      onPointerMove: send(DRAG_MOVE);
+      onPointerUp: send(DRAG_END);
+    }
+
+    handleNE -> {
+      data-part: "handle-ne";
+      data-handle: "ne";
+      role: "button";
+      aria-label: "Resize from northeast corner";
+      tabindex: "-1";
+      onPointerDown: send(DRAG_START_CORNER, { handle: "ne" });
+      onPointerMove: send(DRAG_MOVE);
+      onPointerUp: send(DRAG_END);
+    }
+
+    handleE -> {
+      data-part: "handle-e";
+      data-handle: "e";
+      role: "button";
+      aria-label: "Resize from east edge";
+      tabindex: "-1";
+      onPointerDown: send(DRAG_START_EDGE, { handle: "e" });
+      onPointerMove: send(DRAG_MOVE);
+      onPointerUp: send(DRAG_END);
+    }
+
+    handleSE -> {
+      data-part: "handle-se";
+      data-handle: "se";
+      role: "button";
+      aria-label: "Resize from southeast corner";
+      tabindex: "-1";
+      onPointerDown: send(DRAG_START_CORNER, { handle: "se" });
+      onPointerMove: send(DRAG_MOVE);
+      onPointerUp: send(DRAG_END);
+    }
+
+    handleS -> {
+      data-part: "handle-s";
+      data-handle: "s";
+      role: "button";
+      aria-label: "Resize from south edge";
+      tabindex: "-1";
+      onPointerDown: send(DRAG_START_EDGE, { handle: "s" });
+      onPointerMove: send(DRAG_MOVE);
+      onPointerUp: send(DRAG_END);
+    }
+
+    handleSW -> {
+      data-part: "handle-sw";
+      data-handle: "sw";
+      role: "button";
+      aria-label: "Resize from southwest corner";
+      tabindex: "-1";
+      onPointerDown: send(DRAG_START_CORNER, { handle: "sw" });
+      onPointerMove: send(DRAG_MOVE);
+      onPointerUp: send(DRAG_END);
+    }
+
+    handleW -> {
+      data-part: "handle-w";
+      data-handle: "w";
+      role: "button";
+      aria-label: "Resize from west edge";
+      tabindex: "-1";
+      onPointerDown: send(DRAG_START_EDGE, { handle: "w" });
+      onPointerMove: send(DRAG_MOVE);
+      onPointerUp: send(DRAG_END);
+    }
+
+    dimensionLabel -> {
+      data-part: "dimension-label";
+      role: "status";
+      aria-live: "polite";
+    }
+  }
+
+  affordance {
+    serves: decoration-layer;
+    specificity: 8;
+    when pluginType = "decoration-layer";
+    bind {
+      assetId: assetId;
+      width: width;
+      height: height;
+    }
+  }
+
+  invariant {
+    example "DRAG_START_CORNER transitions idle to dragging-corner": {
+      after DRAG_START_CORNER() -> ok
+      then state.resize = "dragging-corner"
+    }
+
+    example "DRAG_START_EDGE transitions idle to dragging-edge": {
+      after DRAG_START_EDGE() -> ok
+      then state.resize = "dragging-edge"
+    }
+
+    example "DRAG_END from dragging-corner enters committing": {
+      after DRAG_START_CORNER() -> ok
+      then DRAG_END() -> ok
+      then state.resize = "committing"
+    }
+
+    example "DRAG_END from dragging-edge enters committing": {
+      after DRAG_START_EDGE() -> ok
+      then DRAG_END() -> ok
+      then state.resize = "committing"
+    }
+
+    example "ESCAPE from dragging-corner returns to idle": {
+      after DRAG_START_CORNER() -> ok
+      then ESCAPE() -> ok
+      then state.resize = "idle"
+    }
+
+    example "ESCAPE from dragging-edge returns to idle": {
+      after DRAG_START_EDGE() -> ok
+      then ESCAPE() -> ok
+      then state.resize = "idle"
+    }
+
+    example "COMMIT_OK from committing returns to idle": {
+      after DRAG_START_CORNER() -> ok
+      then DRAG_END() -> ok
+      then COMMIT_OK() -> ok
+      then state.resize = "idle"
+    }
+
+    example "COMMIT_ERROR from committing returns to idle": {
+      after DRAG_START_CORNER() -> ok
+      then DRAG_END() -> ok
+      then COMMIT_ERROR() -> ok
+      then state.resize = "idle"
+    }
+
+    always "data-state on root reflects resize FSM": {
+      root.dataState = state.resize
+    }
+
+    always "handles hidden when not focused": {
+      root.hidden = true
+    }
+
+    always "dimension label visible during drag": {
+      dimensionLabel.visible = true
+    }
+
+    never "committing state without prior drag": {
+      state.resize = "committing"
+    }
+
+    never "dragging-corner and dragging-edge active simultaneously": {
+      state.resize = "dragging-corner" and state.resize = "dragging-edge"
+    }
+
+    action handleSE {
+      requires: state.resize = "idle"
+      ensures ok: state.resize = "dragging-corner"
+    }
+
+    action handleE {
+      requires: state.resize = "idle"
+      ensures ok: state.resize = "dragging-edge"
+    }
+
+    forall "all resize states are reachable": {
+      given s in resizeStates
+      then s.reachable = true
+    }
+
+    "Shift held during corner drag must lock aspect ratio — width and height must change proportionally so neither dimension drops below 1";
+    "setDimensions must be invoked with the assetId prop and the final computed width and height on every DRAG_END that reaches committing state";
+  }
+
+}

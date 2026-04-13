@@ -94,6 +94,21 @@ concept Patch [P] {
       fixture commute_independent { p1: $create_patch.patchId, p2: $create_patch.patchId } after create_patch
       fixture commute_missing { p1: "patch-nonexistent", p2: "patch-2" } -> error
     }
+
+    action applyInverse(patchId: P, content: Bytes) {
+      -> ok(result: Bytes) {
+        Invert the patch to obtain its inverse edit script, then apply
+        the inverse to content, effectively undoing the patch. Returns
+        the transformed result that existed before the original patch
+        was applied.
+      }
+      -> error(message: String) {
+        patchId not found, or the patch effect cannot be inverted.
+      }
+
+      fixture apply_inverse_ok { patchId: $create_patch.patchId, content: "hello\nworld" } after create_patch
+      fixture apply_inverse_missing { patchId: "patch-nonexistent", content: "hello" } -> error
+    }
   }
 
   example "create then apply": {

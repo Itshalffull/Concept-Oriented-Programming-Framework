@@ -12,7 +12,9 @@ concept MediaAsset [M] {
     metadata: M -> String;
     thumbnail: M -> String;
     originalFile: M -> String;
-    context: M -> Bytes
+    context: M -> Bytes;
+    width: M -> option Int;
+    height: M -> option Int
   }
 
   actions {
@@ -20,7 +22,7 @@ concept MediaAsset [M] {
       -> ok(asset: M, context: Bytes) {
         Media asset created, wrapping the underlying file with the
         specified source plugin for format-specific operations.
-        The context value is opaque to MediaAsset — it is stored as-is
+        The context value is opaque to MediaAsset -- it is stored as-is
         and echoed back in the ok completion for dispatch syncs to read.
       }
       -> error(message: String) {
@@ -57,6 +59,26 @@ concept MediaAsset [M] {
 
       fixture thumb_existing { asset: $create_image.asset } after create_image
       fixture thumb_missing { asset: "nonexistent" } -> notfound
+    }
+
+    action setDimensions(asset: M, width: Int, height: Int) {
+      -> ok(asset: M, width: Int, height: Int) {
+        Dimensions stored on the media asset record; the new width and height
+        are persisted and echoed back for downstream syncs. Both values must
+        be positive integers.
+      }
+      -> notfound(message: String) {
+        No asset exists with this identifier.
+      }
+      -> error(message: String) {
+        Dimension update failed because one or both values are non-positive
+        or an internal storage error occurred.
+      }
+
+      fixture set_dims_ok { asset: $create_image.asset, width: 800, height: 600 } after create_image
+      fixture set_dims_missing { asset: "missing", width: 100, height: 100 } -> notfound
+      fixture set_dims_invalid { asset: $create_image.asset, width: -1, height: 100 } after create_image -> error
+      reversal: setDimensions
     }
 
     action getMedia(asset: M) {
@@ -101,5 +123,10 @@ concept MediaAsset [M] {
 
   action generateThumbnail {
     ensures ok: asset != none
+  }
+
+  action setDimensions {
+    requires: width > 0 and height > 0
+    ensures ok: asset != none and width > 0 and height > 0
   }
 }
