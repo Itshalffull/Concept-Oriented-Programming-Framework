@@ -1963,7 +1963,11 @@ interface BlockSlotProps {
   isSelected?: boolean;
   onFocus: () => void;
   onBlur: () => void;
-  onMutate: () => void;
+  /** Called after a successful update-block-content (or equivalent Patch). Does NOT trigger a
+   * full Outline reload — use for lightweight tracking such as dirty-state indicators. */
+  onBlockContentChange?: (nodeId: string, content: string) => void;
+  /** Called on structural changes: block insert, delete, or reorder. Parent passes loadChildren here. */
+  onStructureChange: () => void;
   /** Called on click events to propagate multi-select modifier logic upward. */
   onBlockClick?: (e: React.MouseEvent) => void;
   /**
@@ -1988,7 +1992,8 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
   isSelected = false,
   onFocus,
   onBlur,
-  onMutate,
+  onBlockContentChange,
+  onStructureChange,
   onBlockClick,
   onSectionSelect,
   rootNodeId,
@@ -2179,7 +2184,8 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
           nodeId,
           patch: fmtResult.patch,
         });
-        onMutate();
+        // Patch/apply is a content-level change — no structural reload needed.
+        onBlockContentChange?.(nodeId, text);
       } else if (fmtResult.variant === 'no_provider') {
         console.info('[BlockSlot] Syntax/format: no provider for language:', language);
       } else if (fmtResult.variant !== 'ok') {
@@ -2190,7 +2196,7 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
     } finally {
       setIsFormatting(false);
     }
-  }, [canEdit, isFormatting, invoke, nodeId, schema, onMutate]);
+  }, [canEdit, isFormatting, invoke, nodeId, schema, onBlockContentChange]);
 
   // -------------------------------------------------------------------------
   // Link hover preview state (PP-link-hover)
@@ -2256,7 +2262,7 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
         if (blockContentRef.current && !hasInitializedRef.current) {
           blockContentRef.current.textContent = body;
           hasInitializedRef.current = true;
-          setBlockEmpty(body.trim() === '');
+          blockEmptyRef.current = body.trim() === '';
         }
       } catch (err) {
         console.warn('[BlockSlot] initial body load failed:', err);
@@ -2318,14 +2324,15 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
         context: JSON.stringify({ nodeId, rootNodeId, schema, content: newContent }),
       });
       if (result.variant === 'ok') {
-        onMutate();
+        // Content update — does NOT trigger a structural reload.
+        onBlockContentChange?.(nodeId, newContent);
       } else {
         console.warn('[BlockSlot] update-block-content returned non-ok:', result.variant);
       }
     } catch (err) {
       console.error('[BlockSlot] content update failed:', err);
     }
-  }, [nodeId, rootNodeId, schema, invoke, onMutate]);
+  }, [nodeId, rootNodeId, schema, invoke, onBlockContentChange]);
 
   const handleDelete = useCallback(async () => {
     try {
@@ -2334,14 +2341,15 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
         context: JSON.stringify({ nodeId, rootNodeId }),
       });
       if (result.variant === 'ok') {
-        onMutate();
+        // Block deleted — structural change, reload Outline.
+        onStructureChange();
       } else {
         console.warn('[BlockSlot] delete-block returned non-ok:', result.variant);
       }
     } catch (err) {
       console.error('[BlockSlot] delete failed:', err);
     }
-  }, [nodeId, rootNodeId, invoke, onMutate]);
+  }, [nodeId, rootNodeId, invoke, onStructureChange]);
 
   // List schemas receive the narrower "app.editor.list" scope so that Tab /
   // Shift+Tab KeyBinding entries (kb-block-list-indent, kb-block-list-outdent)
@@ -2358,7 +2366,7 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
       data-display-mode={displayMode}
       data-resolved-widget={resolvedWidget}
       data-selected={isSelected ? 'true' : 'false'}
-      data-block-empty={blockEmpty ? 'true' : 'false'}
+      data-block-empty={blockEmptyRef.current ? 'true' : 'false'}
       data-block-focused={blockFocused ? 'true' : 'false'}
       {...(isListSchema ? { 'data-keybinding-scope': 'app.editor.list' } : {})}
       onFocus={onFocus}
@@ -2391,11 +2399,14 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
         onContextMenu={handleContextMenu}
         onMouseOver={handleLinkMouseEnter}
         onMouseLeave={handleLinkMouseLeave}
-        onFocus={() => setBlockFocused(true)}
+        onFocus={(e) => {
+          blockEmptyRef.current = (e.currentTarget.textContent ?? '').trim() === '';
+          setBlockFocused(true);
+        }}
         onInput={(e) => {
           if (!canEdit) return;
           const text = (e.currentTarget as HTMLDivElement).textContent ?? '';
-          setBlockEmpty(text.trim() === '');
+          blockEmptyRef.current = text.trim() === '';
           notifyBlockEdit(nodeId, text, invoke);
           // LE-16: debounced syntax highlight dispatch for code/latex blocks
           if (isHighlightableSchema && text.trim()) {
@@ -2411,7 +2422,7 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
         onBlur={(e) => {
           setBlockFocused(false);
           const text = e.currentTarget.textContent ?? '';
-          setBlockEmpty(text.trim() === '');
+          blockEmptyRef.current = text.trim() === '';
           handleContentEdit(text);
           onBlur();
           // LE-16: trigger highlight on blur so decorations are current when block loses focus
@@ -2425,8 +2436,64 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
             void dispatchHighlight(text, lang);
           }
         }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Capture current text + cursor offset in the contentEditable
+            const sel = window.getSelection();
+            const el = blockContentRef.current;
+            if (!el || !sel || sel.rangeCount === 0) return;
+            const range = sel.getRangeAt(0);
+
+            // Compute text-offset within the contentEditable
+            const preRange = range.cloneRange();
+            preRange.selectNodeContents(el);
+            preRange.setEnd(range.endContainer, range.endOffset);
+            const before = preRange.toString();
+            const full = el.textContent ?? \'\';
+            const after = full.slice(before.length);
+
+            // Truncate current block\'s DOM to `before`
+            el.textContent = before;
+
+            // Persist the truncation via update-block-content binding
+            void invoke(\'ActionBinding\', \'invoke\', {
+              binding: \'update-block-content\',
+              context: JSON.stringify({ nodeId, rootNodeId, schema, content: before }),
+            });
+
+            // Insert new block after current with `after` as body.
+            // afterBlockId is the convention used by smart-paste-converter
+            // for positional insertion; content carries the split remainder.
+            void invoke(\'ActionBinding\', \'invoke\', {
+              binding: \'insert-block\',
+              context: JSON.stringify({
+                rootNodeId,
+                schema: \'paragraph\',
+                displayMode: \'block-editor\',
+                afterBlockId: nodeId,
+                content: after,
+              }),
+            }).then((result) => {
+              if (result.variant === \'ok\') {
+                onMutate();
+                // TODO: focus the new block — requires a second useEffect watching
+                // children and focusing the last-inserted block by position.
+              }
+            });
+            return;
+          }
+          if (e.key === \'Enter\' && e.shiftKey) {
+            // Soft line break within block
+            e.preventDefault();
+            document.execCommand(\'insertLineBreak\');
+            return;
+          }
+        }}
         style={{
-          padding: 'var(--spacing-xs) var(--spacing-sm)',
+          padding: \'var(--spacing-xs) var(--spacing-sm)\',
           borderRadius: '4px',
           outline: 'none',
           minHeight: '1.5em',
@@ -2553,7 +2620,7 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
                   'data-node-id': nodeId,
                   'data-schema': schema,
                   'data-editor-flavor': editorFlavor,
-                  'data-block-empty': blockEmpty ? 'true' : 'false',
+                  'data-block-empty': blockEmptyRef.current ? 'true' : 'false',
                   'data-block-focused': blockFocused ? 'true' : 'false',
                   'data-decoration-scope': typeof entry.metadata.scope === 'string'
                     ? entry.metadata.scope
