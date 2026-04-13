@@ -1,0 +1,35 @@
+# Register the katex-highlight Highlight provider for language="latex" so
+# that Highlight/highlight dispatches to katex's parser to surface LaTeX
+# parse errors as inline annotations (kind="error"). Runs once at boot when
+# PluginRegistry advertises a highlight-provider plugin slot named
+# "katex-highlight".
+#
+# The concrete text->annotations function is installed in the shared
+# module-level registry (handlers/ts/providers/highlight-provider-registry.ts)
+# by the provider module itself on import; this sync wires the concept-layer
+# binding so Highlight/highlight { language: "latex" } resolves to this
+# provider. Mirrors syncs/app/register-katex-parse.sync (LE-07) and
+# syncs/app/register-shiki-highlight.sync (LE-11).
+#
+# The resulting annotations feed the code-syntax-error-panel widget so
+# malformed LaTeX shows inline squiggles and a diagnostic list.
+#
+# See docs/plans/block-editor-loose-ends-prd.md LE-12 (Highlight providers)
+# and the Highlight concept (specs/app/highlight.concept).
+
+sync RegisterKatexHighlight [eager]
+  purpose: "Bind the katex-highlight provider to language=latex in the Highlight concept once the highlight-provider PluginRegistry slot is available, enabling LaTeX parse-error annotations via KaTeX for the code-syntax-error-panel widget."
+when {
+  PluginRegistry/register: [ type: "highlight-provider"; name: ?name ]
+    => ok(plugin: ?plugin)
+}
+where {
+  eq(?name, "katex-highlight")
+}
+then {
+  Highlight/register: [
+    provider: "katex-highlight";
+    language: "latex";
+    config: ""
+  ]
+}
