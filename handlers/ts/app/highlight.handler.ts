@@ -16,6 +16,7 @@ import {
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import { getHighlightProvider } from '../providers/highlight-provider-registry.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
@@ -51,7 +52,7 @@ const _highlightHandler: FunctionalConceptHandler = {
       (b) => {
         const id = nextId();
         let b2 = put(b, 'definition', id, { id, provider, language, config });
-        b2 = put(b2, 'byLanguage', language, id);
+        b2 = put(b2, 'byLanguage', language, { id, provider, config });
         return complete(b2, 'ok', { id }) as StorageProgram<Result>;
       },
     ) as StorageProgram<Result>;
@@ -67,23 +68,47 @@ const _highlightHandler: FunctionalConceptHandler = {
       }) as StorageProgram<Result>;
     }
 
-    // Look up the registered provider id for this language
+    // Look up the registered provider record for this language
     let p = createProgram();
-    p = get(p, 'byLanguage', language, 'providerId');
+    p = get(p, 'byLanguage', language, 'providerRec');
     return branch(p,
-      (b) => !b.providerId,
+      (b) => !b.providerRec,
       (b) => complete(b, 'no_provider', { language }) as StorageProgram<Result>,
       (b) => {
-        // Provider exists — produce a stub annotation list. Real dispatch happens
-        // via sync wiring to the actual highlighter binary. The list encodes
-        // zero ranges so renderers display unstyled text until a real provider
-        // plugs in the actual decoration spans.
-        const annotations = JSON.stringify({
-          providerId: b.providerId,
-          language,
-          textLength: text.length,
-          annotations: [] as Array<{ range: { start: number; end: number }; kind: string; meta: string }>,
-        });
+        // Provider exists — dispatch through the module-level provider
+        // registry (shared with LE-12 katex-highlight). If no implementation
+        // is registered under the provider name, fall back to a valid empty
+        // annotation list so renderers always receive well-formed bytes.
+        const rec = (b.providerRec ?? {}) as { id?: string; provider?: string; config?: string } | string;
+        const providerName = typeof rec === 'string' ? '' : (rec.provider ?? '');
+        const providerId = typeof rec === 'string' ? rec : (rec.id ?? '');
+        const providerConfig = typeof rec === 'string' ? undefined : rec.config;
+        const fn = providerName ? getHighlightProvider(providerName) : undefined;
+        let annotations: string;
+        try {
+          if (fn) {
+            annotations = fn(text, language, providerConfig);
+          } else {
+            annotations = JSON.stringify({
+              providerId, language, textLength: text.length, annotations: [],
+            });
+          }
+        } catch (err: any) {
+          return complete(b, 'error', {
+            message: err?.message ?? 'provider dispatch failed',
+          }) as StorageProgram<Result>;
+        }
+        // Detect structured error envelope from the provider.
+        try {
+          const parsed = JSON.parse(annotations);
+          if (parsed && parsed.ok === false && parsed.error) {
+            return complete(b, 'error', {
+              message: String(parsed.error?.message ?? 'provider error'),
+            }) as StorageProgram<Result>;
+          }
+        } catch {
+          // Non-JSON is still valid Bytes — pass through as-is.
+        }
         return complete(b, 'ok', { annotations }) as StorageProgram<Result>;
       },
     ) as StorageProgram<Result>;
