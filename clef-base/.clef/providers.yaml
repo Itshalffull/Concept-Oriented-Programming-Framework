@@ -66,6 +66,185 @@ parse:
       - clef-theme
       - clef-derived
 
+  # Tree-sitter WASM grammars (VPR-21).
+  #
+  # Every grammar shipped by the tree-sitter-wasms npm package is copied into
+  # suites/parse/grammars/wasm/ by scripts/copy-tree-sitter-wasm.mjs (postinstall).
+  # The tree-sitter Parse provider is grammar-agnostic — each entry selects a
+  # grammar via options.grammar (project-relative wasm path).
+  #
+  # slot naming convention: identical to the wasm file suffix
+  #   tree-sitter-<slot>.wasm  →  slot: <slot>
+  # Underscores are preserved (c_sharp, embedded_template). Scope name follows
+  # TextMate convention: source.<slot>.
+  #
+  # slot-group is not used here because each entry carries a distinct options
+  # block (different grammar path per language).
+  #
+  # json, yaml, typescript, and tsx are intentionally omitted — they are
+  # handled by dedicated higher-priority parse providers elsewhere in the
+  # stack (and by the tree-sitter-autodiscover reader as a fallback).
+  - slot: bash
+    provider: tree-sitter
+    options:
+      grammar: suites/parse/grammars/wasm/tree-sitter-bash.wasm
+      packageName: tree-sitter-wasms
+  - slot: c
+    provider: tree-sitter
+    options:
+      grammar: suites/parse/grammars/wasm/tree-sitter-c.wasm
+      packageName: tree-sitter-wasms
+  - slot: c_sharp
+    provider: tree-sitter
+    options:
+      grammar: suites/parse/grammars/wasm/tree-sitter-c_sharp.wasm
+      packageName: tree-sitter-wasms
+  - slot: cpp
+    provider: tree-sitter
+    options:
+      grammar: suites/parse/grammars/wasm/tree-sitter-cpp.wasm
+      packageName: tree-sitter-wasms
+  - slot: css
+    provider: tree-sitter
+    options:
+      grammar: suites/parse/grammars/wasm/tree-sitter-css.wasm
+      packageName: tree-sitter-wasms
+  - slot: dart
+    provider: tree-sitter
+    options:
+      grammar: suites/parse/grammars/wasm/tree-sitter-dart.wasm
+      packageName: tree-sitter-wasms
+  - slot: elisp
+    provider: tree-sitter
+    options:
+      grammar: suites/parse/grammars/wasm/tree-sitter-elisp.wasm
+      packageName: tree-sitter-wasms
+  - slot: elixir
+    provider: tree-sitter
+    options:
+      grammar: suites/parse/grammars/wasm/tree-sitter-elixir.wasm
+      packageName: tree-sitter-wasms
+  - slot: elm
+    provider: tree-sitter
+    options:
+      grammar: suites/parse/grammars/wasm/tree-sitter-elm.wasm
+      packageName: tree-sitter-wasms
+  - slot: embedded_template
+    provider: tree-sitter
+    options:
+      grammar: suites/parse/grammars/wasm/tree-sitter-embedded_template.wasm
+      packageName: tree-sitter-wasms
+  - slot: go
+    provider: tree-sitter
+    options:
+      grammar: suites/parse/grammars/wasm/tree-sitter-go.wasm
+      packageName: tree-sitter-wasms
+  - slot: html
+    provider: tree-sitter
+    options:
+      grammar: suites/parse/grammars/wasm/tree-sitter-html.wasm
+      packageName: tree-sitter-wasms
+  - slot: java
+    provider: tree-sitter
+    options:
+      grammar: suites/parse/grammars/wasm/tree-sitter-java.wasm
+      packageName: tree-sitter-wasms
+  - slot: javascript
+    provider: tree-sitter
+    options:
+      grammar: suites/parse/grammars/wasm/tree-sitter-javascript.wasm
+      packageName: tree-sitter-wasms
+  - slot: kotlin
+    provider: tree-sitter
+    options:
+      grammar: suites/parse/grammars/wasm/tree-sitter-kotlin.wasm
+      packageName: tree-sitter-wasms
+  - slot: lua
+    provider: tree-sitter
+    options:
+      grammar: suites/parse/grammars/wasm/tree-sitter-lua.wasm
+      packageName: tree-sitter-wasms
+  - slot: objc
+    provider: tree-sitter
+    options:
+      grammar: suites/parse/grammars/wasm/tree-sitter-objc.wasm
+      packageName: tree-sitter-wasms
+  - slot: ocaml
+    provider: tree-sitter
+    options:
+      grammar: suites/parse/grammars/wasm/tree-sitter-ocaml.wasm
+      packageName: tree-sitter-wasms
+  - slot: php
+    provider: tree-sitter
+    options:
+      grammar: suites/parse/grammars/wasm/tree-sitter-php.wasm
+      packageName: tree-sitter-wasms
+  - slot: python
+    provider: tree-sitter
+    options:
+      grammar: suites/parse/grammars/wasm/tree-sitter-python.wasm
+      packageName: tree-sitter-wasms
+  - slot: ql
+    provider: tree-sitter
+    options:
+      grammar: suites/parse/grammars/wasm/tree-sitter-ql.wasm
+      packageName: tree-sitter-wasms
+  - slot: rescript
+    provider: tree-sitter
+    options:
+      grammar: suites/parse/grammars/wasm/tree-sitter-rescript.wasm
+      packageName: tree-sitter-wasms
+  - slot: ruby
+    provider: tree-sitter
+    options:
+      grammar: suites/parse/grammars/wasm/tree-sitter-ruby.wasm
+      packageName: tree-sitter-wasms
+  - slot: rust
+    provider: tree-sitter
+    options:
+      grammar: suites/parse/grammars/wasm/tree-sitter-rust.wasm
+      packageName: tree-sitter-wasms
+  - slot: scala
+    provider: tree-sitter
+    options:
+      grammar: suites/parse/grammars/wasm/tree-sitter-scala.wasm
+      packageName: tree-sitter-wasms
+  - slot: solidity
+    provider: tree-sitter
+    options:
+      grammar: suites/parse/grammars/wasm/tree-sitter-solidity.wasm
+      packageName: tree-sitter-wasms
+  - slot: swift
+    provider: tree-sitter
+    options:
+      grammar: suites/parse/grammars/wasm/tree-sitter-swift.wasm
+      packageName: tree-sitter-wasms
+  - slot: systemrdl
+    provider: tree-sitter
+    options:
+      grammar: suites/parse/grammars/wasm/tree-sitter-systemrdl.wasm
+      packageName: tree-sitter-wasms
+  - slot: tlaplus
+    provider: tree-sitter
+    options:
+      grammar: suites/parse/grammars/wasm/tree-sitter-tlaplus.wasm
+      packageName: tree-sitter-wasms
+  - slot: toml
+    provider: tree-sitter
+    options:
+      grammar: suites/parse/grammars/wasm/tree-sitter-toml.wasm
+      packageName: tree-sitter-wasms
+  - slot: vue
+    provider: tree-sitter
+    options:
+      grammar: suites/parse/grammars/wasm/tree-sitter-vue.wasm
+      packageName: tree-sitter-wasms
+  - slot: zig
+    provider: tree-sitter
+    options:
+      grammar: suites/parse/grammars/wasm/tree-sitter-zig.wasm
+      packageName: tree-sitter-wasms
+
 # ── Highlight ─────────────────────────────────────────────────────────────────
 #
 # Providers registered here handle AST / source text → token annotations.
