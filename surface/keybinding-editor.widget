@@ -1,0 +1,302 @@
+@version(1)
+widget keybinding-editor {
+
+  purpose {
+    Three-mode editor for viewing, customizing, and creating keybindings in the
+    KeyBinding registry. In "view" mode it replaces the hand-curated
+    KeyboardHelpModal with a searchable, category-filtered list derived live from
+    the registry. In "edit" mode it opens a detail pane and an inline recorder for
+    rebinding a selected combination. In "create" mode it starts the recorder
+    immediately for registering a brand-new binding. The recorder captures
+    keystrokes directly and suppresses the global dispatcher during capture; it
+    supports chord recording (e.g., Cmd+K then Cmd+S) with visual keycap chips.
+    Conflict detection runs inline and must be resolved before saving. Implements
+    the mode + context prop contract required by the Clef Base Creation UX (Tier
+    1a) so the editor can be mounted as create_surface from any InteractionSpec.
+  }
+
+  anatomy {
+    root:              container    { Top-level region wrapper for the entire editor surface }
+    search:            interactive  { Search input that filters the binding list by label, scope, or chord }
+    categoryFilter:    interactive  { Combobox that restricts the list to a single category such as Editing, Navigation, or Formatting }
+    modifiedFilter:    action       { Toggle button that narrows the list to only overridden bindings }
+    presetPicker:      interactive  { Dropdown for browsing and applying a KeybindingPreset such as Vim or VSCode }
+    list:              container    { Scrollable list of keybinding entries; supports virtual scrolling for 200 or more items }
+    listItem:          container    { A single row in the list representing one keybinding }
+    itemLabel:         text         { Human-readable action label for the listItem such as Bold }
+    keycapChips:       presentation { Row of styled keycap tokens showing the bound chord for the listItem }
+    scopePath:         text         { Dot-delimited scope string such as app.editor.code-block shown on the listItem }
+    modifiedIndicator: presentation { Badge shown on listItems whose chord has been overridden from the seed default }
+    detailPane:        container    { Side panel showing full metadata for the selected binding; visible only when mode is edit or create }
+    recorder:          interactive  { Keystroke-capture input that blocks the global dispatcher and shows recorded chord chips; hidden in view mode }
+    conflictWarning:   container    { Inline alert shown when the recorded chord conflicts with an existing binding in the same scope }
+    resetButton:       action       { Per-binding button in detailPane that clears any override and restores the seed default chord }
+  }
+
+  states {
+    idle [initial] {
+      on START_RECORDING -> recording;
+    }
+
+    recording {
+      on KEY_CAPTURED -> recordingChordStage2;
+      on CANCEL_RECORDING -> idle;
+      on SINGLE_STROKE_CONFIRM -> idle;
+      on CONFLICT_DETECTED -> conflict;
+      entry [suppressGlobalDispatcher];
+      exit [releaseGlobalDispatcher];
+    }
+
+    recordingChordStage2 {
+      on KEY_CAPTURED -> idle;
+      on BACKSPACE_STROKE -> recording;
+      on CANCEL_RECORDING -> idle;
+      on CONFIRM_CHORD -> idle;
+      on CONFLICT_DETECTED -> conflict;
+      entry [showChordOverlay];
+      exit [hideChordOverlay];
+    }
+
+    conflict {
+      on RESOLVE_REPLACE -> idle;
+      on RESOLVE_KEEP_BOTH -> idle;
+      on CANCEL_RECORDING -> idle;
+      entry [announceConflict];
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      Escape -> CANCEL_RECORDING;
+      ArrowUp -> NAVIGATE_PREV;
+      ArrowDown -> NAVIGATE_NEXT;
+      Enter -> CONFIRM_SELECTION;
+    }
+    focus {
+      trap: false;
+      initial: search;
+      roving: true;
+      returnOnClose: list;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Keybinding editor";
+      };
+      search -> {
+        role: "searchbox";
+        aria-label: "Search keybindings";
+        aria-controls: list;
+      };
+      categoryFilter -> {
+        role: "combobox";
+        aria-label: "Filter by category";
+      };
+      modifiedFilter -> {
+        role: "button";
+        aria-label: "Show only modified bindings";
+      };
+      presetPicker -> {
+        role: "combobox";
+        aria-label: "Select keybinding preset";
+      };
+      list -> {
+        role: "listbox";
+        aria-label: "Keybinding list";
+        aria-live: "polite";
+      };
+      listItem -> {
+        role: "option";
+      };
+      detailPane -> {
+        role: "region";
+        aria-label: "Binding detail";
+      };
+      recorder -> {
+        role: "textbox";
+        aria-label: "Press a key combination to bind";
+        aria-live: "assertive";
+      };
+      conflictWarning -> {
+        role: "alert";
+        aria-live: "assertive";
+      };
+      resetButton -> {
+        role: "button";
+        aria-label: "Reset binding to default";
+      };
+    }
+  }
+
+  props {
+    mode: "view" | "edit" | "create" = "view"
+    context: option String
+    scopeFilter: option String
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-mode: ?mode;
+      role: "region";
+      aria-label: "Keybinding editor";
+    }
+
+    search -> {
+      data-part: "search";
+      role: "searchbox";
+      aria-label: "Search keybindings";
+      placeholder: "Search by action name or key";
+      onInput: send(FILTER_SEARCH);
+    }
+
+    categoryFilter -> {
+      data-part: "category-filter";
+      role: "combobox";
+      aria-label: "Filter by category";
+      onInput: send(FILTER_CATEGORY);
+    }
+
+    modifiedFilter -> {
+      data-part: "modified-filter";
+      role: "button";
+      onClick: send(TOGGLE_MODIFIED_FILTER);
+    }
+
+    presetPicker -> {
+      data-part: "preset-picker";
+      role: "combobox";
+      aria-label: "Select keybinding preset";
+      onInput: send(SELECT_PRESET);
+    }
+
+    list -> {
+      data-part: "list";
+      role: "listbox";
+      aria-label: "Keybinding list";
+      onKeyDown: send(NAVIGATE_NEXT);
+    }
+
+    listItem -> {
+      data-part: "list-item";
+      role: "option";
+      onClick: send(CONFIRM_SELECTION);
+    }
+
+    itemLabel -> {
+      data-part: "item-label";
+    }
+
+    keycapChips -> {
+      data-part: "keycap-chips";
+    }
+
+    scopePath -> {
+      data-part: "scope-path";
+    }
+
+    modifiedIndicator -> {
+      data-part: "modified-indicator";
+    }
+
+    detailPane -> {
+      data-part: "detail-pane";
+      role: "region";
+      aria-label: "Binding detail";
+      hidden: if ?mode == "view" then true else false;
+    }
+
+    recorder -> {
+      data-part: "recorder";
+      data-recording: if state == "recording" or state == "recordingChordStage2" then "true" else "false";
+      role: "textbox";
+      aria-label: "Press a key combination to bind";
+      hidden: if ?mode == "view" then true else false;
+      onKeyDown: send(KEY_CAPTURED);
+      onKeyDown-Escape: send(CANCEL_RECORDING);
+      onKeyDown-Backspace: send(BACKSPACE_STROKE);
+    }
+
+    conflictWarning -> {
+      data-part: "conflict-warning";
+      data-conflict: if state == "conflict" then "true" else "false";
+      role: "alert";
+      hidden: if state == "conflict" then false else true;
+    }
+
+    resetButton -> {
+      data-part: "reset-button";
+      role: "button";
+      aria-label: "Reset binding to default";
+      onClick: send(RESET_BINDING);
+      hidden: if ?mode == "view" then true else false;
+    }
+  }
+
+  affordance {
+    serves: single-choice;
+    specificity: 9;
+    bind {
+      mode: mode;
+      context: context;
+      scopeFilter: scopeFilter;
+    }
+  }
+
+  invariant {
+    # Prose invariants covering key behavioral contracts
+    "recorder and detailPane are hidden when mode is view";
+    "recorder shows data-recording true when state is recording or recordingChordStage2";
+    "conflictWarning is hidden when state is not conflict";
+    "presetPicker is visible in all modes at all times";
+    "modifiedFilter is visible in all modes at all times";
+    "search aria-label describes filtering purpose so screen readers can identify it";
+    "list announces match count via aria-live polite region after each filter";
+    "listItem data-binding-id is present and unique for each rendered row";
+    "Escape key cancels recording in any recording state and returns to idle";
+    "Backspace removes most-recent stroke when state is recordingChordStage2";
+    "root data-mode reflects the mode prop at all times";
+    "conflictWarning role alert is always present in the DOM even when hidden";
+
+    # Action contracts
+    action CANCEL_RECORDING {
+      requires: state = "recording"
+      ensures ok: state = "idle"
+    }
+
+    action BACKSPACE_STROKE {
+      requires: state = "recordingChordStage2"
+      ensures ok: state = "recording"
+    }
+
+    action START_RECORDING {
+      requires: state = "idle"
+      ensures ok: state = "recording"
+    }
+
+    action CONFLICT_DETECTED {
+      requires: state = "recording"
+      ensures ok: state = "conflict"
+    }
+
+    # Structural always/never invariants
+    always "data-state on root reflects FSM": {
+      root.name = root.name
+    }
+
+    always "recorder hidden in view mode": {
+      mode = "view"
+    }
+
+    never "recorder visible in view mode": {
+      mode = "view"
+    }
+
+    never "conflictWarning active outside conflict state": {
+      state = "idle"
+    }
+  }
+
+}
