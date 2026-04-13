@@ -1,0 +1,24 @@
+# PluginRegistry seeds — media annotation decoration layer plugin (MAG-752).
+# Registers annotation-overlay widget as a decoration-layer plugin for media blocks
+# (image and video). The overlay composites all spatial annotation regions on top
+# of the media surface via the annotation-layer-overlay container widget.
+
+concept: PluginRegistry
+action: register
+entries:
+  - type: decoration-layer
+    name: annotation-overlay
+    metadata: >
+      {
+        "widget": "annotation-layer-overlay",
+        "label": "Annotation Layer",
+        "icon": "layers",
+        "availableContexts": ["image", "media-asset-video"],
+        "defaultEnabled": true,
+        "order": 10,
+        "props": {
+          "entityId": "$context.assetId",
+          "annotations": "$annotationLayer.regions",
+          "count": "$annotationLayer.count"
+        }
+      }

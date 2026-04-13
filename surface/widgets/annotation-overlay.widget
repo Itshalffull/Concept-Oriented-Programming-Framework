@@ -1,0 +1,233 @@
+@version(1)
+widget annotation-overlay {
+
+  purpose {
+    Decoration-layer widget that renders a single spatial annotation region
+    on top of an image or video asset. The widget reads geometry and label
+    data from AnnotationLayer and Region state; it does not own that state.
+    The regionShape is an SVG or absolutely-positioned element whose
+    dimensions are derived from the serialised regionGeometry prop. The
+    regionLabel floats above or beside the shape, and a commentIndicator
+    badge appears when comments are attached to the annotation. Hovering or
+    clicking the overlay transitions the FSM to hovering or selected,
+    surfacing a focus ring and raising the annotation in visual z-order.
+    Keyboard Tab/Enter/Escape support lets users navigate and select
+    annotations without a pointer device. Registered with PluginRegistry
+    as type decoration-layer, name annotation-overlay.
+  }
+
+  requires @1 {
+    fields {
+      annotationId: String;
+      regionGeometry: String;
+      label: String;
+    }
+    actions {
+      listByEntity(entityId: String);
+    }
+  }
+
+  anatomy {
+    root:             container    { Top-level absolutely-positioned wrapper that positions the annotation over the asset; carries data-state and data-annotation-id }
+    regionShape:      presentation { SVG or div element whose dimensions are derived from the serialised regionGeometry; renders the visible region boundary }
+    regionLabel:      text         { Floating label text derived from the label prop; positioned above or beside the regionShape }
+    commentIndicator: presentation { Small badge rendered on the region when comments are attached; hidden when commentCount is zero }
+  }
+
+  states {
+    view {
+      idle [initial] {
+        on POINTER_ENTER -> hovering;
+        on FOCUS         -> hovering;
+      }
+      hovering {
+        on POINTER_LEAVE -> idle;
+        on BLUR          -> idle;
+        on CLICK         -> selected;
+        on ESCAPE        -> idle;
+        entry [raiseZOrder];
+        exit [lowerZOrder];
+      }
+      selected {
+        on POINTER_ENTER -> selected;
+        on POINTER_LEAVE -> selected;
+        on DESELECT      -> idle;
+        on ESCAPE        -> idle;
+        entry [raiseZOrder; emitSelectEvent];
+        exit [lowerZOrder];
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Enter  -> CLICK;
+      Escape -> ESCAPE;
+      Tab    -> FOCUS;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      roving: false;
+      returnOnClose: root;
+    }
+    aria {
+      root -> {
+        role: "button";
+        aria-label: "Annotation region";
+        aria-pressed: if state.view == "selected" then "true" else "false";
+        aria-describedby: regionLabel;
+        tabindex: "0";
+      };
+      regionShape -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      regionLabel -> {
+        role: "tooltip";
+        aria-live: "polite";
+      };
+      commentIndicator -> {
+        role: "status";
+        aria-label: "Has comments";
+        aria-live: "polite";
+      };
+    }
+  }
+
+  props {
+    annotationId: String
+    regionGeometry: String
+    label: String
+    focused: Bool = false
+    commentCount: Int = 0
+    editable: Bool = false
+    opacity: Int = 80
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.view;
+      data-annotation-id: ?annotationId;
+      data-focused: if ?focused then "true" else "false";
+      aria-label: "Annotation region";
+      aria-pressed: if state.view == "selected" then "true" else "false";
+      tabindex: "0";
+      onPointerEnter: send(POINTER_ENTER);
+      onPointerLeave: send(POINTER_LEAVE);
+      onFocus: send(FOCUS);
+      onBlur: send(BLUR);
+      onClick: send(CLICK);
+      onKeyDown: send(ESCAPE);
+    }
+
+    regionShape -> {
+      data-part: "region-shape";
+      data-geometry: ?regionGeometry;
+      data-annotation-id: ?annotationId;
+      aria-hidden: "true";
+    }
+
+    regionLabel -> {
+      data-part: "region-label";
+      text: ?label;
+      hidden: if ?label == "" then true else false;
+    }
+
+    commentIndicator -> {
+      data-part: "comment-indicator";
+      data-comment-count: ?commentCount;
+      hidden: if ?commentCount == 0 then true else false;
+      aria-label: "Has comments";
+    }
+  }
+
+  affordance {
+    serves: decoration-layer;
+    specificity: 7;
+    when pluginType = "decoration-layer";
+    bind {
+      annotationId: annotationId;
+      regionGeometry: regionGeometry;
+      label: label;
+    }
+  }
+
+  invariant {
+    example "POINTER_ENTER transitions idle to hovering": {
+      after POINTER_ENTER() -> ok
+      then state.view = "hovering"
+    }
+
+    example "CLICK transitions hovering to selected": {
+      after CLICK() -> ok
+      then state.view = "selected"
+    }
+
+    example "ESCAPE from hovering returns to idle": {
+      after ESCAPE() -> ok
+      then state.view = "idle"
+    }
+
+    example "ESCAPE from selected returns to idle": {
+      after ESCAPE() -> ok
+      then state.view = "idle"
+    }
+
+    example "DESELECT transitions selected to idle": {
+      after DESELECT() -> ok
+      then state.view = "idle"
+    }
+
+    example "FOCUS transitions idle to hovering": {
+      after FOCUS() -> ok
+      then state.view = "hovering"
+    }
+
+    forall "all view states are reachable": {
+      given s in viewStates
+      then s.reachable = true
+    }
+
+    always "data-state on root reflects view FSM": {
+      root.dataState = state.view
+    }
+
+    always "data-annotation-id present on root": {
+      root.dataAnnotationId = annotationId
+    }
+
+    always "aria-pressed on root reflects selected state": {
+      state.view = "selected" and root.ariaPressed = "true"
+    }
+
+    always "commentIndicator hidden when commentCount is zero": {
+      commentCount = 0 and commentIndicator.hidden = true
+    }
+
+    always "regionLabel hidden when label is empty string": {
+      label = "" and regionLabel.hidden = true
+    }
+
+    never "annotation-overlay rendered without annotationId": {
+      root.dataAnnotationId = ""
+    }
+
+    never "aria-pressed true while view state is not selected": {
+      state.view != "selected" and root.ariaPressed = "true"
+    }
+
+    never "focused and idle simultaneously when focused prop is true": {
+      focused = true and state.view = "idle" and root.dataFocused = "false"
+    }
+
+    action root {
+      requires: state.view = "idle"
+      ensures ok: state.view = "hovering"
+    }
+  }
+
+}

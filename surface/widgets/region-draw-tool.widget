@@ -1,0 +1,376 @@
+@version(1)
+widget region-draw-tool {
+
+  purpose {
+    Tool-plane overlay widget invoked via ActionBinding that lets users draw
+    spatial regions (rectangle, ellipse, or polygon) on top of an image or
+    video asset. A transparent drawing canvas is layered over the media; the
+    active shape tool is selected from the toolbar. While the pointer is held
+    down, a live regionPreview is rendered showing the region-in-progress.
+    Releasing the pointer transitions to a labeling phase where the user types
+    a descriptive label before confirming or cancelling. On confirm the widget
+    calls the ActionBinding ref supplied in onComplete, passing the serialised
+    geometry and label back to the caller so AnnotationLayer/create and
+    Region/create can be invoked. Keyboard-first: Tab cycles toolbar tools,
+    Enter confirms, Escape cancels at any phase. Registered with PluginRegistry
+    as type tool-plane, name region-draw-tool.
+  }
+
+  requires @1 {
+    fields {
+      targetAssetId: String;
+      canvasWidth: Int;
+      canvasHeight: Int;
+    }
+    actions {
+      create(annotationLayerId: String, regionGeometry: String, label: String);
+    }
+  }
+
+  anatomy {
+    root:          container    { Top-level overlay wrapper that stretches over the media surface; carries data-state for the draw and shape FSMs }
+    toolbar:       container    { Horizontal tool strip at the top of the overlay containing the three shape-tool buttons }
+    rectangleTool: action       { Toolbar button activating rectangle draw mode; toggles data-active when the shape machine is in rectangle state }
+    ellipseTool:   action       { Toolbar button activating ellipse draw mode; toggles data-active when the shape machine is in ellipse state }
+    polygonTool:   action       { Toolbar button activating polygon draw mode; toggles data-active when the shape machine is in polygon state }
+    drawingCanvas: interactive  { Transparent canvas element that captures pointer events for region drawing; spans the full asset dimensions }
+    regionPreview: presentation { Live preview outline rendered during active drawing, showing the in-progress region before the pointer is released }
+    labelInput:    interactive  { Text input that accepts the region label after drawing completes; focused automatically on entry to labeling state }
+    confirmButton: action       { Submits the drawn region with the typed label to the onComplete ActionBinding ref }
+    cancelButton:  action       { Discards the in-progress region and returns the machine to idle without emitting a result }
+  }
+
+  states {
+    draw {
+      idle [initial] {
+        on START_DRAW -> drawing;
+        on CANCEL     -> idle;
+      }
+      drawing {
+        on POINTER_UP -> labeling;
+        on CANCEL     -> idle;
+        entry [beginRegionPreview];
+        exit [finaliseRegionPreview];
+      }
+      labeling {
+        on CONFIRM  -> saving;
+        on CANCEL   -> idle;
+        entry [focusLabelInput];
+        exit [clearLabelInput];
+      }
+      saving {
+        on SAVE_SUCCESS -> idle;
+        on SAVE_FAILURE -> labeling;
+        entry [lockConfirmButton];
+        exit [unlockConfirmButton];
+      }
+    }
+
+    shape [parallel] {
+      rectangle [initial] {
+        on SELECT_RECTANGLE -> rectangle;
+        on SELECT_ELLIPSE   -> ellipse;
+        on SELECT_POLYGON   -> polygon;
+      }
+      ellipse {
+        on SELECT_RECTANGLE -> rectangle;
+        on SELECT_ELLIPSE   -> ellipse;
+        on SELECT_POLYGON   -> polygon;
+      }
+      polygon {
+        on SELECT_RECTANGLE -> rectangle;
+        on SELECT_ELLIPSE   -> ellipse;
+        on SELECT_POLYGON   -> polygon;
+        on ADD_POLYGON_POINT -> polygon;
+      }
+    }
+  }
+
+  accessibility {
+    role: dialog;
+    modal: true;
+    keyboard {
+      Escape     -> CANCEL;
+      Enter      -> CONFIRM;
+      Tab        -> FOCUS_NEXT_TOOL;
+      Shift+Tab  -> FOCUS_PREV_TOOL;
+      R          -> SELECT_RECTANGLE;
+      E          -> SELECT_ELLIPSE;
+      P          -> SELECT_POLYGON;
+    }
+    focus {
+      trap: true;
+      initial: rectangleTool;
+      roving: false;
+      returnOnClose: drawingCanvas;
+    }
+    aria {
+      root -> {
+        role: "dialog";
+        aria-label: "Draw annotation region";
+        aria-modal: "true";
+      };
+      toolbar -> {
+        role: "toolbar";
+        aria-label: "Shape tools";
+      };
+      rectangleTool -> {
+        role: "button";
+        aria-label: "Rectangle tool";
+        aria-pressed: if state.shape == "rectangle" then "true" else "false";
+        aria-keyshortcuts: "R";
+      };
+      ellipseTool -> {
+        role: "button";
+        aria-label: "Ellipse tool";
+        aria-pressed: if state.shape == "ellipse" then "true" else "false";
+        aria-keyshortcuts: "E";
+      };
+      polygonTool -> {
+        role: "button";
+        aria-label: "Polygon tool";
+        aria-pressed: if state.shape == "polygon" then "true" else "false";
+        aria-keyshortcuts: "P";
+      };
+      drawingCanvas -> {
+        role: "application";
+        aria-label: "Drawing canvas";
+        aria-roledescription: "Draw a region on the media asset";
+      };
+      regionPreview -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      labelInput -> {
+        role: "textbox";
+        aria-label: "Region label";
+        aria-required: "true";
+      };
+      confirmButton -> {
+        role: "button";
+        aria-label: "Confirm region";
+        aria-disabled: if state.draw == "saving" then "true" else "false";
+        aria-keyshortcuts: "Enter";
+      };
+      cancelButton -> {
+        role: "button";
+        aria-label: "Cancel drawing";
+        aria-keyshortcuts: "Escape";
+      };
+    }
+  }
+
+  props {
+    targetAssetId: String
+    canvasWidth: Int = 0
+    canvasHeight: Int = 0
+    onComplete: String
+    defaultLabel: String = ""
+    snapToGrid: Bool = false
+    minRegionSize: Int = 10
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.draw;
+      data-shape: state.shape;
+      data-target-asset-id: ?targetAssetId;
+      aria-label: "Draw annotation region";
+      aria-modal: "true";
+      onKeyDown: send(CANCEL);
+    }
+
+    toolbar -> {
+      data-part: "toolbar";
+      role: "toolbar";
+      aria-label: "Shape tools";
+    }
+
+    rectangleTool -> {
+      data-part: "rectangle-tool";
+      data-active: if state.shape == "rectangle" then "true" else "false";
+      aria-pressed: if state.shape == "rectangle" then "true" else "false";
+      aria-label: "Rectangle tool";
+      tabindex: if state.shape == "rectangle" then "0" else "-1";
+      onClick: send(SELECT_RECTANGLE);
+    }
+
+    ellipseTool -> {
+      data-part: "ellipse-tool";
+      data-active: if state.shape == "ellipse" then "true" else "false";
+      aria-pressed: if state.shape == "ellipse" then "true" else "false";
+      aria-label: "Ellipse tool";
+      tabindex: if state.shape == "ellipse" then "0" else "-1";
+      onClick: send(SELECT_ELLIPSE);
+    }
+
+    polygonTool -> {
+      data-part: "polygon-tool";
+      data-active: if state.shape == "polygon" then "true" else "false";
+      aria-pressed: if state.shape == "polygon" then "true" else "false";
+      aria-label: "Polygon tool";
+      tabindex: if state.shape == "polygon" then "0" else "-1";
+      onClick: send(SELECT_POLYGON);
+    }
+
+    drawingCanvas -> {
+      data-part: "drawing-canvas";
+      data-draw-state: state.draw;
+      data-shape: state.shape;
+      width: ?canvasWidth;
+      height: ?canvasHeight;
+      onPointerDown: send(START_DRAW);
+      onPointerUp: send(POINTER_UP);
+    }
+
+    regionPreview -> {
+      data-part: "region-preview";
+      data-shape: state.shape;
+      aria-hidden: "true";
+      hidden: if state.draw == "idle" then true else false;
+    }
+
+    labelInput -> {
+      data-part: "label-input";
+      hidden: if state.draw == "labeling" then false else true;
+      autofocus: if state.draw == "labeling" then true else false;
+      placeholder: "Enter region label";
+      disabled: if state.draw == "saving" then true else false;
+      onInput: send(UPDATE_LABEL);
+    }
+
+    confirmButton -> {
+      data-part: "confirm-button";
+      hidden: if state.draw == "labeling" then false else true;
+      disabled: if state.draw == "saving" then true else false;
+      aria-disabled: if state.draw == "saving" then "true" else "false";
+      onClick: send(CONFIRM);
+    }
+
+    cancelButton -> {
+      data-part: "cancel-button";
+      hidden: if state.draw == "idle" then true else false;
+      onClick: send(CANCEL);
+    }
+  }
+
+  affordance {
+    serves: tool-plane;
+    specificity: 8;
+    when pluginType = "tool-plane";
+    bind {
+      targetAssetId: targetAssetId;
+      onComplete: onComplete;
+    }
+  }
+
+  invariant {
+    example "START_DRAW transitions idle to drawing": {
+      after START_DRAW() -> ok
+      then state.draw = "drawing"
+    }
+
+    example "POINTER_UP transitions drawing to labeling": {
+      after POINTER_UP() -> ok
+      then state.draw = "labeling"
+    }
+
+    example "CONFIRM transitions labeling to saving": {
+      after CONFIRM() -> ok
+      then state.draw = "saving"
+    }
+
+    example "SAVE_SUCCESS transitions saving to idle": {
+      after SAVE_SUCCESS() -> ok
+      then state.draw = "idle"
+    }
+
+    example "SAVE_FAILURE returns saving to labeling": {
+      after SAVE_FAILURE() -> ok
+      then state.draw = "labeling"
+    }
+
+    example "CANCEL from drawing returns to idle": {
+      after CANCEL() -> ok
+      then state.draw = "idle"
+    }
+
+    example "SELECT_ELLIPSE transitions shape machine to ellipse": {
+      after SELECT_ELLIPSE() -> ok
+      then state.shape = "ellipse"
+    }
+
+    example "SELECT_POLYGON transitions shape machine to polygon": {
+      after SELECT_POLYGON() -> ok
+      then state.shape = "polygon"
+    }
+
+    example "SELECT_RECTANGLE transitions shape machine back to rectangle": {
+      after SELECT_RECTANGLE() -> ok
+      then state.shape = "rectangle"
+    }
+
+    forall "all draw states are reachable": {
+      given s in drawStates
+      then s.reachable = true
+    }
+
+    forall "all shape states are reachable": {
+      given s in shapeStates
+      then s.reachable = true
+    }
+
+    always "data-state on root reflects draw FSM": {
+      root.dataState = state.draw
+    }
+
+    always "data-shape on root reflects shape FSM": {
+      root.dataShape = state.shape
+    }
+
+    always "labelInput visible only during labeling or saving": {
+      state.draw != "labeling" and labelInput.hidden = true
+    }
+
+    always "confirmButton visible only during labeling or saving": {
+      state.draw != "labeling" and confirmButton.hidden = true
+    }
+
+    always "cancelButton hidden while in idle": {
+      state.draw = "idle" and cancelButton.hidden = true
+    }
+
+    always "confirmButton disabled while saving": {
+      state.draw = "saving" and confirmButton.disabled = true
+    }
+
+    never "region submitted without a targetAssetId": {
+      targetAssetId = "" and state.draw = "saving"
+    }
+
+    never "multiple shape tools show aria-pressed true simultaneously": {
+      rectangleTool.ariaPressed = "true" and ellipseTool.ariaPressed = "true"
+    }
+
+    never "drawingCanvas interactive while saving": {
+      state.draw = "saving" and drawingCanvas.disabled = false
+    }
+
+    action confirmButton {
+      requires: state.draw = "labeling"
+      ensures ok: state.draw = "saving"
+    }
+
+    action cancelButton {
+      requires: state.draw != "idle"
+      ensures ok: state.draw = "idle"
+    }
+
+    action rectangleTool {
+      requires: state.draw = "idle"
+      ensures ok: state.shape = "rectangle"
+    }
+  }
+
+}

@@ -1,0 +1,49 @@
+# EditSurface seeds — media annotation tools for image and video blocks (MAG-752).
+# Extends the (image, block-editor) and (media-asset-video, block-editor) surfaces
+# to include annotation drawing commands and the annotation layer panel widget.
+# ActionBindings (annotation-draw-region, annotation-create-comment-for-region,
+# annotation-tag-region) are registered separately in ActionBinding.media-annotations.seeds.yaml.
+
+concept: EditSurface
+action: register
+entries:
+  - id: image-block-editor-annotations
+    schema_ref: image
+    context: block-editor
+    toolbar_widget: inline-toolbar
+    command_bindings:
+      - image-crop
+      - image-filter-picker
+      - image-alt-text-edit
+      - image-replace
+      - annotation-draw-region
+      - annotation-create-comment-for-region
+      - annotation-tag-region
+    panel_widgets:
+      - image-metadata-panel
+      - exif-panel
+      - annotation-layer-overlay
+    context_menu_bindings: []
+    input_rule_refs: []
+    picker_refs:
+      - media-picker
+    compile_action_ref: null
+    compile_bundle_ref: null
+    compile_status_field: null
+
+  - id: video-block-editor-annotations
+    schema_ref: media-asset-video
+    context: block-editor
+    toolbar_widget: inline-toolbar
+    command_bindings:
+      - annotation-draw-region
+      - annotation-create-comment-for-region
+      - annotation-tag-region
+    panel_widgets:
+      - annotation-layer-overlay
+    context_menu_bindings: []
+    input_rule_refs: []
+    picker_refs: []
+    compile_action_ref: null
+    compile_bundle_ref: null
+    compile_status_field: null

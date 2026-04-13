@@ -1,0 +1,52 @@
+# ActionBinding seeds — media annotation toolbar commands (MAG-752).
+# Three annotation commands for image and video block editor surfaces.
+# annotation-draw-region: invokes region-draw-tool widget; on complete creates
+#   a Region + AnnotationLayer entry via the onComplete ActionBinding ref.
+# annotation-create-comment-for-region: after region drawn, opens comment input
+#   reusing the P3.04 comment-add-to-selection flow with entity=annotation-id.
+# annotation-tag-region: opens tag picker for the drawn region (Tag/apply).
+
+concept: ActionBinding
+action: bind
+entries:
+  # Draw a spatial region on the media surface and create a Region + AnnotationLayer entry
+  - name: annotation-draw-region
+    binding: annotation-draw-region
+    target: "AnnotationLayer/create"
+    parameterMap: '{"entityId":"context.assetId","regionGeometry":"context.regionGeometry","label":"context.regionLabel"}'
+    executionPolicy: "pessimistic"
+    toolbar_command: true
+    slash_command: false
+    context_menu: false
+    section: "Annotate"
+    label: "Draw Region"
+    icon: "pen-tool"
+    widget_ref: "region-draw-tool"
+
+  # After a region is drawn, open comment input for the created annotation
+  - name: annotation-create-comment-for-region
+    binding: annotation-create-comment-for-region
+    target: "Comment/create"
+    parameterMap: '{"entity":"context.annotationId","entityKind":"annotation","body":"context.commentBody"}'
+    executionPolicy: "pessimistic"
+    toolbar_command: true
+    slash_command: false
+    context_menu: false
+    section: "Annotate"
+    label: "Comment on Region"
+    icon: "message-circle"
+    widget_ref: "comment-composer"
+
+  # Open tag picker for the drawn region, applying tags via Tag/apply
+  - name: annotation-tag-region
+    binding: annotation-tag-region
+    target: "Tag/apply"
+    parameterMap: '{"entity":"context.annotationId","tag":"context.selectedTag"}'
+    executionPolicy: "auto"
+    toolbar_command: true
+    slash_command: false
+    context_menu: false
+    section: "Annotate"
+    label: "Tag Region"
+    icon: "tag"
+    widget_ref: "tag-picker"

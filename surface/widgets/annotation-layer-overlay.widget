@@ -1,0 +1,229 @@
+@version(1)
+widget annotation-layer-overlay {
+
+  purpose {
+    Decoration-layer widget that renders the full annotation layer for an image
+    or video media block, compositing all spatial annotation overlays on top of
+    the media surface as absolutely-positioned children. Each annotation region
+    is represented by a child annotation-overlay widget instance. The panel
+    provides a collective container, a count badge, and a collapse/expand toggle
+    so users can show or hide all annotations simultaneously. When expanded each
+    individual annotation-overlay emits hover and select events through this
+    container. Keyboard navigation with Tab cycles focus between annotations and
+    Escape collapses the layer. Registered with PluginRegistry as
+    type decoration-layer, name annotation-overlay.
+  }
+
+  requires @1 {
+    fields {
+      entityId: String;
+      annotations: list;
+      count: Int;
+    }
+    actions {
+      listByEntity(entityId: String);
+    }
+  }
+
+  anatomy {
+    root:          container    { Full-size absolutely-positioned layer that sits over the media surface; carries data-state, data-entity-id, and data-count }
+    layerToggle:   action       { Button that collapses or expands the entire annotation layer; shows the count badge label }
+    countBadge:    presentation { Numeric bubble showing the total annotation count; visible whenever count is greater than zero }
+    annotationList: container   { Container holding the rendered annotation-overlay child instances; hidden when layer is collapsed }
+    emptyHint:     text         { Placeholder text shown when count is zero and the layer is expanded, guiding the user to draw the first region }
+  }
+
+  states {
+    visibility {
+      expanded [initial] {
+        on COLLAPSE -> collapsed;
+        on ESCAPE   -> collapsed;
+      }
+      collapsed {
+        on EXPAND   -> expanded;
+      }
+    }
+
+    focus {
+      idle [initial] {
+        on FOCUS_LAYER -> focused;
+      }
+      focused {
+        on BLUR_LAYER -> idle;
+        on ESCAPE     -> idle;
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Escape -> ESCAPE;
+      Enter  -> EXPAND;
+      Tab    -> FOCUS_LAYER;
+    }
+    focus {
+      trap: false;
+      initial: layerToggle;
+      roving: false;
+      returnOnClose: layerToggle;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Annotation layer";
+        aria-expanded: if state.visibility == "expanded" then "true" else "false";
+        aria-live: "polite";
+      };
+      layerToggle -> {
+        role: "button";
+        aria-label: "Toggle annotation layer";
+        aria-expanded: if state.visibility == "expanded" then "true" else "false";
+        aria-controls: annotationList;
+      };
+      countBadge -> {
+        role: "status";
+        aria-label: "Annotation count";
+        aria-live: "polite";
+      };
+      annotationList -> {
+        role: "list";
+        aria-label: "Annotation regions";
+      };
+      emptyHint -> {
+        role: "note";
+        aria-live: "polite";
+      };
+    }
+  }
+
+  props {
+    entityId: String
+    annotations: list String = []
+    count: Int = 0
+    defaultExpanded: Bool = true
+    showEmptyHint: Bool = true
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.visibility;
+      data-entity-id: ?entityId;
+      data-count: ?count;
+      aria-label: "Annotation layer";
+      aria-expanded: if state.visibility == "expanded" then "true" else "false";
+      onFocus: send(FOCUS_LAYER);
+      onBlur: send(BLUR_LAYER);
+    }
+
+    layerToggle -> {
+      data-part: "layer-toggle";
+      aria-expanded: if state.visibility == "expanded" then "true" else "false";
+      aria-controls: "annotation-list";
+      onClick: send(COLLAPSE);
+      onKeyDown: send(EXPAND);
+    }
+
+    countBadge -> {
+      data-part: "count-badge";
+      data-count: ?count;
+      hidden: if ?count == 0 then true else false;
+      aria-label: "Annotation count";
+    }
+
+    annotationList -> {
+      data-part: "annotation-list";
+      hidden: if state.visibility == "collapsed" then true else false;
+    }
+
+    emptyHint -> {
+      data-part: "empty-hint";
+      hidden: if ?count == 0 and state.visibility == "expanded" then false else true;
+    }
+  }
+
+  affordance {
+    serves: decoration-layer;
+    specificity: 8;
+    when pluginType = "decoration-layer";
+    bind {
+      entityId: entityId;
+      annotations: annotations;
+      count: count;
+    }
+  }
+
+  invariant {
+    example "COLLAPSE transitions expanded to collapsed": {
+      after COLLAPSE() -> ok
+      then state.visibility = "collapsed"
+    }
+
+    example "EXPAND transitions collapsed to expanded": {
+      after EXPAND() -> ok
+      then state.visibility = "expanded"
+    }
+
+    example "ESCAPE from expanded transitions to collapsed": {
+      after ESCAPE() -> ok
+      then state.visibility = "collapsed"
+    }
+
+    example "FOCUS_LAYER transitions focus idle to focused": {
+      after FOCUS_LAYER() -> ok
+      then state.focus = "focused"
+    }
+
+    example "BLUR_LAYER transitions focus focused to idle": {
+      after BLUR_LAYER() -> ok
+      then state.focus = "idle"
+    }
+
+    example "ESCAPE from focus focused transitions to idle": {
+      after ESCAPE() -> ok
+      then state.focus = "idle"
+    }
+
+    forall "all visibility states are reachable": {
+      given s in visibilityStates
+      then s.reachable = true
+    }
+
+    forall "all focus states are reachable": {
+      given s in focusStates
+      then s.reachable = true
+    }
+
+    always "data-state on root reflects visibility FSM": {
+      root.dataState = state.visibility
+    }
+
+    always "annotationList hidden when layer is collapsed": {
+      state.visibility = "collapsed" and annotationList.hidden = true
+    }
+
+    always "countBadge hidden when count is zero": {
+      count = 0 and countBadge.hidden = true
+    }
+
+    always "emptyHint visible only when expanded and count is zero": {
+      count != 0 and emptyHint.hidden = true
+    }
+
+    never "annotation-layer-overlay rendered without entityId": {
+      root.dataEntityId = ""
+    }
+
+    never "annotationList visible while collapsed": {
+      state.visibility = "collapsed" and annotationList.hidden = false
+    }
+
+    action layerToggle {
+      requires: state.visibility = "expanded"
+      ensures ok: state.visibility = "collapsed"
+    }
+  }
+
+}
