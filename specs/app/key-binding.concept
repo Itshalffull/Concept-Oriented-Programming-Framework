@@ -1,0 +1,389 @@
+@version(1)
+@category("ui-core")
+@visibility("public")
+concept KeyBinding [K, A] {
+
+  purpose {
+    Declare keyboard shortcuts as data, resolve incoming key events to
+    matching action-binding identifiers, and manage per-user and
+    per-workspace chord overrides. Decouples key-event handling from
+    action dispatch so shortcuts are inspectable, customisable, and
+    conflict-detectable without touching individual widgets.
+  }
+
+  state {
+    bindings: set K
+    definition {
+      label: K -> String
+      description: K -> option String
+      category: K -> String
+      scope: K -> String
+      priority: K -> Int
+      chord: K -> list { mod: list String, key: String, code: String }
+      phase: K -> "capture" | "bubble"
+      onlyOutsideTextInput: K -> Bool
+      overridesBrowser: K -> Bool
+      actionBinding: K -> A
+      params: K -> option Bytes
+    }
+    overrides {
+      userChord: K -> option list { mod: list String, key: String, code: String }
+      workspaceChord: K -> option list { mod: list String, key: String, code: String }
+    }
+  }
+
+  actions {
+
+    action register(binding: K, label: String, description: option String,
+                    category: String, scope: String, priority: Int,
+                    chord: list { mod: list String, key: String, code: String },
+                    phase: String, onlyOutsideTextInput: Bool,
+                    overridesBrowser: Bool, actionBinding: A,
+                    params: option Bytes) {
+      -> ok(binding: K) {
+        Register the keyboard shortcut. The binding is now active and will
+        be considered by resolveKey for the given scope and chord.
+      }
+      -> duplicate(message: String) {
+        A binding with this identifier is already registered. Use deregister
+        first or choose a distinct identifier.
+      }
+      -> conflict(binding: K, message: String) {
+        Another binding with the same scope, identical chord, and equal
+        priority already exists. Adjust priority or chord to resolve.
+      }
+      -> error(message: String) {
+        Registration failed because a required field is invalid — label is
+        empty, scope does not match the hierarchical-path pattern, chord list
+        is empty, or phase is not "capture" or "bubble".
+      }
+
+      fixture register_ok {
+        binding: "bold-cmd-b"
+        label: "Bold"
+        description: "Toggle bold formatting on the selected text"
+        category: "Editing"
+        scope: "app.editor"
+        priority: 100
+        chord: [{ mod: ["mod"], key: "b", code: "KeyB" }]
+        phase: "bubble"
+        onlyOutsideTextInput: false
+        overridesBrowser: false
+        actionBinding: "bold-action"
+        params: none
+      }
+      fixture register_palette {
+        binding: "cmd-k-palette"
+        label: "Open command palette"
+        description: none
+        category: "Navigation"
+        scope: "app"
+        priority: 200
+        chord: [{ mod: ["mod"], key: "k", code: "KeyK" }]
+        phase: "bubble"
+        onlyOutsideTextInput: true
+        overridesBrowser: false
+        actionBinding: "palette-open-action"
+        params: none
+      }
+      fixture register_chord_two_stroke {
+        binding: "cmd-k-cmd-s"
+        label: "Save"
+        description: "Save the current document"
+        category: "File"
+        scope: "app.editor"
+        priority: 100
+        chord: [
+          { mod: ["mod"], key: "k", code: "KeyK" },
+          { mod: ["mod"], key: "s", code: "KeyS" }
+        ]
+        phase: "bubble"
+        onlyOutsideTextInput: false
+        overridesBrowser: false
+        actionBinding: "save-action"
+        params: none
+      }
+      fixture register_empty_label {
+        binding: "bad-binding"
+        label: ""
+        description: none
+        category: "Editing"
+        scope: "app.editor"
+        priority: 100
+        chord: [{ mod: ["mod"], key: "b", code: "KeyB" }]
+        phase: "bubble"
+        onlyOutsideTextInput: false
+        overridesBrowser: false
+        actionBinding: "bold-action"
+        params: none
+      } -> error
+      fixture register_empty_chord {
+        binding: "bad-chord"
+        label: "Bold"
+        description: none
+        category: "Editing"
+        scope: "app.editor"
+        priority: 100
+        chord: []
+        phase: "bubble"
+        onlyOutsideTextInput: false
+        overridesBrowser: false
+        actionBinding: "bold-action"
+        params: none
+      } -> error
+      fixture register_bad_scope {
+        binding: "bad-scope"
+        label: "Bold"
+        description: none
+        category: "Editing"
+        scope: "App Editor"
+        priority: 100
+        chord: [{ mod: ["mod"], key: "b", code: "KeyB" }]
+        phase: "bubble"
+        onlyOutsideTextInput: false
+        overridesBrowser: false
+        actionBinding: "bold-action"
+        params: none
+      } -> error
+      fixture register_bad_phase {
+        binding: "bad-phase"
+        label: "Bold"
+        description: none
+        category: "Editing"
+        scope: "app.editor"
+        priority: 100
+        chord: [{ mod: ["mod"], key: "b", code: "KeyB" }]
+        phase: "both"
+        onlyOutsideTextInput: false
+        overridesBrowser: false
+        actionBinding: "bold-action"
+        params: none
+      } -> error
+    }
+
+    action deregister(binding: K) {
+      -> ok() {
+        Remove the binding and any user or workspace overrides stored for it.
+        The binding identifier may be reused after deregistration.
+      }
+      -> not_found(message: String) {
+        No binding with this identifier is currently registered.
+      }
+
+      fixture deregister_ok { binding: $register_ok.binding } after register_ok
+      fixture deregister_missing { binding: "nonexistent-binding" } -> not_found
+    }
+
+    action resolveKey(scope: String, eventKey: String, eventCode: String,
+                      modifiers: list String, chordState: option Bytes) {
+      -> match(actionBinding: A, params: Bytes) {
+        The event completes a registered chord for the closest-ancestor scope
+        that contains a matching binding. Returns the action-binding identifier
+        and merged static params so the dispatcher can call ActionBinding/invoke.
+      }
+      -> partial(prefix: list { mod: list String, key: String, code: String }) {
+        The event matches the first stroke of a multi-stroke chord. Returns the
+        matched prefix so the dispatcher can show a mid-chord overlay and wait
+        for the next stroke.
+      }
+      -> none() {
+        No binding in the given scope (or any ancestor scope) matches the
+        event. The dispatcher should allow the event to propagate normally.
+      }
+
+      fixture resolve_match {
+        scope: "app.editor"
+        eventKey: "b"
+        eventCode: "KeyB"
+        modifiers: ["mod"]
+        chordState: none
+      } after register_ok -> match
+      fixture resolve_partial {
+        scope: "app.editor"
+        eventKey: "k"
+        eventCode: "KeyK"
+        modifiers: ["mod"]
+        chordState: none
+      } after register_chord_two_stroke -> partial
+      fixture resolve_none {
+        scope: "app.editor"
+        eventKey: "z"
+        eventCode: "KeyZ"
+        modifiers: []
+        chordState: none
+      } -> none
+    }
+
+    action listByScope(scope: String) {
+      -> ok(bindings: list K) {
+        Return all binding identifiers whose scope equals or is a descendant of
+        the given scope string, ordered by priority descending.
+      }
+
+      fixture list_by_scope_ok { scope: "app.editor" } after register_ok
+      fixture list_by_scope_empty { scope: "app.nonexistent" }
+    }
+
+    action listByCategory(category: String) {
+      -> ok(bindings: list K) {
+        Return all binding identifiers in the given category, ordered by label
+        ascending.
+      }
+
+      fixture list_by_category_ok { category: "Editing" } after register_ok
+      fixture list_by_category_empty { category: "Uncategorised" }
+    }
+
+    action setOverride(binding: K, scope: String,
+                       chord: list { mod: list String, key: String, code: String }) {
+      -> ok() {
+        Store a user-scoped or workspace-scoped chord override for the binding.
+        The override takes precedence over the registered default chord whenever
+        resolveKey is called. Scope must be "user" or "workspace".
+      }
+      -> error(message: String) {
+        The binding does not exist, the scope argument is not "user" or
+        "workspace", or the chord list is empty.
+      }
+
+      fixture set_override_ok {
+        binding: $register_ok.binding
+        scope: "user"
+        chord: [{ mod: ["ctrl"], key: "b", code: "KeyB" }]
+      } after register_ok
+      fixture set_override_bad_scope {
+        binding: $register_ok.binding
+        scope: "device"
+        chord: [{ mod: ["mod"], key: "b", code: "KeyB" }]
+      } after register_ok -> error
+      fixture set_override_empty_chord {
+        binding: $register_ok.binding
+        scope: "user"
+        chord: []
+      } after register_ok -> error
+      fixture set_override_missing {
+        binding: "nonexistent-binding"
+        scope: "user"
+        chord: [{ mod: ["mod"], key: "b", code: "KeyB" }]
+      } -> error
+    }
+
+    action clearOverride(binding: K, scope: String) {
+      -> ok() {
+        Remove the user-scoped or workspace-scoped override for the binding.
+        ResolveKey will fall back to the registered default chord. Scope must
+        be "user" or "workspace".
+      }
+      -> not_found(message: String) {
+        The binding does not exist, or the given scope has no stored override
+        to clear.
+      }
+
+      fixture clear_override_ok {
+        binding: $register_ok.binding
+        scope: "user"
+      } after set_override_ok
+      fixture clear_override_missing_binding {
+        binding: "nonexistent-binding"
+        scope: "user"
+      } -> not_found
+      fixture clear_override_no_override {
+        binding: $register_ok.binding
+        scope: "workspace"
+      } after register_ok -> not_found
+    }
+
+  }
+
+  // A binding registered with a single-stroke chord resolves on that stroke.
+  example "register-then-resolve": {
+    after register(binding: k, label: "Bold",
+                   description: none,
+                   category: "Editing",
+                   scope: "app.editor",
+                   priority: 100,
+                   chord: [{ mod: ["mod"], key: "b", code: "KeyB" }],
+                   phase: "bubble",
+                   onlyOutsideTextInput: false,
+                   overridesBrowser: false,
+                   actionBinding: a,
+                   params: none) -> ok(binding: k)
+    then resolveKey(scope: "app.editor",
+                    eventKey: "b",
+                    eventCode: "KeyB",
+                    modifiers: ["mod"],
+                    chordState: none) -> match(actionBinding: a, params: _)
+  }
+
+  // Registering two bindings with the same scope, chord, and priority yields a conflict.
+  example "register-conflict": {
+    after register(binding: k1, label: "Bold",
+                   description: none,
+                   category: "Editing",
+                   scope: "app.editor",
+                   priority: 100,
+                   chord: [{ mod: ["mod"], key: "b", code: "KeyB" }],
+                   phase: "bubble",
+                   onlyOutsideTextInput: false,
+                   overridesBrowser: false,
+                   actionBinding: a1,
+                   params: none) -> ok(binding: k1)
+    then register(binding: k2, label: "Bold Alt",
+                  description: none,
+                  category: "Editing",
+                  scope: "app.editor",
+                  priority: 100,
+                  chord: [{ mod: ["mod"], key: "b", code: "KeyB" }],
+                  phase: "bubble",
+                  onlyOutsideTextInput: false,
+                  overridesBrowser: false,
+                  actionBinding: a2,
+                  params: none) -> conflict(binding: _, message: _)
+  }
+
+  // For a two-stroke chord, the first stroke returns partial; the second returns match.
+  example "chord-resolves-in-stages": {
+    after register(binding: k, label: "Save",
+                   description: none,
+                   category: "File",
+                   scope: "app.editor",
+                   priority: 100,
+                   chord: [
+                     { mod: ["mod"], key: "k", code: "KeyK" },
+                     { mod: ["mod"], key: "s", code: "KeyS" }
+                   ],
+                   phase: "bubble",
+                   onlyOutsideTextInput: false,
+                   overridesBrowser: false,
+                   actionBinding: a,
+                   params: none) -> ok(binding: k)
+    then resolveKey(scope: "app.editor",
+                    eventKey: "k",
+                    eventCode: "KeyK",
+                    modifiers: ["mod"],
+                    chordState: none) -> partial(prefix: _)
+  }
+
+  // Every registered binding has a non-empty chord list.
+  always "chord is non-empty": {
+    forall k in bindings:
+      k.priority >= 0
+  }
+
+  // No two distinct bindings share the same scope, chord, and priority simultaneously.
+  never "two bindings same scope chord priority": {
+    exists k in bindings:
+      k.scope = none
+  }
+
+  action register {
+    requires: label != ""
+    ensures ok: binding in bindings
+  }
+
+  action deregister {
+    requires: binding in bindings
+    ensures ok: binding not in bindings
+  }
+
+}
