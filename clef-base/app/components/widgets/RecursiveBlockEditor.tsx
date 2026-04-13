@@ -33,6 +33,12 @@ import React, {
   useState,
 } from 'react';
 import { useKernelInvoke } from '../../../lib/clef-provider';
+import {
+  notifyBlockEdit,
+  resolveAnnotation,
+  getActiveAnnotations,
+} from '../../services/spell-check-dispatcher';
+import { SpellCheckSuggestionsPopover } from './SpellCheckSuggestionsPopover';
 
 // ---------------------------------------------------------------------------
 // Selection tracking — populated from document selectionchange events
@@ -736,12 +742,44 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
       style={{
         display: 'grid',
         gridTemplateColumns: '1fr minmax(0, 3fr) 280px',
-        gridTemplateRows: 'auto 1fr',
+        gridTemplateRows: 'auto auto 1fr auto auto',
         height: '100%',
         gap: 0,
         position: 'relative',
       }}
     >
+      {/* ------------------------------------------------------------------ */}
+      {/* header-slot — resolver-driven top-bar widgets (breadcrumbs, etc.)  */}
+      {/* Widgets registered via PluginRegistry/register with                */}
+      {/* type="header-slot" appear here automatically.                      */}
+      {/* ------------------------------------------------------------------ */}
+      {headerSlotEntries.length > 0 && (
+        <div
+          data-part="header-slot"
+          style={{
+            gridColumn: '1 / -1',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--spacing-xs)',
+            padding: 'var(--spacing-xs) var(--spacing-md)',
+            borderBottom: '1px solid var(--palette-outline-variant)',
+            background: 'var(--palette-surface-container)',
+          }}
+        >
+          {headerSlotEntries.map((entry) => (
+            <SlotMount
+              key={entry.name}
+              entry={entry}
+              hostAttrs={{
+                'data-part': 'header-mount',
+                'data-node-id': rootNodeId,
+                'data-editor-flavor': editorFlavor,
+              }}
+            />
+          ))}
+        </div>
+      )}
+
       {/* ------------------------------------------------------------------ */}
       {/* Header — compile status badge + recompile button                    */}
       {/* ------------------------------------------------------------------ */}
@@ -1067,6 +1105,71 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
           </div>
         )}
       </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* footer-slot — resolver-driven bottom-bar widgets (word-count, etc.) */}
+      {/* Widgets registered via PluginRegistry/register with                */}
+      {/* type="footer-slot" appear here automatically.                      */}
+      {/* ------------------------------------------------------------------ */}
+      {footerSlotEntries.length > 0 && (
+        <div
+          data-part="footer-slot"
+          style={{
+            gridColumn: '1 / -1',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--spacing-sm)',
+            padding: 'var(--spacing-xs) var(--spacing-md)',
+            borderTop: '1px solid var(--palette-outline-variant)',
+            background: 'var(--palette-surface-container)',
+          }}
+        >
+          {footerSlotEntries.map((entry) => (
+            <SlotMount
+              key={entry.name}
+              entry={entry}
+              hostAttrs={{
+                'data-part': 'footer-mount',
+                'data-node-id': rootNodeId,
+                'data-editor-flavor': editorFlavor,
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* ------------------------------------------------------------------ */}
+      {/* status-bar — resolver-driven narrow bar (offline-indicator, etc.)  */}
+      {/* Widgets registered via PluginRegistry/register with                */}
+      {/* type="status-bar" appear here automatically.                       */}
+      {/* ------------------------------------------------------------------ */}
+      {statusBarEntries.length > 0 && (
+        <div
+          data-part="status-bar"
+          style={{
+            gridColumn: '1 / -1',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--spacing-sm)',
+            padding: '2px var(--spacing-md)',
+            borderTop: '1px solid var(--palette-outline-variant)',
+            background: 'var(--palette-surface-container-high)',
+            fontSize: '11px',
+          }}
+        >
+          {statusBarEntries.map((entry) => (
+            <SlotMount
+              key={entry.name}
+              entry={entry}
+              hostAttrs={{
+                'data-part': 'status-bar-mount',
+                'data-node-id': rootNodeId,
+                'data-editor-flavor': editorFlavor,
+              }}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };
