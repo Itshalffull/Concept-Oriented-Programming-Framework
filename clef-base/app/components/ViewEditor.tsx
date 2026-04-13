@@ -26,6 +26,7 @@ import { useConceptQuery } from '../../lib/use-concept-query';
 import { useKernelInvoke, useNavigator } from '../../lib/clef-provider';
 import { ViewRenderer } from './ViewRenderer';
 import { ViewEditorToolbar } from './widgets/ViewEditorToolbar';
+import { ConceptActionPicker } from './widgets/ConceptActionPicker';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -232,25 +233,14 @@ const SourceSelector: React.FC<{
   }, [dataSource, onChange]);
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-md)' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 'var(--spacing-md)' }}>
       <div>
-        <label style={labelStyle}>Concept</label>
-        <input
-          type="text"
-          value={dataSource.concept}
-          onChange={(e) => onChange({ ...dataSource, concept: e.target.value })}
-          placeholder="e.g. ContentNode"
-          style={inputStyle}
-        />
-      </div>
-      <div>
-        <label style={labelStyle}>Action</label>
-        <input
-          type="text"
-          value={dataSource.action}
-          onChange={(e) => onChange({ ...dataSource, action: e.target.value })}
-          placeholder="e.g. list"
-          style={inputStyle}
+        <label style={labelStyle}>Concept / Action</label>
+        <ConceptActionPicker
+          value={dataSource.concept && dataSource.action ? { concept: dataSource.concept, action: dataSource.action } : undefined}
+          onChange={(v) => onChange({ ...dataSource, concept: v.concept, action: v.action })}
+          filter="query"
+          placeholder="Search query actions…"
         />
       </div>
       <div style={{ gridColumn: '1 / -1' }}>
@@ -766,23 +756,12 @@ const ControlsConfigurator: React.FC<{
           {controls.create && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
               <div>
-                <label style={{ ...labelStyle, fontSize: 'var(--typography-label-sm-size)' }}>Concept</label>
-                <input
-                  type="text"
-                  value={controls.create.concept}
-                  onChange={(e) => onChange({ ...controls, create: { ...controls.create!, concept: e.target.value } })}
-                  placeholder="e.g. ContentNode"
-                  style={{ ...inputStyle, fontSize: 'var(--typography-body-sm-size)' }}
-                />
-              </div>
-              <div>
-                <label style={{ ...labelStyle, fontSize: 'var(--typography-label-sm-size)' }}>Action</label>
-                <input
-                  type="text"
-                  value={controls.create.action}
-                  onChange={(e) => onChange({ ...controls, create: { ...controls.create!, action: e.target.value } })}
-                  placeholder="e.g. create"
-                  style={{ ...inputStyle, fontSize: 'var(--typography-body-sm-size)' }}
+                <label style={{ ...labelStyle, fontSize: 'var(--typography-label-sm-size)' }}>Concept / Action</label>
+                <ConceptActionPicker
+                  value={controls.create.concept && controls.create.action ? { concept: controls.create.concept, action: controls.create.action } : undefined}
+                  onChange={(v) => onChange({ ...controls, create: { ...controls.create!, concept: v.concept, action: v.action } })}
+                  filter="all"
+                  placeholder="Search actions…"
                 />
               </div>
               <div>
@@ -852,14 +831,13 @@ const ControlsConfigurator: React.FC<{
         </h4>
         {(controls.rowActions ?? []).length > 0 && (
           <div style={{ marginBottom: 'var(--spacing-xs)' }}>
-            <div style={{ ...actionRowStyle, marginBottom: 'var(--spacing-xs)' }}>
+            <div style={{ ...actionRowStyle, gridTemplateColumns: '1fr 1fr auto', marginBottom: 'var(--spacing-xs)' }}>
               <label style={{ ...labelStyle, fontSize: 'var(--typography-label-sm-size)', marginBottom: 0 }}>Label</label>
-              <label style={{ ...labelStyle, fontSize: 'var(--typography-label-sm-size)', marginBottom: 0 }}>Concept</label>
-              <label style={{ ...labelStyle, fontSize: 'var(--typography-label-sm-size)', marginBottom: 0 }}>Action</label>
+              <label style={{ ...labelStyle, fontSize: 'var(--typography-label-sm-size)', marginBottom: 0 }}>Concept / Action</label>
               <span />
             </div>
             {(controls.rowActions ?? []).map((ra, i) => (
-              <div key={ra.key} style={actionRowStyle}>
+              <div key={ra.key} style={{ ...actionRowStyle, gridTemplateColumns: '1fr 1fr auto' }}>
                 <input
                   type="text"
                   value={ra.label}
@@ -867,19 +845,14 @@ const ControlsConfigurator: React.FC<{
                   placeholder="e.g. Archive"
                   style={{ ...inputStyle, fontSize: 'var(--typography-body-sm-size)' }}
                 />
-                <input
-                  type="text"
-                  value={ra.concept}
-                  onChange={(e) => updateRowAction(i, 'concept', e.target.value)}
-                  placeholder="e.g. ContentNode"
-                  style={{ ...inputStyle, fontSize: 'var(--typography-body-sm-size)' }}
-                />
-                <input
-                  type="text"
-                  value={ra.action}
-                  onChange={(e) => updateRowAction(i, 'action', e.target.value)}
-                  placeholder="e.g. archive"
-                  style={{ ...inputStyle, fontSize: 'var(--typography-body-sm-size)' }}
+                <ConceptActionPicker
+                  value={ra.concept && ra.action ? { concept: ra.concept, action: ra.action } : undefined}
+                  onChange={(v) => {
+                    updateRowAction(i, 'concept', v.concept);
+                    updateRowAction(i, 'action', v.action);
+                  }}
+                  filter="all"
+                  placeholder="Search actions…"
                 />
                 <button onClick={() => removeRowAction(i)} style={removeButtonStyle}>
                   Remove
@@ -900,14 +873,13 @@ const ControlsConfigurator: React.FC<{
         </h4>
         {(controls.bulkActions ?? []).length > 0 && (
           <div style={{ marginBottom: 'var(--spacing-xs)' }}>
-            <div style={{ ...actionRowStyle, marginBottom: 'var(--spacing-xs)' }}>
+            <div style={{ ...actionRowStyle, gridTemplateColumns: '1fr 1fr auto', marginBottom: 'var(--spacing-xs)' }}>
               <label style={{ ...labelStyle, fontSize: 'var(--typography-label-sm-size)', marginBottom: 0 }}>Label</label>
-              <label style={{ ...labelStyle, fontSize: 'var(--typography-label-sm-size)', marginBottom: 0 }}>Concept</label>
-              <label style={{ ...labelStyle, fontSize: 'var(--typography-label-sm-size)', marginBottom: 0 }}>Action</label>
+              <label style={{ ...labelStyle, fontSize: 'var(--typography-label-sm-size)', marginBottom: 0 }}>Concept / Action</label>
               <span />
             </div>
             {(controls.bulkActions ?? []).map((ba, i) => (
-              <div key={ba.key} style={actionRowStyle}>
+              <div key={ba.key} style={{ ...actionRowStyle, gridTemplateColumns: '1fr 1fr auto' }}>
                 <input
                   type="text"
                   value={ba.label}
@@ -915,19 +887,14 @@ const ControlsConfigurator: React.FC<{
                   placeholder="e.g. Delete Selected"
                   style={{ ...inputStyle, fontSize: 'var(--typography-body-sm-size)' }}
                 />
-                <input
-                  type="text"
-                  value={ba.concept}
-                  onChange={(e) => updateBulkAction(i, 'concept', e.target.value)}
-                  placeholder="e.g. ContentNode"
-                  style={{ ...inputStyle, fontSize: 'var(--typography-body-sm-size)' }}
-                />
-                <input
-                  type="text"
-                  value={ba.action}
-                  onChange={(e) => updateBulkAction(i, 'action', e.target.value)}
-                  placeholder="e.g. delete"
-                  style={{ ...inputStyle, fontSize: 'var(--typography-body-sm-size)' }}
+                <ConceptActionPicker
+                  value={ba.concept && ba.action ? { concept: ba.concept, action: ba.action } : undefined}
+                  onChange={(v) => {
+                    updateBulkAction(i, 'concept', v.concept);
+                    updateBulkAction(i, 'action', v.action);
+                  }}
+                  filter="all"
+                  placeholder="Search actions…"
                 />
                 <button onClick={() => removeBulkAction(i)} style={removeButtonStyle}>
                   Remove
