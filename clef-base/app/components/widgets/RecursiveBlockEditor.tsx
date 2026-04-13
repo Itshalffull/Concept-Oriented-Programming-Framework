@@ -1043,6 +1043,34 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
             onClose={closeSlashMenu}
           />
         )}
+
+        {/* ---------------------------------------------------------------- */}
+        {/* decoration-layer slot — resolver-driven overlay mounts           */}
+        {/* Widgets registered via PluginRegistry/register with              */}
+        {/* type="decoration-layer" appear here automatically.               */}
+        {/* Examples: comment-gutter-marker, presence-decoration,            */}
+        {/*           inline-annotation-decoration, block-handle.            */}
+        {/* ---------------------------------------------------------------- */}
+        {decorationLayerEntries.length > 0 && (
+          <div
+            data-part="decoration-layer"
+            aria-hidden="true"
+            style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 5 }}
+          >
+            {decorationLayerEntries.map((entry) => (
+              <SlotMount
+                key={entry.name}
+                entry={entry}
+                hostAttrs={{
+                  'data-part': 'decoration-mount',
+                  'data-node-id': rootNodeId,
+                  'data-editor-flavor': editorFlavor,
+                }}
+                style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ------------------------------------------------------------------ */}
