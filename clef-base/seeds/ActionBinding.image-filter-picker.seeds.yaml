@@ -4,11 +4,10 @@
 # identifier is stored as a metadata override on the ContentNode via
 # Property/set, keyed as "imageFilter" on the focused block's assetId.
 #
-# API gap note:
-#   Property/set is used to persist the override because ContentNode
-#   metadata overrides are stored as named properties on the entity.
-#   The parameterMap forwards context.selectedFilter (resolved from the
-#   image-filter-picker widget's onComplete callback) as the property value.
+# Uses Property/set (shipped in repertoire/concepts/foundation/property.concept)
+# to persist the filter override. ContentNode metadata overrides are stored as
+# named properties on the entity. The parameterMap forwards context.selectedFilter
+# (resolved from the image-filter-picker widget's onComplete callback) as the property value.
 
 concept: ActionBinding
 action: bind

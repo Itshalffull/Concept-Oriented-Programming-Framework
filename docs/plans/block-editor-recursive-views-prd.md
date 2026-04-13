@@ -551,10 +551,10 @@ Minimal end-to-end proof across text + media + marks + theme.
 
 **Phase 1 complete (2026-04-12) — 16/16 cards shipped.** Callout theming and slash-menu registry queries work fully; four acceptance items remain partial pending backing-handler work (InlineMark concept, MediaAsset context threading, ContentNode/clone, paragraph-block FSM handler wiring). These become Phase 2 scope.
 
-**Concept API gaps noted (follow-up cards needed):**
-- `Outline` has no block-schema-change action — markdown-heading-2 ActionBinding uses `Schema/applyTo` as proxy (should be `Outline/retype` or similar)
-- `MediaAsset/createMedia` doesn't thread `focusedDocId` through — paste-image-to-block sync has placeholder parent binding
-- No `InlineMark` concept exists for toggling marks on a selection range — bold/italic/code ActionBindings reference placeholder `InlineMark/toggleMark`. Follow-up card needed to introduce `InlineMark [M]` with `toggleMark(blockId, range, markKind)` action.
+**Concept API gaps (status as of 2026-04-13):**
+- `Outline` has no block-schema-change action — markdown-heading-2 ActionBinding uses `Schema/applyTo` as proxy (should be `Outline/retype` or similar). Still open.
+- `MediaAsset/createMedia` context threading — shipped in commit `a6feeac7` (Gap 3, RESOLVED PP7.01).
+- `InlineMark/toggleMark` — shipped in commit `dc7da671` (Gap 1, RESOLVED PP1.03). bold/italic/code/strikethrough/subscript/superscript/link ActionBindings now target the real action.
 
 ## 10. Card Plan (Phase 1 only; Phase 2+ carded after Phase 1 ships)
 

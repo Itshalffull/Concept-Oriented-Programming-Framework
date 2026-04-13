@@ -3,17 +3,17 @@
 # code-language-picker, code-format, code-copy, code-toggle-line-numbers:
 #   toolbar commands for the code-block editor surface.
 #
-# API gap notes:
+# Notes:
 #   - code-language-picker invokes language-picker.widget, which ships in a later card.
-#     The target references the anticipated "Schema/applyTo" pattern used to retype the
-#     block's language field; the exact action may change when the language-picker
-#     concept is defined.
+#     Uses Schema/applyTo to retype the block's language field; the exact action may
+#     change when the language-picker concept is defined.
 #   - code-format has no dedicated concept action yet. Target references an anticipated
 #     "CodeFormatter/format" action; a follow-up card should introduce that concept.
 #   - code-copy uses ContentNode/read as the closest primitive for reading block content
-#     to the clipboard; a dedicated Clipboard concept may refine this later.
-#   - code-toggle-line-numbers targets the anticipated "Property/set" to toggle the
-#     showLineNumbers field on the ContentNode's property bag.
+#     to the clipboard; a dedicated Clipboard concept (browser navigator.clipboard is
+#     used directly) may refine this later.
+#   - code-toggle-line-numbers uses Property/set (shipped in repertoire/concepts/foundation/property.concept)
+#     to toggle the showLineNumbers field on the ContentNode's property bag.
 
 concept: ActionBinding
 action: bind

@@ -264,7 +264,7 @@ The audit at commit `f60b0540` (MAG-757) identified the following gaps between t
 
 **What fails:** Ctrl+B / Ctrl+I / Ctrl+E (code) in `RecursiveBlockEditor` log a warning and do nothing. Bold, italic, and code mark toggles in the inline toolbar are also inert.
 
-**Why:** The `InlineMark` concept was planned as part of Phase 1 but was not implemented. The ActionBindings `bold-toggle`, `italic-toggle`, and `code-toggle` seeded in `clef-base/seeds/ActionBinding.seeds.yaml` reference the placeholder target `InlineMark/toggleMark`. The `InlineMark [M]` concept does not yet exist as a registered concept handler — calling it returns `notfound`.
+**Why (resolved):** The `InlineMark` concept was planned as part of Phase 1 but was initially absent. The ActionBindings `bold-toggle`, `italic-toggle`, and `code-toggle` seeded in `clef-base/seeds/ActionBinding.seeds.yaml` referenced `InlineMark/toggleMark`. `InlineMark/toggleMark` shipped in commit `dc7da671`; the targets are now real actions.
 
 **Anticipatory reference created by:** MAG-718 (bold/italic/code mark RenderTransforms, commit `eaebdff7`). The RenderTransforms ship correctly; the missing piece is the concept action that applies a mark to a selection range in the editor state and triggers the transform.
 
@@ -278,7 +278,7 @@ The audit at commit `f60b0540` (MAG-757) identified the following gaps between t
 
 **What fails:** "Duplicate page" actions for `agent-persona` and `meeting-notes` documents opened in `RecursiveBlockEditor` do not clone the document.
 
-**Why:** `ContentNode/clone` was shipped in commit `a6d18662` as an anticipatory action. The `ActionBinding` seeds for persona-duplicate and meeting-notes-duplicate were written in MAG-721 (commit `3e79c85c`) and reference `ContentNode/clone`, but the handler plumbing from the ActionBinding parameterMap through to the kernel invocation was not wired. The concept action exists; the binding resolution does not reach the handler.
+**Why (resolved):** `ContentNode/clone` shipped in commit `a6d18662`. The `ActionBinding` seeds for persona-duplicate and meeting-notes-duplicate (written in MAG-721, commit `3e79c85c`) reference `ContentNode/clone`; the handler plumbing was subsequently wired as part of PP3.03.
 
 **Anticipatory reference created by:** MAG-721 (AI continue ActionBinding + persona, commit `3e79c85c`). The persona seed workflow assumed clone was fully invokable at that point.
 

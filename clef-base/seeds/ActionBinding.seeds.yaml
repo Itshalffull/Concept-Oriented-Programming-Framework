@@ -264,9 +264,9 @@ entries:
   # — all entities searchable). On completion the selection is wrapped in a
   # data-mark="wikilink" data-entity-ref span (the wikilink RenderTransform
   # applies the accent.wikilink colour token automatically).
-  # API gap note: EntityPicker/open is an anticipated action; a follow-up card
-  # should introduce that concept and update the target at that time. The
-  # executionPolicy is "auto" because the picker opens immediately on trigger.
+  # Note: EntityPicker/open is a widget-dispatch shortcut — the picker is opened
+  # via ModalStackProvider, not a kernel concept action.
+  # The executionPolicy is "auto" because the picker opens immediately on trigger.
   - name: entity-picker-open-for-wikilink
     binding: entity-picker-open-for-wikilink
     target: "EntityPicker/open"
@@ -295,8 +295,7 @@ entries:
 
   # entity-follow: navigates to the referenced entity's detail view.
   # Triggered by Enter or double-click on an entity-embed-block.
-  # API gap note: Navigator/navigate is the expected target; adjust once
-  # the Navigator concept surface action is finalised for entity deep-links.
+  # Uses Navigator/navigate (shipped in ui-app/navigator.concept).
   - name: entity-follow
     binding: entity-follow
     target: "Navigator/navigate"
@@ -372,17 +371,8 @@ entries:
     toolbar_command: false
 
   # --- Inline mark toggle actions (MAG-718) ---
-  # API gap note: No concept currently provides a dedicated "toggle inline mark
-  # on selection" action. InlineAnnotation/annotate is the closest primitive but
-  # targets change-tracking, not presentational marks. Outline has no wrapMark /
-  # toggleMark action. A future follow-up card should introduce an InlineMark
-  # concept (or extend Outline) with a toggleMark(selection, markKind) action;
-  # at that point these bindings' targets can be updated from the synthetic
-  # reference below to the real action.
-  #
-  # For now, the target references "InlineMark/toggleMark" as a placeholder
-  # matching the expected future API shape. The bindings are valid seed records
-  # and will resolve once that concept is available.
+  # InlineMark/toggleMark shipped in commit dc7da671.
+  # bold-toggle, italic-toggle, and code-toggle use this real action.
   - name: bold-toggle
     binding: bold-toggle
     target: "InlineMark/toggleMark"
@@ -417,12 +407,10 @@ entries:
     icon: "code"
 
   # --- Inline link actions (MAG-728) ---
-  # API gap note: No concept currently provides a dedicated "toggle inline link
-  # mark on selection" action. InlineMark/toggleMark is the placeholder target
-  # from MAG-718 (same InlineMark gap). A future follow-up card should introduce
-  # an InlineMark concept (or extend Outline) with a toggleMark(selection, markKind)
-  # action; link-open-editor invokes the link-editor widget via a synthetic
-  # InlineMark/openEditor surface action (anticipated API shape).
+  # Uses InlineMark/toggleMark (shipped dc7da671) for link-toggle, link-remove,
+  # and link-wrap-selection-with-url.
+  # link-open-editor targets InlineMark/openEditor — widget dispatched via
+  # ModalStackProvider, not a kernel concept action.
   #
   # link-toggle: opens the link-editor widget to collect URL/label (Ctrl+K).
   # link-open-editor: invokes link-editor.widget on the current selection.
@@ -640,9 +628,7 @@ entries:
     toolbar_command: false
 
   # --- Additional inline mark toggle actions (MAG-729) ---
-  # API gap note: Same InlineMark gap as bold/italic/code (MAG-718). These
-  # bindings use "InlineMark/toggleMark" as a placeholder matching the expected
-  # future API shape. They will resolve once the InlineMark concept is available.
+  # Uses InlineMark/toggleMark (shipped dc7da671), same as bold/italic/code (MAG-718).
   - name: strikethrough-toggle
     binding: strikethrough-toggle
     target: "InlineMark/toggleMark"
@@ -695,8 +681,7 @@ entries:
 
   # view-embed-open-source: navigates to the source ViewShell's canonical page.
   # Available via context menu and the toolbar on a focused view-embed-block.
-  # API gap note: Navigator/navigate is the expected target; same gap noted for
-  # entity-follow. The parameterMap carries the viewShellRef from context.
+  # Uses Navigator/navigate (shipped in ui-app/navigator.concept).
   - name: view-embed-open-source
     binding: view-embed-open-source
     target: "Navigator/navigate"
@@ -709,9 +694,7 @@ entries:
 
   # view-embed-refresh: re-invokes ViewShell/refresh on the embedded ViewShell,
   # causing the widget to re-resolve and re-mount the view with fresh data.
-  # API gap note: ViewShell/refresh does not currently exist in the ViewShell
-  # concept spec (specs/view/). A follow-up card should add that action. The
-  # binding is registered now so the command slot is reserved.
+  # ViewShell/refresh shipped in commit 43553c10.
   - name: view-embed-refresh
     binding: view-embed-refresh
     target: "ViewShell/refresh"
@@ -730,9 +713,8 @@ entries:
   # as a modal dialog, passing the pasted URL. On dialog confirm, one of the three
   # confirm bindings fires depending on the selected embed type. On cancel, no block
   # is inserted.
-  # API gap note: EmbedUrlResolver/open is an anticipated surface action that mounts
-  # the embed-url-resolver.widget with the captured URL. A follow-up card should
-  # introduce that concept. For now the target references the anticipated API shape.
+  # Note: EmbedUrlResolver/open is a widget-dispatch shortcut — the resolver widget
+  # is mounted via ModalStackProvider, not a kernel concept action.
   - name: media-embed-from-url
     binding: media-embed-from-url
     target: "EmbedUrlResolver/open"
@@ -815,8 +797,8 @@ entries:
   # text. On completion, the picked emoji character is inserted at the cursor via
   # Outline/addChild (inline character insertion). executionPolicy "auto" because the
   # picker opens immediately on trigger-char dispatch.
-  # API gap note: EmojiPicker/open is an anticipated surface action; the target below
-  # references the synthetic action. Update once the emoji-picker backing concept ships.
+  # Note: EmojiPicker/open is a widget-dispatch shortcut — the picker is mounted
+  # via ModalStackProvider, not a kernel concept action.
   - name: emoji-picker-open
     binding: emoji-picker-open
     target: "EmojiPicker/open"
@@ -851,7 +833,6 @@ entries:
   # Invokes Template/expand with the collected variable values (context.variables carries
   # the name->value map). After expand completes -> ok, the result text is inserted at the
   # cursor via Outline/addChild or inline text replacement at the trigger position.
-  # API gap note: Template/expand is the real action; this binding uses it directly.
   - name: template-expand-confirmed
     binding: template-expand-confirmed
     target: "Template/expand"
@@ -973,10 +954,7 @@ entries:
   # comment-add-to-block: adds a comment anchored to the focused block.
   # Available via context menu and keyboard shortcut on any block whose
   # schema has isCommentable=true. blockId comes from the host EditSurface
-  # context. API gap note: Comment/addComment is anticipated; if the concept
-  # exposes addComment with (entity, body, author) the parameterMap should
-  # match. Update target when the action name is confirmed from the Comment
-  # concept spec.
+  # context. Uses Comment/addComment.
   - name: comment-add-to-block
     binding: comment-add-to-block
     target: "Comment/addComment"
@@ -993,13 +971,13 @@ entries:
   # comment-add-to-selection: adds an inline annotation comment to the active
   # text selection. Only visible when the focused schema has commentScope in
   # [inline, both]. Creates an InlineAnnotation first, then binds the new
-  # comment to that annotation's id. Two-step action; both targets are noted;
-  # a follow-up sync wires InlineAnnotation/create -> Comment/addComment.
-  # API gap note: InlineAnnotation/create is anticipated from the
-  # InlineAnnotation concept spec shipped in commit a4585cc1.
+  # comment to that annotation's id. Two-step action; a follow-up sync wires
+  # InlineAnnotation/annotate -> Comment/addComment.
+  # Note: the InlineAnnotation concept action is named "annotate", not "create"
+  # (see InlineAnnotation concept spec, commit a4585cc1).
   - name: comment-add-to-selection
     binding: comment-add-to-selection
-    target: "InlineAnnotation/create"
+    target: "InlineAnnotation/annotate"
     parameterMap: '{"kind":"comment","rangeStart":"context.selectionStart","rangeEnd":"context.selectionEnd","blockId":"context.blockId"}'
     executionPolicy: "pessimistic"
     slash_command: false
@@ -1010,9 +988,9 @@ entries:
     icon: "comment-text"
 
   # comment-resolve: marks the focused comment thread resolved.
-  # API gap note: Comment/resolve is anticipated; if the concept instead
-  # exposes Comment/publish with resolved=true adjust target accordingly.
-  # A gap note is intentionally left here for the concept author to confirm.
+  # Note: Comment has no resolve action; publish is the closest existing action.
+  # The target below is a placeholder — update to Comment/publish (with resolved=true)
+  # or introduce a dedicated resolve action before this binding is invokable.
   - name: comment-resolve
     binding: comment-resolve
     target: "Comment/resolve"
@@ -1027,7 +1005,7 @@ entries:
 
   # comment-reply: opens the reply input in the comments-panel for the focused
   # thread. Triggers START_REPLY FSM event on the comments-panel widget.
-  # API gap note: Comment/reply is anticipated; update target once confirmed.
+  # Uses Comment/reply.
   - name: comment-reply
     binding: comment-reply
     target: "Comment/reply"
@@ -1124,8 +1102,8 @@ entries:
   # The picker passes the filled variable map as context.variables and the selected
   # template id as context.templateId before firing the onComplete binding
   # (template-expand-confirmed, already seeded above in MAG-732 section).
-  # API gap note: TemplatePicker/open is an anticipated surface action that mounts
-  # the template-picker.widget. A follow-up card should introduce that concept.
+  # Note: TemplatePicker/open is a widget-dispatch shortcut — the picker is mounted
+  # via ModalStackProvider, not a kernel concept action.
   - name: template-insert
     binding: template-insert
     target: "TemplatePicker/open"

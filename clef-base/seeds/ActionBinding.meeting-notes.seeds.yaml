@@ -4,10 +4,8 @@
 #   meeting-notes-recompile:  re-run compilation after block edits
 #   meeting-notes-duplicate:  deep-clone of the meeting-notes page + outline
 #
-# API gap note: ContentNode has no atomic clone action in the current spec.
-# meeting-notes-duplicate references the anticipated "ContentNode/clone" action
-# (same gap as persona-duplicate, MAG-723). A follow-up card should introduce
-# that action and update this target at that time.
+# meeting-notes-duplicate uses ContentNode/clone (shipped a6d18662).
+# See also persona-duplicate (MAG-723) which uses the same action.
 
 concept: ActionBinding
 action: bind
@@ -39,8 +37,7 @@ entries:
     icon: "refresh-cw"
 
   # meeting-notes-duplicate: deep-clone of the meeting-notes page + outline.
-  # API gap: references the anticipated "ContentNode/clone" action.
-  # See persona-duplicate (MAG-723) for the same gap and resolution plan.
+  # Uses ContentNode/clone (shipped a6d18662); same action as persona-duplicate (MAG-723).
   - name: meeting-notes-duplicate
     binding: meeting-notes-duplicate
     target: "ContentNode/clone"
