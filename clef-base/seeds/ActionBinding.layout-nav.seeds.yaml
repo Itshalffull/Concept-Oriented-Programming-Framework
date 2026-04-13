@@ -1,0 +1,116 @@
+# ActionBinding seeds — tab group + split layout keyboard navigation (KB-19).
+#
+# PRD:  docs/plans/keybinding-prd.md §4 Phase H (card 19)
+# Card: KB-19
+#
+# These ActionBindings are dispatched by the KeyBinding seeds in
+# clef-base/seeds/KeyBinding.layout.seeds.yaml when the
+# useKeyBindings dispatcher resolves a key event in the appropriate scope.
+#
+# Tab navigation (scope: app.tabs):
+#   tab-prev     → TabGroup/activatePrevious — wraps to the last tab when at index 0
+#   tab-next     → TabGroup/activateNext     — wraps to the first tab when at the last index
+#   tab-jump     → TabGroup/activateByIndex  — parameterMap reads index from params.index
+#                  (shared across kb-tab-jump-1..9; the KeyBinding seed embeds the 1-based
+#                  index in its params field so each binding dispatches to the same
+#                  ActionBinding with the correct index)
+#
+# Pane focus (scope: app.layout.split):
+#   pane-focus-left  → SplitLayout/focusPane with direction: "left"
+#   pane-focus-right → SplitLayout/focusPane with direction: "right"
+#   pane-focus-up    → SplitLayout/focusPane with direction: "up"
+#   pane-focus-down  → SplitLayout/focusPane with direction: "down"
+#
+# Widget spec: surface/widgets/view-tab-bar.widget, SplitLayoutRenderer
+# Companion KeyBinding seeds: clef-base/seeds/KeyBinding.layout.seeds.yaml
+
+concept: ActionBinding
+action: bind
+entries:
+  # --- Tab navigation ---
+
+  - name: tab-prev
+    binding: tab-prev
+    target: "TabGroup/activatePrevious"
+    parameterMap: '{"group":"context.tabGroupId"}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    palette_command: false
+    context_menu: false
+    section: "Navigation"
+    label: "Previous Tab"
+
+  - name: tab-next
+    binding: tab-next
+    target: "TabGroup/activateNext"
+    parameterMap: '{"group":"context.tabGroupId"}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    palette_command: false
+    context_menu: false
+    section: "Navigation"
+    label: "Next Tab"
+
+  - name: tab-jump
+    binding: tab-jump
+    target: "TabGroup/activateByIndex"
+    parameterMap: '{"group":"context.tabGroupId","index":"params.index"}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    palette_command: false
+    context_menu: false
+    section: "Navigation"
+    label: "Jump to Tab"
+
+  # --- Pane focus ---
+
+  - name: pane-focus-left
+    binding: pane-focus-left
+    target: "SplitLayout/focusPane"
+    parameterMap: '{"layout":"context.layoutId","direction":"\"left\""}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    palette_command: false
+    context_menu: false
+    section: "Navigation"
+    label: "Focus Left Pane"
+
+  - name: pane-focus-right
+    binding: pane-focus-right
+    target: "SplitLayout/focusPane"
+    parameterMap: '{"layout":"context.layoutId","direction":"\"right\""}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    palette_command: false
+    context_menu: false
+    section: "Navigation"
+    label: "Focus Right Pane"
+
+  - name: pane-focus-up
+    binding: pane-focus-up
+    target: "SplitLayout/focusPane"
+    parameterMap: '{"layout":"context.layoutId","direction":"\"up\""}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    palette_command: false
+    context_menu: false
+    section: "Navigation"
+    label: "Focus Upper Pane"
+
+  - name: pane-focus-down
+    binding: pane-focus-down
+    target: "SplitLayout/focusPane"
+    parameterMap: '{"layout":"context.layoutId","direction":"\"down\""}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    palette_command: false
+    context_menu: false
+    section: "Navigation"
+    label: "Focus Lower Pane"

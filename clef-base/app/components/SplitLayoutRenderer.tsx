@@ -403,7 +403,7 @@ export const SplitLayoutRenderer: React.FC<SplitLayoutRendererProps> = ({ layout
   }
 
   return (
-    <div style={{ width: '100%', height: '100%', display: 'flex' }}>
+    <div data-keybinding-scope="app.layout.split" style={{ width: '100%', height: '100%', display: 'flex' }}>
       <TreeNodeRenderer node={rootNode} nodes={nodeMap} layoutId={layoutId} />
     </div>
   );

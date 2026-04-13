@@ -167,7 +167,7 @@ export const ViewTabBar: React.FC<ViewTabBarProps> = ({
   }, [commitRename]);
 
   return (
-    <div data-part="root" style={{ position: 'relative' }}>
+    <div data-part="root" data-keybinding-scope="app.tabs" style={{ position: 'relative' }}>
       <div data-part="tab-strip" role="tablist" aria-label="Views" style={barStyle}>
         {tabs.map((tab) => {
           const isActive = tab.id === activeViewId;

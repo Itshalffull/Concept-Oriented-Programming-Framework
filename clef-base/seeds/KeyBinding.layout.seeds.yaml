@@ -1,0 +1,227 @@
+# KeyBinding seeds — tab group + split layout keyboard navigation (KB-19).
+#
+# PRD:  docs/plans/keybinding-prd.md §4 Phase H (card 19)
+# Card: KB-19
+#
+# Registers all keyboard bindings for ViewTabBar (scope: app.tabs) and
+# SplitLayoutRenderer (scope: app.layout.split).
+#
+# ViewTabBar bindings (scope: app.tabs):
+#   ArrowLeft       → tab-prev      (activate previous tab)
+#   ArrowRight      → tab-next      (activate next tab)
+#   Cmd+1..Cmd+9    → tab-jump-1..9 (activate tab at 1-based index)
+#
+# SplitLayoutRenderer bindings (scope: app.layout.split):
+#   Cmd+Shift+ArrowLeft  → pane-focus-left
+#   Cmd+Shift+ArrowRight → pane-focus-right
+#   Cmd+Shift+ArrowUp    → pane-focus-up
+#   Cmd+Shift+ArrowDown  → pane-focus-down
+#
+# Companion ActionBinding seeds:
+#   clef-base/seeds/ActionBinding.layout-nav.seeds.yaml
+#
+# Scopes must match the data-keybinding-scope attributes set on:
+#   ViewTabBar root         → data-keybinding-scope="app.tabs"
+#   SplitLayoutRenderer root → data-keybinding-scope="app.layout.split"
+
+concept: KeyBinding
+action: register
+entries:
+  # --- ViewTabBar — tab navigation (scope: app.tabs) ---
+
+  - binding: kb-tab-prev
+    label: "Previous Tab"
+    description: "Activate the tab to the left of the currently active tab"
+    category: "Navigation"
+    scope: "app.tabs"
+    priority: 10
+    chord: '[{"mod":[],"key":"ArrowLeft","code":"ArrowLeft"}]'
+    phase: "bubble"
+    onlyOutsideTextInput: true
+    overridesBrowser: false
+    actionBinding: "tab-prev"
+    params: ""
+
+  - binding: kb-tab-next
+    label: "Next Tab"
+    description: "Activate the tab to the right of the currently active tab"
+    category: "Navigation"
+    scope: "app.tabs"
+    priority: 10
+    chord: '[{"mod":[],"key":"ArrowRight","code":"ArrowRight"}]'
+    phase: "bubble"
+    onlyOutsideTextInput: true
+    overridesBrowser: false
+    actionBinding: "tab-next"
+    params: ""
+
+  - binding: kb-tab-jump-1
+    label: "Jump to Tab 1"
+    description: "Activate the first tab in the tab bar"
+    category: "Navigation"
+    scope: "app.tabs"
+    priority: 10
+    chord: '[{"mod":["meta"],"key":"1","code":"Digit1"}]'
+    phase: "bubble"
+    onlyOutsideTextInput: true
+    overridesBrowser: false
+    actionBinding: "tab-jump"
+    params: '{"index":1}'
+
+  - binding: kb-tab-jump-2
+    label: "Jump to Tab 2"
+    description: "Activate the second tab in the tab bar"
+    category: "Navigation"
+    scope: "app.tabs"
+    priority: 10
+    chord: '[{"mod":["meta"],"key":"2","code":"Digit2"}]'
+    phase: "bubble"
+    onlyOutsideTextInput: true
+    overridesBrowser: false
+    actionBinding: "tab-jump"
+    params: '{"index":2}'
+
+  - binding: kb-tab-jump-3
+    label: "Jump to Tab 3"
+    description: "Activate the third tab in the tab bar"
+    category: "Navigation"
+    scope: "app.tabs"
+    priority: 10
+    chord: '[{"mod":["meta"],"key":"3","code":"Digit3"}]'
+    phase: "bubble"
+    onlyOutsideTextInput: true
+    overridesBrowser: false
+    actionBinding: "tab-jump"
+    params: '{"index":3}'
+
+  - binding: kb-tab-jump-4
+    label: "Jump to Tab 4"
+    description: "Activate the fourth tab in the tab bar"
+    category: "Navigation"
+    scope: "app.tabs"
+    priority: 10
+    chord: '[{"mod":["meta"],"key":"4","code":"Digit4"}]'
+    phase: "bubble"
+    onlyOutsideTextInput: true
+    overridesBrowser: false
+    actionBinding: "tab-jump"
+    params: '{"index":4}'
+
+  - binding: kb-tab-jump-5
+    label: "Jump to Tab 5"
+    description: "Activate the fifth tab in the tab bar"
+    category: "Navigation"
+    scope: "app.tabs"
+    priority: 10
+    chord: '[{"mod":["meta"],"key":"5","code":"Digit5"}]'
+    phase: "bubble"
+    onlyOutsideTextInput: true
+    overridesBrowser: false
+    actionBinding: "tab-jump"
+    params: '{"index":5}'
+
+  - binding: kb-tab-jump-6
+    label: "Jump to Tab 6"
+    description: "Activate the sixth tab in the tab bar"
+    category: "Navigation"
+    scope: "app.tabs"
+    priority: 10
+    chord: '[{"mod":["meta"],"key":"6","code":"Digit6"}]'
+    phase: "bubble"
+    onlyOutsideTextInput: true
+    overridesBrowser: false
+    actionBinding: "tab-jump"
+    params: '{"index":6}'
+
+  - binding: kb-tab-jump-7
+    label: "Jump to Tab 7"
+    description: "Activate the seventh tab in the tab bar"
+    category: "Navigation"
+    scope: "app.tabs"
+    priority: 10
+    chord: '[{"mod":["meta"],"key":"7","code":"Digit7"}]'
+    phase: "bubble"
+    onlyOutsideTextInput: true
+    overridesBrowser: false
+    actionBinding: "tab-jump"
+    params: '{"index":7}'
+
+  - binding: kb-tab-jump-8
+    label: "Jump to Tab 8"
+    description: "Activate the eighth tab in the tab bar"
+    category: "Navigation"
+    scope: "app.tabs"
+    priority: 10
+    chord: '[{"mod":["meta"],"key":"8","code":"Digit8"}]'
+    phase: "bubble"
+    onlyOutsideTextInput: true
+    overridesBrowser: false
+    actionBinding: "tab-jump"
+    params: '{"index":8}'
+
+  - binding: kb-tab-jump-9
+    label: "Jump to Tab 9"
+    description: "Activate the ninth tab in the tab bar"
+    category: "Navigation"
+    scope: "app.tabs"
+    priority: 10
+    chord: '[{"mod":["meta"],"key":"9","code":"Digit9"}]'
+    phase: "bubble"
+    onlyOutsideTextInput: true
+    overridesBrowser: false
+    actionBinding: "tab-jump"
+    params: '{"index":9}'
+
+  # --- SplitLayoutRenderer — pane focus (scope: app.layout.split) ---
+
+  - binding: kb-pane-focus-left
+    label: "Focus Left Pane"
+    description: "Move keyboard focus to the pane immediately to the left of the current pane"
+    category: "Navigation"
+    scope: "app.layout.split"
+    priority: 10
+    chord: '[{"mod":["meta","shift"],"key":"ArrowLeft","code":"ArrowLeft"}]'
+    phase: "bubble"
+    onlyOutsideTextInput: false
+    overridesBrowser: false
+    actionBinding: "pane-focus-left"
+    params: ""
+
+  - binding: kb-pane-focus-right
+    label: "Focus Right Pane"
+    description: "Move keyboard focus to the pane immediately to the right of the current pane"
+    category: "Navigation"
+    scope: "app.layout.split"
+    priority: 10
+    chord: '[{"mod":["meta","shift"],"key":"ArrowRight","code":"ArrowRight"}]'
+    phase: "bubble"
+    onlyOutsideTextInput: false
+    overridesBrowser: false
+    actionBinding: "pane-focus-right"
+    params: ""
+
+  - binding: kb-pane-focus-up
+    label: "Focus Upper Pane"
+    description: "Move keyboard focus to the pane immediately above the current pane"
+    category: "Navigation"
+    scope: "app.layout.split"
+    priority: 10
+    chord: '[{"mod":["meta","shift"],"key":"ArrowUp","code":"ArrowUp"}]'
+    phase: "bubble"
+    onlyOutsideTextInput: false
+    overridesBrowser: false
+    actionBinding: "pane-focus-up"
+    params: ""
+
+  - binding: kb-pane-focus-down
+    label: "Focus Lower Pane"
+    description: "Move keyboard focus to the pane immediately below the current pane"
+    category: "Navigation"
+    scope: "app.layout.split"
+    priority: 10
+    chord: '[{"mod":["meta","shift"],"key":"ArrowDown","code":"ArrowDown"}]'
+    phase: "bubble"
+    onlyOutsideTextInput: false
+    overridesBrowser: false
+    actionBinding: "pane-focus-down"
+    params: ""
