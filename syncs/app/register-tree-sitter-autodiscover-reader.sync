@@ -1,0 +1,30 @@
+# Register the tree-sitter auto-discovery ManifestReader adapter with the
+# ManifestReader registry during kernel boot. Once this sync fires,
+# ProviderManifest/load can dispatch node_modules/tree-sitter-*/package.json
+# to the auto-discovery reader in handlers/ts/readers/tree-sitter-
+# autodiscover.reader.ts, which walks node_modules for packages carrying
+# the official `tree-sitter` package.json field and emits Parse (+ optional
+# Highlight) provider entries per discovered grammar.
+#
+# Priority 40 is intentionally the lowest tier so user-authored manifest
+# entries (priority 100) always win over auto-discovery.
+#
+# See docs/plans/virtual-provider-registry-prd.md §2 and VPR-08.
+
+sync RegisterTreeSitterAutodiscoverReader [eager]
+  purpose {
+    On kernel boot, register the tree-sitter-autodiscover ManifestReader
+    adapter so ProviderManifest can walk node_modules for tree-sitter-*
+    grammar packages and register Parse/Highlight providers automatically.
+  }
+when {
+  KernelBoot/boot: [ projectRoot: ?projectRoot; manifestPath: ?manifestPath ]
+    => ok(kernel: ?kernel; concepts: ?concepts; syncs: ?syncs)
+}
+then {
+  ManifestReader/register: [
+    reader: "tree-sitter-autodiscover";
+    formats: ["node_modules/tree-sitter-*/package.json"];
+    priority: 40
+  ]
+}
