@@ -151,20 +151,34 @@ const _outlineHandler: FunctionalConceptHandler = {
     p = spGet(p, 'outline', node, 'existing');
     p = branch(p, 'existing',
       (b) => {
-        let b2 = spGet(b, 'outline', newParent, 'newParentRecord');
-        b2 = branch(b2, 'newParentRecord',
-          (c) => {
-            // merge (not put) preserves node/order/children/isCollapsed/createdAt.
-            let c2 = merge(c, 'outline', node, { parent: newParent });
-            return complete(c2, 'ok', { node });
-          },
-          (c) => complete(c, 'notfound', { message: 'Parent not found' }),
-        );
-        return b2;
+        // No longer verify the parent has its own outline record — page
+        // roots (rootNodeId on a ContentNode that owns a block tree) are
+        // legitimate parents but don't themselves have outline entries.
+        // merge preserves node/order/children/isCollapsed/createdAt.
+        let b2 = merge(b, 'outline', node, { parent: newParent });
+        return complete(b2, 'ok', { node });
       },
       (b) => complete(b, 'notfound', { message: 'Node not found' }),
     );
 
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
+  /**
+   * getParent(node) — return the parent field of a node's outline record,
+   * or 'notfound' if the node has no outline. Used by Shift+Tab outdent.
+   */
+  getParent(input: Record<string, unknown>) {
+    const node = input.node as string;
+    let p = createProgram();
+    p = spGet(p, 'outline', node, 'existing');
+    p = branch(p, 'existing',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const rec = bindings.existing as Record<string, unknown>;
+        return { parent: String(rec.parent ?? '') };
+      }),
+      (b) => complete(b, 'notfound', { message: 'Node not found' }),
+    );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 

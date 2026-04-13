@@ -2825,9 +2825,21 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
                 })();
                 const myIndex = siblings.indexOf(nodeId);
                 if (e.shiftKey) {
-                  // Outdent: if rootNodeId is already the page root we can't
-                  // go higher; bail quietly for MVP. Proper outdent requires
-                  // knowing grandparent, which we don't thread down yet.
+                  // Outdent: reparent me to my grandparent. Chain two
+                  // Outline/getParent lookups: my parent, then my parent's
+                  // parent. If my parent === rootNodeId we're already at
+                  // the top level and can't outdent further.
+                  const myParent = await invoke('Outline', 'getParent', { node: nodeId });
+                  if (myParent.variant !== 'ok') return;
+                  const parentId = String(myParent.parent ?? '');
+                  if (!parentId || parentId === rootNodeId) return;
+                  const gp = await invoke('Outline', 'getParent', { node: parentId });
+                  if (gp.variant !== 'ok') return;
+                  const grandparentId = String(gp.parent ?? '') || rootNodeId;
+                  const result = await invoke('Outline', 'reparent', {
+                    node: nodeId, newParent: grandparentId,
+                  });
+                  if (result.variant === 'ok') onStructureChange();
                   return;
                 }
                 // Indent under previous sibling.
