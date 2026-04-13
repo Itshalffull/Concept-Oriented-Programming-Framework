@@ -1,0 +1,164 @@
+@version(1)
+@category("syntax")
+@visibility("public")
+concept Format [F] {
+
+  purpose {
+    Dispatch text to language-specific formatter providers that convert raw
+    source text into a serialized Patch value. Each language has exactly one
+    registered provider; applications install providers for the languages they
+    need and call format to obtain a Patch that integrates directly with the
+    existing Patch + UndoStack pipeline — each format invocation becomes one
+    undo entry rather than a raw text replacement.
+  }
+
+  state {
+    providers: set F
+    definition {
+      language: F -> String
+      provider: F -> String
+      config:   F -> Bytes
+    }
+    index {
+      byLanguage: String -> option F
+    }
+  }
+
+  actions {
+    action register(provider: String, language: String, config: Bytes) {
+      -> ok(id: F) {
+        Record the provider as the formatter for the given language and make it
+        immediately available to format calls. The provider identifier and
+        language are both stored for discovery.
+      }
+      -> duplicate(language: String) {
+        A provider for this language is already registered. Each language may
+        have at most one active formatter; remove the existing one before
+        registering a replacement.
+      }
+      -> error(message: String) {
+        Registration failed because provider or language is an empty string, or
+        a storage error occurred.
+      }
+
+      fixture register_ok {
+        provider: "prettier"
+        language: "typescript"
+        config: ""
+      }
+      fixture register_markdown {
+        provider: "micromark-format"
+        language: "markdown"
+        config: ""
+      }
+      fixture register_json {
+        provider: "prettier"
+        language: "json"
+        config: ""
+      }
+      fixture register_empty_provider {
+        provider: ""
+        language: "typescript"
+        config: ""
+      } -> error
+      fixture register_empty_language {
+        provider: "prettier"
+        language: ""
+        config: ""
+      } -> error
+      fixture register_duplicate {
+        provider: "prettier-v3"
+        language: "typescript"
+        config: ""
+      } after register_ok -> duplicate
+    }
+
+    action format(language: String, text: String) {
+      -> ok(patch: Bytes) {
+        Invoke the registered formatter for the language and return the minimal
+        set of edits as a serialized Patch. The Patch encoding is
+        provider-defined and consumed by the Patch + UndoStack pipeline;
+        applying it to the original text yields the formatted output.
+      }
+      -> no_provider(language: String) {
+        No formatter has been registered for this language. Register a suitable
+        provider before calling format, or skip formatting for this language.
+      }
+      -> error(message: String) {
+        The language string is empty, the provider was found but failed to
+        format the text (e.g. a syntax error prevented formatting), or an
+        internal dispatch error occurred.
+      }
+
+      fixture format_ok {
+        language: "typescript"
+        text: "const x=1"
+      } after register_ok
+      fixture format_markdown {
+        language: "markdown"
+        text: "# Hello\n\nParagraph."
+      } after register_markdown
+      fixture format_empty_language {
+        language: ""
+        text: "const x=1"
+      } -> error
+      fixture format_no_provider {
+        language: "rust"
+        text: "fn main(){}"
+      } -> no_provider
+    }
+
+    action listLanguages() {
+      -> ok(languages: list String) {
+        Return the list of language identifiers for which a formatter provider
+        is currently registered. The list is unordered and may be empty when
+        no providers have been registered yet.
+      }
+
+      fixture list_empty {}
+      fixture list_after_register {} after register_ok
+    }
+  }
+
+  example "register then format returns patch": {
+    after register(provider: "prettier", language: "typescript", config: "") -> ok(id: _)
+    then format(language: "typescript", text: "const x=1") -> ok(patch: _)
+  }
+
+  example "format unknown language returns no_provider": {
+    then format(language: "cobol", text: "IDENTIFICATION DIVISION.") -> no_provider(language: "cobol")
+  }
+
+  example "duplicate registration is rejected": {
+    after register(provider: "prettier", language: "typescript", config: "") -> ok(id: _)
+    then register(provider: "prettier-v3", language: "typescript", config: "") -> duplicate(language: "typescript")
+  }
+
+  example "register then listLanguages includes language": {
+    after register(provider: "prettier", language: "typescript", config: "") -> ok(id: _)
+    then listLanguages() -> ok(languages: ["typescript"])
+  }
+
+  always "every provider has a non-empty language": {
+    forall f in providers: f.language != ""
+  }
+
+  always "every provider has a non-empty provider identifier": {
+    forall f in providers: f.provider != ""
+  }
+
+  never "two providers for the same language": {
+    exists f1 in providers, f2 in providers:
+      f1 != f2 and f1.language = f2.language
+  }
+
+  action register {
+    requires: provider.length > 0 and language.length > 0
+    ensures ok: id in providers
+  }
+
+  action format {
+    requires: language.length > 0
+    ensures ok: patch != none
+  }
+}
