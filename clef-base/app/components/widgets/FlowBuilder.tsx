@@ -31,6 +31,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useKernelInvoke } from '../../../lib/clef-provider';
 import { ActionButton } from './ActionButton';
+import {
+  ConceptActionPicker,
+  type ConceptActionPickerValue,
+  type ConceptActionSpec,
+} from './ConceptActionPicker';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -643,7 +648,7 @@ const StepInspectorPane: React.FC<StepInspectorPaneProps> = ({
                     >
                       Concept/Action
                     </label>
-                    <ActionBindingInput
+                    <ActionBindingPicker
                       id={`action-binding-${stepId}`}
                       processSpecId={processSpecId}
                       stepId={stepId}
@@ -709,83 +714,98 @@ const StepInspectorPane: React.FC<StepInspectorPaneProps> = ({
 };
 
 // ---------------------------------------------------------------------------
-// ActionBindingInput — action-editor sub-widget (kernel-mediated)
+// ActionBindingPicker — action-editor sub-widget (kernel-mediated)
+//
+// Replaces the former free-text ActionBindingInput with ConceptActionPicker
+// (CAP-03). The stored format is unchanged: a "Concept/action" string saved
+// to the `conceptAction` key inside the step config JSON.
 // ---------------------------------------------------------------------------
 
-interface ActionBindingInputProps {
+interface ActionBindingPickerProps {
   id: string;
   processSpecId: string;
   stepId: string;
+  /** Current value in "Concept/action" format, or empty string when unset. */
   initialValue: string;
   onSaved: (value: string) => void;
 }
 
-const ActionBindingInput: React.FC<ActionBindingInputProps> = ({
+const ActionBindingPicker: React.FC<ActionBindingPickerProps> = ({
   id, processSpecId, stepId, initialValue, onSaved,
 }) => {
   const invoke = useKernelInvoke();
-  const [value, setValue] = useState(initialValue);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
-  useEffect(() => { setValue(initialValue); }, [initialValue]);
+  // Derive a structured picker value from the stored "Concept/action" string.
+  const parseInitial = (raw: string): ConceptActionPickerValue | undefined => {
+    if (!raw) return undefined;
+    const sep = raw.indexOf('/');
+    if (sep < 1) return undefined;
+    return { concept: raw.slice(0, sep), action: raw.slice(sep + 1) };
+  };
 
-  const handleSave = useCallback(async () => {
-    setSaving(true);
-    setError(null);
-    try {
-      const result = await invoke('ProcessSpec', 'updateStep', {
-        spec: processSpecId,
-        stepId,
-        config: JSON.stringify({ conceptAction: value }),
-      });
-      if (result && (result as Record<string, unknown>).variant === 'ok') {
-        onSaved(value);
-      } else {
-        setError('Save failed');
+  const [pickerValue, setPickerValue] = useState<ConceptActionPickerValue | undefined>(
+    parseInitial(initialValue),
+  );
+
+  // Sync picker value when the parent re-loads step config (e.g. step switch).
+  useEffect(() => {
+    setPickerValue(parseInitial(initialValue));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialValue]);
+
+  const handleChange = useCallback(
+    async (val: ConceptActionPickerValue & { actionSpec?: ConceptActionSpec }) => {
+      const serialized = `${val.concept}/${val.action}`;
+      setPickerValue({ concept: val.concept, action: val.action });
+      setSaveError(null);
+      setSaving(true);
+      try {
+        const result = await invoke('ProcessSpec', 'updateStep', {
+          spec: processSpecId,
+          stepId,
+          config: JSON.stringify({ conceptAction: serialized }),
+        });
+        if (result && (result as Record<string, unknown>).variant === 'ok') {
+          onSaved(serialized);
+        } else {
+          setSaveError('Save failed');
+        }
+      } catch (err) {
+        setSaveError(err instanceof Error ? err.message : 'Save failed');
+      } finally {
+        setSaving(false);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Save failed');
-    } finally {
-      setSaving(false);
-    }
-  }, [invoke, processSpecId, stepId, value, onSaved]);
+    },
+    [invoke, processSpecId, stepId, onSaved],
+  );
 
   return (
-    <div data-part="action-binding-input">
-      <input
-        id={id}
-        type="text"
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        placeholder="e.g. ContentStorage/save"
-        style={{
-          width: '100%',
-          fontFamily: 'var(--typography-font-family-mono)',
-          fontSize: 'var(--typography-code-sm-size)',
-          padding: '4px 6px',
-          border: '1px solid var(--palette-outline-variant)',
-          borderRadius: 'var(--radius-xs, 2px)',
-          background: 'var(--palette-surface-variant)',
-          color: 'var(--palette-on-surface)',
-        }}
-        onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); }}
+    <div data-part="action-binding-picker" id={id}>
+      <ConceptActionPicker
+        value={pickerValue}
+        onChange={handleChange}
+        filter="all"
+        placeholder="Search concepts and actions…"
       />
-      <div style={{ display: 'flex', gap: 'var(--spacing-xs)', marginTop: '4px', alignItems: 'center' }}>
-        <button
-          data-part="button"
-          data-variant="filled"
-          style={{ fontSize: '11px', padding: '2px 8px' }}
-          onClick={handleSave}
-          disabled={saving}
-          aria-busy={saving}
+      {saving && (
+        <p
+          role="status"
+          aria-live="polite"
+          style={{ fontSize: '11px', color: 'var(--palette-on-surface-variant)', marginTop: '4px' }}
         >
-          {saving ? 'Saving…' : 'Save'}
-        </button>
-        {error && (
-          <span style={{ fontSize: '11px', color: 'var(--palette-error)' }}>{error}</span>
-        )}
-      </div>
+          Saving…
+        </p>
+      )}
+      {saveError && (
+        <p
+          role="alert"
+          style={{ fontSize: '11px', color: 'var(--palette-error)', marginTop: '4px' }}
+        >
+          {saveError}
+        </p>
+      )}
     </div>
   );
 };
