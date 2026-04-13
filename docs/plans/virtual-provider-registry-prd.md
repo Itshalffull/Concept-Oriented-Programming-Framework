@@ -348,12 +348,27 @@ Prefer wasm where available (rustfmt has wasm builds); fall back to subprocess i
 
 ## 9. Card Plan
 
-19 cards under epic "Virtual Provider Registry". See VK breakdown for per-card descriptions and blocking relationships.
+20 cards under epic MAG-817 "Virtual Provider Registry". All shipped 2026-04-13.
 
-Phase ordering:
-- Phase 1 blocks Phases 2, 3, 4 (generic syncs + ManifestReader/ProviderManifest concepts before any reader or provider can register via them)
-- Phase 2 blocks Phase 5 (readers must exist before default manifest can be loaded through them)
-- Phase 3 blocks Phase 5 (Clef DSL providers must exist before default manifest references them)
-- Phase 4 can run parallel to Phases 2, 3 after Phase 1 lands
-- Phase 6 is independent after Phase 1
-- Phase 7 depends on Phase 5 (watches the actively-loaded reader set)
+| Card | Title | Commit |
+|---|---|---|
+| VPR-01 | ManifestReader + ProviderManifest concepts + handlers | 0ef9b245 |
+| VPR-02 | Four generic forward registration syncs | a094e44f |
+| VPR-03 | Reverse syncs + deregister actions + PluginRegistry/remove | 0cd211e6 |
+| VPR-04 | clef-yaml + clef-json ManifestReaders | 8077b56b |
+| VPR-05 | prettier-config ManifestReader | 8d170fd6 |
+| VPR-06 | editorconfig ManifestReader | 5403e47b |
+| VPR-07 | vscode-settings + vscode-extension ManifestReaders | ca931e46 |
+| VPR-08 | tree-sitter auto-discover ManifestReader | e93250e4 |
+| VPR-09 | clef-framework-parse meta-provider (5 DSLs) | ff91311a |
+| VPR-10 | clef-dsl-highlight meta-provider (5 DSLs) | db72f923 |
+| VPR-11 | tree-sitter generic Parse adapter | d546343c |
+| VPR-12 | textmate generic Highlight adapter | 3a025bd9 |
+| VPR-13 | LSP Format + Highlight adapter | 33965592 |
+| VPR-14 | Default .clef/providers.yaml + InputRule migration | a6904bbd |
+| VPR-15 | Retire per-language registration syncs | 4f373f87 |
+| VPR-16 | prettier-plugin-solidity Format provider | d5a2213e |
+| VPR-17 | rustfmt Format provider (wasm + subprocess) | 5403e47b |
+| VPR-18 | swift-format Format provider | b52946e1 |
+| VPR-19 | ProviderManifest/reload diff semantics + file watcher | 8995cd52 |
+| VPR-20 | Refactor callout providers into micromark extensions | 13ff5cfa |
