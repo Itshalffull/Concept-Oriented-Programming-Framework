@@ -819,6 +819,30 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
     });
   }, [modalStack, rootNodeId, pageTitle]);
 
+  // =========================================================================
+  // Keyboard help modal — Cmd+/ or ? (PP-keyboard-help)
+  // Opens the keyboard-help-modal widget showing all registered shortcuts
+  // grouped by category. Pushed via ModalStackProvider; Escape closes.
+  // =========================================================================
+
+  const openKeyboardHelp = useCallback(() => {
+    const modalId = `keyboard-help-${Date.now()}`;
+    modalStack.pushModal({
+      id: modalId,
+      widgetId: 'keyboard-help-modal',
+      dismissOnBackdrop: true,
+      focusTrapped: true,
+      onClose: () => {},
+      props: {
+        children: (
+          <KeyboardHelpModal
+            onClose={() => modalStack.popModal(modalId)}
+          />
+        ),
+      },
+    });
+  }, [modalStack]);
+
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     // Cmd+Shift+E / Ctrl+Shift+E — open export dialog (PP-export-dialog)
     if (e.key === 'e' && e.shiftKey && (e.metaKey || e.ctrlKey)) {
@@ -826,6 +850,24 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
       e.stopPropagation();
       openExportDialog();
       return;
+    }
+    // Cmd+/ or Ctrl+/ — open keyboard shortcuts help (PP-keyboard-help)
+    if (e.key === '/' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      e.stopPropagation();
+      openKeyboardHelp();
+      return;
+    }
+    // ? (Shift+/) without meta — also opens keyboard help when not in an input
+    if (e.key === '?' && !e.metaKey && !e.ctrlKey) {
+      const target = e.target as HTMLElement;
+      const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+      if (!isInput) {
+        e.preventDefault();
+        e.stopPropagation();
+        openKeyboardHelp();
+        return;
+      }
     }
     // Cmd+K / Ctrl+K — open command palette (PP-command-palette)
     if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
@@ -861,7 +903,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
     }
     // Multi-select keyboard handler runs unconditionally (handles Escape/arrows/delete)
     handleMultiSelectKeyDown(e);
-  }, [fsmState, findReplaceOpen, openExportDialog, openSlashMenu, closeSlashMenu, handleMultiSelectKeyDown, openCommandPalette]);
+  }, [fsmState, findReplaceOpen, openExportDialog, openKeyboardHelp, openSlashMenu, closeSlashMenu, handleMultiSelectKeyDown, openCommandPalette]);
 
   // =========================================================================
   // Paste handler — clipboard image → MediaAsset/createMedia via ActionBinding
