@@ -36,7 +36,7 @@
  * simpler path for v1.
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -287,3 +287,142 @@ export function useInvocation(
     dismiss,
   };
 }
+
+// ---------------------------------------------------------------------------
+// useInvokeWithFeedback
+// ---------------------------------------------------------------------------
+
+/**
+ * useInvokeWithFeedback — ergonomic wrapper that generates a client-side
+ * invocation id before the kernel round-trip, so <InvocationStatusIndicator>
+ * can mount immediately rather than waiting for the pending variant.
+ *
+ * PRD §4.4 v1 path: the kernel does not yet push a `pending(invocation)` variant
+ * back to the React layer (useKernelInvoke only returns the final completion per
+ * INV-04). This helper bridges the gap by:
+ *
+ * 1. Generating an invocation id client-side via crypto.randomUUID (or fallback).
+ * 2. Registering the invocation via Invocation/start so the kernel tracks it.
+ * 3. Dispatching the real concept action.
+ * 4. Completing or failing the invocation record after the action returns.
+ *
+ * The hook returns:
+ * - `invocationId` — stable id; wire into <InvocationStatusIndicator invocationId={id} />
+ * - `invoke(concept, action, input)` — async function; call in event handlers
+ *
+ * Usage:
+ * ```tsx
+ * const { invocationId, invoke } = useInvokeWithFeedback();
+ *
+ * // In a click handler:
+ * const result = await invoke('ConceptBrowser', 'install', { package_name: pkg });
+ * if (result.variant === 'ok') { ... }
+ *
+ * // In JSX:
+ * <InvocationStatusIndicator invocationId={invocationId} />
+ * ```
+ *
+ * The invocationId resets to null after `autoClearMs` (default 0 = never reset
+ * automatically, the indicator handles its own dismiss lifecycle).
+ */
+
+export interface UseInvokeWithFeedbackResult {
+  /** Client-generated invocation id. Null before first invoke call. */
+  invocationId: string | null;
+  /**
+   * Dispatch a kernel action while tracking lifecycle in the Invocation concept.
+   * Returns the raw kernel completion so callers can branch on variant.
+   */
+  invoke: (
+    concept: string,
+    action: string,
+    input: Record<string, unknown>,
+  ) => Promise<Record<string, unknown>>;
+  /** Current lifecycle status derived from the Invocation record. */
+  status: InvocationStatus;
+}
+
+function generateInvocationId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  // Fallback for environments without crypto.randomUUID (older Safari, SSR).
+  return 'inv-' + Math.random().toString(36).slice(2, 11) + '-' + Date.now().toString(36);
+}
+
+export function useInvokeWithFeedback(): UseInvokeWithFeedbackResult {
+  const [invocationId, setInvocationId] = useState<string | null>(null);
+  const invocationState = useInvocation(invocationId);
+
+  const invoke = useCallback(
+    async (
+      concept: string,
+      action: string,
+      input: Record<string, unknown>,
+    ): Promise<Record<string, unknown>> => {
+      const id = generateInvocationId();
+      const startedAt = new Date().toISOString();
+
+      // 1. Register the invocation synchronously before the real call so the
+      //    indicator can mount immediately.
+      setInvocationId(id);
+
+      // Fire-and-forget: register in Invocation/start. Non-fatal if it fails —
+      // the indicator will stay in pending until the poll resolves it.
+      kernelInvoke('Invocation', 'start', {
+        invocation: id,
+        connection: 'system',
+        binding: `${concept}/${action}`,
+        params: btoa(JSON.stringify(input)),
+        startedAt,
+      }).catch(() => {
+        // Silently ignore registration failures — the indicator degrades to a
+        // spinner that never resolves rather than crashing the call site.
+      });
+
+      // 2. Dispatch the real action.
+      let result: Record<string, unknown>;
+      try {
+        result = await kernelInvoke(concept, action, input);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Network error';
+        // Mark invocation as failed.
+        kernelInvoke('Invocation', 'fail', {
+          invocation: id,
+          error: msg,
+          completedAt: new Date().toISOString(),
+        }).catch(() => {});
+        throw err;
+      }
+
+      // 3. Complete or fail the invocation based on the variant.
+      const completedAt = new Date().toISOString();
+      if (result.variant === 'ok') {
+        kernelInvoke('Invocation', 'complete', {
+          invocation: id,
+          result: btoa(JSON.stringify(result)),
+          completedAt,
+        }).catch(() => {});
+      } else {
+        const msg =
+          typeof result.message === 'string' ? result.message :
+          typeof result.reason  === 'string' ? result.reason  :
+          `Action returned: ${String(result.variant)}`;
+        kernelInvoke('Invocation', 'fail', {
+          invocation: id,
+          error: msg,
+          completedAt,
+        }).catch(() => {});
+      }
+
+      return result;
+    },
+    [],
+  );
+
+  return useMemo(
+    () => ({ invocationId, invoke, status: invocationState.status }),
+    [invocationId, invoke, invocationState.status],
+  );
+}
+

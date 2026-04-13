@@ -19,6 +19,8 @@
  */
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import { useInvokeWithFeedback } from '../../lib/useInvocation';
+import { InvocationStatusIndicator } from './widgets/InvocationStatusIndicator';
 import { Card } from './widgets/Card';
 import { Badge } from './widgets/Badge';
 import { EmptyState } from './widgets/EmptyState';
@@ -208,9 +210,11 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
   const [filtersInitialized, setFiltersInitialized] = useState(false);
   const [resolvedLayout, setResolvedLayout] = useState<string | null>(null);
   const [resolvedWidget, setResolvedWidget] = useState<string | null>(null);
-  const [actionPending, setActionPending] = useState(false);
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+  // INV-06: per-action invocation feedback via useInvokeWithFeedback + InvocationStatusIndicator
+  const rowActionFeedback = useInvokeWithFeedback();
+  const bulkActionFeedback = useInvokeWithFeedback();
+  // Inline field-save errors (detail/content-body layout) — separate from row/bulk action feedback
+  const [inlineFieldError, setActionError] = useState<string | null>(null);
 
   // Toolbar state — advanced filter conditions, sort keys, group, and field visibility
   // managed by ViewEditorToolbar. Separate from the toggle-group activeFilters system.
@@ -801,62 +805,53 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
     navigateToHref(path);
   }, [controls.rowClick, navigateToHref, onSelect]);
 
-  // Bulk action handler — invoke a concept action for each selected row
+  // Bulk action handler — invoke a concept action for each selected row.
+  // INV-06: migrated to bulkActionFeedback (useInvokeWithFeedback) so failures
+  // are surfaced via InvocationStatusIndicator rather than a silent state variable.
   // TODO: migrate to <ActionButtonCompact> when InteractionSpec seeds create ActionBinding records
   const handleBulkAction = useCallback(async (actionKey: string, selectedRows: Record<string, unknown>[]) => {
     const bulkDef = controls.bulk?.actions.find(a => a.key === actionKey);
     if (!bulkDef) return;
     // Find matching row action config to get concept/action/params mapping
     const rowActionDef = controls.rowActions?.find(a => a.key === actionKey);
-    if (rowActionDef) {
-      setActionPending(true);
-      setActionError(null);
-      setActionSuccess(null);
-      try {
-        for (const row of selectedRows) {
-          const params: Record<string, unknown> = {};
-          for (const [paramKey, rowField] of Object.entries(rowActionDef.params)) {
-            params[paramKey] = row[rowField];
-          }
-          const result = await invoke(rowActionDef.concept, rowActionDef.action, params);
-          if (result.variant !== 'ok') {
-            setActionError(String(result.message ?? `${rowActionDef.action} failed`));
-            return;
-          }
-        }
-        setActionSuccess(`${bulkDef.label ?? actionKey} completed`);
-        refetch();
-      } catch (err) {
-        setActionError(err instanceof Error ? err.message : `${actionKey} failed`);
-      } finally {
-        setActionPending(false);
-      }
-    }
-  }, [controls.bulk?.actions, controls.rowActions, invoke, refetch]);
+    if (!rowActionDef) return;
 
-  // Row action handler — legacy path; actions with actionBindingId bypass this via ActionButtonCompact in display components
+    for (const row of selectedRows) {
+      const params: Record<string, unknown> = {};
+      for (const [paramKey, rowField] of Object.entries(rowActionDef.params)) {
+        // INV-06 null-safety: skip rows where the mapped field is undefined
+        // rather than propagating undefined into the kernel call.
+        const fieldValue = row[rowField];
+        if (fieldValue === undefined) continue;
+        params[paramKey] = fieldValue;
+      }
+      // bulkActionFeedback.invoke tracks the last invocation id for the indicator.
+      const result = await bulkActionFeedback.invoke(
+        rowActionDef.concept, rowActionDef.action, params,
+      );
+      if (result.variant !== 'ok') return; // stop on first failure; indicator shows error
+    }
+    refetch();
+  }, [controls.bulk?.actions, controls.rowActions, refetch, bulkActionFeedback]);
+
+  // Row action handler — legacy path; actions with actionBindingId bypass this via ActionButtonCompact in display components.
+  // INV-06: migrated to rowActionFeedback (useInvokeWithFeedback) so failures
+  // surface via InvocationStatusIndicator rather than a silent state variable.
   const handleRowAction = useCallback(async (action: RowActionConfig, row: Record<string, unknown>) => {
-    setActionPending(true);
-    setActionError(null);
-    setActionSuccess(null);
     const params: Record<string, unknown> = {};
     for (const [paramKey, rowField] of Object.entries(action.params)) {
-      params[paramKey] = row[rowField];
+      // INV-06 null-safety: guard against undefined row fields — skip the param
+      // rather than forwarding undefined into the kernel, which causes silent
+      // failures or unexpected behaviour in the handler.
+      const fieldValue = row[rowField];
+      if (fieldValue === undefined) continue;
+      params[paramKey] = fieldValue;
     }
-    try {
-      const result = await invoke(action.concept, action.action, params);
-      if (result.variant !== 'ok') {
-        setActionError(String(result.message ?? `${action.action} failed`));
-        return;
-      }
-      setActionSuccess(`${action.label ?? action.action} completed`);
+    const result = await rowActionFeedback.invoke(action.concept, action.action, params);
+    if (result.variant === 'ok') {
       refetch();
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : `${action.action} failed`);
-    } finally {
-      setActionPending(false);
     }
-  }, [invoke, refetch]);
+  }, [refetch, rowActionFeedback]);
 
   // Hide view if contextual filters can't be resolved
   if (hasUnresolvedContextualHide) {
@@ -962,7 +957,24 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
     }
 
     if (dataError) {
-      return <EmptyState title="Query failed" description={dataError} />;
+      // INV-06: add a retry button so users can recover from transient query failures
+      // without a full page reload.  The retry action re-triggers the underlying
+      // useConceptQuery by calling the unified refetch() from the active data mode.
+      return (
+        <EmptyState
+          title="Query failed"
+          description={dataError}
+          action={
+            <button
+              data-part="button"
+              data-variant="outlined"
+              onClick={() => refetch()}
+            >
+              Retry
+            </button>
+          }
+        />
+      );
     }
 
     if (displayData.length === 0) {
@@ -1243,20 +1255,30 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
         />
       )}
 
-      {/* Action feedback — row/bulk action pending, error, success states */}
-      {actionPending && (
-        <div style={{ marginBottom: 'var(--spacing-sm)', padding: 'var(--spacing-xs) var(--spacing-md)', borderRadius: 'var(--radius-sm)', background: 'var(--palette-surface-variant)', color: 'var(--palette-on-surface-variant)', fontSize: 'var(--typography-body-sm-size)' }}>
-          Working...
-        </div>
-      )}
-      {actionError && (
+      {/* Inline field-save errors (detail / content-body layouts) */}
+      {inlineFieldError && (
         <div style={{ marginBottom: 'var(--spacing-sm)', padding: 'var(--spacing-xs) var(--spacing-md)', borderRadius: 'var(--radius-sm)', background: 'var(--palette-error-container)', color: 'var(--palette-on-error-container)', fontSize: 'var(--typography-body-sm-size)' }}>
-          {actionError}
+          {inlineFieldError}
         </div>
       )}
-      {actionSuccess && !actionPending && (
-        <div style={{ marginBottom: 'var(--spacing-sm)', padding: 'var(--spacing-xs) var(--spacing-md)', borderRadius: 'var(--radius-sm)', background: 'var(--palette-primary-container)', color: 'var(--palette-on-primary-container)', fontSize: 'var(--typography-body-sm-size)' }}>
-          {actionSuccess}
+
+      {/* Action feedback — INV-06: InvocationStatusIndicator replaces manual pending/error/success divs */}
+      {rowActionFeedback.invocationId && (
+        <div style={{ marginBottom: 'var(--spacing-sm)' }}>
+          <InvocationStatusIndicator
+            invocationId={rowActionFeedback.invocationId}
+            verbose
+            label={rowActionFeedback.status === 'ok' ? 'Action completed' : undefined}
+          />
+        </div>
+      )}
+      {bulkActionFeedback.invocationId && (
+        <div style={{ marginBottom: 'var(--spacing-sm)' }}>
+          <InvocationStatusIndicator
+            invocationId={bulkActionFeedback.invocationId}
+            verbose
+            label={bulkActionFeedback.status === 'ok' ? 'Bulk action completed' : undefined}
+          />
         </div>
       )}
 
