@@ -1,0 +1,58 @@
+# ComponentMapping seeds — audio block widget bindings (MAG-751).
+# Registers the audio-block widget for media-asset entities whose mimeType
+# is an audio variant. Two mappings:
+#   1. (audio-asset, inline-media) — insertable audio block entry; routes
+#      inline audio embeds to the audio-block widget.
+#   2. (audio-asset, block-editor) — schema-overlay alias so that when a
+#      ContentNode has schema "audio-asset" and the view requests block-editor
+#      display, it routes to the audio-block widget.
+
+concept: ComponentMapping
+action: create
+entries:
+  # (audio-asset, inline-media) — insertable audio block entry
+  - name: audio-mapping
+    widget_id: audio-block
+    schema: audio-asset
+    display_mode: inline-media
+    insertable: true
+    section: "Media"
+    icon: "audio"
+    label: "Audio"
+
+  # (audio-asset, block-editor) — schema-overlay alias for block-editor display
+  - name: audio-asset-block-editor
+    widget_id: audio-block
+    schema: audio-asset
+    display_mode: block-editor
+
+---
+# Bind slots to entity fields for each mapping above
+
+concept: ComponentMapping
+action: bindSlot
+entries:
+  # Slots for audio-mapping (resolves to audio-block parts)
+  - mapping: audio-mapping
+    slot_name: blockId
+    sources: ["entity_field:node"]
+  - mapping: audio-mapping
+    slot_name: assetId
+    sources: ["entity_field:asset"]
+  - mapping: audio-mapping
+    slot_name: caption
+    sources: ["entity_field:captionRef"]
+  - mapping: audio-mapping
+    slot_name: autoplay
+    sources: ["entity_field:autoplay"]
+
+  # Slots for audio-asset-block-editor
+  - mapping: audio-asset-block-editor
+    slot_name: blockId
+    sources: ["entity_field:node"]
+  - mapping: audio-asset-block-editor
+    slot_name: assetId
+    sources: ["entity_field:asset"]
+  - mapping: audio-asset-block-editor
+    slot_name: caption
+    sources: ["entity_field:captionRef"]

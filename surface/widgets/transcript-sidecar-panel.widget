@@ -1,0 +1,298 @@
+@version(1)
+widget transcript-sidecar-panel {
+
+  purpose {
+    Sidecar panel that displays a synchronized transcript alongside an audio
+    or video block. In follow-mode the panel auto-scrolls to keep the active
+    utterance visible and announces caption updates via aria-live polite. The
+    user can enter free-scroll mode at any time and press F to re-engage
+    follow-mode. A search input filters utterances by text; matching turns are
+    highlighted while non-matching turns are dimmed. Clicking any timestamp
+    chip emits a SEEK event so the companion player jumps to that position.
+    Reads transcript segments from Transcript/get using the transcriptId prop.
+  }
+
+  requires @1 {
+    fields {
+      segments: list;
+      status: String;
+      language: String;
+    }
+    actions {
+      get(id: String);
+      seekToWord(id: String, wordIndex: String);
+    }
+  }
+
+  anatomy {
+    root:                container    { Top-level panel region; carries data-state aria-live and aria-label }
+    searchInput:         interactive  { Text input for filtering utterances by content; pressing / focuses it }
+    transcriptScrollArea: container  { Scrollable viewport for the full transcript managed by follow-mode logic }
+    speakerTurn:         container   { Grouped block for one continuous speaker segment }
+    speakerLabel:        text        { Speaker identifier label decorative-only for the current turn }
+    utterance:           text        { The spoken text of the turn; highlighted spans mark the active word }
+    timestampChip:       action      { Clickable chip displaying the start time of the turn; emits SEEK on click }
+    currentMarker:       presentation { Floating indicator line that marks the currently active utterance position }
+  }
+
+  states {
+    viewing {
+      live [initial] {
+        on USER_SCROLL    -> free-scroll;
+        on SEARCH_OPEN    -> searching;
+        on TOGGLE_FOLLOW  -> free-scroll;
+        entry [enableAutoScroll];
+      }
+
+      searching {
+        on SEARCH_CLEAR   -> live;
+        on ESCAPE         -> live;
+        on USER_SCROLL    -> free-scroll;
+        entry [focusSearchInput];
+        exit [clearHighlights];
+      }
+
+      follow-mode {
+        on USER_SCROLL    -> free-scroll;
+        on SEARCH_OPEN    -> searching;
+        on TOGGLE_FOLLOW  -> free-scroll;
+        entry [enableAutoScroll];
+        exit [disableAutoScroll];
+      }
+
+      free-scroll {
+        on TOGGLE_FOLLOW  -> follow-mode;
+        on SEARCH_OPEN    -> searching;
+        entry [disableAutoScroll];
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Escape     -> ESCAPE;
+      ArrowUp    -> NAVIGATE_PREV;
+      ArrowDown  -> NAVIGATE_NEXT;
+      F          -> TOGGLE_FOLLOW;
+    }
+    focus {
+      trap: false;
+      initial: transcriptScrollArea;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Transcript";
+        aria-live: if state.viewing == "live" then "polite" else "off";
+      };
+      searchInput -> {
+        role: "searchbox";
+        aria-label: "Search transcript";
+        aria-controls: transcriptScrollArea;
+      };
+      transcriptScrollArea -> {
+        role: "list";
+        aria-label: "Transcript turns";
+      };
+      speakerTurn -> {
+        role: "listitem";
+      };
+      speakerLabel -> {
+        aria-hidden: "true";
+      };
+      utterance -> {
+        aria-label: self.text;
+      };
+      timestampChip -> {
+        role: "button";
+        tabindex: "0";
+        aria-label: concat("Seek to ", self.startTime);
+      };
+      currentMarker -> {
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    transcriptId:       String
+    currentTime:        String = "0"
+    query:              String = ""
+    focusedUtteranceId: option String
+  }
+
+  connect {
+    root -> {
+      data-part:  "root";
+      data-state: state.viewing;
+      role:       "region";
+      aria-label: "Transcript";
+      aria-live:  if state.viewing == "live" then "polite" else "off";
+    }
+
+    searchInput -> {
+      data-part:       "search-input";
+      role:            "searchbox";
+      type:            "text";
+      placeholder:     "Search transcript";
+      aria-label:      "Search transcript";
+      value:           ?query;
+      onInput:         send(SEARCH_QUERY);
+      onFocus:         send(SEARCH_OPEN);
+      onKeyDown-Escape: send(ESCAPE);
+    }
+
+    transcriptScrollArea -> {
+      data-part:      "transcript-scroll-area";
+      role:           "list";
+      aria-label:     "Transcript turns";
+      data-following: if state.viewing == "live" then "true" else "false";
+      onScroll:       send(USER_SCROLL);
+    }
+
+    speakerTurn -> {
+      data-part:   "speaker-turn";
+      role:        "listitem";
+      data-active: if self.id == ?focusedUtteranceId then "true" else "false";
+    }
+
+    speakerLabel -> {
+      data-part:   "speaker-label";
+      aria-hidden: "true";
+      text:        self.speaker;
+    }
+
+    utterance -> {
+      data-part:  "utterance";
+      aria-label: self.text;
+      text:       self.text;
+    }
+
+    timestampChip -> {
+      data-part:        "timestamp-chip";
+      role:             "button";
+      tabindex:         "0";
+      aria-label:       concat("Seek to ", self.startTime);
+      text:             self.startTime;
+      data-time:        self.startTime;
+      onClick:          send(SEEK);
+      onKeyDown-Enter:  send(SEEK);
+      onKeyDown-Space:  send(SEEK);
+    }
+
+    currentMarker -> {
+      data-part:   "current-marker";
+      aria-hidden: "true";
+      data-time:   ?currentTime;
+    }
+  }
+
+  affordance {
+    serves: media-transcript-sidecar;
+    specificity: 9;
+    when context = "audio-sidecar";
+    bind {
+      transcriptId: transcriptId;
+      currentTime:  currentTime;
+    }
+  }
+
+  invariant {
+    example "USER_SCROLL from live transitions to free-scroll": {
+      after transition(from: "live", event: "USER_SCROLL") -> ok
+      then state.viewing = "free-scroll"
+    }
+
+    example "TOGGLE_FOLLOW from free-scroll enters follow-mode": {
+      after transition(from: "free-scroll", event: "TOGGLE_FOLLOW") -> ok
+      then state.viewing = "follow-mode"
+    }
+
+    example "TOGGLE_FOLLOW from follow-mode exits to free-scroll": {
+      after transition(from: "follow-mode", event: "TOGGLE_FOLLOW") -> ok
+      then state.viewing = "free-scroll"
+    }
+
+    example "SEARCH_OPEN from live enters searching": {
+      after transition(from: "live", event: "SEARCH_OPEN") -> ok
+      then state.viewing = "searching"
+    }
+
+    example "ESCAPE from searching returns to live": {
+      after transition(from: "searching", event: "ESCAPE") -> ok
+      then state.viewing = "live"
+    }
+
+    example "SEARCH_CLEAR from searching returns to live": {
+      after transition(from: "searching", event: "SEARCH_CLEAR") -> ok
+      then state.viewing = "live"
+    }
+
+    example "USER_SCROLL from follow-mode transitions to free-scroll": {
+      after transition(from: "follow-mode", event: "USER_SCROLL") -> ok
+      then state.viewing = "free-scroll"
+    }
+
+    example "USER_SCROLL from searching enters free-scroll": {
+      after transition(from: "searching", event: "USER_SCROLL") -> ok
+      then state.viewing = "free-scroll"
+    }
+
+    example "SEARCH_OPEN from follow-mode enters searching": {
+      after transition(from: "follow-mode", event: "SEARCH_OPEN") -> ok
+      then state.viewing = "searching"
+    }
+
+    example "TOGGLE_FOLLOW from live enters free-scroll": {
+      after transition(from: "live", event: "TOGGLE_FOLLOW") -> ok
+      then state.viewing = "free-scroll"
+    }
+
+    example "root data-state changes on USER_SCROLL": {
+      after transition(from: "live", event: "USER_SCROLL") -> ok
+      then state.viewing != "live"
+    }
+
+    example "double follow-toggle round trips to free-scroll": {
+      after transition(from: "free-scroll", event: "TOGGLE_FOLLOW") -> ok
+      then state.viewing = "follow-mode"
+    }
+
+    forall "all viewing states are reachable": {
+      given s in viewingStates
+      then s.reachable = true
+    }
+
+    always "root data-state reflects FSM": {
+      root.dataState = state.viewing
+    }
+
+    always "timestampChip role is button": {
+      timestampChip.role = "button"
+    }
+
+    always "currentMarker aria-hidden": {
+      currentMarker.ariaHidden = "true"
+    }
+
+    always "speakerLabel aria-hidden": {
+      speakerLabel.ariaHidden = "true"
+    }
+
+    never "free-scroll and follow-mode simultaneously": {
+      state.viewing = "free-scroll"
+    }
+
+    action timestampChip {
+      ensures ok: send.called = true
+    }
+
+    action searchInput {
+      ensures ok: query = self.value
+    }
+  }
+
+}

@@ -1,0 +1,58 @@
+# ActionBinding seeds — audio block and transcript panel actions (MAG-751).
+# Three bindings:
+#   audio-seek-to-timestamp  — seeks the audio player to a timestamp supplied
+#     by the transcript-sidecar-panel SEEK event, forwarded to MediaAsset/seek.
+#   audio-toggle-speed       — cycles playback rate on the audio-block widget,
+#     persisted as a Property override on the ContentNode.
+#   transcript-search-query  — updates the query prop on the companion
+#     transcript-sidecar-panel so utterances are filtered by the search term.
+
+concept: ActionBinding
+action: bind
+entries:
+  # Seek the audio player to the timestamp emitted by a transcript timestamp-chip click.
+  # The parameterMap forwards context.seekTime (resolved from the SEEK event payload
+  # on the transcript-sidecar-panel) to the MediaAsset seek call.
+  - name: audio-seek-to-timestamp
+    binding: audio-seek-to-timestamp
+    target: "MediaAsset/seek"
+    parameterMap: '{"assetId":"context.focusedAssetId","position":"context.seekTime"}'
+    executionPolicy: "optimistic"
+    toolbar_command: false
+    slash_command: false
+    context_menu: false
+    section: "Audio"
+    label: "Seek to timestamp"
+    icon: "clock"
+
+  # Cycle playback rate on the focused audio-block widget.
+  # The selected rate is persisted as a Property override on the ContentNode
+  # keyed "playbackRate", scoped to the block's assetId.
+  - name: audio-toggle-speed
+    binding: audio-toggle-speed
+    target: "Property/set"
+    parameterMap: '{"entity":"context.focusedBlockId","key":"playbackRate","value":"context.nextPlaybackRate"}'
+    executionPolicy: "optimistic"
+    toolbar_command: true
+    slash_command: false
+    context_menu: false
+    section: "Audio"
+    label: "Playback speed"
+    icon: "gauge"
+
+  # Push a search query into the companion transcript-sidecar-panel.
+  # The query is forwarded from the slash command input to the panel via the
+  # transcript-sidecar-panel's query prop through a Binding/writeField call.
+  - name: transcript-search-query
+    binding: transcript-search-query
+    target: "Binding/writeField"
+    parameterMap: '{"widget":"transcript-sidecar-panel","field":"query","value":"context.searchQuery"}'
+    executionPolicy: "optimistic"
+    toolbar_command: false
+    slash_command: true
+    slash_label: "Search transcript"
+    slash_description: "Filter transcript utterances by text"
+    context_menu: false
+    section: "Transcript"
+    label: "Search transcript"
+    icon: "search"

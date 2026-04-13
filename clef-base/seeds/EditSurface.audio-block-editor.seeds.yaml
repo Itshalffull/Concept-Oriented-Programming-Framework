@@ -1,0 +1,27 @@
+# EditSurface seeds — audio block editor surface registration (MAG-751).
+# Declares the editing surface for the (audio-asset, block-editor) pair,
+# wiring toolbar, command bindings, and panel widgets.
+# The transcript-sidecar-panel is registered as a panel_widget so that
+# when the user opens an audio block in block-editor context, the companion
+# transcript panel is available in the sidebar.
+
+concept: EditSurface
+action: register
+entries:
+  - id: audio-block-editor
+    schema_ref: audio-asset
+    context: block-editor
+    toolbar_widget: inline-toolbar
+    command_bindings:
+      - audio-seek-to-timestamp
+      - audio-toggle-speed
+      - transcript-search-query
+    panel_widgets:
+      - transcript-sidecar-panel
+    context_menu_bindings: []
+    input_rule_refs: []
+    picker_refs:
+      - media-picker
+    compile_action_ref: null
+    compile_bundle_ref: null
+    compile_status_field: null

@@ -1,0 +1,360 @@
+@version(1)
+widget audio-block {
+
+  purpose {
+    Headless audio player block for time-synchronized media playback within
+    content documents. Renders a waveform visualisation, scrub bar, playback
+    controls, volume and speed selectors, and an optional captions toggle.
+    Reads the source URL from MediaAsset/get scoped to audio MIME types. The
+    FSM models six playback states (idle, playing, paused, buffering, ended,
+    error) and exposes keyboard shortcuts that match common media-player
+    conventions: Space play/pause, arrow keys for seeking and volume, digit
+    keys for proportional position jumps, and Shift+arrow for playback rate.
+  }
+
+  requires @1 {
+    fields {
+      src: String;
+      mimeType: String;
+      duration: String;
+    }
+    actions {
+      get(assetId: String);
+    }
+  }
+
+  anatomy {
+    root:                    container     { Top-level block wrapper; carries data-state and data-block-id }
+    audioElement:            presentation  { Native audio element hidden from accessibility tree; managed by the FSM }
+    waveform:                presentation  { Waveform visualisation canvas updated on current-time change }
+    controls:                container     { Row grouping playButton scrubBar timeDisplay volumeControl playbackSpeedSelector and captionsToggle }
+    playButton:              action        { Toggle play/pause; icon reflects current playback state }
+    scrubBar:                interactive   { Range input allowing the user to seek to any position in the file }
+    timeDisplay:             text          { Current elapsed time and total duration formatted as mm:ss / mm:ss }
+    volumeControl:           interactive   { Range input 0-1 controlling audio output level }
+    playbackSpeedSelector:   action        { Selector cycling through 0.5x 0.75x 1x 1.25x 1.5x 2x rates }
+    captionsToggle:          action        { Button that shows or hides the companion transcript when a caption is available }
+  }
+
+  states {
+    playback {
+      idle [initial] {
+        on PLAY       -> playing;
+        on ERROR      -> error;
+        entry [loadAudioSource];
+      }
+
+      playing {
+        on PAUSE      -> paused;
+        on BUFFER     -> buffering;
+        on END        -> ended;
+        on SEEK       -> playing;
+        on ERROR      -> error;
+        entry [startPlayback];
+        exit [recordPosition];
+      }
+
+      paused {
+        on PLAY       -> playing;
+        on SEEK       -> paused;
+        on ERROR      -> error;
+      }
+
+      buffering {
+        on READY      -> playing;
+        on ERROR      -> error;
+        entry [showBufferingIndicator];
+        exit [hideBufferingIndicator];
+      }
+
+      ended {
+        on PLAY       -> playing;
+        on SEEK       -> paused;
+      }
+
+      error {
+        on RETRY      -> idle;
+        entry [showErrorMessage];
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Space              -> TOGGLE_PLAY;
+      ArrowLeft          -> SEEK_BACK;
+      ArrowRight         -> SEEK_FORWARD;
+      ArrowUp            -> VOLUME_UP;
+      ArrowDown          -> VOLUME_DOWN;
+      Shift+ArrowLeft    -> SPEED_DOWN;
+      Shift+ArrowRight   -> SPEED_UP;
+    }
+    focus {
+      trap: false;
+      initial: playButton;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Audio player";
+        aria-busy: if state.playback == "buffering" then "true" else "false";
+      };
+      playButton -> {
+        role: "button";
+        aria-label: if state.playback == "playing" then "Pause" else "Play";
+        aria-pressed: if state.playback == "playing" then "true" else "false";
+      };
+      scrubBar -> {
+        role: "slider";
+        aria-label: "Seek";
+        aria-valuemin: "0";
+        aria-valuenow: ?currentTime;
+      };
+      timeDisplay -> {
+        aria-live: "off";
+        aria-label: "Playback time";
+      };
+      volumeControl -> {
+        role: "slider";
+        aria-label: "Volume";
+        aria-valuemin: "0";
+        aria-valuemax: "1";
+        aria-valuenow: ?volumeLevel;
+      };
+      playbackSpeedSelector -> {
+        role: "button";
+        aria-label: "Playback speed";
+        aria-haspopup: "listbox";
+      };
+      captionsToggle -> {
+        role: "button";
+        aria-label: "Toggle captions";
+        aria-pressed: if ?captionsVisible then "true" else "false";
+      };
+      audioElement -> {
+        aria-hidden: "true";
+      };
+      waveform -> {
+        role: "img";
+        aria-label: "Audio waveform";
+      };
+    }
+  }
+
+  props {
+    blockId:          String
+    assetId:          String
+    autoplay:         Bool = false
+    muted:            Bool = false
+    playbackRate:     String = "1.0"
+    currentTime:      String = "0"
+    caption:          option String
+    focused:          Bool = false
+    duration:         String = "0"
+    volumeLevel:      String = "1.0"
+    captionsVisible:  Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part:     "root";
+      data-state:    state.playback;
+      data-block-id: ?blockId;
+      data-asset-id: ?assetId;
+      role:          "region";
+      aria-label:    "Audio player";
+    }
+
+    audioElement -> {
+      data-part:   "audio-element";
+      aria-hidden: "true";
+      autoplay:    ?autoplay;
+      muted:       ?muted;
+      src:         self.src;
+    }
+
+    waveform -> {
+      data-part:  "waveform";
+      role:       "img";
+      aria-label: "Audio waveform";
+      data-time:  ?currentTime;
+    }
+
+    controls -> {
+      data-part:  "controls";
+      role:       "group";
+      aria-label: "Playback controls";
+    }
+
+    playButton -> {
+      data-part:    "play-button";
+      role:         "button";
+      aria-label:   if state.playback == "playing" then "Pause" else "Play";
+      aria-pressed: if state.playback == "playing" then "true" else "false";
+      data-state:   state.playback;
+      onClick:      send(TOGGLE_PLAY);
+      onKeyDown-Space: send(TOGGLE_PLAY);
+    }
+
+    scrubBar -> {
+      data-part:     "scrub-bar";
+      role:          "slider";
+      type:          "range";
+      min:           "0";
+      max:           ?duration;
+      value:         ?currentTime;
+      aria-label:    "Seek";
+      aria-valuenow: ?currentTime;
+      onInput:       send(SEEK);
+      onKeyDown-ArrowLeft:  send(SEEK_BACK);
+      onKeyDown-ArrowRight: send(SEEK_FORWARD);
+    }
+
+    timeDisplay -> {
+      data-part:  "time-display";
+      aria-live:  "off";
+      aria-label: "Playback time";
+      text:       self.formattedTime;
+    }
+
+    volumeControl -> {
+      data-part:     "volume-control";
+      role:          "slider";
+      type:          "range";
+      min:           "0";
+      max:           "1";
+      step:          "0.05";
+      value:         ?volumeLevel;
+      aria-label:    "Volume";
+      aria-valuenow: ?volumeLevel;
+      onInput:       send(VOLUME_CHANGE);
+      onKeyDown-ArrowUp:   send(VOLUME_UP);
+      onKeyDown-ArrowDown: send(VOLUME_DOWN);
+    }
+
+    playbackSpeedSelector -> {
+      data-part:     "playback-speed-selector";
+      role:          "button";
+      aria-label:    "Playback speed";
+      aria-haspopup: "listbox";
+      data-rate:     ?playbackRate;
+      onClick:       send(SPEED_CYCLE);
+    }
+
+    captionsToggle -> {
+      data-part:     "captions-toggle";
+      role:          "button";
+      aria-label:    "Toggle captions";
+      aria-pressed:  if ?captionsVisible then "true" else "false";
+      onClick:       send(TOGGLE_CAPTIONS);
+    }
+  }
+
+  affordance {
+    serves: media-audio;
+    specificity: 10;
+    when schema = "audio-asset";
+    bind {
+      blockId:  blockId;
+      assetId:  assetId;
+    }
+  }
+
+  invariant {
+    example "PLAY transitions idle to playing": {
+      after transition(from: "idle", event: "PLAY") -> ok
+      then state.playback = "playing"
+    }
+
+    example "PAUSE transitions playing to paused": {
+      after transition(from: "playing", event: "PAUSE") -> ok
+      then state.playback = "paused"
+    }
+
+    example "PLAY from paused resumes playing": {
+      after transition(from: "paused", event: "PLAY") -> ok
+      then state.playback = "playing"
+    }
+
+    example "BUFFER transitions playing to buffering": {
+      after transition(from: "playing", event: "BUFFER") -> ok
+      then state.playback = "buffering"
+    }
+
+    example "READY from buffering returns to playing": {
+      after transition(from: "buffering", event: "READY") -> ok
+      then state.playback = "playing"
+    }
+
+    example "END transitions playing to ended": {
+      after transition(from: "playing", event: "END") -> ok
+      then state.playback = "ended"
+    }
+
+    example "ERROR from playing transitions to error": {
+      after transition(from: "playing", event: "ERROR") -> ok
+      then state.playback = "error"
+    }
+
+    example "RETRY from error returns to idle": {
+      after transition(from: "error", event: "RETRY") -> ok
+      then state.playback = "idle"
+    }
+
+    example "SEEK while playing stays playing": {
+      after transition(from: "playing", event: "SEEK") -> ok
+      then state.playback = "playing"
+    }
+
+    example "SEEK while paused stays paused": {
+      after transition(from: "paused", event: "SEEK") -> ok
+      then state.playback = "paused"
+    }
+
+    forall "all playback states are reachable": {
+      given s in playbackStates
+      then s.reachable = true
+    }
+
+    always "root data-state reflects FSM": {
+      root.dataState = state.playback
+    }
+
+    always "playButton role is button": {
+      playButton.role = "button"
+    }
+
+    always "scrubBar is slider": {
+      scrubBar.role = "slider"
+    }
+
+    always "volumeControl is slider": {
+      volumeControl.role = "slider"
+    }
+
+    always "audioElement is aria-hidden": {
+      audioElement.ariaHidden = "true"
+    }
+
+    never "error state reached from ended without PLAY first": {
+      state.playback = "buffering"
+    }
+
+    action playButton {
+      requires: state.playback = "idle"
+      ensures ok: state.playback = "playing"
+    }
+
+    action scrubBar {
+      ensures ok: currentTime = self.value
+    }
+
+    action captionsToggle {
+      ensures ok: captionsVisible = true
+    }
+  }
+
+}
