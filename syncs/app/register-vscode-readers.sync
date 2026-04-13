@@ -1,0 +1,55 @@
+# Register the VSCode ManifestReader adapters with the ManifestReader
+# registry during kernel boot. Once these syncs fire, ProviderManifest/load
+# can dispatch `.vscode/settings.json` and scan `.vscode/extensions/` roots
+# (user-global ~/.vscode/extensions and workspace-local .vscode/extensions)
+# to the corresponding reader implementations in handlers/ts/readers/.
+#
+# Priorities (lower = overridden by higher; see
+# docs/plans/virtual-provider-registry-prd.md §1):
+#   - explicit .clef manifests: 100
+#   - vscode-settings:           60
+#   - vscode-extension:          50
+#
+# So the explicit Clef manifest always wins over VSCode-derived defaults,
+# and workspace settings win over contributed grammars.
+#
+# See docs/plans/virtual-provider-registry-prd.md §2 and VPR-07.
+
+sync RegisterVscodeSettingsReader [eager]
+  purpose {
+    On kernel boot, register the vscode-settings ManifestReader adapter so
+    ProviderManifest can translate .vscode/settings.json language sections
+    (`"[typescript]": {...}`) into Format option-overlay entries on each
+    matching slot.
+  }
+when {
+  KernelBoot/boot: [ projectRoot: ?projectRoot; manifestPath: ?manifestPath ]
+    => ok(kernel: ?kernel; concepts: ?concepts; syncs: ?syncs)
+}
+then {
+  ManifestReader/register: [
+    reader: "vscode-settings";
+    formats: [".vscode/settings.json"];
+    priority: 60
+  ]
+}
+
+sync RegisterVscodeExtensionReader [eager]
+  purpose {
+    On kernel boot, register the vscode-extension ManifestReader adapter so
+    ProviderManifest can scan installed VSCode extensions (user-global and
+    workspace-local) and emit Parse/Highlight slot hints from
+    contributes.languages plus textmate Highlight entries from
+    contributes.grammars.
+  }
+when {
+  KernelBoot/boot: [ projectRoot: ?projectRoot; manifestPath: ?manifestPath ]
+    => ok(kernel: ?kernel; concepts: ?concepts; syncs: ?syncs)
+}
+then {
+  ManifestReader/register: [
+    reader: "vscode-extension";
+    formats: [".vscode/extensions"];
+    priority: 50
+  ]
+}
