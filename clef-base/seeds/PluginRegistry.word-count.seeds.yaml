@@ -1,0 +1,26 @@
+# PluginRegistry seed — word-count-indicator footer-slot plugin (PP-word-count).
+# Registers the word-count-indicator widget so the slot resolver can attach it
+# to the editor footer for any text-bearing document context.
+# RecursiveBlockEditor picks this up automatically via the footer-slot
+# plugin type; no direct component edits are required.
+
+concept: PluginRegistry
+action: register
+entries:
+  - type: footer-slot
+    name: word-count-indicator
+    metadata: >
+      {
+        "widget": "word-count-indicator",
+        "label": "Word Count",
+        "icon": "text-cursor",
+        "availableContexts": ["markdown", "wiki", "notebook", "persona", "database-record"],
+        "defaultEnabled": true,
+        "order": 10,
+        "props": {
+          "wordCount": "$document.wordCount",
+          "charCount": "$document.charCount",
+          "readingTimeMin": "$document.readingTimeMin",
+          "wpm": "$schema.readingWpm"
+        }
+      }

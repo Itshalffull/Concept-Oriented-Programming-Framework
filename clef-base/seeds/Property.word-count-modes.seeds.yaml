@@ -1,0 +1,28 @@
+# Per-schema wordCountMode Property seeds (PP-word-count).
+# Blocks whose schema carries wordCountMode:"exclude" are skipped by the
+# word-count-indicator widget when summing words and characters.
+# Text-bearing schemas have no seed here — they are included by default
+# (absence of the property equals "include").
+
+concept: Property
+action: set
+entries:
+  # === code ===
+  - entity: code
+    key: wordCountMode
+    value: "exclude"
+
+  # === code-cell ===
+  - entity: code-cell
+    key: wordCountMode
+    value: "exclude"
+
+  # === math ===
+  - entity: math
+    key: wordCountMode
+    value: "exclude"
+
+  # === divider ===
+  - entity: divider
+    key: wordCountMode
+    value: "exclude"

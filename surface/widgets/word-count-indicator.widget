@@ -1,0 +1,225 @@
+@version(1)
+widget word-count-indicator {
+
+  purpose {
+    Footer-slot indicator that displays a live word count, character count, and
+    estimated reading time for the current document. The widget walks the
+    visible block tree, summing words from all blocks whose schema does not
+    carry a wordCountMode:"exclude" Property (code, math, dividers, and other
+    non-prose blocks are excluded). A mode-toggle button lets the user switch
+    the primary display between word count and character count. Reading time
+    is calculated from the word count using a configurable words-per-minute
+    rate and is always visible alongside the active count.
+  }
+
+  anatomy {
+    root:        container    { Outermost wrapper anchored to the editor footer slot; carries data-state reflecting display mode }
+    wordCount:   text         { Formatted word-count label, e.g. "1 234 words"; visible in showing-words mode }
+    charCount:   text         { Formatted character-count label, e.g. "6 789 chars"; visible in showing-chars mode }
+    readingTime: text         { Reading-time estimate, e.g. "6 min read"; always visible }
+    modeToggle:  action       { Button that cycles between showing-words and showing-chars modes }
+  }
+
+  states {
+    display {
+      showing-words [initial] {
+        on TOGGLE_MODE -> showing-chars;
+      }
+      showing-chars {
+        on TOGGLE_MODE -> showing-words;
+      }
+    }
+  }
+
+  accessibility {
+    role: status;
+
+    keyboard {
+      Enter  -> TOGGLE_MODE;
+      Space  -> TOGGLE_MODE;
+    }
+
+    focus {
+      trap: false;
+      initial: modeToggle;
+      roving: false;
+    }
+
+    aria {
+      root -> {
+        role: "status";
+        aria-label: "Document statistics";
+        aria-live: "polite";
+        aria-atomic: "true";
+      };
+      wordCount -> {
+        role: "text";
+        aria-label: "Word count";
+        aria-hidden: if state.display == "showing-words" then "false" else "true";
+      };
+      charCount -> {
+        role: "text";
+        aria-label: "Character count";
+        aria-hidden: if state.display == "showing-chars" then "false" else "true";
+      };
+      readingTime -> {
+        role: "text";
+        aria-label: "Estimated reading time";
+      };
+      modeToggle -> {
+        role: "button";
+        aria-label: if state.display == "showing-words" then "Switch to character count" else "Switch to word count";
+        aria-pressed: if state.display == "showing-chars" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    wordCount:      Int    = 0
+    charCount:      Int    = 0
+    readingTimeMin: Int    = 0
+    wpm:            Int    = 200
+  }
+
+  connect {
+    root -> {
+      data-part:  "root";
+      data-state: state.display;
+    }
+
+    wordCount -> {
+      data-part:   "word-count";
+      text:        ?wordCount;
+      hidden:      if state.display == "showing-words" then false else true;
+      aria-hidden: if state.display == "showing-words" then "false" else "true";
+    }
+
+    charCount -> {
+      data-part:   "char-count";
+      text:        ?charCount;
+      hidden:      if state.display == "showing-chars" then false else true;
+      aria-hidden: if state.display == "showing-chars" then "false" else "true";
+    }
+
+    readingTime -> {
+      data-part: "reading-time";
+      text:      ?readingTimeMin;
+    }
+
+    modeToggle -> {
+      data-part:        "mode-toggle";
+      onClick:          send(TOGGLE_MODE);
+      onKeyDown-Enter:  send(TOGGLE_MODE);
+      onKeyDown-Space:  send(TOGGLE_MODE);
+      aria-pressed:     if state.display == "showing-chars" then "true" else "false";
+    }
+  }
+
+  affordance {
+    serves: footer-slot;
+    specificity: 8;
+    bind {
+      wordCount:      wordCount;
+      charCount:      charCount;
+      readingTimeMin: readingTimeMin;
+    }
+  }
+
+  invariant {
+
+    example "initial display mode is showing-words": {
+      after render(wordCount: 100, charCount: 500, readingTimeMin: 1) -> ok
+      then state.display = "showing-words"
+    }
+
+    example "TOGGLE_MODE switches to showing-chars": {
+      after TOGGLE_MODE() -> ok
+      then state.display = "showing-chars"
+    }
+
+    example "wordCount hidden in showing-chars mode": {
+      after TOGGLE_MODE() -> ok
+      then wordCount.hidden = true
+    }
+
+    example "charCount hidden in showing-words mode": {
+      after render(charCount: 500) -> ok
+      then charCount.hidden = true
+    }
+
+    example "charCount visible in showing-chars mode": {
+      after TOGGLE_MODE() -> ok
+      then charCount.hidden = false
+    }
+
+    example "wordCount visible in showing-words mode": {
+      after render(wordCount: 42) -> ok
+      then wordCount.hidden = false
+    }
+
+    example "readingTime visible in showing-chars mode": {
+      after TOGGLE_MODE() -> ok
+      then readingTime.hidden = false
+    }
+
+    example "root data-state is showing-words initially": {
+      after render(wordCount: 10) -> ok
+      then root.dataState = "showing-words"
+    }
+
+    example "root data-state is showing-chars after toggle": {
+      after TOGGLE_MODE() -> ok
+      then root.dataState = "showing-chars"
+    }
+
+    example "wordCount prop value propagates to text": {
+      after render(wordCount: 789) -> ok
+      then wordCount.text = 789
+    }
+
+    example "charCount prop value propagates to text": {
+      after render(charCount: 1234) -> ok
+      then charCount.text = 1234
+    }
+
+    example "readingTimeMin prop propagates to readingTime text": {
+      after render(readingTimeMin: 5) -> ok
+      then readingTime.text = 5
+    }
+
+    forall "both display states are reachable": {
+      given s in { "showing-words", "showing-chars" }
+      then s.reachable = true
+    }
+
+    always "root data-state reflects display FSM": {
+      root.dataState = state.display
+    }
+
+    always "readingTime data-part is reading-time": {
+      readingTime.dataPart = "reading-time"
+    }
+
+    always "modeToggle data-part is mode-toggle": {
+      modeToggle.dataPart = "mode-toggle"
+    }
+
+    never "wordCount and charCount both visible": {
+      wordCount.hidden = false and charCount.hidden = false
+    }
+
+    never "wordCount and charCount both hidden": {
+      wordCount.hidden = true and charCount.hidden = true
+    }
+
+    action modeToggle {
+      requires: state.display = "showing-words"
+      ensures ok: state.display = "showing-chars"
+    }
+
+    "Blocks with wordCountMode Property set to exclude are omitted from word and character tallies";
+    "Reading time is derived from wordCount divided by wpm; a document with zero words shows 0 min read";
+    "The wpm prop defaults to 200 and can be overridden by the host to reflect domain-specific reading speeds";
+  }
+
+}
