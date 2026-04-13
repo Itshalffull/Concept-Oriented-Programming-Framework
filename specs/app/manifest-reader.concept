@@ -1,0 +1,159 @@
+@version(1)
+@category("syntax")
+@visibility("public")
+concept ManifestReader [R] {
+
+  purpose {
+    Registry of format-specific config readers. Each reader knows how to
+    translate one external config format (e.g., .prettierrc, .editorconfig,
+    .vscode/settings.json, tree-sitter package.json fields, native Clef YAML)
+    into a normalized list of provider entries. Registering a reader claims
+    the file-pattern formats it owns and the priority used to resolve slot
+    collisions when multiple readers produce entries for the same slot.
+  }
+
+  state {
+    readers: set R
+    definition {
+      readerId: R -> String
+      formats:  R -> list String
+      priority: R -> Int
+    }
+    index {
+      byReaderId: String -> option R
+    }
+  }
+
+  actions {
+    action register(reader: String, formats: list String, priority: Int) {
+      -> ok(id: R) {
+        Record the reader under the given id, associate it with the file-pattern
+        formats it can translate, and store its priority for collision resolution.
+        The reader is immediately available for read dispatches.
+      }
+      -> duplicate(reader: String) {
+        A reader with this id is already registered. Each reader id must be
+        unique; remove the existing registration before re-registering under
+        the same id.
+      }
+      -> error(message: String) {
+        Registration failed because reader is an empty string, formats is
+        empty, or a storage error occurred.
+      }
+
+      fixture register_ok {
+        reader: "prettier-config"
+        formats: [".prettierrc", ".prettierrc.json", ".prettierrc.yaml", "prettier.config.js"]
+        priority: 10
+      }
+      fixture register_editorconfig {
+        reader: "editorconfig"
+        formats: [".editorconfig"]
+        priority: 5
+      }
+      fixture register_clef_yaml {
+        reader: "clef-yaml"
+        formats: [".clef/providers.yaml", ".clef/providers.yml"]
+        priority: 100
+      }
+      fixture register_tree_sitter {
+        reader: "tree-sitter"
+        formats: ["node_modules/tree-sitter-*/package.json"]
+        priority: 20
+      }
+      fixture register_empty_reader {
+        reader: ""
+        formats: [".prettierrc"]
+        priority: 10
+      } -> error
+      fixture register_empty_formats {
+        reader: "bad-reader"
+        formats: []
+        priority: 10
+      } -> error
+      fixture register_duplicate {
+        reader: "prettier-config"
+        formats: [".prettierrc"]
+        priority: 10
+      } -> duplicate
+    }
+
+    action read(reader: String, path: String) {
+      -> ok(entries: Bytes) {
+        Dispatch to the named reader to translate the file at path into
+        normalized provider entries serialized as JSON bytes. The entries
+        array may be empty if the file is valid but contains no recognized
+        provider declarations.
+      }
+      -> not_found(reader: String) {
+        No reader with this id is registered. Register the reader before
+        invoking read.
+      }
+      -> error(message: String) {
+        The read operation failed because path is empty, the file could not
+        be accessed, or the file content could not be translated into
+        normalized entries by the named reader.
+      }
+
+      fixture read_ok {
+        reader: "prettier-config"
+        path: ".prettierrc"
+      } after register_ok
+      fixture read_empty_path {
+        reader: "prettier-config"
+        path: ""
+      } -> error
+      fixture read_no_reader {
+        reader: "nonexistent-reader"
+        path: ".prettierrc"
+      } -> not_found
+    }
+
+    action listReaders() {
+      -> ok(readers: list String) {
+        Return the list of reader ids currently registered. The list is
+        unordered and may be empty when no readers have been registered yet.
+      }
+
+      fixture list_empty {}
+      fixture list_after_register {} after register_ok
+    }
+  }
+
+  example "register then listReaders includes reader id": {
+    after register(reader: "prettier-config", formats: [".prettierrc"], priority: 10) -> ok(id: _)
+    then listReaders() -> ok(readers: ["prettier-config"])
+  }
+
+  example "register then read dispatches to reader": {
+    after register(reader: "prettier-config", formats: [".prettierrc"], priority: 10) -> ok(id: _)
+    then read(reader: "prettier-config", path: ".prettierrc") -> ok(entries: _)
+  }
+
+  example "read unregistered reader returns not_found": {
+    then read(reader: "missing-reader", path: ".prettierrc") -> not_found(reader: "missing-reader")
+  }
+
+  example "duplicate reader id is rejected": {
+    after register(reader: "prettier-config", formats: [".prettierrc"], priority: 10) -> ok(id: _)
+    then register(reader: "prettier-config", formats: [".prettierrc.json"], priority: 5) -> duplicate(reader: "prettier-config")
+  }
+
+  always "every reader has a non-empty id": {
+    forall r in readers: r.readerId != ""
+  }
+
+  always "every reader has at least one format pattern": {
+    forall r in readers: r.formats.length > 0
+  }
+
+  never "two readers share the same id": {
+    exists r1 in readers, r2 in readers:
+      r1 != r2 and r1.readerId = r2.readerId
+  }
+
+  action register {
+    requires: reader.length > 0 and formats.length > 0
+    ensures ok: id in readers
+  }
+}

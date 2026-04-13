@@ -1,0 +1,129 @@
+@version(1)
+@category("syntax")
+@visibility("public")
+concept ProviderManifest [M] {
+
+  purpose {
+    Aggregate provider entries from external config files by delegating to
+    registered readers, deduplicate across readers by priority, and hold the
+    resolved entry set ready for emission to PluginRegistry. A reload detects
+    added, removed, and changed entries so downstream registrations stay
+    current without a full restart.
+  }
+
+  state {
+    entries: set M
+    definition {
+      kind:       M -> "parse" | "format" | "highlight" | "content-serializer"
+      slot:       M -> String
+      provider:   M -> String
+      options:    M -> Bytes
+      extensions: M -> list String
+      priority:   M -> Int
+      sourcePath: M -> String
+    }
+    index {
+      bySlotKind: String -> set M
+    }
+    snapshot {
+      loadedAt:   option DateTime
+      sourceHash: option String
+    }
+  }
+
+  actions {
+    action load(sources: list String) {
+      -> ok(count: Int) {
+        Read each source path by dispatching to the appropriate reader (matched
+        by file-pattern format), collect and deduplicate the resulting entries
+        by kind + slot using reader priority to resolve collisions, and store
+        the merged entry set. Returns the number of unique entries now loaded.
+        Replaces any previously loaded entries from the same sources.
+      }
+      -> error(message: String) {
+        Load failed because sources is empty, no reader could be matched for
+        one or more paths, or a reader returned malformed entry bytes.
+      }
+
+      fixture load_ok {
+        sources: [".prettierrc", ".clef/providers.yaml"]
+      }
+      fixture load_single {
+        sources: [".clef/providers.yaml"]
+      }
+      fixture load_empty_sources {
+        sources: []
+      } -> error
+    }
+
+    action reload() {
+      -> ok(added: Int, removed: Int, changed: Int) {
+        Re-read the previously configured sources, diff the freshly collected
+        entries against the currently stored set, update storage with the
+        delta, and return counts of added, removed, and changed entries.
+        Entries whose kind + slot + provider triple is unchanged are left
+        untouched even if options differ in whitespace.
+      }
+      -> error(message: String) {
+        Reload failed because no sources have been loaded yet, a reader
+        returned malformed data, or a storage error occurred.
+      }
+
+      fixture reload_ok {} after load_ok
+      fixture reload_no_prior_load {} -> error
+    }
+
+    action listEntries() {
+      -> ok(entries: Bytes) {
+        Return the currently loaded normalized entries serialized as a JSON
+        bytes array. The array is empty when no entries have been loaded yet.
+        Each element matches the normalized entry shape with kind, slot,
+        provider, options, extensions, priority, and sourcePath fields.
+      }
+
+      fixture list_empty {}
+      fixture list_after_load {} after load_ok
+    }
+  }
+
+  example "load then listEntries returns non-empty bytes": {
+    after load(sources: [".clef/providers.yaml"]) -> ok(count: _)
+    then listEntries() -> ok(entries: _)
+  }
+
+  example "reload without prior load returns error": {
+    then reload() -> error(message: _)
+  }
+
+  example "load with empty sources returns error": {
+    then load(sources: []) -> error(message: _)
+  }
+
+  example "reload after load returns diff counts": {
+    after load(sources: [".clef/providers.yaml"]) -> ok(count: _)
+    then reload() -> ok(added: _, removed: _, changed: _)
+  }
+
+  always "every entry has a non-empty slot": {
+    forall e in entries: e.slot != ""
+  }
+
+  always "every entry has a non-empty provider": {
+    forall e in entries: e.provider != ""
+  }
+
+  always "every entry kind is a recognized value": {
+    forall e in entries:
+      e.kind in ["parse", "format", "highlight", "content-serializer"]
+  }
+
+  never "two entries share the same kind and slot": {
+    exists e1 in entries, e2 in entries:
+      e1 != e2 and e1.kind = e2.kind and e1.slot = e2.slot
+  }
+
+  action load {
+    requires: sources.length > 0
+    ensures ok: count >= 0
+  }
+}
