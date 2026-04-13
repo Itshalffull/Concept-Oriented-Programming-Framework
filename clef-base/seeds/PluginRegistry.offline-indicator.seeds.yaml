@@ -1,0 +1,25 @@
+# PluginRegistry seeds -- offline-indicator status-bar plugin (PP-offline-indicator)
+# Registers the offline-indicator widget so it appears automatically in the
+# app shell status bar, reading Replica peer state (online / saving / offline /
+# conflict) and surfacing queued-edit count and last-sync timestamp to the user.
+
+concept: PluginRegistry
+action: register
+entries:
+  - type: status-bar
+    name: offline-indicator
+    metadata: >
+      {
+        "widget": "offline-indicator",
+        "label": "Offline Indicator",
+        "icon": "cloud",
+        "availableContexts": ["app-shell"],
+        "defaultEnabled": true,
+        "order": 100,
+        "props": {
+          "replicaId": "$currentReplicaId",
+          "queuedEditCount": "$replicaQueuedEditCount",
+          "lastSyncedAt": "$replicaLastSyncedAt",
+          "isOnline": "$networkIsOnline"
+        }
+      }

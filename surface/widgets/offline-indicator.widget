@@ -1,0 +1,261 @@
+@version(1)
+widget offline-indicator {
+
+  purpose {
+    Status-bar widget that surfaces the live sync state of a Replica peer.
+    It communicates four distinct conditions -- online and synced, actively
+    saving pending edits, offline with a queued-edit count, and a conflict
+    requiring manual resolution -- so users always know whether their work is
+    safely persisted. Hovering the indicator reveals a tooltip with the exact
+    timestamp of the last successful sync. Because sync state changes
+    frequently and without user action, the widget uses aria-live polite so
+    assistive technology announces transitions without interrupting the user.
+  }
+
+  anatomy {
+    root:         container    { Top-level status-bar wrapper; carries data-state for FSM styling }
+    statusIcon:   presentation { Visual icon representing the current connection state (checkmark, spinner, cloud-slash, warning) }
+    statusLabel:  text         { Short human-readable description of the current state }
+    queueCount:   text         { Count of edits queued locally and not yet synced; visible in offline state only }
+    lastSyncTime: text         { Timestamp of the last successful sync; shown in the tooltip on hover }
+  }
+
+  states {
+    connection {
+      online [initial] {
+        on GO_SAVING   -> saving;
+        on GO_OFFLINE  -> offline;
+        on GO_CONFLICT -> conflict;
+      }
+
+      saving {
+        on SAVE_COMPLETE -> online;
+        on GO_OFFLINE    -> offline;
+        on GO_CONFLICT   -> conflict;
+        entry [startSaveAnimation];
+        exit  [stopSaveAnimation];
+      }
+
+      offline {
+        on GO_ONLINE   -> online;
+        on GO_CONFLICT -> conflict;
+        entry [showQueueCount];
+      }
+
+      conflict {
+        on CONFLICT_RESOLVED -> online;
+        on GO_OFFLINE        -> offline;
+        entry [alertConflict];
+      }
+    }
+
+    tooltip [parallel] {
+      hidden [initial] {
+        on POINTER_ENTER -> visible;
+        on FOCUS         -> visible;
+      }
+
+      visible {
+        on POINTER_LEAVE -> hidden;
+        on BLUR          -> hidden;
+      }
+    }
+  }
+
+  accessibility {
+    role: status;
+    keyboard {
+      Tab    -> FOCUS;
+      Escape -> BLUR;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "status";
+        aria-live: "polite";
+        aria-atomic: "true";
+        aria-label: if state.connection == "online" then "Synced"
+                    else if state.connection == "saving" then "Saving"
+                    else if state.connection == "offline" then concat("Offline, ", ?queuedEditCount, " edits queued")
+                    else "Conflict detected";
+      };
+      statusIcon -> {
+        role: "img";
+        aria-hidden: "true";
+        data-connection-state: state.connection;
+      };
+      statusLabel -> {
+        role: "none";
+        aria-hidden: "true";
+      };
+      queueCount -> {
+        aria-hidden: if state.connection == "offline" then "false" else "true";
+        aria-label: concat(?queuedEditCount, " edits pending sync");
+      };
+      lastSyncTime -> {
+        role: "tooltip";
+        aria-hidden: if state.tooltip == "visible" then "false" else "true";
+      };
+    }
+  }
+
+  props {
+    replicaId:       String
+    queuedEditCount: Int = 0
+    lastSyncedAt:    option String
+    isOnline:        Bool = true
+  }
+
+  connect {
+    root -> {
+      data-part:       "root";
+      data-state:      state.connection;
+      onPointerEnter:  send(POINTER_ENTER);
+      onPointerLeave:  send(POINTER_LEAVE);
+      onFocus:         send(FOCUS);
+      onBlur:          send(BLUR);
+      tabindex:        "0";
+    }
+
+    statusIcon -> {
+      data-part:             "status-icon";
+      data-connection-state: state.connection;
+      data-icon:             if state.connection == "online"   then "check"
+                             else if state.connection == "saving"  then "spinner"
+                             else if state.connection == "offline" then "cloud-slash"
+                             else "warning";
+    }
+
+    statusLabel -> {
+      data-part: "status-label";
+      text:      if state.connection == "online"   then "Synced"
+                 else if state.connection == "saving"  then "Saving"
+                 else if state.connection == "offline" then "Offline"
+                 else "Conflict";
+    }
+
+    queueCount -> {
+      data-part:    "queue-count";
+      data-visible: if state.connection == "offline" then "true" else "false";
+      text:         ?queuedEditCount;
+      hidden:       if state.connection == "offline" then false else true;
+    }
+
+    lastSyncTime -> {
+      data-part:    "last-sync-time";
+      data-visible: if state.tooltip == "visible" then "true" else "false";
+      text:         ?lastSyncedAt;
+      hidden:       if state.tooltip == "visible" then false else true;
+    }
+  }
+
+  affordance {
+    serves: status-bar;
+    specificity: 7;
+    bind {
+      replicaId:       replicaId;
+      queuedEditCount: queuedEditCount;
+      lastSyncedAt:    lastSyncedAt;
+      isOnline:        isOnline;
+    }
+  }
+
+  invariant {
+    example "online to saving then back to online": {
+      after GO_SAVING() -> ok
+      then state.connection = "saving"
+      then SAVE_COMPLETE() -> ok
+      then state.connection = "online"
+    }
+
+    example "online to offline and back": {
+      after GO_OFFLINE() -> ok
+      then state.connection = "offline"
+      then GO_ONLINE() -> ok
+      then state.connection = "online"
+    }
+
+    example "online to conflict then resolved": {
+      after GO_CONFLICT() -> ok
+      then state.connection = "conflict"
+      then CONFLICT_RESOLVED() -> ok
+      then state.connection = "online"
+    }
+
+    example "saving can transition directly to offline": {
+      after GO_SAVING() -> ok
+      then state.connection = "saving"
+      then GO_OFFLINE() -> ok
+      then state.connection = "offline"
+    }
+
+    example "tooltip visible on pointer enter and hidden on leave": {
+      after POINTER_ENTER() -> ok
+      then state.tooltip = "visible"
+      then POINTER_LEAVE() -> ok
+      then state.tooltip = "hidden"
+    }
+
+    example "tooltip visible on focus and hidden on blur": {
+      after FOCUS() -> ok
+      then state.tooltip = "visible"
+      then BLUR() -> ok
+      then state.tooltip = "hidden"
+    }
+
+    forall "all states reachable": {
+      given s in states
+      then s.reachable = true
+    }
+
+    always "connection state variable is non-empty": {
+      state.connection != ""
+    }
+
+    always "tooltip state variable is non-empty": {
+      state.tooltip != ""
+    }
+
+    always "replicaId prop is bound": {
+      root.replicaId != ""
+    }
+
+    never "queueCount and online co-occur": {
+      exists s in states:
+        s.name = "online" and s.queueVisible = true
+    }
+
+    never "tooltip and BLUR co-occur after blur": {
+      exists e in events:
+        e.type = "BLUR" and state.tooltip = "visible"
+    }
+
+    action GO_OFFLINE {
+      requires: state.connection = "online"
+      ensures ok: state.connection = "offline"
+    }
+
+    action CONFLICT_RESOLVED {
+      requires: state.connection = "conflict"
+      ensures ok: state.connection = "online"
+    }
+
+    action GO_SAVING {
+      requires: state.connection = "online"
+      ensures ok: state.connection = "saving"
+    }
+
+    action SAVE_COMPLETE {
+      requires: state.connection = "saving"
+      ensures ok: state.connection = "online"
+    }
+
+    "lastSyncedAt prop text is rendered verbatim into lastSyncTime for the hover tooltip";
+    "replicaId prop identifies the Replica peer that drives external state transition events";
+  }
+
+}
