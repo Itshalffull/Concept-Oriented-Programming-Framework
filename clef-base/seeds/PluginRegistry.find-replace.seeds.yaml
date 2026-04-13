@@ -1,0 +1,33 @@
+# PluginRegistry seeds — find-replace-overlay decoration-layer plugin (PP-find-replace).
+#
+# Registers the find-replace-overlay widget as a decoration-layer plugin so
+# the SlotResolver infrastructure can discover and auto-mount it inside the
+# RecursiveBlockEditor center-pane decoration-layer slot. The plugin is
+# rendered only when the find-replace-open ActionBinding fires (the "open"
+# prop gate is enforced by the host — the plugin entry provides discovery
+# metadata and default props only).
+#
+# type="decoration-layer" matches the useSlotResolver('decoration-layer')
+# call in RecursiveBlockEditor. The widget is mounted via FindReplaceOverlay.tsx
+# which is directly imported and conditionally rendered when findReplaceOpen=true.
+# The PluginRegistry entry makes the shortcut discoverable via the keyboard
+# help panel and future slot-resolver auto-mount paths.
+
+concept: PluginRegistry
+action: register
+entries:
+  - type: decoration-layer
+    name: find-replace-overlay
+    metadata: >
+      {
+        "widget": "find-replace-overlay",
+        "label": "Find and Replace",
+        "icon": "search",
+        "availableContexts": ["markdown", "wiki", "notebook", "persona", "workflow"],
+        "defaultEnabled": false,
+        "openBinding": "find-replace-open",
+        "order": 50,
+        "props": {
+          "canEdit": true
+        }
+      }

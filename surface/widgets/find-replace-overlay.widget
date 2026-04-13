@@ -1,0 +1,291 @@
+@version(1)
+widget find-replace-overlay {
+
+  purpose {
+    Floating overlay panel anchored to the top-right of the editor that
+    provides full-text find and replace across the current page's block tree.
+    Users type a query into the search input; the overlay computes match
+    ranges across all block text nodes, highlights them in the decoration
+    layer, and shows a counter of the form "M of N". Prev/next navigation
+    buttons scroll and focus each successive match. A replace input and
+    replace-one / replace-all buttons dispatch Patch operations through the
+    burst-tracker so each replacement lands in UndoStack and can be reversed
+    with Cmd+Z. The FSM starts in idle, transitions to searching once the
+    user types a query, and to replacing once the replace input is non-empty.
+    Escape dismisses the overlay entirely. Registered with PluginRegistry
+    as type decoration-layer, name find-replace-overlay.
+  }
+
+  anatomy {
+    root:            container    { Absolutely-positioned panel anchored top-right inside the editor center pane; carries data-state }
+    searchRow:       container    { Row containing the search input, match counter, and prev/next navigation buttons }
+    searchInput:     interactive  { Text input that receives the search query; auto-focused on open }
+    matchCounter:    text         { Read-only label showing current match position, e.g. "3 of 7" or "No matches" }
+    prevButton:      action       { Button that moves the active match index to the previous match and scrolls it into view }
+    nextButton:      action       { Button that moves the active match index to the next match and scrolls it into view }
+    replaceRow:      container    { Row containing the replace input and replace-one / replace-all buttons; always visible }
+    replaceInput:    interactive  { Text input that holds the replacement string }
+    replaceOneButton: action      { Button that replaces only the currently active match with the replacement string via a single Patch }
+    replaceAllButton: action      { Button that replaces every match in sequence via one Patch per match block, all tracked in UndoStack }
+    closeButton:     action       { Button that dismisses the overlay entirely and restores keyboard focus to the editor }
+  }
+
+  states {
+    phase {
+      idle [initial] {
+        on QUERY_CHANGE -> searching;
+        on CLOSE        -> idle;
+      }
+      searching {
+        on QUERY_CHANGE  -> searching;
+        on QUERY_CLEARED -> idle;
+        on REPLACE_INPUT -> replacing;
+        on CLOSE         -> idle;
+        entry [runMatchScan; applyHighlights];
+        exit [clearHighlights];
+      }
+      replacing {
+        on QUERY_CHANGE   -> searching;
+        on QUERY_CLEARED  -> idle;
+        on REPLACE_CLEARED -> searching;
+        on CLOSE           -> idle;
+        entry [runMatchScan; applyHighlights];
+        exit [clearHighlights];
+      }
+    }
+  }
+
+  accessibility {
+    role: dialog;
+    modal: false;
+    keyboard {
+      Escape      -> CLOSE;
+      Enter       -> NEXT_MATCH;
+      F3          -> NEXT_MATCH;
+      Shift_F3    -> PREV_MATCH;
+    }
+    focus {
+      trap: false;
+      initial: searchInput;
+      roving: false;
+      returnOnClose: root;
+    }
+    aria {
+      root -> {
+        role: "dialog";
+        aria-label: "Find and replace";
+        aria-modal: "false";
+      };
+      searchInput -> {
+        role: "searchbox";
+        aria-label: "Find";
+        aria-autocomplete: "none";
+      };
+      matchCounter -> {
+        role: "status";
+        aria-live: "polite";
+        aria-atomic: "true";
+      };
+      prevButton -> {
+        role: "button";
+        aria-label: "Previous match";
+      };
+      nextButton -> {
+        role: "button";
+        aria-label: "Next match";
+      };
+      replaceInput -> {
+        role: "textbox";
+        aria-label: "Replace with";
+      };
+      replaceOneButton -> {
+        role: "button";
+        aria-label: "Replace current match";
+      };
+      replaceAllButton -> {
+        role: "button";
+        aria-label: "Replace all matches";
+      };
+      closeButton -> {
+        role: "button";
+        aria-label: "Close find and replace";
+      };
+    }
+  }
+
+  props {
+    query: String = ""
+    replacement: String = ""
+    matchIndex: Int = 0
+    matchTotal: Int = 0
+    hasMatches: Bool = false
+    canEdit: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.phase;
+      role: "dialog";
+      aria-label: "Find and replace";
+    }
+
+    searchRow -> {
+      data-part: "search-row";
+    }
+
+    searchInput -> {
+      data-part: "search-input";
+      type: "text";
+      value: ?query;
+      placeholder: "Find...";
+      aria-label: "Find";
+      onInput: send(QUERY_CHANGE);
+      onKeyDown: send(CLOSE);
+      autoFocus: "true";
+    }
+
+    matchCounter -> {
+      data-part: "match-counter";
+      data-has-matches: if ?hasMatches then "true" else "false";
+      aria-live: "polite";
+    }
+
+    prevButton -> {
+      data-part: "prev-button";
+      disabled: if ?hasMatches then false else true;
+      onClick: send(PREV_MATCH);
+      aria-label: "Previous match";
+    }
+
+    nextButton -> {
+      data-part: "next-button";
+      disabled: if ?hasMatches then false else true;
+      onClick: send(NEXT_MATCH);
+      aria-label: "Next match";
+    }
+
+    replaceRow -> {
+      data-part: "replace-row";
+    }
+
+    replaceInput -> {
+      data-part: "replace-input";
+      type: "text";
+      value: ?replacement;
+      placeholder: "Replace...";
+      aria-label: "Replace with";
+      onInput: send(REPLACE_INPUT);
+    }
+
+    replaceOneButton -> {
+      data-part: "replace-one-button";
+      disabled: if ?hasMatches then false else true;
+      onClick: send(REPLACE_ONE);
+      aria-label: "Replace current match";
+    }
+
+    replaceAllButton -> {
+      data-part: "replace-all-button";
+      disabled: if ?hasMatches then false else true;
+      onClick: send(REPLACE_ALL);
+      aria-label: "Replace all matches";
+    }
+
+    closeButton -> {
+      data-part: "close-button";
+      onClick: send(CLOSE);
+      aria-label: "Close find and replace";
+    }
+  }
+
+  affordance {
+    serves: overlay;
+    specificity: 9;
+    when pluginType = "decoration-layer";
+  }
+
+  invariant {
+    example "QUERY_CHANGE transitions idle to searching": {
+      after QUERY_CHANGE() -> ok
+      then state.phase = "searching"
+    }
+
+    example "QUERY_CLEARED transitions searching to idle": {
+      after QUERY_CHANGE() -> ok
+      then state.phase = "searching"
+      and QUERY_CLEARED() -> ok
+      then state.phase = "idle"
+    }
+
+    example "REPLACE_INPUT transitions searching to replacing": {
+      after QUERY_CHANGE() -> ok
+      then state.phase = "searching"
+      and REPLACE_INPUT() -> ok
+      then state.phase = "replacing"
+    }
+
+    example "REPLACE_CLEARED reverts replacing to searching": {
+      after QUERY_CHANGE() -> ok
+      and REPLACE_INPUT() -> ok
+      and REPLACE_CLEARED() -> ok
+      then state.phase = "searching"
+    }
+
+    example "CLOSE from searching returns to idle": {
+      after QUERY_CHANGE() -> ok
+      and CLOSE() -> ok
+      then state.phase = "idle"
+    }
+
+    example "CLOSE from replacing returns to idle": {
+      after QUERY_CHANGE() -> ok
+      and REPLACE_INPUT() -> ok
+      and CLOSE() -> ok
+      then state.phase = "idle"
+    }
+
+    always "data-state on root reflects phase FSM": {
+      root.dataState = state.phase
+    }
+
+    always "prevButton and nextButton disabled when no matches": {
+      hasMatches = false and prevButton.disabled = true and nextButton.disabled = true
+    }
+
+    always "replaceOneButton and replaceAllButton disabled when no matches": {
+      hasMatches = false and replaceOneButton.disabled = true and replaceAllButton.disabled = true
+    }
+
+    always "matchCounter aria-live is polite": {
+      matchCounter.ariaLive = "polite"
+    }
+
+    never "replaceOneButton enabled while hasMatches is false": {
+      hasMatches = false and replaceOneButton.disabled = false
+    }
+
+    never "replaceAllButton enabled while hasMatches is false": {
+      hasMatches = false and replaceAllButton.disabled = false
+    }
+
+    never "REPLACE_ONE dispatched while phase is idle": {
+      state.phase = "idle" and REPLACE_ONE.dispatched = true
+    }
+
+    never "overlay rendered without searchInput in anatomy": {
+      searchInput.rendered = false and root.rendered = true
+    }
+
+    action searchInput {
+      requires: state.phase = "idle"
+      ensures ok: state.phase = "searching"
+    }
+
+    action closeButton {
+      requires: state.phase != "idle"
+      ensures ok: state.phase = "idle"
+    }
+  }
+
+}

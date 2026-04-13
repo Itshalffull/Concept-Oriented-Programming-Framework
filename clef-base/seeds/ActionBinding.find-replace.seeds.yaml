@@ -1,0 +1,77 @@
+# ActionBinding seeds — find-replace keyboard chord bindings (PP-find-replace).
+#
+# find-replace-open: Cmd+F / Ctrl+F → opens the find-replace-overlay widget
+#   inside the editor. RecursiveBlockEditor intercepts the key event and sets
+#   findReplaceOpen=true. This binding is also registered so the
+#   ActionBinding/listByTag API can surface it in keyboard shortcut help UIs.
+#
+# find-replace-find-next: Enter / F3 → advance to next match.
+#   Handled internally by FindReplaceOverlay's keyboard handler; the binding
+#   seed gives the shortcut a discoverable name.
+#
+# find-replace-find-prev: Shift+F3 → advance to previous match.
+#   Same internal handling model as find-next.
+#
+# find-replace-replace-one: replaces the currently active match via
+#   ActionBinding "update-block-content" → Patch/create → UndoStack/push.
+#   The binding seed maps the Replace button action to the canonical target.
+#
+# find-replace-replace-all: replaces every match via a sequence of
+#   ActionBinding "update-block-content" invocations (one per match block)
+#   routed through the burst-tracker so each Patch lands in UndoStack and
+#   can be individually reversed with Cmd+Z.
+#
+# Architecture doc §PP-find-replace
+
+concept: ActionBinding
+action: bind
+entries:
+  - name: find-replace-open
+    binding: find-replace-open
+    target: "FindReplaceOverlay/open"
+    parameterMap: '{"rootNodeId":"context.rootNodeId"}'
+    executionPolicy: "auto"
+    label: "Find / Replace"
+    icon: "search"
+    tags: ["editor_keyboard_chord"]
+    keyChord: "Cmd+F"
+    contexts: ["markdown", "wiki", "notebook", "persona", "workflow"]
+
+  - name: find-replace-find-next
+    binding: find-replace-find-next
+    target: "FindReplaceOverlay/findNext"
+    parameterMap: '{}'
+    executionPolicy: "auto"
+    label: "Find Next"
+    tags: ["editor_keyboard_chord"]
+    keyChord: "Enter"
+    keyChordAlt: "F3"
+    contexts: ["find-replace-overlay"]
+
+  - name: find-replace-find-prev
+    binding: find-replace-find-prev
+    target: "FindReplaceOverlay/findPrev"
+    parameterMap: '{}'
+    executionPolicy: "auto"
+    label: "Find Previous"
+    tags: ["editor_keyboard_chord"]
+    keyChord: "Shift+F3"
+    contexts: ["find-replace-overlay"]
+
+  - name: find-replace-replace-one
+    binding: find-replace-replace-one
+    target: "Patch/apply"
+    parameterMap: '{"patchId":"context.params.patchId","content":"context.params.content"}'
+    executionPolicy: "pessimistic"
+    label: "Replace"
+    tags: ["editor_keyboard_chord", "find_replace"]
+    contexts: ["find-replace-overlay"]
+
+  - name: find-replace-replace-all
+    binding: find-replace-replace-all
+    target: "Patch/apply"
+    parameterMap: '{"patchId":"context.params.patchId","content":"context.params.content"}'
+    executionPolicy: "pessimistic"
+    label: "Replace All"
+    tags: ["editor_keyboard_chord", "find_replace"]
+    contexts: ["find-replace-overlay"]

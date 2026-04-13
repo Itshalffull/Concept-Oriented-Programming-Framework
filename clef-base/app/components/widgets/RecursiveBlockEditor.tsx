@@ -38,8 +38,15 @@ import {
   getActiveAnnotations,
 } from '../../services/spell-check-dispatcher';
 import { SpellCheckSuggestionsPopover } from './SpellCheckSuggestionsPopover';
-import { useSlotResolver, SlotMount } from './SlotResolver';
+import { useSlotResolver, SlotMount, type SlotEntry } from './SlotResolver';
 import { PageTitle } from './PageTitle';
+import { convertAndInsert, hasStructuredContent } from './smart-paste-converter';
+import { FindReplaceOverlay } from './FindReplaceOverlay';
+import { useModalStack } from './ModalStackProvider';
+import { CommandPalette } from './CommandPalette';
+import { BlockHandle, BlockDropZoneIndicator } from './BlockHandle';
+import { LinkHoverPreview } from './LinkHoverPreview';
+import { ExportDialog } from './ExportDialog';
 
 // ---------------------------------------------------------------------------
 // Selection tracking — populated from document selectionchange events
@@ -132,6 +139,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
   canEdit,
 }) => {
   const invoke = useKernelInvoke();
+  const modalStack = useModalStack();
 
   // ------- FSM state --------
   const [fsmState, setFsmState] = useState<EditorState>('idle');
@@ -174,6 +182,28 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
   const [compileStatus, setCompileStatus] = useState<CompileStatus | null>(null);
   const [compiledPreview, setCompiledPreview] = useState<string | null>(null);
   const [consumers, setConsumers] = useState<string[]>([]);
+
+  // ------- multi-select state (PP-multi-select) --------
+  // selectedBlockIds: the Set of currently selected block IDs.
+  // anchorBlockId: the block that initiated the current range (Shift+click anchor).
+  const [selectedBlockIds, setSelectedBlockIds] = useState<Set<string>>(new Set());
+  const [anchorBlockId, setAnchorBlockId] = useState<string>('');
+
+  // ------- find-replace overlay (PP-find-replace) --------
+  // Toggled by Cmd+F (or Ctrl+F); closed by Escape.
+  const [findReplaceOpen, setFindReplaceOpen] = useState(false);
+
+  // ------- block hover state (PP-block-handle) --------
+  // Tracks which block the pointer is currently over so BlockHandle appears
+  // only on the hovered row and so link-hover-preview / comment markers can
+  // access the hovered block id without querying the DOM.
+  const [currentHoveredBlockId, setCurrentHoveredBlockId] = useState<string>('');
+
+  // ------- drag state (PP-block-handle) --------
+  // dragOverBlockId: the block id over which the dragged block is hovering.
+  // dropPosition: 'before' | 'after' — where the drop zone line is shown.
+  const [dragOverBlockId, setDragOverBlockId] = useState<string>('');
+  const [dropPosition, setDropPosition] = useState<'before' | 'after'>('after');
 
   // ------- stable refs --------
   const rootNodeIdRef = useRef(rootNodeId);
@@ -462,6 +492,141 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
     }
   }, [fsmState]);
 
+  // =========================================================================
+  // Multi-select handlers (PP-multi-select)
+  //
+  // Three selection gestures:
+  //   • Click alone       — single select (replace selection, set anchor)
+  //   • Cmd/Ctrl+click    — toggle the clicked block in/out of selection
+  //   • Shift+click       — range-extend from anchorBlockId to clicked block
+  //
+  // Keyboard:
+  //   • Shift+ArrowUp/Down — range-extend upward/downward by one block
+  //   • Escape             — clear all selected blocks
+  //
+  // All batch mutations route through ActionBinding/invoke.
+  // =========================================================================
+
+  /**
+   * Compute the contiguous slice of block IDs between two block IDs
+   * (inclusive on both ends). Returns an empty array when either ID is absent.
+   */
+  const computeRange = useCallback((fromId: string, toId: string): string[] => {
+    const ids = children.map((c) => c.id);
+    const fromIdx = ids.indexOf(fromId);
+    const toIdx = ids.indexOf(toId);
+    if (fromIdx === -1 || toIdx === -1) return [];
+    const lo = Math.min(fromIdx, toIdx);
+    const hi = Math.max(fromIdx, toIdx);
+    return ids.slice(lo, hi + 1);
+  }, [children]);
+
+  const handleBlockClick = useCallback((
+    blockId: string,
+    e: React.MouseEvent,
+  ) => {
+    const isCtrl = e.ctrlKey || e.metaKey;
+    const isShift = e.shiftKey;
+
+    if (isShift && anchorBlockId) {
+      // Range extend from anchor to this block
+      const range = computeRange(anchorBlockId, blockId);
+      setSelectedBlockIds(new Set(range));
+      // Anchor stays fixed during shift-extend
+    } else if (isCtrl) {
+      // Toggle individual block
+      setSelectedBlockIds((prev) => {
+        const next = new Set(prev);
+        if (next.has(blockId)) {
+          next.delete(blockId);
+        } else {
+          next.add(blockId);
+        }
+        return next;
+      });
+      setAnchorBlockId(blockId);
+    } else {
+      // Plain click: single-select
+      setSelectedBlockIds(new Set([blockId]));
+      setAnchorBlockId(blockId);
+    }
+  }, [anchorBlockId, computeRange]);
+
+  const clearSelection = useCallback(() => {
+    setSelectedBlockIds(new Set());
+    setAnchorBlockId('');
+  }, []);
+
+  const handleMultiSelectKeyDown = useCallback((e: React.KeyboardEvent) => {
+    const ids = children.map((c) => c.id);
+
+    if (e.key === 'Escape' && selectedBlockIds.size > 0) {
+      e.preventDefault();
+      clearSelection();
+      return;
+    }
+
+    if (e.shiftKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+      if (selectedBlockIds.size === 0) return;
+      e.preventDefault();
+      const currentAnchor = anchorBlockId || ids[0] || '';
+      const anchorIdx = ids.indexOf(currentAnchor);
+      if (anchorIdx === -1) return;
+
+      // The "live end" of the selection is the farthest selected block
+      // in the direction of movement.
+      const selectedArr = Array.from(selectedBlockIds)
+        .map((id) => ids.indexOf(id))
+        .filter((i) => i !== -1);
+      const liveIdx =
+        e.key === 'ArrowUp'
+          ? Math.min(...selectedArr)
+          : Math.max(...selectedArr);
+      const nextIdx = e.key === 'ArrowUp' ? liveIdx - 1 : liveIdx + 1;
+      if (nextIdx < 0 || nextIdx >= ids.length) return;
+
+      const nextId = ids[nextIdx];
+      const range = computeRange(currentAnchor, nextId);
+      setSelectedBlockIds(new Set(range));
+      return;
+    }
+
+    // Batch delete via keyboard Delete/Backspace (guard: no focused text input)
+    if (
+      (e.key === 'Delete' || e.key === 'Backspace') &&
+      selectedBlockIds.size > 0 &&
+      canEdit
+    ) {
+      const activeEl = document.activeElement;
+      const isInText =
+        activeEl instanceof HTMLElement &&
+        (activeEl.isContentEditable ||
+          activeEl.tagName === 'INPUT' ||
+          activeEl.tagName === 'TEXTAREA');
+      if (!isInText) {
+        e.preventDefault();
+        handleBatchDelete();
+      }
+    }
+  }, [selectedBlockIds, anchorBlockId, children, canEdit, computeRange, clearSelection]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleBatchDelete = useCallback(async () => {
+    if (selectedBlockIds.size === 0 || !canEdit) return;
+    const ids = Array.from(selectedBlockIds);
+    for (const blockId of ids) {
+      try {
+        await invoke('ActionBinding', 'invoke', {
+          binding: 'multi-select-delete',
+          context: JSON.stringify({ nodeId: blockId, rootNodeId }),
+        });
+      } catch (err) {
+        console.error('[RecursiveBlockEditor] multi-select-delete failed for block:', blockId, err);
+      }
+    }
+    clearSelection();
+    loadChildren();
+  }, [selectedBlockIds, canEdit, rootNodeId, invoke, clearSelection, loadChildren]);
+
   // Focus the first child block — called from PageTitle on Enter/Tab.
   // Looks for the first [data-part="block-slot"] inside the center pane.
   const handleFirstBlockFocus = useCallback(() => {
@@ -584,16 +749,73 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
   // Keyboard handler — '/' triggers slash menu
   // =========================================================================
 
+  // =========================================================================
+  // Command palette — Cmd+K (Meta+K) opens via ModalStackProvider.
+  // Distinct from slash menu: palette = global navigation/commands;
+  // slash menu = inline block insertion at the cursor.
+  // Widget spec: surface/widgets/command-palette.widget
+  // Card: PP-command-palette (df2a224d-e059-4ab4-b4b1-7c07124bfec2)
+  // =========================================================================
+
+  const openCommandPalette = useCallback(() => {
+    const modalId = `command-palette-${Date.now()}`;
+    modalStack.pushModal({
+      id: modalId,
+      widgetId: 'command-palette',
+      dismissOnBackdrop: true,
+      focusTrapped: true,
+      onClose: () => {},
+      props: {
+        children: (
+          <CommandPalette
+            onNavigate={(nodeId) => {
+              modalStack.popModal(modalId);
+              // Broadcast navigation intent — page host handles routing.
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(
+                  new CustomEvent('clef:navigate', { detail: { nodeId } }),
+                );
+              }
+            }}
+            onCommand={() => {
+              modalStack.popModal(modalId);
+            }}
+            commandContext={{ rootNodeId, editorFlavor }}
+          />
+        ),
+      },
+    });
+  }, [modalStack, rootNodeId, editorFlavor]);
+
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    // Cmd+K / Ctrl+K — open command palette (PP-command-palette)
+    if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      e.stopPropagation();
+      openCommandPalette();
+      return;
+    }
+    // Cmd+F / Ctrl+F — open find-replace overlay (PP-find-replace)
+    if (e.key === 'f' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      setFindReplaceOpen(true);
+      return;
+    }
     if (e.key === '/' && !e.ctrlKey && !e.metaKey) {
       e.preventDefault();
       openSlashMenu();
     } else if (e.key === 'Escape') {
+      if (findReplaceOpen) {
+        setFindReplaceOpen(false);
+        return;
+      }
       if (fsmState === 'slash-open') {
         closeSlashMenu();
       }
     }
-  }, [fsmState, openSlashMenu, closeSlashMenu]);
+    // Multi-select keyboard handler runs unconditionally (handles Escape/arrows/delete)
+    handleMultiSelectKeyDown(e);
+  }, [fsmState, findReplaceOpen, openSlashMenu, closeSlashMenu, handleMultiSelectKeyDown, openCommandPalette]);
 
   // =========================================================================
   // Paste handler — clipboard image → MediaAsset/createMedia via ActionBinding
@@ -1041,11 +1263,13 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
           >
             {children.map((child) => {
               const resolved = resolvedWidgets.get(child.id);
+              const isSelected = selectedBlockIds.has(child.id);
               return (
                 <li
                   key={child.id}
                   data-part="block-list-item"
                   data-block-id={child.id}
+                  data-selected={isSelected ? 'true' : 'false'}
                 >
                   <BlockSlot
                     nodeId={child.id}
@@ -1053,11 +1277,14 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
                     displayMode={child.displayMode}
                     resolvedWidget={resolved?.widgetId ?? 'block-slot'}
                     canEdit={canEdit}
+                    isSelected={isSelected}
                     onFocus={() => handleBlockFocus(child.id, child.schema)}
                     onBlur={handleBlockBlur}
                     onMutate={loadChildren}
+                    onBlockClick={(e) => handleBlockClick(child.id, e)}
                     rootNodeId={rootNodeId}
                     editorFlavor={editorFlavor}
+                    decorationLayerEntries={decorationLayerEntries}
                   />
                 </li>
               );
@@ -1072,6 +1299,20 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
             loading={slashMenuLoading}
             onActivate={handleSlashItemActivate}
             onClose={closeSlashMenu}
+          />
+        )}
+
+        {/* ---------------------------------------------------------------- */}
+        {/* Find-replace overlay — PP-find-replace                           */}
+        {/* Opens on Cmd+F; close button and Escape dismiss it.              */}
+        {/* Walks block tree text, highlights matches, dispatches Patch via  */}
+        {/* burst-tracker → UndoStack so Cmd+Z reverses each replacement.   */}
+        {/* ---------------------------------------------------------------- */}
+        {findReplaceOpen && (
+          <FindReplaceOverlay
+            rootNodeId={rootNodeId}
+            canEdit={canEdit}
+            onClose={() => setFindReplaceOpen(false)}
           />
         )}
 
@@ -1288,11 +1529,17 @@ interface BlockSlotProps {
   displayMode: string;
   resolvedWidget: string;
   canEdit: boolean;
+  /** True when this block is part of the current multi-select set. */
+  isSelected?: boolean;
   onFocus: () => void;
   onBlur: () => void;
   onMutate: () => void;
+  /** Called on click events to propagate multi-select modifier logic upward. */
+  onBlockClick?: (e: React.MouseEvent) => void;
   rootNodeId: string;
   editorFlavor: EditorFlavor;
+  /** Decoration-layer slot entries resolved by the parent editor (shared across all blocks). */
+  decorationLayerEntries: import('./SlotResolver').SlotEntry[];
 }
 
 const BlockSlot: React.FC<BlockSlotProps> = ({
@@ -1301,13 +1548,24 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
   displayMode,
   resolvedWidget,
   canEdit,
+  isSelected = false,
   onFocus,
   onBlur,
   onMutate,
+  onBlockClick,
   rootNodeId,
   editorFlavor,
+  decorationLayerEntries,
 }) => {
   const invoke = useKernelInvoke();
+
+  // -------------------------------------------------------------------------
+  // Per-block focus + empty state — drives placeholder-decoration overlay
+  // (PP-placeholder-integration 9dbd7a7b)
+  // -------------------------------------------------------------------------
+
+  const [blockFocused, setBlockFocused] = useState(false);
+  const [blockEmpty, setBlockEmpty] = useState(true);
 
   // -------------------------------------------------------------------------
   // Spell-check popover state (PP-spell-check)
@@ -1406,9 +1664,19 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
       data-schema={schema}
       data-display-mode={displayMode}
       data-resolved-widget={resolvedWidget}
+      data-selected={isSelected ? 'true' : 'false'}
+      data-block-empty={blockEmpty ? 'true' : 'false'}
+      data-block-focused={blockFocused ? 'true' : 'false'}
       onFocus={onFocus}
       onBlur={onBlur}
-      style={{ position: 'relative' }}
+      onClick={onBlockClick}
+      style={{
+        position: 'relative',
+        outline: isSelected ? '2px solid var(--palette-primary)' : 'none',
+        outlineOffset: '2px',
+        borderRadius: '4px',
+        background: isSelected ? 'var(--palette-primary-container, rgba(99,102,241,0.08))' : 'transparent',
+      }}
     >
       {/* Block handle (drag + context menu affordance) */}
       {canEdit && (
@@ -1442,13 +1710,17 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
         suppressContentEditableWarning
         spellCheck={canEdit}
         onContextMenu={handleContextMenu}
+        onFocus={() => setBlockFocused(true)}
         onInput={(e) => {
           if (!canEdit) return;
           const text = (e.currentTarget as HTMLDivElement).textContent ?? '';
+          setBlockEmpty(text.trim() === '');
           notifyBlockEdit(nodeId, text, invoke);
         }}
         onBlur={(e) => {
+          setBlockFocused(false);
           const text = e.currentTarget.textContent ?? '';
+          setBlockEmpty(text.trim() === '');
           handleContentEdit(text);
           onBlur();
         }}
@@ -1498,6 +1770,35 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
         >
           ×
         </button>
+      )}
+      {/* ------------------------------------------------------------------ */}
+      {/* Per-block decoration-layer slot — placeholder-decoration overlay    */}
+      {/* Each decoration-layer widget registered via PluginRegistry receives  */}
+      {/* blockId, schema, isEmpty, and focused so that placeholder-decoration */}
+      {/* can show/hide ghost text per block independently.                   */}
+      {/* PP-placeholder-integration (9dbd7a7b)                               */}
+      {/* ------------------------------------------------------------------ */}
+      {decorationLayerEntries.length > 0 && (
+        <div
+          data-part="block-decoration-layer"
+          aria-hidden="true"
+          style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 2 }}
+        >
+          {decorationLayerEntries.map((entry) => (
+            <SlotMount
+              key={entry.name}
+              entry={entry}
+              hostAttrs={{
+                'data-part': 'block-decoration-mount',
+                'data-block-id': nodeId,
+                'data-schema': schema,
+                'data-block-empty': blockEmpty ? 'true' : 'false',
+                'data-block-focused': blockFocused ? 'true' : 'false',
+              }}
+              style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
+            />
+          ))}
+        </div>
       )}
     </div>
 
