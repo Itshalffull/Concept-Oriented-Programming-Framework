@@ -105,6 +105,13 @@ export interface KeybindingEditorProps {
   context?: string | null;
   /** Optional scope subtree filter */
   scopeFilter?: string;
+  /**
+   * Called when the user clicks a binding row in view mode.
+   * Receives the binding id of the clicked row. Callers can use this
+   * to switch the enclosing modal to edit mode (KB-07) or navigate to
+   * a dedicated editor page.
+   */
+  onSelectBinding?: (bindingId: string) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -265,6 +272,7 @@ export function KeybindingEditor({
   mode = 'view',
   context = null,
   scopeFilter,
+  onSelectBinding,
 }: KeybindingEditorProps): React.ReactElement {
   // ------------------------------------------------------------------
   // Data
@@ -646,8 +654,11 @@ export function KeybindingEditor({
           borderBottom: '1px solid var(--color-border-subtle, #eee)',
         }}
         onClick={() => {
-          // Fire onClick — in view mode callers handle routing (KB-12).
-          // In edit/create mode this is a no-op since context comes from props.
+          // In view mode, notify the caller so it can switch to edit mode (KB-07/KB-12).
+          // In edit/create mode context comes from props — no-op here.
+          if (mode === 'view' && onSelectBinding) {
+            onSelectBinding(b.binding);
+          }
         }}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
