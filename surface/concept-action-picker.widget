@@ -1,0 +1,172 @@
+@version(1)
+widget concept-action-picker {
+
+  purpose {
+    Two-pane picker for selecting a concept and one of its actions from the
+    live Score index. The left pane lists concepts grouped into Common and
+    Advanced categories; the right pane shows the actions for the selected
+    concept. A search field filters both panes simultaneously. When a value
+    is already set the picker collapses to a single result chip with a
+    click-to-reopen affordance and a clear button. The final onChange
+    callback fires only when an action is chosen, never on concept selection
+    alone.
+  }
+
+  anatomy {
+    root:          container     { Top-level region wrapper }
+    search:        interactive   { Search input that filters both concept and action panes }
+    conceptList:   container     { Left-pane listbox of available concepts }
+    conceptItem:   action        { Single concept row inside conceptList }
+    categoryBadge: presentation  { Badge showing the concept category within a conceptItem }
+    actionList:    container     { Right-pane listbox of actions for the selected concept }
+    actionItem:    action        { Single action row inside actionList }
+    variantChips:  presentation  { Chips showing completion variants for an actionItem }
+    descSnippet:   text          { Short prose description truncated to one line }
+    advancedToggle: action       { Button that expands or collapses the Advanced concept group }
+    resultChip:    container     { Collapsed view showing the currently selected concept/action pair }
+    clearButton:   action        { Clears the current selection and re-opens the picker }
+  }
+
+  states {
+    mode {
+      idle [initial] {
+        on SEARCH_INPUT -> searching;
+        on SELECT_CONCEPT -> concept-selected;
+      }
+      searching {
+        on CLEAR_SEARCH -> idle;
+        on SELECT_CONCEPT -> concept-selected;
+      }
+      concept-selected {
+        on SEARCH_INPUT -> searching;
+        on CLEAR_SEARCH -> idle;
+        on SELECT_ACTION -> action-selected;
+        on DESELECT_CONCEPT -> idle;
+      }
+      action-selected {
+        on REOPEN -> idle;
+        on CLEAR -> idle;
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      Escape -> CLEAR_SEARCH;
+      ArrowDown -> NAVIGATE_NEXT;
+      ArrowUp -> NAVIGATE_PREV;
+      Enter -> SELECT_ACTION;
+    }
+    focus {
+      trap: false;
+      initial: search;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Concept action picker";
+      };
+      search -> {
+        role: "searchbox";
+        aria-label: "Search concepts and actions";
+      };
+      conceptList -> {
+        role: "listbox";
+        aria-label: "Concepts";
+        aria-live: "polite";
+      };
+      conceptItem -> {
+        role: "option";
+      };
+      actionList -> {
+        role: "listbox";
+        aria-label: "Actions";
+        hidden: if state.mode == "idle" or state.mode == "searching" then true else false;
+      };
+      actionItem -> {
+        role: "option";
+      };
+      advancedToggle -> {
+        role: "button";
+        aria-expanded: if ?showAdvanced then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    value: option { concept: String, action: String }
+    onChange: String
+    filter: "mutating" | "query" | "all" = "all"
+    showAdvanced: Bool = false
+    placeholder: option String
+  }
+
+  connect {
+    root -> {
+      data-widget: "concept-action-picker";
+      data-state: state.mode;
+      role: "region";
+      aria-label: "Concept action picker";
+    }
+    search -> {
+      autofocus: true;
+      placeholder: if ?placeholder then ?placeholder else "Search concepts and actions...";
+      onInput: send(SEARCH_INPUT);
+    }
+    conceptList -> {
+      role: "listbox";
+      aria-live: "polite";
+    }
+    conceptItem -> {
+      role: "option";
+      onClick: send(SELECT_CONCEPT);
+    }
+    actionList -> {
+      role: "listbox";
+      hidden: if state.mode == "idle" or state.mode == "searching" then true else false;
+    }
+    actionItem -> {
+      role: "option";
+      onClick: send(SELECT_ACTION);
+    }
+    advancedToggle -> {
+      role: "button";
+      aria-expanded: if ?showAdvanced then "true" else "false";
+      onClick: send(TOGGLE_ADVANCED);
+    }
+    clearButton -> {
+      onClick: send(CLEAR);
+    }
+    resultChip -> {
+      hidden: if state.mode == "action-selected" then false else true;
+      onClick: send(REOPEN);
+    }
+  }
+
+  invariant {
+    always "root has region role": {
+      root.role = "region"
+    }
+
+    always "actionList hidden unless concept or action selected": {
+      forall s in [idle, searching]:
+        state.mode = s implies actionList.hidden = true
+    }
+
+    always "advancedToggle aria-expanded reflects showAdvanced prop": {
+      advancedToggle.ariaExpanded = if showAdvanced then "true" else "false"
+    }
+
+    always "search filters both panes when non-empty": {
+      search.value != "" implies
+        (conceptList shows only matching concepts and
+         actionList shows only matching actions)
+    }
+
+    never "concept-selected without action-selected can emit onChange": {
+      state.mode = "concept-selected" and onChange called
+    }
+  }
+}
