@@ -1,0 +1,27 @@
+# Register the editorconfig ManifestReader adapter with the ManifestReader
+# registry during kernel boot. Once this sync fires, ProviderManifest can
+# dispatch .editorconfig files to the editorconfig reader implementation in
+# handlers/ts/readers/editorconfig.reader.ts, which emits Format option
+# overlays (not full provider registrations) keyed by slot.
+#
+# See docs/plans/virtual-provider-registry-prd.md §2 (editorconfig row) and
+# VPR-06.
+
+sync RegisterEditorconfigReader [eager]
+  purpose {
+    On kernel boot, register the editorconfig ManifestReader adapter so
+    ProviderManifest can translate .editorconfig files into Format option
+    overlay entries. Priority 70 sits below clef-yaml (100) and prettier
+    (80) so explicit provider manifests win over editorconfig defaults.
+  }
+when {
+  KernelBoot/boot: [ projectRoot: ?projectRoot; manifestPath: ?manifestPath ]
+    => ok(kernel: ?kernel; concepts: ?concepts; syncs: ?syncs)
+}
+then {
+  ManifestReader/register: [
+    reader: "editorconfig";
+    formats: [".editorconfig"];
+    priority: 70
+  ]
+}
