@@ -36,6 +36,7 @@ widget keybinding-editor {
   states {
     idle [initial] {
       on START_RECORDING -> recording;
+      on RESET_BINDING -> confirmReset;
     }
 
     recording {
@@ -62,6 +63,13 @@ widget keybinding-editor {
       on RESOLVE_KEEP_BOTH -> idle;
       on CANCEL_RECORDING -> idle;
       entry [announceConflict];
+    }
+
+    confirmReset {
+      on CONFIRM_RESET -> idle;
+      on CANCEL_RESET -> idle;
+      entry [showResetConfirmation];
+      exit [hideResetConfirmation];
     }
   }
 
@@ -133,6 +141,7 @@ widget keybinding-editor {
     mode: "view" | "edit" | "create" = "view"
     context: option String
     scopeFilter: option String
+    modifiedFilterActive: Bool = false
   }
 
   connect {
@@ -162,6 +171,8 @@ widget keybinding-editor {
     modifiedFilter -> {
       data-part: "modified-filter";
       role: "button";
+      aria-pressed: if ?modifiedFilterActive then "true" else "false";
+      data-active: if ?modifiedFilterActive then "true" else "false";
       onClick: send(TOGGLE_MODIFIED_FILTER);
     }
 
@@ -232,6 +243,8 @@ widget keybinding-editor {
       aria-label: "Reset binding to default";
       onClick: send(RESET_BINDING);
       hidden: if ?mode == "view" then true else false;
+      data-has-override: if ?context != null then "true" else "false";
+      data-confirming: if state == "confirmReset" then "true" else "false";
     }
   }
 
@@ -260,6 +273,23 @@ widget keybinding-editor {
     "root data-mode reflects the mode prop at all times";
     "conflictWarning role alert is always present in the DOM even when hidden";
 
+    # KB-10: Conflict warning ergonomics
+    "conflictWarning message format: '<Chord> is already bound to <conflicting label> — replace?'";
+    "conflictWarning exposes exactly three resolution buttons: Replace, Keep Both (with priorities), Cancel";
+    "Keep Both (with priorities) bumps the new binding priority to existingPriority + 10";
+    "conflictWarning data-conflict-label contains the human-readable label of the conflicting binding";
+    "conflictWarning data-conflict-scope contains the scope path of the conflicting binding";
+
+    # KB-10: Modified filter active state
+    "modifiedFilter data-active is 'true' when the filter is active, 'false' otherwise";
+    "modifiedFilter renders with filled visual style when data-active is 'true'";
+    "modifiedFilter filters list to only bindings where Property/get returns non-null OR workspace override is set";
+
+    # KB-10: Reset-to-default button
+    "resetButton is visible in detailPane only when the selected binding has a user override";
+    "resetButton dispatches KeyBinding/clearOverride(binding, 'user') when clicked";
+    "resetButton shows inline confirmation text before executing the reset";
+
     # Action contracts
     action CANCEL_RECORDING {
       requires: state = "recording"
@@ -279,6 +309,21 @@ widget keybinding-editor {
     action CONFLICT_DETECTED {
       requires: state = "recording"
       ensures ok: state = "conflict"
+    }
+
+    action RESET_BINDING {
+      requires: state = "idle"
+      ensures ok: state = "confirmReset"
+    }
+
+    action CONFIRM_RESET {
+      requires: state = "confirmReset"
+      ensures ok: state = "idle"
+    }
+
+    action CANCEL_RESET {
+      requires: state = "confirmReset"
+      ensures ok: state = "idle"
     }
 
     # Structural always/never invariants
