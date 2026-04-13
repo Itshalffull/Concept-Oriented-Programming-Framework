@@ -19,6 +19,7 @@ import { UserSyncListView } from '../../views/UserSyncListView';
 import { UserSyncEditorView } from '../../views/UserSyncEditorView';
 import { RecursiveEditorView } from '../../views/RecursiveEditorView';
 import { PersonaEditorView } from '../../views/PersonaEditorView';
+import { MediaLibraryView } from '../../views/MediaLibraryView';
 
 export default async function AdminPage({
   params,
@@ -266,6 +267,16 @@ export default async function AdminPage({
     return (
       <HostedPage>
         <PersonaEditorView nodeId={decodeURIComponent(slug[2])} />
+      </HostedPage>
+    );
+  }
+
+  // Media Library — ViewShell over all media-asset ContentNodes (MAG-754).
+  // Mounts media-library-view (blocks default) with switchable card-grid / table / timeline.
+  if (path === 'media') {
+    return (
+      <HostedPage>
+        <MediaLibraryView />
       </HostedPage>
     );
   }

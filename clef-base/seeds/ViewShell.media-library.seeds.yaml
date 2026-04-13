@@ -1,0 +1,64 @@
+# ViewShell seeds for the media-library route (MAG-754).
+#
+# media-library-view is the root ViewShell mounted at /media.
+# It defaults to the "blocks" presentation (media-blocks-default) so each asset
+# renders through its own block widget. Users can swap to card-grid, table, or
+# timeline via PresentationSpec swap in the view-editor toolbar.
+#
+# Three named presentation-variant shells share the same data source, filter,
+# sort, and projection as media-library-view but each hard-wires a different
+# PresentationSpec so the view-editor toolbar can offer a one-click swap target:
+#   media-library-card-grid  — thumbnail gallery (PresentationSpec: media-card-grid)
+#   media-library-table      — structured metadata table (PresentationSpec: media-table)
+#   media-library-timeline   — chronological strip (PresentationSpec: media-timeline)
+
+concept: ViewShell
+action: create
+entries:
+  # Root shell — blocks (default)
+  - name: media-library-view
+    title: Media Library
+    description: Browse uploaded media assets — images, audio, video, and documents. Switch between block, gallery, timeline, and table presentations. Filter by type, date, duration, size, or tags.
+    dataSource: media-asset-list-source
+    filter: media-combined-filter
+    sort: media-captured-at-desc
+    group: ''
+    projection: media-asset-fields
+    presentation: media-blocks-default
+    interaction: no-controls
+
+  # Presentation variant — card-grid (gallery)
+  - name: media-library-card-grid
+    title: Media Library — Gallery
+    description: Thumbnail grid of media assets sorted by capture date.
+    dataSource: media-asset-list-source
+    filter: media-combined-filter
+    sort: media-captured-at-desc
+    group: ''
+    projection: media-asset-card-fields
+    presentation: media-card-grid
+    interaction: no-controls
+
+  # Presentation variant — table
+  - name: media-library-table
+    title: Media Library — Table
+    description: Structured metadata table for media assets with all fields visible.
+    dataSource: media-asset-list-source
+    filter: media-combined-filter
+    sort: media-captured-at-desc
+    group: ''
+    projection: media-asset-fields
+    presentation: media-table
+    interaction: no-controls
+
+  # Presentation variant — timeline
+  - name: media-library-timeline
+    title: Media Library — Timeline
+    description: Chronological timeline of media assets grouped by capture date.
+    dataSource: media-asset-list-source
+    filter: media-combined-filter
+    sort: media-captured-at-desc
+    group: media-group-by-date
+    projection: media-asset-card-fields
+    presentation: media-timeline
+    interaction: no-controls
