@@ -17,7 +17,7 @@ export default defineConfig({
       'generated/deploy/**/*.test.ts',
       'generated/repertoire/**/*.test.ts',
       'generated/nextjs/**/*.test.ts',
-      'generated/widget-tests/**/*.test.ts',
+      'generated/widget-tests/**/*.test.ts', 'generated/widget-tests/**/*.test.tsx',
       'codegen/**/*.test.ts',
       'repertoire/**/tests/**/*.test.ts',
       'surface/widgets/**/*.test.ts',

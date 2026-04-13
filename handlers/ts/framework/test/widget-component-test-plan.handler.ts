@@ -641,4 +641,4 @@ export const widgetComponentTestPlanHandler = autoInterpret(_handler);
 
 // Re-export types for use by renderers and providers
 export type { WidgetTestPlan, WidgetTestAssertion };
-export { buildWidgetTestPlan, VALID_CATEGORIES };
+export { VALID_CATEGORIES };

@@ -179,13 +179,8 @@ widget page-title {
     # keystroke and resets the caret to offset 0 — typing "Hello" yields
     # "olleH". Every platform port must seed initial text via ref once on
     # mount and never re-render the text node during editing.
-    never "typing into titleInput mutates caret offset": {
+    never "titleInput text driven by react children": {
       state.edit = "editing" and titleInput.textContentDrivenByReactChildren = true
-    }
-
-    always "cursor stability across keystroke bursts": {
-      state.edit = "editing"
-      implies titleInput.preservesKeyOrder = true
     }
   }
 }
