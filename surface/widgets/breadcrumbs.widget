@@ -1,0 +1,200 @@
+@version(1)
+widget breadcrumbs {
+
+  purpose {
+    Header-slot widget that renders the ancestor path of the currently focused
+    block as a horizontal breadcrumb trail, reading from page root down to the
+    focused block via the Outline parent-chain. Each segment represents one
+    ancestor node and can be clicked to emit NAVIGATE_TO_BLOCK, scrolling and
+    focusing that block in the host editor. The trail is capped at maxSegments
+    ancestors to prevent overflow; when capped an ellipsis segment is injected
+    before the last visible ancestor. A separator glyph is rendered between
+    segments as a purely presentational divider.
+  }
+
+  requires @1 {
+    fields {
+      focusedBlockId: String;
+      pageRootId: String;
+      ancestorChain: list;
+    }
+    actions {
+      navigateToBlock(blockId: String);
+    }
+  }
+
+  anatomy {
+    root:         container    { Outer nav wrapper; carries role=navigation and data-state for the nav FSM }
+    segment:      action       { One breadcrumb segment representing a single ancestor block; repeated per ancestor }
+    separator:    presentation { Visual divider glyph rendered between consecutive segments }
+    segmentLabel: text         { Text label of the ancestor block title inside a segment }
+    segmentIcon:  presentation { Optional block-type icon rendered before the label in a segment }
+  }
+
+  states {
+    nav {
+      idle [initial] {
+        on SEGMENT_POINTER_ENTER -> hovering-segment;
+      }
+
+      hovering-segment {
+        on SEGMENT_POINTER_LEAVE -> idle;
+        on NAVIGATE_TO_BLOCK     -> idle;
+        on ESCAPE                -> idle;
+        entry [highlightSegment];
+        exit [clearHighlight];
+      }
+    }
+  }
+
+  accessibility {
+    role: navigation;
+    keyboard {
+      Enter      -> NAVIGATE_TO_BLOCK;
+      Escape     -> ESCAPE;
+      ArrowLeft  -> FOCUS_PREV_SEGMENT;
+      ArrowRight -> FOCUS_NEXT_SEGMENT;
+    }
+    focus {
+      trap: false;
+      initial: segment;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "navigation";
+        aria-label: "Breadcrumbs";
+        data-state: state.nav;
+      };
+      segment -> {
+        role: "button";
+        aria-label: self.blockTitle;
+        tabindex: "0";
+      };
+      separator -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      segmentLabel -> {
+        role: "none";
+      };
+      segmentIcon -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    focusedBlockId: option String
+    pageRootId:     String
+    maxSegments:    Int = 5
+  }
+
+  connect {
+    root -> {
+      data-part:      "root";
+      data-state:     state.nav;
+      aria-label:     "Breadcrumbs";
+      data-page-root: ?pageRootId;
+    }
+
+    segment -> {
+      data-part:       "segment";
+      data-block-id:   self.blockId;
+      data-depth:      self.depth;
+      data-active:     if self.blockId = ?focusedBlockId then "true" else "false";
+      onClick:         send(NAVIGATE_TO_BLOCK, { blockId: self.blockId });
+      onPointerEnter:  send(SEGMENT_POINTER_ENTER, { blockId: self.blockId });
+      onPointerLeave:  send(SEGMENT_POINTER_LEAVE);
+      onKeyDown:       send(NAVIGATE_TO_BLOCK, { blockId: self.blockId });
+      aria-label:      self.blockTitle;
+      tabindex:        "0";
+    }
+
+    separator -> {
+      data-part:   "separator";
+      aria-hidden: "true";
+    }
+
+    segmentLabel -> {
+      data-part: "segment-label";
+      text:      self.blockTitle;
+    }
+
+    segmentIcon -> {
+      data-part:       "segment-icon";
+      data-block-type: self.blockType;
+      aria-hidden:     "true";
+    }
+  }
+
+  affordance {
+    serves: header-slot;
+    specificity: 8;
+    when slotKind = "breadcrumbs";
+    bind {
+      focusedBlockId: focusedBlockId;
+      pageRootId:     pageRootId;
+      maxSegments:    maxSegments;
+    }
+  }
+
+  invariant {
+    example "idle to hovering-segment on SEGMENT_POINTER_ENTER": {
+      after SEGMENT_POINTER_ENTER(blockId: "b1") -> ok
+      then state.nav = "hovering-segment"
+    }
+
+    example "hovering-segment returns to idle on SEGMENT_POINTER_LEAVE": {
+      after SEGMENT_POINTER_ENTER(blockId: "b1") -> ok and SEGMENT_POINTER_LEAVE() -> ok
+      then state.nav = "idle"
+    }
+
+    example "NAVIGATE_TO_BLOCK from hovering-segment resolves to idle": {
+      after SEGMENT_POINTER_ENTER(blockId: "b2") -> ok and NAVIGATE_TO_BLOCK(blockId: "b2") -> ok
+      then state.nav = "idle"
+    }
+
+    example "ESCAPE from hovering-segment resolves to idle": {
+      after SEGMENT_POINTER_ENTER(blockId: "b3") -> ok and ESCAPE() -> ok
+      then state.nav = "idle"
+    }
+
+    example "initial FSM state is idle": {
+      after INIT() -> ok
+      then state.nav = "idle"
+    }
+
+    always "root data-state reflects nav FSM": {
+      root.dataState = state.nav
+    }
+
+    always "separator carries aria-hidden": {
+      separator.ariaHidden = "true"
+    }
+
+    always "segmentIcon carries aria-hidden": {
+      segmentIcon.ariaHidden = "true"
+    }
+
+    never "segment fires without a bound blockId": {
+      segment.dataBlockId = none
+    }
+
+    never "segment count exceeds maxSegments prop": {
+      segments.length > maxSegments
+    }
+
+    action NAVIGATE_TO_BLOCK {
+      requires: self.blockId != none
+      ensures ok: state.nav = "idle"
+    }
+
+    action SEGMENT_POINTER_ENTER {
+      requires: state.nav = "idle"
+      ensures ok: state.nav = "hovering-segment"
+    }
+  }
+
+}

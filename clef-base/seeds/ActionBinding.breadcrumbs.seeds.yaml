@@ -1,0 +1,22 @@
+# ActionBinding seeds -- navigate-to-block action (PP-breadcrumbs)
+# Wires the NAVIGATE_TO_BLOCK event emitted by the breadcrumbs widget to a
+# host scroll-and-focus operation via Outline/focusBlock.
+# When a breadcrumb segment is clicked (or activated via keyboard), the widget
+# emits NAVIGATE_TO_BLOCK with { blockId }. This binding resolves that event
+# to Outline/focusBlock so the host editor scrolls the target block into view
+# and places focus on it.
+
+concept: ActionBinding
+action: bind
+entries:
+  - name: navigate-to-block
+    binding: navigate-to-block
+    target: "Outline/focusBlock"
+    parameterMap: '{"blockId":"context.blockId"}'
+    executionPolicy: "optimistic"
+    toolbar_command: false
+    slash_command: false
+    context_menu: false
+    section: "Navigation"
+    label: "Navigate to Block"
+    icon: "arrow-right"

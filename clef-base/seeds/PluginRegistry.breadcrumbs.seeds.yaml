@@ -1,0 +1,24 @@
+# PluginRegistry seeds -- breadcrumbs header-slot plugin (PP-breadcrumbs)
+# Registers the breadcrumbs widget as a header-slot plugin so that
+# RecursiveBlockEditor's header-slot iteration picks it up automatically
+# for any editor surface that exposes the focusedBlockId and pageRootId context.
+
+concept: PluginRegistry
+action: register
+entries:
+  - type: header-slot
+    name: breadcrumbs
+    metadata: >
+      {
+        "widget": "breadcrumbs",
+        "label": "Breadcrumbs",
+        "icon": "breadcrumbs",
+        "availableContexts": ["markdown", "wiki", "notebook", "persona", "database-record", "canvas"],
+        "defaultEnabled": true,
+        "order": 10,
+        "props": {
+          "focusedBlockId": "$focusedBlockId",
+          "pageRootId": "$pageRootId",
+          "maxSegments": 5
+        }
+      }
