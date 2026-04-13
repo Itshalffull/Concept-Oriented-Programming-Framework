@@ -1008,6 +1008,12 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
       return;
     }
     if (e.key === '/' && !e.ctrlKey && !e.metaKey) {
+      // Don't hijack slash when the user is typing inside a contentEditable block.
+      // Slash-menu-from-block can still be triggered via the BlockHandle "+" button
+      // or via a block-level detector that watches for '/' as the first character
+      // of an empty block's body.
+      const target = e.target as HTMLElement;
+      if (target.isContentEditable) return;
       e.preventDefault();
       openSlashMenu();
     } else if (e.key === 'Escape') {
@@ -2008,6 +2014,9 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
   // restarts at 1.
   // -------------------------------------------------------------------------
 
+  const blockContentRef = useRef<HTMLDivElement>(null);
+  const hasInitializedRef = useRef(false);
+
   const clickCountRef = useRef(0);
   const lastClickTimeRef = useRef(0);
 
@@ -2067,10 +2076,18 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
   // -------------------------------------------------------------------------
   // Per-block focus + empty state — drives placeholder-decoration overlay
   // (PP-placeholder-integration 9dbd7a7b)
+  //
+  // blockEmptyRef stores the empty flag in a ref rather than state so that
+  // typing a character does NOT trigger a re-render (which was causing the
+  // browser to reset cursor position to start on every keystroke — BEF-02).
+  // The ref is updated on every input event without causing reconciliation.
+  // Re-renders that already occur on focus/blur transitions (driven by
+  // blockFocused state) will read the current ref value, so data-block-empty
+  // stays accurate at the moments decoration consumers need it.
   // -------------------------------------------------------------------------
 
   const [blockFocused, setBlockFocused] = useState(false);
-  const [blockEmpty, setBlockEmpty] = useState(true);
+  const blockEmptyRef = useRef(true);
 
   // -------------------------------------------------------------------------
   // Spell-check popover state (PP-spell-check)
@@ -2227,6 +2244,28 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
     if (highlightDebounceRef.current !== null) clearTimeout(highlightDebounceRef.current);
   }, []);
 
+  // BEF-01: Load initial body from storage on mount so content survives page reload.
+  useEffect(() => {
+    if (hasInitializedRef.current) return;
+    let cancelled = false;
+    async function loadBody() {
+      try {
+        const result = await invoke('ContentNode', 'get', { node: nodeId });
+        if (cancelled || result.variant !== 'ok') return;
+        const body = typeof result.content === 'string' ? result.content : '';
+        if (blockContentRef.current && !hasInitializedRef.current) {
+          blockContentRef.current.textContent = body;
+          hasInitializedRef.current = true;
+          setBlockEmpty(body.trim() === '');
+        }
+      } catch (err) {
+        console.warn('[BlockSlot] initial body load failed:', err);
+      }
+    }
+    void loadBody();
+    return () => { cancelled = true; };
+  }, [nodeId, invoke]);
+
   const closeLinkPreview = useCallback(() => {
     if (linkLeaveTimer.current !== null) { clearTimeout(linkLeaveTimer.current); linkLeaveTimer.current = null; }
     setLinkPreviewOpen(false);
@@ -2343,6 +2382,7 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
           requires the widget interpreter to be wired into this host. The
           data-resolved-widget attribute is the hook for that wiring. */}
       <div
+        ref={blockContentRef}
         data-part="block-content"
         data-widget={resolvedWidget}
         contentEditable={canEdit}
