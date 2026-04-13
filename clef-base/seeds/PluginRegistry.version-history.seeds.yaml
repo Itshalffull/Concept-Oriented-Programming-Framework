@@ -1,0 +1,24 @@
+# PluginRegistry seeds — version-history-browser editor-panel plugin (PP-version-history)
+# Registers the version-history-browser widget as an editor-panel so the
+# slot resolver in RecursiveBlockEditor picks it up automatically for any
+# document that has two or more recorded Version snapshots.
+# The widget appears in the right-rail side-panel for all editor flavors that
+# produce versions: markdown, wiki, notebook, persona, and workflow.
+
+concept: PluginRegistry
+action: register
+entries:
+  - type: editor-panel
+    name: version-history-browser
+    metadata: >
+      {
+        "widget": "version-history-browser",
+        "label": "Version History",
+        "icon": "history",
+        "availableContexts": ["markdown", "wiki", "notebook", "persona", "workflow"],
+        "defaultEnabled": false,
+        "order": 80,
+        "props": {
+          "currentNodeId": "$currentDocId"
+        }
+      }

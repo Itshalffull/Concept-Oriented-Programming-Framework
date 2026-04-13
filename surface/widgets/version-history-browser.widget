@@ -1,0 +1,427 @@
+@version(1)
+widget version-history-browser {
+
+  purpose {
+    Editor-panel side-panel that displays the full version timeline for the
+    current document. Each entry in the timeline shows the version identifier,
+    the author who created the snapshot, a human-readable timestamp, and an
+    optional short summary derived from the snapshot data. Clicking a timeline
+    entry loads that version's content into the preview pane on the right side
+    of the panel; a diff badge shows the number of changed lines compared to
+    the current version. A Restore button on the preview pane lets the user
+    replace the current document body with the historical snapshot, creating a
+    new version entry to preserve the current state before overwriting.
+    Registered with PluginRegistry as type "editor-panel" so it appears
+    automatically in the editor side-panel for any document that has two or
+    more recorded versions.
+  }
+
+  requires @1 {
+    fields {
+      versions: list;
+      currentNodeId: String;
+      selectedVersionId: option String;
+    }
+    actions {
+      listVersions(entity: String);
+      rollback(version: String);
+      diff(versionA: String, versionB: String);
+    }
+  }
+
+  anatomy {
+    root:           container    { Top-level panel wrapper; carries data-state for both FSMs }
+    panelHeader:    container    { Fixed header row holding the panel title and close button }
+    panelTitle:     text         { "Version History" label shown in the panel header }
+    closeButton:    action       { Button that collapses or dismisses the panel }
+    timeline:       container    { Scrollable list of all recorded version entries }
+    versionEntry:   action       { Single row in the timeline for one recorded version }
+    versionLabel:   text         { Version number or short identifier (e.g. "v3") }
+    authorLabel:    text         { Display name of the author who created the snapshot }
+    timestampLabel: text         { Relative or absolute timestamp of the snapshot }
+    summaryLabel:   text         { Optional one-line summary extracted from the snapshot }
+    diffBadge:      presentation { Pill showing the line-diff count vs the current version }
+    previewPane:    container    { Read-only content area rendering the selected version }
+    previewContent: text         { Full text of the selected version snapshot }
+    diffView:       container    { Inline diff display showing additions and deletions }
+    restoreButton:  action       { Button that restores the previewed snapshot as current }
+    loadingSpinner: presentation { Visible while versions list or preview is loading }
+    emptyState:     presentation { Shown when the document has no recorded versions }
+  }
+
+  states {
+    panel {
+      idle [initial] {
+        on SELECT_VERSION  -> previewing;
+        on CLOSE           -> closed;
+      }
+      previewing {
+        on SELECT_VERSION  -> previewing;
+        on RESTORE_START   -> restoring;
+        on CLOSE           -> closed;
+        on CLEAR_PREVIEW   -> idle;
+        entry [loadPreviewContent; computeDiff];
+        exit  [clearPreview];
+      }
+      restoring {
+        on RESTORE_DONE    -> restored;
+        on RESTORE_ERROR   -> previewing;
+        entry [invokeRollback];
+      }
+      restored {
+        on SELECT_VERSION  -> previewing;
+        on CLOSE           -> closed;
+        entry [reloadVersionList; showRestoredBanner];
+      }
+      closed {
+        on OPEN            -> idle;
+      }
+    }
+
+    loading {
+      ready [initial] {
+        on LOAD_START      -> fetching;
+      }
+      fetching {
+        on LOAD_DONE       -> ready;
+        on LOAD_ERROR      -> error;
+        entry [showSpinner];
+        exit  [hideSpinner];
+      }
+      error {
+        on RETRY           -> fetching;
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      ArrowUp    -> SELECT_PREV_VERSION;
+      ArrowDown  -> SELECT_NEXT_VERSION;
+      Enter      -> SELECT_VERSION;
+      Escape     -> CLEAR_PREVIEW;
+      KeyR       -> RESTORE_START;
+    }
+    focus {
+      trap: false;
+      initial: timeline;
+      roving: true;
+      returnOnClose: root;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Version history panel";
+        aria-live: "polite";
+        aria-busy: if state.loading == "fetching" then "true" else "false";
+      };
+      panelHeader -> {
+        role: "banner";
+      };
+      closeButton -> {
+        role: "button";
+        aria-label: "Close version history";
+        tabIndex: "0";
+      };
+      timeline -> {
+        role: "list";
+        aria-label: "Version entries";
+      };
+      versionEntry -> {
+        role: "listitem";
+        aria-selected: if self.versionId == ?selectedVersionId then "true" else "false";
+        aria-current: if self.versionId == ?selectedVersionId then "true" else "false";
+        tabIndex: "0";
+      };
+      previewPane -> {
+        role: "region";
+        aria-label: "Version preview";
+        aria-live: "polite";
+      };
+      restoreButton -> {
+        role: "button";
+        aria-label: "Restore this version";
+        aria-disabled: if state.panel == "restoring" then "true" else "false";
+        tabIndex: "0";
+      };
+      loadingSpinner -> {
+        role: "status";
+        aria-label: "Loading versions";
+        aria-hidden: if state.loading != "fetching" then "true" else "false";
+      };
+      emptyState -> {
+        role: "status";
+        aria-label: "No version history";
+      };
+      diffBadge -> {
+        role: "img";
+        aria-label: "Line changes";
+      };
+    }
+  }
+
+  props {
+    currentNodeId:      String
+    selectedVersionId:  option String
+    versions:           list VersionEntry
+    previewContent:     option String
+    diffSummary:        option String
+    isRestoring:        Bool = false
+    defaultOpen:        Bool = true
+  }
+
+  connect {
+    root -> {
+      data-part:  "root";
+      data-state: state.panel;
+      data-loading: state.loading;
+      hidden: if state.panel == "closed" then true else false;
+    }
+
+    panelHeader -> {
+      data-part: "panel-header";
+    }
+
+    panelTitle -> {
+      data-part: "panel-title";
+      text: "Version History";
+    }
+
+    closeButton -> {
+      data-part: "close-button";
+      onClick: send(CLOSE);
+      onKeyDown: if key == "Enter" or key == "Space" then send(CLOSE) else noop;
+    }
+
+    timeline -> {
+      data-part: "timeline";
+    }
+
+    versionEntry -> {
+      data-part:        "version-entry";
+      data-version-id:  self.versionId;
+      data-selected:    if self.versionId == ?selectedVersionId then "true" else "false";
+      onClick:          send(SELECT_VERSION, { versionId: self.versionId });
+      onKeyDown:        if key == "Enter" then send(SELECT_VERSION, { versionId: self.versionId }) else noop;
+      tabIndex:         "0";
+    }
+
+    versionLabel -> {
+      data-part: "version-label";
+      text: self.versionId;
+    }
+
+    authorLabel -> {
+      data-part: "author-label";
+      text: self.author;
+    }
+
+    timestampLabel -> {
+      data-part: "timestamp-label";
+      text: self.timestamp;
+      data-iso: self.timestampIso;
+    }
+
+    summaryLabel -> {
+      data-part: "summary-label";
+      text: self.summary;
+      hidden: if self.summary == none then true else false;
+    }
+
+    diffBadge -> {
+      data-part: "diff-badge";
+      text: self.diffCount;
+      hidden: if self.diffCount == none then true else false;
+    }
+
+    previewPane -> {
+      data-part:  "preview-pane";
+      hidden:     if state.panel == "idle" or state.panel == "closed" then true else false;
+    }
+
+    previewContent -> {
+      data-part: "preview-content";
+      text:      ?previewContent;
+    }
+
+    diffView -> {
+      data-part: "diff-view";
+      hidden:    if ?diffSummary == none then true else false;
+      text:      ?diffSummary;
+    }
+
+    restoreButton -> {
+      data-part:    "restore-button";
+      disabled:     if state.panel == "restoring" or state.panel == "restored" then true else false;
+      data-state:   state.panel;
+      onClick:      send(RESTORE_START);
+      onKeyDown:    if key == "Enter" then send(RESTORE_START) else noop;
+    }
+
+    loadingSpinner -> {
+      data-part: "loading-spinner";
+      hidden:    if state.loading != "fetching" then true else false;
+    }
+
+    emptyState -> {
+      data-part: "empty-state";
+      hidden:    if versions.length > 0 then true else false;
+    }
+  }
+
+  affordance {
+    serves: editor-panel;
+    specificity: 9;
+    when: editorPanelContext = true;
+    bind {
+      currentNodeId:     rootNodeId;
+      selectedVersionId: selectedVersionId;
+    }
+  }
+
+  invariant {
+    example "selecting a version transitions to previewing": {
+      after versionEntry(versionId: "v2") -> ok
+      then state.panel = "previewing"
+      and root.data-state = "previewing"
+      and previewPane.hidden = "false"
+    }
+
+    example "clear preview returns panel to idle": {
+      after versionEntry(versionId: "v2") -> ok
+      then state.panel = "previewing"
+      then transition(from: "previewing", event: "CLEAR_PREVIEW") -> ok
+      then state.panel = "idle"
+      and previewPane.hidden = "true"
+    }
+
+    example "restore start transitions to restoring": {
+      after versionEntry(versionId: "v1") -> ok
+      then state.panel = "previewing"
+      then restoreButton.click -> ok
+      then state.panel = "restoring"
+      and restoreButton.disabled = "true"
+    }
+
+    example "restore done transitions to restored": {
+      after transition(from: "restoring", event: "RESTORE_DONE") -> ok
+      then state.panel = "restored"
+    }
+
+    example "close from any non-closed state reaches closed": {
+      after transition(from: "previewing", event: "CLOSE") -> ok
+      then state.panel = "closed"
+      and root.hidden = "true"
+    }
+
+    example "loading fetching shows spinner": {
+      after transition(from: "ready", event: "LOAD_START") -> ok
+      then state.loading = "fetching"
+      and loadingSpinner.hidden = "false"
+    }
+
+    example "loading done hides spinner": {
+      after transition(from: "fetching", event: "LOAD_DONE") -> ok
+      then state.loading = "ready"
+      and loadingSpinner.hidden = "true"
+    }
+
+    example "empty state shown when no versions": {
+      after versions.length = 0 -> ok
+      then emptyState.hidden = "false"
+    }
+
+    example "selected version entry carries data-selected true": {
+      after versionEntry(versionId: "v3") -> ok
+      then versionEntry.data-selected = "true"
+      and versionEntry.aria-selected = "true"
+    }
+
+    example "diffBadge hidden when diffCount is none": {
+      after versionEntry(versionId: "v1") -> ok
+      then diffBadge.hidden = "false"
+    }
+
+    example "restore button disabled in restoring state": {
+      after transition(from: "previewing", event: "RESTORE_START") -> ok
+      then restoreButton.disabled = "true"
+      and restoreButton.aria-disabled = "true"
+    }
+
+    example "re-selecting a version while previewing re-enters previewing": {
+      after versionEntry(versionId: "v2") -> ok
+      then state.panel = "previewing"
+      then versionEntry(versionId: "v1") -> ok
+      then state.panel = "previewing"
+    }
+
+    forall "all panel states are reachable from initial": {
+      given s in { idle, previewing, restoring, restored, closed }
+      then s.reachable = true
+    }
+
+    forall "all version entries expose required data attributes": {
+      given entry in versionEntry
+      then entry.data-version-id != none
+      and entry.data-selected != none
+    }
+
+    always "data-state on root reflects panel FSM": {
+      root.data-state = state.panel
+    }
+
+    always "previewPane hidden when panel is idle or closed": {
+      state.panel in { idle, closed }
+      and previewPane.hidden = "true"
+    }
+
+    always "restoreButton disabled while restoring": {
+      state.panel = "restoring"
+      and restoreButton.disabled = "true"
+    }
+
+    always "loadingSpinner hidden when not fetching": {
+      state.loading != "fetching"
+      and loadingSpinner.hidden = "true"
+    }
+
+    always "emptyState hidden when versions list is non-empty": {
+      versions.length > 0
+      and emptyState.hidden = "true"
+    }
+
+    never "previewing and idle simultaneously": {
+      state.panel = "previewing" and state.panel = "idle"
+    }
+
+    never "restoreButton enabled while restoring": {
+      state.panel = "restoring" and restoreButton.disabled = "false"
+    }
+
+    never "previewPane visible in closed state": {
+      state.panel = "closed" and previewPane.hidden = "false"
+    }
+
+    action versionEntry {
+      requires: state.panel != "restoring"
+      ensures ok: state.panel = "previewing"
+    }
+
+    action restoreButton {
+      requires: state.panel = "previewing"
+      ensures ok: state.panel = "restoring"
+    }
+
+    action closeButton {
+      requires: state.panel != "closed"
+      ensures ok: state.panel = "closed"
+    }
+
+    "ArrowUp and ArrowDown must rove focus between versionEntry items in the timeline";
+    "Escape must send CLEAR_PREVIEW when state.panel is previewing";
+    "R key must activate restoreButton when state.panel is previewing and restoreButton is not disabled";
+    "summaryLabel must be hidden when the version snapshot carries no parseable summary field";
+  }
+
+}

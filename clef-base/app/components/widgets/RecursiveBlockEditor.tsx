@@ -47,6 +47,8 @@ import { CommandPalette } from './CommandPalette';
 import { BlockHandle, BlockDropZoneIndicator } from './BlockHandle';
 import { LinkHoverPreview } from './LinkHoverPreview';
 import { ExportDialog } from './ExportDialog';
+import { VersionHistoryBrowser } from './VersionHistoryBrowser';
+import { KeyboardHelpModal } from './KeyboardHelpModal';
 
 // ---------------------------------------------------------------------------
 // Selection tracking — populated from document selectionchange events
@@ -1466,30 +1468,34 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
         )}
 
         {/* ---------------------------------------------------------------- */}
-        {/* decoration-layer slot — resolver-driven overlay mounts           */}
-        {/* Widgets registered via PluginRegistry/register with              */}
-        {/* type="decoration-layer" appear here automatically.               */}
-        {/* Examples: comment-gutter-marker, presence-decoration,            */}
-        {/*           inline-annotation-decoration, block-handle.            */}
+        {/* decoration-layer slot — root-level overlay mounts (PP-mount-built) */}
+        {/* Widgets registered with perBlock=false mount here once (e.g.     */}
+        {/* presence-decoration, which spans the whole editor viewport).     */}
+        {/* Per-block widgets (perBlock=true or unset, e.g. comment-gutter-  */}
+        {/* marker, track-changes-decoration, placeholder-decoration) mount  */}
+        {/* inside each BlockSlot's block-decoration-layer instead.          */}
+        {/* Examples: presence-decoration.                                   */}
         {/* ---------------------------------------------------------------- */}
-        {decorationLayerEntries.length > 0 && (
+        {decorationLayerEntries.filter((e) => e.metadata.perBlock === false).length > 0 && (
           <div
             data-part="decoration-layer"
             aria-hidden="true"
             style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 5 }}
           >
-            {decorationLayerEntries.map((entry) => (
-              <SlotMount
-                key={entry.name}
-                entry={entry}
-                hostAttrs={{
-                  'data-part': 'decoration-mount',
-                  'data-node-id': rootNodeId,
-                  'data-editor-flavor': editorFlavor,
-                }}
-                style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
-              />
-            ))}
+            {decorationLayerEntries
+              .filter((entry) => entry.metadata.perBlock === false)
+              .map((entry) => (
+                <SlotMount
+                  key={entry.name}
+                  entry={entry}
+                  hostAttrs={{
+                    'data-part': 'decoration-mount',
+                    'data-node-id': rootNodeId,
+                    'data-editor-flavor': editorFlavor,
+                  }}
+                  style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
+                />
+              ))}
           </div>
         )}
       </div>

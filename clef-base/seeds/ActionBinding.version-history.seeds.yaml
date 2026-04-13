@@ -1,0 +1,51 @@
+# ActionBinding seeds — version history actions (PP-version-history)
+# Two bindings:
+#   version-restore — restores a historical snapshot via Version/rollback,
+#     using context.versionId (the selected version entry in the panel) and
+#     context.nodeId (the current document node).
+#   version-compare — opens a diff view by invoking Version/diff between the
+#     selected version and the current version; the result is forwarded to the
+#     version-history-browser panel's diffView part via a Binding/writeField call.
+
+concept: ActionBinding
+action: bind
+entries:
+  # Restore a historical version snapshot as the current document body.
+  # The parameterMap forwards context.versionId to Version/rollback, which
+  # returns the historical content. The parent RecursiveBlockEditor then
+  # calls ContentNode/update to persist the restored body and takes a new
+  # Version/snapshot to preserve the current state before overwriting.
+  #
+  # Gap note: Version concept lacks a dedicated restore action that atomically
+  # snapshots current state before overwriting. Until that action is added,
+  # the restore flow is a two-step sequence: rollback (read) → ContentNode/update
+  # (write). A Version/restore action is tracked as a follow-up gap.
+  - name: version-restore
+    binding: version-restore
+    target: "Version/rollback"
+    parameterMap: '{"version":"context.versionId"}'
+    executionPolicy: "optimistic"
+    toolbar_command: false
+    slash_command: false
+    context_menu: false
+    section: "Version History"
+    label: "Restore version"
+    icon: "history"
+
+  # Open a diff view between the selected version and the current version.
+  # The parameterMap forwards context.versionA and context.versionB (where
+  # versionA is the most recent / current snapshot and versionB is the
+  # selected historical entry). The result is written to the
+  # version-history-browser diffView part via a Binding/writeField call on
+  # the side-panel widget.
+  - name: version-compare
+    binding: version-compare
+    target: "Version/diff"
+    parameterMap: '{"versionA":"context.currentVersionId","versionB":"context.selectedVersionId"}'
+    executionPolicy: "optimistic"
+    toolbar_command: false
+    slash_command: false
+    context_menu: false
+    section: "Version History"
+    label: "Compare versions"
+    icon: "diff"

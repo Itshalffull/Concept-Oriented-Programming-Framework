@@ -9,6 +9,8 @@
     "start": "next start -p 4006"
   },
   "dependencies": {
+    "micromark": "^4.0.2",
+    "micromark-extension-gfm": "^3.0.0",
     "next": "^15.5.12",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
