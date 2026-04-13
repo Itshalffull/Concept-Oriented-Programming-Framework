@@ -12,7 +12,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "clef": "npx tsx cli/src/main.ts",
-    "postinstall": "node scripts/copy-tree-sitter-wasm.mjs"
+    "postinstall": "node scripts/copy-tree-sitter-wasm.mjs && node scripts/copy-agent-references.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.27.1",

@@ -27,7 +27,7 @@ change ripples into, and verify via parser + conformance tests.
 1. **Read the card/task** — understand exactly what change is needed.
 2. **Find the concept** — use `ScoreApi/getConcept` or Grep to locate the `.concept` file.
 3. **Read the full spec** — understand state, actions, every fixture, every invariant, every reversal declaration. Don't skim.
-4. **Read the full grammar reference** — `.claude/skills/create-concept/references/concept-grammar.md` (833 lines) is authoritative. Re-read the sections relevant to your change before editing. Common sections you will need:
+4. **Read the full grammar reference** — a local copy lives in your own agent folder at `.claude/agents/concept-parameter-update/concept-grammar.md` (833 lines, kept in sync by `scripts/copy-agent-references.mjs` from the canonical `.claude/skills/create-concept/references/concept-grammar.md`). The companion Jackson methodology doc is at `.claude/agents/concept-parameter-update/jackson-methodology.md`. Read both before editing. If the regen-time copy is stale, run `node scripts/copy-agent-references.mjs` first. Grammar sections you will need:
    - §Top-Level Structure — ordering rules
    - §State Section — relation declarations, groupings
    - §Actions Section — signatures, variants, fixtures, reversal
