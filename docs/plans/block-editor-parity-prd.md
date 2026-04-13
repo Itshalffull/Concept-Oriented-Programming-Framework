@@ -40,12 +40,25 @@ addendum first.
 
 | ID | Title | Status | Commit |
 |----|-------|--------|--------|
-| BE-PREC-01 | Outline/children action (lists children by parent) | pending | — |
-| BE-PREC-02 | ContentNode/insertChildBlock compound action (creates node + Outline record) | pending | — |
-| BE-PREC-03 | Rewire insert-block binding → insertChildBlock; pass rootNodeId as parent | pending | — |
-| BE-PREC-04 | Outline/children empty-notfound fallback (fresh pages have no root outline record) | pending | — |
-| BE-PREC-05 | Playwright end-to-end typing verification (type, Enter, reload, verify) | pending | — |
-| BE-PREC-06 | Audit other contenteditable JSX-child patterns across clef-base | pending | — |
+| BE-PREC-01 | Outline/children action (lists children by parent) | Done | 5b6d75a7 |
+| BE-PREC-02 | Direct ContentNode + Outline dispatch from editor (ActionBinding layer inert) | Done | 5b6d75a7 |
+| BE-PREC-03 | insert-block + update-block-content seeds (legacy ActionBinding path) | Done | beaca9ef |
+| BE-PREC-04 | Outline/children empty-notfound fallback | Done | 5b6d75a7 |
+| BE-PREC-05 | Playwright end-to-end typing verification (type, Enter, reload, verify) | Done | 5b6d75a7 |
+| BE-PREC-06 | PageTitle contenteditable JSX-child fix (cursor-reset) | Done | beaca9ef |
+| BE-PREC-07 | Enter auto-focuses newly-created block (Notion parity) | Done | 5b6d75a7 |
+| BE-PREC-08 | Tab indents block under previous sibling | Done | 5b6d75a7 |
+| BE-PREC-09 | Widget invariants + regenerated conformance tests (94 passing) | Done | 06434f0b |
+
+## Next loop (Notion-parity core UX)
+
+| ID | Title | Status | Commit |
+|----|-------|--------|--------|
+| BE-LOOP-01 | Backspace-at-offset-0 merges into previous sibling | pending | — |
+| BE-LOOP-02 | Shift+Tab outdent (thread parent through BlockSlot props) | pending | — |
+| BE-LOOP-03 | Delete on empty block removes block + focus to previous | pending | — |
+| BE-LOOP-04 | Arrow up/down moves caret between blocks | pending | — |
+| BE-LOOP-05 | Paragraph-block invariants capturing cursor-stability + Enter | pending | — |
 
 Once BE-PREC-01..05 are green, Phase 1 below is viable.
 

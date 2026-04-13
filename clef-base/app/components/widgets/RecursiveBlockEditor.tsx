@@ -1956,6 +1956,98 @@ function resolveHeadingLevel(schema: string): number | null {
 const CLICK_RESET_MS = 400;
 
 // ===========================================================================
+// BlockSlotChildren — renders nested children of a block.
+// This is where the "recursive view" contract materializes: every BlockSlot
+// can own a subtree, so Tab-indented blocks reappear under their new parent
+// rather than disappearing from the top-level list. Each nested child is
+// itself a BlockSlot, so the recursion is unbounded (cycles prevented by
+// the outline DAG invariant).
+// ===========================================================================
+
+interface BlockSlotChildrenProps {
+  parentId: string;
+  rootNodeId: string;
+  canEdit: boolean;
+  invoke: (concept: string, action: string, input: Record<string, unknown>) => Promise<{ variant: string; [k: string]: unknown }>;
+  onBlockContentChange?: (nodeId: string, content: string) => void;
+  onStructureChange: () => void;
+}
+
+const BlockSlotChildren: React.FC<BlockSlotChildrenProps> = ({
+  parentId, rootNodeId, canEdit, invoke, onBlockContentChange, onStructureChange,
+}) => {
+  const [childIds, setChildIds] = useState<string[]>([]);
+  const [childSchemas, setChildSchemas] = useState<Record<string, string>>({});
+
+  const loadChildren = useCallback(async () => {
+    try {
+      const result = await invoke('Outline', 'children', { parent: parentId });
+      if (result.variant !== 'ok') return;
+      const ids: string[] = (() => {
+        try { return JSON.parse((result.children as string) || '[]'); }
+        catch { return []; }
+      })();
+      setChildIds(ids);
+      // Resolve each child's schema via ContentNode/get.type
+      const schemaMap: Record<string, string> = {};
+      for (const id of ids) {
+        const r = await invoke('ContentNode', 'get', { node: id });
+        if (r.variant === 'ok') {
+          schemaMap[id] = (r.type as string) || 'paragraph';
+        }
+      }
+      setChildSchemas(schemaMap);
+    } catch (err) {
+      console.warn('[BlockSlotChildren] load failed:', err);
+    }
+  }, [parentId, invoke]);
+
+  useEffect(() => { void loadChildren(); }, [loadChildren]);
+
+  if (childIds.length === 0) return null;
+
+  return (
+    <div
+      data-part="block-children"
+      style={{
+        marginLeft: 'var(--spacing-lg, 24px)',
+        borderLeft: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.08))',
+        paddingLeft: 'var(--spacing-sm, 8px)',
+        marginTop: 'var(--spacing-xs, 4px)',
+      }}
+    >
+      {childIds.map((childId) => {
+        const schema = childSchemas[childId] || 'paragraph';
+        return (
+          <BlockSlot
+            key={childId}
+            nodeId={childId}
+            rootNodeId={rootNodeId}
+            schema={schema}
+            displayMode="block-editor"
+            resolvedWidget={`${schema}-block`}
+            canEdit={canEdit}
+            isSelected={false}
+            editorFlavor="markdown"
+            decorationLayerEntries={[]}
+            onFocus={() => {}}
+            onBlur={() => {}}
+            onBlockContentChange={onBlockContentChange}
+            onStructureChange={() => {
+              // Structural change in a nested block: refresh my own
+              // children list AND bubble up so the outer editor refreshes
+              // its root children too.
+              void loadChildren();
+              onStructureChange();
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+};
+
+// ===========================================================================
 // BlockSlot — generic block renderer (block-slot.widget analogue)
 // Mounts the resolved widget for a given (schema, displayMode) pair.
 // ===========================================================================
@@ -2514,6 +2606,82 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
             })();
             return;
           }
+          if (e.key === 'Backspace') {
+            // Notion-style: Backspace at offset 0 of a non-first block merges
+            // this block's content into the end of the previous sibling, then
+            // deletes this block. Cursor lands at the join point.
+            const sel = window.getSelection();
+            if (!sel || sel.rangeCount === 0) return;
+            const range = sel.getRangeAt(0);
+            // Only trigger merge when caret is at the very start AND there
+            // is no selection (range is collapsed).
+            if (!range.collapsed) return;
+            // Compute caret offset within the block-content div.
+            const pre = range.cloneRange();
+            pre.selectNodeContents(blockContentRef.current!);
+            pre.setEnd(range.endContainer, range.endOffset);
+            if (pre.toString().length !== 0) return; // caret not at start
+            e.preventDefault();
+            e.stopPropagation();
+            void (async () => {
+              try {
+                const siblingsRes = await invoke('Outline', 'children', { parent: rootNodeId });
+                if (siblingsRes.variant !== 'ok') return;
+                const siblings: string[] = (() => {
+                  try { return JSON.parse((siblingsRes.children as string) || '[]'); }
+                  catch { return []; }
+                })();
+                const myIndex = siblings.indexOf(nodeId);
+                if (myIndex <= 0) return; // first block — nothing to merge into
+                const prev = siblings[myIndex - 1];
+                // Read both blocks' current content.
+                const [myRes, prevRes] = await Promise.all([
+                  invoke('ContentNode', 'get', { node: nodeId }),
+                  invoke('ContentNode', 'get', { node: prev }),
+                ]);
+                const myText = myRes.variant === 'ok' ? String(myRes.content ?? '') : '';
+                const prevText = prevRes.variant === 'ok' ? String(prevRes.content ?? '') : '';
+                const joinOffset = prevText.length;
+                const merged = prevText + myText;
+                await invoke('ContentNode', 'update', { node: prev, content: merged });
+                await invoke('ContentNode', 'delete', { node: nodeId });
+                await invoke('Outline', 'delete', { node: nodeId });
+                onStructureChange();
+                // Restore caret at the join point in the previous block.
+                const focusAt = (attempt = 0) => {
+                  const prevEl = document.querySelector<HTMLDivElement>(
+                    `[data-part="block-slot"][data-node-id="${prev}"] [data-part="block-content"]`,
+                  );
+                  if (prevEl) {
+                    prevEl.focus();
+                    const s = window.getSelection();
+                    if (!s) return;
+                    // Walk text nodes to find the one containing joinOffset.
+                    let remaining = joinOffset;
+                    const walker = document.createTreeWalker(prevEl, NodeFilter.SHOW_TEXT);
+                    let node: Node | null;
+                    let target: Text | null = null; let targetOffset = 0;
+                    while ((node = walker.nextNode())) {
+                      const len = (node as Text).data.length;
+                      if (remaining <= len) { target = node as Text; targetOffset = remaining; break; }
+                      remaining -= len;
+                    }
+                    const r = document.createRange();
+                    if (target) { r.setStart(target, targetOffset); }
+                    else { r.setStart(prevEl, 0); }
+                    r.collapse(true);
+                    s.removeAllRanges(); s.addRange(r);
+                  } else if (attempt < 16) {
+                    setTimeout(() => focusAt(attempt + 1), 30);
+                  }
+                };
+                focusAt();
+              } catch (err) {
+                console.warn('[RecursiveBlockEditor] Backspace-merge failed:', err);
+              }
+            })();
+            return;
+          }
           if (e.key === 'Tab') {
             // Notion-style indent/outdent. Shift+Tab = outdent (move up in
             // hierarchy); Tab = indent (nest under previous sibling).
@@ -2704,6 +2872,20 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
             ))}
         </div>
       )}
+
+      {/* --- Recursive children region ---
+          Each BlockSlot renders its own descendants as nested BlockSlots,
+          indented. This is the "Recursive" in RecursiveBlockEditor: blocks
+          that have been Tab-indented under this one reappear here instead
+          of disappearing from the top level. */}
+      <BlockSlotChildren
+        parentId={nodeId}
+        rootNodeId={rootNodeId}
+        canEdit={canEdit}
+        invoke={invoke}
+        onBlockContentChange={onBlockContentChange}
+        onStructureChange={onStructureChange}
+      />
     </div>
 
     {/* Spell-check suggestions popover — rendered via portal when active */}

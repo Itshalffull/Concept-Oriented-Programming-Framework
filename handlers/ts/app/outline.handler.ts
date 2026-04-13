@@ -2,7 +2,7 @@
 // @migrated dsl-constructs 2026-03-18
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, put, branch, complete, completeFrom, find,
+  createProgram, get as spGet, put, del, branch, complete, completeFrom, find,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -177,6 +177,24 @@ const _outlineHandler: FunctionalConceptHandler = {
       (b) => complete(b, 'notfound', { message: 'Node not found' }),
     );
 
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
+  /**
+   * delete(node) — remove a node's outline record. Used when merging
+   * blocks (Backspace-at-start) or deleting a block wholesale.
+   */
+  delete(input: Record<string, unknown>) {
+    const node = input.node as string;
+    let p = createProgram();
+    p = spGet(p, 'outline', node, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = del(b, 'outline', node);
+        return complete(b2, 'ok', { node });
+      },
+      (b) => complete(b, 'notfound', { message: 'Node not found' }),
+    );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 

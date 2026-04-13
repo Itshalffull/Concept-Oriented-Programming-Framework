@@ -207,6 +207,46 @@ widget paragraph-block {
       given s in { "idle", "focused", "editing", "selecting-text" }
       then s.reachable = true
     }
+
+    # --- Core editing contract (landed with BE-PARITY pass 2026-04-13) ---
+    # Rooted in the cursor-reset-to-offset-0 bug caught via Playwright
+    # and the missing Enter/Tab/Backspace dispatch paths discovered while
+    # wiring the block editor through direct concept invocation. See
+    # docs/plans/block-editor-parity-prd.md Addendum.
+
+    # Cursor stability — body MUST own its own DOM text via ref-seeded
+    # contentEditable, never via a React-reconciled child expression.
+    never "body text driven by react children": {
+      state.edit = "editing" and body.textContentDrivenByReactChildren = true
+    }
+
+    # Enter-splits-at-caret: pressing Enter (no Shift) in an editing block
+    # ends its editing state, persisting the split.
+    action body {
+      requires: state.edit = "editing" and body.enterKey = true
+      ensures ok: state.edit = "idle"
+    }
+
+    # Shift+Enter stays in editing (soft linebreak, no persistence boundary).
+    action body {
+      requires: state.edit = "editing" and body.enterKey = true and body.shiftKey = true
+      ensures ok: state.edit = "editing"
+    }
+
+    # Tab at the start of a block yields to the editor host's indent
+    # dispatcher; after dispatch the block leaves editing (focus moves to
+    # the reparented block's render re-mount).
+    action body {
+      requires: state.edit = "editing" and body.tabKey = true
+      ensures ok: state.edit = "idle"
+    }
+
+    # Backspace at offset 0 yields to the editor host's merge dispatcher;
+    # block ends editing (the previous sibling absorbs this block's text).
+    action body {
+      requires: state.edit = "editing" and body.backspaceKey = true and body.caretAtStart = true
+      ensures ok: state.edit = "idle"
+    }
   }
 
 }
