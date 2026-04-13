@@ -1,0 +1,33 @@
+# ActionBinding seeds — keyboard-help-modal (PP-keyboard-help).
+#
+# keyboard-help-open: opens the keyboard-help-modal to display a grouped
+#   cheat sheet of all registered keyboard shortcuts. Dispatched by the
+#   RecursiveBlockEditor keyboard handler on Cmd+/ (or ?). The modal is
+#   pushed onto the ModalStackProvider and dismissed via Escape or its
+#   close button. No concept mutation occurs — this is a pure UI overlay.
+#
+# The binding targets a synthetic surface action KeyboardHelp/open since
+# the modal is opened via ModalStackProvider.pushModal in React. The
+# target here follows the anticipated API shape; the actual dispatch is
+# handled inside RecursiveBlockEditor.handleKeyDown rather than through
+# a kernel invoke.
+#
+# Architecture doc: PP-keyboard-help
+# Widget spec: surface/widgets/keyboard-help-modal.widget
+
+concept: ActionBinding
+action: bind
+entries:
+  - name: keyboard-help-open
+    binding: keyboard-help-open
+    target: "KeyboardHelp/open"
+    parameterMap: '{}'
+    executionPolicy: "auto"
+    toolbar_command: false
+    slash_command: false
+    context_menu: false
+    section: "View"
+    label: "Keyboard Shortcuts"
+    keyboard: "Meta+/"
+    icon: "keyboard"
+    tags: ["editor_keyboard_chord"]

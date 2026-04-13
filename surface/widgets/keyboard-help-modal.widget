@@ -1,0 +1,298 @@
+@version(1)
+widget keyboard-help-modal {
+
+  purpose {
+    Read-only modal overlay that presents all registered keyboard shortcuts
+    grouped by category so the user can discover available key bindings at
+    any time. Opens via Cmd+/ (or ?) from the block editor and dismisses with
+    Escape or a close button. Each shortcut row renders a chord chip (e.g.
+    Cmd+B) alongside the action label. Categories are Format, Navigate, Edit,
+    Insert, Selection, and View. The widget is non-interactive beyond
+    scrolling and closing — it never fires concept mutations.
+  }
+
+  anatomy {
+    root:            container    { Top-level modal dialog wrapper; carries data-state }
+    backdrop:        container    { Full-viewport semitransparent overlay behind the panel }
+    panel:           container    { Scrollable panel holding the header, search, and shortcut groups }
+    header:          container    { Top bar with the modal title and close button }
+    title:           text         { Modal heading "Keyboard Shortcuts" }
+    closeButton:     action       { Icon button that closes the modal }
+    searchInput:     interactive  { Optional filter field; narrows visible rows by label match }
+    groupList:       container    { Ordered list of shortcut category groups }
+    group:           container    { Single category section; contains groupLabel and shortcutList }
+    groupLabel:      text         { Category heading (Format, Navigate, Edit, Insert, Selection, View) }
+    shortcutList:    container    { List of shortcut rows within a category }
+    shortcutRow:     container    { Single shortcut row: chord chip(s) + action label }
+    chordChip:       presentation { Visual key-chord representation, e.g. Cmd+B }
+    actionLabel:     text         { Human-readable description of what the shortcut does }
+    emptyState:      container    { Shown when the filter query matches no shortcuts }
+  }
+
+  states {
+    visibility {
+      closed [initial] {
+        on OPEN  -> open;
+      }
+      open {
+        on CLOSE  -> closed;
+        on ESCAPE -> closed;
+        entry [trapFocus; preventScroll];
+        exit  [releaseFocus; restoreScroll];
+      }
+    }
+
+    filter {
+      idle [initial] {
+        on QUERY_CHANGED -> filtering;
+      }
+      filtering {
+        on QUERY_CHANGED -> filtering;
+        on QUERY_CLEARED -> idle;
+        entry [applyFilter];
+      }
+    }
+  }
+
+  accessibility {
+    role: dialog;
+    modal: true;
+    keyboard {
+      Escape -> CLOSE;
+      Tab    -> FOCUS_NEXT;
+    }
+    focus {
+      trap: true;
+      initial: searchInput;
+      roving: false;
+      returnOnClose: true;
+    }
+    aria {
+      root -> {
+        role: "dialog";
+        aria-modal: "true";
+        aria-label: "Keyboard shortcuts";
+        aria-describedby: groupList;
+      };
+      backdrop -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      panel -> {
+        role: "document";
+      };
+      closeButton -> {
+        role: "button";
+        aria-label: "Close keyboard shortcuts";
+      };
+      searchInput -> {
+        role: "searchbox";
+        aria-label: "Filter shortcuts";
+        aria-controls: groupList;
+      };
+      groupList -> {
+        role: "list";
+        aria-label: "Shortcut categories";
+        aria-live: "polite";
+      };
+      group -> {
+        role: "listitem";
+        aria-label: self.category;
+      };
+      shortcutList -> {
+        role: "list";
+        aria-label: self.category;
+      };
+      shortcutRow -> {
+        role: "listitem";
+        aria-label: self.label;
+      };
+      chordChip -> {
+        role: "img";
+        aria-label: self.chordText;
+      };
+      emptyState -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: "No shortcuts match your filter";
+      };
+    }
+  }
+
+  props {
+    shortcuts: list { section: String, label: String, chord: String } = []
+    filterQuery: String = ""
+    categories: list String = ["Format", "Navigate", "Edit", "Insert", "Selection", "View"]
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.visibility;
+      role: "dialog";
+      aria-modal: "true";
+      aria-label: "Keyboard shortcuts";
+      hidden: if state.visibility == "closed" then true else false;
+    }
+
+    backdrop -> {
+      data-part: "backdrop";
+      aria-hidden: "true";
+      onClick: send(CLOSE);
+    }
+
+    panel -> {
+      data-part: "panel";
+      role: "document";
+    }
+
+    header -> {
+      data-part: "header";
+    }
+
+    title -> {
+      data-part: "title";
+      text: "Keyboard Shortcuts";
+    }
+
+    closeButton -> {
+      data-part: "close-button";
+      aria-label: "Close keyboard shortcuts";
+      onClick: send(CLOSE);
+    }
+
+    searchInput -> {
+      data-part: "search-input";
+      value: ?filterQuery;
+      placeholder: "Filter shortcuts...";
+      aria-label: "Filter shortcuts";
+      aria-controls: "shortcut-group-list";
+      autofocus: true;
+      onInput: send(QUERY_CHANGED);
+    }
+
+    groupList -> {
+      data-part: "group-list";
+      id: "shortcut-group-list";
+      aria-live: "polite";
+      data-filter-state: state.filter;
+    }
+
+    group -> {
+      data-part: "group";
+      data-category: self.category;
+    }
+
+    groupLabel -> {
+      data-part: "group-label";
+      text: self.category;
+    }
+
+    shortcutList -> {
+      data-part: "shortcut-list";
+    }
+
+    shortcutRow -> {
+      data-part: "shortcut-row";
+      data-section: self.section;
+    }
+
+    chordChip -> {
+      data-part: "chord-chip";
+      aria-label: self.chordText;
+      text: self.chordText;
+    }
+
+    actionLabel -> {
+      data-part: "action-label";
+      text: self.label;
+    }
+
+    emptyState -> {
+      data-part: "empty-state";
+      hidden: if state.filter == "idle" then true else false;
+      aria-live: "polite";
+    }
+  }
+
+  affordance {
+    serves: overlay;
+    specificity: 8;
+    when {
+      feature: "keyboard-help";
+    }
+  }
+
+  compose {
+    _portal:    widget("portal",     { target: "body" });
+    _focusTrap: widget("focus-trap", { active: if state.visibility == "open" then true else false });
+    _presence:  widget("presence",   { present: if state.visibility == "open" then true else false });
+  }
+
+  invariant {
+    example "OPEN transitions from closed to open": {
+      after transition(from: "closed", event: "OPEN") -> ok
+      then state.visibility = "open"
+    }
+
+    example "CLOSE transitions from open to closed": {
+      after transition(from: "open", event: "CLOSE") -> ok
+      then state.visibility = "closed"
+    }
+
+    example "ESCAPE transitions from open to closed": {
+      after transition(from: "open", event: "ESCAPE") -> ok
+      then state.visibility = "closed"
+    }
+
+    example "QUERY_CHANGED transitions filter from idle to filtering": {
+      after transition(from: "idle", event: "QUERY_CHANGED") -> ok
+      then state.filter = "filtering"
+    }
+
+    example "QUERY_CLEARED returns filter to idle": {
+      after transition(from: "filtering", event: "QUERY_CLEARED") -> ok
+      then state.filter = "idle"
+    }
+
+    forall s in states:
+      s.reachable = true
+
+    always "root carries data-state matching visibility FSM": {
+      root.dataState = state.visibility
+    }
+
+    always "modal hidden when visibility is closed": {
+      if state.visibility = "closed" then root.hidden = true
+    }
+
+    never "both visibility states active simultaneously": {
+      state.visibility = "open" and state.visibility = "closed"
+    }
+
+    never "emptyState visible while filter is idle": {
+      state.filter = "idle" and emptyState.hidden = false
+    }
+
+    never "panel interactive while modal is closed": {
+      state.visibility = "closed" and panel.focusTrap = true
+    }
+
+    action closeButton {
+      requires: state.visibility = "open"
+      ensures ok: state.visibility = "closed"
+    }
+
+    action backdrop {
+      requires: state.visibility = "open"
+      ensures ok: state.visibility = "closed"
+    }
+
+    "Focus must return to the element that triggered the modal when visibility transitions to closed";
+    "searchInput must receive initial focus when visibility transitions to open";
+    "Focus must be trapped inside panel while visibility is open";
+    "aria-modal must equal true on root while visibility is open";
+    "Tab key must cycle focus only among focusable elements inside panel while modal is open";
+  }
+
+}
