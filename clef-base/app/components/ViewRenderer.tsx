@@ -143,6 +143,15 @@ interface ControlsConfig {
   bulk?: {
     actions: BulkActionConfig[];
   };
+  /**
+   * ActionBinding id for the board card-move operation. When present, the board
+   * display enables drag-and-drop: dropping a card onto a column invokes this
+   * binding with context { rowId, field, value }. When absent, drag-to-move is
+   * disabled and a visual indicator is shown (see BoardDisplay).
+   *
+   * Seed: ActionBinding.board.seeds.yaml — "board-card-move"
+   */
+  moveBinding?: string;
 }
 
 interface ViewRendererProps {
@@ -206,6 +215,10 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
   const { navigateToHref } = useNavigator();
   const theme = useActiveTheme();
   const [showCreate, setShowCreate] = useState(false);
+  // Prefill values forwarded to CreateForm when the modal is opened from a
+  // calendar cell click. Keys are field names; values are pre-populated strings
+  // (e.g. { date: "2026-04-13" } when the user clicks a day cell).
+  const [createInitialValues, setCreateInitialValues] = useState<Record<string, string>>({});
   const [activeFilters, setActiveFilters] = useState<Record<string, Set<string>>>({});
   const [filtersInitialized, setFiltersInitialized] = useState(false);
   const [resolvedLayout, setResolvedLayout] = useState<string | null>(null);
@@ -213,6 +226,15 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
   // INV-06: per-action invocation feedback via useInvokeWithFeedback + InvocationStatusIndicator
   const rowActionFeedback = useInvokeWithFeedback();
   const bulkActionFeedback = useInvokeWithFeedback();
+  // Board drag-and-drop card-move feedback — separate from row action feedback
+  // so the status indicator doesn't conflict with row action indicators.
+  const moveCardFeedback = useInvokeWithFeedback();
+  // Optimistic board data: tracks cards displaced by in-flight drag operations.
+  // When a move is initiated we update displayData locally so the card appears
+  // in the target column immediately. If the action fails we revert.
+  const [optimisticMoves, setOptimisticMoves] = useState<
+    Array<{ rowId: string; field: string; prevValue: unknown; newValue: string }>
+  >([]);
   // Inline field-save errors (detail/content-body layout) — separate from row/bulk action feedback
   const [inlineFieldError, setActionError] = useState<string | null>(null);
 
@@ -648,7 +670,7 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
   }
 
   // Apply interactive filters then sort, then toolbar conditions
-  const displayData = useMemo(() => {
+  const displayData_base = useMemo(() => {
     let filtered = allData;
 
     // Apply interactive toggle-group filters via FilterNode tree evaluation
@@ -694,6 +716,24 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
 
     return filtered;
   }, [allData, activeFilters, interactiveFilters, toolbarFilterConditions, toolbarSortKeys, sortKeys]);
+
+  // Apply optimistic board moves on top of the filtered+sorted data so that
+  // dragged cards appear in their target column immediately while the action
+  // is in flight. Optimistic moves are keyed by rowId; when an action
+  // completes (success or failure) the entry is removed and the server data
+  // takes over.
+  const displayData = useMemo(() => {
+    if (optimisticMoves.length === 0) return displayData_base;
+    return displayData_base.map(row => {
+      const move = optimisticMoves.find(m => {
+        if (row.id !== undefined && row.id !== null) return String(row.id) === m.rowId;
+        // Fallback: match by first field value (mirrors rowId() in BoardDisplay)
+        return false;
+      });
+      if (!move) return row;
+      return { ...row, [move.field]: move.newValue };
+    });
+  }, [displayData_base, optimisticMoves]);
 
   const layout = inlineLayout ?? viewConfig?.layout ?? 'table';
   // Toolbar layout override takes precedence over config layout
@@ -858,6 +898,53 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
       refetch();
     }
   }, [refetch, rowActionFeedback]);
+
+  // Board card-move handler — invoked when a card is dropped onto a different
+  // column. Uses optimistic UI: the card moves locally first, then an
+  // ActionBinding/invoke call persists the change. On failure the optimistic
+  // move is reverted so the card snaps back to its original column.
+  //
+  // The grouping field comes from effectiveGroupConfig — the same field that
+  // BoardDisplay uses to partition cards into columns. We pass it in the
+  // context so the board-card-move binding's parameterMap routes it to
+  // ContentNode/update with { node: rowId, field: groupField, value: newValue }.
+  const handleCardMove = useCallback(async (rowId: string, newGroupValue: string) => {
+    if (!controls.moveBinding) return;
+
+    // Resolve the grouping field from the current group config.
+    const groupField = effectiveGroupConfig?.fields[0]?.field ?? '';
+    if (!groupField) return;
+
+    // Find the row to capture its current group value for rollback.
+    const targetRow = displayData.find(r => {
+      if (r.id !== undefined && r.id !== null) return String(r.id) === rowId;
+      const firstKey = effectiveFields[0]?.key;
+      return firstKey ? String(r[firstKey] ?? '') === rowId : false;
+    });
+    const prevValue = targetRow ? targetRow[groupField] : undefined;
+
+    // Optimistic update — move the card visually before the action completes.
+    setOptimisticMoves(prev => [...prev, { rowId, field: groupField, prevValue, newValue: newGroupValue }]);
+
+    try {
+      const result = await moveCardFeedback.invoke('ActionBinding', 'invoke', {
+        binding: controls.moveBinding,
+        context: JSON.stringify({ rowId, field: groupField, value: newGroupValue }),
+      });
+
+      if (result.variant === 'ok') {
+        // Clear the optimistic move and reload authoritative data.
+        setOptimisticMoves(prev => prev.filter(m => m.rowId !== rowId));
+        refetch();
+      } else {
+        // Revert optimistic move on failure — card snaps back.
+        setOptimisticMoves(prev => prev.filter(m => m.rowId !== rowId));
+      }
+    } catch {
+      // Network error — revert optimistic move.
+      setOptimisticMoves(prev => prev.filter(m => m.rowId !== rowId));
+    }
+  }, [controls.moveBinding, effectiveGroupConfig, displayData, effectiveFields, moveCardFeedback, refetch]);
 
   // Hide view if contextual filters can't be resolved
   if (hasUnresolvedContextualHide) {
@@ -1128,16 +1215,63 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
             onRowAction={handleRowAction}
             groupBy={effectiveGroupConfig?.fields[0]?.field}
             renderItem={renderDisplayModeItem ?? undefined}
+            onCardMove={controls.moveBinding ? handleCardMove : undefined}
           />
         );
 
-      case 'calendar':
+      case 'calendar': {
+        // Resolve the date field key using the same heuristic CalendarDisplay uses
+        // internally (formatter: 'date' wins; otherwise regex match on the key name).
+        // This lets ViewRenderer build the correct prefill map without CalendarDisplay
+        // needing to expose its internal dateField selection.
+        const calDateField = (() => {
+          const byFormatter = effectiveFields.find(f => f.formatter === 'date');
+          if (byFormatter) return byFormatter.key;
+          const byName = effectiveFields.find(f =>
+            /date|at|on|time|created|updated|due|start|end/i.test(f.key),
+          );
+          return byName?.key ?? effectiveFields[0]?.key ?? 'date';
+        })();
+
+        // Infer start/end field keys for range prefill. Falls back to the date
+        // field when no dedicated start/end key is found in the projection.
+        const calStartField = effectiveFields.find(
+          f => /start/i.test(f.key) && f.key !== calDateField,
+        )?.key ?? calDateField;
+
+        const calEndField = effectiveFields.find(
+          f => /end/i.test(f.key) && f.key !== calDateField,
+        )?.key ?? calDateField;
+
+        const handleCalendarCreateEvent = controls.create
+          ? (isoDate: string) => {
+              setCreateInitialValues({ [calDateField]: isoDate });
+              setShowCreate(true);
+            }
+          : undefined;
+
+        // Drag-to-select: prefill both start and end time fields. The calendar
+        // passes ISO datetime strings (YYYY-MM-DDTHH:00). Prefill uses the
+        // inferred start/end field keys so the Tier 3 form pre-populates both.
+        const handleCalendarCreateEventRange = controls.create
+          ? (startIso: string, endIso: string) => {
+              setCreateInitialValues({
+                [calStartField]: startIso,
+                [calEndField]: endIso,
+              });
+              setShowCreate(true);
+            }
+          : undefined;
+
         return (
           <CalendarDisplay
             data={displayData} fields={effectiveFields}
             onRowClick={(onSelect || controls.rowClick) ? handleRowClick : undefined}
+            onCreateEvent={handleCalendarCreateEvent}
+            onCreateEventRange={handleCalendarCreateEventRange}
           />
         );
+      }
 
       case 'timeline':
         return (
@@ -1287,6 +1421,15 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
           />
         </div>
       )}
+      {moveCardFeedback.invocationId && (
+        <div style={{ marginBottom: 'var(--spacing-sm)' }}>
+          <InvocationStatusIndicator
+            invocationId={moveCardFeedback.invocationId}
+            verbose
+            label={moveCardFeedback.status === 'ok' ? 'Card moved' : undefined}
+          />
+        </div>
+      )}
 
       {/* Legacy toggle-group filters — shown only when no toolbar-managed filter conditions */}
       {toolbarFilterConditions.length === 0 && renderFilters()}
@@ -1298,13 +1441,18 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
       {controls.create && (
         <CreateForm
           open={showCreate}
-          onClose={() => setShowCreate(false)}
+          onClose={() => {
+            setShowCreate(false);
+            // Clear calendar prefill values so the next open starts fresh.
+            setCreateInitialValues({});
+          }}
           onCreated={refetch}
           concept={controls.create.concept}
           action={controls.create.action}
           title={`Create ${viewTitle.replace(/s$/, '')}`}
           fields={controls.create.fields as Array<{ name: string; label?: string; type?: 'text' | 'textarea' | 'select'; options?: string[]; required?: boolean; placeholder?: string }>}
           destinationId={interactionSpecName ?? undefined}
+          initialValues={Object.keys(createInitialValues).length > 0 ? createInitialValues : undefined}
         />
       )}
     </div>

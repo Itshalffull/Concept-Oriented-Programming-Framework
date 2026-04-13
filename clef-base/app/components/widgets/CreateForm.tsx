@@ -94,6 +94,17 @@ export interface CreateFormProps {
    * InteractionSpec/get(destinationId) — if create_surface is set, mount that widget.
    */
   destinationId?: string;
+  /**
+   * Pre-filled field values. Merged into the Tier 3 primitive form's initial state
+   * when the modal opens. Keys match FieldDef.name values. Also forwarded to the
+   * Tier 1a bespoke surface and Tier 2 FormRenderer via the `initialValues` prop so
+   * those renderers can honour the prefill (e.g. a date pre-filled from a calendar
+   * cell click).
+   *
+   * Callers that prefill values should reset this to {} or undefined when the modal
+   * closes so stale values don't re-appear on the next open.
+   */
+  initialValues?: Record<string, string>;
 }
 
 // ---------------------------------------------------------------------------
@@ -135,19 +146,39 @@ export const CreateForm: React.FC<CreateFormProps> = ({
   onCreated,
   schemaId,
   destinationId,
+  initialValues,
 }) => {
   const invoke = useKernelInvoke();
   const router = useRouter();
   const { create: contentNativeCreate, isPending: contentNativeIsPending } =
     useContentNativeCreate();
 
-  const [values, setValues] = useState<Record<string, string>>({});
+  // Seed form values from initialValues when the modal opens; reset on close.
+  const [values, setValues] = useState<Record<string, string>>(initialValues ?? {});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errorVariant, setErrorVariant] = useState<string | null>(null);
 
   // Tier probe state — all tiers resolved together in a single useEffect.
   const [tierState, setTierState] = useState<TierState>(INITIAL_TIER_STATE);
+
+  // -------------------------------------------------------------------------
+  // Sync initialValues into form state on open/change
+  // -------------------------------------------------------------------------
+  // When the modal opens (or when the caller changes initialValues between
+  // opens), merge the prefill values into the current field state so they
+  // appear as pre-populated inputs in Tier 3 and can be forwarded to Tier 2
+  // (FormRenderer) and Tier 1a (bespoke surface).
+  useEffect(() => {
+    if (open && initialValues && Object.keys(initialValues).length > 0) {
+      setValues((prev) => ({ ...prev, ...initialValues }));
+    }
+    if (!open) {
+      // Reset to empty on close so the next open starts fresh unless the
+      // caller supplies new initialValues.
+      setValues({});
+    }
+  }, [open, initialValues]);
 
   // -------------------------------------------------------------------------
   // Tier probing — runs when modal opens and we have schemaId or destinationId
@@ -385,7 +416,9 @@ export const CreateForm: React.FC<CreateFormProps> = ({
 
         ) : tier1aModal && SurfaceComp ? (
           // Tier 1a — bespoke widget mounted inside the modal container.
-          <SurfaceComp mode="create" context={null} />
+          // initialValues forwarded so the bespoke surface can prefill fields
+          // (e.g. a date pre-selected from a calendar cell click).
+          <SurfaceComp mode="create" context={null} initialValues={initialValues ?? {}} />
 
         ) : tier1b ? (
           // Tier 1b — content-native create; hook navigates automatically.
@@ -403,12 +436,14 @@ export const CreateForm: React.FC<CreateFormProps> = ({
 
         ) : tier2 ? (
           // Tier 2 — FormSpec-driven rendering via FormRenderer.
+          // initialValues forwarded so FormRenderer can prefill matching fields.
           <FormRenderer
             schemaId={schemaId!}
             mode="create"
             onSubmit={handleFormRendererSubmit}
             onCancel={onClose}
             compact={true}
+            initialValues={initialValues}
           />
 
         ) : (

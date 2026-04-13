@@ -1,0 +1,20 @@
+# ActionBinding seeds — board display drag-and-drop card move action.
+#
+# board-card-move: invoked when a card is dragged from one kanban column to
+# another. The context carries the row's ID, the grouping field name, and the
+# target column's value. The binding routes to ContentNode/update which sets
+# the field to the new value, moving the card into the target column.
+#
+# context shape expected by ViewRenderer when calling ActionBinding/invoke:
+#   { rowId: string, field: string, value: string }
+
+concept: ActionBinding
+action: bind
+entries:
+  - name: board-card-move
+    binding: board-card-move
+    target: "ContentNode/update"
+    parameterMap: '{"node":"context.rowId","field":"context.field","value":"context.value"}'
+    executionPolicy: "auto"
+    slash_command: false
+    toolbar_command: false

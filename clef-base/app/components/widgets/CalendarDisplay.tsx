@@ -14,7 +14,7 @@
  * conformance tests can select parts by [data-part="<name>"].
  */
 
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback, useRef } from 'react';
 import type { FieldConfig } from './TableDisplay';
 
 // ---------------------------------------------------------------------------
@@ -30,6 +30,11 @@ interface CalendarDisplayProps {
    *  indicator is shown. The parent (ViewRenderer) is responsible for opening
    *  the view's createForm ActionBinding with the date pre-filled. */
   onCreateEvent?: (date: string) => void;
+  /** Called when the user drag-selects a time range in the day or week view's
+   *  hour grid. Receives ISO 8601 datetime strings for the start and end of the
+   *  selected range (YYYY-MM-DDTHH:00 / YYYY-MM-DDTHH:00). If absent, the
+   *  hour slots fall back to calling onCreateEvent with just the date portion. */
+  onCreateEventRange?: (startIso: string, endIso: string) => void;
 }
 
 type ViewMode = 'month' | 'week' | 'day';
@@ -663,9 +668,19 @@ interface DayViewProps {
   labelField: string;
   onRowClick?: (row: Record<string, unknown>) => void;
   onCreateEvent?: (date: string) => void;
+  onCreateEventRange?: (startIso: string, endIso: string) => void;
 }
 
-function DayView({ anchor, today, allItems, labelField, onRowClick, onCreateEvent }: DayViewProps) {
+/** Format a Date as YYYY-MM-DDTHH:00 for use as a datetime prefill value. */
+function toHourIso(d: Date, hour: number): string {
+  const y = d.getFullYear();
+  const mo = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const h = String(hour).padStart(2, '0');
+  return `${y}-${mo}-${day}T${h}:00`;
+}
+
+function DayView({ anchor, today, allItems, labelField, onRowClick, onCreateEvent, onCreateEventRange }: DayViewProps) {
   const isToday = isSameDay(anchor, today);
 
   const dayItems = useMemo(() =>
@@ -682,6 +697,60 @@ function DayView({ anchor, today, allItems, labelField, onRowClick, onCreateEven
     }
     return map;
   }, [dayItems]);
+
+  // ---- Drag-to-select state for the hour grid ----
+  // dragStart/dragEnd track the hour indices being selected (inclusive).
+  // Null when no drag is in progress.
+  const dragStartHour = useRef<number | null>(null);
+  const [dragRange, setDragRange] = useState<{ start: number; end: number } | null>(null);
+
+  const handleHourMouseDown = useCallback((h: number) => {
+    if (!onCreateEvent && !onCreateEventRange) return;
+    dragStartHour.current = h;
+    setDragRange({ start: h, end: h });
+  }, [onCreateEvent, onCreateEventRange]);
+
+  const handleHourMouseEnter = useCallback((h: number) => {
+    if (dragStartHour.current === null) return;
+    const start = Math.min(dragStartHour.current, h);
+    const end = Math.max(dragStartHour.current, h);
+    setDragRange({ start, end });
+  }, []);
+
+  const handleHourMouseUp = useCallback((h: number) => {
+    if (dragStartHour.current === null) return;
+    const start = Math.min(dragStartHour.current, h);
+    const end = Math.max(dragStartHour.current, h);
+    dragStartHour.current = null;
+    setDragRange(null);
+
+    if (start === end) {
+      // Single-slot click — fire onCreateEvent with just the date.
+      onCreateEvent?.(
+        `${anchor.getFullYear()}-${String(anchor.getMonth() + 1).padStart(2, '0')}-${String(anchor.getDate()).padStart(2, '0')}`,
+      );
+    } else {
+      // Multi-slot drag — fire onCreateEventRange with start and end datetimes.
+      const startIso = toHourIso(anchor, start);
+      const endIso = toHourIso(anchor, end + 1); // end is exclusive (next hour boundary)
+      if (onCreateEventRange) {
+        onCreateEventRange(startIso, endIso);
+      } else {
+        // Fallback: open create form with just the date.
+        onCreateEvent?.(
+          `${anchor.getFullYear()}-${String(anchor.getMonth() + 1).padStart(2, '0')}-${String(anchor.getDate()).padStart(2, '0')}`,
+        );
+      }
+    }
+  }, [anchor, onCreateEvent, onCreateEventRange]);
+
+  // Cancel drag on mouse-leave from the grid container.
+  const handleGridMouseLeave = useCallback(() => {
+    if (dragStartHour.current !== null) {
+      dragStartHour.current = null;
+      setDragRange(null);
+    }
+  }, []);
 
   return (
     <div
@@ -774,13 +843,17 @@ function DayView({ anchor, today, allItems, labelField, onRowClick, onCreateEven
         </div>
       )}
 
-      {/* Hour rows */}
-      {/* TODO (MAG-667): Add click-and-drag on hour cells to create events
-          spanning a time range. For now, only the all-day cell fires
-          onCreateEvent. Drag-selection UX is deferred due to complexity. */}
-      <div style={{ maxHeight: 480, overflowY: 'auto' }}>
+      {/* Hour rows — supports click and drag-to-select for event creation.
+          Dragging across multiple hour slots fires onCreateEventRange(startIso, endIso);
+          a single-slot click fires onCreateEvent(date). */}
+      <div
+        style={{ maxHeight: 480, overflowY: 'auto', userSelect: 'none' }}
+        onMouseLeave={handleGridMouseLeave}
+      >
         {HOURS.map(h => {
           const hourItems = itemsByHour.get(h) ?? [];
+          const canInteract = !!(onCreateEvent || onCreateEventRange);
+          const isInDragRange = dragRange !== null && h >= dragRange.start && h <= dragRange.end;
           return (
             <div
               key={h}
@@ -802,8 +875,20 @@ function DayView({ anchor, today, allItems, labelField, onRowClick, onCreateEven
                 {formatHour(h)}
               </div>
               <div
+                data-part="hour-cell"
                 role="gridcell"
-                style={{ padding: '2px 8px', background: token.surface }}
+                aria-label={`${formatHour(h)} slot`}
+                style={{
+                  padding: '2px 8px',
+                  background: isInDragRange
+                    ? token.primaryCont
+                    : token.surface,
+                  cursor: canInteract ? 'pointer' : 'default',
+                  transition: 'background 80ms ease',
+                }}
+                onMouseDown={canInteract ? () => handleHourMouseDown(h) : undefined}
+                onMouseEnter={dragRange !== null ? () => handleHourMouseEnter(h) : undefined}
+                onMouseUp={canInteract ? () => handleHourMouseUp(h) : undefined}
               >
                 {hourItems.map((item, i) => (
                   <EventChip
@@ -812,6 +897,20 @@ function DayView({ anchor, today, allItems, labelField, onRowClick, onCreateEven
                     onClick={onRowClick ? () => onRowClick(item.row) : undefined}
                   />
                 ))}
+                {/* Drag range label — shows selected time span during drag */}
+                {isInDragRange && dragRange !== null && h === dragRange.start && dragRange.end > dragRange.start && (
+                  <div
+                    aria-live="polite"
+                    style={{
+                      fontSize: '10px',
+                      color: token.onPrimaryCont,
+                      pointerEvents: 'none',
+                      marginTop: 2,
+                    }}
+                  >
+                    {formatHour(dragRange.start)} – {formatHour(dragRange.end + 1)}
+                  </div>
+                )}
               </div>
             </div>
           );
@@ -825,7 +924,7 @@ function DayView({ anchor, today, allItems, labelField, onRowClick, onCreateEven
 // Root component
 // ---------------------------------------------------------------------------
 
-export const CalendarDisplay: React.FC<CalendarDisplayProps> = ({ data, fields, onRowClick, onCreateEvent }) => {
+export const CalendarDisplay: React.FC<CalendarDisplayProps> = ({ data, fields, onRowClick, onCreateEvent, onCreateEventRange }) => {
   const today = new Date();
   const [view, setView] = useState<ViewMode>('month');
 
@@ -1066,6 +1165,7 @@ export const CalendarDisplay: React.FC<CalendarDisplayProps> = ({ data, fields, 
           labelField={labelField}
           onRowClick={onRowClick}
           onCreateEvent={onCreateEvent}
+          onCreateEventRange={onCreateEventRange}
         />
       )}
 
