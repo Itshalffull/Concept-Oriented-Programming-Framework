@@ -15,15 +15,25 @@
  * PRD: docs/plans/block-editor-recursive-views-prd.md §5.7
  * Card: MAG-724
  *
- * Partial-behavior notes for Phase 1:
- * - InlineMark concept not yet shipped: bold/italic/code toolbar buttons render
- *   but their ActionBinding/invoke will return a non-ok variant; we surface a
- *   console.warn and show a transient "not yet available" label.
- * - ContentNode/clone not shipped: duplicate-block command renders in context
- *   menu but fails gracefully with the same fallback.
- * - MediaAsset context threading for clipboard paste is wired at the
- *   InputRule/match level; actual upload is gated on MediaAsset/createMedia
- *   being accessible from the block-editor context. Passes gracefully if absent.
+ * Integration status (as of 2026-04-13):
+ * - InlineMark (dc7da671) + toggle wiring (85d89558): bold / italic / code /
+ *   strikethrough / subscript / superscript / link / wikilink marks operate
+ *   via InlineMark/toggleMark with selection context threaded through
+ *   ActionBinding parameterMap.
+ * - ContentNode/clone (a6d18662): duplicate-block (Cmd+D, block-handle menu),
+ *   persona-duplicate, meeting-notes-duplicate all wired end-to-end.
+ * - MediaAsset/context (a6feeac7) + paste/drop handlers (85d89558, ecc13254):
+ *   clipboard image + dropped files thread { focusedDocId, cursorBlockId,
+ *   cursorPosition } to MediaAsset/createMedia → paste-image-to-block /
+ *   drop-file-to-block syncs attach new asset to the focused doc.
+ *
+ * Parity pass (MAG-767, 26 cards) shipped all remaining production features:
+ * drag-reorder, multi-select, keystroke undo (Patch + UndoStack),
+ * placeholders, page title, smart paste, Cmd+D, smart selection, find-replace,
+ * Cmd+K palette, breadcrumbs, keyboard help, slot resolver, modal stack,
+ * built-but-unwired widget mounting, default panels, link hover preview,
+ * media resize, focus mode, word count, offline indicator, export dialog,
+ * version history, spell-check, legacy BlockEditor.tsx removed.
  */
 
 import React, {
