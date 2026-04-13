@@ -22,6 +22,8 @@ entries:
   # Proves ContentCompiler integration for structured meeting content:
   # compile_action_ref + status_decoration_ref + output_preview_ref +
   # consumers_panel_ref (backlinks-panel filtered to "attends-meeting").
+  # PP-default-panels adds outline-panel for agenda structure navigation
+  # and comments-panel for inline discussion threads.
   - id: meeting-notes-page-editor
     schema_ref: meeting-notes
     context: page-level
@@ -31,8 +33,10 @@ entries:
       - meeting-notes-recompile
       - meeting-notes-duplicate
     panel_widgets:
+      - outline-panel
       - calendar-event-preview
       - backlinks-panel
+      - comments-panel
     context_menu_bindings: []
     input_rule_refs: []
     picker_refs: []

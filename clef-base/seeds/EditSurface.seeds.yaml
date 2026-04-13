@@ -186,6 +186,7 @@ entries:
   # status_decoration_ref + output_preview_ref + consumers_panel_ref.
   # backlinks-panel (MAG-741) is included in panel_widgets to show all
   # ContentNodes that reference this persona via the Reference/Backlink graph.
+  # PP-default-panels adds outline-panel for body structure navigation.
   - id: agent-persona-page-editor
     schema_ref: agent-persona
     context: page-level
@@ -195,6 +196,7 @@ entries:
       - persona-recompile
       - persona-duplicate
     panel_widgets:
+      - outline-panel
       - prompt-assembly-preview
       - persona-consumers-panel
       - backlinks-panel
@@ -217,6 +219,7 @@ entries:
   #   inline graph preview when the surface is rendered at page-level.
   # consumers_panel_ref: backlinks-panel (MAG-741) filtered to "runs-spec" relation kind
   #   surfaces ProcessRuns that reference this workflow's compiled ProcessSpec.
+  # PP-default-panels adds outline-panel for body structure navigation.
   - id: workflow-page-editor
     schema_ref: workflow
     context: page-level
@@ -225,6 +228,7 @@ entries:
       - workflow-compile
       - workflow-start-run
     panel_widgets:
+      - outline-panel
       - flowchart-editor
       - backlinks-panel
     context_menu_bindings: []
@@ -237,18 +241,39 @@ entries:
     output_preview_ref: flowchart-editor
     consumers_panel_ref: backlinks-panel
 
+  # Markdown article page-level editor surface (PP-default-panels)
+  # Generic MarkdownEditor surface for Article-schema content nodes.
+  # panel_widgets defaults: outline-panel (document structure) +
+  #   comments-panel (inline annotation threads).
+  - id: article-page-editor
+    schema_ref: article
+    context: page-level
+    toolbar_widget: inline-toolbar
+    command_bindings: []
+    panel_widgets:
+      - outline-panel
+      - comments-panel
+    context_menu_bindings: []
+    input_rule_refs: []
+    picker_refs: []
+    compile_action_ref: null
+    compile_bundle_ref: null
+    compile_status_field: null
+
   # Generic wiki-page page-level editor surface (MAG-741)
   # Any content page authored as a wiki page gets a backlinks panel
   # showing all other pages that link to it via wikilink, mention, or embed.
-  # workflow-editor, filter-draft-editor, and wiki-editor all share this
-  # registration pattern by referencing backlinks-panel in panel_widgets.
+  # PP-default-panels adds outline-panel (document structure) and
+  # comments-panel (inline annotation threads) to the default right-rail.
   - id: wiki-page-editor
     schema_ref: wiki-page
     context: page-level
     toolbar_widget: inline-toolbar
     command_bindings: []
     panel_widgets:
+      - outline-panel
       - backlinks-panel
+      - comments-panel
     context_menu_bindings: []
     input_rule_refs: []
     picker_refs: []
@@ -267,6 +292,7 @@ entries:
   #   have installed this draft as their active filter).
   # Block schemas: predicate-group, predicate, operator-value (seed-only;
   #   registered by filter-draft-block-schemas-registered.sync).
+  # PP-default-panels adds outline-panel for body structure navigation.
   - id: filter-draft-page-editor
     schema_ref: filter-draft
     context: page-level
@@ -275,6 +301,7 @@ entries:
       - filter-draft-compile
       - filter-draft-install
     panel_widgets:
+      - outline-panel
       - filter-preview
       - backlinks-panel
     context_menu_bindings: []

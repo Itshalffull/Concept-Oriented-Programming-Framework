@@ -62,17 +62,20 @@ entries:
     compile_status_field: null
 
   # notebook page-level editor surface.
-  # Attaches ai-chat-panel, outline-panel, and backlinks-panel as side-rail
-  # panel widgets so the full notebook authoring surface is available.
+  # Attaches outline-panel, ai-chat-panel, backlinks-panel, and comments-panel
+  # as side-rail panel widgets so the full notebook authoring surface is available.
+  # PP-default-panels: outline-panel leads (document structure), ai-chat-panel
+  # for cell-level AI assistance, comments-panel for annotation threads.
   - id: notebook-page-editor
     schema_ref: notebook
     context: page-level
     toolbar_widget: inline-toolbar
     command_bindings: []
     panel_widgets:
-      - ai-chat-panel
       - outline-panel
+      - ai-chat-panel
       - backlinks-panel
+      - comments-panel
     context_menu_bindings: []
     input_rule_refs: []
     picker_refs: []
