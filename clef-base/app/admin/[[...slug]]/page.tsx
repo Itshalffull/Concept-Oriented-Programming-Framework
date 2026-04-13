@@ -15,6 +15,7 @@ import { FormBuilder } from '../../components/widgets/FormBuilder';
 import { FlowBuilder } from '../../components/widgets/FlowBuilder';
 import { SchemaFieldsEditor } from '../../components/widgets/SchemaFieldsEditor';
 import { UserSyncEditor } from '../../components/widgets/UserSyncEditor';
+import { KeybindingEditor } from '../../components/widgets/KeybindingEditor';
 import { CanvasBrowserView } from '../../views/CanvasBrowserView';
 import { FlowBuilderView } from '../../views/FlowBuilderView';
 import { UserSyncListView } from '../../views/UserSyncListView';
@@ -218,6 +219,25 @@ export default async function AdminPage({
     return (
       <HostedPage>
         <FormBuilder mode="create" context={null} />
+      </HostedPage>
+    );
+  }
+
+  // KB-12: Settings → Keybindings routes.
+  // /admin/keybinding-editor        → read-only browse (default landing)
+  // /admin/keybinding-editor/edit   → edit mode (from "Customize" button)
+  if (slug[0] === 'keybinding-editor' && !slug[1]) {
+    return (
+      <HostedPage>
+        <KeybindingEditor mode="view" context={null} />
+      </HostedPage>
+    );
+  }
+
+  if (slug[0] === 'keybinding-editor' && slug[1] === 'edit') {
+    return (
+      <HostedPage>
+        <KeybindingEditor mode="edit" context={null} />
       </HostedPage>
     );
   }

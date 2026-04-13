@@ -1,0 +1,13 @@
+# Settings → Keybindings destination — KB-12.
+
+concept: DestinationCatalog
+action: register
+entries:
+  - destination: keybindings
+    name: keybindings
+    targetConcept: KeyBinding
+    targetView: editor
+    href: /admin/keybinding-editor
+    icon: "⌨"
+    group: Settings
+    interactionSpec: keybindings-controls

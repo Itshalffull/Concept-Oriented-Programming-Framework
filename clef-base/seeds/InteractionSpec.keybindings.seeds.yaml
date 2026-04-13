@@ -1,0 +1,15 @@
+# InteractionSpec for the Settings → Keybindings destination — KB-12.
+# create_surface: keybinding-editor routes the create flow through the
+# KeybindingEditor widget (Tier 1a).  create_mode_hint: page navigates
+# to /admin/keybinding-editor/new rather than opening a modal.
+
+concept: InteractionSpec
+action: create
+entries:
+  - name: keybindings-controls
+    createForm: '{}'
+    rowClick: '{}'
+    rowActions: '[]'
+    pickerMode: false
+    create_surface: keybinding-editor
+    create_mode_hint: page

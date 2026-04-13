@@ -54,6 +54,7 @@ import { SchemaFieldsEditor } from './SchemaFieldsEditor';
 import { FlowBuilder } from './FlowBuilder';
 import { UserSyncEditor } from './UserSyncEditor';
 import { FormBuilder } from './FormBuilder';
+import { KeybindingEditor } from './KeybindingEditor';
 
 // Register all known create surfaces.  Idempotent — safe to call multiple times.
 registerCreateSurface('view-editor', ViewEditor as React.ComponentType<Record<string, unknown>>);
@@ -61,6 +62,7 @@ registerCreateSurface('schema-editor', SchemaFieldsEditor as React.ComponentType
 registerCreateSurface('flow-builder', FlowBuilder as React.ComponentType<Record<string, unknown>>);
 registerCreateSurface('user-sync-editor', UserSyncEditor as React.ComponentType<Record<string, unknown>>);
 registerCreateSurface('form-builder', FormBuilder as React.ComponentType<Record<string, unknown>>);
+registerCreateSurface('keybinding-editor', KeybindingEditor as React.ComponentType<Record<string, unknown>>);
 
 // ---------------------------------------------------------------------------
 // Types
