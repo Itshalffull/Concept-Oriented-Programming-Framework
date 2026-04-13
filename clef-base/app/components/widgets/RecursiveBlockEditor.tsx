@@ -35,7 +35,6 @@ import React, {
 import { useKernelInvoke } from '../../../lib/clef-provider';
 import {
   notifyBlockEdit,
-  resolveAnnotation,
   getActiveAnnotations,
 } from '../../services/spell-check-dispatcher';
 import { SpellCheckSuggestionsPopover } from './SpellCheckSuggestionsPopover';

@@ -1,0 +1,32 @@
+# ActionBinding seeds — editor undo/redo keyboard chord bindings (PP-undo)
+#
+# editor-undo: Cmd+Z chord → UndoStack/undo → Patch/applyInverse
+#   Dispatched by RecursiveBlockEditor.handleEditorUndo when the user presses
+#   Cmd+Z (or Ctrl+Z). The context carries the undoStackId, reversalAction
+#   ("Patch/applyInverse"), and the params needed to apply the inverse patch.
+#
+# editor-redo: Cmd+Shift+Z chord → UndoStack/redo → Patch/apply
+#   Dispatched by RecursiveBlockEditor.handleEditorRedo when the user presses
+#   Cmd+Shift+Z (or Ctrl+Shift+Z). The context carries the undoStackId,
+#   the forward action ("Patch/apply"), and the original params.
+#
+# Architecture doc §clef-base — PP-undo §4
+
+concept: ActionBinding
+action: bind
+entries:
+  - name: editor-undo
+    binding: editor-undo
+    target: "Patch/applyInverse"
+    parameterMap: '{"patchId":"context.params.patchId","content":"context.params.content"}'
+    executionPolicy: "auto"
+    label: "Undo"
+    tags: ["editor_keyboard_chord"]
+
+  - name: editor-redo
+    binding: editor-redo
+    target: "Patch/apply"
+    parameterMap: '{"patchId":"context.params.patchId","content":"context.params.content"}'
+    executionPolicy: "auto"
+    label: "Redo"
+    tags: ["editor_keyboard_chord"]
