@@ -1,0 +1,248 @@
+@version(1)
+widget focus-mode-toggle {
+
+  purpose {
+    Header-slot button that toggles focus (distraction-free) mode on the editor
+    surface by hiding chrome elements such as sidebars, breadcrumbs, and panels.
+    A secondary reading-width dropdown lets the user pick a content column width
+    (narrow 640 px, comfortable 800 px, or wide 100 %) which is applied by setting
+    the CSS custom property --editor-reading-width on the editor root element.
+    The companion CSS custom property --editor-chrome-visibility is toggled between
+    visible and hidden when focus mode is activated or deactivated. Both settings
+    are persisted via ActionBinding seeds that call Property/set on the user node,
+    so preferences survive page reloads. The keyboard shortcut Meta+Period activates
+    the TOGGLE_FOCUS event from any state.
+  }
+
+  anatomy {
+    root:         container    { Top-level wrapper; carries data-state for all parallel machines }
+    toggleButton: action       { Icon/label button that toggles focus mode on and off }
+    widthMenu:    container    { Dropdown panel listing the three reading-width options }
+    widthOption:  action       { Repeating item within widthMenu representing one width choice }
+  }
+
+  states {
+    mode {
+      chrome-on [initial] {
+        on TOGGLE_FOCUS -> chrome-off;
+        exit [hideChromeElements; setChromeCSSHidden];
+      }
+      chrome-off {
+        on TOGGLE_FOCUS -> chrome-on;
+        exit [showChromeElements; setChromeCSSVisible];
+      }
+    }
+
+    width [parallel] {
+      narrow [initial] {
+        on SELECT_NARROW -> narrow;
+        on SELECT_COMFORTABLE -> comfortable;
+        on SELECT_WIDE -> wide;
+        entry [applyNarrowWidth];
+      }
+      comfortable {
+        on SELECT_NARROW -> narrow;
+        on SELECT_COMFORTABLE -> comfortable;
+        on SELECT_WIDE -> wide;
+        entry [applyComfortableWidth];
+      }
+      wide {
+        on SELECT_NARROW -> narrow;
+        on SELECT_COMFORTABLE -> comfortable;
+        on SELECT_WIDE -> wide;
+        entry [applyWideWidth];
+      }
+    }
+
+    menu {
+      closed [initial] {
+        on OPEN_MENU -> open;
+      }
+      open {
+        on CLOSE_MENU -> closed;
+        on SELECT_NARROW -> closed;
+        on SELECT_COMFORTABLE -> closed;
+        on SELECT_WIDE -> closed;
+        entry [positionMenu];
+        exit [releaseMenuFocus];
+      }
+    }
+  }
+
+  accessibility {
+    role: toolbar;
+    keyboard {
+      Meta+Period -> TOGGLE_FOCUS;
+      Escape -> CLOSE_MENU;
+      ArrowDown -> OPEN_MENU;
+      ArrowUp -> CLOSE_MENU;
+      Enter -> SELECT_COMFORTABLE;
+    }
+    focus {
+      trap: false;
+      initial: toggleButton;
+      roving: true;
+      returnOnClose: toggleButton;
+    }
+    aria {
+      root -> {
+        role: "toolbar";
+        aria-label: "Focus mode controls";
+      };
+      toggleButton -> {
+        role: "button";
+        aria-pressed: if state.mode == "chrome-off" then "true" else "false";
+        aria-label: if state.mode == "chrome-off" then "Exit focus mode" else "Enter focus mode";
+        aria-keyshortcuts: "Meta+Period";
+      };
+      widthMenu -> {
+        role: "menu";
+        aria-label: "Reading width";
+        aria-expanded: if state.menu == "open" then "true" else "false";
+        hidden: if state.menu == "closed" then true else false;
+      };
+      widthOption -> {
+        role: "menuitemradio";
+        aria-checked: "false";
+      };
+    }
+  }
+
+  props {
+    focusModeOn: Bool = false
+    readingWidth: String = "comfortable"
+    showWidthSelector: Bool = true
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state.mode;
+      data-width: state.width;
+      data-menu: state.menu;
+      data-focus-mode: if state.mode == "chrome-off" then "true" else "false";
+    }
+
+    toggleButton -> {
+      data-part: "toggle-button";
+      aria-pressed: if state.mode == "chrome-off" then "true" else "false";
+      aria-label: if state.mode == "chrome-off" then "Exit focus mode" else "Enter focus mode";
+      aria-keyshortcuts: "Meta+Period";
+      onClick: send(TOGGLE_FOCUS);
+      data-active: if state.mode == "chrome-off" then "true" else "false";
+    }
+
+    widthMenu -> {
+      data-part: "width-menu";
+      role: "menu";
+      aria-label: "Reading width";
+      hidden: if state.menu == "closed" then true else false;
+      data-open: if state.menu == "open" then "true" else "false";
+    }
+
+    widthOption -> {
+      data-part: "width-option";
+      role: "menuitemradio";
+      onClick: send(SELECT_COMFORTABLE);
+      data-width-value: ?readingWidth;
+    }
+  }
+
+  affordance {
+    serves: navigation;
+    specificity: 6;
+    bind {
+      focusModeOn: userPrefFocusMode;
+      readingWidth: userPrefReadingWidth;
+    }
+  }
+
+  invariant {
+    example "TOGGLE_FOCUS from chrome-on enters chrome-off": {
+      after transition(from: "chrome-on", event: "TOGGLE_FOCUS") -> ok
+      then state.mode = "chrome-off"
+    }
+
+    example "TOGGLE_FOCUS from chrome-off returns to chrome-on": {
+      after transition(from: "chrome-off", event: "TOGGLE_FOCUS") -> ok
+      then state.mode = "chrome-on"
+    }
+
+    example "SELECT_COMFORTABLE transitions width machine to comfortable": {
+      after transition(from: "narrow", event: "SELECT_COMFORTABLE") -> ok
+      then state.width = "comfortable"
+    }
+
+    example "SELECT_NARROW transitions width machine to narrow": {
+      after transition(from: "comfortable", event: "SELECT_NARROW") -> ok
+      then state.width = "narrow"
+    }
+
+    example "SELECT_WIDE transitions width machine to wide": {
+      after transition(from: "comfortable", event: "SELECT_WIDE") -> ok
+      then state.width = "wide"
+    }
+
+    example "OPEN_MENU transitions menu machine to open": {
+      after transition(from: "closed", event: "OPEN_MENU") -> ok
+      then state.menu = "open"
+    }
+
+    example "SELECT_NARROW from open menu closes menu": {
+      after transition(from: "open", event: "SELECT_NARROW") -> ok
+      then state.menu = "closed"
+    }
+
+    example "SELECT_COMFORTABLE from open menu closes menu": {
+      after transition(from: "open", event: "SELECT_COMFORTABLE") -> ok
+      then state.menu = "closed"
+    }
+
+    example "SELECT_WIDE from open menu closes menu": {
+      after transition(from: "open", event: "SELECT_WIDE") -> ok
+      then state.menu = "closed"
+    }
+
+    example "CLOSE_MENU event closes open menu": {
+      after transition(from: "open", event: "CLOSE_MENU") -> ok
+      then state.menu = "closed"
+    }
+
+    forall "all mode states are reachable from initial": {
+      given s in modeStates
+      then s.reachable = true
+    }
+
+    forall "all width states are reachable from initial": {
+      given s in widthStates
+      then s.reachable = true
+    }
+
+    forall "all menu states are reachable from initial": {
+      given s in menuStates
+      then s.reachable = true
+    }
+
+    always "data-state on root reflects mode FSM": {
+      root.dataState = state.mode
+    }
+
+    always "aria-pressed on toggleButton reflects mode FSM": {
+      toggleButton.ariaPressed = state.mode
+    }
+
+    never "chrome-on and chrome-off simultaneously": {
+      state.mode = "chrome-on" and state.mode = "chrome-off"
+    }
+
+    never "width menu open and closed simultaneously": {
+      state.menu = "open" and state.menu = "closed"
+    }
+
+    action toggleButton {
+      requires: state.mode = "chrome-on"
+      ensures ok: state.mode = "chrome-off"
+    }
+  }
+
+}

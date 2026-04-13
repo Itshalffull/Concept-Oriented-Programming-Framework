@@ -1,0 +1,24 @@
+# PluginRegistry seeds — focus-mode-toggle header-slot plugin (PP-focus-mode).
+# Registers the focus-mode-toggle widget so it appears automatically in the
+# editor header slot across all document contexts. Provides the toggle button
+# and reading-width dropdown as a header-resident control.
+
+concept: PluginRegistry
+action: register
+entries:
+  - type: header-slot
+    name: focus-mode-toggle
+    metadata: >
+      {
+        "widget": "focus-mode-toggle",
+        "label": "Focus Mode",
+        "icon": "focus",
+        "availableContexts": ["markdown", "wiki", "notebook", "persona", "code"],
+        "defaultEnabled": true,
+        "order": 90,
+        "props": {
+          "focusModeOn": false,
+          "readingWidth": "comfortable",
+          "showWidthSelector": true
+        }
+      }

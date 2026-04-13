@@ -1,0 +1,42 @@
+# ActionBinding seeds — focus-mode-toggle user-preference bindings (PP-focus-mode).
+#
+# focus-mode-toggle: persists the focus-mode on/off state as a user-node
+#   Property keyed "focusMode". Called whenever the user activates the
+#   TOGGLE_FOCUS event from the focus-mode-toggle widget. The parameterMap
+#   forwards context.focusModeOn (the new boolean state) as the property value.
+#
+# reading-width-set: persists the chosen reading-width preset as a user-node
+#   Property keyed "readingWidth". Called whenever the user picks narrow,
+#   comfortable, or wide from the width dropdown. The parameterMap forwards
+#   context.readingWidth (the selected string) as the property value.
+#
+# Both bindings target Property/set on the authenticated user's node so
+# the preferences survive page reloads and cross-device sessions.
+
+concept: ActionBinding
+action: bind
+entries:
+  - name: focus-mode-toggle
+    binding: focus-mode-toggle
+    target: "Property/set"
+    parameterMap: '{"entity":"context.currentUserId","key":"focusMode","value":"context.focusModeOn"}'
+    executionPolicy: "optimistic"
+    toolbar_command: false
+    slash_command: false
+    context_menu: false
+    section: "Editor"
+    label: "Toggle Focus Mode"
+    icon: "focus"
+    keyboard_shortcut: "Meta+Period"
+
+  - name: reading-width-set
+    binding: reading-width-set
+    target: "Property/set"
+    parameterMap: '{"entity":"context.currentUserId","key":"readingWidth","value":"context.readingWidth"}'
+    executionPolicy: "optimistic"
+    toolbar_command: false
+    slash_command: false
+    context_menu: false
+    section: "Editor"
+    label: "Set Reading Width"
+    icon: "layout"
