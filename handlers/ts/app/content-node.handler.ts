@@ -6,7 +6,7 @@
 // concept), not from a "type" field. ContentNode is a universal entity pool.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, del, branch, complete, completeFrom, mapBindings, traverse,
+  createProgram, get as spGet, find, put, merge, del, branch, complete, completeFrom, mapBindings, traverse,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -59,7 +59,8 @@ const _contentNodeHandler: FunctionalConceptHandler = {
     p = spGet(p, 'node', node, 'existing');
     p = branch(p, 'existing',
       (b) => {
-        let b2 = put(b, 'node', node, {
+        // merge preserves type/metadata/createdBy while updating content.
+        let b2 = merge(b, 'node', node, {
           content,
           updatedAt: new Date().toISOString(),
         });
@@ -457,7 +458,9 @@ const _contentNodeHandler: FunctionalConceptHandler = {
     p = spGet(p, 'node', node, 'existing');
     p = branch(p, 'existing',
       (b) => {
-        let b2 = put(b, 'node', node, {
+        // merge is the partial-update primitive — preserves existing fields
+        // while updating type + updatedAt. put replaces the whole record.
+        let b2 = merge(b, 'node', node, {
           type,
           updatedAt: new Date().toISOString(),
         });

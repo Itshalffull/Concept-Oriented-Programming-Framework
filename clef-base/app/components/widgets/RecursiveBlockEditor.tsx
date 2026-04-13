@@ -338,13 +338,24 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
         const childRecords: BlockChild[] = await Promise.all(
           ids.map(async (childId) => {
             try {
+              // Prefer Schema/getSchemasFor membership (richer taxonomy);
+              // fall back to ContentNode.type when no membership exists.
+              // Many workspaces don't have predefined Schemas, so the
+              // type field carries the block schema on its own.
               const schemaResult = await invoke('Schema', 'getSchemasFor', { entity_id: childId });
               const schemas: string[] = schemaResult.variant === 'ok'
                 ? safeParseJsonArray<string>(schemaResult.schemas)
                 : [];
+              if (schemas[0]) {
+                return { id: childId, schema: schemas[0], displayMode: 'block-editor' };
+              }
+              const nodeResult = await invoke('ContentNode', 'get', { node: childId });
+              const type = nodeResult.variant === 'ok' && typeof nodeResult.type === 'string'
+                ? nodeResult.type
+                : 'paragraph';
               return {
                 id: childId,
-                schema: schemas[0] ?? 'paragraph',
+                schema: type || 'paragraph',
                 displayMode: 'block-editor',
               };
             } catch {
@@ -2492,6 +2503,14 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
         ref={blockContentRef}
         data-part="block-content"
         data-widget={resolvedWidget}
+        data-placeholder={
+          schema === 'heading' ? 'Heading' :
+          schema === 'code' ? '// code' :
+          schema === 'quote' ? 'Quote' :
+          schema === 'callout' ? 'Callout' :
+          schema === 'bullet-list' || schema === 'numbered-list' ? 'List item' :
+          "Type '/' for commands"
+        }
         contentEditable={canEdit}
         suppressContentEditableWarning
         spellCheck={canEdit}
@@ -2507,6 +2526,45 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
           const text = (e.currentTarget as HTMLDivElement).textContent ?? '';
           blockEmptyRef.current = text.trim() === '';
           notifyBlockEdit(nodeId, text, invoke);
+
+          // Markdown shortcuts (InputRules): when the user types the space
+          // that completes a prefix like "# ", "## ", "- ", "> ", "1. ",
+          // convert the block's schema. Only runs on a paragraph and only
+          // when the matched prefix is the entire text of the block.
+          if (schema === 'paragraph') {
+            const markdownRule: Record<string, string> = {
+              '# ': 'heading',
+              '## ': 'heading',
+              '### ': 'heading',
+              '- ': 'bullet-list',
+              '* ': 'bullet-list',
+              '1. ': 'numbered-list',
+              '> ': 'quote',
+              '``` ': 'code',
+            };
+            // ContentEditable inserts NBSP (\u00A0, 160) instead of regular
+            // space (32) at certain caret positions. Normalize before match.
+            const normalizedText = text.replace(/\u00A0/g, ' ');
+            const matched = Object.keys(markdownRule).find((p) => normalizedText === p);
+            if (matched) {
+              const newSchema = markdownRule[matched];
+              const el = e.currentTarget as HTMLDivElement;
+              void (async () => {
+                try {
+                  // Change the block's type directly — loadChildren reads
+                  // ContentNode.type when no Schema membership exists.
+                  await invoke('ContentNode', 'changeType', { node: nodeId, type: newSchema });
+                  await invoke('ContentNode', 'update', { node: nodeId, content: '' });
+                  el.textContent = '';
+                  onStructureChange();
+                } catch (err) {
+                  console.warn('[RecursiveBlockEditor] markdown shortcut failed:', err);
+                }
+              })();
+              return;
+            }
+          }
+
           // LE-16: debounced syntax highlight dispatch for code/latex blocks
           if (isHighlightableSchema && text.trim()) {
             if (highlightDebounceRef.current !== null) clearTimeout(highlightDebounceRef.current);

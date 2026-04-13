@@ -3043,3 +3043,15 @@ button, [data-part="button"] {
   white-space: pre-wrap;
   word-break: break-word;
 }
+
+/* ─── Block editor placeholders ─── */
+/* Show a faded prompt in empty blocks, Notion-style. The text comes from the
+ * data-placeholder attribute on [data-part="block-content"], set by BlockSlot
+ * from the schema. `:empty` works because the DOM is truly empty when no text
+ * has been typed (BEF-01 seeds "" on mount). */
+[data-part="block-content"]:empty::before {
+  content: attr(data-placeholder);
+  color: var(--palette-on-surface-variant, rgba(0,0,0,0.4));
+  pointer-events: none;
+  font-style: italic;
+}
