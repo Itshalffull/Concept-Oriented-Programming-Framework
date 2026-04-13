@@ -3055,3 +3055,36 @@ button, [data-part="button"] {
   pointer-events: none;
   font-style: italic;
 }
+
+/* ─── Bullet / numbered list markers ─── */
+[data-part="block-slot"][data-schema="bullet-list"] > [data-part="block-content"] {
+  padding-left: 1.5em;
+  position: relative;
+}
+[data-part="block-slot"][data-schema="bullet-list"] > [data-part="block-content"]::after {
+  content: '•';
+  position: absolute;
+  left: 0.5em;
+  top: 0;
+  color: var(--palette-on-surface, inherit);
+  font-weight: bold;
+}
+[data-part="block-slot"][data-schema="numbered-list"] > [data-part="block-content"] {
+  padding-left: 1.75em;
+  position: relative;
+}
+[data-part="block-slot"][data-schema="numbered-list"] > [data-part="block-content"]::after {
+  content: '•';  /* TODO: real index once we wire numbering */
+  position: absolute;
+  left: 0.5em;
+  top: 0;
+  color: var(--palette-on-surface, inherit);
+}
+
+/* ─── Quote block ─── */
+[data-part="block-slot"][data-schema="quote"] > [data-part="block-content"] {
+  padding-left: 0.75em;
+  border-left: 3px solid var(--palette-outline, rgba(0,0,0,0.2));
+  color: var(--palette-on-surface-variant, rgba(0,0,0,0.7));
+  font-style: italic;
+}

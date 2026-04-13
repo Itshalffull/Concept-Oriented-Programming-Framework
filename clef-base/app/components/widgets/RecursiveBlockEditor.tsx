@@ -2664,6 +2664,38 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
             })();
             return;
           }
+          // Bold / Italic / Code (Cmd|Ctrl + B/I/E). Uses browser's
+          // native execCommand which wraps the selection in a <b>/<i>/<code>
+          // tag. Long-term we'll route through the InlineMark concept and
+          // Patch-based mark storage, but this gets Notion-parity keyboard
+          // for now without needing Mark serialization.
+          if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey) {
+            const cmd: Record<string, string> = { b: 'bold', i: 'italic', u: 'underline' };
+            const op = cmd[e.key.toLowerCase()];
+            if (op) {
+              e.preventDefault();
+              document.execCommand(op);
+              return;
+            }
+            if (e.key.toLowerCase() === 'e') {
+              e.preventDefault();
+              // Code-span: wrap selection in <code>. No execCommand for code
+              // so insert HTML directly. No-op if selection is empty.
+              const sel = window.getSelection();
+              if (sel && !sel.isCollapsed) {
+                const range = sel.getRangeAt(0);
+                const code = document.createElement('code');
+                code.appendChild(range.extractContents());
+                range.insertNode(code);
+                // Place caret at end of the new <code>.
+                range.setStartAfter(code);
+                range.collapse(true);
+                sel.removeAllRanges();
+                sel.addRange(range);
+              }
+              return;
+            }
+          }
           if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
             // Notion/Roam-style vertical caret nav. When the caret is on the
             // first visual line of the block and user presses ArrowUp, move
