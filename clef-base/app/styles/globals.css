@@ -3104,6 +3104,14 @@ button, [data-part="button"] {
   line-height: 1.3;
 }
 
+/* ─── Highlight mark ─── */
+[data-part="block-content"] mark {
+  background: var(--palette-tertiary-container, #fef3c7);
+  color: inherit;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
 /* ─── Anchor links inside block-content ─── */
 [data-part="block-content"] a {
   color: var(--palette-primary, #6366f1);

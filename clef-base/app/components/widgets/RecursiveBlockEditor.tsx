@@ -3749,6 +3749,30 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
               }
               return;
             }
+            if (e.key.toLowerCase() === 'h' && e.shiftKey) {
+              e.preventDefault();
+              // Highlight: wrap selection in <mark>. Second press on a
+              // selection that's entirely inside an existing <mark>
+              // unwraps it.
+              const sel = window.getSelection();
+              if (!sel || sel.isCollapsed) return;
+              const range = sel.getRangeAt(0);
+              const ancestor = range.commonAncestorContainer;
+              const enclosingMark = (ancestor instanceof Element ? ancestor : ancestor.parentElement)?.closest('mark');
+              if (enclosingMark) {
+                // Unwrap
+                const parent = enclosingMark.parentNode;
+                while (enclosingMark.firstChild) parent?.insertBefore(enclosingMark.firstChild, enclosingMark);
+                parent?.removeChild(enclosingMark);
+              } else {
+                const mark = document.createElement('mark');
+                mark.appendChild(range.extractContents());
+                range.insertNode(mark);
+                range.setStartAfter(mark); range.collapse(true);
+                sel.removeAllRanges(); sel.addRange(range);
+              }
+              return;
+            }
             if (e.key.toLowerCase() === 'k') {
               e.preventDefault();
               // Link: prompt for URL, wrap selection in <a href>. If no

@@ -4361,6 +4361,14 @@ button, [data-part="button"] {
   line-height: 1.3;
 }
 
+/* ─── Highlight mark ─── */
+[data-part="block-content"] mark {
+  background: var(--palette-tertiary-container, #fef3c7);
+  color: inherit;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
 /* ─── Anchor links inside block-content ─── */
 [data-part="block-content"] a {
   color: var(--palette-primary, #6366f1);
@@ -4422,6 +4430,19 @@ button, [data-part="button"] {
   background: var(--palette-tertiary-container, #fef3c7) !important;
   border-left: 4px solid var(--palette-tertiary, #f59e0b);
   padding-left: 1em !important;
+}
+
+/* ─── Divider block ─── */
+[data-part="block-slot"][data-schema="divider"] > [data-part="block-content"] {
+  min-height: 1px !important;
+  padding: 0 !important;
+  border-top: 1px solid var(--palette-outline-variant, #e5e7eb);
+  margin: 1em 0;
+  pointer-events: none;
+}
+[data-part="block-slot"][data-schema="divider"] > [data-part="block-content"]:empty::before {
+  content: '';
+  display: none;
 }
 
 /* ─── Quote block ─── */
