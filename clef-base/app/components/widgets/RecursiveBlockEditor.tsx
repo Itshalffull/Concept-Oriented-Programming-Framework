@@ -2113,6 +2113,63 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
           </ol>
         )}
 
+        {/* Auto-built TOC — floating right-side index of headings */}
+        {!childrenLoading && (() => {
+          const headings = children.filter((c) =>
+            c.schema === 'heading' || c.schema === 'heading-2' || c.schema === 'heading-3'
+          );
+          if (headings.length < 2) return null;
+          return (
+            <nav
+              data-part="toc"
+              aria-label="Table of contents"
+              style={{
+                position: 'fixed',
+                top: '120px',
+                right: '24px',
+                maxWidth: '180px',
+                fontSize: '12px',
+                lineHeight: '1.4',
+                padding: '8px',
+                background: 'transparent',
+                borderLeft: '2px solid var(--palette-outline-variant, #e5e7eb)',
+                paddingLeft: '12px',
+                zIndex: 5,
+              }}
+            >
+              {headings.map((h) => {
+                const level = h.schema === 'heading' ? 0 : h.schema === 'heading-2' ? 1 : 2;
+                const text = (contentBodyCache.get(h.id) ?? '').replace(/<[^>]+>/g, ' ').trim() || '(untitled)';
+                return (
+                  <a
+                    key={h.id}
+                    href={`#${h.id}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      const el = document.querySelector<HTMLElement>(
+                        `[data-part="block-slot"][data-node-id="${h.id}"]`,
+                      );
+                      el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }}
+                    style={{
+                      display: 'block',
+                      paddingLeft: `${level * 12}px`,
+                      color: 'var(--palette-on-surface-variant, #6b7280)',
+                      textDecoration: 'none',
+                      padding: '2px 0',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
+                    {text}
+                  </a>
+                );
+              })}
+            </nav>
+          );
+        })()}
+
         {/* Word count + reading time footer */}
         {!childrenLoading && children.length > 0 && (() => {
           let words = 0;
