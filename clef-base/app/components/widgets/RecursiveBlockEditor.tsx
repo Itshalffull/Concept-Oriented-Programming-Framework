@@ -1165,6 +1165,45 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
       return;
     }
 
+    // Cmd+Shift+Up/Down — move focused block among siblings.
+    if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+      const focused = focusedBlockIdRef.current;
+      if (!focused) return;
+      e.preventDefault();
+      const dir = e.key === 'ArrowUp' ? -1 : +1;
+      void (async () => {
+        try {
+          const myRec = await invoke('Outline', 'getRecord', { node: focused });
+          if (myRec.variant !== 'ok') return;
+          const myParent = String(myRec.parent ?? rootNodeId);
+          const sibsRes = await invoke('Outline', 'children', { parent: myParent });
+          const sibs: string[] = sibsRes.variant === 'ok'
+            ? (() => { try { return JSON.parse(sibsRes.children as string || '[]'); } catch { return []; } })()
+            : [];
+          const idx = sibs.indexOf(focused);
+          if (idx < 0) return;
+          // Compute the new order: between target's prev/next neighbor.
+          const targetIdx = idx + dir;
+          if (targetIdx < 0 || targetIdx >= sibs.length) return;
+          // For move-up: new order = midpoint(targetPrev?.order, target.order)
+          // For move-down: new order = midpoint(target.order, targetNext?.order)
+          const target = await invoke('Outline', 'getRecord', { node: sibs[targetIdx] });
+          const targetOrder = target.variant === 'ok' && typeof target.order === 'number' ? target.order : 0;
+          const adjIdx = dir < 0 ? targetIdx - 1 : targetIdx + 1;
+          let adjOrder: number | null = null;
+          if (adjIdx >= 0 && adjIdx < sibs.length) {
+            const adj = await invoke('Outline', 'getRecord', { node: sibs[adjIdx] });
+            if (adj.variant === 'ok' && typeof adj.order === 'number') adjOrder = adj.order;
+          }
+          const newOrder = adjOrder !== null ? (targetOrder + adjOrder) / 2 : (dir < 0 ? targetOrder - 1 : targetOrder + 1);
+          await invoke('Outline', 'setOrder', { node: focused, order: newOrder });
+          loadChildren();
+          restoreFocusToBlock(focused);
+        } catch (err) { console.warn('[RecursiveBlockEditor] move-block failed:', err); }
+      })();
+      return;
+    }
+
     // Cmd+Shift+1..9 / 0 — convert focused block's schema in place.
     // Mirrors Notion's quick-turn-into shortcuts.
     if ((e.metaKey || e.ctrlKey) && e.shiftKey && !e.altKey) {
