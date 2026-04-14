@@ -1639,7 +1639,12 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
                   {/* Drop zone indicator — above block during active drag-over */}
                   <BlockDropZoneIndicator active={isDragOver && dropPosition === 'before'} position="before" />
 
-                  {/* Block handle — left gutter, visible on hover */}
+                  {/* Block handle — left gutter, visible on hover.
+                      Opacity is driven by the row's isHovered state (from
+                      pointer-enter/leave on the <li>) so the handle is
+                      actually discoverable — BlockHandle's internal FSM
+                      would otherwise only flip to visible on hover OF the
+                      handle, which is invisible. */}
                   {canEdit && (
                     <div
                       style={{
@@ -1647,7 +1652,9 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
                         left: '-28px',
                         top: '50%',
                         transform: 'translateY(-50%)',
-                        pointerEvents: 'auto',
+                        pointerEvents: isHovered ? 'auto' : 'none',
+                        opacity: isHovered ? 1 : 0,
+                        transition: 'opacity 120ms ease',
                         zIndex: 6,
                       }}
                     >
