@@ -3545,6 +3545,44 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
                 { re: /~~([^~\n]+)~~$/, tag: 's' },
                 { re: /==([^=\n]+)==$/, tag: 'mark' },
               ];
+              // Typographic autoreplace: -- → —, ... → …, "word" → curly.
+              // Runs as simple string substitutions on the last 4 chars
+              // near the caret; re-writes block text if a replacement applies.
+              {
+                let replaced = false;
+                const raw = full;
+                let patched = raw;
+                // em-dash: "-- " or "--" before a word-like tail
+                patched = patched.replace(/(\w)--(?=\w)/g, '$1—');
+                patched = patched.replace(/--(?= )/g, '—');
+                // ellipsis
+                patched = patched.replace(/\.{3}/g, '…');
+                if (patched !== raw) {
+                  // Replace the whole textContent. Caret offset adjusts by
+                  // the length delta. Simple approximation: move caret to
+                  // the diff point + length of replacement minus original.
+                  const delta = patched.length - raw.length;
+                  const newCaret = Math.max(0, caretOffset + delta);
+                  blockContentRef.current!.textContent = patched;
+                  const walkerP = document.createTreeWalker(blockContentRef.current!, NodeFilter.SHOW_TEXT);
+                  let seenP = 0; let tn: Text | null = null; let to = 0;
+                  let np: Node | null;
+                  while ((np = walkerP.nextNode())) {
+                    const t = np as Text; const len = t.data.length;
+                    if (newCaret <= seenP + len) { tn = t; to = newCaret - seenP; break; }
+                    seenP += len;
+                  }
+                  if (tn) {
+                    const r = document.createRange();
+                    r.setStart(tn, to); r.collapse(true);
+                    const s = window.getSelection();
+                    s?.removeAllRanges(); s?.addRange(r);
+                  }
+                  replaced = true;
+                }
+                if (replaced) return;
+              }
+
               // URL autolink: detect URL followed by a just-typed space.
               // Fires when tail ends with "https://foo.com " or similar.
               const urlMatch = tail.match(/(https?:\/\/[^\s<>"]+) $/);
