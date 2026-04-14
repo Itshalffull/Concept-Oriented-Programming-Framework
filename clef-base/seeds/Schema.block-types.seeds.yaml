@@ -1,0 +1,77 @@
+# Schema seeds — block types the RecursiveBlockEditor supports.
+# The slash menu queries Schema/list and renders these as insertable options.
+# Each entry is a minimal Schema definition; the actual render is handled by
+# the editor's CSS + inline style keyed on data-schema, not field lists.
+
+concept: Schema
+action: defineSchema
+entries:
+  - schema: paragraph
+    fields: ""
+    label: "Text"
+    icon: "¶"
+    section: "Basic"
+    insertable: "true"
+
+  - schema: heading
+    fields: ""
+    label: "Heading 1"
+    icon: "H1"
+    section: "Basic"
+    insertable: "true"
+
+  - schema: heading-2
+    fields: ""
+    label: "Heading 2"
+    icon: "H2"
+    section: "Basic"
+    insertable: "true"
+
+  - schema: heading-3
+    fields: ""
+    label: "Heading 3"
+    icon: "H3"
+    section: "Basic"
+    insertable: "true"
+
+  - schema: bullet-list
+    fields: ""
+    label: "Bullet list"
+    icon: "•"
+    section: "List"
+    insertable: "true"
+
+  - schema: numbered-list
+    fields: ""
+    label: "Numbered list"
+    icon: "1."
+    section: "List"
+    insertable: "true"
+
+  - schema: task
+    fields: ""
+    label: "To-do"
+    icon: "☐"
+    section: "List"
+    insertable: "true"
+
+  - schema: quote
+    fields: ""
+    label: "Quote"
+    icon: '"'
+    section: "Basic"
+    insertable: "true"
+
+  - schema: code
+    fields: ""
+    label: "Code block"
+    icon: "{}"
+    section: "Basic"
+    insertable: "true"
+
+  - schema: callout
+    fields: ""
+    label: "Callout"
+    icon: "💡"
+    section: "Basic"
+    insertable: "true"

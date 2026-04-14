@@ -7,7 +7,7 @@
 // entity↔schema membership (applyTo, removeFrom, getSchemasFor).
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, del, putFrom, branch, complete, mapBindings,
+  createProgram, get as spGet, find, put, del, putFrom, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -16,10 +16,12 @@ const _schemaHandler: FunctionalConceptHandler = {
   list(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'schema', {}, 'items');
-    p = mapBindings(p, (bindings) => {
-      return JSON.stringify((bindings.items as Array<Record<string, unknown>>) || []);
-    }, 'itemsJson');
-    return complete(p, 'ok', { items: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = completeFrom(p, 'ok', (bindings) => {
+      const rows = (bindings.items as Array<Record<string, unknown>> | undefined) || [];
+      // Return the row objects themselves (slash menu reads name/label/icon).
+      return { items: JSON.stringify(rows) };
+    });
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   get(input: Record<string, unknown>) {

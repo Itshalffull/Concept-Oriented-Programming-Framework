@@ -757,11 +757,37 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
     setFsmState('slash-open');
     setSlashMenuLoading(true);
 
-    // Baseline block-type items matching the schemas the editor actually
-    // renders. ComponentMapping/listInsertable doesn't exist yet in the
-    // kernel, so the server-sourced items list is a future enrichment;
-    // these hardcoded defaults make the menu functional today.
-    const items: SlashMenuItem[] = [
+    // Query registered Schemas (via Schema/list) so any schema seeded
+    // into the kernel auto-appears in the slash menu. This is the
+    // Clef architectural property: concepts register, UIs auto-pull.
+    const items: SlashMenuItem[] = [];
+    try {
+      const schemasRes = await invoke('Schema', 'list', {});
+      if (schemasRes.variant === 'ok') {
+        const rows = safeParseJsonArray<Record<string, unknown>>(schemasRes.items);
+        for (const r of rows) {
+          const schemaName = String(r.schema ?? r.name ?? '');
+          // Only include schemas flagged insertable (defaults true if missing).
+          if (r.insertable !== undefined && r.insertable !== 'true' && r.insertable !== true) continue;
+          if (!schemaName) continue;
+          items.push({
+            id: schemaName,
+            label: String(r.label ?? schemaName),
+            section: String(r.section ?? 'Basic'),
+            icon: typeof r.icon === 'string' ? r.icon : undefined,
+            kind: 'insertable',
+            mappingId: schemaName,
+          });
+        }
+      }
+    } catch {
+      /* non-fatal — menu will fall back to baseline below */
+    }
+
+    // Baseline items — kept for fresh DBs where no Schema seeds have
+    // loaded yet. If Schema/list returned results, this loop adds only
+    // schemas not already present.
+    const baseline: SlashMenuItem[] = [
       { id: 'paragraph', label: 'Text', section: 'Basic', icon: '¶', kind: 'insertable', mappingId: 'paragraph' },
       { id: 'heading', label: 'Heading 1', section: 'Basic', icon: 'H1', kind: 'insertable', mappingId: 'heading' },
       { id: 'heading-2', label: 'Heading 2', section: 'Basic', icon: 'H2', kind: 'insertable', mappingId: 'heading-2' },
@@ -772,29 +798,8 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
       { id: 'quote', label: 'Quote', section: 'Basic', icon: '"', kind: 'insertable', mappingId: 'quote' },
       { id: 'code', label: 'Code block', section: 'Basic', icon: '{}', kind: 'insertable', mappingId: 'code' },
     ];
-
-    try {
-      // Optional server-sourced enrichment (no-op today since the action
-      // isn't registered; kept for future Schema taxonomy growth).
-      const mappingResult = await invoke('ComponentMapping', 'listInsertable', {
-        context: editorFlavor,
-      });
-      if (mappingResult.variant === 'ok') {
-        const mappings = safeParseJsonArray<Record<string, unknown>>(mappingResult.items);
-        for (const m of mappings) {
-          items.push({
-            id: String(m.id ?? m.name),
-            label: String(m.label ?? m.name),
-            section: String(m.section ?? 'Basic'),
-            icon: typeof m.icon === 'string' ? m.icon : undefined,
-            kind: 'insertable',
-            mappingId: String(m.id ?? m.name),
-          });
-        }
-      }
-    } catch {
-      /* non-fatal — fall back to hardcoded defaults */
-    }
+    const existingIds = new Set(items.map((i) => i.id));
+    for (const b of baseline) if (!existingIds.has(b.id)) items.push(b);
 
     try {
       // Slash commands from ActionBinding
@@ -3516,10 +3521,13 @@ const SlashMenuOverlay: React.FC<SlashMenuOverlayProps> = ({
       style={{
         position: 'absolute',
         top: '40px',
-        left: 'var(--spacing-md)',
+        left: 'var(--spacing-md, 16px)',
         zIndex: 100,
-        background: 'var(--palette-surface-container)',
-        border: '1px solid var(--palette-outline)',
+        // Concrete fallbacks — theme tokens sometimes resolve to empty on
+        // first render and leave the menu transparent against the block body.
+        background: 'var(--palette-surface-container, #ffffff)',
+        color: 'var(--palette-on-surface, #111827)',
+        border: '1px solid var(--palette-outline, #d1d5db)',
         borderRadius: '8px',
         minWidth: '280px',
         maxHeight: '360px',
@@ -3527,7 +3535,7 @@ const SlashMenuOverlay: React.FC<SlashMenuOverlayProps> = ({
         boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
       }}
     >
-      <div style={{ padding: 'var(--spacing-xs) var(--spacing-sm)' }}>
+      <div style={{ padding: 'var(--spacing-xs, 4px) var(--spacing-sm, 8px)' }}>
         <input
           data-part="slash-search"
           type="text"
