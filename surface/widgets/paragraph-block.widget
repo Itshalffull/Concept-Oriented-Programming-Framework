@@ -255,6 +255,33 @@ widget paragraph-block {
       requires: state.edit = "editing" and body.backspaceKey = true and body.caretAtStart = true
       ensures ok: state.edit = "idle"
     }
+
+    # ArrowUp / ArrowDown on the first / last visual line yield to the host's
+    # block-nav dispatcher. Caret moves to the previous / next sibling block
+    # at the same depth (not the page root). Block ends editing because
+    # focus leaves this contentEditable.
+    action body {
+      requires: state.edit = "editing" and body.arrowUpKey = true and body.onFirstLine = true
+      ensures ok: state.edit = "idle"
+    }
+    action body {
+      requires: state.edit = "editing" and body.arrowDownKey = true and body.onLastLine = true
+      ensures ok: state.edit = "idle"
+    }
+
+    # Enter in an empty list-type block (bullet-list / numbered-list / task /
+    # task-done) converts the block back to paragraph — Notion-style
+    # "exit list on empty enter". No new block is created. Expressed here as
+    # the action leaves editing but the block stays (caller schema changes).
+    # (The schema-change assertion itself is cross-block and not expressible
+    # in the current grammar; documented here for the handler contract.)
+    never "empty list enter creates a new block": {
+      state.edit = "editing"
+      and body.enterKey = true
+      and body.textContent = ""
+      and body.isListSchema = true
+      and event.newBlockCreated = true
+    }
   }
 
 }
