@@ -2707,19 +2707,44 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
             const full = el.textContent ?? '';
             const after = full.slice(before.length);
 
+            // List behavior: Enter in an EMPTY list item exits the list
+            // (converts the block back to paragraph instead of creating a
+            // new list item). Matches Notion / Roam / BlockNote.
+            const isListSchemaForSplit = schema === 'bullet-list'
+              || schema === 'numbered-list'
+              || schema === 'task'
+              || schema === 'task-done';
+            if (isListSchemaForSplit && (el.textContent ?? '').trim() === '') {
+              void (async () => {
+                try {
+                  await invoke('ContentNode', 'changeType', { node: nodeId, type: 'paragraph' });
+                  onStructureChange();
+                  restoreFocusToBlock(nodeId);
+                } catch (err) {
+                  console.warn('[RecursiveBlockEditor] list-exit failed:', err);
+                }
+              })();
+              return;
+            }
+
             // Truncate current block's DOM to `before`
             el.textContent = before;
 
             // Serialize: persist truncation FIRST, then create new block + outline,
             // THEN refresh children. (Direct concept invokes — see
             // handleCreateFirstBlock for why ActionBinding is bypassed.)
+            // New block inherits list-family schema so pressing Enter in
+            // a list item produces another list item (continuation).
+            const newSchemaForSplit = isListSchemaForSplit
+              ? (schema === 'task-done' ? 'task' : schema)  // new task starts unchecked
+              : 'paragraph';
             const newBlockId = `${rootNodeId}:block:${Date.now()}`;
             void (async () => {
               try {
                 await invoke('ContentNode', 'update', { node: nodeId, content: before });
                 const insertResult = await invoke('ContentNode', 'createWithSchema', {
                   id: newBlockId,
-                  schema: 'paragraph',
+                  schema: newSchemaForSplit,
                   body: after,
                 });
                 if (insertResult.variant === 'ok') {
@@ -2820,7 +2845,13 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
             e.preventDefault();
             void (async () => {
               try {
-                const siblingsRes = await invoke('Outline', 'children', { parent: rootNodeId });
+                // Look up my actual parent so siblings resolve at the
+                // correct depth (nested blocks have non-root parents).
+                const myParentRes = await invoke('Outline', 'getParent', { node: nodeId });
+                const myParent = myParentRes.variant === 'ok'
+                  ? String(myParentRes.parent ?? rootNodeId)
+                  : rootNodeId;
+                const siblingsRes = await invoke('Outline', 'children', { parent: myParent });
                 if (siblingsRes.variant !== 'ok') return;
                 const siblings: string[] = (() => {
                   try { return JSON.parse((siblingsRes.children as string) || '[]'); }
@@ -2874,7 +2905,13 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
             e.stopPropagation();
             void (async () => {
               try {
-                const siblingsRes = await invoke('Outline', 'children', { parent: rootNodeId });
+                // Resolve siblings under my actual parent (not rootNodeId)
+                // so Backspace-merge works for nested blocks.
+                const myParentRes = await invoke('Outline', 'getParent', { node: nodeId });
+                const myParent = myParentRes.variant === 'ok'
+                  ? String(myParentRes.parent ?? rootNodeId)
+                  : rootNodeId;
+                const siblingsRes = await invoke('Outline', 'children', { parent: myParent });
                 if (siblingsRes.variant !== 'ok') return;
                 const siblings: string[] = (() => {
                   try { return JSON.parse((siblingsRes.children as string) || '[]'); }
