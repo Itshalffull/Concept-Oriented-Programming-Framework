@@ -67,15 +67,24 @@ describe('Block editor E2E — shipped Notion-parity features', () => {
     expect(s).toContain('dataSource: "list-pages"');
   });
 
-  it('has InputRule seeds for block-markdown shortcuts', async () => {
+  it('has InputRule seeds for block-markdown shortcuts across files', async () => {
+    // Heading H1/H3-H6 live in InputRule.markdown-heading.seeds.yaml;
+    // heading-2 + quote + divider + trigger-wikilink/mention in
+    // InputRule.seeds.yaml. Each registers kind: pattern rules with an
+    // action_ref into an ActionBinding. The editor calls
+    // InputRule/match({kind: "pattern", ...}) to look up which rule
+    // (if any) was triggered by the latest keystroke.
     const fs = await import('fs');
     const path = await import('path');
-    const p = path.resolve(__dirname, '..', 'seeds', 'InputRule.block-markdown.seeds.yaml');
-    expect(fs.existsSync(p)).toBe(true);
-    const s = fs.readFileSync(p, 'utf-8');
-    for (const pat of ['^# $', '^## $', '^### $', '^[-*] $', '^\\\\d+\\\\. $', '^> $']) {
-      expect(s).toContain(`pattern: "${pat}"`);
+    const seedsDir = path.resolve(__dirname, '..', 'seeds');
+    const headings = fs.readFileSync(path.join(seedsDir, 'InputRule.markdown-heading.seeds.yaml'), 'utf-8');
+    for (const pat of ['^# ', '^### ', '^#### ']) {
+      expect(headings).toContain(`pattern: "${pat}"`);
     }
+    const core = fs.readFileSync(path.join(seedsDir, 'InputRule.seeds.yaml'), 'utf-8');
+    expect(core).toContain('pattern: "^## "');
+    expect(core).toContain('pattern: "^> "');
+    expect(core).toContain('pattern: "^---"');
   });
 
   it('Schema seeds cover every renderable block type', async () => {

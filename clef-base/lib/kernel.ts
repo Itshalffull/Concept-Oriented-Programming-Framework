@@ -13,6 +13,7 @@ import { clipHandler } from '../../handlers/ts/media/clip.handler';
 import { keyBindingHandler } from '../../handlers/ts/app/key-binding.handler';
 import { actionBindingHandler } from '../../handlers/ts/app/action-binding.handler';
 import { textSpanHandler } from '../../handlers/ts/app/text-span.handler';
+import { inputRuleHandler } from '../../handlers/ts/app/input-rule.handler';
 
 import { REGISTRY_ENTRIES, SYNC_FILES } from '../../generated/kernel-registry';
 import { discoverFromFilesystem } from '../../handlers/ts/seed-data.handler';
@@ -76,6 +77,12 @@ const SUPPLEMENTAL_REGISTRY_ENTRIES = [
     uri: 'urn:clef/TextSpan',
     handler: textSpanHandler,
     storageName: 'text-span',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/InputRule',
+    handler: inputRuleHandler,
+    storageName: 'input-rule',
     storageType: 'standard' as const,
   },
 ];

@@ -3957,18 +3957,23 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
               try {
                 let newSchema: string | null = null;
                 try {
+                  // Seed shape: kind: pattern, scope: null | paragraph.
+                  // The handler returns { variant: 'ok', action_ref: string }
+                  // where action_ref names a markdown-transform-to-<schema>
+                  // ActionBinding. We map that binding's name to the target
+                  // schema by convention so the editor can dispatch
+                  // content-node-change-type without a second round trip.
                   const match = await invoke('InputRule', 'match', {
-                    kind: 'block-markdown',
+                    kind: 'pattern',
                     input: normalizedText,
                     scope: 'paragraph',
                   });
-                  if (match.variant === 'ok') {
-                    const rule = match.rule as Record<string, unknown> | undefined;
-                    if (rule && typeof rule.dispatchArgs === 'string') {
-                      try {
-                        const args = JSON.parse(rule.dispatchArgs);
-                        if (typeof args.type === 'string') newSchema = args.type;
-                      } catch { /* fall through */ }
+                  if (match.variant === 'ok' && typeof match.action_ref === 'string') {
+                    const prefix = 'markdown-transform-to-';
+                    if (match.action_ref.startsWith(prefix)) {
+                      newSchema = match.action_ref.slice(prefix.length);
+                      // Normalize heading-1 → heading (block-editor schema name).
+                      if (newSchema === 'heading-1') newSchema = 'heading';
                     }
                   }
                 } catch { /* InputRule not registered — fall back below */ }
