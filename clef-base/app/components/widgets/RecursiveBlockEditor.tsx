@@ -3754,6 +3754,16 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
                 // smart single quotes / apostrophe
                 patched = patched.replace(/(^|[\s\(\[])'/g, '$1\u2018');
                 patched = patched.replace(/'/g, '\u2019');
+                // arrows and symbols
+                patched = patched.replace(/(?:^|\s)->(?=\s|$)/g, (m) => m.replace('->', '→'));
+                patched = patched.replace(/(?:^|\s)<-(?=\s|$)/g, (m) => m.replace('<-', '←'));
+                patched = patched.replace(/(?:^|\s)=>(?=\s|$)/g, (m) => m.replace('=>', '⇒'));
+                patched = patched.replace(/(?:^|\s)<=(?=\s|$)/g, (m) => m.replace('<=', '≤'));
+                patched = patched.replace(/(?:^|\s)>=(?=\s|$)/g, (m) => m.replace('>=', '≥'));
+                patched = patched.replace(/\(c\)/gi, '©');
+                patched = patched.replace(/\(r\)/gi, '®');
+                patched = patched.replace(/\(tm\)/gi, '™');
+                patched = patched.replace(/(?<!\w)\+\/-(?!\w)/g, '±');
                 if (patched !== raw) {
                   // Replace the whole textContent. Caret offset adjusts by
                   // the length delta. Simple approximation: move caret to
