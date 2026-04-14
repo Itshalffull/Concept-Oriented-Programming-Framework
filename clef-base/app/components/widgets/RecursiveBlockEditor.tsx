@@ -1407,6 +1407,31 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
   const handlePaste = useCallback(async (e: React.ClipboardEvent) => {
     if (!canEdit) return;
 
+    // Paste URL on non-empty text selection → wrap selection in <a href=URL>.
+    // Matches Notion/Slack: if you have text selected and paste a URL, the
+    // URL becomes the link's href rather than replacing the selected text.
+    const clipText = e.clipboardData?.getData('text/plain') ?? '';
+    const urlOnly = clipText.trim();
+    if (/^https?:\/\/\S+$/.test(urlOnly)) {
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount > 0 && !sel.isCollapsed) {
+        const target = e.target as HTMLElement;
+        if (target.isContentEditable) {
+          e.preventDefault();
+          const range = sel.getRangeAt(0);
+          const a = document.createElement('a');
+          a.href = urlOnly;
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          a.appendChild(range.extractContents());
+          range.insertNode(a);
+          range.setStartAfter(a); range.collapse(true);
+          sel.removeAllRanges(); sel.addRange(range);
+          return;
+        }
+      }
+    }
+
     // -------------------------------------------------------------------------
     // Smart-paste path (PP-smart-paste): runs BEFORE the image-paste path.
     // Intercepts clipboard content containing structured HTML or Markdown and
