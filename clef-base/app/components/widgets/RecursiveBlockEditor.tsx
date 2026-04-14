@@ -1077,6 +1077,45 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
       setFindReplaceOpen(true);
       return;
     }
+
+    // Cmd+Z / Ctrl+Z — undo; Cmd+Shift+Z / Ctrl+Shift+Z — redo.
+    // Only intercepts when there's an entry on our block-level stack;
+    // otherwise defer to the browser's native contentEditable undo
+    // (which handles per-character text history).
+    if ((e.metaKey || e.ctrlKey) && (e.key === 'z' || e.key === 'Z')) {
+      const redo = e.shiftKey;
+      const stack = redo ? redoStack : undoStack;
+      const mirror = redo ? undoStack : redoStack;
+      const entry = stack.pop();
+      if (!entry) return; // fall back to browser default
+      e.preventDefault();
+      e.stopPropagation();
+      void (async () => {
+        try {
+          if (entry.kind === 'text') {
+            const target = redo ? entry.after : entry.before;
+            contentBodyCache.set(entry.nodeId, target);
+            await invoke('ContentNode', 'update', { node: entry.nodeId, content: target });
+            const el = document.querySelector<HTMLDivElement>(
+              `[data-part="block-slot"][data-node-id="${entry.nodeId}"] [data-part="block-content"]`,
+            );
+            if (el) el.textContent = target;
+            mirror.push(entry);
+            loadChildren();
+          } else if (entry.kind === 'reparent') {
+            const target = redo ? entry.newParent : entry.oldParent;
+            await invoke('Outline', 'reparent', { node: entry.nodeId, newParent: target });
+            mirror.push(entry);
+            loadChildren();
+            restoreFocusToBlock(entry.nodeId);
+          }
+          // insert / delete / changeType: extend as those paths push entries
+        } catch (err) {
+          console.warn('[RecursiveBlockEditor] undo/redo failed:', err);
+        }
+      })();
+      return;
+    }
     if (e.key === '/' && !e.ctrlKey && !e.metaKey) {
       // Notion/Roam: `/` opens the block-type picker. Allow this inside
       // contentEditables when the caret is at the start of an empty block
@@ -2147,6 +2186,40 @@ export function invalidateBlockBody(nodeId: string) {
   contentBodyCache.delete(nodeId);
 }
 
+/**
+ * Undo/redo stacks — module-level because one block editor lives per
+ * page view at a time. Each entry is an inverse action captured at
+ * dispatch time; undo pops and applies, redo re-pushes onto undo.
+ * Text-edit bursts within BURST_MS coalesce into one entry.
+ */
+type UndoEntry =
+  | { kind: 'text'; nodeId: string; before: string; after: string; ts: number }
+  | { kind: 'insert'; nodeId: string; parent: string }
+  | { kind: 'delete'; nodeId: string; parent: string; schema: string; content: string }
+  | { kind: 'reparent'; nodeId: string; oldParent: string; newParent: string }
+  | { kind: 'changeType'; nodeId: string; oldType: string; newType: string };
+
+const undoStack: UndoEntry[] = [];
+const redoStack: UndoEntry[] = [];
+const BURST_MS = 800;
+const UNDO_CAP = 200;
+
+export function pushUndo(entry: UndoEntry) {
+  // Coalesce consecutive same-nodeId text edits within BURST_MS
+  if (entry.kind === 'text' && undoStack.length > 0) {
+    const top = undoStack[undoStack.length - 1];
+    if (top.kind === 'text' && top.nodeId === entry.nodeId && entry.ts - top.ts < BURST_MS) {
+      top.after = entry.after;
+      top.ts = entry.ts;
+      redoStack.length = 0;
+      return;
+    }
+  }
+  undoStack.push(entry);
+  if (undoStack.length > UNDO_CAP) undoStack.shift();
+  redoStack.length = 0;
+}
+
 function restoreFocusToBlock(nodeId: string, at: 'start' | 'end' = 'end') {
   pendingFocusNodeId = nodeId;
   pendingFocusAt = at;
@@ -2662,7 +2735,9 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
       // Direct ContentNode/update — ActionBinding layer is inert; see
       // RecursiveBlockEditor.handleCreateFirstBlock comment.
       // Update cache eagerly so a sibling re-mount sees fresh content.
+      const before = contentBodyCache.get(nodeId) ?? '';
       contentBodyCache.set(nodeId, newContent);
+      pushUndo({ kind: 'text', nodeId, before, after: newContent, ts: Date.now() });
       const result = await invoke('ContentNode', 'update', {
         node: nodeId, content: newContent,
       });
@@ -3199,6 +3274,7 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
                   const grandparentId = String(gp.parent ?? '') || rootNodeId;
                   // Optimistic: decrement depth locally BEFORE server ack.
                   onOptimisticDepthChange?.(nodeId, -1);
+                  pushUndo({ kind: 'reparent', nodeId, oldParent: parentId, newParent: grandparentId });
                   const result = await invoke('Outline', 'reparent', {
                     node: nodeId, newParent: grandparentId,
                   });
@@ -3213,6 +3289,7 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
                 const prevSibling = siblings[myIndex - 1];
                 // Optimistic: increment depth locally BEFORE server ack.
                 onOptimisticDepthChange?.(nodeId, +1);
+                pushUndo({ kind: 'reparent', nodeId, oldParent: myParent, newParent: prevSibling });
                 const result = await invoke('Outline', 'reparent', {
                   node: nodeId, newParent: prevSibling,
                 });
