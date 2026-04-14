@@ -351,6 +351,28 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
     ));
   }, []);
 
+  // Optimistic block insert — Enter creates a BlockChild entry locally
+  // so the DOM appears on the same frame as the keystroke. Server-side
+  // create runs in the background; loadChildren reconciles later.
+  const handleOptimisticInsert = useCallback((newChild: {
+    id: string; schema: string; parent: string; afterNodeId: string;
+  }) => {
+    setChildren((prev) => {
+      const idx = prev.findIndex((c) => c.id === newChild.afterNodeId);
+      if (idx < 0) return prev;
+      const after = prev[idx];
+      const entry: BlockChild = {
+        id: newChild.id,
+        schema: newChild.schema,
+        displayMode: 'block-editor',
+        depth: after.depth,       // same depth as sibling we're splitting from
+        parent: after.parent,     // same parent — it's a sibling
+        hasChildren: false,
+      };
+      return [...prev.slice(0, idx + 1), entry, ...prev.slice(idx + 1)];
+    });
+  }, []);
+
   const loadChildren = useCallback(async () => {
     // NOTE: don't flip childrenLoading on reloads. It's only used for the
     // initial render to show "Loading blocks..." while we first fetch
@@ -1909,6 +1931,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
                         onBlockContentChange={undefined}
                         onStructureChange={loadChildren}
                         onOptimisticDepthChange={handleOptimisticDepthChange}
+                        onOptimisticInsert={handleOptimisticInsert}
                         onBlockClick={(e) => handleBlockClick(child.id, e)}
                         onSectionSelect={handleSectionSelect}
                         rootNodeId={rootNodeId}
@@ -2492,6 +2515,11 @@ interface BlockSlotProps {
   /** Optimistic depth adjustment — parent patches local children state
    *  (no server round-trip) so Tab / Shift+Tab feel instant. */
   onOptimisticDepthChange?: (nodeId: string, delta: number) => void;
+  /** Optimistic block insert — parent adds a new BlockChild into local
+   *  children state so the DOM appears synchronously with Enter. */
+  onOptimisticInsert?: (newChild: {
+    id: string; schema: string; parent: string; afterNodeId: string;
+  }) => void;
   /** Called on click events to propagate multi-select modifier logic upward. */
   onBlockClick?: (e: React.MouseEvent) => void;
   /**
@@ -2519,6 +2547,7 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
   onBlockContentChange,
   onStructureChange,
   onOptimisticDepthChange,
+  onOptimisticInsert,
   onBlockClick,
   onSectionSelect,
   rootNodeId,
@@ -3212,6 +3241,15 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
             // mount effect can seed DOM content synchronously without
             // a ContentNode/get round-trip — no flash.
             contentBodyCache.set(newBlockId, after);
+            // Optimistically insert the block into local state so the
+            // DOM appears on this frame. Server-side create runs in
+            // background; loadChildren reconciles later.
+            onOptimisticInsert?.({
+              id: newBlockId,
+              schema: newSchemaForSplit,
+              parent: rootNodeId,  // adjusted by the Outline/create below
+              afterNodeId: nodeId,
+            });
             void (async () => {
               try {
                 await invoke('ContentNode', 'update', { node: nodeId, content: before });
