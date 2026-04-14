@@ -703,19 +703,27 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
 
     if (blockIds.length === 0) return;
 
-    // Determine the parent of each block from the children list.
-    // RecursiveBlockEditor manages top-level children whose parent is rootNodeId.
+    // Clone via direct ContentNode + Outline dispatch; ActionBinding layer
+    // is inert so block-duplicate binding is a no-op.
     for (const blockId of blockIds) {
       try {
-        await invoke('ActionBinding', 'invoke', {
-          binding: 'block-duplicate',
-          context: JSON.stringify({
-            blockId,
-            parentId: rootNodeId,
-          }),
+        const srcNode = await invoke('ContentNode', 'get', { node: blockId });
+        const srcParent = await invoke('Outline', 'getParent', { node: blockId });
+        if (srcNode.variant !== 'ok') continue;
+        const dupId = `${rootNodeId}:block:${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        const type = String(srcNode.type ?? 'paragraph');
+        const content = String(srcNode.content ?? '');
+        await invoke('ContentNode', 'createWithSchema', {
+          id: dupId,
+          schema: type || 'paragraph',
+          body: content,
         });
+        const parent = srcParent.variant === 'ok'
+          ? String(srcParent.parent ?? rootNodeId)
+          : rootNodeId;
+        await invoke('Outline', 'create', { node: dupId, parent });
       } catch (err) {
-        console.error('[RecursiveBlockEditor] block-duplicate failed for block:', blockId, err);
+        console.error('[RecursiveBlockEditor] duplicate failed for block:', blockId, err);
       }
     }
 
