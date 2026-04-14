@@ -3542,9 +3542,42 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
                 { re: /(?<!\*)\*([^*\n]+)\*(?!\*)$/, tag: 'i' },
                 { re: /(?<!_)_([^_\n]+)_(?!_)$/, tag: 'i' },
                 { re: /`([^`\n]+)`$/, tag: 'code' },
-                { re: /~~([^~\n]+)~~$/, tag: 's' },  // strike-through
-                { re: /==([^=\n]+)==$/, tag: 'mark' },  // highlight
+                { re: /~~([^~\n]+)~~$/, tag: 's' },
+                { re: /==([^=\n]+)==$/, tag: 'mark' },
               ];
+              // URL autolink: detect URL followed by a just-typed space.
+              // Fires when tail ends with "https://foo.com " or similar.
+              const urlMatch = tail.match(/(https?:\/\/[^\s<>"]+) $/);
+              if (urlMatch) {
+                const urlStr = urlMatch[1];
+                const matchStart = caretOffset - urlStr.length - 1;
+                const walker2 = document.createTreeWalker(blockContentRef.current!, NodeFilter.SHOW_TEXT);
+                let seen2 = 0;
+                let sn: Text | null = null, so = 0, en: Text | null = null, eo = 0;
+                let nn: Node | null;
+                while ((nn = walker2.nextNode())) {
+                  const t = nn as Text; const len = t.data.length;
+                  if (!sn && matchStart <= seen2 + len) { sn = t; so = matchStart - seen2; }
+                  if (caretOffset - 1 <= seen2 + len) { en = t; eo = caretOffset - 1 - seen2; break; }
+                  seen2 += len;
+                }
+                if (sn && en) {
+                  const r = document.createRange();
+                  r.setStart(sn, so); r.setEnd(en, eo);
+                  r.deleteContents();
+                  const a = document.createElement('a');
+                  a.href = urlStr;
+                  a.target = '_blank';
+                  a.rel = 'noopener noreferrer';
+                  a.textContent = urlStr;
+                  r.insertNode(a);
+                  // Caret after the anchor (space still follows)
+                  const after = document.createRange();
+                  after.setStartAfter(a); after.collapse(true);
+                  const s = window.getSelection();
+                  s?.removeAllRanges(); s?.addRange(after);
+                }
+              }
               for (const { re, tag } of inlinePatterns) {
                 const m = tail.match(re);
                 if (!m) continue;
