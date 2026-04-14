@@ -780,7 +780,9 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
     if (blockIds.length === 0) return;
 
     // Clone via direct ContentNode + Outline dispatch; ActionBinding layer
-    // is inert so block-duplicate binding is a no-op.
+    // is inert so block-duplicate binding is a no-op. Each duplicate gets
+    // a fractional order that places it immediately after the source so it
+    // doesn't jump to the end of the parent's children list.
     for (const blockId of blockIds) {
       try {
         const srcNode = await invoke('ContentNode', 'get', { node: blockId });
@@ -797,7 +799,28 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
         const parent = srcParent.variant === 'ok'
           ? String(srcParent.parent ?? rootNodeId)
           : rootNodeId;
-        await invoke('Outline', 'create', { node: dupId, parent });
+        // Compute fractional order = midpoint(src, nextSibling)
+        let order: number | undefined;
+        try {
+          const siblingsRes = await invoke('Outline', 'children', { parent });
+          const sibIds: string[] = siblingsRes.variant === 'ok'
+            ? (() => { try { return JSON.parse(siblingsRes.children as string || '[]'); } catch { return []; } })()
+            : [];
+          const idx = sibIds.indexOf(blockId);
+          const srcRec = await invoke('Outline', 'getRecord', { node: blockId });
+          const srcOrder = srcRec.variant === 'ok' && typeof srcRec.order === 'number' ? srcRec.order : Date.now();
+          let nextOrder: number | null = null;
+          if (idx >= 0 && idx < sibIds.length - 1) {
+            const n = await invoke('Outline', 'getRecord', { node: sibIds[idx + 1] });
+            if (n.variant === 'ok' && typeof n.order === 'number') nextOrder = n.order;
+          }
+          order = nextOrder !== null ? (srcOrder + nextOrder) / 2 : srcOrder + 1;
+        } catch { /* fall through to default Date.now() */ }
+        await invoke('Outline', 'create', {
+          node: dupId,
+          parent,
+          ...(order !== undefined ? { order } : {}),
+        });
       } catch (err) {
         console.error('[RecursiveBlockEditor] duplicate failed for block:', blockId, err);
       }
