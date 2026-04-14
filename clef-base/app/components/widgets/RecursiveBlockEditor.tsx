@@ -2483,7 +2483,11 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
                     };
                     const subtreeRows = collectSubtree(child.id).map((c) => ({
                       id: c.id,
-                      parent: c.parent === child.id ? '' : c.parent,  // roots of this mini-tree have no parent inside the set
+                      // Always carry the real parent id — TreeDisplay
+                      // won't render the clicked block itself (it's
+                      // not in the row set), and BoardDisplay uses the
+                      // parent id to resolve the column label.
+                      parent: c.parent,
                       schema: c.schema,
                       content: titleLine(contentBodyCache.get(c.id) ?? ''),
                     }));
@@ -2527,15 +2531,95 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
                       );
                     }
                     if (mode === 'block-children-board') {
-                      // BoardDisplay groups by the first parent — the
-                      // clicked block itself. Because every direct
-                      // child of this block has parent=child.id, that
-                      // yields a single column. To get a more useful
-                      // kanban, group by schema which is what users
-                      // actually want for a block-subtree kanban.
+                      // Kanban where each column IS a parent block —
+                      // "first parent as the group". We pass the whole
+                      // subtree so every descendant shows up in the
+                      // column for its immediate parent. Column labels
+                      // are the parent block's title (resolved via a
+                      // lookup map), and onCardMove reparents via the
+                      // seeded outline-reparent ActionBinding so drag
+                      // is a first-class hierarchy edit.
+                      const parentLabel: Record<string, string> = {};
+                      const labelToId: Record<string, string> = {};
+                      // Include the rendered parent block itself as a
+                      // valid column so users can drag a card back to
+                      // THIS parent's direct children.
+                      parentLabel[child.id] = (contentBodyCache.get(child.id) ?? '')
+                        .replace(/<[^>]+>/g, '').trim() || child.id;
+                      for (const c of children) {
+                        if (c.hasChildren) {
+                          const lbl = (contentBodyCache.get(c.id) ?? '').replace(/<[^>]+>/g, '').trim() || c.id;
+                          parentLabel[c.id] = lbl;
+                        }
+                      }
+                      for (const [id, lbl] of Object.entries(parentLabel)) {
+                        // First-write-wins on duplicate labels; console
+                        // warning so the collision is visible without
+                        // breaking the drop handler.
+                        if (labelToId[lbl] === undefined) labelToId[lbl] = id;
+                      }
+                      const boardRows = subtreeRows.map((r) => ({
+                        ...r,
+                        parent: parentLabel[String(r.parent)] ?? String(r.parent) ?? '(root)',
+                      }));
+                      // Render each Kanban card as a real BlockSlot so
+                      // the card's internal content honors the original
+                      // block display (paragraph stays a paragraph,
+                      // heading stays a heading, etc.) including live
+                      // editing and resolved widget. The kanban shell
+                      // only wraps the block; the display-mode doesn't
+                      // change just because the VIEW changed. Each row
+                      // looks up its BlockChild record for schema /
+                      // displayMode metadata.
+                      const byId = new Map<string, BlockChild>();
+                      for (const c of children) byId.set(c.id, c);
+                      const renderBlockCard = (row: Record<string, unknown>) => {
+                        const id = String(row.id);
+                        const rec = byId.get(id);
+                        if (!rec) return <span style={{ fontSize: 12 }}>{String(row.content)}</span>;
+                        const resolved = resolvedWidgets.get(id);
+                        return (
+                          <BlockSlot
+                            nodeId={rec.id}
+                            schema={rec.schema}
+                            displayMode={rec.displayMode}
+                            resolvedWidget={resolved?.widgetId ?? `${rec.schema}-block`}
+                            canEdit={canEdit}
+                            isSelected={false}
+                            onFocus={() => handleBlockFocus(rec.id, rec.schema)}
+                            onBlur={handleBlockBlur}
+                            onBlockContentChange={undefined}
+                            onStructureChange={loadChildren}
+                            onOptimisticDepthChange={handleOptimisticDepthChange}
+                            onOptimisticInsert={handleOptimisticInsert}
+                            onBlockClick={(e) => handleBlockClick(rec.id, e)}
+                            onSectionSelect={handleSectionSelect}
+                            rootNodeId={rootNodeId}
+                            editorFlavor={editorFlavor}
+                            decorationLayerEntries={decorationLayerEntries}
+                          />
+                        );
+                      };
                       return (
                         <div data-part="nested-alt-view" data-view={mode} data-parent-id={child.id} style={wrap}>
-                          <BoardDisplay data={directRows} fields={fields} groupBy="schema" />
+                          <BoardDisplay
+                            data={boardRows}
+                            fields={[...fields, { key: 'parent', label: 'Parent' }]}
+                            groupBy="parent"
+                            renderItem={renderBlockCard}
+                            onCardMove={(rowId, newColumnLabel) => {
+                              const newParentId = labelToId[newColumnLabel];
+                              if (!newParentId || newParentId === rowId) return;
+                              void invokeBinding(invoke, 'outline-reparent', {
+                                node: rowId,
+                                newParent: newParentId,
+                              }).then(() => {
+                                void loadChildren();
+                              }).catch((err) => {
+                                console.warn('[block-children-board] reparent failed:', err);
+                              });
+                            }}
+                          />
                         </div>
                       );
                     }
