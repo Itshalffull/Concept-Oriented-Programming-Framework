@@ -2635,7 +2635,18 @@ const WikilinkPicker: React.FC<WikilinkPickerProps> = ({ query, anchor, invoke, 
     let cancelled = false;
     void (async () => {
       try {
-        const res = await invokeBinding(invoke, 'list-pages', { limit: 200 });
+        // Read the picker's ViewShell config (discovers which ActionBinding
+        // backs this picker's data source). Falls back to 'list-pages' if
+        // ViewShell isn't registered yet.
+        let dataSourceBinding = 'list-pages';
+        try {
+          const vs = await invoke('ViewShell', 'resolve', { name: 'wikilink-picker' });
+          if (vs.variant === 'ok') {
+            const cfg = JSON.parse(String(vs.config ?? '{}'));
+            if (typeof cfg.dataSource === 'string' && cfg.dataSource) dataSourceBinding = cfg.dataSource;
+          }
+        } catch { /* fall back to default binding */ }
+        const res = await invokeBinding(invoke, dataSourceBinding, { limit: 200 });
         if (cancelled || res.variant !== 'ok') return;
         const rows: Array<Record<string, unknown>> = (() => {
           try { return JSON.parse(res.items as string || '[]'); }
@@ -2737,7 +2748,18 @@ const MentionPicker: React.FC<{
     let cancelled = false;
     void (async () => {
       try {
-        const res = await invokeBinding(invoke, 'list-users', {});
+        // Same pattern as wikilink picker: resolve the ViewShell for the
+        // user-mention picker to discover the backing binding. Falls
+        // back if ViewShell isn't registered yet.
+        let dataSourceBinding = 'list-users';
+        try {
+          const vs = await invoke('ViewShell', 'resolve', { name: 'user-mention-picker' });
+          if (vs.variant === 'ok') {
+            const cfg = JSON.parse(String(vs.config ?? '{}'));
+            if (typeof cfg.dataSource === 'string' && cfg.dataSource) dataSourceBinding = cfg.dataSource;
+          }
+        } catch { /* fall back to default binding */ }
+        const res = await invokeBinding(invoke, dataSourceBinding, {});
         if (cancelled || res.variant !== 'ok') return;
         const rows: Array<{ user: string; provider: string }> = (() => {
           try { return JSON.parse(res.items as string || '[]'); }

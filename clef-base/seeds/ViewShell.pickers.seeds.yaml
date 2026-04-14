@@ -1,0 +1,37 @@
+# ViewShell seeds — picker surfaces for the block editor.
+#
+# Each picker (@-mention, [[wikilink) is backed by a ViewShell row so
+# the data shape, filter rules, and presentation are discoverable as
+# concept data rather than buried in a React component. The React
+# WikilinkPicker / MentionPicker components query ViewShell/resolve at
+# render time and execute through the bound action binding.
+#
+# Long-term: a generic PickerView widget reads the resolved config and
+# renders. Right now the components are bespoke but already read their
+# data source through list-pages / list-users ActionBindings seeded in
+# ActionBinding.picker-queries.seeds.yaml.
+
+concept: ViewShell
+action: create
+entries:
+  - name: user-mention-picker
+    title: "User mention picker"
+    description: "Autocomplete list of users shown when @ is typed in a block."
+    dataSource: "list-users"
+    filter: ""
+    sort: ""
+    group: ""
+    projection: ""
+    presentation: "popover-listbox"
+    interaction: "block-editor-mention"
+
+  - name: wikilink-picker
+    title: "Wiki link picker"
+    description: "Autocomplete list of pages shown when [[ is typed in a block."
+    dataSource: "list-pages"
+    filter: ""
+    sort: ""
+    group: ""
+    projection: ""
+    presentation: "popover-listbox"
+    interaction: "block-editor-wikilink"
