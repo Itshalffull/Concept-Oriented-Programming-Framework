@@ -384,15 +384,26 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
       // React list, so keyed BlockSlots keep their DOM nodes and we
       // don't get the top-to-bottom re-fetch flash on structural change.
       async function resolveSchema(childId: string): Promise<string> {
+        // Cache-first: if we already know this block's schema from a
+        // prior load (and it hasn't been explicitly invalidated), use
+        // it without a round-trip. Schema only changes via changeType
+        // which invalidates the cache.
+        const cached = contentSchemaCache.get(childId);
+        if (cached) return cached;
         try {
           const schemaResult = await invoke('Schema', 'getSchemasFor', { entity_id: childId });
           const schemas: string[] = schemaResult.variant === 'ok'
             ? safeParseJsonArray<string>(schemaResult.schemas)
             : [];
-          if (schemas[0]) return schemas[0];
+          if (schemas[0]) {
+            contentSchemaCache.set(childId, schemas[0]);
+            return schemas[0];
+          }
           const nodeResult = await invoke('ContentNode', 'get', { node: childId });
           if (nodeResult.variant === 'ok' && typeof nodeResult.type === 'string') {
-            return nodeResult.type || 'paragraph';
+            const t = nodeResult.type || 'paragraph';
+            contentSchemaCache.set(childId, t);
+            return t;
           }
         } catch { /* ignore, fall through */ }
         return 'paragraph';
@@ -955,6 +966,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
           // Convert the focused block's schema in place (the block the
           // user typed '/' into). Matches Notion: selecting an item
           // changes THIS block, not adds a sibling.
+          contentSchemaCache.set(focusedId, item.mappingId);
           await invoke('ContentNode', 'changeType', {
             node: focusedId, type: item.mappingId,
           });
@@ -2336,8 +2348,10 @@ let pendingFocusAt: 'start' | 'end' = 'end';
  * update-block-content / changeType.
  */
 const contentBodyCache = new Map<string, string>();
+const contentSchemaCache = new Map<string, string>();
 export function invalidateBlockBody(nodeId: string) {
   contentBodyCache.delete(nodeId);
+  contentSchemaCache.delete(nodeId);
 }
 
 /**
@@ -2974,6 +2988,7 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
               e.preventDefault();
               e.stopPropagation();
               const newSchema = schema === 'task' ? 'task-done' : 'task';
+              contentSchemaCache.set(nodeId, newSchema);
               void invoke('ContentNode', 'changeType', { node: nodeId, type: newSchema })
                 .then(() => onStructureChange());
               return;
@@ -3124,7 +3139,7 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
                 try {
                   // Change the block's type directly — loadChildren reads
                   // ContentNode.type when no Schema membership exists.
-                  await invoke('ContentNode', 'changeType', { node: nodeId, type: newSchema });
+                  contentSchemaCache.set(nodeId, newSchema); await invoke('ContentNode', 'changeType', { node: nodeId, type: newSchema });
                   await invoke('ContentNode', 'update', { node: nodeId, content: '' });
                   el.textContent = '';
                   onStructureChange();
@@ -3193,7 +3208,7 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
             if (isListSchemaForSplit && (el.textContent ?? '').trim() === '') {
               void (async () => {
                 try {
-                  await invoke('ContentNode', 'changeType', { node: nodeId, type: 'paragraph' });
+                  contentSchemaCache.set(nodeId, "paragraph"); await invoke("ContentNode", "changeType", { node: nodeId, type: "paragraph" });
                   onStructureChange();
                   restoreFocusToBlock(nodeId);
                 } catch (err) {
