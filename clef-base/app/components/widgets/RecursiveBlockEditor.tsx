@@ -102,6 +102,11 @@ interface BlockChild {
   id: string;
   schema: string;
   displayMode: string;
+  /** Indent depth from root — 0 for top-level, 1+ for nested. Drives CSS
+   *  margin-left so Tab reparent becomes a flat-list reorder (no remount). */
+  depth: number;
+  /** Outline parent id. Top-level blocks have parent === rootNodeId. */
+  parent: string;
 }
 
 interface ResolvedWidget {
@@ -329,41 +334,39 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
   const loadChildren = useCallback(async () => {
     setChildrenLoading(true);
     try {
-      // Outline/children returns ordered child ContentNode ids
-      const result = await invoke('Outline', 'children', { parent: rootNodeId });
-      if (result.variant === 'ok') {
-        const ids = safeParseJsonArray<string>(result.children);
-
-        // For each child, get its schema to set up the BlockChild record
-        const childRecords: BlockChild[] = await Promise.all(
-          ids.map(async (childId) => {
-            try {
-              // Prefer Schema/getSchemasFor membership (richer taxonomy);
-              // fall back to ContentNode.type when no membership exists.
-              // Many workspaces don't have predefined Schemas, so the
-              // type field carries the block schema on its own.
-              const schemaResult = await invoke('Schema', 'getSchemasFor', { entity_id: childId });
-              const schemas: string[] = schemaResult.variant === 'ok'
-                ? safeParseJsonArray<string>(schemaResult.schemas)
-                : [];
-              if (schemas[0]) {
-                return { id: childId, schema: schemas[0], displayMode: 'block-editor' };
-              }
-              const nodeResult = await invoke('ContentNode', 'get', { node: childId });
-              const type = nodeResult.variant === 'ok' && typeof nodeResult.type === 'string'
-                ? nodeResult.type
-                : 'paragraph';
-              return {
-                id: childId,
-                schema: type || 'paragraph',
-                displayMode: 'block-editor',
-              };
-            } catch {
-              return { id: childId, schema: 'paragraph', displayMode: 'block-editor' };
-            }
-          }),
-        );
-
+      // DFS walk: collect ALL descendants as a flat list with depth.
+      // The flat shape means Tab reparent is a reorder within the SAME
+      // React list, so keyed BlockSlots keep their DOM nodes and we
+      // don't get the top-to-bottom re-fetch flash on structural change.
+      async function resolveSchema(childId: string): Promise<string> {
+        try {
+          const schemaResult = await invoke('Schema', 'getSchemasFor', { entity_id: childId });
+          const schemas: string[] = schemaResult.variant === 'ok'
+            ? safeParseJsonArray<string>(schemaResult.schemas)
+            : [];
+          if (schemas[0]) return schemas[0];
+          const nodeResult = await invoke('ContentNode', 'get', { node: childId });
+          if (nodeResult.variant === 'ok' && typeof nodeResult.type === 'string') {
+            return nodeResult.type || 'paragraph';
+          }
+        } catch { /* ignore, fall through */ }
+        return 'paragraph';
+      }
+      async function walk(parentId: string, depth: number, out: BlockChild[]): Promise<void> {
+        const res = await invoke('Outline', 'children', { parent: parentId });
+        if (res.variant !== 'ok') return;
+        const ids = safeParseJsonArray<string>(res.children);
+        for (const id of ids) {
+          const schema = await resolveSchema(id);
+          out.push({ id, schema, displayMode: 'block-editor', depth, parent: parentId });
+          await walk(id, depth + 1, out);  // DFS — children follow parent
+        }
+      }
+      const childRecords: BlockChild[] = [];
+      await walk(rootNodeId, 0, childRecords);
+      {
+        // For the downstream code that expects `ids` (e.g. widget resolver)
+        const ids = childRecords.map((c) => c.id);
         setChildren(childRecords);
 
         // Resolve ComponentMapping for each child
@@ -1639,7 +1642,17 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
                       console.error('[RecursiveBlockEditor] block-drop failed:', err);
                     }
                   }}
-                  style={{ position: 'relative' }}
+                  style={{
+                    position: 'relative',
+                    // Indent via depth — flat-list layout where nested blocks
+                    // sit directly under the top-level <ol>, reparent becomes
+                    // a margin-change not a React subtree swap.
+                    marginLeft: child.depth > 0 ? `${child.depth * 24}px` : 0,
+                    borderLeft: child.depth > 0
+                      ? '1px solid var(--palette-outline-variant, rgba(0,0,0,0.08))'
+                      : 'none',
+                    paddingLeft: child.depth > 0 ? '8px' : 0,
+                  }}
                 >
                   {/* Drop zone indicator — above block during active drag-over */}
                   <BlockDropZoneIndicator active={isDragOver && dropPosition === 'before'} position="before" />
@@ -3291,19 +3304,10 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
         </div>
       )}
 
-      {/* --- Recursive children region ---
-          Each BlockSlot renders its own descendants as nested BlockSlots,
-          indented. This is the "Recursive" in RecursiveBlockEditor: blocks
-          that have been Tab-indented under this one reappear here instead
-          of disappearing from the top level. */}
-      <BlockSlotChildren
-        parentId={nodeId}
-        rootNodeId={rootNodeId}
-        canEdit={canEdit}
-        invoke={invoke}
-        onBlockContentChange={onBlockContentChange}
-        onStructureChange={onStructureChange}
-      />
+      {/* Nested children now render in the top-level flat list (keyed by
+          node id + indented via `depth` prop). The block-children region
+          that used to live here has moved up to RecursiveBlockEditor's
+          main map so Tab reparent is a pure reorder (no remount flash). */}
     </div>
 
     {/* Spell-check suggestions popover — rendered via portal when active */}
