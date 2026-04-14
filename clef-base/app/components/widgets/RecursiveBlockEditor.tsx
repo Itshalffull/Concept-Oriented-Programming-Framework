@@ -2637,12 +2637,38 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
                             key={rec.id + ':node'}
                             data-part="kanban-subtree-node"
                             style={{
+                              position: 'relative',
                               marginLeft: depth * 12,
                               borderLeft: depth > 0 ? '1px solid var(--palette-outline-variant, rgba(0,0,0,0.08))' : 'none',
                               paddingLeft: depth > 0 ? 6 : 0,
                             }}
+                            onMouseEnter={(e) => {
+                              const g = e.currentTarget.querySelector('[data-part="nested-children-gear"]') as HTMLElement | null;
+                              if (g) g.style.opacity = '0.9';
+                            }}
+                            onMouseLeave={(e) => {
+                              const g = e.currentTarget.querySelector('[data-part="nested-children-gear"]') as HTMLElement | null;
+                              if (g) g.style.opacity = '0';
+                            }}
                           >
                             {renderOneBlock(rec, ':card')}
+                            {rec.hasChildren && (
+                              <button
+                                data-part="nested-children-gear"
+                                data-parent-id={rec.id}
+                                title="View settings for this block's children"
+                                aria-label="Nested children view settings"
+                                onClick={(e) => { e.stopPropagation(); setBlockChildrenMenu({ x: e.clientX, y: e.clientY, parentId: rec.id }); }}
+                                style={{
+                                  position: 'absolute', right: 4, top: 4, zIndex: 7,
+                                  fontSize: 11, padding: '1px 6px', borderRadius: 4, cursor: 'pointer',
+                                  background: 'var(--palette-surface, #fff)',
+                                  border: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.12))',
+                                  color: 'var(--palette-on-surface-variant, #666)',
+                                  opacity: 0, transition: 'opacity 120ms ease',
+                                }}
+                              >⚙ {settingsFor(rec.id).view.replace('block-children-', '')}</button>
+                            )}
                           </div>,
                         );
                         for (const c of byParent.get(rec.id) ?? []) {
