@@ -202,6 +202,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
   // ------- slash menu --------
   const [slashItems, setSlashItems] = useState<SlashMenuItem[]>([]);
   const [slashMenuLoading, setSlashMenuLoading] = useState(false);
+  const [slashAnchor, setSlashAnchor] = useState<{ top: number; left: number } | undefined>(undefined);
 
   // ------- page title — loaded from ContentNode/get on mount --------
   const [pageTitle, setPageTitle] = useState<string>('');
@@ -873,6 +874,15 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
   // =========================================================================
 
   const openSlashMenu = useCallback(async () => {
+    // Anchor the menu to the caret position so it appears under the '/'
+    // the user just typed, matching Notion/Obsidian behavior.
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      const rect = sel.getRangeAt(0).getBoundingClientRect();
+      if (rect.top || rect.left) {
+        setSlashAnchor({ top: rect.bottom + 4, left: rect.left });
+      }
+    }
     setFsmState('slash-open');
     setSlashMenuLoading(true);
 
@@ -2255,6 +2265,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
             loading={slashMenuLoading}
             onActivate={handleSlashItemActivate}
             onClose={closeSlashMenu}
+            anchor={slashAnchor}
           />
         )}
 
@@ -4869,6 +4880,7 @@ interface SlashMenuOverlayProps {
   loading: boolean;
   onActivate: (item: SlashMenuItem) => void;
   onClose: () => void;
+  anchor?: { top: number; left: number };
 }
 
 const SlashMenuOverlay: React.FC<SlashMenuOverlayProps> = ({
@@ -4876,6 +4888,7 @@ const SlashMenuOverlay: React.FC<SlashMenuOverlayProps> = ({
   loading,
   onActivate,
   onClose,
+  anchor,
 }) => {
   const [query, setQuery] = useState('');
 
@@ -4895,9 +4908,9 @@ const SlashMenuOverlay: React.FC<SlashMenuOverlayProps> = ({
       aria-modal="false"
       aria-label="Block inserter"
       style={{
-        position: 'absolute',
-        top: '40px',
-        left: 'var(--spacing-md, 16px)',
+        position: 'fixed',
+        top: anchor?.top ?? 120,
+        left: anchor?.left ?? 120,
         zIndex: 100,
         // Hard-coded light-mode colors — theme tokens sometimes resolve
         // the same variable to the same value (e.g. both on-surface and
