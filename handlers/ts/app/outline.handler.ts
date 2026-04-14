@@ -85,6 +85,25 @@ const _outlineHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
+  /**
+   * setOrder(node, order) — update a node's order field. Used by client
+   * to implement moveUp/moveDown via order-swap with its sibling.
+   */
+  setOrder(input: Record<string, unknown>) {
+    const node = input.node as string;
+    const order = typeof input.order === 'number' ? input.order : parseFloat(String(input.order ?? '0')) || 0;
+    let p = createProgram();
+    p = spGet(p, 'outline', node, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = merge(b, 'outline', node, { order });
+        return complete(b2, 'ok', { node });
+      },
+      (b) => complete(b, 'notfound', { message: 'Node not found' }),
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
   moveUp(input: Record<string, unknown>) {
     const node = input.node as string;
 
