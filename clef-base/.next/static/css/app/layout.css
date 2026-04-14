@@ -4301,6 +4301,17 @@ button, [data-part="button"] {
   word-break: break-word;
 }
 
+/* ─── Focused block subtle ring ─── */
+/* BlockSlot sets data-block-focused when its contentEditable is active. */
+[data-part="block-slot"][data-block-focused="true"] {
+  position: relative;
+}
+[data-part="block-slot"][data-block-focused="true"] > [data-part="block-content"] {
+  background: var(--palette-surface-container-low, rgba(99, 102, 241, 0.04));
+  border-radius: 4px;
+  transition: background 120ms ease;
+}
+
 /* ─── Block editor placeholders ─── */
 /* Show a faded prompt in empty blocks, Notion-style. The text comes from the
  * data-placeholder attribute on [data-part="block-content"], set by BlockSlot

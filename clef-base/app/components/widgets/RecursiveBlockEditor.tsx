@@ -1165,6 +1165,30 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
       return;
     }
 
+    // Cmd+Shift+1..9 / 0 — convert focused block's schema in place.
+    // Mirrors Notion's quick-turn-into shortcuts.
+    if ((e.metaKey || e.ctrlKey) && e.shiftKey && !e.altKey) {
+      const schemaByKey: Record<string, string> = {
+        '1': 'heading', '2': 'heading-2', '3': 'heading-3',
+        '7': 'bullet-list', '8': 'numbered-list', '9': 'task',
+        '0': 'paragraph',
+      };
+      const target = schemaByKey[e.key];
+      const focused = focusedBlockIdRef.current;
+      if (target && focused) {
+        e.preventDefault();
+        void (async () => {
+          try {
+            contentSchemaCache.set(focused, target);
+            await invoke('ContentNode', 'changeType', { node: focused, type: target });
+            loadChildren();
+            restoreFocusToBlock(focused);
+          } catch (err) { console.warn('[RecursiveBlockEditor] schema-shortcut failed:', err); }
+        })();
+        return;
+      }
+    }
+
     // Cmd+A / Ctrl+A — block-level select-all with Notion two-tap semantics:
     // 1st press: select the currently-focused block (escape from text select).
     // 2nd press: select all top-level blocks.
