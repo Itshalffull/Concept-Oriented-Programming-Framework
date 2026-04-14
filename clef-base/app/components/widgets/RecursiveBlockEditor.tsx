@@ -3523,11 +3523,12 @@ const SlashMenuOverlay: React.FC<SlashMenuOverlayProps> = ({
         top: '40px',
         left: 'var(--spacing-md, 16px)',
         zIndex: 100,
-        // Concrete fallbacks — theme tokens sometimes resolve to empty on
-        // first render and leave the menu transparent against the block body.
-        background: 'var(--palette-surface-container, #ffffff)',
-        color: 'var(--palette-on-surface, #111827)',
-        border: '1px solid var(--palette-outline, #d1d5db)',
+        // Hard-coded light-mode colors — theme tokens sometimes resolve
+        // the same variable to the same value (e.g. both on-surface and
+        // surface-container end up white) leaving the menu unreadable.
+        background: '#ffffff',
+        color: '#111827',
+        border: '1px solid #d1d5db',
         borderRadius: '8px',
         minWidth: '280px',
         maxHeight: '360px',
@@ -3553,6 +3554,7 @@ const SlashMenuOverlay: React.FC<SlashMenuOverlayProps> = ({
             background: 'transparent',
             fontSize: '13px',
             padding: '4px 0',
+            color: '#111827',
           }}
         />
       </div>
@@ -3573,8 +3575,8 @@ const SlashMenuOverlay: React.FC<SlashMenuOverlayProps> = ({
                 fontSize: '10px',
                 textTransform: 'uppercase',
                 letterSpacing: '0.08em',
-                color: 'var(--palette-on-surface-variant)',
-                padding: '8px var(--spacing-sm) 4px',
+                color: '#6b7280',
+                padding: '8px 8px 4px',
               }}
             >
               {section}
@@ -3586,17 +3588,20 @@ const SlashMenuOverlay: React.FC<SlashMenuOverlayProps> = ({
                 data-item-id={item.id}
                 data-kind={item.kind}
                 onClick={() => onActivate(item)}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#f3f4f6'; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 'var(--spacing-xs)',
+                  gap: '6px',
                   width: '100%',
                   textAlign: 'left',
-                  padding: '6px var(--spacing-sm)',
-                  background: 'none',
+                  padding: '6px 8px',
+                  background: 'transparent',
                   border: 'none',
                   cursor: 'pointer',
                   fontSize: '13px',
+                  color: '#111827',
                 }}
               >
                 {item.icon && (
