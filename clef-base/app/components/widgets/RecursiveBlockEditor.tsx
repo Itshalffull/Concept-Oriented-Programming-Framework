@@ -332,7 +332,10 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
   // =========================================================================
 
   const loadChildren = useCallback(async () => {
-    setChildrenLoading(true);
+    // NOTE: don't flip childrenLoading on reloads. It's only used for the
+    // initial render to show "Loading blocks..." while we first fetch
+    // from the kernel. Subsequent loads (after Tab / Enter / delete) keep
+    // the old render on screen while we fetch in the background.
     try {
       // DFS walk: collect ALL descendants as a flat list with depth.
       // The flat shape means Tab reparent is a reorder within the SAME
@@ -885,21 +888,29 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
     closeSlashMenu();
     try {
       if (item.kind === 'insertable' && item.mappingId) {
-        // Insert a new block of this type as a child of the root node
-        const result = await invoke('ActionBinding', 'invoke', {
-          binding: 'insert-block',
-          context: JSON.stringify({
-            rootNodeId,
-            schema: item.mappingId,
-            displayMode: 'block-editor',
-          }),
-        });
-        if (result.variant === 'ok') {
+        const focusedId = focusedBlockIdRef.current;
+        if (focusedId) {
+          // Convert the focused block's schema in place (the block the
+          // user typed '/' into). Matches Notion: selecting an item
+          // changes THIS block, not adds a sibling.
+          await invoke('ContentNode', 'changeType', {
+            node: focusedId, type: item.mappingId,
+          });
           await loadChildren();
+          restoreFocusToBlock(focusedId);
         } else {
-          console.warn('[RecursiveBlockEditor] insert-block returned non-ok:', result.variant);
+          // No focused block — insert as new top-level child.
+          const newId = `${rootNodeId}:block:${Date.now()}`;
+          await invoke('ContentNode', 'createWithSchema', {
+            id: newId, schema: item.mappingId, body: '',
+          });
+          await invoke('Outline', 'create', { node: newId, parent: rootNodeId });
+          await loadChildren();
+          restoreFocusToBlock(newId);
         }
       } else if (item.kind === 'command' && item.bindingId) {
+        // Commands still route through ActionBinding for now; most of
+        // these haven't been wired to direct handlers yet.
         const result = await invoke('ActionBinding', 'invoke', {
           binding: item.bindingId,
           context: JSON.stringify({ rootNodeId, editorFlavor }),
