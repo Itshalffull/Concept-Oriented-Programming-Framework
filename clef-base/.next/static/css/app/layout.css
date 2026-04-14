@@ -4301,6 +4301,25 @@ button, [data-part="button"] {
   word-break: break-word;
 }
 
+/* ─── Block editor typography + reading measure ─── */
+[data-part="block-list"] {
+  max-width: 740px;
+  margin: 0 auto;
+  padding: 0;
+}
+[data-part="block-content"] {
+  line-height: 1.55;
+  font-size: 16px;
+  color: var(--palette-on-surface, #111827);
+}
+[data-part="block-list-item"] {
+  margin-bottom: 2px;
+}
+[data-part="block-list-item"] + [data-part="block-list-item"]
+  [data-part="block-content"] {
+  margin-top: 2px;
+}
+
 /* ─── Focused block subtle ring ─── */
 /* BlockSlot sets data-block-focused when its contentEditable is active. */
 [data-part="block-slot"][data-block-focused="true"] {

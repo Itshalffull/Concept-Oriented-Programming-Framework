@@ -3503,6 +3503,8 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
                 { re: /(?<!\*)\*([^*\n]+)\*(?!\*)$/, tag: 'i' },
                 { re: /(?<!_)_([^_\n]+)_(?!_)$/, tag: 'i' },
                 { re: /`([^`\n]+)`$/, tag: 'code' },
+                { re: /~~([^~\n]+)~~$/, tag: 's' },  // strike-through
+                { re: /==([^=\n]+)==$/, tag: 'mark' },  // highlight
               ];
               for (const { re, tag } of inlinePatterns) {
                 const m = tail.match(re);
