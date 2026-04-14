@@ -2266,6 +2266,111 @@ const CLICK_RESET_MS = 400;
  * required. document.execCommand dispatches keep the implementation
  * portable and match the behavior of Cmd+B / Cmd+I / Cmd+U / Cmd+E.
  */
+/**
+ * WikilinkPicker — floating list of pages filtered by query. Shown when
+ * the user types `[[` in a block. Selecting a page inserts an anchor
+ * `<a data-wikilink="pageId">title</a>` replacing the `[[query` range.
+ */
+interface WikilinkPickerProps {
+  query: string;
+  anchor: { top: number; left: number };
+  invoke: (concept: string, action: string, input: Record<string, unknown>) => Promise<{ variant: string; [k: string]: unknown }>;
+  onSelect: (pageId: string, title: string) => void;
+  onClose: () => void;
+}
+
+const WikilinkPicker: React.FC<WikilinkPickerProps> = ({ query, anchor, invoke, onSelect, onClose }) => {
+  const [items, setItems] = useState<Array<{ id: string; title: string }>>([]);
+  const [selectedIdx, setSelectedIdx] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await invoke('ContentNode', 'list', { limit: 200 });
+        if (cancelled || res.variant !== 'ok') return;
+        const rows: Array<Record<string, unknown>> = (() => {
+          try { return JSON.parse(res.items as string || '[]'); }
+          catch { return []; }
+        })();
+        const pages = rows
+          .map((r) => ({
+            id: String(r.node ?? ''),
+            title: String(r.content ?? r.node ?? '').slice(0, 60) || String(r.node ?? ''),
+          }))
+          .filter((p) => p.id)
+          .filter((p) => !query || p.title.toLowerCase().includes(query.toLowerCase()) || p.id.toLowerCase().includes(query.toLowerCase()))
+          .slice(0, 8);
+        setItems(pages);
+        setSelectedIdx(0);
+      } catch { /* ignore */ }
+    })();
+    return () => { cancelled = true; };
+  }, [query, invoke]);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') { e.preventDefault(); onClose(); return; }
+      if (e.key === 'ArrowDown') { e.preventDefault(); setSelectedIdx((i) => Math.min(i + 1, items.length - 1)); return; }
+      if (e.key === 'ArrowUp') { e.preventDefault(); setSelectedIdx((i) => Math.max(i - 1, 0)); return; }
+      if (e.key === 'Enter') {
+        if (items.length === 0) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const sel = items[selectedIdx] ?? items[0];
+        onSelect(sel.id, sel.title);
+      }
+    }
+    document.addEventListener('keydown', onKey, true);
+    return () => document.removeEventListener('keydown', onKey, true);
+  }, [items, selectedIdx, onSelect, onClose]);
+
+  if (items.length === 0) return null;
+  return (
+    <div
+      data-part="wikilink-picker"
+      role="listbox"
+      aria-label="Page picker"
+      style={{
+        position: 'fixed',
+        top: `${anchor.top}px`,
+        left: `${anchor.left}px`,
+        zIndex: 1000,
+        background: '#ffffff',
+        border: '1px solid #d1d5db',
+        borderRadius: '6px',
+        minWidth: '240px',
+        maxHeight: '280px',
+        overflowY: 'auto',
+        boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+      }}
+    >
+      {items.map((it, i) => (
+        <button
+          key={it.id}
+          role="option"
+          aria-selected={i === selectedIdx}
+          onMouseEnter={() => setSelectedIdx(i)}
+          onMouseDown={(e) => { e.preventDefault(); onSelect(it.id, it.title); }}
+          style={{
+            display: 'block',
+            width: '100%',
+            textAlign: 'left',
+            padding: '6px 10px',
+            border: 'none',
+            background: i === selectedIdx ? '#f3f4f6' : 'transparent',
+            color: '#111827',
+            cursor: 'pointer',
+            fontSize: '13px',
+          }}
+        >
+          {it.title || it.id}
+        </button>
+      ))}
+    </div>
+  );
+};
+
 const SelectionToolbar: React.FC<{ selection: EditorSelection | null }> = ({ selection }) => {
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
   useEffect(() => {
@@ -2588,6 +2693,15 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
   // -------------------------------------------------------------------------
 
   const blockContentRef = useRef<HTMLDivElement>(null);
+
+  // Wikilink picker: tracks the character offset of `[[` in the block's
+  // textContent. When non-null, the popover renders; key nav intercepts
+  // ArrowUp/Down/Enter/Escape.
+  const [wikilinkState, setWikilinkState] = useState<{
+    triggerOffset: number;
+    query: string;
+    anchor: { top: number; left: number };
+  } | null>(null);
   const hasInitializedRef = useRef(false);
 
   const clickCountRef = useRef(0);
@@ -3043,6 +3157,39 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
           const text = (e.currentTarget as HTMLDivElement).textContent ?? '';
           blockEmptyRef.current = text.trim() === '';
           notifyBlockEdit(nodeId, text, invoke);
+
+          // Wikilink detection: find the last `[[` before the caret and
+          // compute the query text between `[[` and caret. Open picker.
+          if (canEdit && blockContentRef.current) {
+            const el = blockContentRef.current;
+            const sel = window.getSelection();
+            if (sel && sel.rangeCount > 0 && sel.isCollapsed) {
+              const range = sel.getRangeAt(0);
+              const preRange = range.cloneRange();
+              preRange.selectNodeContents(el);
+              preRange.setEnd(range.endContainer, range.endOffset);
+              const caretOffset = preRange.toString().length;
+              const full = el.textContent ?? '';
+              const bracketIdx = full.lastIndexOf('[[', caretOffset - 1);
+              if (bracketIdx >= 0) {
+                const between = full.slice(bracketIdx + 2, caretOffset);
+                // Close if the between contains a space-and-non-space boundary
+                // or a closing `]]`, or is too long (> 40 chars).
+                if (!between.includes(']') && between.length <= 40) {
+                  const rect = range.getBoundingClientRect();
+                  setWikilinkState({
+                    triggerOffset: bracketIdx,
+                    query: between,
+                    anchor: { top: rect.bottom + 4, left: rect.left },
+                  });
+                } else {
+                  setWikilinkState(null);
+                }
+              } else {
+                setWikilinkState(null);
+              }
+            }
+          }
 
           // Inline markdown: detect **bold**, _italic_, `code` patterns
           // just BEFORE the caret and convert to HTML marks. Triggered
@@ -3788,6 +3935,62 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
         anchorRect={linkHoverState.anchorRect}
         open={linkPreviewOpen}
         onDismiss={closeLinkPreview}
+      />
+    )}
+
+    {/* Wikilink picker — floating listbox triggered by `[[` */}
+    {wikilinkState && (
+      <WikilinkPicker
+        query={wikilinkState.query}
+        anchor={wikilinkState.anchor}
+        invoke={invoke}
+        onClose={() => setWikilinkState(null)}
+        onSelect={(pageId, title) => {
+          const el = blockContentRef.current;
+          if (!el) { setWikilinkState(null); return; }
+          // Replace the `[[query` substring (from triggerOffset through
+          // caret) with a <a data-wikilink> anchor.
+          const replaceStart = wikilinkState.triggerOffset;
+          const sel = window.getSelection();
+          if (!sel || sel.rangeCount === 0) { setWikilinkState(null); return; }
+          const range = sel.getRangeAt(0);
+          const preRange = range.cloneRange();
+          preRange.selectNodeContents(el);
+          preRange.setEnd(range.endContainer, range.endOffset);
+          const caretOffset = preRange.toString().length;
+          // Walk text nodes to build a range from replaceStart to caretOffset.
+          const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+          let seen = 0;
+          let startNode: Text | null = null, startOff = 0;
+          let endNode: Text | null = null, endOff = 0;
+          let n: Node | null;
+          while ((n = walker.nextNode())) {
+            const t = n as Text; const len = t.data.length;
+            if (!startNode && replaceStart <= seen + len) {
+              startNode = t; startOff = replaceStart - seen;
+            }
+            if (caretOffset <= seen + len) {
+              endNode = t; endOff = caretOffset - seen; break;
+            }
+            seen += len;
+          }
+          if (startNode && endNode) {
+            const r = document.createRange();
+            r.setStart(startNode, startOff);
+            r.setEnd(endNode, endOff);
+            r.deleteContents();
+            const a = document.createElement('a');
+            a.setAttribute('data-wikilink', pageId);
+            a.href = `/admin/content/${encodeURIComponent(pageId)}`;
+            a.textContent = title;
+            r.insertNode(a);
+            const after = document.createRange();
+            after.setStartAfter(a); after.collapse(true);
+            sel.removeAllRanges(); sel.addRange(after);
+          }
+          setWikilinkState(null);
+          blockContentRef.current?.focus();
+        }}
       />
     )}
     </>
