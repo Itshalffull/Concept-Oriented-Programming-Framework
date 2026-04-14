@@ -1192,6 +1192,41 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
       }
     }
 
+    // Plain-text multi-line paste: split into blocks. Detects markdown
+    // prefixes (# / ## / ### / - / 1. / > / ``` / [] / [x]) on each
+    // line and maps to the matching schema. Matches Notion behavior
+    // when pasting e.g. a markdown README into an empty page.
+    const plainText = e.clipboardData?.getData('text/plain') ?? '';
+    if (plainText.includes('\n')) {
+      e.preventDefault();
+      const lines = plainText.split(/\r?\n/).filter((l) => l.length > 0 || true);
+      const mdPrefix = (line: string): { schema: string; body: string } => {
+        const m = line.match(/^(#{1,3})\s+(.*)$/);
+        if (m) return { schema: m[1].length === 1 ? 'heading' : m[1].length === 2 ? 'heading-2' : 'heading-3', body: m[2] };
+        if (/^[-*]\s+/.test(line)) return { schema: 'bullet-list', body: line.replace(/^[-*]\s+/, '') };
+        if (/^\d+\.\s+/.test(line)) return { schema: 'numbered-list', body: line.replace(/^\d+\.\s+/, '') };
+        if (/^>\s+/.test(line)) return { schema: 'quote', body: line.replace(/^>\s+/, '') };
+        if (/^\[\s\]\s+/.test(line)) return { schema: 'task', body: line.replace(/^\[\s\]\s+/, '') };
+        if (/^\[x\]\s+/i.test(line)) return { schema: 'task-done', body: line.replace(/^\[x\]\s+/i, '') };
+        return { schema: 'paragraph', body: line };
+      };
+      const parsed = lines.map(mdPrefix).filter((p) => p.body !== '' || p.schema !== 'paragraph');
+      try {
+        for (let i = 0; i < parsed.length; i++) {
+          const p = parsed[i];
+          const id = `${rootNodeId}:block:${Date.now()}-${i}`;
+          await invoke('ContentNode', 'createWithSchema', {
+            id, schema: p.schema, body: p.body,
+          });
+          await invoke('Outline', 'create', { node: id, parent: rootNodeId });
+        }
+        loadChildren();
+        return;
+      } catch (err) {
+        console.error('[RecursiveBlockEditor] plain-text paste failed:', err);
+      }
+    }
+
     // -------------------------------------------------------------------------
     // Original image-paste path (PP-2 / MAG-717): only runs when smart-paste
     // did not consume the event (no structured text content detected).
