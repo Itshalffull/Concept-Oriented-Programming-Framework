@@ -3057,28 +3057,34 @@ button, [data-part="button"] {
 }
 
 /* ─── Bullet / numbered list markers ─── */
+/* !important because the block-content carries an inline padding
+ * shorthand that would otherwise win the cascade and collapse our
+ * padding-left back to the default spacing token. */
 [data-part="block-slot"][data-schema="bullet-list"] > [data-part="block-content"] {
-  padding-left: 1.5em;
+  padding-left: 1.75em !important;
   position: relative;
 }
-[data-part="block-slot"][data-schema="bullet-list"] > [data-part="block-content"]::after {
+[data-part="block-slot"][data-schema="bullet-list"] > [data-part="block-content"]::before {
   content: '•';
   position: absolute;
   left: 0.5em;
-  top: 0;
-  color: var(--palette-on-surface, inherit);
-  font-weight: bold;
+  top: 0.15em;
+  color: inherit;
+  font-weight: 700;
+  pointer-events: none;
 }
 [data-part="block-slot"][data-schema="numbered-list"] > [data-part="block-content"] {
-  padding-left: 1.75em;
+  padding-left: 2em !important;
   position: relative;
 }
-[data-part="block-slot"][data-schema="numbered-list"] > [data-part="block-content"]::after {
-  content: '•';  /* TODO: real index once we wire numbering */
+[data-part="block-slot"][data-schema="numbered-list"] > [data-part="block-content"]::before {
+  content: '1.';  /* TODO: real per-block numbering once siblings know their index */
   position: absolute;
-  left: 0.5em;
-  top: 0;
-  color: var(--palette-on-surface, inherit);
+  left: 0.4em;
+  top: 0.15em;
+  color: inherit;
+  font-size: 0.9em;
+  pointer-events: none;
 }
 
 /* ─── Heading levels ─── */
@@ -3114,31 +3120,51 @@ button, [data-part="button"] {
 /* ─── Task / todo blocks (checkbox) ─── */
 [data-part="block-slot"][data-schema="task"] > [data-part="block-content"],
 [data-part="block-slot"][data-schema="task-done"] > [data-part="block-content"] {
-  padding-left: 1.75em;
+  padding-left: 2em !important;
   position: relative;
 }
-[data-part="block-slot"][data-schema="task"] > [data-part="block-content"]::after,
-[data-part="block-slot"][data-schema="task-done"] > [data-part="block-content"]::after {
+[data-part="block-slot"][data-schema="task"] > [data-part="block-content"]::before,
+[data-part="block-slot"][data-schema="task-done"] > [data-part="block-content"]::before {
   content: '';
   position: absolute;
   left: 0.5em;
-  top: 0.45em;
-  width: 0.85em;
-  height: 0.85em;
-  border: 2px solid var(--palette-outline, rgba(0,0,0,0.4));
+  top: 0.35em;
+  width: 0.95em;
+  height: 0.95em;
+  border: 2px solid var(--palette-outline, #9ca3af);
   border-radius: 3px;
-  background: var(--palette-surface, #fff);
+  background: var(--palette-surface, #ffffff);
   cursor: pointer;
   pointer-events: auto;
   box-sizing: border-box;
 }
-[data-part="block-slot"][data-schema="task-done"] > [data-part="block-content"]::after {
+[data-part="block-slot"][data-schema="task-done"] > [data-part="block-content"]::before {
   background: var(--palette-primary, #6366f1);
   border-color: var(--palette-primary, #6366f1);
 }
 [data-part="block-slot"][data-schema="task-done"] > [data-part="block-content"] {
   text-decoration: line-through;
-  color: var(--palette-on-surface-variant, rgba(0,0,0,0.5));
+  color: var(--palette-on-surface-variant, #9ca3af);
+}
+
+/* ─── Code block: monospace + background from theme token ─── */
+/* Theme SHOULD provide --palette-surface-container-high; we provide a
+ * fallback for when the token is unset so the block is always legible. */
+[data-part="block-slot"][data-schema="code"] > [data-part="block-content"] {
+  background: var(--palette-surface-container-high, #f3f4f6) !important;
+  border: 1px solid var(--palette-outline-variant, #e5e7eb);
+  border-radius: 4px;
+  padding: 0.5em 0.75em !important;
+  font-family: var(--typography-family-mono, 'JetBrains Mono', 'Fira Code', Menlo, Consolas, monospace) !important;
+  font-size: 0.875em;
+  white-space: pre-wrap;
+}
+
+/* ─── Callout block ─── */
+[data-part="block-slot"][data-schema="callout"] > [data-part="block-content"] {
+  background: var(--palette-tertiary-container, #fef3c7) !important;
+  border-left: 4px solid var(--palette-tertiary, #f59e0b);
+  padding-left: 1em !important;
 }
 
 /* ─── Quote block ─── */
