@@ -2939,11 +2939,9 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
             })();
             return;
           }
-          // Bold / Italic / Code (Cmd|Ctrl + B/I/E). Uses browser's
-          // native execCommand which wraps the selection in a <b>/<i>/<code>
-          // tag. Long-term we'll route through the InlineMark concept and
-          // Patch-based mark storage, but this gets Notion-parity keyboard
-          // for now without needing Mark serialization.
+          // Bold / Italic / Underline / Code / Link shortcuts. Use
+          // browser execCommand for bold/italic/underline; Range API
+          // for code / link (no native execCommand for those).
           if ((e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey) {
             const cmd: Record<string, string> = { b: 'bold', i: 'italic', u: 'underline' };
             const op = cmd[e.key.toLowerCase()];
@@ -2962,12 +2960,39 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
                 const code = document.createElement('code');
                 code.appendChild(range.extractContents());
                 range.insertNode(code);
-                // Place caret at end of the new <code>.
                 range.setStartAfter(code);
                 range.collapse(true);
                 sel.removeAllRanges();
                 sel.addRange(range);
               }
+              return;
+            }
+            if (e.key.toLowerCase() === 'k') {
+              e.preventDefault();
+              // Link: prompt for URL, wrap selection in <a href>. If no
+              // selection, insert a link placeholder at caret using the
+              // URL as both href and visible text.
+              const url = window.prompt('Link URL:');
+              if (!url) return;
+              const sel = window.getSelection();
+              if (!sel || sel.rangeCount === 0) return;
+              const range = sel.getRangeAt(0);
+              const a = document.createElement('a');
+              a.href = url;
+              a.target = '_blank';
+              a.rel = 'noopener noreferrer';
+              if (sel.isCollapsed) {
+                a.textContent = url;
+                range.insertNode(a);
+                range.setStartAfter(a);
+              } else {
+                a.appendChild(range.extractContents());
+                range.insertNode(a);
+                range.setStartAfter(a);
+              }
+              range.collapse(true);
+              sel.removeAllRanges();
+              sel.addRange(range);
               return;
             }
           }
