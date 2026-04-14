@@ -757,10 +757,25 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
     setFsmState('slash-open');
     setSlashMenuLoading(true);
 
-    const items: SlashMenuItem[] = [];
+    // Baseline block-type items matching the schemas the editor actually
+    // renders. ComponentMapping/listInsertable doesn't exist yet in the
+    // kernel, so the server-sourced items list is a future enrichment;
+    // these hardcoded defaults make the menu functional today.
+    const items: SlashMenuItem[] = [
+      { id: 'paragraph', label: 'Text', section: 'Basic', icon: '¶', kind: 'insertable', mappingId: 'paragraph' },
+      { id: 'heading', label: 'Heading 1', section: 'Basic', icon: 'H1', kind: 'insertable', mappingId: 'heading' },
+      { id: 'heading-2', label: 'Heading 2', section: 'Basic', icon: 'H2', kind: 'insertable', mappingId: 'heading-2' },
+      { id: 'heading-3', label: 'Heading 3', section: 'Basic', icon: 'H3', kind: 'insertable', mappingId: 'heading-3' },
+      { id: 'bullet-list', label: 'Bullet list', section: 'List', icon: '•', kind: 'insertable', mappingId: 'bullet-list' },
+      { id: 'numbered-list', label: 'Numbered list', section: 'List', icon: '1.', kind: 'insertable', mappingId: 'numbered-list' },
+      { id: 'task', label: 'To-do', section: 'List', icon: '☐', kind: 'insertable', mappingId: 'task' },
+      { id: 'quote', label: 'Quote', section: 'Basic', icon: '"', kind: 'insertable', mappingId: 'quote' },
+      { id: 'code', label: 'Code block', section: 'Basic', icon: '{}', kind: 'insertable', mappingId: 'code' },
+    ];
 
     try {
-      // Insertable block types from ComponentMapping
+      // Optional server-sourced enrichment (no-op today since the action
+      // isn't registered; kept for future Schema taxonomy growth).
       const mappingResult = await invoke('ComponentMapping', 'listInsertable', {
         context: editorFlavor,
       });
@@ -778,7 +793,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
         }
       }
     } catch {
-      /* non-fatal — fall back to empty mapping list */
+      /* non-fatal — fall back to hardcoded defaults */
     }
 
     try {
