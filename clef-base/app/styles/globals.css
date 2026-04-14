@@ -3226,6 +3226,20 @@ button, [data-part="button"] {
   font-family: var(--typography-family-mono, 'JetBrains Mono', 'Fira Code', Menlo, Consolas, monospace) !important;
   font-size: 0.875em;
   white-space: pre-wrap;
+  position: relative;
+}
+/* Language tag top-right from data-lang attribute. Fallback: 'code'. */
+[data-part="block-slot"][data-schema="code"] > [data-part="block-content"]::after {
+  content: attr(data-lang);
+  position: absolute;
+  top: 0.25em;
+  right: 0.5em;
+  font-size: 10px;
+  color: var(--palette-on-surface-variant, #6b7280);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-family: var(--typography-family-mono, monospace);
+  pointer-events: none;
 }
 
 /* ─── Callout block ─── */
