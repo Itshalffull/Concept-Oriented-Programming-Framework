@@ -3103,18 +3103,30 @@ button, [data-part="button"] {
   font-weight: 700;
   pointer-events: none;
 }
+/* CSS-counter-driven numbering. The block-list resets the counter; each
+ * numbered-list child increments it. Non-numbered siblings DON'T reset
+ * the counter but DO break the visual run (acceptable trade-off; matches
+ * Notion's "blocks between numbers don't reset count" behavior). */
+[data-part="block-list"] {
+  counter-reset: numbered-list;
+}
+[data-part="block-slot"][data-schema="numbered-list"] {
+  counter-increment: numbered-list;
+}
 [data-part="block-slot"][data-schema="numbered-list"] > [data-part="block-content"] {
-  padding-left: 2em !important;
+  padding-left: 2.25em !important;
   position: relative;
 }
 [data-part="block-slot"][data-schema="numbered-list"] > [data-part="block-content"]::before {
-  content: '1.';  /* TODO: real per-block numbering once siblings know their index */
+  content: counter(numbered-list) ".";
   position: absolute;
   left: 0.4em;
   top: 0.15em;
   color: inherit;
   font-size: 0.9em;
+  font-variant-numeric: tabular-nums;
   pointer-events: none;
+  min-width: 1.5em;
 }
 
 /* ─── Heading levels ─── */
