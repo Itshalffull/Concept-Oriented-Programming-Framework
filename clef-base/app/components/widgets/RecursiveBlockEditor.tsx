@@ -2635,7 +2635,7 @@ const WikilinkPicker: React.FC<WikilinkPickerProps> = ({ query, anchor, invoke, 
     let cancelled = false;
     void (async () => {
       try {
-        const res = await invoke('ContentNode', 'list', { limit: 200 });
+        const res = await invokeBinding(invoke, 'list-pages', { limit: 200 });
         if (cancelled || res.variant !== 'ok') return;
         const rows: Array<Record<string, unknown>> = (() => {
           try { return JSON.parse(res.items as string || '[]'); }
@@ -2737,7 +2737,7 @@ const MentionPicker: React.FC<{
     let cancelled = false;
     void (async () => {
       try {
-        const res = await invoke('Authentication', 'list', {});
+        const res = await invokeBinding(invoke, 'list-users', {});
         if (cancelled || res.variant !== 'ok') return;
         const rows: Array<{ user: string; provider: string }> = (() => {
           try { return JSON.parse(res.items as string || '[]'); }

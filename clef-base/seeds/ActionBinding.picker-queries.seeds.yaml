@@ -1,0 +1,24 @@
+# ActionBinding seeds — data-source bindings for block-editor pickers
+#
+# The @-mention and [[wikilink pickers in RecursiveBlockEditor used to
+# invoke Authentication/list and ContentNode/list directly. Now they
+# resolve through these bindings so the data source can be swapped via
+# seed (e.g. to a filtered / remote / federated list) without touching
+# the React component.
+
+concept: ActionBinding
+action: bind
+entries:
+  - name: list-users
+    binding: list-users
+    target: "Authentication/list"
+    parameterMap: '{}'
+    executionPolicy: "auto"
+    label: "List users"
+
+  - name: list-pages
+    binding: list-pages
+    target: "ContentNode/list"
+    parameterMap: '{"limit":"context.limit"}'
+    executionPolicy: "auto"
+    label: "List pages"
