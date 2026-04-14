@@ -1330,13 +1330,46 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
       };
       const parsed = lines.map(mdPrefix).filter((p) => p.body !== '' || p.schema !== 'paragraph');
       try {
+        // Compute a base order range: if focus is on an existing block,
+        // slot the pasted lines between it and its next sibling. Otherwise
+        // append at the end (Date.now()).
+        const anchorId = focusedBlockIdRef.current;
+        let baseOrder = Date.now();
+        let endOrder = baseOrder + parsed.length;
+        if (anchorId) {
+          try {
+            const anchorRec = await invoke('Outline', 'getRecord', { node: anchorId });
+            if (anchorRec.variant === 'ok' && typeof anchorRec.order === 'number') {
+              baseOrder = anchorRec.order;
+              const myParent = String(anchorRec.parent ?? rootNodeId);
+              const sibRes = await invoke('Outline', 'children', { parent: myParent });
+              const sibIds: string[] = sibRes.variant === 'ok'
+                ? (() => { try { return JSON.parse(sibRes.children as string || '[]'); } catch { return []; } })()
+                : [];
+              const idx = sibIds.indexOf(anchorId);
+              if (idx >= 0 && idx < sibIds.length - 1) {
+                const nextRec = await invoke('Outline', 'getRecord', { node: sibIds[idx + 1] });
+                if (nextRec.variant === 'ok' && typeof nextRec.order === 'number') {
+                  endOrder = nextRec.order;
+                }
+              } else {
+                endOrder = baseOrder + parsed.length; // append at end of siblings
+              }
+            }
+          } catch { /* ignore — fall through to append */ }
+        }
+        const step = (endOrder - baseOrder) / (parsed.length + 1);
         for (let i = 0; i < parsed.length; i++) {
           const p = parsed[i];
           const id = `${rootNodeId}:block:${Date.now()}-${i}`;
           await invoke('ContentNode', 'createWithSchema', {
             id, schema: p.schema, body: p.body,
           });
-          await invoke('Outline', 'create', { node: id, parent: rootNodeId });
+          await invoke('Outline', 'create', {
+            node: id,
+            parent: rootNodeId,
+            order: baseOrder + step * (i + 1),
+          });
         }
         loadChildren();
         return;
