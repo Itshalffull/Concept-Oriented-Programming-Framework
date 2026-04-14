@@ -2315,6 +2315,22 @@ function resolveHeadingLevel(schema: string): number | null {
 
 const CLICK_RESET_MS = 400;
 
+/** Minimal emoji shortcode map. :name: → emoji. */
+const EMOJI_MAP: Record<string, string> = {
+  fire: '🔥', rocket: '🚀', tada: '🎉', check: '✅', x: '❌',
+  warning: '⚠️', star: '⭐', heart: '❤️', thumbsup: '👍', thumbsdown: '👎',
+  eyes: '👀', bug: '🐛', pencil: '✏️', bulb: '💡', zap: '⚡',
+  sparkles: '✨', package: '📦', wrench: '🔧', hammer: '🔨', gear: '⚙️',
+  book: '📖', bookmark: '🔖', link: '🔗', mag: '🔍', lock: '🔒',
+  unlock: '🔓', key: '🔑', hourglass: '⌛', clock: '🕐', calendar: '📅',
+  phone: '📞', envelope: '✉️', inbox: '📥', outbox: '📤', memo: '📝',
+  clipboard: '📋', chart: '📊', trophy: '🏆', crown: '👑', rainbow: '🌈',
+  sun: '☀️', moon: '🌙', cloud: '☁️', snowflake: '❄️', umbrella: '☂️',
+  coffee: '☕', pizza: '🍕', cake: '🎂', beer: '🍺', wine: '🍷',
+  smile: '😀', wink: '😉', cry: '😢', laugh: '😂', thinking: '🤔',
+  cool: '😎', party: '🥳', hundred: '💯', plus_one: '➕', shrug: '🤷',
+};
+
 /**
  * SelectionToolbar — floating popover with B/I/U/<> buttons, anchored to
  * the active text selection. Always renders when a non-empty selection
@@ -3353,6 +3369,55 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
                   });
                 } else setMentionState(null);
               } else setMentionState(null);
+            }
+          }
+
+          // Emoji shortcode: :name: → unicode emoji. Fires when the
+          // closing colon is typed and :name: is a known shortcode.
+          if (canEdit && blockContentRef.current) {
+            const el = blockContentRef.current;
+            const sel = window.getSelection();
+            if (sel && sel.rangeCount > 0 && sel.isCollapsed) {
+              const range = sel.getRangeAt(0);
+              const preRange = range.cloneRange();
+              preRange.selectNodeContents(el);
+              preRange.setEnd(range.endContainer, range.endOffset);
+              const caretOffset = preRange.toString().length;
+              const full = el.textContent ?? '';
+              const tail = full.slice(Math.max(0, caretOffset - 32), caretOffset);
+              const m = tail.match(/:([a-z_]+):$/);
+              if (m) {
+                const emoji = EMOJI_MAP[m[1]];
+                if (emoji) {
+                  const matchStart = caretOffset - m[0].length;
+                  // Walk to find the range to replace
+                  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+                  let seen = 0; let startNode: Text | null = null; let startOff = 0;
+                  let endNode: Text | null = null; let endOff = 0;
+                  let n: Node | null;
+                  while ((n = walker.nextNode())) {
+                    const t = n as Text; const len = t.data.length;
+                    if (!startNode && matchStart <= seen + len) {
+                      startNode = t; startOff = matchStart - seen;
+                    }
+                    if (caretOffset <= seen + len) {
+                      endNode = t; endOff = caretOffset - seen; break;
+                    }
+                    seen += len;
+                  }
+                  if (startNode && endNode) {
+                    const r = document.createRange();
+                    r.setStart(startNode, startOff);
+                    r.setEnd(endNode, endOff);
+                    r.deleteContents();
+                    const txt = document.createTextNode(emoji);
+                    r.insertNode(txt);
+                    const after = document.createRange();
+                    after.setStartAfter(txt); after.collapse(true);
+                    sel.removeAllRanges(); sel.addRange(after);
+                  }
+                }
+              }
             }
           }
 
