@@ -400,10 +400,18 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
             return schemas[0];
           }
           const nodeResult = await invoke('ContentNode', 'get', { node: childId });
-          if (nodeResult.variant === 'ok' && typeof nodeResult.type === 'string') {
-            const t = nodeResult.type || 'paragraph';
-            contentSchemaCache.set(childId, t);
-            return t;
+          if (nodeResult.variant === 'ok') {
+            // Populate the body cache too while we have the record — saves
+            // TOC / word count / other consumers from waiting for BEF-01
+            // mount effects on every block.
+            if (typeof nodeResult.content === 'string') {
+              contentBodyCache.set(childId, nodeResult.content);
+            }
+            if (typeof nodeResult.type === 'string') {
+              const t = nodeResult.type || 'paragraph';
+              contentSchemaCache.set(childId, t);
+              return t;
+            }
           }
         } catch { /* ignore, fall through */ }
         return 'paragraph';
