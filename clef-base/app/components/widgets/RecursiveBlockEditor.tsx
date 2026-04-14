@@ -3747,6 +3747,13 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
                 patched = patched.replace(/--(?= )/g, '—');
                 // ellipsis
                 patched = patched.replace(/\.{3}/g, '…');
+                // smart double quotes: " after whitespace/start → open ",
+                // " after a word → close "
+                patched = patched.replace(/(^|[\s\(\[])"/g, '$1\u201C');
+                patched = patched.replace(/"/g, '\u201D');
+                // smart single quotes / apostrophe
+                patched = patched.replace(/(^|[\s\(\[])'/g, '$1\u2018');
+                patched = patched.replace(/'/g, '\u2019');
                 if (patched !== raw) {
                   // Replace the whole textContent. Caret offset adjusts by
                   // the length delta. Simple approximation: move caret to
