@@ -3066,6 +3066,21 @@ button, [data-part="button"] {
   margin-top: 2px;
 }
 
+/* ─── Focus mode: hide chrome, center the center pane ─── */
+[data-part="root"][data-focus-mode="true"] {
+  --focus-hide: true;
+}
+[data-part="root"][data-focus-mode="true"] [data-part="left-palette"],
+[data-part="root"][data-focus-mode="true"] [data-part="right-panels"],
+[data-part="root"][data-focus-mode="true"] [data-part="inline-toolbar"],
+[data-part="root"][data-focus-mode="true"] [data-part="toc"] {
+  display: none !important;
+}
+[data-part="root"][data-focus-mode="true"] [data-part="center-pane"] {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
 /* ─── Focused block subtle ring ─── */
 /* BlockSlot sets data-block-focused when its contentEditable is active. */
 [data-part="block-slot"][data-block-focused="true"] {

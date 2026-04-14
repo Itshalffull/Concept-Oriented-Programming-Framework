@@ -234,6 +234,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
   // ------- find-replace overlay (PP-find-replace) --------
   // Toggled by Cmd+F (or Ctrl+F); closed by Escape.
   const [findReplaceOpen, setFindReplaceOpen] = useState(false);
+  const [focusMode, setFocusMode] = useState(false);
 
   // ------- block hover state (PP-block-handle) --------
   // Tracks which block the pointer is currently over so BlockHandle appears
@@ -1183,6 +1184,13 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
       return;
     }
 
+    // Cmd+. / Ctrl+. — toggle focus mode (hide chrome outside block list)
+    if (e.key === '.' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      setFocusMode((v) => !v);
+      return;
+    }
+
     // Cmd+Shift+Up/Down — move focused block among siblings.
     if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
       const focused = focusedBlockIdRef.current;
@@ -1715,6 +1723,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
       data-state={fsmState}
       data-flavor={editorFlavor}
       data-can-edit={canEdit ? 'true' : 'false'}
+      data-focus-mode={focusMode ? 'true' : 'false'}
       data-keybinding-scope="app.editor"
       role="region"
       aria-label={`Block editor — ${editorFlavor}`}
