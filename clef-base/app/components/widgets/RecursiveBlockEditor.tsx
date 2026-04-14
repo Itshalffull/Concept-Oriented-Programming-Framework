@@ -4410,6 +4410,42 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
         }}
       />
 
+      {/* Code block Copy button */}
+      {schema === 'code' && (
+        <button
+          data-part="block-copy"
+          aria-label="Copy code"
+          onClick={(e) => {
+            e.stopPropagation();
+            const text = blockContentRef.current?.textContent ?? '';
+            void navigator.clipboard.writeText(text).then(() => {
+              const btn = e.currentTarget as HTMLButtonElement;
+              const prev = btn.textContent;
+              btn.textContent = '✓';
+              setTimeout(() => { btn.textContent = prev; }, 900);
+            });
+          }}
+          title="Copy code"
+          style={{
+            position: 'absolute',
+            right: '4px',
+            top: '4px',
+            fontSize: '11px',
+            cursor: 'pointer',
+            background: 'var(--palette-surface-container-high, #e5e7eb)',
+            border: '1px solid var(--palette-outline-variant, #d1d5db)',
+            borderRadius: '3px',
+            color: 'var(--palette-on-surface-variant, #4b5563)',
+            padding: '1px 6px',
+            lineHeight: '18px',
+            opacity: 0.85,
+            zIndex: 5,
+          }}
+        >
+          Copy
+        </button>
+      )}
+
       {/* LE-16: Code-block format button — Syntax/format dispatch */}
       {canEdit && isHighlightableSchema && (
         <button
