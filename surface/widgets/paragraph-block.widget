@@ -307,6 +307,130 @@ widget paragraph-block {
       requires: state.edit = "editing" and body.blurEvent = true
       ensures ok: state.edit = "idle"
     }
+
+    # Cmd+E wraps selection in <code> — keeps editing.
+    action body {
+      requires: state.edit = "editing" and body.cmdEKey = true and body.selection = "non-empty"
+      ensures ok: state.edit = "editing"
+    }
+
+    # Cmd+K link insertion — keeps editing. Implementation prompts for URL
+    # and wraps selection in <a href>. (Prompt dialog is a UI concern
+    # outside the block's FSM contract.)
+    action body {
+      requires: state.edit = "editing" and body.cmdKKey = true
+      ensures ok: state.edit = "editing"
+    }
+
+    # Cmd+Shift+H toggles <mark> wrapper around selection — stays editing.
+    action body {
+      requires: state.edit = "editing" and body.cmdHKey = true and body.shiftKey = true and body.selection = "non-empty"
+      ensures ok: state.edit = "editing"
+    }
+
+    # Cmd+D duplicate — editor-level operation; the focused block loses
+    # editing because loadChildren remounts. Recorded as a transition.
+    action body {
+      requires: state.edit = "editing" and body.cmdDKey = true
+      ensures ok: state.edit = "idle"
+    }
+
+    # Cmd+Shift+1..3 convert schema to heading / heading-2 / heading-3.
+    # The block leaves editing while the re-mount settles; restoreFocus
+    # brings caret back.
+    action body {
+      requires: state.edit = "editing" and body.cmdShiftDigitKey = true
+      ensures ok: state.edit = "idle"
+    }
+
+    # Cmd+Shift+Up/Down move block among siblings — block leaves editing
+    # during the setOrder + loadChildren round trip.
+    action body {
+      requires: state.edit = "editing" and body.cmdShiftArrowKey = true
+      ensures ok: state.edit = "idle"
+    }
+
+    # Cmd+Z / Cmd+Shift+Z undo/redo — stays editing for text-level edits,
+    # leaves editing for structural (reparent) entries.
+    action body {
+      requires: state.edit = "editing" and body.cmdZKey = true and body.undoEntryKind = "text"
+      ensures ok: state.edit = "editing"
+    }
+    action body {
+      requires: state.edit = "editing" and body.cmdZKey = true and body.undoEntryKind = "reparent"
+      ensures ok: state.edit = "idle"
+    }
+
+    # Cmd+. toggle focus mode — editor-level, block stays editing.
+    action body {
+      requires: state.edit = "editing" and body.cmdDotKey = true
+      ensures ok: state.edit = "editing"
+    }
+
+    # Cmd+A block-level select-all (two-tap). First tap selects the
+    # focused block and blurs the contentEditable.
+    action body {
+      requires: state.edit = "editing" and body.cmdAKey = true and body.multiSelectSize = 0
+      ensures ok: state.edit = "idle"
+    }
+
+    # Autoreplace rules — each runs on onInput; block stays editing.
+    # URL autolink after space.
+    action body {
+      requires: state.edit = "editing" and body.lastKeyWasSpace = true and body.tailMatchesUrl = true
+      ensures ok: state.edit = "editing"
+    }
+    # Emoji shortcode ":name:".
+    action body {
+      requires: state.edit = "editing" and body.lastKeyWasColon = true and body.tailMatchesEmojiShortcode = true
+      ensures ok: state.edit = "editing"
+    }
+    # Inline markdown **bold**, _italic_, `code`, ~~strike~~, ==mark==.
+    action body {
+      requires: state.edit = "editing" and body.tailMatchesInlineMarkdown = true
+      ensures ok: state.edit = "editing"
+    }
+    # Typographic autoreplace: --, ..., quotes, (c), (r), (tm), +/-, arrows.
+    action body {
+      requires: state.edit = "editing" and body.tailMatchesTypographicRule = true
+      ensures ok: state.edit = "editing"
+    }
+
+    # Paste on selection
+    action body {
+      requires: state.edit = "editing" and body.pasteEvent = true and body.clipboardIsUrl = true and body.selection = "non-empty"
+      ensures ok: state.edit = "editing"
+    }
+    # Paste multi-line plain text → smart-paste creates new sibling blocks.
+    action body {
+      requires: state.edit = "editing" and body.pasteEvent = true and body.clipboardIsMultiLine = true
+      ensures ok: state.edit = "idle"
+    }
+
+    # Wikilink picker opens when `[[` is typed in the trailing context.
+    action body {
+      requires: state.edit = "editing" and body.tailIsDoubleBracket = true
+      ensures ok: state.edit = "editing"
+    }
+    # Mention picker opens when `@` at word-start is typed.
+    action body {
+      requires: state.edit = "editing" and body.lastKeyWasAtSign = true and body.atSignIsAtWordStart = true
+      ensures ok: state.edit = "editing"
+    }
+
+    # Guarantees about what must never happen.
+    never "autoreplace inside code block": {
+      body.schema = "code"
+      and event.autoreplaceFired = true
+    }
+    never "mention picker opens mid-word": {
+      body.mentionPickerOpen = true
+      and body.atSignPrecededByWord = true
+    }
+    never "emoji replaces partial shortcode": {
+      event.emojiReplaceFired = true
+      and body.closingColonMissing = true
+    }
   }
 
 }
