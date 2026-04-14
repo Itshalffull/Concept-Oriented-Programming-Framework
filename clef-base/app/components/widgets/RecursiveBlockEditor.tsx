@@ -2075,6 +2075,39 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
               });
           const viewMode = blockChildrenSettings.view;
 
+          // Toolbar + menu rendered regardless of view mode so the
+          // gear is reachable from every variant (not just blocks).
+          const viewSettingsToolbar = (
+            <div data-part="block-children-toolbar" style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 4, gap: 6 }}>
+              <button
+                data-part="block-children-gear-inline"
+                title="View settings — filter, sort, view type (right-click the list also opens)"
+                aria-label="Block children view settings"
+                onClick={(e) => setBlockChildrenMenu({ x: e.clientX, y: e.clientY })}
+                style={{
+                  fontSize: 12, padding: '3px 10px', borderRadius: 6, cursor: 'pointer',
+                  background: 'var(--palette-surface, #fff)',
+                  border: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.12))',
+                  color: 'var(--palette-on-surface, #333)', opacity: 0.8,
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
+                onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.8')}
+              >
+                ⚙ View: {blockChildrenSettings.view.replace('block-children-', '')}
+                {blockChildrenSettings.sort !== 'block-children-order' && ' · sort: ' + blockChildrenSettings.sort.replace('block-children-', '')}
+                {blockChildrenSettings.filter !== 'block-children-all' && ' · filter: ' + blockChildrenSettings.filter.replace('block-children-', '')}
+              </button>
+            </div>
+          );
+          const viewSettingsMenu = blockChildrenMenu ? (
+            <BlockChildrenSettingsMenu
+              settings={blockChildrenSettings}
+              onChange={onBlockChildrenSettingsChange}
+              onClose={() => setBlockChildrenMenu(null)}
+              x={blockChildrenMenu.x} y={blockChildrenMenu.y}
+            />
+          ) : null;
+
           if (viewMode !== 'block-children-blocks') {
             const titleLine = (c: string) => {
               const s = c.replace(/<[^>]+>/g, '').trim();
@@ -2082,8 +2115,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
             };
             const rowText = (id: string) => titleLine(contentBodyCache.get(id) ?? '');
             if (viewMode === 'block-children-outline' || viewMode === 'block-children-list') {
-              return (
-                <ol
+              return (<>{viewSettingsToolbar}{viewSettingsMenu}<ol
                   data-part="block-list"
                   data-view={viewMode}
                   aria-label="Document blocks outline"
@@ -2105,26 +2137,22 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
                       {rowText(child.id)}
                     </li>
                   ))}
-                </ol>
-              );
+                </ol></>);
             }
             if (viewMode === 'block-children-gallery') {
-              return (
-                <div data-part="block-list" data-view={viewMode} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: 10 }}>
+              return (<>{viewSettingsToolbar}{viewSettingsMenu}<div data-part="block-list" data-view={viewMode} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: 10 }}>
                   {orderedChildren.map((child) => (
                     <div key={child.id} data-block-id={child.id} data-schema={child.schema} style={{ border: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.1))', borderRadius: 6, padding: 12, minHeight: 80, fontSize: 12 }}>
                       <div style={{ fontSize: 10, textTransform: 'uppercase', color: 'var(--palette-outline, #888)', marginBottom: 6 }}>{child.schema}</div>
                       <div>{rowText(child.id)}</div>
                     </div>
                   ))}
-                </div>
-              );
+                </div></>);
             }
             if (viewMode === 'block-children-board') {
               const cols: Record<string, typeof orderedChildren> = {};
               for (const c of orderedChildren) (cols[c.schema] ||= []).push(c);
-              return (
-                <div data-part="block-list" data-view={viewMode} style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 12 }}>
+              return (<>{viewSettingsToolbar}{viewSettingsMenu}<div data-part="block-list" data-view={viewMode} style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 12 }}>
                   {Object.entries(cols).map(([schema, col]) => (
                     <div key={schema} style={{ minWidth: 200, flex: '0 0 200px', background: 'var(--palette-surface-variant, rgba(0,0,0,0.02))', borderRadius: 6, padding: 10 }}>
                       <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', color: 'var(--palette-outline, #666)', marginBottom: 8 }}>{schema} ({col.length})</div>
@@ -2135,12 +2163,10 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
                       ))}
                     </div>
                   ))}
-                </div>
-              );
+                </div></>);
             }
             if (viewMode === 'block-children-table') {
-              return (
-                <table data-part="block-list" data-view={viewMode} style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              return (<>{viewSettingsToolbar}{viewSettingsMenu}<table data-part="block-list" data-view={viewMode} style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                   <thead>
                     <tr style={{ textAlign: 'left', color: 'var(--palette-outline, #888)', fontSize: 11, textTransform: 'uppercase' }}>
                       <th style={{ padding: 6, borderBottom: '1px solid var(--palette-outline-variant)' }}>Schema</th>
@@ -2157,21 +2183,14 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
                       </tr>
                     ))}
                   </tbody>
-                </table>
-              );
+                </table></>);
             }
           }
 
           const shownChildren = orderedChildren;
           return (<>
-          {blockChildrenMenu && (
-            <BlockChildrenSettingsMenu
-              settings={blockChildrenSettings}
-              onChange={onBlockChildrenSettingsChange}
-              onClose={() => setBlockChildrenMenu(null)}
-              x={blockChildrenMenu.x} y={blockChildrenMenu.y}
-            />
-          )}
+          {viewSettingsToolbar}
+          {viewSettingsMenu}
           <ol
             data-part="block-list"
             data-view={viewMode}
