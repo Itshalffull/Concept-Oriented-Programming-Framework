@@ -1078,6 +1078,37 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
       return;
     }
 
+    // Cmd+C with multi-selection — serialize selected blocks as markdown
+    // and copy to clipboard. Inverse of smart-paste. Matches Notion's
+    // "select blocks → copy → paste as markdown" round-trip.
+    if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key === 'c' && selectedBlockIds.size > 0) {
+      const ids = Array.from(selectedBlockIds);
+      // Preserve document order
+      const ordered = children.filter((c) => ids.includes(c.id)).map((c) => c);
+      const mdLines = ordered.map((c) => {
+        const prefix = c.depth > 0 ? '  '.repeat(c.depth) : '';
+        const body = contentBodyCache.get(c.id) ?? '';
+        switch (c.schema) {
+          case 'heading': return `${prefix}# ${body}`;
+          case 'heading-2': return `${prefix}## ${body}`;
+          case 'heading-3': return `${prefix}### ${body}`;
+          case 'bullet-list': return `${prefix}- ${body}`;
+          case 'numbered-list': return `${prefix}1. ${body}`;
+          case 'quote': return `${prefix}> ${body}`;
+          case 'task': return `${prefix}[ ] ${body}`;
+          case 'task-done': return `${prefix}[x] ${body}`;
+          case 'code': return `\n\`\`\`\n${body}\n\`\`\`\n`;
+          default: return `${prefix}${body}`;
+        }
+      });
+      const md = mdLines.join('\n');
+      e.preventDefault();
+      void navigator.clipboard.writeText(md).catch((err) => {
+        console.warn('[RecursiveBlockEditor] copy-as-markdown failed:', err);
+      });
+      return;
+    }
+
     // Cmd+Z / Ctrl+Z — undo; Cmd+Shift+Z / Ctrl+Shift+Z — redo.
     // Only intercepts when there's an entry on our block-level stack;
     // otherwise defer to the browser's native contentEditable undo
