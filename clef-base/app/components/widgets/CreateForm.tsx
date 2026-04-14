@@ -215,7 +215,13 @@ export const CreateForm: React.FC<CreateFormProps> = ({
             name: destinationId,
           });
           // eslint-disable-next-line no-console
-          console.log('[CreateForm Tier 1a probe]', { destinationId, specResult });
+          console.log('[CreateForm Tier 1a probe]', {
+            destinationId,
+            variant: specResult.variant,
+            create_surface: specResult.create_surface,
+            create_mode_hint: specResult.create_mode_hint,
+            allKeys: Object.keys(specResult),
+          });
           if (specResult.variant === 'ok') {
             const cs = specResult.create_surface as string | undefined;
             const cmh = specResult.create_mode_hint as string | undefined;

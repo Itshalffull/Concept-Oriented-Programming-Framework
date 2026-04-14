@@ -57,3 +57,11 @@ Load the ViewShell entry by name , then fetch each non empty child spec
  are not registered ( empty ref or notfound ) are returned as empty strings .
 
 **Arguments:** `$0` **name** (string)
+
+### refresh
+Re run the underlying query by reading the DataSourceSpec , FilterSpec , 
+ SortSpec , and all other registered child specs anew , then update 
+ lastRenderedAt . Triggers downstream render observations so any bound 
+ surface components receive the fresh results .
+
+**Arguments:** `$0` **shell** (V)

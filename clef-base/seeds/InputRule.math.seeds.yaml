@@ -1,0 +1,33 @@
+# InputRule seeds -- math block and math inline input-plane rules (MAG-755).
+# markdown-math-block: fires when a paragraph line starts with $$ (block display mode).
+#   Dispatches markdown-transform-to-math-block which applies schema "math" via Schema/applyTo.
+# markdown-math-inline: fires when a run within a paragraph matches $...$
+#   (at least one non-dollar character between the delimiters).
+#   Dispatches markdown-wrap-as-math-inline which toggles the "math" inline mark
+#   via InlineMark/toggleMark with the captured LaTeX content.
+#
+# Both rules have literal-block-scope exclusion: the math-block widget's editablePane
+# suppresses all InputRules internally, matching the code-block pattern.
+
+concept: InputRule
+action: register
+entries:
+  # Block math: fires when a paragraph line starts with $$
+  # The captured text after $$ is used as the initial latex seed for the block.
+  - name: markdown-math-block
+    rule: markdown-math-block
+    kind: pattern
+    pattern: "^\\$\\$"
+    action_ref: markdown-transform-to-math-block
+    priority: 100
+    scope: null
+
+  # Inline math: fires when $...$  wraps a non-empty, non-dollar run within a paragraph.
+  # capturedGroup1 carries the inner LaTeX source.
+  - name: markdown-math-inline
+    rule: markdown-math-inline
+    kind: pattern
+    pattern: "\\$([^$]+)\\$"
+    action_ref: markdown-wrap-as-math-inline
+    priority: 100
+    scope: null

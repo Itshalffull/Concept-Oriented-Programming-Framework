@@ -1,0 +1,18 @@
+[
+  {
+    "name": "data_source_spec_create",
+    "briefDescription": "Register a new named data source with the given kind and serialized \n DataSou...",
+    "category": "DataSourceSpec",
+    "concept": "DataSourceSpec",
+    "action": "create",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "data_source_spec_bind",
+    "briefDescription": "Resolve every template variable of the form { { varName } } in the \n source s...",
+    "category": "DataSourceSpec",
+    "concept": "DataSourceSpec",
+    "action": "bind",
+    "alwaysLoaded": false
+  }
+]

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-11T18:37:53.904Z",
+  "generatedAt": "2026-04-13T18:51:03.803Z",
   "files": [
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/spec-parser/spec-parser.commands.ts",
@@ -460,7 +460,7 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/storage-adapter-scaffold-gen/SKILL.md",
       "relativePath": "claude-skills/storage-adapter-scaffold-gen/SKILL.md",
-      "hash": "62b26b7c11d0da35afb36318a7c71d2e2b61a22b2a9a829f6738b7cdea4eb388",
+      "hash": "4e41ea67dd041e45227014d5412a4ebcd2c8ca3dc38de268c6dba0c8a7f93b49",
       "target": "claude-skills"
     },
     {
@@ -472,7 +472,7 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/storage-adapter-scaffold-gen/references/storage-adapter-guide.md",
       "relativePath": "claude-skills/storage-adapter-scaffold-gen/references/storage-adapter-guide.md",
-      "hash": "40ca70459059595c646bf553125cafa548a9abff0e5b5397f6a0098f295c4649",
+      "hash": "d8f1dc56e5ad56e3d90a9234ed7caf36f8d236e8a9e0ee90007f6638f9ee0cec",
       "target": "claude-skills"
     },
     {
@@ -508,7 +508,7 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/surface-component-scaffold-gen/SKILL.md",
       "relativePath": "claude-skills/surface-component-scaffold-gen/SKILL.md",
-      "hash": "2f6eb9c09175ca494ba7161d247ccb173f1784d4f7b3aca60c6d603bf7202f29",
+      "hash": "025e18e6c5a9ab05f8e64a14dc9296f6c4026e2dd881f2eebf3bf20d8612103b",
       "target": "claude-skills"
     },
     {
@@ -526,7 +526,7 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/surface-component-scaffold-gen/references/widget-grammar.md",
       "relativePath": "claude-skills/surface-component-scaffold-gen/references/widget-grammar.md",
-      "hash": "cf63c445f13c96cedbf4d4e8b52e77eeaaa643db04173859736fd0e339c8143f",
+      "hash": "0afd748d8d4bf3de5ffcb0bcd53f7299fc83f8b90eb619cbe4ebdd427db8aeb5",
       "target": "claude-skills"
     },
     {
@@ -1162,13 +1162,13 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/patch/patch.commands.ts",
       "relativePath": "claude-skills/patch/patch.commands.ts",
-      "hash": "a5d08b3def1aa1b498e9e694418e8c31918f783044020ec648c0d6dedee68172",
+      "hash": "9d4b5fcfc68b7211668e3270e2aab3a471c8ca93f99da5c9441db99392be930a",
       "target": "claude-skills"
     },
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/patch/SKILL.md",
       "relativePath": "claude-skills/patch/SKILL.md",
-      "hash": "92d98906860ee7c90faded945ab6f48aed1c313a741dccec7b1ff00a16ff1274",
+      "hash": "b541d9b41b3ce022f11cde6ba119573b9ab864e42a38b4737e02bb1bf6cfca9e",
       "target": "claude-skills"
     },
     {
@@ -1624,19 +1624,25 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/query-program/query-program.commands.ts",
       "relativePath": "claude-skills/query-program/query-program.commands.ts",
-      "hash": "8b25f9099321dd4ac046b93bd80c9d9a08d5a3032341d7a38acc61d4205c877b",
+      "hash": "0223fbbaabeeeab61f9ac75516911999b3a871c821d68d77c133d73c11a5e562",
       "target": "claude-skills"
     },
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/query-program/SKILL.md",
       "relativePath": "claude-skills/query-program/SKILL.md",
-      "hash": "9fbb44252dfb5e662b308bfe0404cb66d9b44211ee9f7efb31e377532935f506",
+      "hash": "bf29e56197f775d07911f9800f0c4844ba521e878b8d473e60c9826e4ad5d330",
       "target": "claude-skills"
     },
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/query-program/references/query-program-grammar.md",
       "relativePath": "claude-skills/query-program/references/query-program-grammar.md",
-      "hash": "0bf71815ecf0cededa6d90f72d78b4696932fa112c74d71559b54356d31857c4",
+      "hash": "931404c42f8c12abcedea6b4320ed6cbdc6468eb70c3a596dd2f76845cda9db6",
+      "target": "claude-skills"
+    },
+    {
+      "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/query-program/references/view-grammar.md",
+      "relativePath": "claude-skills/query-program/references/view-grammar.md",
+      "hash": "d68e574b004920e5150c2f42443f5a3562b58343c4a3a50560766baed1baec09",
       "target": "claude-skills"
     },
     {
@@ -1726,25 +1732,25 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/interaction-spec/interaction-spec.commands.ts",
       "relativePath": "claude-skills/interaction-spec/interaction-spec.commands.ts",
-      "hash": "b16d00024c96838f2e2acad855af5800340c21f0124e4d219f0df587e5742aed",
+      "hash": "eb1db892a391a57d1a14d85952c8ed71688e244854385ca46da659d0fbdb7759",
       "target": "claude-skills"
     },
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/interaction-spec/SKILL.md",
       "relativePath": "claude-skills/interaction-spec/SKILL.md",
-      "hash": "117664396ecf4a39feea52842766c280209402a3500c640ce67f32682721655c",
+      "hash": "8af9b7fbd6acafbb4de82e4fe4019c4d356bce367498f7d1bccc67368c2844c0",
       "target": "claude-skills"
     },
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/view-shell/view-shell.commands.ts",
       "relativePath": "claude-skills/view-shell/view-shell.commands.ts",
-      "hash": "8d72b4247d484e42a89a88d0ce818d9e07c945f773973109273dca252aa63fb1",
+      "hash": "ef78e9b604c961a61cd7766b2142b00f40cac100f3e4f22aa5e5ac496fac3247",
       "target": "claude-skills"
     },
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/view-shell/SKILL.md",
       "relativePath": "claude-skills/view-shell/SKILL.md",
-      "hash": "bc8a013893a6dc90feb0d96127a86f47d6a27211354ee7161495067dde354710",
+      "hash": "10c591e8d009d0a5e7eb515e5d4a20d49c226e42f556eeef0ff22137e451628f",
       "target": "claude-skills"
     },
     {
@@ -1780,7 +1786,13 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/connection/SKILL.md",
       "relativePath": "claude-skills/connection/SKILL.md",
-      "hash": "ce94149f99af2f7efcf5b7723c6fd2897466f414424d6beca32a5488ef9665b6",
+      "hash": "08b3a9ed041ff591fd9dca9911676a57f8a2939fc048f8cf1b2e416b2cbb08b1",
+      "target": "claude-skills"
+    },
+    {
+      "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/connection/references/inbound-binding-guide.md",
+      "relativePath": "claude-skills/connection/references/inbound-binding-guide.md",
+      "hash": "12a0bad8d4d8df64dd89dde264fe53c49285214fd13e984d4eeb0468a8fb0c45",
       "target": "claude-skills"
     },
     {
@@ -1810,13 +1822,37 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/clef-base/clef-base.commands.ts",
       "relativePath": "claude-skills/clef-base/clef-base.commands.ts",
-      "hash": "5edc161b0092bc229deb4776770191950af1087d7bb6be568d36d458a16b7c3d",
+      "hash": "c8bfa9d72e41651678b8b324df803083422b3e251a722f5718f98529ec71ba41",
       "target": "claude-skills"
     },
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/clef-base/SKILL.md",
       "relativePath": "claude-skills/clef-base/SKILL.md",
-      "hash": "e7126133e561c602acb91a156017820a5c7cd2a8644c223cf150aa6004b72080",
+      "hash": "74ccdaa7d50aeed950a0c466f5762c2ee3c4c370bc644484b480e6a0a98a6494",
+      "target": "claude-skills"
+    },
+    {
+      "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/infrastructure-core/infrastructure-core.commands.ts",
+      "relativePath": "claude-skills/infrastructure-core/infrastructure-core.commands.ts",
+      "hash": "4a9825c6c1471b0aee2420a3daffae0c1546727f698872f620ce60b8292c7982",
+      "target": "claude-skills"
+    },
+    {
+      "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/infrastructure-core/SKILL.md",
+      "relativePath": "claude-skills/infrastructure-core/SKILL.md",
+      "hash": "2f4fd5cfc9731200ad05a781995c8e6fc043eefa18e527e17219cf58b82883c2",
+      "target": "claude-skills"
+    },
+    {
+      "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/runtime-infrastructure/runtime-infrastructure.commands.ts",
+      "relativePath": "claude-skills/runtime-infrastructure/runtime-infrastructure.commands.ts",
+      "hash": "e40f37a8079e58b26b2de4b6f07c76bfc6aa97badf68f108e59a5535c4b4653c",
+      "target": "claude-skills"
+    },
+    {
+      "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/runtime-infrastructure/SKILL.md",
+      "relativePath": "claude-skills/runtime-infrastructure/SKILL.md",
+      "hash": "a32efcdb46acef806baa61a678771f7f36433f9ac6eb7cc86753166e000a5732",
       "target": "claude-skills"
     },
     {
@@ -2044,7 +2080,7 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/cli/src/storage-adapter-scaffold-gen/storage-adapter-scaffold-gen.help.md",
       "relativePath": "cli/storage-adapter-scaffold-gen/storage-adapter-scaffold-gen.help.md",
-      "hash": "5b1c43182e95b7a358fccaa574f28054ce91da365254f42b4bcc386da6f72eb8",
+      "hash": "ab8a14421ef6415841f0b4b8cea6cae515326a001a5fed36351e0d754a265672",
       "target": "cli"
     },
     {
@@ -2068,7 +2104,7 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/cli/src/surface-component-scaffold-gen/surface-component-scaffold-gen.help.md",
       "relativePath": "cli/surface-component-scaffold-gen/surface-component-scaffold-gen.help.md",
-      "hash": "9c515c8fc198cde5519319fd9b01ebe370be414af5c702e55dd2c8bc7c85c212",
+      "hash": "7424bb896cf5ca10871ac1e793232c919c4849165097c72ea8b241125285e58a",
       "target": "cli"
     },
     {
@@ -2398,7 +2434,7 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/cli/src/patch/patch.command.ts",
       "relativePath": "cli/patch/patch.command.ts",
-      "hash": "e298fdf29a51572f3579831e6af3c43e9d269f624aeee7afd1333bd843dfe4cc",
+      "hash": "80837076fbcf65b391c4298aa0144b614908455a737499a7307be00f4128fc8f",
       "target": "cli"
     },
     {
@@ -2632,13 +2668,13 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/cli/src/query-program/query-program.command.ts",
       "relativePath": "cli/query-program/query-program.command.ts",
-      "hash": "1b32a2b3db0e52ccdfdd7a1dfcee2b73ef09b6fddc6a579f8c1b237ab73565a2",
+      "hash": "0e3b087bbf854217f6f7a5e1c6c437b5320ad5b041e419be08b078b37082ed60",
       "target": "cli"
     },
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/cli/src/query-program/query-program.help.md",
       "relativePath": "cli/query-program/query-program.help.md",
-      "hash": "a1598773e77ca8c815ae1572cc924916f4355a5257e236da435e9e669fce58d3",
+      "hash": "214b2a53304bf4b3e22576070d36d21f9247de0d5883eee71b81b24383a9a2d3",
       "target": "cli"
     },
     {
@@ -2686,13 +2722,13 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/cli/src/interaction-spec/interaction-spec.command.ts",
       "relativePath": "cli/interaction-spec/interaction-spec.command.ts",
-      "hash": "9f60e82b42330200ec83bf87e4d964b1d4e5fb82d23cb2513cd052ffc9f0aab6",
+      "hash": "eb02e5966fd7210cbf64d34ffdc32f55360d04b65f32f989ee22540c18198c69",
       "target": "cli"
     },
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/cli/src/view-shell/view-shell.command.ts",
       "relativePath": "cli/view-shell/view-shell.command.ts",
-      "hash": "ebf85deb5a78d14cfcc4beba3ddd48ce4287e021b9cbda4b1529dbbe04cfc127",
+      "hash": "8b521c4b20e13c74c264394b6979ce585705470c57f5de160f1ff67ca5426442",
       "target": "cli"
     },
     {
@@ -2714,6 +2750,12 @@
       "target": "cli"
     },
     {
+      "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/cli/src/connection/connection.help.md",
+      "relativePath": "cli/connection/connection.help.md",
+      "hash": "161f9239ea68fe41f1aadcef6ed8579d4983a8f497fea224f5b6fc883d2ef720",
+      "target": "cli"
+    },
+    {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/cli/src/credential/credential.command.ts",
       "relativePath": "cli/credential/credential.command.ts",
       "hash": "8d4b17bd7056041ed814b4054b87b8c27883644d12d434742b166d3ef305fa6b",
@@ -2728,7 +2770,19 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/cli/src/clef-base/clef-base.command.ts",
       "relativePath": "cli/clef-base/clef-base.command.ts",
-      "hash": "09961a73da79a7267e587eed6840bfe562f8b88c394e9cd0d97aba92b5d5ac37",
+      "hash": "798fea099c016543b98d590fbef94ead0dc55bc9c6875b2ebb858fdd6cb53d1b",
+      "target": "cli"
+    },
+    {
+      "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/cli/src/infrastructure-core/infrastructure-core.command.ts",
+      "relativePath": "cli/infrastructure-core/infrastructure-core.command.ts",
+      "hash": "d674c0ad36a3d0d089d8795c20f9bf7e821af4cfa679cce04b846820d476aa55",
+      "target": "cli"
+    },
+    {
+      "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/cli/src/runtime-infrastructure/runtime-infrastructure.command.ts",
+      "relativePath": "cli/runtime-infrastructure/runtime-infrastructure.command.ts",
+      "hash": "b618d707aa2a8783875ebb3d19b23b9b3f18fc2207051b593d6068c345e43596",
       "target": "cli"
     },
     {
@@ -3076,7 +3130,7 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/mcp/storage-adapter-scaffold-gen/storage-adapter-scaffold-gen.help.md",
       "relativePath": "mcp/storage-adapter-scaffold-gen/storage-adapter-scaffold-gen.help.md",
-      "hash": "f551c22cdc24a10165f398dd952c1d6f7c9bed83ef4e7212ee8d1810e604bfef",
+      "hash": "1b65db84f56e381f7b55cd7bd0cf291476538d95168e86077042143505df41b2",
       "target": "mcp"
     },
     {
@@ -3112,7 +3166,7 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/mcp/surface-component-scaffold-gen/surface-component-scaffold-gen.help.md",
       "relativePath": "mcp/surface-component-scaffold-gen/surface-component-scaffold-gen.help.md",
-      "hash": "5f3b79dd5e799c9cd280584614a0f1b2acf067a5576f357e496880c3391a7e32",
+      "hash": "1a7cc2d6a5765fd4cba9709701ddae347e2a2362b0a4fc0ca47f0f3423178ad1",
       "target": "mcp"
     },
     {
@@ -3742,13 +3796,13 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/mcp/patch/patch.tools.ts",
       "relativePath": "mcp/patch/patch.tools.ts",
-      "hash": "866a487f5e79b4643bcc07bd6ceb7981598b948536aa83f976df5e740584e21a",
+      "hash": "d1db4671ce1e2de29907e8c4d15e56bcc40b6ad26a787c1eb721d74e08a72b8c",
       "target": "mcp"
     },
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/mcp/patch/patch.catalog.json",
       "relativePath": "mcp/patch/patch.catalog.json",
-      "hash": "1945f80935b0619d2698efff02802da8b9b02163c97a96933c6daa0150c8a89e",
+      "hash": "5de12ebd51285230055daf159dcbaf6004daa0beac397ecf04877ef28edabc74",
       "target": "mcp"
     },
     {
@@ -4198,19 +4252,19 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/mcp/query-program/query-program.tools.ts",
       "relativePath": "mcp/query-program/query-program.tools.ts",
-      "hash": "7f65a0db74a40ca6fcd9aed22b92472f4655d5ada18b62060643220d3fbfacc5",
+      "hash": "b89431d8da82e728161c3f7c9047ef1b03a508227d3079ea0c3688663483e0db",
       "target": "mcp"
     },
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/mcp/query-program/query-program.catalog.json",
       "relativePath": "mcp/query-program/query-program.catalog.json",
-      "hash": "191c75731c7ce1c799dc27563667ba8f35b892ece31841b43a7ca3538e86d6f5",
+      "hash": "f5b649222b283314a14916e14618f4decdd6075c561bf3775d75d4b988172be9",
       "target": "mcp"
     },
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/mcp/query-program/query-program.help.md",
       "relativePath": "mcp/query-program/query-program.help.md",
-      "hash": "05afcf6a595f552de3f0e057b7dce451586d99e17001c3083dd2d6272d617ab6",
+      "hash": "aeb8c17cb5b8995ba5d0f96eab430bdf96625c635e3d38601113ee3ecee5501c",
       "target": "mcp"
     },
     {
@@ -4300,25 +4354,25 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/mcp/interaction-spec/interaction-spec.tools.ts",
       "relativePath": "mcp/interaction-spec/interaction-spec.tools.ts",
-      "hash": "d01a3539f6d30fb79984eec812cb53c666acd70f0361668c29a8269009fd679c",
+      "hash": "6e1225a7d6b49488ee1f44c9c59d05331217017f1c3114e37c13533d0a2dcf3f",
       "target": "mcp"
     },
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/mcp/interaction-spec/interaction-spec.catalog.json",
       "relativePath": "mcp/interaction-spec/interaction-spec.catalog.json",
-      "hash": "b1835d778a8244e0bfee8833cf4ed6dbefef5a6e9df15d9eb7e0b855ebdf528e",
+      "hash": "297fea33e78fd8d5267407d53ec3f13eda49d88dac6eea1561b006c57cc3aa83",
       "target": "mcp"
     },
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/mcp/view-shell/view-shell.tools.ts",
       "relativePath": "mcp/view-shell/view-shell.tools.ts",
-      "hash": "8065c45ab86eac8e7257329349b48178ff7da0f1fbcca0f6c3bf707d81027fe3",
+      "hash": "5222dd3814bed2951d30028bca95849bdb408ef02fe35dc06af81e71c41a1227",
       "target": "mcp"
     },
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/mcp/view-shell/view-shell.catalog.json",
       "relativePath": "mcp/view-shell/view-shell.catalog.json",
-      "hash": "c2b815f3b28f0396f70285b845e444bf1ecf2380e7c6cd6ce0f9ae3959c2b31b",
+      "hash": "8052e55622a864259f0ce9b33c50370b10ff803561ab62201a431779f786282c",
       "target": "mcp"
     },
     {
@@ -4358,6 +4412,12 @@
       "target": "mcp"
     },
     {
+      "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/mcp/connection/connection.help.md",
+      "relativePath": "mcp/connection/connection.help.md",
+      "hash": "4262c678bffb73781785f2db2cbe45a01043fe77ab08180034925acb213463b6",
+      "target": "mcp"
+    },
+    {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/mcp/credential/credential.tools.ts",
       "relativePath": "mcp/credential/credential.tools.ts",
       "hash": "a27c3756903140b2725339d0dd5182852ac359c1a94d752d926680bd6e115d6c",
@@ -4384,19 +4444,31 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/mcp/clef-base/clef-base.tools.ts",
       "relativePath": "mcp/clef-base/clef-base.tools.ts",
-      "hash": "8b3638f5684c1a75aba1fc3885d173415232f9a50c0ddecd8f8579bde037e7eb",
+      "hash": "811d438a8aa6907c5974b87983535db54165f1e6ccd066e7291e5b138bd584cf",
       "target": "mcp"
     },
     {
-      "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/mcp/clef-base/clef-base.catalog.json",
-      "relativePath": "mcp/clef-base/clef-base.catalog.json",
-      "hash": "f1e440e3e3ecaa6155be690af925c4eaf50759622fd23feda634ef62b51d2ceb",
+      "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/mcp/infrastructure-core/infrastructure-core.tools.ts",
+      "relativePath": "mcp/infrastructure-core/infrastructure-core.tools.ts",
+      "hash": "ef74dbf8bee614c50ca20dca163284790f931b7cfb85e093d8bc1f3df43049e1",
       "target": "mcp"
+    },
+    {
+      "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/mcp/runtime-infrastructure/runtime-infrastructure.tools.ts",
+      "relativePath": "mcp/runtime-infrastructure/runtime-infrastructure.tools.ts",
+      "hash": "1d1bc773175a8018f3b829a6a1d2554259389d0fcfee55263d9c0e8672e75b7d",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/agents/interface-scaffold-gen.md",
+      "relativePath": "claude-agents/interface-scaffold-gen.md",
+      "hash": "89023c82e3a5781f69749ba8fe4ab5fd9f6ef93a471f2e99747d787c41c737e7",
+      "target": "claude-agents"
     },
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/agents/concept-scaffold-gen.md",
       "relativePath": "claude-agents/concept-scaffold-gen.md",
-      "hash": "fc47d0fa58453e05c292ec8efb1ad77c2f9b2ec6da5a335ffbe6638cfe6b31db",
+      "hash": "c08eecc27c10b0969a3acef0e864981ca27134557f53a27f371c095f84439143",
       "target": "claude-agents"
     },
     {
@@ -4408,43 +4480,73 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/agents/handler-scaffold-gen.md",
       "relativePath": "claude-agents/handler-scaffold-gen.md",
-      "hash": "60549b38a4c89f007bce3bb34865eb252d554e80ba1ffc2632a0cf7f747a02ae",
+      "hash": "37514465fd3dc1faa01d759993cc18607a2563ff89decaa8f4559e5878f212ee",
       "target": "claude-agents"
     },
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/agents/surface-component-scaffold-gen.md",
       "relativePath": "claude-agents/surface-component-scaffold-gen.md",
-      "hash": "adedd0a6c80e4ced110238c9a595a49b1a2a6e8d7fba6da75ba11e909ed99431",
+      "hash": "2aa245f45b94d365942d009ddd65e99d236655e26cdf5967bc15e9ee99d64984",
       "target": "claude-agents"
     },
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/agents/surface-widget-handler-gen.md",
       "relativePath": "claude-agents/surface-widget-handler-gen.md",
-      "hash": "516880ecab611e09230a3edc4f36ca5ce4cbfbe4c6b48c6e3c048428d1218737",
+      "hash": "0007ad03f7b17a8b8a169aa7d7854a2ec2697882d58f82e6ec493e7a26512e14",
       "target": "claude-agents"
     },
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/agents/clef-base.md",
       "relativePath": "claude-agents/clef-base.md",
-      "hash": "0533ba2a882961103ffa1f0f010b3ff7ff81b592d46f497f86aba276e606572a",
+      "hash": "27f38fb4fe1875cd208eed5e74b4a2e7dcedb643d6b63a36c14e5191d6bf0226",
       "target": "claude-agents"
+    },
+    {
+      "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/agents/infrastructure-core.md",
+      "relativePath": "claude-agents/infrastructure-core.md",
+      "hash": "36d8c7089d2019553a819fefffc8ae54d44d6b13d7ee051c64598e74c14e1bb1",
+      "target": "claude-agents"
+    },
+    {
+      "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/agents/runtime-infrastructure.md",
+      "relativePath": "claude-agents/runtime-infrastructure.md",
+      "hash": "c32b71fec02aeab2c310abd777680f92bbafe832fa37d63db06cfe4c0f4ac98a",
+      "target": "claude-agents"
+    },
+    {
+      "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/agents/runtime-infrastructure/references/runtime-infrastructure-guide.md",
+      "relativePath": "claude-agents/runtime-infrastructure/references/runtime-infrastructure-guide.md",
+      "hash": "1ff878c2e77a8c5af6cd3b1496b57e087a3848840ab417ab053b780f3e5171b2",
+      "target": "claude-agents"
+    },
+    {
+      "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/generated/specs/openapi.yaml",
+      "relativePath": "openapi/openapi.yaml",
+      "hash": "4cb091b2d8047681911ef44d984a56f8675c1c462f0a943a8e116ea0c9362881",
+      "target": "openapi"
+    },
+    {
+      "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/generated/specs/asyncapi.yaml",
+      "relativePath": "asyncapi/asyncapi.yaml",
+      "hash": "08242f8055eb4380c7ed665d352adb430567a87be4dbe570db9d405f7714b2bd",
+      "target": "asyncapi"
     },
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/CLAUDE.md",
       "relativePath": "project-instructions/CLAUDE.md",
-      "hash": "36e3c2702f08a99fea1713c74ebaa9c552c9c1df20134e0ab42dec92dc3235e6",
+      "hash": "826d80ec31ade4dfc3b37536a3d885c0320327f2b4b89d4391a804b6dce25bfc",
       "target": "project-instructions"
     },
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/AGENTS.md",
       "relativePath": "project-instructions/AGENTS.md",
-      "hash": "fd3648ff855a5d3c540e6b53ad5339deed328fc5c3a73d4cc7af56b56c482d9b",
+      "hash": "e5a5c8f2bc9ab74130bf3ad2613f40039106327720b769623232a547c14daed8",
       "target": "project-instructions"
     },
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/GEMINI.md",
       "relativePath": "project-instructions/GEMINI.md",
-      "hash": "2cba629649dfc691b640e2e7c2319609b2c05b3568fc7d0c5b2a411bbc5db36e",
+      "hash": "4c3467ebd9ef355c356180eb51b93e6497b84911f230dac2bc4741f07e75d110",
       "target": "project-instructions"
     }
   ],

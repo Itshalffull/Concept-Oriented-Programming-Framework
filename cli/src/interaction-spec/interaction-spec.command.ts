@@ -17,6 +17,8 @@ interactionSpecCommand
   .requiredOption('--picker-mode <pickerMode>', 'Picker Mode')
   .requiredOption('--create-program <createProgram>', 'Create Program')
   .requiredOption('--action-program <actionProgram>', 'Action Program')
+  .requiredOption('--create-surface <create_surface>', 'Create_surface')
+  .requiredOption('--create-mode-hint <create_mode_hint>', 'Create_mode_hint')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     try {
@@ -35,7 +37,7 @@ interactionSpecCommand
 
 interactionSpecCommand
   .command('get')
-  .description('Return the interaction spec s create form config , row click rule , row action list , picker mode flag , and optional invoke bearing QueryProgram references exactly as registered .')
+  .description('Return the interaction spec s create form config , row click rule , row action list , picker mode flag , optional invoke bearing QueryProgram references , and optional create surface routing fields exactly as registered .')
   .requiredOption('--name <name>', 'Name')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
@@ -72,8 +74,50 @@ interactionSpecCommand
     }
   });
 
+interactionSpecCommand
+  .command('add-row-action')
+  .description('Append an ActionBinding ID to the row action binding list for the named interaction spec . The spec is updated in place and the new list is available immediately on subsequent get calls .')
+  .requiredOption('--name <name>', 'Name')
+  .requiredOption('--binding <binding>', 'Binding')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/InteractionSpec', 'addRowAction', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
+  });
+
+interactionSpecCommand
+  .command('set-create-binding')
+  .description('Set the ActionBinding ID to use for the create form action of the named interaction spec . Replaces any previously set create binding .')
+  .requiredOption('--name <name>', 'Name')
+  .requiredOption('--binding <binding>', 'Binding')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/InteractionSpec', 'setCreateBinding', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
+  });
+
 export const interactionSpecCommandTree = {
   group: 'interaction-spec',
   description: 'Manage named interaction configurations that govern controls , row actions , navigation , and picker behaviors for a view . Each interaction spec captures whether a create form is available ( as a serialized CreateFormConfig JSON ) , a row click navigation rule ( as a serialized RowClickConfig JSON ) , a list of per row action buttons ( as a serialized RowActionConfig [ ] JSON ) , and whether the view operates in picker mode . Interaction specs are independent of data source , filter , sort , and presentation concerns they describe only what a user can do with the rows displayed',
-  commands: [{ action: 'create', command: 'create' }, { action: 'get', command: 'get' }, { action: 'list', command: 'list' }],
+  commands: [{ action: 'create', command: 'create' }, { action: 'get', command: 'get' }, { action: 'list', command: 'list' }, { action: 'addRowAction', command: 'add-row-action' }, { action: 'setCreateBinding', command: 'set-create-binding' }],
 };

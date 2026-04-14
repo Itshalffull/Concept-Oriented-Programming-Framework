@@ -1,0 +1,22 @@
+# ProjectionSpec seeds for the media library view pipeline.
+# Per MAG-754 (media-library.derived recursive-views).
+#
+# Two projections:
+#   media-asset-fields       — full field set for table / detail views
+#   media-asset-card-fields  — condensed set for card-grid / masonry / timeline
+
+concept: ProjectionSpec
+action: create
+entries:
+  # Full projection — used by table, detail, and block presentations
+  - name: media-asset-fields
+    fields: '[{"key":"thumbnail","label":"Preview","visibility":"visible","formatter":"thumbnail"},{"key":"name","label":"Name","visibility":"visible"},{"key":"mimeType","label":"Type","visibility":"visible","formatter":"badge"},{"key":"fileSize","label":"Size","visibility":"visible","formatter":"file-size"},{"key":"duration","label":"Duration","visibility":"visible","formatter":"duration"},{"key":"capturedAt","label":"Captured","visibility":"visible","formatter":"date"},{"key":"tags","label":"Tags","visibility":"visible","formatter":"tag-list"},{"key":"album","label":"Album","visibility":"visible","formatter":"badge"}]'
+
+  # Condensed projection — used by card-grid, masonry, timeline
+  - name: media-asset-card-fields
+    fields: '[{"key":"thumbnail","label":"Preview","visibility":"visible","formatter":"thumbnail"},{"key":"name","label":"Name","visibility":"visible"},{"key":"mimeType","label":"Type","visibility":"visible","formatter":"badge"},{"key":"capturedAt","label":"Captured","visibility":"visible","formatter":"relative-date"}]'
+
+  # Summary projection — four core fields for the named ViewShell variants (blocks, gallery, table, timeline).
+  # Covers the PRD §6 Phase 5 requirement: thumbnail, title, capturedAt, size.
+  - name: media-asset-summary
+    fields: '[{"key":"thumbnail","label":"Preview","visibility":"visible","formatter":"thumbnail"},{"key":"name","label":"Title","visibility":"visible"},{"key":"capturedAt","label":"Captured","visibility":"visible","formatter":"date"},{"key":"fileSize","label":"Size","visibility":"visible","formatter":"file-size"}]'

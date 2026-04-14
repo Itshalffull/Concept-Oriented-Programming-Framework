@@ -1,0 +1,34 @@
+[
+  {
+    "name": "interface_scaffold_gen_generate",
+    "briefDescription": "Interface manifest generated .",
+    "category": "InterfaceScaffoldGen",
+    "concept": "InterfaceScaffoldGen",
+    "action": "generate",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "interface_scaffold_gen_generate_dual",
+    "briefDescription": "Both config and content manifests generated .",
+    "category": "InterfaceScaffoldGen",
+    "concept": "InterfaceScaffoldGen",
+    "action": "generateDual",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "interface_scaffold_gen_preview",
+    "briefDescription": "Dry run : compute output files without writing .",
+    "category": "InterfaceScaffoldGen",
+    "concept": "InterfaceScaffoldGen",
+    "action": "preview",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "interface_scaffold_gen_register",
+    "briefDescription": "Return static metadata for PluginRegistry .",
+    "category": "InterfaceScaffoldGen",
+    "concept": "InterfaceScaffoldGen",
+    "action": "register",
+    "alwaysLoaded": false
+  }
+]

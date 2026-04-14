@@ -1,0 +1,25 @@
+# EditSurface seed -- math block editor surface (MAG-755).
+# Registers the math-block editing surface for ContentNodes with schema "math".
+# Literal block scope: input_rule_refs is intentionally empty because
+# all markdown shortcuts and snippet triggers are suppressed inside math blocks
+# (matching the code-block literal-block-scope pattern).
+# panel_widgets: latex-editor provides the inspector panel for LaTeX authoring
+# with the symbol picker drawer.
+
+concept: EditSurface
+action: register
+entries:
+  - id: math-block-editor
+    schema_ref: math
+    context: block-editor
+    toolbar_widget: inline-toolbar
+    command_bindings:
+      - math-insert-symbol
+    panel_widgets:
+      - latex-editor
+    context_menu_bindings: []
+    input_rule_refs: []
+    picker_refs: []
+    compile_action_ref: null
+    compile_bundle_ref: null
+    compile_status_field: null

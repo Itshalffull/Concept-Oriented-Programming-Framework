@@ -205,6 +205,26 @@ channels:
     messages:
       deployScaffoldGenRegisterCompleted:
         $ref: '#/components/messages/DeployScaffoldGenRegisterCompleted'
+  interface-scaffold-gen/generateCompleted:
+    description: Fires when InterfaceScaffoldGen/generate completes with ok
+    messages:
+      interfaceScaffoldGenGenerateCompleted:
+        $ref: '#/components/messages/InterfaceScaffoldGenGenerateCompleted'
+  interface-scaffold-gen/generateDualCompleted:
+    description: Fires when InterfaceScaffoldGen/generateDual completes with ok
+    messages:
+      interfaceScaffoldGenGenerateDualCompleted:
+        $ref: '#/components/messages/InterfaceScaffoldGenGenerateDualCompleted'
+  interface-scaffold-gen/previewCompleted:
+    description: Fires when InterfaceScaffoldGen/preview completes with ok
+    messages:
+      interfaceScaffoldGenPreviewCompleted:
+        $ref: '#/components/messages/InterfaceScaffoldGenPreviewCompleted'
+  interface-scaffold-gen/registerCompleted:
+    description: Fires when InterfaceScaffoldGen/register completes with ok
+    messages:
+      interfaceScaffoldGenRegisterCompleted:
+        $ref: '#/components/messages/InterfaceScaffoldGenRegisterCompleted'
   concept-scaffold-gen/generateCompleted:
     description: Fires when ConceptScaffoldGen/generate completes with ok
     messages:
@@ -345,6 +365,41 @@ channels:
     messages:
       generatorRegenerateCompleted:
         $ref: '#/components/messages/GeneratorRegenerateCompleted'
+  projection/projectCompleted:
+    description: Fires when Projection/project completes with ok
+    messages:
+      projectionProjectCompleted:
+        $ref: '#/components/messages/ProjectionProjectCompleted'
+  projection/validateCompleted:
+    description: Fires when Projection/validate completes with ok
+    messages:
+      projectionValidateCompleted:
+        $ref: '#/components/messages/ProjectionValidateCompleted'
+  projection/diffCompleted:
+    description: Fires when Projection/diff completes with ok
+    messages:
+      projectionDiffCompleted:
+        $ref: '#/components/messages/ProjectionDiffCompleted'
+  projection/inferResourcesCompleted:
+    description: Fires when Projection/inferResources completes with ok
+    messages:
+      projectionInferResourcesCompleted:
+        $ref: '#/components/messages/ProjectionInferResourcesCompleted'
+  projection/ingestCompleted:
+    description: Fires when Projection/ingest completes with ok
+    messages:
+      projectionIngestCompleted:
+        $ref: '#/components/messages/ProjectionIngestCompleted'
+  projection/resolveForwardCompleted:
+    description: Fires when Projection/resolveForward completes with ok
+    messages:
+      projectionResolveForwardCompleted:
+        $ref: '#/components/messages/ProjectionResolveForwardCompleted'
+  projection/resolveReverseCompleted:
+    description: Fires when Projection/resolveReverse completes with ok
+    messages:
+      projectionResolveReverseCompleted:
+        $ref: '#/components/messages/ProjectionResolveReverseCompleted'
   api-surface/composeCompleted:
     description: Fires when ApiSurface/compose completes with ok
     messages:
@@ -1355,6 +1410,11 @@ channels:
     messages:
       patchCommuteCompleted:
         $ref: '#/components/messages/PatchCommuteCompleted'
+  patch/applyInverseCompleted:
+    description: Fires when Patch/applyInverse completes with ok
+    messages:
+      patchApplyInverseCompleted:
+        $ref: '#/components/messages/PatchApplyInverseCompleted'
   ref/created:
     description: Fires when Ref/create completes with ok
     messages:
@@ -2005,6 +2065,36 @@ channels:
     messages:
       queryExecutionPlanPushdownCompleted:
         $ref: '#/components/messages/QueryExecutionPlanPushdownCompleted'
+  filter-spec/created:
+    description: Fires when FilterSpec/create completes with ok
+    messages:
+      filterSpecCreated:
+        $ref: '#/components/messages/FilterSpecCreated'
+  filter-spec/composeCompleted:
+    description: Fires when FilterSpec/compose completes with ok
+    messages:
+      filterSpecComposeCompleted:
+        $ref: '#/components/messages/FilterSpecComposeCompleted'
+  filter-spec/evaluateCompleted:
+    description: Fires when FilterSpec/evaluate completes with ok
+    messages:
+      filterSpecEvaluateCompleted:
+        $ref: '#/components/messages/FilterSpecEvaluateCompleted'
+  filter-spec/normalizeCompleted:
+    description: Fires when FilterSpec/normalize completes with ok
+    messages:
+      filterSpecNormalizeCompleted:
+        $ref: '#/components/messages/FilterSpecNormalizeCompleted'
+  filter-spec/validateCompleted:
+    description: Fires when FilterSpec/validate completes with ok
+    messages:
+      filterSpecValidateCompleted:
+        $ref: '#/components/messages/FilterSpecValidateCompleted'
+  filter-spec/bindCompleted:
+    description: Fires when FilterSpec/bind completes with ok
+    messages:
+      filterSpecBindCompleted:
+        $ref: '#/components/messages/FilterSpecBindCompleted'
   sort-spec/created:
     description: Fires when SortSpec/create completes with ok
     messages:
@@ -2045,6 +2135,16 @@ channels:
     messages:
       projectionSpecEvaluateCompleted:
         $ref: '#/components/messages/ProjectionSpecEvaluateCompleted'
+  data-source-spec/created:
+    description: Fires when DataSourceSpec/create completes with ok
+    messages:
+      dataSourceSpecCreated:
+        $ref: '#/components/messages/DataSourceSpecCreated'
+  data-source-spec/bindCompleted:
+    description: Fires when DataSourceSpec/bind completes with ok
+    messages:
+      dataSourceSpecBindCompleted:
+        $ref: '#/components/messages/DataSourceSpecBindCompleted'
   presentation-spec/created:
     description: Fires when PresentationSpec/create completes with ok
     messages:
@@ -2055,6 +2155,16 @@ channels:
     messages:
       interactionSpecCreated:
         $ref: '#/components/messages/InteractionSpecCreated'
+  interaction-spec/created:
+    description: Fires when InteractionSpec/addRowAction completes with ok
+    messages:
+      interactionSpecCreated:
+        $ref: '#/components/messages/InteractionSpecCreated'
+  interaction-spec/setCreateBindingCompleted:
+    description: Fires when InteractionSpec/setCreateBinding completes with ok
+    messages:
+      interactionSpecSetCreateBindingCompleted:
+        $ref: '#/components/messages/InteractionSpecSetCreateBindingCompleted'
   view-shell/created:
     description: Fires when ViewShell/create completes with ok
     messages:
@@ -2075,6 +2185,11 @@ channels:
     messages:
       viewShellResolveHydratedCompleted:
         $ref: '#/components/messages/ViewShellResolveHydratedCompleted'
+  view-shell/refreshCompleted:
+    description: Fires when ViewShell/refresh completes with ok
+    messages:
+      viewShellRefreshCompleted:
+        $ref: '#/components/messages/ViewShellRefreshCompleted'
   filter-representation/registerKindCompleted:
     description: Fires when FilterRepresentation/registerKind completes with ok
     messages:
@@ -2140,6 +2255,31 @@ channels:
     messages:
       connectionDisconnectCompleted:
         $ref: '#/components/messages/ConnectionDisconnectCompleted'
+  credential/created:
+    description: Fires when Credential/create completes with ok
+    messages:
+      credentialCreated:
+        $ref: '#/components/messages/CredentialCreated'
+  credential/storeCompleted:
+    description: Fires when Credential/store completes with ok
+    messages:
+      credentialStoreCompleted:
+        $ref: '#/components/messages/CredentialStoreCompleted'
+  credential/loadCompleted:
+    description: Fires when Credential/load completes with ok
+    messages:
+      credentialLoadCompleted:
+        $ref: '#/components/messages/CredentialLoadCompleted'
+  credential/refreshCompleted:
+    description: Fires when Credential/refresh completes with ok
+    messages:
+      credentialRefreshCompleted:
+        $ref: '#/components/messages/CredentialRefreshCompleted'
+  credential/deleted:
+    description: Fires when Credential/remove completes with ok
+    messages:
+      credentialDeleted:
+        $ref: '#/components/messages/CredentialDeleted'
   page-map/registerCompleted:
     description: Fires when PageMap/register completes with ok
     messages:
@@ -2430,6 +2570,34 @@ operations:
     summary: Publish event when DeployScaffoldGen/register completes
     messages:
       - $ref: '#/channels/deploy-scaffold-gen/registerCompleted/messages/deployScaffoldGenRegisterCompleted'
+  publishInterfaceScaffoldGenGenerateCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/interface-scaffold-gen/generateCompleted'
+    summary: Publish event when InterfaceScaffoldGen/generate completes
+    messages:
+      - $ref: '#/channels/interface-scaffold-gen/generateCompleted/messages/interfaceScaffoldGenGenerateCompleted'
+  publishInterfaceScaffoldGenGenerateDualCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/interface-scaffold-gen/generateDualCompleted'
+    summary: Publish event when InterfaceScaffoldGen/generateDual completes
+    messages:
+      - $ref: '#/channels/interface-scaffold-gen/generateDualCompleted/messages/interfaceScaffoldGenGenerateDualCompleted'
+  publishInterfaceScaffoldGenPreviewCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/interface-scaffold-gen/previewCompleted'
+    summary: Publish event when InterfaceScaffoldGen/preview completes
+    messages:
+      - $ref: '#/channels/interface-scaffold-gen/previewCompleted/messages/interfaceScaffoldGenPreviewCompleted'
+  publishInterfaceScaffoldGenRegisterCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/interface-scaffold-gen/registerCompleted'
+    summary: Publish event when InterfaceScaffoldGen/register completes
+    messages:
+      - $ref: '#/channels/interface-scaffold-gen/registerCompleted/messages/interfaceScaffoldGenRegisterCompleted'
   publishConceptScaffoldGenGenerateCompleted:
     action: send
     channel:
@@ -2626,6 +2794,55 @@ operations:
     summary: Publish event when Generator/regenerate completes
     messages:
       - $ref: '#/channels/generator/regenerateCompleted/messages/generatorRegenerateCompleted'
+  publishProjectionProjectCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/projection/projectCompleted'
+    summary: Publish event when Projection/project completes
+    messages:
+      - $ref: '#/channels/projection/projectCompleted/messages/projectionProjectCompleted'
+  publishProjectionValidateCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/projection/validateCompleted'
+    summary: Publish event when Projection/validate completes
+    messages:
+      - $ref: '#/channels/projection/validateCompleted/messages/projectionValidateCompleted'
+  publishProjectionDiffCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/projection/diffCompleted'
+    summary: Publish event when Projection/diff completes
+    messages:
+      - $ref: '#/channels/projection/diffCompleted/messages/projectionDiffCompleted'
+  publishProjectionInferResourcesCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/projection/inferResourcesCompleted'
+    summary: Publish event when Projection/inferResources completes
+    messages:
+      - $ref: '#/channels/projection/inferResourcesCompleted/messages/projectionInferResourcesCompleted'
+  publishProjectionIngestCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/projection/ingestCompleted'
+    summary: Publish event when Projection/ingest completes
+    messages:
+      - $ref: '#/channels/projection/ingestCompleted/messages/projectionIngestCompleted'
+  publishProjectionResolveForwardCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/projection/resolveForwardCompleted'
+    summary: Publish event when Projection/resolveForward completes
+    messages:
+      - $ref: '#/channels/projection/resolveForwardCompleted/messages/projectionResolveForwardCompleted'
+  publishProjectionResolveReverseCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/projection/resolveReverseCompleted'
+    summary: Publish event when Projection/resolveReverse completes
+    messages:
+      - $ref: '#/channels/projection/resolveReverseCompleted/messages/projectionResolveReverseCompleted'
   publishApiSurfaceComposeCompleted:
     action: send
     channel:
@@ -4040,6 +4257,13 @@ operations:
     summary: Publish event when Patch/commute completes
     messages:
       - $ref: '#/channels/patch/commuteCompleted/messages/patchCommuteCompleted'
+  publishPatchApplyInverseCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/patch/applyInverseCompleted'
+    summary: Publish event when Patch/applyInverse completes
+    messages:
+      - $ref: '#/channels/patch/applyInverseCompleted/messages/patchApplyInverseCompleted'
   publishRefCreated:
     action: send
     channel:
@@ -4950,6 +5174,48 @@ operations:
     summary: Publish event when QueryExecution/planPushdown completes
     messages:
       - $ref: '#/channels/query-execution/planPushdownCompleted/messages/queryExecutionPlanPushdownCompleted'
+  publishFilterSpecCreated:
+    action: send
+    channel:
+      $ref: '#/channels/filter-spec/created'
+    summary: Publish event when FilterSpec/create completes
+    messages:
+      - $ref: '#/channels/filter-spec/created/messages/filterSpecCreated'
+  publishFilterSpecComposeCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/filter-spec/composeCompleted'
+    summary: Publish event when FilterSpec/compose completes
+    messages:
+      - $ref: '#/channels/filter-spec/composeCompleted/messages/filterSpecComposeCompleted'
+  publishFilterSpecEvaluateCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/filter-spec/evaluateCompleted'
+    summary: Publish event when FilterSpec/evaluate completes
+    messages:
+      - $ref: '#/channels/filter-spec/evaluateCompleted/messages/filterSpecEvaluateCompleted'
+  publishFilterSpecNormalizeCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/filter-spec/normalizeCompleted'
+    summary: Publish event when FilterSpec/normalize completes
+    messages:
+      - $ref: '#/channels/filter-spec/normalizeCompleted/messages/filterSpecNormalizeCompleted'
+  publishFilterSpecValidateCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/filter-spec/validateCompleted'
+    summary: Publish event when FilterSpec/validate completes
+    messages:
+      - $ref: '#/channels/filter-spec/validateCompleted/messages/filterSpecValidateCompleted'
+  publishFilterSpecBindCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/filter-spec/bindCompleted'
+    summary: Publish event when FilterSpec/bind completes
+    messages:
+      - $ref: '#/channels/filter-spec/bindCompleted/messages/filterSpecBindCompleted'
   publishSortSpecCreated:
     action: send
     channel:
@@ -5006,6 +5272,20 @@ operations:
     summary: Publish event when ProjectionSpec/evaluate completes
     messages:
       - $ref: '#/channels/projection-spec/evaluateCompleted/messages/projectionSpecEvaluateCompleted'
+  publishDataSourceSpecCreated:
+    action: send
+    channel:
+      $ref: '#/channels/data-source-spec/created'
+    summary: Publish event when DataSourceSpec/create completes
+    messages:
+      - $ref: '#/channels/data-source-spec/created/messages/dataSourceSpecCreated'
+  publishDataSourceSpecBindCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/data-source-spec/bindCompleted'
+    summary: Publish event when DataSourceSpec/bind completes
+    messages:
+      - $ref: '#/channels/data-source-spec/bindCompleted/messages/dataSourceSpecBindCompleted'
   publishPresentationSpecCreated:
     action: send
     channel:
@@ -5020,6 +5300,20 @@ operations:
     summary: Publish event when InteractionSpec/create completes
     messages:
       - $ref: '#/channels/interaction-spec/created/messages/interactionSpecCreated'
+  publishInteractionSpecCreated:
+    action: send
+    channel:
+      $ref: '#/channels/interaction-spec/created'
+    summary: Publish event when InteractionSpec/addRowAction completes
+    messages:
+      - $ref: '#/channels/interaction-spec/created/messages/interactionSpecCreated'
+  publishInteractionSpecSetCreateBindingCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/interaction-spec/setCreateBindingCompleted'
+    summary: Publish event when InteractionSpec/setCreateBinding completes
+    messages:
+      - $ref: '#/channels/interaction-spec/setCreateBindingCompleted/messages/interactionSpecSetCreateBindingCompleted'
   publishViewShellCreated:
     action: send
     channel:
@@ -5048,6 +5342,13 @@ operations:
     summary: Publish event when ViewShell/resolveHydrated completes
     messages:
       - $ref: '#/channels/view-shell/resolveHydratedCompleted/messages/viewShellResolveHydratedCompleted'
+  publishViewShellRefreshCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/view-shell/refreshCompleted'
+    summary: Publish event when ViewShell/refresh completes
+    messages:
+      - $ref: '#/channels/view-shell/refreshCompleted/messages/viewShellRefreshCompleted'
   publishFilterRepresentationRegisterKindCompleted:
     action: send
     channel:
@@ -5139,6 +5440,41 @@ operations:
     summary: Publish event when Connection/disconnect completes
     messages:
       - $ref: '#/channels/connection/disconnectCompleted/messages/connectionDisconnectCompleted'
+  publishCredentialCreated:
+    action: send
+    channel:
+      $ref: '#/channels/credential/created'
+    summary: Publish event when Credential/create completes
+    messages:
+      - $ref: '#/channels/credential/created/messages/credentialCreated'
+  publishCredentialStoreCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/credential/storeCompleted'
+    summary: Publish event when Credential/store completes
+    messages:
+      - $ref: '#/channels/credential/storeCompleted/messages/credentialStoreCompleted'
+  publishCredentialLoadCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/credential/loadCompleted'
+    summary: Publish event when Credential/load completes
+    messages:
+      - $ref: '#/channels/credential/loadCompleted/messages/credentialLoadCompleted'
+  publishCredentialRefreshCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/credential/refreshCompleted'
+    summary: Publish event when Credential/refresh completes
+    messages:
+      - $ref: '#/channels/credential/refreshCompleted/messages/credentialRefreshCompleted'
+  publishCredentialDeleted:
+    action: send
+    channel:
+      $ref: '#/channels/credential/deleted'
+    summary: Publish event when Credential/remove completes
+    messages:
+      - $ref: '#/channels/credential/deleted/messages/credentialDeleted'
   publishPageMapRegisterCompleted:
     action: send
     channel:
@@ -5397,6 +5733,30 @@ components:
       contentType: application/json
       payload:
         $ref: '#/components/schemas/DeployScaffoldGenRegisterCompletedPayload'
+    InterfaceScaffoldGenGenerateCompleted:
+      name: InterfaceScaffoldGenGenerateCompleted
+      title: InterfaceScaffoldGen GenerateCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/InterfaceScaffoldGenGenerateCompletedPayload'
+    InterfaceScaffoldGenGenerateDualCompleted:
+      name: InterfaceScaffoldGenGenerateDualCompleted
+      title: InterfaceScaffoldGen GenerateDualCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/InterfaceScaffoldGenGenerateDualCompletedPayload'
+    InterfaceScaffoldGenPreviewCompleted:
+      name: InterfaceScaffoldGenPreviewCompleted
+      title: InterfaceScaffoldGen PreviewCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/InterfaceScaffoldGenPreviewCompletedPayload'
+    InterfaceScaffoldGenRegisterCompleted:
+      name: InterfaceScaffoldGenRegisterCompleted
+      title: InterfaceScaffoldGen RegisterCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/InterfaceScaffoldGenRegisterCompletedPayload'
     ConceptScaffoldGenGenerateCompleted:
       name: ConceptScaffoldGenGenerateCompleted
       title: ConceptScaffoldGen GenerateCompleted Event
@@ -5565,6 +5925,48 @@ components:
       contentType: application/json
       payload:
         $ref: '#/components/schemas/GeneratorRegenerateCompletedPayload'
+    ProjectionProjectCompleted:
+      name: ProjectionProjectCompleted
+      title: Projection ProjectCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ProjectionProjectCompletedPayload'
+    ProjectionValidateCompleted:
+      name: ProjectionValidateCompleted
+      title: Projection ValidateCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ProjectionValidateCompletedPayload'
+    ProjectionDiffCompleted:
+      name: ProjectionDiffCompleted
+      title: Projection DiffCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ProjectionDiffCompletedPayload'
+    ProjectionInferResourcesCompleted:
+      name: ProjectionInferResourcesCompleted
+      title: Projection InferResourcesCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ProjectionInferResourcesCompletedPayload'
+    ProjectionIngestCompleted:
+      name: ProjectionIngestCompleted
+      title: Projection IngestCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ProjectionIngestCompletedPayload'
+    ProjectionResolveForwardCompleted:
+      name: ProjectionResolveForwardCompleted
+      title: Projection ResolveForwardCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ProjectionResolveForwardCompletedPayload'
+    ProjectionResolveReverseCompleted:
+      name: ProjectionResolveReverseCompleted
+      title: Projection ResolveReverseCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ProjectionResolveReverseCompletedPayload'
     ApiSurfaceComposeCompleted:
       name: ApiSurfaceComposeCompleted
       title: ApiSurface ComposeCompleted Event
@@ -6777,6 +7179,12 @@ components:
       contentType: application/json
       payload:
         $ref: '#/components/schemas/PatchCommuteCompletedPayload'
+    PatchApplyInverseCompleted:
+      name: PatchApplyInverseCompleted
+      title: Patch ApplyInverseCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/PatchApplyInverseCompletedPayload'
     RefCreated:
       name: RefCreated
       title: Ref Created Event
@@ -7557,6 +7965,42 @@ components:
       contentType: application/json
       payload:
         $ref: '#/components/schemas/QueryExecutionPlanPushdownCompletedPayload'
+    FilterSpecCreated:
+      name: FilterSpecCreated
+      title: FilterSpec Created Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/FilterSpecCreatedPayload'
+    FilterSpecComposeCompleted:
+      name: FilterSpecComposeCompleted
+      title: FilterSpec ComposeCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/FilterSpecComposeCompletedPayload'
+    FilterSpecEvaluateCompleted:
+      name: FilterSpecEvaluateCompleted
+      title: FilterSpec EvaluateCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/FilterSpecEvaluateCompletedPayload'
+    FilterSpecNormalizeCompleted:
+      name: FilterSpecNormalizeCompleted
+      title: FilterSpec NormalizeCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/FilterSpecNormalizeCompletedPayload'
+    FilterSpecValidateCompleted:
+      name: FilterSpecValidateCompleted
+      title: FilterSpec ValidateCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/FilterSpecValidateCompletedPayload'
+    FilterSpecBindCompleted:
+      name: FilterSpecBindCompleted
+      title: FilterSpec BindCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/FilterSpecBindCompletedPayload'
     SortSpecCreated:
       name: SortSpecCreated
       title: SortSpec Created Event
@@ -7605,6 +8049,18 @@ components:
       contentType: application/json
       payload:
         $ref: '#/components/schemas/ProjectionSpecEvaluateCompletedPayload'
+    DataSourceSpecCreated:
+      name: DataSourceSpecCreated
+      title: DataSourceSpec Created Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/DataSourceSpecCreatedPayload'
+    DataSourceSpecBindCompleted:
+      name: DataSourceSpecBindCompleted
+      title: DataSourceSpec BindCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/DataSourceSpecBindCompletedPayload'
     PresentationSpecCreated:
       name: PresentationSpecCreated
       title: PresentationSpec Created Event
@@ -7617,6 +8073,18 @@ components:
       contentType: application/json
       payload:
         $ref: '#/components/schemas/InteractionSpecCreatedPayload'
+    InteractionSpecCreated:
+      name: InteractionSpecCreated
+      title: InteractionSpec Created Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/InteractionSpecCreatedPayload'
+    InteractionSpecSetCreateBindingCompleted:
+      name: InteractionSpecSetCreateBindingCompleted
+      title: InteractionSpec SetCreateBindingCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/InteractionSpecSetCreateBindingCompletedPayload'
     ViewShellCreated:
       name: ViewShellCreated
       title: ViewShell Created Event
@@ -7641,6 +8109,12 @@ components:
       contentType: application/json
       payload:
         $ref: '#/components/schemas/ViewShellResolveHydratedCompletedPayload'
+    ViewShellRefreshCompleted:
+      name: ViewShellRefreshCompleted
+      title: ViewShell RefreshCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ViewShellRefreshCompletedPayload'
     FilterRepresentationRegisterKindCompleted:
       name: FilterRepresentationRegisterKindCompleted
       title: FilterRepresentation RegisterKindCompleted Event
@@ -7719,6 +8193,36 @@ components:
       contentType: application/json
       payload:
         $ref: '#/components/schemas/ConnectionDisconnectCompletedPayload'
+    CredentialCreated:
+      name: CredentialCreated
+      title: Credential Created Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/CredentialCreatedPayload'
+    CredentialStoreCompleted:
+      name: CredentialStoreCompleted
+      title: Credential StoreCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/CredentialStoreCompletedPayload'
+    CredentialLoadCompleted:
+      name: CredentialLoadCompleted
+      title: Credential LoadCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/CredentialLoadCompletedPayload'
+    CredentialRefreshCompleted:
+      name: CredentialRefreshCompleted
+      title: Credential RefreshCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/CredentialRefreshCompletedPayload'
+    CredentialDeleted:
+      name: CredentialDeleted
+      title: Credential Deleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/CredentialDeletedPayload'
     PageMapRegisterCompleted:
       name: PageMapRegisterCompleted
       title: PageMap RegisterCompleted Event
@@ -7994,6 +8498,15 @@ components:
         value:
           type: string
       required: [appName, value]
+    InterfaceScaffoldGen:
+      type: object
+      properties:
+        name:
+          type: string
+        manifestType: null
+        value:
+          type: string
+      required: [name, manifestType, value]
     ConceptScaffoldGen:
       type: object
       properties:
@@ -8099,6 +8612,98 @@ components:
         value:
           type: string
       required: [targets, sdkLanguages, specFormats, outputDir, formatting, value]
+    Projection:
+      type: object
+      properties:
+        concept:
+          type: string
+        kitName:
+          type: string
+        kitVersion:
+          type: string
+        conceptManifest:
+          type: string
+        traits:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              scope:
+                type: string
+              config:
+                type: string
+            required: [name, scope, config]
+        resourceMapping:
+          oneOf:
+
+            - type: object
+              properties:           path:
+                  type: string
+                idField:
+                  type: string
+                actions:
+                  type: array
+                  items:
+                    type: string
+              required: [path, idField, actions]
+            - type: 'null'
+        targetOverrides:
+          type: array
+          items:
+            type: object
+            properties:
+              target:
+                type: string
+              config:
+                type: string
+            required: [target, config]
+        shapes:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              kind:
+                type: string
+              resolved:
+                type: string
+            required: [name, kind, resolved]
+        crossReferences:
+          type: array
+          items:
+            type: object
+            properties:
+              from:
+                type: string
+              to:
+                type: string
+              relation:
+                type: string
+            required: [from, to, relation]
+        content:
+          type: string
+        externalSource:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        direction: null
+        actionMappings:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        authConfig:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        value:
+          type: string
+      required: [concept, kitName, kitVersion, conceptManifest, traits, resourceMapping, targetOverrides, shapes, crossReferences, content, externalSource, direction, actionMappings, authConfig, value]
     ApiSurface:
       type: object
       properties:
@@ -9991,6 +10596,25 @@ components:
         value:
           type: string
       required: [name, kind, capabilities, value, value]
+    FilterSpec:
+      type: object
+      properties:
+        name:
+          type: string
+        tree:
+          type: string
+        sourceType: null
+        fieldRefs:
+          type: array
+          items:
+            type: string
+        parameters:
+          type: array
+          items:
+            type: string
+        value:
+          type: string
+      required: [name, tree, sourceType, fieldRefs, parameters, value]
     SortSpec:
       type: object
       properties:
@@ -10025,6 +10649,21 @@ components:
         value:
           type: string
       required: [name, fields, value]
+    DataSourceSpec:
+      type: object
+      properties:
+        name:
+          type: string
+        kind: null
+        config:
+          type: string
+        parameters:
+          type: array
+          items:
+            type: string
+        value:
+          type: string
+      required: [name, kind, config, parameters, value]
     PresentationSpec:
       type: object
       properties:
@@ -10066,9 +10705,34 @@ components:
 
             - type: string
             - type: 'null'
+        actionBindings:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        createBinding:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        bulkBindings:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        create_surface:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        create_mode_hint:
+          oneOf:
+
+            - type: string
+            - type: 'null'
         value:
           type: string
-      required: [name, createForm, rowClick, rowActions, pickerMode, createProgram, actionProgram, value]
+      required: [name, createForm, rowClick, rowActions, pickerMode, createProgram, actionProgram, actionBindings, createBinding, bulkBindings, create_surface, create_mode_hint, value]
     ViewShell:
       type: object
       properties:
@@ -10154,6 +10818,29 @@ components:
         value:
           type: string
       required: [endpoint, status, session, registeredConcepts, transportAdapter, errorInfo, value]
+    Credential:
+      type: object
+      properties:
+        name:
+          type: string
+        endpoint:
+          type: string
+        method:
+          type: string
+        token:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        expiresAt:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        status: null
+        value:
+          type: string
+      required: [name, endpoint, method, token, expiresAt, status, value]
     PageMap:
       type: object
       properties:
@@ -10722,6 +11409,64 @@ components:
           items:
             type: string
       required: [variant, name, inputKind, outputKind, capabilities]
+    InterfaceScaffoldGenGenerateCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        files:
+          type: array
+          items:
+            type: string
+        filesGenerated:
+          type: integer
+      required: [variant, files, filesGenerated]
+    InterfaceScaffoldGenGenerateDualCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        files:
+          type: array
+          items:
+            type: string
+        filesGenerated:
+          type: integer
+      required: [variant, files, filesGenerated]
+    InterfaceScaffoldGenPreviewCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        files:
+          type: array
+          items:
+            type: string
+        wouldWrite:
+          type: integer
+        wouldSkip:
+          type: integer
+      required: [variant, files, wouldWrite, wouldSkip]
+    InterfaceScaffoldGenRegisterCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        name:
+          type: string
+        inputKind:
+          type: string
+        outputKind:
+          type: string
+        capabilities:
+          type: array
+          items:
+            type: string
+      required: [variant, name, inputKind, outputKind, capabilities]
     ConceptScaffoldGenGenerateCompletedPayload:
       type: object
       properties:
@@ -11140,6 +11885,103 @@ components:
         filesRegenerated:
           type: integer
       required: [variant, plan, filesRegenerated]
+    ProjectionProjectCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        projection:
+          type: string
+        shapes:
+          type: integer
+        actions:
+          type: integer
+        traits:
+          type: integer
+      required: [variant, projection, shapes, actions, traits]
+    ProjectionValidateCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        projection:
+          type: string
+        warnings:
+          type: array
+          items:
+            type: string
+      required: [variant, projection, warnings]
+    ProjectionDiffCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        added:
+          type: array
+          items:
+            type: string
+        removed:
+          type: array
+          items:
+            type: string
+        changed:
+          type: array
+          items:
+            type: string
+      required: [variant, added, removed, changed]
+    ProjectionInferResourcesCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        projection:
+          type: string
+        resources:
+          type: array
+          items:
+            type: string
+      required: [variant, projection, resources]
+    ProjectionIngestCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        projection:
+          type: string
+      required: [variant, projection]
+    ProjectionResolveForwardCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        method:
+          type: string
+        path:
+          type: string
+        body:
+          type: string
+        headers:
+          type: string
+      required: [variant, method, path, body, headers]
+    ProjectionResolveReverseCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        concept:
+          type: string
+        action:
+          type: string
+        input:
+          type: string
+      required: [variant, concept, action, input]
     ApiSurfaceComposeCompletedPayload:
       type: object
       properties:
@@ -13194,6 +14036,15 @@ components:
         p2Prime:
           type: string
       required: [variant, p1Prime, p2Prime]
+    PatchApplyInverseCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        result:
+          type: string
+      required: [variant, result]
     RefCreatedPayload:
       type: object
       properties:
@@ -14514,6 +15365,64 @@ components:
         residual:
           type: string
       required: [variant, pushdown, residual]
+    FilterSpecCreatedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        filter:
+          type: string
+      required: [variant, filter]
+    FilterSpecComposeCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        filter:
+          type: string
+        tree:
+          type: string
+      required: [variant, filter, tree]
+    FilterSpecEvaluateCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        rows:
+          type: string
+      required: [variant, rows]
+    FilterSpecNormalizeCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        tree:
+          type: string
+      required: [variant, tree]
+    FilterSpecValidateCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        filter:
+          type: string
+      required: [variant, filter]
+    FilterSpecBindCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        filter:
+          type: string
+        tree:
+          type: string
+      required: [variant, filter, tree]
     SortSpecCreatedPayload:
       type: object
       properties:
@@ -14590,6 +15499,26 @@ components:
         rows:
           type: string
       required: [variant, rows]
+    DataSourceSpecCreatedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        source:
+          type: string
+      required: [variant, source]
+    DataSourceSpecBindCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        source:
+          type: string
+        config:
+          type: string
+      required: [variant, source, config]
     PresentationSpecCreatedPayload:
       type: object
       properties:
@@ -14600,6 +15529,24 @@ components:
           type: string
       required: [variant, presentation]
     InteractionSpecCreatedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        interaction:
+          type: string
+      required: [variant, interaction]
+    InteractionSpecCreatedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        interaction:
+          type: string
+      required: [variant, interaction]
+    InteractionSpecSetCreateBindingCompletedPayload:
       type: object
       properties:
         variant:
@@ -14664,6 +15611,15 @@ components:
         interaction:
           type: string
       required: [variant, view, title, description, dataSource, filter, sort, group, projection, presentation, interaction]
+    ViewShellRefreshCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        shell:
+          type: string
+      required: [variant, shell]
     FilterRepresentationRegisterKindCompletedPayload:
       type: object
       properties:
@@ -14792,6 +15748,57 @@ components:
         connection:
           type: string
       required: [variant, connection]
+    CredentialCreatedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        profile:
+          type: string
+      required: [variant, profile]
+    CredentialStoreCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        profile:
+          type: string
+      required: [variant, profile]
+    CredentialLoadCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        profile:
+          type: string
+        token:
+          type: string
+        endpoint:
+          type: string
+      required: [variant, profile, token, endpoint]
+    CredentialRefreshCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        profile:
+          type: string
+        token:
+          type: string
+      required: [variant, profile, token]
+    CredentialDeletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        profile:
+          type: string
+      required: [variant, profile]
     PageMapRegisterCompletedPayload:
       type: object
       properties:
@@ -16087,6 +17094,140 @@ components:
           items:
             type: string
       required: [variant, name, inputKind, outputKind, capabilities]
+    InterfaceScaffoldGenGenerateInput:
+      type: object
+      properties:
+        name:
+          type: string
+        targets:
+          type: array
+          items:
+            type: string
+        sdks:
+          type: array
+          items:
+            type: string
+      required: [name, targets, sdks]
+    InterfaceScaffoldGenGenerateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        files:
+          type: array
+          items:
+            type: string
+        filesGenerated:
+          type: integer
+      required: [variant, files, filesGenerated]
+    InterfaceScaffoldGenGenerateErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    InterfaceScaffoldGenGenerateDualInput:
+      type: object
+      properties:
+        name:
+          type: string
+        targets:
+          type: array
+          items:
+            type: string
+        sdks:
+          type: array
+          items:
+            type: string
+      required: [name, targets, sdks]
+    InterfaceScaffoldGenGenerateDualOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        files:
+          type: array
+          items:
+            type: string
+        filesGenerated:
+          type: integer
+      required: [variant, files, filesGenerated]
+    InterfaceScaffoldGenGenerateDualErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    InterfaceScaffoldGenPreviewInput:
+      type: object
+      properties:
+        name:
+          type: string
+        targets:
+          type: array
+          items:
+            type: string
+        sdks:
+          type: array
+          items:
+            type: string
+      required: [name, targets, sdks]
+    InterfaceScaffoldGenPreviewOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        files:
+          type: array
+          items:
+            type: string
+        wouldWrite:
+          type: integer
+        wouldSkip:
+          type: integer
+      required: [variant, files, wouldWrite, wouldSkip]
+    InterfaceScaffoldGenPreviewOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    InterfaceScaffoldGenPreviewErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    InterfaceScaffoldGenRegisterOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        name:
+          type: string
+        inputKind:
+          type: string
+        outputKind:
+          type: string
+        capabilities:
+          type: array
+          items:
+            type: string
+      required: [variant, name, inputKind, outputKind, capabilities]
     ConceptScaffoldGenGenerateInput:
       type: object
       properties:
@@ -17194,6 +18335,284 @@ components:
         filesRegenerated:
           type: integer
       required: [variant, plan, filesRegenerated]
+    ProjectionProjectInput:
+      type: object
+      properties:
+        manifest:
+          type: string
+        annotations:
+          type: string
+      required: [manifest, annotations]
+    ProjectionProjectOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        projection:
+          type: string
+        shapes:
+          type: integer
+        actions:
+          type: integer
+        traits:
+          type: integer
+      required: [variant, projection, shapes, actions, traits]
+    ProjectionProjectOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        concept:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string
+      required: [variant, concept, errors]
+    ProjectionProjectOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        concept:
+          type: string
+        missing:
+          type: array
+          items:
+            type: string
+      required: [variant, concept, missing]
+    ProjectionProjectOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        concept:
+          type: string
+        trait1:
+          type: string
+        trait2:
+          type: string
+        reason:
+          type: string
+      required: [variant, concept, trait1, trait2, reason]
+    ProjectionValidateInput:
+      type: object
+      properties:
+        projection:
+          type: string
+      required: [projection]
+    ProjectionValidateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        projection:
+          type: string
+        warnings:
+          type: array
+          items:
+            type: string
+      required: [variant, projection, warnings]
+    ProjectionValidateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        projection:
+          type: string
+        changes:
+          type: array
+          items:
+            type: string
+      required: [variant, projection, changes]
+    ProjectionValidateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        projection:
+          type: string
+        missing:
+          type: array
+          items:
+            type: string
+      required: [variant, projection, missing]
+    ProjectionDiffInput:
+      type: object
+      properties:
+        projection:
+          type: string
+        previous:
+          type: string
+      required: [projection, previous]
+    ProjectionDiffOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        added:
+          type: array
+          items:
+            type: string
+        removed:
+          type: array
+          items:
+            type: string
+        changed:
+          type: array
+          items:
+            type: string
+      required: [variant, added, removed, changed]
+    ProjectionDiffIncompatibleResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [incompatible]
+        reason:
+          type: string
+      required: [variant, reason]
+    ProjectionInferResourcesInput:
+      type: object
+      properties:
+        projection:
+          type: string
+      required: [projection]
+    ProjectionInferResourcesOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        projection:
+          type: string
+        resources:
+          type: array
+          items:
+            type: string
+      required: [variant, projection, resources]
+    ProjectionIngestInput:
+      type: object
+      properties:
+        manifest:
+          type: string
+        source:
+          type: string
+        concept:
+          type: string
+      required: [manifest, source, concept]
+    ProjectionIngestOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        projection:
+          type: string
+      required: [variant, projection]
+    ProjectionIngestInvalidResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [invalid]
+        message:
+          type: string
+      required: [variant, message]
+    ProjectionResolveForwardInput:
+      type: object
+      properties:
+        projection:
+          type: string
+        action:
+          type: string
+        input:
+          type: string
+      required: [projection, action, input]
+    ProjectionResolveForwardOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        method:
+          type: string
+        path:
+          type: string
+        body:
+          type: string
+        headers:
+          type: string
+      required: [variant, method, path, body, headers]
+    ProjectionResolveForwardNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    ProjectionResolveForwardErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    ProjectionResolveReverseInput:
+      type: object
+      properties:
+        projection:
+          type: string
+        method:
+          type: string
+        path:
+          type: string
+        body:
+          type: string
+      required: [projection, method, path, body]
+    ProjectionResolveReverseOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        concept:
+          type: string
+        action:
+          type: string
+        input:
+          type: string
+      required: [variant, concept, action, input]
+    ProjectionResolveReverseNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    ProjectionResolveReverseErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
     ApiSurfaceComposeInput:
       type: object
       properties:
@@ -25716,6 +27135,32 @@ components:
         message:
           type: string
       required: [variant, message]
+    PatchApplyInverseInput:
+      type: object
+      properties:
+        patchId:
+          type: string
+        content:
+          type: string
+      required: [patchId, content]
+    PatchApplyInverseOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        result:
+          type: string
+      required: [variant, result]
+    PatchApplyInverseErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
     RefCreateInput:
       type: object
       properties:
@@ -30027,6 +31472,243 @@ components:
         message:
           type: string
       required: [variant, message]
+    FilterSpecCreateInput:
+      type: object
+      properties:
+        name:
+          type: string
+        tree:
+          type: string
+        sourceType:
+          type: string
+      required: [name, tree, sourceType]
+    FilterSpecCreateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        filter:
+          type: string
+      required: [variant, filter]
+    FilterSpecCreateDuplicateResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [duplicate]
+        filter:
+          type: string
+      required: [variant, filter]
+    FilterSpecGetInput:
+      type: object
+      properties:
+        name:
+          type: string
+      required: [name]
+    FilterSpecGetOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        filter:
+          type: string
+        tree:
+          type: string
+        sourceType:
+          type: string
+        fieldRefs:
+          type: string
+      required: [variant, filter, tree, sourceType, fieldRefs]
+    FilterSpecGetNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    FilterSpecComposeInput:
+      type: object
+      properties:
+        a:
+          type: string
+        b:
+          type: string
+      required: [a, b]
+    FilterSpecComposeOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        filter:
+          type: string
+        tree:
+          type: string
+      required: [variant, filter, tree]
+    FilterSpecComposeNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    FilterSpecEvaluateInput:
+      type: object
+      properties:
+        name:
+          type: string
+        rows:
+          type: string
+      required: [name, rows]
+    FilterSpecEvaluateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        rows:
+          type: string
+      required: [variant, rows]
+    FilterSpecEvaluateNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    FilterSpecEvaluateErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    FilterSpecNormalizeInput:
+      type: object
+      properties:
+        name:
+          type: string
+        form:
+          type: string
+      required: [name, form]
+    FilterSpecNormalizeOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        tree:
+          type: string
+      required: [variant, tree]
+    FilterSpecNormalizeNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    FilterSpecNormalizeErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    FilterSpecValidateInput:
+      type: object
+      properties:
+        name:
+          type: string
+        schema:
+          type: string
+      required: [name, schema]
+    FilterSpecValidateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        filter:
+          type: string
+      required: [variant, filter]
+    FilterSpecValidateInvalidResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [invalid]
+        message:
+          type: string
+      required: [variant, message]
+    FilterSpecValidateNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    FilterSpecBindInput:
+      type: object
+      properties:
+        name:
+          type: string
+        bindings:
+          type: string
+      required: [name, bindings]
+    FilterSpecBindOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        filter:
+          type: string
+        tree:
+          type: string
+      required: [variant, filter, tree]
+    FilterSpecBindNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    FilterSpecBindErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    FilterSpecListOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        filters:
+          type: string
+      required: [variant, filters]
     SortSpecCreateInput:
       type: object
       properties:
@@ -30395,6 +32077,119 @@ components:
         projections:
           type: string
       required: [variant, projections]
+    DataSourceSpecCreateInput:
+      type: object
+      properties:
+        name:
+          type: string
+        kind:
+          type: string
+        config:
+          type: string
+      required: [name, kind, config]
+    DataSourceSpecCreateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        source:
+          type: string
+      required: [variant, source]
+    DataSourceSpecCreateDuplicateResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [duplicate]
+        source:
+          type: string
+      required: [variant, source]
+    DataSourceSpecCreateErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    DataSourceSpecGetInput:
+      type: object
+      properties:
+        name:
+          type: string
+      required: [name]
+    DataSourceSpecGetOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        source:
+          type: string
+        kind:
+          type: string
+        config:
+          type: string
+        parameters:
+          type: string
+      required: [variant, source, kind, config, parameters]
+    DataSourceSpecGetNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    DataSourceSpecBindInput:
+      type: object
+      properties:
+        name:
+          type: string
+        bindings:
+          type: string
+      required: [name, bindings]
+    DataSourceSpecBindOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        source:
+          type: string
+        config:
+          type: string
+      required: [variant, source, config]
+    DataSourceSpecBindNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    DataSourceSpecBindErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    DataSourceSpecListOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        sources:
+          type: string
+      required: [variant, sources]
     PresentationSpecCreateInput:
       type: object
       properties:
@@ -30500,7 +32295,17 @@ components:
 
             - type: string
             - type: 'null'
-      required: [name, createForm, rowClick, rowActions, pickerMode, createProgram, actionProgram]
+        create_surface:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        create_mode_hint:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+      required: [name, createForm, rowClick, rowActions, pickerMode, createProgram, actionProgram, create_surface, create_mode_hint]
     InteractionSpecCreateOkResponse:
       type: object
       properties:
@@ -30560,7 +32365,17 @@ components:
 
             - type: string
             - type: 'null'
-      required: [variant, interaction, createForm, rowClick, rowActions, pickerMode, createProgram, actionProgram]
+        create_surface:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        create_mode_hint:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+      required: [variant, interaction, createForm, rowClick, rowActions, pickerMode, createProgram, actionProgram, create_surface, create_mode_hint]
     InteractionSpecGetNotfoundResponse:
       type: object
       properties:
@@ -30579,6 +32394,76 @@ components:
         interactions:
           type: string
       required: [variant, interactions]
+    InteractionSpecAddRowActionInput:
+      type: object
+      properties:
+        name:
+          type: string
+        binding:
+          type: string
+      required: [name, binding]
+    InteractionSpecAddRowActionOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        interaction:
+          type: string
+      required: [variant, interaction]
+    InteractionSpecAddRowActionNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    InteractionSpecAddRowActionErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    InteractionSpecSetCreateBindingInput:
+      type: object
+      properties:
+        name:
+          type: string
+        binding:
+          type: string
+      required: [name, binding]
+    InteractionSpecSetCreateBindingOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        interaction:
+          type: string
+      required: [variant, interaction]
+    InteractionSpecSetCreateBindingNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    InteractionSpecSetCreateBindingErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
     ViewShellCreateInput:
       type: object
       properties:
@@ -30797,6 +32682,39 @@ components:
         variant:
           type: string
           enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    ViewShellRefreshInput:
+      type: object
+      properties:
+        shell:
+          type: string
+      required: [shell]
+    ViewShellRefreshOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        shell:
+          type: string
+      required: [variant, shell]
+    ViewShellRefreshNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    ViewShellRefreshErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
         message:
           type: string
       required: [variant, message]
@@ -31306,6 +33224,172 @@ components:
         connection:
           type: string
       required: [variant, connection]
+    CredentialCreateInput:
+      type: object
+      properties:
+        profile:
+          type: string
+        name:
+          type: string
+        endpoint:
+          type: string
+        method:
+          type: string
+      required: [profile, name, endpoint, method]
+    CredentialCreateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        profile:
+          type: string
+      required: [variant, profile]
+    CredentialCreateDuplicateResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [duplicate]
+        message:
+          type: string
+      required: [variant, message]
+    CredentialStoreInput:
+      type: object
+      properties:
+        profile:
+          type: string
+        token:
+          type: string
+        expiresAt:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+      required: [profile, token, expiresAt]
+    CredentialStoreOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        profile:
+          type: string
+      required: [variant, profile]
+    CredentialStoreNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    CredentialLoadInput:
+      type: object
+      properties:
+        profile:
+          type: string
+      required: [profile]
+    CredentialLoadOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        profile:
+          type: string
+        token:
+          type: string
+        endpoint:
+          type: string
+      required: [variant, profile, token, endpoint]
+    CredentialLoadNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    CredentialLoadExpiredResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [expired]
+        message:
+          type: string
+      required: [variant, message]
+    CredentialRefreshInput:
+      type: object
+      properties:
+        profile:
+          type: string
+      required: [profile]
+    CredentialRefreshOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        profile:
+          type: string
+        token:
+          type: string
+      required: [variant, profile, token]
+    CredentialRefreshNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    CredentialRefreshErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    CredentialRemoveInput:
+      type: object
+      properties:
+        profile:
+          type: string
+      required: [profile]
+    CredentialRemoveOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        profile:
+          type: string
+      required: [variant, profile]
+    CredentialRemoveNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    CredentialListOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        profiles:
+          type: string
+      required: [variant, profiles]
     PageMapRegisterInput:
       type: object
       properties:

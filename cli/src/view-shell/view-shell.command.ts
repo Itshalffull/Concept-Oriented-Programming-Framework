@@ -144,8 +144,28 @@ viewShellCommand
     }
   });
 
+viewShellCommand
+  .command('refresh')
+  .description('Re run the underlying query by reading the DataSourceSpec , FilterSpec , SortSpec , and all other registered child specs anew , then update lastRenderedAt . Triggers downstream render observations so any bound surface components receive the fresh results .')
+  .requiredOption('--shell <shell>', 'Shell')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/ViewShell', 'refresh', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
+  });
+
 export const viewShellCommandTree = {
   group: 'view-shell',
   description: 'Name and bind the user facing identity of a view by holding references to all subordinate configuration concepts filter , sort , group , projection , presentation , interaction , and data source . ViewShell owns no query or render logic itself ; it is a composition point that lets a view be addressed by a single stable name and resolved into a complete , hydrated ViewConfig at runtime . A nullable legacyConfig field supports migration from monolithic JSON based view records without breaking existing callers',
-  commands: [{ action: 'create', command: 'create' }, { action: 'get', command: 'get' }, { action: 'update', command: 'update' }, { action: 'resolve', command: 'resolve' }, { action: 'list', command: 'list' }, { action: 'resolveHydrated', command: 'resolve-hydrated' }],
+  commands: [{ action: 'create', command: 'create' }, { action: 'get', command: 'get' }, { action: 'update', command: 'update' }, { action: 'resolve', command: 'resolve' }, { action: 'list', command: 'list' }, { action: 'resolveHydrated', command: 'resolve-hydrated' }, { action: 'refresh', command: 'refresh' }],
 };

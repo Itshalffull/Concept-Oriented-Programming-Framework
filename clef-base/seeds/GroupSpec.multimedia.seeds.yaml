@@ -1,0 +1,34 @@
+# GroupSpec seeds for the media library view pipeline.
+# Per MAG-754 (media-library.derived recursive-views).
+#
+# Five grouping dimensions: album, tag, schema (MIME category),
+# folder (outline parent), and date (captured-at month bucket).
+# All use basic grouping type with a count aggregation per group.
+
+concept: GroupSpec
+action: create
+entries:
+  # Group by album (Collection membership)
+  - name: media-group-by-album
+    grouping: '{"type":"basic","fields":[{"field":"album","sort":"asc"}]}'
+    aggregations: '[{"function":"count","alias":"count"}]'
+
+  # Group by tag
+  - name: media-group-by-tag
+    grouping: '{"type":"basic","fields":[{"field":"tags","sort":"asc"}]}'
+    aggregations: '[{"function":"count","alias":"count"}]'
+
+  # Group by schema / MIME type category (image, video, audio, etc.)
+  - name: media-group-by-schema
+    grouping: '{"type":"basic","fields":[{"field":"mimeType","sort":"asc"}]}'
+    aggregations: '[{"function":"count","alias":"count"}]'
+
+  # Group by folder (outline parent node)
+  - name: media-group-by-folder
+    grouping: '{"type":"basic","fields":[{"field":"folder","sort":"asc"}]}'
+    aggregations: '[{"function":"count","alias":"count"}]'
+
+  # Group by captured-at month bucket (year-month)
+  - name: media-group-by-date
+    grouping: '{"type":"basic","fields":[{"field":"capturedAt","bucket":"month","sort":"desc"}]}'
+    aggregations: '[{"function":"count","alias":"count"}]'

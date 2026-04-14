@@ -112,8 +112,29 @@ patchCommand
     }
   });
 
+patchCommand
+  .command('apply-inverse')
+  .description('Invert the patch to obtain its inverse edit script , then apply the inverse to content , effectively undoing the patch . Returns the transformed result that existed before the original patch was applied .')
+  .requiredOption('--patch-id <patchId>', 'Patch Id')
+  .requiredOption('--content <content>', 'Content')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Patch', 'applyInverse', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
+  });
+
 export const patchCommandTree = {
   group: 'patch',
   description: 'Represent a change as a first class , invertible , composable object . Patches have algebraic properties they can be applied , inverted , composed sequentially , and commuted when independent',
-  commands: [{ action: 'create', command: 'create' }, { action: 'apply', command: 'apply' }, { action: 'invert', command: 'invert' }, { action: 'compose', command: 'compose' }, { action: 'commute', command: 'commute' }],
+  commands: [{ action: 'create', command: 'create' }, { action: 'apply', command: 'apply' }, { action: 'invert', command: 'invert' }, { action: 'compose', command: 'compose' }, { action: 'commute', command: 'commute' }, { action: 'applyInverse', command: 'apply-inverse' }],
 };

@@ -1,0 +1,21 @@
+# ComponentMapping seed -- math block type (MAG-755).
+# math-block-mapping registers the math-block widget as the renderer for
+# ContentNodes with schema "math" in the block-editor display mode.
+# insertable: true means the block appears in the slash-menu / block picker
+# under the "Advanced" section, matching the code-block pattern.
+
+concept: ComponentMapping
+action: create
+entries:
+  # Math block -- literal LaTeX expression block with KaTeX rendering,
+  # live preview, and an inline latex-editor inspector panel.
+  # InputRules are disabled inside the editablePane (literal block scope).
+  - id: math-block-mapping
+    name: math-block-mapping
+    widget_id: math-block
+    schema: math
+    display_mode: block-editor
+    insertable: true
+    section: "Advanced"
+    icon: "function"
+    label: "Math"

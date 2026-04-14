@@ -1,0 +1,49 @@
+# PresentationSpec seeds for the media library view pipeline.
+# Per MAG-754 (media-library.derived recursive-views).
+#
+# Four switchable presentation modes:
+#   blocks     — default; each asset rendered by its own image/video/audio block widget
+#   card-grid  — thumbnail grid (gallery mode)
+#   timeline   — chronological strip sorted by capturedAt
+#   masonry    — variable-height card layout for mixed aspect ratios
+#
+# All four use displayModePolicy: user-selectable so the user can switch at runtime.
+# blocks uses bypass because the block renderer handles display mode internally.
+
+concept: PresentationSpec
+action: create
+entries:
+  # Default presentation — each child asset rendered as its own block widget
+  - name: media-blocks-default
+    displayType: blocks
+    hints: '{}'
+    displayModePolicy: bypass
+    defaultDisplayMode: ""
+
+  # Gallery card grid — fixed-size thumbnails in a responsive grid
+  - name: media-card-grid
+    displayType: card-grid
+    hints: '{"columns":4,"aspectRatio":"square","showLabel":true}'
+    displayModePolicy: user-selectable
+    defaultDisplayMode: card
+
+  # Timeline — horizontal or vertical chronological strip
+  - name: media-timeline
+    displayType: timeline
+    hints: '{"orientation":"horizontal","compact":false}'
+    displayModePolicy: user-selectable
+    defaultDisplayMode: timeline-item
+
+  # Masonry — variable-height Pinterest-style layout for mixed aspect ratios
+  - name: media-masonry
+    displayType: masonry
+    hints: '{"columns":3,"gap":8}'
+    displayModePolicy: user-selectable
+    defaultDisplayMode: card
+
+  # Table — structured rows with all metadata columns visible (matches media-asset-fields projection)
+  - name: media-table
+    displayType: table
+    hints: '{"striped":false,"compact":false,"stickyHeader":true}'
+    displayModePolicy: user-selectable
+    defaultDisplayMode: table-row

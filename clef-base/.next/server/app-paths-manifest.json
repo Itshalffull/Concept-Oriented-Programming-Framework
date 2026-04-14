@@ -1,0 +1,4 @@
+{
+  "/api/invoke/[concept]/[action]/route": "app/api/invoke/[concept]/[action]/route.js",
+  "/admin/[[...slug]]/page": "app/admin/[[...slug]]/page.js"
+}

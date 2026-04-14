@@ -65,7 +65,16 @@
       "Bash(cp .claude/agents/concept-parameter-update.md .gemini/agents/)",
       "Bash(cp .claude/agents/test-generation.md .codex/agents/)",
       "Bash(cp .claude/agents/test-generation.md .gemini/agents/)",
-      "Bash(cp .claude/agents/seed-data.md .codex/agents/)"
+      "Bash(cp .claude/agents/seed-data.md .codex/agents/)",
+      "mcp__vibe_kanban__update_issue",
+      "Bash(mkdir -p .claude/agents/concept-parameter-update .codex/agents/concept-parameter-update .gemini/agents/concept-parameter-update)",
+      "Bash(cp .claude/skills/create-concept/references/concept-grammar.md .claude/agents/concept-parameter-update/concept-grammar.md)",
+      "Bash(cp .claude/skills/create-concept/references/concept-grammar.md .codex/agents/concept-parameter-update/concept-grammar.md)",
+      "Bash(cp .claude/skills/create-concept/references/concept-grammar.md .gemini/agents/concept-parameter-update/concept-grammar.md)",
+      "Bash(cp .claude/skills/create-concept/references/jackson-methodology.md .claude/agents/concept-parameter-update/jackson-methodology.md)",
+      "Bash(cp .claude/skills/create-concept/references/jackson-methodology.md .codex/agents/concept-parameter-update/jackson-methodology.md)",
+      "Bash(cp .claude/skills/create-concept/references/jackson-methodology.md .gemini/agents/concept-parameter-update/jackson-methodology.md)",
+      "Bash(cp .claude/agents/seed-data.md .gemini/agents/seed-data.md)"
     ]
   },
   "enableAllProjectMcpServers": true,

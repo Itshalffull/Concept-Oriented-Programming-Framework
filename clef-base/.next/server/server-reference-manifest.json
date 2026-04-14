@@ -1,0 +1,162 @@
+{
+  "node": {
+    "00188ac59892a6db0eaa322470c79029b3885d5b04": {
+      "workers": {
+        "app/admin/[[...slug]]/page": {
+          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2Fhome%2Ftrinley%2FDocuments%2FGithub%2FConcept-Oriented-Programming-Framework%2Fclef-base%2Fapp%2Fadmin%2Factions.ts%22%2C%5B%7B%22id%22%3A%2200188ac59892a6db0eaa322470c79029b3885d5b04%22%2C%22exportedName%22%3A%22logoutAdminAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%220061e6c975cab34f767a12aa74b19768dfabbb2519%22%2C%22exportedName%22%3A%22readAccessSnapshotAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22400993875ebe0893b38e2f5979264fa4aead2c0c9d%22%2C%22exportedName%22%3A%22assignAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22401511c28fa47a1172cc150af1b3fceafc546e9db3%22%2C%22exportedName%22%3A%22updateSchemaAccessAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22404856239fe2e02edfbb2db8015c09c08f94d5dba5%22%2C%22exportedName%22%3A%22createAccessUserAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22405c478814de6f58b2c1582386eb827781dc68cf42%22%2C%22exportedName%22%3A%22createAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240a09ed0d13b4a67858acd6cf4b944419e11440da1%22%2C%22exportedName%22%3A%22resetAccessPasswordAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240be6e61f975db86f8e97fcbcb131fb2ecf39b52d5%22%2C%22exportedName%22%3A%22revokeAccessPermissionAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240cc44d93aec3a25fc4181bb3074692b60de8e3640%22%2C%22exportedName%22%3A%22grantAccessPermissionAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240d999b94270ff5259b8b8e9d5de46bd4daba932ac%22%2C%22exportedName%22%3A%22revokeAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240edbd35f85416c7b7f916be055ae97f18cc4f1f7d%22%2C%22exportedName%22%3A%22updateNodeAccessAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22602afff87cccb2f51d90ae641aabe5babc611327f3%22%2C%22exportedName%22%3A%22loginAdminAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/admin/[[...slug]]/page": "action-browser"
+      },
+      "filename": "app/admin/actions.ts",
+      "exportedName": "logoutAdminAction"
+    },
+    "0061e6c975cab34f767a12aa74b19768dfabbb2519": {
+      "workers": {
+        "app/admin/[[...slug]]/page": {
+          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2Fhome%2Ftrinley%2FDocuments%2FGithub%2FConcept-Oriented-Programming-Framework%2Fclef-base%2Fapp%2Fadmin%2Factions.ts%22%2C%5B%7B%22id%22%3A%2200188ac59892a6db0eaa322470c79029b3885d5b04%22%2C%22exportedName%22%3A%22logoutAdminAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%220061e6c975cab34f767a12aa74b19768dfabbb2519%22%2C%22exportedName%22%3A%22readAccessSnapshotAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22400993875ebe0893b38e2f5979264fa4aead2c0c9d%22%2C%22exportedName%22%3A%22assignAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22401511c28fa47a1172cc150af1b3fceafc546e9db3%22%2C%22exportedName%22%3A%22updateSchemaAccessAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22404856239fe2e02edfbb2db8015c09c08f94d5dba5%22%2C%22exportedName%22%3A%22createAccessUserAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22405c478814de6f58b2c1582386eb827781dc68cf42%22%2C%22exportedName%22%3A%22createAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240a09ed0d13b4a67858acd6cf4b944419e11440da1%22%2C%22exportedName%22%3A%22resetAccessPasswordAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240be6e61f975db86f8e97fcbcb131fb2ecf39b52d5%22%2C%22exportedName%22%3A%22revokeAccessPermissionAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240cc44d93aec3a25fc4181bb3074692b60de8e3640%22%2C%22exportedName%22%3A%22grantAccessPermissionAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240d999b94270ff5259b8b8e9d5de46bd4daba932ac%22%2C%22exportedName%22%3A%22revokeAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240edbd35f85416c7b7f916be055ae97f18cc4f1f7d%22%2C%22exportedName%22%3A%22updateNodeAccessAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22602afff87cccb2f51d90ae641aabe5babc611327f3%22%2C%22exportedName%22%3A%22loginAdminAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/admin/[[...slug]]/page": "action-browser"
+      },
+      "filename": "app/admin/actions.ts",
+      "exportedName": "readAccessSnapshotAction"
+    },
+    "400993875ebe0893b38e2f5979264fa4aead2c0c9d": {
+      "workers": {
+        "app/admin/[[...slug]]/page": {
+          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2Fhome%2Ftrinley%2FDocuments%2FGithub%2FConcept-Oriented-Programming-Framework%2Fclef-base%2Fapp%2Fadmin%2Factions.ts%22%2C%5B%7B%22id%22%3A%2200188ac59892a6db0eaa322470c79029b3885d5b04%22%2C%22exportedName%22%3A%22logoutAdminAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%220061e6c975cab34f767a12aa74b19768dfabbb2519%22%2C%22exportedName%22%3A%22readAccessSnapshotAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22400993875ebe0893b38e2f5979264fa4aead2c0c9d%22%2C%22exportedName%22%3A%22assignAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22401511c28fa47a1172cc150af1b3fceafc546e9db3%22%2C%22exportedName%22%3A%22updateSchemaAccessAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22404856239fe2e02edfbb2db8015c09c08f94d5dba5%22%2C%22exportedName%22%3A%22createAccessUserAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22405c478814de6f58b2c1582386eb827781dc68cf42%22%2C%22exportedName%22%3A%22createAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240a09ed0d13b4a67858acd6cf4b944419e11440da1%22%2C%22exportedName%22%3A%22resetAccessPasswordAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240be6e61f975db86f8e97fcbcb131fb2ecf39b52d5%22%2C%22exportedName%22%3A%22revokeAccessPermissionAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240cc44d93aec3a25fc4181bb3074692b60de8e3640%22%2C%22exportedName%22%3A%22grantAccessPermissionAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240d999b94270ff5259b8b8e9d5de46bd4daba932ac%22%2C%22exportedName%22%3A%22revokeAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240edbd35f85416c7b7f916be055ae97f18cc4f1f7d%22%2C%22exportedName%22%3A%22updateNodeAccessAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22602afff87cccb2f51d90ae641aabe5babc611327f3%22%2C%22exportedName%22%3A%22loginAdminAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/admin/[[...slug]]/page": "action-browser"
+      },
+      "filename": "app/admin/actions.ts",
+      "exportedName": "assignAccessRoleAction"
+    },
+    "401511c28fa47a1172cc150af1b3fceafc546e9db3": {
+      "workers": {
+        "app/admin/[[...slug]]/page": {
+          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2Fhome%2Ftrinley%2FDocuments%2FGithub%2FConcept-Oriented-Programming-Framework%2Fclef-base%2Fapp%2Fadmin%2Factions.ts%22%2C%5B%7B%22id%22%3A%2200188ac59892a6db0eaa322470c79029b3885d5b04%22%2C%22exportedName%22%3A%22logoutAdminAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%220061e6c975cab34f767a12aa74b19768dfabbb2519%22%2C%22exportedName%22%3A%22readAccessSnapshotAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22400993875ebe0893b38e2f5979264fa4aead2c0c9d%22%2C%22exportedName%22%3A%22assignAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22401511c28fa47a1172cc150af1b3fceafc546e9db3%22%2C%22exportedName%22%3A%22updateSchemaAccessAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22404856239fe2e02edfbb2db8015c09c08f94d5dba5%22%2C%22exportedName%22%3A%22createAccessUserAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22405c478814de6f58b2c1582386eb827781dc68cf42%22%2C%22exportedName%22%3A%22createAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240a09ed0d13b4a67858acd6cf4b944419e11440da1%22%2C%22exportedName%22%3A%22resetAccessPasswordAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240be6e61f975db86f8e97fcbcb131fb2ecf39b52d5%22%2C%22exportedName%22%3A%22revokeAccessPermissionAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240cc44d93aec3a25fc4181bb3074692b60de8e3640%22%2C%22exportedName%22%3A%22grantAccessPermissionAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240d999b94270ff5259b8b8e9d5de46bd4daba932ac%22%2C%22exportedName%22%3A%22revokeAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240edbd35f85416c7b7f916be055ae97f18cc4f1f7d%22%2C%22exportedName%22%3A%22updateNodeAccessAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22602afff87cccb2f51d90ae641aabe5babc611327f3%22%2C%22exportedName%22%3A%22loginAdminAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/admin/[[...slug]]/page": "action-browser"
+      },
+      "filename": "app/admin/actions.ts",
+      "exportedName": "updateSchemaAccessAction"
+    },
+    "404856239fe2e02edfbb2db8015c09c08f94d5dba5": {
+      "workers": {
+        "app/admin/[[...slug]]/page": {
+          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2Fhome%2Ftrinley%2FDocuments%2FGithub%2FConcept-Oriented-Programming-Framework%2Fclef-base%2Fapp%2Fadmin%2Factions.ts%22%2C%5B%7B%22id%22%3A%2200188ac59892a6db0eaa322470c79029b3885d5b04%22%2C%22exportedName%22%3A%22logoutAdminAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%220061e6c975cab34f767a12aa74b19768dfabbb2519%22%2C%22exportedName%22%3A%22readAccessSnapshotAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22400993875ebe0893b38e2f5979264fa4aead2c0c9d%22%2C%22exportedName%22%3A%22assignAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22401511c28fa47a1172cc150af1b3fceafc546e9db3%22%2C%22exportedName%22%3A%22updateSchemaAccessAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22404856239fe2e02edfbb2db8015c09c08f94d5dba5%22%2C%22exportedName%22%3A%22createAccessUserAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22405c478814de6f58b2c1582386eb827781dc68cf42%22%2C%22exportedName%22%3A%22createAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240a09ed0d13b4a67858acd6cf4b944419e11440da1%22%2C%22exportedName%22%3A%22resetAccessPasswordAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240be6e61f975db86f8e97fcbcb131fb2ecf39b52d5%22%2C%22exportedName%22%3A%22revokeAccessPermissionAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240cc44d93aec3a25fc4181bb3074692b60de8e3640%22%2C%22exportedName%22%3A%22grantAccessPermissionAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240d999b94270ff5259b8b8e9d5de46bd4daba932ac%22%2C%22exportedName%22%3A%22revokeAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240edbd35f85416c7b7f916be055ae97f18cc4f1f7d%22%2C%22exportedName%22%3A%22updateNodeAccessAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22602afff87cccb2f51d90ae641aabe5babc611327f3%22%2C%22exportedName%22%3A%22loginAdminAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/admin/[[...slug]]/page": "action-browser"
+      },
+      "filename": "app/admin/actions.ts",
+      "exportedName": "createAccessUserAction"
+    },
+    "405c478814de6f58b2c1582386eb827781dc68cf42": {
+      "workers": {
+        "app/admin/[[...slug]]/page": {
+          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2Fhome%2Ftrinley%2FDocuments%2FGithub%2FConcept-Oriented-Programming-Framework%2Fclef-base%2Fapp%2Fadmin%2Factions.ts%22%2C%5B%7B%22id%22%3A%2200188ac59892a6db0eaa322470c79029b3885d5b04%22%2C%22exportedName%22%3A%22logoutAdminAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%220061e6c975cab34f767a12aa74b19768dfabbb2519%22%2C%22exportedName%22%3A%22readAccessSnapshotAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22400993875ebe0893b38e2f5979264fa4aead2c0c9d%22%2C%22exportedName%22%3A%22assignAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22401511c28fa47a1172cc150af1b3fceafc546e9db3%22%2C%22exportedName%22%3A%22updateSchemaAccessAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22404856239fe2e02edfbb2db8015c09c08f94d5dba5%22%2C%22exportedName%22%3A%22createAccessUserAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22405c478814de6f58b2c1582386eb827781dc68cf42%22%2C%22exportedName%22%3A%22createAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240a09ed0d13b4a67858acd6cf4b944419e11440da1%22%2C%22exportedName%22%3A%22resetAccessPasswordAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240be6e61f975db86f8e97fcbcb131fb2ecf39b52d5%22%2C%22exportedName%22%3A%22revokeAccessPermissionAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240cc44d93aec3a25fc4181bb3074692b60de8e3640%22%2C%22exportedName%22%3A%22grantAccessPermissionAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240d999b94270ff5259b8b8e9d5de46bd4daba932ac%22%2C%22exportedName%22%3A%22revokeAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240edbd35f85416c7b7f916be055ae97f18cc4f1f7d%22%2C%22exportedName%22%3A%22updateNodeAccessAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22602afff87cccb2f51d90ae641aabe5babc611327f3%22%2C%22exportedName%22%3A%22loginAdminAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/admin/[[...slug]]/page": "action-browser"
+      },
+      "filename": "app/admin/actions.ts",
+      "exportedName": "createAccessRoleAction"
+    },
+    "40a09ed0d13b4a67858acd6cf4b944419e11440da1": {
+      "workers": {
+        "app/admin/[[...slug]]/page": {
+          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2Fhome%2Ftrinley%2FDocuments%2FGithub%2FConcept-Oriented-Programming-Framework%2Fclef-base%2Fapp%2Fadmin%2Factions.ts%22%2C%5B%7B%22id%22%3A%2200188ac59892a6db0eaa322470c79029b3885d5b04%22%2C%22exportedName%22%3A%22logoutAdminAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%220061e6c975cab34f767a12aa74b19768dfabbb2519%22%2C%22exportedName%22%3A%22readAccessSnapshotAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22400993875ebe0893b38e2f5979264fa4aead2c0c9d%22%2C%22exportedName%22%3A%22assignAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22401511c28fa47a1172cc150af1b3fceafc546e9db3%22%2C%22exportedName%22%3A%22updateSchemaAccessAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22404856239fe2e02edfbb2db8015c09c08f94d5dba5%22%2C%22exportedName%22%3A%22createAccessUserAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22405c478814de6f58b2c1582386eb827781dc68cf42%22%2C%22exportedName%22%3A%22createAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240a09ed0d13b4a67858acd6cf4b944419e11440da1%22%2C%22exportedName%22%3A%22resetAccessPasswordAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240be6e61f975db86f8e97fcbcb131fb2ecf39b52d5%22%2C%22exportedName%22%3A%22revokeAccessPermissionAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240cc44d93aec3a25fc4181bb3074692b60de8e3640%22%2C%22exportedName%22%3A%22grantAccessPermissionAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240d999b94270ff5259b8b8e9d5de46bd4daba932ac%22%2C%22exportedName%22%3A%22revokeAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240edbd35f85416c7b7f916be055ae97f18cc4f1f7d%22%2C%22exportedName%22%3A%22updateNodeAccessAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22602afff87cccb2f51d90ae641aabe5babc611327f3%22%2C%22exportedName%22%3A%22loginAdminAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/admin/[[...slug]]/page": "action-browser"
+      },
+      "filename": "app/admin/actions.ts",
+      "exportedName": "resetAccessPasswordAction"
+    },
+    "40be6e61f975db86f8e97fcbcb131fb2ecf39b52d5": {
+      "workers": {
+        "app/admin/[[...slug]]/page": {
+          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2Fhome%2Ftrinley%2FDocuments%2FGithub%2FConcept-Oriented-Programming-Framework%2Fclef-base%2Fapp%2Fadmin%2Factions.ts%22%2C%5B%7B%22id%22%3A%2200188ac59892a6db0eaa322470c79029b3885d5b04%22%2C%22exportedName%22%3A%22logoutAdminAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%220061e6c975cab34f767a12aa74b19768dfabbb2519%22%2C%22exportedName%22%3A%22readAccessSnapshotAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22400993875ebe0893b38e2f5979264fa4aead2c0c9d%22%2C%22exportedName%22%3A%22assignAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22401511c28fa47a1172cc150af1b3fceafc546e9db3%22%2C%22exportedName%22%3A%22updateSchemaAccessAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22404856239fe2e02edfbb2db8015c09c08f94d5dba5%22%2C%22exportedName%22%3A%22createAccessUserAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22405c478814de6f58b2c1582386eb827781dc68cf42%22%2C%22exportedName%22%3A%22createAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240a09ed0d13b4a67858acd6cf4b944419e11440da1%22%2C%22exportedName%22%3A%22resetAccessPasswordAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240be6e61f975db86f8e97fcbcb131fb2ecf39b52d5%22%2C%22exportedName%22%3A%22revokeAccessPermissionAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240cc44d93aec3a25fc4181bb3074692b60de8e3640%22%2C%22exportedName%22%3A%22grantAccessPermissionAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240d999b94270ff5259b8b8e9d5de46bd4daba932ac%22%2C%22exportedName%22%3A%22revokeAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240edbd35f85416c7b7f916be055ae97f18cc4f1f7d%22%2C%22exportedName%22%3A%22updateNodeAccessAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22602afff87cccb2f51d90ae641aabe5babc611327f3%22%2C%22exportedName%22%3A%22loginAdminAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/admin/[[...slug]]/page": "action-browser"
+      },
+      "filename": "app/admin/actions.ts",
+      "exportedName": "revokeAccessPermissionAction"
+    },
+    "40cc44d93aec3a25fc4181bb3074692b60de8e3640": {
+      "workers": {
+        "app/admin/[[...slug]]/page": {
+          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2Fhome%2Ftrinley%2FDocuments%2FGithub%2FConcept-Oriented-Programming-Framework%2Fclef-base%2Fapp%2Fadmin%2Factions.ts%22%2C%5B%7B%22id%22%3A%2200188ac59892a6db0eaa322470c79029b3885d5b04%22%2C%22exportedName%22%3A%22logoutAdminAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%220061e6c975cab34f767a12aa74b19768dfabbb2519%22%2C%22exportedName%22%3A%22readAccessSnapshotAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22400993875ebe0893b38e2f5979264fa4aead2c0c9d%22%2C%22exportedName%22%3A%22assignAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22401511c28fa47a1172cc150af1b3fceafc546e9db3%22%2C%22exportedName%22%3A%22updateSchemaAccessAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22404856239fe2e02edfbb2db8015c09c08f94d5dba5%22%2C%22exportedName%22%3A%22createAccessUserAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22405c478814de6f58b2c1582386eb827781dc68cf42%22%2C%22exportedName%22%3A%22createAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240a09ed0d13b4a67858acd6cf4b944419e11440da1%22%2C%22exportedName%22%3A%22resetAccessPasswordAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240be6e61f975db86f8e97fcbcb131fb2ecf39b52d5%22%2C%22exportedName%22%3A%22revokeAccessPermissionAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240cc44d93aec3a25fc4181bb3074692b60de8e3640%22%2C%22exportedName%22%3A%22grantAccessPermissionAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240d999b94270ff5259b8b8e9d5de46bd4daba932ac%22%2C%22exportedName%22%3A%22revokeAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240edbd35f85416c7b7f916be055ae97f18cc4f1f7d%22%2C%22exportedName%22%3A%22updateNodeAccessAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22602afff87cccb2f51d90ae641aabe5babc611327f3%22%2C%22exportedName%22%3A%22loginAdminAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/admin/[[...slug]]/page": "action-browser"
+      },
+      "filename": "app/admin/actions.ts",
+      "exportedName": "grantAccessPermissionAction"
+    },
+    "40d999b94270ff5259b8b8e9d5de46bd4daba932ac": {
+      "workers": {
+        "app/admin/[[...slug]]/page": {
+          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2Fhome%2Ftrinley%2FDocuments%2FGithub%2FConcept-Oriented-Programming-Framework%2Fclef-base%2Fapp%2Fadmin%2Factions.ts%22%2C%5B%7B%22id%22%3A%2200188ac59892a6db0eaa322470c79029b3885d5b04%22%2C%22exportedName%22%3A%22logoutAdminAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%220061e6c975cab34f767a12aa74b19768dfabbb2519%22%2C%22exportedName%22%3A%22readAccessSnapshotAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22400993875ebe0893b38e2f5979264fa4aead2c0c9d%22%2C%22exportedName%22%3A%22assignAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22401511c28fa47a1172cc150af1b3fceafc546e9db3%22%2C%22exportedName%22%3A%22updateSchemaAccessAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22404856239fe2e02edfbb2db8015c09c08f94d5dba5%22%2C%22exportedName%22%3A%22createAccessUserAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22405c478814de6f58b2c1582386eb827781dc68cf42%22%2C%22exportedName%22%3A%22createAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240a09ed0d13b4a67858acd6cf4b944419e11440da1%22%2C%22exportedName%22%3A%22resetAccessPasswordAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240be6e61f975db86f8e97fcbcb131fb2ecf39b52d5%22%2C%22exportedName%22%3A%22revokeAccessPermissionAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240cc44d93aec3a25fc4181bb3074692b60de8e3640%22%2C%22exportedName%22%3A%22grantAccessPermissionAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240d999b94270ff5259b8b8e9d5de46bd4daba932ac%22%2C%22exportedName%22%3A%22revokeAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240edbd35f85416c7b7f916be055ae97f18cc4f1f7d%22%2C%22exportedName%22%3A%22updateNodeAccessAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22602afff87cccb2f51d90ae641aabe5babc611327f3%22%2C%22exportedName%22%3A%22loginAdminAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/admin/[[...slug]]/page": "action-browser"
+      },
+      "filename": "app/admin/actions.ts",
+      "exportedName": "revokeAccessRoleAction"
+    },
+    "40edbd35f85416c7b7f916be055ae97f18cc4f1f7d": {
+      "workers": {
+        "app/admin/[[...slug]]/page": {
+          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2Fhome%2Ftrinley%2FDocuments%2FGithub%2FConcept-Oriented-Programming-Framework%2Fclef-base%2Fapp%2Fadmin%2Factions.ts%22%2C%5B%7B%22id%22%3A%2200188ac59892a6db0eaa322470c79029b3885d5b04%22%2C%22exportedName%22%3A%22logoutAdminAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%220061e6c975cab34f767a12aa74b19768dfabbb2519%22%2C%22exportedName%22%3A%22readAccessSnapshotAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22400993875ebe0893b38e2f5979264fa4aead2c0c9d%22%2C%22exportedName%22%3A%22assignAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22401511c28fa47a1172cc150af1b3fceafc546e9db3%22%2C%22exportedName%22%3A%22updateSchemaAccessAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22404856239fe2e02edfbb2db8015c09c08f94d5dba5%22%2C%22exportedName%22%3A%22createAccessUserAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22405c478814de6f58b2c1582386eb827781dc68cf42%22%2C%22exportedName%22%3A%22createAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240a09ed0d13b4a67858acd6cf4b944419e11440da1%22%2C%22exportedName%22%3A%22resetAccessPasswordAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240be6e61f975db86f8e97fcbcb131fb2ecf39b52d5%22%2C%22exportedName%22%3A%22revokeAccessPermissionAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240cc44d93aec3a25fc4181bb3074692b60de8e3640%22%2C%22exportedName%22%3A%22grantAccessPermissionAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240d999b94270ff5259b8b8e9d5de46bd4daba932ac%22%2C%22exportedName%22%3A%22revokeAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240edbd35f85416c7b7f916be055ae97f18cc4f1f7d%22%2C%22exportedName%22%3A%22updateNodeAccessAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22602afff87cccb2f51d90ae641aabe5babc611327f3%22%2C%22exportedName%22%3A%22loginAdminAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/admin/[[...slug]]/page": "action-browser"
+      },
+      "filename": "app/admin/actions.ts",
+      "exportedName": "updateNodeAccessAction"
+    },
+    "602afff87cccb2f51d90ae641aabe5babc611327f3": {
+      "workers": {
+        "app/admin/[[...slug]]/page": {
+          "moduleId": "(action-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-action-entry-loader.js?actions=%5B%5B%22%2Fhome%2Ftrinley%2FDocuments%2FGithub%2FConcept-Oriented-Programming-Framework%2Fclef-base%2Fapp%2Fadmin%2Factions.ts%22%2C%5B%7B%22id%22%3A%2200188ac59892a6db0eaa322470c79029b3885d5b04%22%2C%22exportedName%22%3A%22logoutAdminAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%220061e6c975cab34f767a12aa74b19768dfabbb2519%22%2C%22exportedName%22%3A%22readAccessSnapshotAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22400993875ebe0893b38e2f5979264fa4aead2c0c9d%22%2C%22exportedName%22%3A%22assignAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22401511c28fa47a1172cc150af1b3fceafc546e9db3%22%2C%22exportedName%22%3A%22updateSchemaAccessAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22404856239fe2e02edfbb2db8015c09c08f94d5dba5%22%2C%22exportedName%22%3A%22createAccessUserAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22405c478814de6f58b2c1582386eb827781dc68cf42%22%2C%22exportedName%22%3A%22createAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240a09ed0d13b4a67858acd6cf4b944419e11440da1%22%2C%22exportedName%22%3A%22resetAccessPasswordAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240be6e61f975db86f8e97fcbcb131fb2ecf39b52d5%22%2C%22exportedName%22%3A%22revokeAccessPermissionAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240cc44d93aec3a25fc4181bb3074692b60de8e3640%22%2C%22exportedName%22%3A%22grantAccessPermissionAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240d999b94270ff5259b8b8e9d5de46bd4daba932ac%22%2C%22exportedName%22%3A%22revokeAccessRoleAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%2240edbd35f85416c7b7f916be055ae97f18cc4f1f7d%22%2C%22exportedName%22%3A%22updateNodeAccessAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%2C%7B%22id%22%3A%22602afff87cccb2f51d90ae641aabe5babc611327f3%22%2C%22exportedName%22%3A%22loginAdminAction%22%2C%22filename%22%3A%22app%2Fadmin%2Factions.ts%22%7D%5D%5D%5D&__client_imported__=true!",
+          "async": false
+        }
+      },
+      "layer": {
+        "app/admin/[[...slug]]/page": "action-browser"
+      },
+      "filename": "app/admin/actions.ts",
+      "exportedName": "loginAdminAction"
+    }
+  },
+  "edge": {},
+  "encryptionKey": "/TbIkjPMU+oKH2KZz87Yhbm3W3/YWKoaAeTU7C4iGF4="
+}

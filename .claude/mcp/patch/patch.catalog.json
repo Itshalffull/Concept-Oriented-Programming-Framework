@@ -38,5 +38,13 @@
     "concept": "Patch",
     "action": "commute",
     "alwaysLoaded": false
+  },
+  {
+    "name": "patch_apply_inverse",
+    "briefDescription": "Invert the patch to obtain its inverse edit script , then apply \n the inverse...",
+    "category": "Patch",
+    "concept": "Patch",
+    "action": "applyInverse",
+    "alwaysLoaded": false
   }
 ]

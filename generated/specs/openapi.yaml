@@ -41,6 +41,8 @@ tags:
     description: Generate suite manifest ( suite . yaml ) scaffolds and directory structures for new Clef suites from provided configuration
   - name: DeployScaffoldGen
     description: Generate deployment manifest ( deploy . yaml ) scaffolds from provided configuration including runtimes , concepts , and infrastructure settings
+  - name: InterfaceScaffoldGen
+    description: Generate interface manifest ( interface . yaml ) scaffolds with target configurations , SDK settings , spec output options , and per concept overrides . Supports the dual manifest Bind architecture where a single application is represented by two manifests : a config manifest ( developer facing admin concepts ) and a content manifest ( user facing content concepts ) , each with its own target configuration and auth policy
   - name: ConceptScaffoldGen
     description: Generate concept specification ( . concept ) file scaffolds from provided configuration including name , type parameters , state fields , actions , and invariants
   - name: SyncScaffoldGen
@@ -61,6 +63,8 @@ tags:
     description: Generate derived concept specification ( . derived ) file scaffolds from provided configuration including name , type parameters , composed concepts , syncs boundary , surface actions , surface queries , and operational principle
   - name: Generator
     description: Orchestrate multi target interface generation from concept projections . Plans which targets and SDK languages to generate and coordinates the generation pipeline . History tracking is handled by GenerationPlan ; file output by Emitter
+  - name: Projection
+    description: Bidirectional interface mapping between concepts and external APIs . Forward ( outbound ) : enrich ConceptManifests with interface generation metadata for producing REST GraphQL CLI MCP endpoints . Reverse ( inbound ) : map external API endpoints back to concept actions for consuming third party APIs as concept backends . The same Projection data structure serves both directions the mapping between concept actions and API endpoints is inherently bidirectional
   - name: ApiSurface
     description: Compose generated interfaces from multiple concepts into a cohesive , unified API surface per target . For REST : a single router with concept namespaced routes . For GraphQL : a merged schema with shared types . For CLI : a command tree with concept subcommands . For MCP : a combined tool set . For SDKs : a single client with concept namespaced methods . Renamed from Surface to avoid collision with concept interface suites surface render surface . concept ( runtime rendering target for DOM , terminal , etc . )
   - name: Symbol
@@ -229,12 +233,16 @@ tags:
     description: Build sequences of query instructions as inspectable , composable data . A QueryProgram describes what a view intends to fetch and transform without executing side effects . Programs capture scan , filter , sort , group , project , limit , and pure termination steps as an ordered instruction list . Programs can be analyzed for the fields they read , composed via monadic bind , and handed to an interpreter or optimizer
   - name: QueryExecution
     description: Registry and dispatcher for query execution providers that run structured query programs against a named backend . Manages named provider registrations with kind based routing and capability declarations through sync wiring the coordination hub that lets kernel , in memory , remote , and federated backends all accept the same query program language without coupling to one another
+  - name: FilterSpec
+    description: Represent reusable , composable predicate trees that determine which records pass a filter . Each filter holds a serialized FilterNode AST , the set of fields it references ( for pushdown analysis ) , the bound context variables it expects , and its source classification . Filters can be composed algebraically into AND trees , evaluated directly against JSON row arrays , normalized to canonical forms , validated against a schema , and have parameter nodes substituted with concrete values at runtime
   - name: SortSpec
     description: Manage named , ordered sequences of sort keys that determine record ordering in a view . Each sort spec captures one or more sort keys ( field , direction , null handling , collation ) as a serialized JSON array . Sort specs can be composed to produce a combined ordering where the secondary spec acts as a tiebreaker , and can be evaluated directly against a JSON row array to return the rows in sorted order
   - name: GroupSpec
     description: Define named grouping specifications that cluster records into hierarchical groups and compute aggregations over each group . Each group spec captures a serialized GroupingConfig ( type , fields , and optional set memberships ) , an AggregationDef [ ] describing functions and aliases to compute per group , and an optional post aggregation FilterNode for HAVING style pruning . Group specs can be evaluated directly against a JSON row array , returning a structured result containing the group key , the matching rows , and the computed aggregates for each bucket
   - name: ProjectionSpec
     description: Manage named field selection specifications that control which columns appear in a view , in what order , and how they are formatted or computed . Each projection captures a JSON serialized ProjectionField [ ] describing key , optional label , visibility , formatter , computed expression , and weight . Projections can be merged so that overlay fields win on key conflict and new fields are appended , and can be evaluated directly against a JSON row array to produce projected rows containing only the specified fields in the specified order
+  - name: DataSourceSpec
+    description: Declare the base dataset for a view : what concept action to invoke , what external source to query , or what inline data to use . Each source records its kind , serialized configuration , and the template variables it expects at bind time , so the view layer can resolve the right data without knowing the source s internal structure
   - name: PresentationSpec
     description: Name a display strategy and carry opaque , display specific hints for rendering a view . Each presentation captures a display type ( an open , uninterpreted string such as table , card-grid , board , or any registered custom type ) , a JSON hints blob interpreted only by the matching display component , and a display mode policy that controls whether a DisplayMode system drives the render or is bypassed entirely . PresentationSpec does not enumerate or constrain which display types are valid that is the responsibility of the display component registry
   - name: InteractionSpec
@@ -247,6 +255,8 @@ tags:
     description: Execute query programs against external APIs by mapping query instructions to HTTP calls via Projection and FieldTransform . Handles planPushdown by identifying which predicates the remote API supports natively ( via query params or request body ) and which must run as residual in memory filtering after the response
   - name: Connection
     description: Establish and manage a session with a running Clef kernel instance , providing discovery , invocation , and observation of registered concepts . Transport agnostic : the same concept works over WebSocket , HTTP , IPC , or in process . Each connection carries a session identity that the kernel s existing auth concepts evaluate on every invocation
+  - name: Credential
+    description: Manage named client side connection profiles , each binding a kernel endpoint to stored authentication credentials . Supports multiple profiles for different environments and multiple auth methods , enabling users and agents to switch between connections without re entering credentials each time
   - name: PageMap
     description: Maintain a labeled inventory of interactive elements within a hosted view , addressable by semantic label , role , or concept binding . Independently useful for accessibility auditing , integration testing , dev tools , and agent driven UI navigation
   - name: ClefBase
@@ -1945,6 +1955,174 @@ paths:
                         type: array
                         items:
                           type: string
+  /api/interface-scaffold-gens/{id}/generate:
+    post:
+      operationId: InterfaceScaffoldGen_generate
+      summary: Generate InterfaceScaffoldGen
+      tags:
+        - InterfaceScaffoldGen
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: InterfaceScaffoldGen identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InterfaceScaffoldGenGenerateInput'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterfaceScaffoldGenGenerateOkResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
+  /api/interface-scaffold-gens/{id}/generate-dual:
+    post:
+      operationId: InterfaceScaffoldGen_generateDual
+      summary: GenerateDual InterfaceScaffoldGen
+      tags:
+        - InterfaceScaffoldGen
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: InterfaceScaffoldGen identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InterfaceScaffoldGenGenerateDualInput'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterfaceScaffoldGenGenerateDualOkResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
+  /api/interface-scaffold-gens/{id}/preview:
+    post:
+      operationId: InterfaceScaffoldGen_preview
+      summary: Preview InterfaceScaffoldGen
+      tags:
+        - InterfaceScaffoldGen
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: InterfaceScaffoldGen identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InterfaceScaffoldGenPreviewInput'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterfaceScaffoldGenPreviewOkResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
+  /api/interface-scaffold-gens/{id}/register:
+    post:
+      operationId: InterfaceScaffoldGen_register
+      summary: Register InterfaceScaffoldGen
+      tags:
+        - InterfaceScaffoldGen
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: InterfaceScaffoldGen identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InterfaceScaffoldGenRegisterInput'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterfaceScaffoldGenRegisterOkResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
   /api/concept-scaffold-gens/{id}/generate:
     post:
       operationId: ConceptScaffoldGen_generate
@@ -3136,6 +3314,300 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneratorRegenerateOkResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
+  /api/projections/{id}/project:
+    post:
+      operationId: Projection_project
+      summary: Project Projection
+      tags:
+        - Projection
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Projection identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectionProjectInput'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectionProjectOkResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
+  /api/projections/{id}/validate:
+    post:
+      operationId: Projection_validate
+      summary: Validate Projection
+      tags:
+        - Projection
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Projection identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectionValidateInput'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectionValidateOkResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
+  /api/projections/{id}/diff:
+    post:
+      operationId: Projection_diff
+      summary: Diff Projection
+      tags:
+        - Projection
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Projection identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectionDiffInput'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectionDiffOkResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
+  /api/projections/{id}/infer-resources:
+    post:
+      operationId: Projection_inferResources
+      summary: InferResources Projection
+      tags:
+        - Projection
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Projection identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectionInferResourcesInput'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectionInferResourcesOkResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
+  /api/projections/{id}/ingest:
+    post:
+      operationId: Projection_ingest
+      summary: Ingest Projection
+      tags:
+        - Projection
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Projection identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectionIngestInput'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectionIngestOkResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
+  /api/projections/{id}/resolve-forward:
+    post:
+      operationId: Projection_resolveForward
+      summary: ResolveForward Projection
+      tags:
+        - Projection
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Projection identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectionResolveForwardInput'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectionResolveForwardOkResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
+  /api/projections/{id}/resolve-reverse:
+    post:
+      operationId: Projection_resolveReverse
+      summary: ResolveReverse Projection
+      tags:
+        - Projection
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Projection identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectionResolveReverseInput'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectionResolveReverseOkResponse'
         '422':
           description: Validation error
           content:
@@ -18472,6 +18944,48 @@ paths:
                         type: array
                         items:
                           type: string
+  /api/patchs/{id}/apply-inverse:
+    post:
+      operationId: Patch_applyInverse
+      summary: ApplyInverse Patch
+      tags:
+        - Patch
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Patch identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchApplyInverseInput'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatchApplyInverseOkResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
   /api/refs:
     post:
       operationId: Ref_create
@@ -24732,6 +25246,329 @@ paths:
                         type: array
                         items:
                           type: string
+  /api/filter-specs:
+    post:
+      operationId: FilterSpec_create
+      summary: Create FilterSpec
+      tags:
+        - FilterSpec
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FilterSpecCreateInput'
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FilterSpecCreateOkResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
+    get:
+      operationId: FilterSpec_list
+      summary: List FilterSpec
+      tags:
+        - FilterSpec
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FilterSpecListOkResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
+  /api/filter-specs/{id}:
+    get:
+      operationId: FilterSpec_get
+      summary: Get FilterSpec
+      tags:
+        - FilterSpec
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: FilterSpec identifier
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FilterSpecGetOkResponse'
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
+  /api/filter-specs/{id}/compose:
+    post:
+      operationId: FilterSpec_compose
+      summary: Compose FilterSpec
+      tags:
+        - FilterSpec
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: FilterSpec identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FilterSpecComposeInput'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FilterSpecComposeOkResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
+  /api/filter-specs/{id}/evaluate:
+    post:
+      operationId: FilterSpec_evaluate
+      summary: Evaluate FilterSpec
+      tags:
+        - FilterSpec
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: FilterSpec identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FilterSpecEvaluateInput'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FilterSpecEvaluateOkResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
+  /api/filter-specs/{id}/normalize:
+    post:
+      operationId: FilterSpec_normalize
+      summary: Normalize FilterSpec
+      tags:
+        - FilterSpec
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: FilterSpec identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FilterSpecNormalizeInput'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FilterSpecNormalizeOkResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
+  /api/filter-specs/{id}/validate:
+    post:
+      operationId: FilterSpec_validate
+      summary: Validate FilterSpec
+      tags:
+        - FilterSpec
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: FilterSpec identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FilterSpecValidateInput'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FilterSpecValidateOkResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
+  /api/filter-specs/{id}/bind:
+    post:
+      operationId: FilterSpec_bind
+      summary: Bind FilterSpec
+      tags:
+        - FilterSpec
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: FilterSpec identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FilterSpecBindInput'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FilterSpecBindOkResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
   /api/sort-specs:
     post:
       operationId: SortSpec_create
@@ -25281,6 +26118,161 @@ paths:
                         type: array
                         items:
                           type: string
+  /api/data-source-specs:
+    post:
+      operationId: DataSourceSpec_create
+      summary: Create DataSourceSpec
+      tags:
+        - DataSourceSpec
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataSourceSpecCreateInput'
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataSourceSpecCreateOkResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
+    get:
+      operationId: DataSourceSpec_list
+      summary: List DataSourceSpec
+      tags:
+        - DataSourceSpec
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataSourceSpecListOkResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
+  /api/data-source-specs/{id}:
+    get:
+      operationId: DataSourceSpec_get
+      summary: Get DataSourceSpec
+      tags:
+        - DataSourceSpec
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: DataSourceSpec identifier
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataSourceSpecGetOkResponse'
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
+  /api/data-source-specs/{id}/bind:
+    post:
+      operationId: DataSourceSpec_bind
+      summary: Bind DataSourceSpec
+      tags:
+        - DataSourceSpec
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: DataSourceSpec identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataSourceSpecBindInput'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataSourceSpecBindOkResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
   /api/presentation-specs:
     post:
       operationId: PresentationSpec_create
@@ -25457,6 +26449,40 @@ paths:
                         type: array
                         items:
                           type: string
+    post:
+      operationId: InteractionSpec_addRowAction
+      summary: AddRowAction InteractionSpec
+      tags:
+        - InteractionSpec
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InteractionSpecAddRowActionInput'
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InteractionSpecAddRowActionOkResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
   /api/interaction-specs/{id}:
     get:
       operationId: InteractionSpec_get
@@ -25493,6 +26519,48 @@ paths:
                         type: array
                         items:
                           type: string
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
+  /api/interaction-specs/{id}/set-create-binding:
+    post:
+      operationId: InteractionSpec_setCreateBinding
+      summary: SetCreateBinding InteractionSpec
+      tags:
+        - InteractionSpec
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: InteractionSpec identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InteractionSpecSetCreateBindingInput'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InteractionSpecSetCreateBindingOkResponse'
         '422':
           description: Validation error
           content:
@@ -25745,6 +26813,48 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ViewShellResolveHydratedOkResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
+  /api/view-shells/{id}/refresh:
+    post:
+      operationId: ViewShell_refresh
+      summary: Refresh ViewShell
+      tags:
+        - ViewShell
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ViewShell identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ViewShellRefreshInput'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ViewShellRefreshOkResponse'
         '422':
           description: Validation error
           content:
@@ -26399,6 +27509,245 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ConnectionDisconnectOkResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
+  /api/credentials:
+    post:
+      operationId: Credential_create
+      summary: Create Credential
+      tags:
+        - Credential
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CredentialCreateInput'
+      responses:
+        '201':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CredentialCreateOkResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
+    get:
+      operationId: Credential_list
+      summary: List Credential
+      tags:
+        - Credential
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CredentialListOkResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
+  /api/credentials/{id}/store:
+    post:
+      operationId: Credential_store
+      summary: Store Credential
+      tags:
+        - Credential
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Credential identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CredentialStoreInput'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CredentialStoreOkResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
+  /api/credentials/{id}/load:
+    post:
+      operationId: Credential_load
+      summary: Load Credential
+      tags:
+        - Credential
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Credential identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CredentialLoadInput'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CredentialLoadOkResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
+  /api/credentials/{id}/refresh:
+    post:
+      operationId: Credential_refresh
+      summary: Refresh Credential
+      tags:
+        - Credential
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Credential identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CredentialRefreshInput'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CredentialRefreshOkResponse'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
+  /api/credentials/{id}:
+    delete:
+      operationId: Credential_remove
+      summary: Remove Credential
+      tags:
+        - Credential
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Credential identifier
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CredentialRemoveOkResponse'
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
         '422':
           description: Validation error
           content:
@@ -28353,6 +29702,149 @@ components:
           items:
             type: string
       required: [variant, name, inputKind, outputKind, capabilities]
+    InterfaceScaffoldGen:
+      type: object
+      properties:
+        name:
+          type: string
+        manifestType: null
+        value:
+          type: string
+      required: [name, manifestType, value]
+    InterfaceScaffoldGenGenerateInput:
+      type: object
+      properties:
+        name:
+          type: string
+        targets:
+          type: array
+          items:
+            type: string
+        sdks:
+          type: array
+          items:
+            type: string
+      required: [name, targets, sdks]
+    InterfaceScaffoldGenGenerateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        files:
+          type: array
+          items:
+            type: string
+        filesGenerated:
+          type: integer
+      required: [variant, files, filesGenerated]
+    InterfaceScaffoldGenGenerateErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    InterfaceScaffoldGenGenerateDualInput:
+      type: object
+      properties:
+        name:
+          type: string
+        targets:
+          type: array
+          items:
+            type: string
+        sdks:
+          type: array
+          items:
+            type: string
+      required: [name, targets, sdks]
+    InterfaceScaffoldGenGenerateDualOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        files:
+          type: array
+          items:
+            type: string
+        filesGenerated:
+          type: integer
+      required: [variant, files, filesGenerated]
+    InterfaceScaffoldGenGenerateDualErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    InterfaceScaffoldGenPreviewInput:
+      type: object
+      properties:
+        name:
+          type: string
+        targets:
+          type: array
+          items:
+            type: string
+        sdks:
+          type: array
+          items:
+            type: string
+      required: [name, targets, sdks]
+    InterfaceScaffoldGenPreviewOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        files:
+          type: array
+          items:
+            type: string
+        wouldWrite:
+          type: integer
+        wouldSkip:
+          type: integer
+      required: [variant, files, wouldWrite, wouldSkip]
+    InterfaceScaffoldGenPreviewOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+      required: [variant]
+    InterfaceScaffoldGenPreviewErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    InterfaceScaffoldGenRegisterOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        name:
+          type: string
+        inputKind:
+          type: string
+        outputKind:
+          type: string
+        capabilities:
+          type: array
+          items:
+            type: string
+      required: [variant, name, inputKind, outputKind, capabilities]
     ConceptScaffoldGen:
       type: object
       properties:
@@ -29565,6 +31057,376 @@ components:
         filesRegenerated:
           type: integer
       required: [variant, plan, filesRegenerated]
+    Projection:
+      type: object
+      properties:
+        concept:
+          type: string
+        kitName:
+          type: string
+        kitVersion:
+          type: string
+        conceptManifest:
+          type: string
+        traits:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              scope:
+                type: string
+              config:
+                type: string
+            required: [name, scope, config]
+        resourceMapping:
+          oneOf:
+
+            - type: object
+              properties:           path:
+                  type: string
+                idField:
+                  type: string
+                actions:
+                  type: array
+                  items:
+                    type: string
+              required: [path, idField, actions]
+            - type: 'null'
+        targetOverrides:
+          type: array
+          items:
+            type: object
+            properties:
+              target:
+                type: string
+              config:
+                type: string
+            required: [target, config]
+        shapes:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              kind:
+                type: string
+              resolved:
+                type: string
+            required: [name, kind, resolved]
+        crossReferences:
+          type: array
+          items:
+            type: object
+            properties:
+              from:
+                type: string
+              to:
+                type: string
+              relation:
+                type: string
+            required: [from, to, relation]
+        content:
+          type: string
+        externalSource:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        direction: null
+        actionMappings:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        authConfig:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        value:
+          type: string
+      required: [concept, kitName, kitVersion, conceptManifest, traits, resourceMapping, targetOverrides, shapes, crossReferences, content, externalSource, direction, actionMappings, authConfig, value]
+    ProjectionProjectInput:
+      type: object
+      properties:
+        manifest:
+          type: string
+        annotations:
+          type: string
+      required: [manifest, annotations]
+    ProjectionProjectOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        projection:
+          type: string
+        shapes:
+          type: integer
+        actions:
+          type: integer
+        traits:
+          type: integer
+      required: [variant, projection, shapes, actions, traits]
+    ProjectionProjectOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        concept:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string
+      required: [variant, concept, errors]
+    ProjectionProjectOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        concept:
+          type: string
+        missing:
+          type: array
+          items:
+            type: string
+      required: [variant, concept, missing]
+    ProjectionProjectOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        concept:
+          type: string
+        trait1:
+          type: string
+        trait2:
+          type: string
+        reason:
+          type: string
+      required: [variant, concept, trait1, trait2, reason]
+    ProjectionValidateInput:
+      type: object
+      properties:
+        projection:
+          type: string
+      required: [projection]
+    ProjectionValidateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        projection:
+          type: string
+        warnings:
+          type: array
+          items:
+            type: string
+      required: [variant, projection, warnings]
+    ProjectionValidateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        projection:
+          type: string
+        changes:
+          type: array
+          items:
+            type: string
+      required: [variant, projection, changes]
+    ProjectionValidateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        projection:
+          type: string
+        missing:
+          type: array
+          items:
+            type: string
+      required: [variant, projection, missing]
+    ProjectionDiffInput:
+      type: object
+      properties:
+        projection:
+          type: string
+        previous:
+          type: string
+      required: [projection, previous]
+    ProjectionDiffOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        added:
+          type: array
+          items:
+            type: string
+        removed:
+          type: array
+          items:
+            type: string
+        changed:
+          type: array
+          items:
+            type: string
+      required: [variant, added, removed, changed]
+    ProjectionDiffIncompatibleResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [incompatible]
+        reason:
+          type: string
+      required: [variant, reason]
+    ProjectionInferResourcesInput:
+      type: object
+      properties:
+        projection:
+          type: string
+      required: [projection]
+    ProjectionInferResourcesOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        projection:
+          type: string
+        resources:
+          type: array
+          items:
+            type: string
+      required: [variant, projection, resources]
+    ProjectionIngestInput:
+      type: object
+      properties:
+        manifest:
+          type: string
+        source:
+          type: string
+        concept:
+          type: string
+      required: [manifest, source, concept]
+    ProjectionIngestOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        projection:
+          type: string
+      required: [variant, projection]
+    ProjectionIngestInvalidResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [invalid]
+        message:
+          type: string
+      required: [variant, message]
+    ProjectionResolveForwardInput:
+      type: object
+      properties:
+        projection:
+          type: string
+        action:
+          type: string
+        input:
+          type: string
+      required: [projection, action, input]
+    ProjectionResolveForwardOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        method:
+          type: string
+        path:
+          type: string
+        body:
+          type: string
+        headers:
+          type: string
+      required: [variant, method, path, body, headers]
+    ProjectionResolveForwardNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    ProjectionResolveForwardErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    ProjectionResolveReverseInput:
+      type: object
+      properties:
+        projection:
+          type: string
+        method:
+          type: string
+        path:
+          type: string
+        body:
+          type: string
+      required: [projection, method, path, body]
+    ProjectionResolveReverseOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        concept:
+          type: string
+        action:
+          type: string
+        input:
+          type: string
+      required: [variant, concept, action, input]
+    ProjectionResolveReverseNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    ProjectionResolveReverseErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
     ApiSurface:
       type: object
       properties:
@@ -39282,6 +41144,32 @@ components:
         message:
           type: string
       required: [variant, message]
+    PatchApplyInverseInput:
+      type: object
+      properties:
+        patchId:
+          type: string
+        content:
+          type: string
+      required: [patchId, content]
+    PatchApplyInverseOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        result:
+          type: string
+      required: [variant, result]
+    PatchApplyInverseErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
     Ref:
       type: object
       properties:
@@ -44290,6 +46178,262 @@ components:
         message:
           type: string
       required: [variant, message]
+    FilterSpec:
+      type: object
+      properties:
+        name:
+          type: string
+        tree:
+          type: string
+        sourceType: null
+        fieldRefs:
+          type: array
+          items:
+            type: string
+        parameters:
+          type: array
+          items:
+            type: string
+        value:
+          type: string
+      required: [name, tree, sourceType, fieldRefs, parameters, value]
+    FilterSpecCreateInput:
+      type: object
+      properties:
+        name:
+          type: string
+        tree:
+          type: string
+        sourceType:
+          type: string
+      required: [name, tree, sourceType]
+    FilterSpecCreateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        filter:
+          type: string
+      required: [variant, filter]
+    FilterSpecCreateDuplicateResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [duplicate]
+        filter:
+          type: string
+      required: [variant, filter]
+    FilterSpecGetInput:
+      type: object
+      properties:
+        name:
+          type: string
+      required: [name]
+    FilterSpecGetOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        filter:
+          type: string
+        tree:
+          type: string
+        sourceType:
+          type: string
+        fieldRefs:
+          type: string
+      required: [variant, filter, tree, sourceType, fieldRefs]
+    FilterSpecGetNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    FilterSpecComposeInput:
+      type: object
+      properties:
+        a:
+          type: string
+        b:
+          type: string
+      required: [a, b]
+    FilterSpecComposeOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        filter:
+          type: string
+        tree:
+          type: string
+      required: [variant, filter, tree]
+    FilterSpecComposeNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    FilterSpecEvaluateInput:
+      type: object
+      properties:
+        name:
+          type: string
+        rows:
+          type: string
+      required: [name, rows]
+    FilterSpecEvaluateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        rows:
+          type: string
+      required: [variant, rows]
+    FilterSpecEvaluateNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    FilterSpecEvaluateErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    FilterSpecNormalizeInput:
+      type: object
+      properties:
+        name:
+          type: string
+        form:
+          type: string
+      required: [name, form]
+    FilterSpecNormalizeOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        tree:
+          type: string
+      required: [variant, tree]
+    FilterSpecNormalizeNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    FilterSpecNormalizeErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    FilterSpecValidateInput:
+      type: object
+      properties:
+        name:
+          type: string
+        schema:
+          type: string
+      required: [name, schema]
+    FilterSpecValidateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        filter:
+          type: string
+      required: [variant, filter]
+    FilterSpecValidateInvalidResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [invalid]
+        message:
+          type: string
+      required: [variant, message]
+    FilterSpecValidateNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    FilterSpecBindInput:
+      type: object
+      properties:
+        name:
+          type: string
+        bindings:
+          type: string
+      required: [name, bindings]
+    FilterSpecBindOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        filter:
+          type: string
+        tree:
+          type: string
+      required: [variant, filter, tree]
+    FilterSpecBindNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    FilterSpecBindErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    FilterSpecListOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        filters:
+          type: string
+      required: [variant, filters]
     SortSpec:
       type: object
       properties:
@@ -44692,6 +46836,134 @@ components:
         projections:
           type: string
       required: [variant, projections]
+    DataSourceSpec:
+      type: object
+      properties:
+        name:
+          type: string
+        kind: null
+        config:
+          type: string
+        parameters:
+          type: array
+          items:
+            type: string
+        value:
+          type: string
+      required: [name, kind, config, parameters, value]
+    DataSourceSpecCreateInput:
+      type: object
+      properties:
+        name:
+          type: string
+        kind:
+          type: string
+        config:
+          type: string
+      required: [name, kind, config]
+    DataSourceSpecCreateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        source:
+          type: string
+      required: [variant, source]
+    DataSourceSpecCreateDuplicateResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [duplicate]
+        source:
+          type: string
+      required: [variant, source]
+    DataSourceSpecCreateErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    DataSourceSpecGetInput:
+      type: object
+      properties:
+        name:
+          type: string
+      required: [name]
+    DataSourceSpecGetOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        source:
+          type: string
+        kind:
+          type: string
+        config:
+          type: string
+        parameters:
+          type: string
+      required: [variant, source, kind, config, parameters]
+    DataSourceSpecGetNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    DataSourceSpecBindInput:
+      type: object
+      properties:
+        name:
+          type: string
+        bindings:
+          type: string
+      required: [name, bindings]
+    DataSourceSpecBindOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        source:
+          type: string
+        config:
+          type: string
+      required: [variant, source, config]
+    DataSourceSpecBindNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    DataSourceSpecBindErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    DataSourceSpecListOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        sources:
+          type: string
+      required: [variant, sources]
     PresentationSpec:
       type: object
       properties:
@@ -44815,9 +47087,34 @@ components:
 
             - type: string
             - type: 'null'
+        actionBindings:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        createBinding:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        bulkBindings:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        create_surface:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        create_mode_hint:
+          oneOf:
+
+            - type: string
+            - type: 'null'
         value:
           type: string
-      required: [name, createForm, rowClick, rowActions, pickerMode, createProgram, actionProgram, value]
+      required: [name, createForm, rowClick, rowActions, pickerMode, createProgram, actionProgram, actionBindings, createBinding, bulkBindings, create_surface, create_mode_hint, value]
     InteractionSpecCreateInput:
       type: object
       properties:
@@ -44841,7 +47138,17 @@ components:
 
             - type: string
             - type: 'null'
-      required: [name, createForm, rowClick, rowActions, pickerMode, createProgram, actionProgram]
+        create_surface:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        create_mode_hint:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+      required: [name, createForm, rowClick, rowActions, pickerMode, createProgram, actionProgram, create_surface, create_mode_hint]
     InteractionSpecCreateOkResponse:
       type: object
       properties:
@@ -44901,7 +47208,17 @@ components:
 
             - type: string
             - type: 'null'
-      required: [variant, interaction, createForm, rowClick, rowActions, pickerMode, createProgram, actionProgram]
+        create_surface:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        create_mode_hint:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+      required: [variant, interaction, createForm, rowClick, rowActions, pickerMode, createProgram, actionProgram, create_surface, create_mode_hint]
     InteractionSpecGetNotfoundResponse:
       type: object
       properties:
@@ -44920,6 +47237,76 @@ components:
         interactions:
           type: string
       required: [variant, interactions]
+    InteractionSpecAddRowActionInput:
+      type: object
+      properties:
+        name:
+          type: string
+        binding:
+          type: string
+      required: [name, binding]
+    InteractionSpecAddRowActionOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        interaction:
+          type: string
+      required: [variant, interaction]
+    InteractionSpecAddRowActionNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    InteractionSpecAddRowActionErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    InteractionSpecSetCreateBindingInput:
+      type: object
+      properties:
+        name:
+          type: string
+        binding:
+          type: string
+      required: [name, binding]
+    InteractionSpecSetCreateBindingOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        interaction:
+          type: string
+      required: [variant, interaction]
+    InteractionSpecSetCreateBindingNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    InteractionSpecSetCreateBindingErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
     ViewShell:
       type: object
       properties:
@@ -45169,6 +47556,39 @@ components:
         variant:
           type: string
           enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    ViewShellRefreshInput:
+      type: object
+      properties:
+        shell:
+          type: string
+      required: [shell]
+    ViewShellRefreshOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        shell:
+          type: string
+      required: [variant, shell]
+    ViewShellRefreshNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    ViewShellRefreshErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
         message:
           type: string
       required: [variant, message]
@@ -45732,6 +48152,195 @@ components:
         connection:
           type: string
       required: [variant, connection]
+    Credential:
+      type: object
+      properties:
+        name:
+          type: string
+        endpoint:
+          type: string
+        method:
+          type: string
+        token:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        expiresAt:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        status: null
+        value:
+          type: string
+      required: [name, endpoint, method, token, expiresAt, status, value]
+    CredentialCreateInput:
+      type: object
+      properties:
+        profile:
+          type: string
+        name:
+          type: string
+        endpoint:
+          type: string
+        method:
+          type: string
+      required: [profile, name, endpoint, method]
+    CredentialCreateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        profile:
+          type: string
+      required: [variant, profile]
+    CredentialCreateDuplicateResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [duplicate]
+        message:
+          type: string
+      required: [variant, message]
+    CredentialStoreInput:
+      type: object
+      properties:
+        profile:
+          type: string
+        token:
+          type: string
+        expiresAt:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+      required: [profile, token, expiresAt]
+    CredentialStoreOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        profile:
+          type: string
+      required: [variant, profile]
+    CredentialStoreNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    CredentialLoadInput:
+      type: object
+      properties:
+        profile:
+          type: string
+      required: [profile]
+    CredentialLoadOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        profile:
+          type: string
+        token:
+          type: string
+        endpoint:
+          type: string
+      required: [variant, profile, token, endpoint]
+    CredentialLoadNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    CredentialLoadExpiredResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [expired]
+        message:
+          type: string
+      required: [variant, message]
+    CredentialRefreshInput:
+      type: object
+      properties:
+        profile:
+          type: string
+      required: [profile]
+    CredentialRefreshOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        profile:
+          type: string
+        token:
+          type: string
+      required: [variant, profile, token]
+    CredentialRefreshNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    CredentialRefreshErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    CredentialRemoveInput:
+      type: object
+      properties:
+        profile:
+          type: string
+      required: [profile]
+    CredentialRemoveOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        profile:
+          type: string
+      required: [variant, profile]
+    CredentialRemoveNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    CredentialListOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        profiles:
+          type: string
+      required: [variant, profiles]
     PageMap:
       type: object
       properties:

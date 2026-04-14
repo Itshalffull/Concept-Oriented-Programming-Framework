@@ -150,5 +150,21 @@ export const viewShellTools = [
         "name"
       ]
     }
+  },
+  {
+    "type": "tool",
+    "name": "view_shell_refresh",
+    "description": "Refresh viewshell — Re run the underlying query by reading the DataSourceSpec , FilterSpec , \n SortSpec , and all other registered child specs anew , then update \n lastRenderedAt . Triggers downstream render observations so any bound \n surface components receive the fresh results .",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "shell": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "shell"
+      ]
+    }
   }
 ];

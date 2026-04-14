@@ -1,0 +1,23 @@
+# DataSourceSpec seeds for the media library recursive-views pipeline.
+# Per MAG-754 (media-library.derived recursive-views).
+#
+# media-asset-list-source — uses MediaAsset/list for the top-level library.
+# media-library-root-children-source — outline-children kind rooted at the
+#   canonical media-library-root ContentNode; resolved at view-resolve time.
+# media-asset-folder-children-source — outline-children kind for folder drill-down;
+#   parentRef is bound at view-resolve time to the folder ContentNode.
+
+concept: DataSourceSpec
+action: create
+entries:
+  - name: media-asset-list-source
+    kind: concept-action
+    config: '{"concept":"MediaAsset","action":"list"}'
+
+  - name: media-library-root-children-source
+    kind: outline-children
+    config: '{"parentRef":"media-library-root-id","schema":"media-asset"}'
+
+  - name: media-asset-folder-children-source
+    kind: outline-children
+    config: '{"parentRef":"{{parentRef}}"}'

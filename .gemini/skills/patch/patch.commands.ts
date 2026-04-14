@@ -12,4 +12,4 @@ export async function handlePatchSkill(
   return JSON.stringify(result.body, null, 2);
 }
 
-export const patchSkillCommands = ['create', 'apply', 'invert', 'compose', 'commute'];
+export const patchSkillCommands = ['create', 'apply', 'invert', 'compose', 'commute', 'applyInverse'];

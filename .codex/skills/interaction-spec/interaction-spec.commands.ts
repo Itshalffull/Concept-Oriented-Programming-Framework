@@ -12,4 +12,4 @@ export async function handleInteractionSpecSkill(
   return JSON.stringify(result.body, null, 2);
 }
 
-export const interactionSpecSkillCommands = ['create', 'get', 'list'];
+export const interactionSpecSkillCommands = ['create', 'get', 'list', 'addRowAction', 'setCreateBinding'];

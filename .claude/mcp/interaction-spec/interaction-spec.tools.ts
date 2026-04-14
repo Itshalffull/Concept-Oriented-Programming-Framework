@@ -44,6 +44,26 @@ export const interactionSpecTools = [
               "type": "null"
             }
           ]
+        },
+        "create_surface": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "create_mode_hint": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -53,7 +73,9 @@ export const interactionSpecTools = [
         "rowActions",
         "pickerMode",
         "createProgram",
-        "actionProgram"
+        "actionProgram",
+        "create_surface",
+        "create_mode_hint"
       ]
     }
   },
@@ -61,12 +83,52 @@ export const interactionSpecTools = [
     "type": "resource",
     "name": "interaction_spec_get",
     "uri": "urn:clef://interaction-specs/{name}",
-    "description": "Get interactionspec — Return the interaction spec s create form config , row click rule , \n row action list , picker mode flag , and optional invoke bearing \n QueryProgram references exactly as registered ."
+    "description": "Get interactionspec — Return the interaction spec s create form config , row click rule , \n row action list , picker mode flag , optional invoke bearing \n QueryProgram references , and optional create surface routing fields \n exactly as registered ."
   },
   {
     "type": "resource-template",
     "name": "interaction_spec_list",
     "uriTemplate": "urn:clef://interaction-specs",
     "description": "List interactionspec — Return all registered interaction specs as a JSON array , each entry \n containing name , createForm , rowClick , rowActions , and pickerMode ."
+  },
+  {
+    "type": "tool",
+    "name": "interaction_spec_add_row_action",
+    "description": "Add row action interactionspec — Append an ActionBinding ID to the row action binding list for the named \n interaction spec . The spec is updated in place and the new list is available \n immediately on subsequent get calls .",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "binding": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "binding"
+      ]
+    }
+  },
+  {
+    "type": "tool",
+    "name": "interaction_spec_set_create_binding",
+    "description": "Set create binding interactionspec — Set the ActionBinding ID to use for the create form action of the named \n interaction spec . Replaces any previously set create binding .",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "binding": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "binding"
+      ]
+    }
   }
 ];

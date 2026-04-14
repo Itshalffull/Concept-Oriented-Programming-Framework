@@ -102,5 +102,25 @@ export const patchTools = [
         "p2"
       ]
     }
+  },
+  {
+    "type": "tool",
+    "name": "patch_apply_inverse",
+    "description": "Apply inverse patch — Invert the patch to obtain its inverse edit script , then apply \n the inverse to content , effectively undoing the patch . Returns \n the transformed result that existed before the original patch \n was applied .",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "patchId": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "patchId",
+        "content"
+      ]
+    }
   }
 ];

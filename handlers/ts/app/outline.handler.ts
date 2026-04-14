@@ -14,6 +14,15 @@ const _outlineHandler: FunctionalConceptHandler = {
     }
     const node = input.node as string;
     const parent = (input.parent as string) || '';
+    // Optional explicit order — client can set this to fractional-index
+    // after its known sibling, e.g. siblingOrder + 0.5. Without it,
+    // fall back to Date.now() so blocks created later sort after earlier
+    // ones by default.
+    const explicitOrder = typeof input.order === 'number'
+      ? input.order
+      : (typeof input.order === 'string' && input.order.trim() !== ''
+          ? parseFloat(input.order)
+          : NaN);
 
     let p = createProgram();
     p = spGet(p, 'outline', node, 'existing');
@@ -21,17 +30,15 @@ const _outlineHandler: FunctionalConceptHandler = {
       (b) => complete(b, 'exists', { message: 'already exists' }),
       (b) => {
         const now = new Date().toISOString();
+        const order = !isNaN(explicitOrder) ? explicitOrder : Date.now();
         let b2 = put(b, 'outline', node, {
           node,
           parent,
           children: JSON.stringify([]),
           isCollapsed: false,
-          order: 0,
+          order,
           createdAt: now,
         });
-        if (parent) {
-          b2 = spGet(b2, 'outline', parent, 'parentRecord');
-        }
         return complete(b2, 'ok', { node });
       },
     );
@@ -180,6 +187,29 @@ const _outlineHandler: FunctionalConceptHandler = {
       (b) => complete(b, 'notfound', { message: 'Node not found' }),
     );
 
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
+  /**
+   * getRecord(node) — full outline record for a node. Used by the
+   * block editor to compute fractional order between siblings.
+   */
+  getRecord(input: Record<string, unknown>) {
+    const node = input.node as string;
+    let p = createProgram();
+    p = spGet(p, 'outline', node, 'existing');
+    p = branch(p, 'existing',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const rec = bindings.existing as Record<string, unknown>;
+        return {
+          node: String(rec.node ?? ''),
+          parent: String(rec.parent ?? ''),
+          order: rec.order,
+          isCollapsed: rec.isCollapsed,
+        };
+      }),
+      (b) => complete(b, 'notfound', { message: 'Node not found' }),
+    );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 

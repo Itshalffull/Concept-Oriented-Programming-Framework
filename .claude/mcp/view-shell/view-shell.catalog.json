@@ -30,5 +30,13 @@
     "concept": "ViewShell",
     "action": "resolveHydrated",
     "alwaysLoaded": false
+  },
+  {
+    "name": "view_shell_refresh",
+    "briefDescription": "Re run the underlying query by reading the DataSourceSpec , FilterSpec , \n So...",
+    "category": "ViewShell",
+    "concept": "ViewShell",
+    "action": "refresh",
+    "alwaysLoaded": false
   }
 ]

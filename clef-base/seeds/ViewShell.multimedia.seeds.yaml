@@ -1,0 +1,22 @@
+# ViewShell seeds for the media library recursive-views pipeline.
+# Per MAG-754 (media-library.derived recursive-views).
+#
+# MediaLibraryView — the root ViewShell for /media.
+# Bound to media-asset-list-source (MediaAsset/list) with the combined
+# media filter, captured-at-desc default sort, no default grouping,
+# full field projection, and blocks as the default presentation
+# (switchable to card-grid, timeline, or masonry via PresentationSpec).
+
+concept: ViewShell
+action: create
+entries:
+  - name: media-library-view
+    title: Media Library
+    description: Browse uploaded media assets — images, audio, video, and documents. Switch between block, gallery, timeline, and masonry presentations. Filter by type, date, duration, size, or tags.
+    dataSource: media-asset-list-source
+    filter: media-combined-filter
+    sort: media-captured-at-desc
+    group: ''
+    projection: media-asset-fields
+    presentation: media-blocks-default
+    interaction: no-controls

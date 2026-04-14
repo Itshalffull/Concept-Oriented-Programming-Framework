@@ -1,0 +1,53 @@
+# FilterSpec seeds for the media library view pipeline.
+# Per MAG-754 (media-library.derived recursive-views).
+#
+# All interactive filters start with tree: '{"type":"true"}' (show all by default);
+# actual filtering is resolved locally on the result set when the user engages controls.
+# sourceType is "interactive" for all user-facing toggles per MAG-517 routing rules.
+
+concept: FilterSpec
+action: create
+entries:
+  # Filter by media schema / MIME type category (image, video, audio, document, etc.)
+  - name: media-schema-toggle-filter
+    tree: '{"type":"true"}'
+    sourceType: interactive
+    config: '[{"field":"mimeType","label":"Type","type":"toggle-group","options":["image","video","audio","document","other"]}]'
+
+  # Filter by date captured (date range picker)
+  - name: media-date-captured-filter
+    tree: '{"type":"true"}'
+    sourceType: interactive
+    config: '[{"field":"capturedAt","label":"Date Captured","type":"date-range"}]'
+
+  # Filter by duration (for audio/video assets — range slider in seconds)
+  - name: media-duration-filter
+    tree: '{"type":"true"}'
+    sourceType: interactive
+    config: '[{"field":"duration","label":"Duration","type":"range","unit":"seconds"}]'
+
+  # Filter by file size (range slider in bytes)
+  - name: media-size-filter
+    tree: '{"type":"true"}'
+    sourceType: interactive
+    config: '[{"field":"fileSize","label":"File Size","type":"range","unit":"bytes"}]'
+
+  # Filter by tags applied to the asset
+  - name: media-tags-filter
+    tree: '{"type":"true"}'
+    sourceType: interactive
+    config: '[{"field":"tags","label":"Tags","type":"toggle-group"}]'
+
+  # Combined media filter — all five dimensions composed (AND tree, lazily evaluated)
+  - name: media-combined-filter
+    tree: '{"type":"true"}'
+    sourceType: interactive
+    config: '[{"field":"mimeType","label":"Type","type":"toggle-group","options":["image","video","audio","document","other"]},{"field":"capturedAt","label":"Date Captured","type":"date-range"},{"field":"duration","label":"Duration","type":"range","unit":"seconds"},{"field":"fileSize","label":"File Size","type":"range","unit":"bytes"},{"field":"tags","label":"Tags","type":"toggle-group"}]'
+
+  # System filter — server-side schema scoping to media-asset nodes only.
+  # sourceType: system ensures this is pushed to the kernel (pre-fetch) rather
+  # than evaluated locally after the result arrives.
+  - name: media-asset-schema-filter
+    tree: '{"type":"eq","field":"schema","value":"media-asset"}'
+    sourceType: system
+    config: '[]'

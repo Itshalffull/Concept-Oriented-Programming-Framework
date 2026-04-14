@@ -3281,9 +3281,34 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
                   const myParent = myParentRes.variant === 'ok'
                     ? String(myParentRes.parent ?? rootNodeId)
                     : rootNodeId;
+                  // Compute a fractional order that sits between the
+                  // current block and the next sibling, so the new block
+                  // renders immediately after the current one instead of
+                  // being appended to the end of parent.children.
+                  let order: number | undefined = undefined;
+                  try {
+                    const siblingsRes = await invoke('Outline', 'children', { parent: myParent });
+                    const siblingIds = siblingsRes.variant === 'ok'
+                      ? (() => { try { return JSON.parse(siblingsRes.children as string || '[]') as string[]; } catch { return [] as string[]; } })()
+                      : [] as string[];
+                    const idx = siblingIds.indexOf(nodeId);
+                    const curRecRes = await invoke('Outline', 'getRecord', { node: nodeId });
+                    const curOrder = curRecRes.variant === 'ok' && typeof curRecRes.order === 'number'
+                      ? curRecRes.order
+                      : Date.now();
+                    let nextOrder: number | null = null;
+                    if (idx >= 0 && idx < siblingIds.length - 1) {
+                      const nextRec = await invoke('Outline', 'getRecord', { node: siblingIds[idx + 1] });
+                      if (nextRec.variant === 'ok' && typeof nextRec.order === 'number') {
+                        nextOrder = nextRec.order;
+                      }
+                    }
+                    order = nextOrder !== null ? (curOrder + nextOrder) / 2 : curOrder + 1;
+                  } catch { /* fall through — Outline.create will use Date.now() */ }
                   await invoke('Outline', 'create', {
                     node: newBlockId,
                     parent: myParent,
+                    ...(order !== undefined ? { order } : {}),
                   });
                   onStructureChange();
                   // Notion-style: move caret into the newly-created block.

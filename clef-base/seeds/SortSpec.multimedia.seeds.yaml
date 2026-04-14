@@ -1,0 +1,24 @@
+# SortSpec seeds for the media library view pipeline.
+# Per MAG-754 (media-library.derived recursive-views).
+#
+# Default is captured-at descending (most recent first).
+# Additional user-selectable sort orders: title asc, size desc, duration desc.
+
+concept: SortSpec
+action: create
+entries:
+  # Default: most recently captured first
+  - name: media-captured-at-desc
+    keys: '[{"field":"capturedAt","direction":"desc"}]'
+
+  # Alphabetical by asset title / name
+  - name: media-title-asc
+    keys: '[{"field":"name","direction":"asc"}]'
+
+  # Largest files first
+  - name: media-size-desc
+    keys: '[{"field":"fileSize","direction":"desc"}]'
+
+  # Longest duration first (video/audio)
+  - name: media-duration-desc
+    keys: '[{"field":"duration","direction":"desc"}]'

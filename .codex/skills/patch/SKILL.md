@@ -42,3 +42,11 @@ Returns reordered patches such that applying p2Prime then
  p1Prime produces the same result as applying p1 then p2 .
 
 **Arguments:** `$0` **p1** (P), `$1` **p2** (P)
+
+### applyInverse
+Invert the patch to obtain its inverse edit script , then apply 
+ the inverse to content , effectively undoing the patch . Returns 
+ the transformed result that existed before the original patch 
+ was applied .
+
+**Arguments:** `$0` **patchId** (P), `$1` **content** (bytes)

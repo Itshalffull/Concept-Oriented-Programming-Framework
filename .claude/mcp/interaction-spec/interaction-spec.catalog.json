@@ -6,5 +6,21 @@
     "concept": "InteractionSpec",
     "action": "create",
     "alwaysLoaded": false
+  },
+  {
+    "name": "interaction_spec_add_row_action",
+    "briefDescription": "Append an ActionBinding ID to the row action binding list for the named \n int...",
+    "category": "InteractionSpec",
+    "concept": "InteractionSpec",
+    "action": "addRowAction",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "interaction_spec_set_create_binding",
+    "briefDescription": "Set the ActionBinding ID to use for the create form action of the named \n int...",
+    "category": "InteractionSpec",
+    "concept": "InteractionSpec",
+    "action": "setCreateBinding",
+    "alwaysLoaded": false
   }
 ]

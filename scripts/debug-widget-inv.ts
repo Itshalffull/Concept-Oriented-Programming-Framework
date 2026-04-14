@@ -1,0 +1,11 @@
+import {parseWidgetFile} from '../handlers/ts/framework/widget-spec-parser';
+import fs from 'fs';
+const m: any = parseWidgetFile(fs.readFileSync('./surface/widgets/connector-call-log.widget', 'utf8'));
+const n = (m.invariants || []).length;
+const c: any = {};
+(m.invariants || []).forEach((i: any) => c[i.kind] = (c[i.kind] || 0) + 1);
+console.log('total:', n);
+console.log('by-kind:', JSON.stringify(c));
+console.log('anatomy parts:', m.anatomy?.length);
+console.log('props:', m.props?.map((p: any) => p.name));
+console.log('states:', JSON.stringify(m.states?.map((s: any) => s.name)));

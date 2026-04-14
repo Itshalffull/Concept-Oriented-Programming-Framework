@@ -1,0 +1,49 @@
+# ActionBinding seeds -- math block and math inline toolbar/InputRule commands (MAG-755).
+#
+# markdown-transform-to-math-block: dispatched by the markdown-math-block InputRule
+#   when a paragraph line matches ^\$\$. Applies schema "math" to the focused block
+#   and sets displayMode to "block".
+#
+# markdown-wrap-as-math-inline: dispatched by the markdown-math-inline InputRule when
+#   $...$ wraps a non-empty run within a paragraph. Toggles the "math" inline mark via
+#   InlineMark/toggleMark with the captured LaTeX as the latex content attribute.
+#
+# math-insert-symbol: toolbar action on the latex-editor inspector panel. Opens the
+#   symbol picker by sending OPEN_SYMBOLS to the latex-editor FSM.
+
+concept: ActionBinding
+action: bind
+entries:
+  # Dispatched by the markdown-math-block InputRule when a paragraph line matches ^\$\$.
+  - name: markdown-transform-to-math-block
+    binding: markdown-transform-to-math-block
+    target: "Schema/applyTo"
+    parameterMap: '{"schema":"math","entity_id":"context.focusedBlockId","displayMode":"block"}'
+    executionPolicy: "auto"
+    slash_command: false
+    toolbar_command: false
+
+  # Dispatched by the markdown-math-inline InputRule when $...$ wraps a non-empty run.
+  # capturedGroup1 carries the inner LaTeX source.
+  - name: markdown-wrap-as-math-inline
+    binding: markdown-wrap-as-math-inline
+    target: "InlineMark/toggleMark"
+    parameterMap: '{"kind":"math","latex":"context.capturedGroup1","entity_id":"context.focusedBlockId"}'
+    executionPolicy: "auto"
+    slash_command: false
+    toolbar_command: false
+
+  # Toolbar action on the latex-editor inspector panel.
+  # Opens the symbol picker in the latex-editor FSM.
+  - name: math-insert-symbol
+    binding: math-insert-symbol
+    target: "InlineMark/toggleMark"
+    parameterMap: '{"kind":"math","latex":"context.selectedSymbol","entity_id":"context.focusedBlockId"}'
+    executionPolicy: "auto"
+    toolbar_command: true
+    slash_command: false
+    context_menu: false
+    section: "Math"
+    label: "Insert symbol"
+    icon: "function"
+    picker_ref: "latex-editor"

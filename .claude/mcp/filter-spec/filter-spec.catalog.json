@@ -1,0 +1,50 @@
+[
+  {
+    "name": "filter_spec_create",
+    "briefDescription": "Register a new named filter with its serialized FilterNode tree and \n source ...",
+    "category": "FilterSpec",
+    "concept": "FilterSpec",
+    "action": "create",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "filter_spec_compose",
+    "briefDescription": "Create a new unnamed filter whose tree is \n { type : and , conditions : [ a .",
+    "category": "FilterSpec",
+    "concept": "FilterSpec",
+    "action": "compose",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "filter_spec_evaluate",
+    "briefDescription": "Apply the filter s predicate tree to the provided JSON array of \n row objects...",
+    "category": "FilterSpec",
+    "concept": "FilterSpec",
+    "action": "evaluate",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "filter_spec_normalize",
+    "briefDescription": "Return the filter tree converted to the requested normal form \n ( cnf or dnf ) .",
+    "category": "FilterSpec",
+    "concept": "FilterSpec",
+    "action": "normalize",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "filter_spec_validate",
+    "briefDescription": "All field references in the filter tree exist in the provided \n schema .",
+    "category": "FilterSpec",
+    "concept": "FilterSpec",
+    "action": "validate",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "filter_spec_bind",
+    "briefDescription": "Replace every { type : param } node in the filter tree with the \n concrete va...",
+    "category": "FilterSpec",
+    "concept": "FilterSpec",
+    "action": "bind",
+    "alwaysLoaded": false
+  }
+]

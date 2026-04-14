@@ -1,0 +1,264 @@
+@version(1)
+widget latex-editor {
+
+  purpose {
+    Inspector panel widget for composing, previewing, and confirming LaTeX
+    expressions. Presents a multi-line textarea for raw LaTeX input alongside
+    a live rendered preview pane that recompiles on each keystroke. A symbol
+    picker drawer organises common LaTeX symbols into named categories (Greek,
+    operators, relations, arrows, etc.) so users can browse and insert symbols
+    without memorising command names. Confirming the expression via the confirm
+    button or Enter key fires the onComplete callback with the final LaTeX
+    string. Used as the panel widget for the math-block edit surface and can
+    also be opened standalone from the math toolbar action.
+  }
+
+  anatomy {
+    root:            container    { Outer panel wrapper; carries data-state for the composing/previewing/symbol-browsing FSM }
+    latexTextarea:   interactive  { Multi-line LaTeX source input; receives focus on open; live-connected to previewPane }
+    symbolPicker:    container    { Scrollable symbol drawer that opens over or beside the textarea }
+    symbolCategory:  container    { Named category header row within the symbolPicker (e.g., Greek, Operators) }
+    symbolCell:      action       { Individual tappable symbol cell inside a category; inserts the symbol into latexTextarea }
+    previewPane:     presentation { Live KaTeX-rendered preview of the current textarea content; updates on each input }
+    confirmButton:   action       { Primary action button that commits the current LaTeX and fires onComplete }
+  }
+
+  states {
+    edit {
+      composing [initial] {
+        on OPEN_SYMBOLS    -> symbol-browsing;
+        on PREVIEW         -> previewing;
+        on CONFIRM         -> composing;
+        on CLEAR           -> composing;
+      }
+      previewing {
+        on EDIT            -> composing;
+        on OPEN_SYMBOLS    -> symbol-browsing;
+        on CONFIRM         -> composing;
+      }
+      symbol-browsing {
+        on CLOSE_SYMBOLS   -> composing;
+        on INSERT_SYMBOL   -> composing;
+        on CONFIRM         -> composing;
+        entry [openSymbolDrawer];
+        exit [closeSymbolDrawer];
+      }
+    }
+  }
+
+  accessibility {
+    role: dialog;
+    keyboard {
+      Escape     -> CLOSE_SYMBOLS;
+      Enter      -> CONFIRM;
+      Tab        -> FOCUS_NEXT;
+      ArrowUp    -> FOCUS_PREV_CATEGORY;
+      ArrowDown  -> FOCUS_NEXT_CATEGORY;
+    }
+    focus {
+      trap: false;
+      initial: latexTextarea;
+      roving: true;
+      returnOnClose: latexTextarea;
+    }
+    aria {
+      root -> {
+        role: "dialog";
+        aria-label: "LaTeX editor";
+        aria-modal: "false";
+      };
+      latexTextarea -> {
+        role: "textbox";
+        aria-multiline: "true";
+        aria-label: "LaTeX source";
+      };
+      symbolPicker -> {
+        role: "listbox";
+        aria-label: "Symbol picker";
+        aria-hidden: if state.edit != "symbol-browsing" then "true" else "false";
+      };
+      symbolCategory -> {
+        role: "group";
+        aria-label: self.name;
+      };
+      symbolCell -> {
+        role: "option";
+        aria-label: self.label;
+        aria-describedby: self.command;
+      };
+      previewPane -> {
+        role: "img";
+        aria-label: "LaTeX preview";
+        aria-live: "polite";
+      };
+      confirmButton -> {
+        role: "button";
+        aria-label: "Confirm LaTeX";
+        aria-keyshortcuts: "Enter";
+      };
+    }
+  }
+
+  props {
+    initialLatex: String = ""
+    onComplete:   String
+  }
+
+  connect {
+    root -> {
+      data-part:  "root";
+      data-state: state.edit;
+    }
+
+    latexTextarea -> {
+      data-part:      "latex-textarea";
+      role:           "textbox";
+      aria-multiline: "true";
+      aria-label:     "LaTeX source";
+      text:           ?initialLatex;
+      onInput:        send(PREVIEW);
+      onFocus:        send(EDIT);
+      onKeyDown-Enter: send(CONFIRM);
+      onKeyDown-Escape: send(CLOSE_SYMBOLS);
+      autofocus:      true;
+    }
+
+    symbolPicker -> {
+      data-part: "symbol-picker";
+      hidden:    if state.edit != "symbol-browsing" then true else false;
+      role:      "listbox";
+      aria-label: "Symbol picker";
+    }
+
+    symbolCategory -> {
+      data-part:   "symbol-category";
+      data-name:   self.name;
+      role:        "group";
+      aria-label:  self.name;
+    }
+
+    symbolCell -> {
+      data-part:    "symbol-cell";
+      data-command: self.command;
+      role:         "option";
+      aria-label:   self.label;
+      onClick:      send(INSERT_SYMBOL);
+      tabindex:     "0";
+    }
+
+    previewPane -> {
+      data-part: "preview-pane";
+      role:      "img";
+      aria-label: "LaTeX preview";
+      aria-live: "polite";
+    }
+
+    confirmButton -> {
+      data-part: "confirm-button";
+      role:      "button";
+      aria-label: "Confirm LaTeX";
+      onClick:   send(CONFIRM);
+    }
+  }
+
+  affordance {
+    serves: latex-editor-panel;
+    specificity: 10;
+    when editSurface = "math";
+    bind {
+      initialLatex: latex;
+    }
+  }
+
+  invariant {
+    example "opening symbol picker transitions composing to symbol-browsing": {
+      after OPEN_SYMBOLS() -> ok
+      then state.edit = "symbol-browsing"
+    }
+
+    example "CLOSE_SYMBOLS from symbol-browsing returns to composing": {
+      after CLOSE_SYMBOLS() -> ok
+      then state.edit = "composing"
+    }
+
+    example "INSERT_SYMBOL from symbol-browsing returns to composing": {
+      after INSERT_SYMBOL() -> ok
+      then state.edit = "composing"
+    }
+
+    example "PREVIEW from composing transitions to previewing": {
+      after PREVIEW() -> ok
+      then state.edit = "previewing"
+    }
+
+    example "EDIT from previewing returns to composing": {
+      after EDIT() -> ok
+      then state.edit = "composing"
+    }
+
+    example "symbolPicker hidden outside symbol-browsing": {
+      after render() -> ok
+      then symbolPicker.hidden = true
+    }
+
+    example "symbolPicker visible in symbol-browsing": {
+      after OPEN_SYMBOLS() -> ok
+      then symbolPicker.hidden = false
+    }
+
+    example "confirmButton fires CONFIRM on click": {
+      after confirmButton.click -> ok
+      then state.edit = "composing"
+    }
+
+    example "Enter key in latexTextarea fires CONFIRM": {
+      after onKeyDown-Enter() -> ok
+      then state.edit = "composing"
+    }
+
+    example "Escape key closes symbol drawer": {
+      after CLOSE_SYMBOLS() -> ok
+      then state.edit = "composing"
+    }
+
+    forall "all edit states reachable from initial": {
+      given s in editStates
+      then s.reachable = true
+    }
+
+    always "root data-state reflects edit FSM": {
+      root.dataState = state.edit
+    }
+
+    always "latexTextarea role is textbox": {
+      latexTextarea.role = "textbox"
+    }
+
+    always "previewPane aria-live is polite": {
+      previewPane.ariaLive = "polite"
+    }
+
+    never "symbolPicker visible when not in symbol-browsing state": {
+      state.edit != "symbol-browsing" and symbolPicker.hidden = false
+    }
+
+    never "confirmButton fires while symbolPicker is open": {
+      state.edit = "symbol-browsing" and confirmButton.fired = true
+    }
+
+    action confirmButton {
+      requires: state.edit = "composing"
+      ensures ok: state.edit = "composing"
+    }
+
+    action symbolCell {
+      requires: state.edit = "symbol-browsing"
+      ensures ok: state.edit = "composing"
+    }
+
+    "symbolCell insertion must append the LaTeX command at the current cursor position in latexTextarea without replacing existing content";
+    "previewPane must recompile on every INPUT event fired from latexTextarea, including when the textarea is empty";
+    "onComplete callback receives the final trimmed latex string on CONFIRM regardless of which state triggered the transition";
+  }
+
+}
