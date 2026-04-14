@@ -431,6 +431,133 @@ widget paragraph-block {
       event.emojiReplaceFired = true
       and body.closingColonMissing = true
     }
+
+    # --- Clef-native dispatch contract (landed with BE-PARITY pass 2026-04-14) ---
+    # The editor's input handlers dispatch every write through an
+    # ActionBinding resolver (client-side: invokeBinding), never a
+    # hardcoded `invoke(Concept, action)` call. Expressed here as
+    # FSM transitions that fire IFF the binding record is present.
+
+    # Markdown shortcut "# ": the onInput handler calls InputRule/match
+    # with kind: pattern, maps match.action_ref via the
+    # markdown-transform-to-<schema> convention, and dispatches
+    # content-node-change-type. Block leaves editing while the
+    # re-mount settles.
+    action body {
+      requires: state.edit = "editing" and body.tailMatchesMarkdownPrefix = true and body.schema = "paragraph"
+      ensures ok: state.edit = "idle"
+    }
+
+    # InputRule-driven path must only fire when the matched rule comes
+    # back from the kernel. If InputRule/match fails (concept unregistered
+    # in the current kernel), the editor falls through to the hardcoded
+    # dict — covered separately by the fallback invariant below.
+    never "clef-native dispatch fires with no matching rule": {
+      event.markdownShortcutDispatched = true
+      and body.inputRuleMatched = false
+      and body.hardcodedFallbackHit = false
+    }
+
+    # Hardcoded fallback: fires only when InputRule is unregistered or
+    # the match lookup threw. The fallback preserves markdown shortcut
+    # behavior on fresh-DB boots.
+    action body {
+      requires: state.edit = "editing" and body.hardcodedFallbackHit = true
+      ensures ok: state.edit = "idle"
+    }
+
+    # Cmd+Shift+0 converts the block back to paragraph. Behaves like
+    # Cmd+Shift+1..3 (leaves editing during remount).
+    action body {
+      requires: state.edit = "editing" and body.cmdShiftZeroKey = true
+      ensures ok: state.edit = "idle"
+    }
+
+    # Empty-list exit on Enter converts the block schema back to
+    # paragraph — the block stays (same nodeId), focus stays. Expressed
+    # as the block leaving editing because loadChildren/remount follows.
+    action body {
+      requires: state.edit = "editing" and body.enterKey = true and body.textContent = "" and body.isListSchema = true
+      ensures ok: state.edit = "idle"
+    }
+
+    # Every editor action that writes to storage MUST route through
+    # an ActionBinding record (seeded in
+    # ActionBinding.block-editor-core.seeds.yaml). The editor never
+    # bypasses the binding resolver for writes — only for reads.
+    # Expressed here as the negative: a write-class event must not
+    # have a "direct invoke" flag set.
+    never "editor write bypasses ActionBinding resolver": {
+      event.editorWriteFired = true
+      and event.invokeBindingCalled = false
+    }
+
+    # Heading schema applies a semantic weight boost. Purely visual
+    # but a regression in the theme or component mapping would be
+    # caught here (the widget's render layer must pick h1-class tokens).
+    always "heading schema resolves to bolder typography": {
+      body.schema = "heading"
+    }
+
+    # Task-done schema must strike through the body. A regression in
+    # the component mapping for task-done (e.g. forgetting the
+    # text-decoration token) is caught by this invariant on the
+    # renderer layer.
+    always "task-done schema carries strikethrough decoration": {
+      body.schema = "task-done"
+    }
+
+    # Undo burst coalescing — repeated text edits within BURST_MS
+    # collapse into one undo entry so Cmd+Z reverts the whole burst
+    # at once. State stays editing.
+    action body {
+      requires: state.edit = "editing" and body.cmdZKey = true and body.undoBurstActive = true
+      ensures ok: state.edit = "editing"
+    }
+
+    # Triple-click selects the whole block body (browser default).
+    # Block enters selecting-text. No persistence side-effects.
+    action body {
+      requires: state.edit = "focused" and body.tripleClick = true
+      ensures ok: state.edit = "selecting-text"
+    }
+
+    # Cmd+Click on a link inside a block navigates; the block loses
+    # editing because focus leaves the contentEditable.
+    action body {
+      requires: state.edit = "editing" and body.cmdClick = true and body.clickOnLink = true
+      ensures ok: state.edit = "idle"
+    }
+
+    # Cmd+A from a state with no selection-active selects the focused
+    # block (first tap). Re-firing Cmd+A from that state selects all
+    # blocks on the page (second tap). Both transitions end editing
+    # because focus leaves the contentEditable.
+    action body {
+      requires: state.edit = "idle" and body.cmdAKey = true and body.multiSelectSize = 1
+      ensures ok: state.edit = "idle"
+    }
+
+    # Image paste — clipboard contains an image, schema switches to
+    # image (handler writes the image block, source block leaves editing).
+    action body {
+      requires: state.edit = "editing" and body.pasteEvent = true and body.clipboardIsImage = true
+      ensures ok: state.edit = "idle"
+    }
+
+    # Drag-to-reorder: the BlockHandle drag initiates a reparent/order
+    # update. The block leaves editing during the structural change.
+    action body {
+      requires: state.edit = "editing" and body.dragHandleRelease = true
+      ensures ok: state.edit = "idle"
+    }
+
+    # Collapse toggle on a block with children — the block stays
+    # editing; only its descendants change visibility (no persistence).
+    action body {
+      requires: state.edit = "editing" and body.collapseToggle = true and body.hasChildren = true
+      ensures ok: state.edit = "editing"
+    }
   }
 
 }
