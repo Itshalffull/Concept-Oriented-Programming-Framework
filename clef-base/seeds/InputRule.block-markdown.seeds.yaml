@@ -1,0 +1,78 @@
+# InputRule seeds — block-level markdown shortcuts for RecursiveBlockEditor.
+#
+# Each rule maps a text pattern typed at the start of a paragraph to a
+# schema conversion. The editor's onInput handler calls
+# InputRule/match({kind: "block-markdown", input: text, scope: "paragraph"})
+# on every keystroke and dispatches the matched rule's
+# dispatchBinding against the focused block.
+#
+# Moving the ruleset from a hardcoded React object to a seed file lets
+# users extend the list (e.g. a Jupyter flavor adding `|| ` → table)
+# without touching TypeScript. The editor's hardcoded fallback is
+# still present for when InputRule isn't registered.
+
+concept: InputRule
+action: register
+entries:
+  - kind: block-markdown
+    scope: paragraph
+    pattern: "^# $"
+    priority: 100
+    dispatchBinding: content-node-change-type
+    dispatchArgs: '{"type":"heading"}'
+
+  - kind: block-markdown
+    scope: paragraph
+    pattern: "^## $"
+    priority: 100
+    dispatchBinding: content-node-change-type
+    dispatchArgs: '{"type":"heading-2"}'
+
+  - kind: block-markdown
+    scope: paragraph
+    pattern: "^### $"
+    priority: 100
+    dispatchBinding: content-node-change-type
+    dispatchArgs: '{"type":"heading-3"}'
+
+  - kind: block-markdown
+    scope: paragraph
+    pattern: "^[-*] $"
+    priority: 90
+    dispatchBinding: content-node-change-type
+    dispatchArgs: '{"type":"bullet-list"}'
+
+  - kind: block-markdown
+    scope: paragraph
+    pattern: "^\\d+\\. $"
+    priority: 90
+    dispatchBinding: content-node-change-type
+    dispatchArgs: '{"type":"numbered-list"}'
+
+  - kind: block-markdown
+    scope: paragraph
+    pattern: "^> $"
+    priority: 90
+    dispatchBinding: content-node-change-type
+    dispatchArgs: '{"type":"quote"}'
+
+  - kind: block-markdown
+    scope: paragraph
+    pattern: "^``` $"
+    priority: 95
+    dispatchBinding: content-node-change-type
+    dispatchArgs: '{"type":"code"}'
+
+  - kind: block-markdown
+    scope: paragraph
+    pattern: "^\\[( |x|X)?\\] $"
+    priority: 95
+    dispatchBinding: content-node-change-type
+    dispatchArgs: '{"type":"task"}'
+
+  - kind: block-markdown
+    scope: paragraph
+    pattern: "^(---|___) $"
+    priority: 95
+    dispatchBinding: content-node-change-type
+    dispatchArgs: '{"type":"divider"}'
