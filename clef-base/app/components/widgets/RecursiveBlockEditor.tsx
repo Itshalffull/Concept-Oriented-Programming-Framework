@@ -2539,29 +2539,52 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
                       // lookup map), and onCardMove reparents via the
                       // seeded outline-reparent ActionBinding so drag
                       // is a first-class hierarchy edit.
+                      // Classic kanban shape:
+                      //   columns = direct children of the clicked block
+                      //   cards   = GRANDCHILDREN of the clicked block
+                      //             (= direct children of each column)
+                      //   each card recursively renders its full subtree
+                      // If a direct child has no children of its own,
+                      // it appears as an empty column. If a grandchild
+                      // has descendants, they render nested inside the
+                      // card (renderSubtreeInCard walks byParent).
                       const parentLabel: Record<string, string> = {};
                       const labelToId: Record<string, string> = {};
-                      // Include the rendered parent block itself as a
-                      // valid column so users can drag a card back to
-                      // THIS parent's direct children.
-                      parentLabel[child.id] = (contentBodyCache.get(child.id) ?? '')
-                        .replace(/<[^>]+>/g, '').trim() || child.id;
-                      for (const c of children) {
-                        if (c.hasChildren) {
-                          const lbl = (contentBodyCache.get(c.id) ?? '').replace(/<[^>]+>/g, '').trim() || c.id;
-                          parentLabel[c.id] = lbl;
-                        }
+                      for (const c of byParent.get(child.id) ?? []) {
+                        const lbl = (contentBodyCache.get(c.id) ?? '').replace(/<[^>]+>/g, '').trim() || c.id;
+                        parentLabel[c.id] = lbl;
                       }
                       for (const [id, lbl] of Object.entries(parentLabel)) {
-                        // First-write-wins on duplicate labels; console
-                        // warning so the collision is visible without
-                        // breaking the drop handler.
                         if (labelToId[lbl] === undefined) labelToId[lbl] = id;
                       }
-                      const boardRows = subtreeRows.map((r) => ({
-                        ...r,
-                        parent: parentLabel[String(r.parent)] ?? String(r.parent) ?? '(root)',
+                      // Gather grandchildren as the card set. Each row's
+                      // `parent` is a direct child id, which maps to a
+                      // column label above.
+                      const grandchildren: BlockChild[] = [];
+                      for (const directKid of byParent.get(child.id) ?? []) {
+                        for (const grand of byParent.get(directKid.id) ?? []) {
+                          grandchildren.push(grand);
+                        }
+                      }
+                      const boardRows = grandchildren.map((g) => ({
+                        id: g.id,
+                        parent: parentLabel[g.parent] ?? g.parent,
+                        schema: g.schema,
+                        content: titleLine(contentBodyCache.get(g.id) ?? ''),
                       }));
+                      // Seed empty columns for direct children that
+                      // currently have no grandchildren (otherwise
+                      // BoardDisplay omits them entirely).
+                      for (const directKid of byParent.get(child.id) ?? []) {
+                        if (!(byParent.get(directKid.id) ?? []).length) {
+                          boardRows.push({
+                            id: `__empty__:${directKid.id}`,
+                            parent: parentLabel[directKid.id],
+                            schema: '',
+                            content: '',
+                          });
+                        }
+                      }
                       // Render each Kanban card as a real BlockSlot so
                       // the card's internal content honors the original
                       // block display (paragraph stays a paragraph,
@@ -2573,13 +2596,13 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
                       // displayMode metadata.
                       const byId = new Map<string, BlockChild>();
                       for (const c of children) byId.set(c.id, c);
-                      const renderBlockCard = (row: Record<string, unknown>) => {
-                        const id = String(row.id);
-                        const rec = byId.get(id);
-                        if (!rec) return <span style={{ fontSize: 12 }}>{String(row.content)}</span>;
-                        const resolved = resolvedWidgets.get(id);
+                      // Render a single BlockSlot for a given node id
+                      // using its resolved widget + display mode.
+                      const renderOneBlock = (rec: BlockChild, keySuffix = '') => {
+                        const resolved = resolvedWidgets.get(rec.id);
                         return (
                           <BlockSlot
+                            key={rec.id + keySuffix}
                             nodeId={rec.id}
                             schema={rec.schema}
                             displayMode={rec.displayMode}
@@ -2598,6 +2621,46 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
                             editorFlavor={editorFlavor}
                             decorationLayerEntries={decorationLayerEntries}
                           />
+                        );
+                      };
+                      // Each card renders the node AND its full
+                      // subtree so the view stays recursive inside the
+                      // kanban shell. We walk byParent from the card's
+                      // root and emit a BlockSlot per descendant with
+                      // depth-proportional indentation.
+                      const renderSubtreeInCard = (rootId: string, depth = 0): React.ReactNode[] => {
+                        const rec = byId.get(rootId);
+                        if (!rec) return [];
+                        const out: React.ReactNode[] = [];
+                        out.push(
+                          <div
+                            key={rec.id + ':node'}
+                            data-part="kanban-subtree-node"
+                            style={{
+                              marginLeft: depth * 12,
+                              borderLeft: depth > 0 ? '1px solid var(--palette-outline-variant, rgba(0,0,0,0.08))' : 'none',
+                              paddingLeft: depth > 0 ? 6 : 0,
+                            }}
+                          >
+                            {renderOneBlock(rec, ':card')}
+                          </div>,
+                        );
+                        for (const c of byParent.get(rec.id) ?? []) {
+                          out.push(...renderSubtreeInCard(c.id, depth + 1));
+                        }
+                        return out;
+                      };
+                      const renderBlockCard = (row: Record<string, unknown>) => {
+                        const id = String(row.id);
+                        if (id.startsWith('__empty__:')) {
+                          return <div style={{ fontSize: 11, color: 'var(--palette-outline, #888)', fontStyle: 'italic', padding: 4 }}>(no items)</div>;
+                        }
+                        const rec = byId.get(id);
+                        if (!rec) return <span style={{ fontSize: 12 }}>{String(row.content)}</span>;
+                        return (
+                          <div data-part="kanban-card-tree" data-root-id={id}>
+                            {renderSubtreeInCard(id, 0)}
+                          </div>
                         );
                       };
                       return (
