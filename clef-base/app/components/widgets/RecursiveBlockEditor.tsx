@@ -1025,12 +1025,21 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
       return;
     }
     if (e.key === '/' && !e.ctrlKey && !e.metaKey) {
-      // Don't hijack slash when the user is typing inside a contentEditable block.
-      // Slash-menu-from-block can still be triggered via the BlockHandle "+" button
-      // or via a block-level detector that watches for '/' as the first character
-      // of an empty block's body.
+      // Notion/Roam: `/` opens the block-type picker. Allow this inside
+      // contentEditables when the caret is at the start of an empty block
+      // (so typing `/` mid-sentence doesn't hijack). When the menu is open
+      // the user can type to filter; Escape cancels.
       const target = e.target as HTMLElement;
-      if (target.isContentEditable) return;
+      if (target.isContentEditable) {
+        const text = target.textContent ?? '';
+        if (text.length === 0) {
+          e.preventDefault();
+          openSlashMenu();
+          return;
+        }
+        // otherwise let '/' type naturally
+        return;
+      }
       e.preventDefault();
       openSlashMenu();
     } else if (e.key === 'Escape') {
