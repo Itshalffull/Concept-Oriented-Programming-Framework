@@ -3219,9 +3219,11 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
     if (contentBodyCache.has(nodeId)) {
       const body = contentBodyCache.get(nodeId) ?? '';
       if (blockContentRef.current) {
-        blockContentRef.current.textContent = body;
+        // Use innerHTML so persisted marks (<b>/<i>/<a>/<mark>/wikilinks)
+        // re-render. contentEditable owns the DOM from here on.
+        blockContentRef.current.innerHTML = body;
         hasInitializedRef.current = true;
-        blockEmptyRef.current = body.trim() === '';
+        blockEmptyRef.current = (blockContentRef.current.textContent ?? '').trim() === '';
         if (pendingFocusNodeId === nodeId) {
           restoreFocusToBlock(nodeId, pendingFocusAt);
         }
@@ -3236,9 +3238,9 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
         const body = typeof result.content === 'string' ? result.content : '';
         contentBodyCache.set(nodeId, body);
         if (blockContentRef.current && !hasInitializedRef.current) {
-          blockContentRef.current.textContent = body;
+          blockContentRef.current.innerHTML = body;
           hasInitializedRef.current = true;
-          blockEmptyRef.current = body.trim() === '';
+          blockEmptyRef.current = (blockContentRef.current.textContent ?? '').trim() === '';
           if (pendingFocusNodeId === nodeId) {
             restoreFocusToBlock(nodeId, pendingFocusAt);
           }
@@ -3713,8 +3715,12 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
         onBlur={(e) => {
           setBlockFocused(false);
           const text = e.currentTarget.textContent ?? '';
+          // Persist the full HTML so inline marks (<b>/<i>/<mark>/<a>),
+          // wikilinks, and mentions survive reload. Plain-text callers
+          // that only want the visible text read from .textContent.
+          const html = e.currentTarget.innerHTML ?? '';
           blockEmptyRef.current = text.trim() === '';
-          handleContentEdit(text);
+          handleContentEdit(html);
           onBlur();
           // LE-16: trigger highlight on blur so decorations are current when block loses focus
           if (isHighlightableSchema && text.trim()) {
