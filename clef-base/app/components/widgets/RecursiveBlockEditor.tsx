@@ -1482,6 +1482,11 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
           onTitleSaved={(saved) => setPageTitle(saved)}
         />
 
+        {/* Simple selection toolbar — always-available fallback when
+            EditSurface/resolve can't deliver a toolbar_widget. Shows B/I/U/<>
+            buttons whenever there's a non-empty text selection inside a block. */}
+        <SelectionToolbar selection={currentSelection} />
+
         {/* Inline toolbar — from innermost EditSurface toolbar_widget */}
         {fsmState === 'focused' && innermostSurface?.toolbar_widget && (
           <div
@@ -2001,6 +2006,77 @@ function resolveHeadingLevel(schema: string): number | null {
 // ===========================================================================
 
 const CLICK_RESET_MS = 400;
+
+/**
+ * SelectionToolbar — floating popover with B/I/U/<> buttons, anchored to
+ * the active text selection. Always renders when a non-empty selection
+ * exists inside a [data-part="block-content"]; no EditSurface lookup
+ * required. document.execCommand dispatches keep the implementation
+ * portable and match the behavior of Cmd+B / Cmd+I / Cmd+U / Cmd+E.
+ */
+const SelectionToolbar: React.FC<{ selection: EditorSelection | null }> = ({ selection }) => {
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  useEffect(() => {
+    if (!selection || selection.rangeEnd <= selection.rangeStart) {
+      setPos(null);
+      return;
+    }
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) { setPos(null); return; }
+    const range = sel.getRangeAt(0);
+    if (range.collapsed) { setPos(null); return; }
+    const rect = range.getBoundingClientRect();
+    setPos({ top: rect.top + window.scrollY - 44, left: rect.left + rect.width / 2 + window.scrollX });
+  }, [selection]);
+  if (!pos) return null;
+  const cmd = (op: 'bold' | 'italic' | 'underline') => (e: React.MouseEvent) => {
+    e.preventDefault();
+    document.execCommand(op);
+  };
+  const code = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const s = window.getSelection();
+    if (!s || s.isCollapsed) return;
+    const r = s.getRangeAt(0);
+    const el = document.createElement('code');
+    el.appendChild(r.extractContents());
+    r.insertNode(el);
+    r.setStartAfter(el); r.collapse(true);
+    s.removeAllRanges(); s.addRange(r);
+  };
+  const btn: React.CSSProperties = {
+    background: 'transparent', border: 'none', color: '#f3f4f6',
+    padding: '4px 8px', cursor: 'pointer', fontSize: '13px',
+    borderRadius: '4px',
+  };
+  return (
+    <div
+      data-part="selection-toolbar"
+      role="toolbar"
+      aria-label="Inline formatting"
+      onMouseDown={(e) => e.preventDefault()}
+      style={{
+        position: 'fixed',
+        top: `${pos.top}px`,
+        left: `${pos.left}px`,
+        transform: 'translateX(-50%)',
+        zIndex: 1000,
+        background: '#1f2937',
+        color: '#f3f4f6',
+        borderRadius: '6px',
+        padding: '2px',
+        display: 'flex',
+        gap: '2px',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+      }}
+    >
+      <button onMouseDown={cmd('bold')} style={{...btn, fontWeight: 700}}>B</button>
+      <button onMouseDown={cmd('italic')} style={{...btn, fontStyle: 'italic'}}>I</button>
+      <button onMouseDown={cmd('underline')} style={{...btn, textDecoration: 'underline'}}>U</button>
+      <button onMouseDown={code} style={{...btn, fontFamily: 'monospace'}}>{'<>'}</button>
+    </div>
+  );
+};
 
 /**
  * Re-focus a block's contentEditable after a structural change remounts it.
