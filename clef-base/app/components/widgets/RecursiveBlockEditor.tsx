@@ -801,7 +801,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
         const dupId = `${rootNodeId}:block:${Date.now()}-${Math.floor(Math.random() * 1000)}`;
         const type = String(srcNode.type ?? 'paragraph');
         const content = String(srcNode.content ?? '');
-        await invoke('ContentNode', 'createWithSchema', {
+        await invokeBinding(invoke, 'insert-block', {
           id: dupId,
           schema: type || 'paragraph',
           body: content,
@@ -826,7 +826,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
           }
           order = nextOrder !== null ? (srcOrder + nextOrder) / 2 : srcOrder + 1;
         } catch { /* fall through to default Date.now() */ }
-        await invoke('Outline', 'create', {
+        await invokeBinding(invoke, 'outline-create', {
           node: dupId,
           parent,
           ...(order !== undefined ? { order } : {}),
@@ -846,8 +846,8 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
       try {
         // Direct dispatch (ActionBinding layer inert): remove
         // ContentNode + Outline record. loadChildren refreshes view.
-        await invoke('ContentNode', 'delete', { node: blockId });
-        await invoke('Outline', 'delete', { node: blockId });
+        await invokeBinding(invoke, 'content-node-delete', { node: blockId });
+        await invokeBinding(invoke, 'outline-delete', { node: blockId });
         invalidateBlockBody(blockId);
       } catch (err) {
         console.error('[RecursiveBlockEditor] delete failed for block:', blockId, err);
@@ -979,13 +979,13 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
       // dispatch directly to ContentNode + Outline. Long-term this should
       // route through ActionBinding once the sync registry loads
       // syncs/app/invoke-via-binding.sync.
-      const created = await invoke('ContentNode', 'createWithSchema', {
+      const created = await invokeBinding(invoke, 'insert-block', {
         id,
         schema: 'paragraph',
         body: '',
       });
       if (created.variant === 'ok') {
-        await invoke('Outline', 'create', { node: id, parent: rootNodeId });
+        await invokeBinding(invoke, 'outline-create', { node: id, parent: rootNodeId });
         await loadChildren();
       } else {
         console.warn('[RecursiveBlockEditor] createWithSchema non-ok:', created);
@@ -1009,7 +1009,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
           // user typed '/' into). Matches Notion: selecting an item
           // changes THIS block, not adds a sibling.
           contentSchemaCache.set(focusedId, item.mappingId);
-          await invoke('ContentNode', 'changeType', {
+          await invokeBinding(invoke, 'content-node-change-type', {
             node: focusedId, type: item.mappingId,
           });
           await loadChildren();
@@ -1017,10 +1017,10 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
         } else {
           // No focused block — insert as new top-level child.
           const newId = `${rootNodeId}:block:${Date.now()}`;
-          await invoke('ContentNode', 'createWithSchema', {
+          await invokeBinding(invoke, 'insert-block', {
             id: newId, schema: item.mappingId, body: '',
           });
-          await invoke('Outline', 'create', { node: newId, parent: rootNodeId });
+          await invokeBinding(invoke, 'outline-create', { node: newId, parent: rootNodeId });
           await loadChildren();
           restoreFocusToBlock(newId);
         }
@@ -1222,7 +1222,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
             if (adj.variant === 'ok' && typeof adj.order === 'number') adjOrder = adj.order;
           }
           const newOrder = adjOrder !== null ? (targetOrder + adjOrder) / 2 : (dir < 0 ? targetOrder - 1 : targetOrder + 1);
-          await invoke('Outline', 'setOrder', { node: focused, order: newOrder });
+          await invokeBinding(invoke, 'outline-set-order', { node: focused, order: newOrder });
           loadChildren();
           restoreFocusToBlock(focused);
         } catch (err) { console.warn('[RecursiveBlockEditor] move-block failed:', err); }
@@ -1245,7 +1245,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
         void (async () => {
           try {
             contentSchemaCache.set(focused, target);
-            await invoke('ContentNode', 'changeType', { node: focused, type: target });
+            await invokeBinding(invoke, 'content-node-change-type', { node: focused, type: target });
             loadChildren();
             restoreFocusToBlock(focused);
           } catch (err) { console.warn('[RecursiveBlockEditor] schema-shortcut failed:', err); }
@@ -1335,7 +1335,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
           if (entry.kind === 'text') {
             const target = redo ? entry.after : entry.before;
             contentBodyCache.set(entry.nodeId, target);
-            await invoke('ContentNode', 'update', { node: entry.nodeId, content: target });
+            await invokeBinding(invoke, 'update-block-content', { nodeId: entry.nodeId, content: target });
             const el = document.querySelector<HTMLDivElement>(
               `[data-part="block-slot"][data-node-id="${entry.nodeId}"] [data-part="block-content"]`,
             );
@@ -1344,7 +1344,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
             loadChildren();
           } else if (entry.kind === 'reparent') {
             const target = redo ? entry.newParent : entry.oldParent;
-            await invoke('Outline', 'reparent', { node: entry.nodeId, newParent: target });
+            await invokeBinding(invoke, 'outline-reparent', { node: entry.nodeId, newParent: target });
             mirror.push(entry);
             loadChildren();
             restoreFocusToBlock(entry.nodeId);
@@ -1509,10 +1509,10 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
         for (let i = 0; i < parsed.length; i++) {
           const p = parsed[i];
           const id = `${rootNodeId}:block:${Date.now()}-${i}`;
-          await invoke('ContentNode', 'createWithSchema', {
+          await invokeBinding(invoke, 'insert-block', {
             id, schema: p.schema, body: p.body,
           });
-          await invoke('Outline', 'create', {
+          await invokeBinding(invoke, 'outline-create', {
             node: id,
             parent: rootNodeId,
             order: baseOrder + step * (i + 1),
@@ -1547,7 +1547,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
         try {
           const dataUrl = String(reader.result ?? '');
           const id = `${rootNodeId}:block:${Date.now()}`;
-          await invoke('ContentNode', 'createWithSchema', {
+          await invokeBinding(invoke, 'insert-block', {
             id, schema: 'image', body: dataUrl,
           });
           const anchorId = focusedBlockIdRef.current;
@@ -1560,7 +1560,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
               }
             } catch { /* ignore */ }
           }
-          await invoke('Outline', 'create', {
+          await invokeBinding(invoke, 'outline-create', {
             node: id, parent: rootNodeId,
             ...(order !== undefined ? { order } : {}),
           });
@@ -2074,7 +2074,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
                       const destParent = destParentRes.variant === 'ok'
                         ? String(destParentRes.parent ?? rootNodeId)
                         : rootNodeId;
-                      const result = await invoke('Outline', 'reparent', {
+                      const result = await invokeBinding(invoke, 'outline-reparent', {
                         node: srcBlockId, newParent: destParent,
                       });
                       if (result.variant === 'ok') {
@@ -2883,6 +2883,54 @@ let pendingFocusNodeId: string | null = null;
 let pendingFocusAt: 'start' | 'end' = 'end';
 
 /**
+ * invokeBinding — client-side ActionBinding resolver.
+ *
+ * The kernel's InvokeViaBinding sync (which would do target + parameterMap
+ * resolution server-side) isn't loaded, so ActionBinding/invoke today is a
+ * no-op that just stamps a trace id. This helper does the resolution on
+ * the client: fetch the binding, evaluate the parameterMap against the
+ * supplied context, and dispatch to the target concept/action. All
+ * editor actions go through this path so adding a new action means
+ * writing a Clef seed, not a bespoke React invoke() call.
+ *
+ * parameterMap format (stored in ActionBinding row):
+ *   '{"paramName":"context.path.to.value", ...}'
+ *   Values starting with "context." resolve against the provided context
+ *   object; other values are passed through as string literals.
+ */
+async function invokeBinding(
+  invoke: (concept: string, action: string, input: Record<string, unknown>) => Promise<{ variant: string; [k: string]: unknown }>,
+  bindingId: string,
+  context: Record<string, unknown>,
+  overrides: Record<string, unknown> = {},
+): Promise<{ variant: string; [k: string]: unknown }> {
+  const rec = await invoke('ActionBinding', 'get', { binding: bindingId });
+  if (rec.variant !== 'ok' || typeof rec.target !== 'string') {
+    return { variant: 'notfound', message: `binding '${bindingId}' not found` };
+  }
+  const [concept, action] = String(rec.target).split('/');
+  if (!concept || !action) {
+    return { variant: 'error', message: `invalid target '${rec.target}'` };
+  }
+  let pmapRaw = typeof rec.parameterMap === 'string' ? rec.parameterMap : '{}';
+  let pmap: Record<string, string>;
+  try { pmap = JSON.parse(pmapRaw) as Record<string, string>; }
+  catch { pmap = {}; }
+  const input: Record<string, unknown> = {};
+  for (const [param, path] of Object.entries(pmap)) {
+    if (typeof path !== 'string') continue;
+    if (path.startsWith('context.')) {
+      const key = path.slice('context.'.length);
+      if (key in context) input[param] = context[key];
+    } else {
+      input[param] = path;
+    }
+  }
+  for (const [k, v] of Object.entries(overrides)) input[k] = v;
+  return invoke(concept, action, input);
+}
+
+/**
  * Module-level cache of ContentNode body by nodeId. Survives React
  * re-mounts, so Tab / Shift+Tab / Backspace-merge don't force every
  * visible block to re-fetch its body from the server on structural
@@ -3494,8 +3542,8 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
       const before = contentBodyCache.get(nodeId) ?? '';
       contentBodyCache.set(nodeId, newContent);
       pushUndo({ kind: 'text', nodeId, before, after: newContent, ts: Date.now() });
-      const result = await invoke('ContentNode', 'update', {
-        node: nodeId, content: newContent,
+      const result = await invokeBinding(invoke, 'update-block-content', {
+        nodeId: nodeId, content: newContent,
       });
       if (result.variant === 'ok') {
         onBlockContentChange?.(nodeId, newContent);
@@ -3558,7 +3606,7 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
               e.stopPropagation();
               const newSchema = schema === 'task' ? 'task-done' : 'task';
               contentSchemaCache.set(nodeId, newSchema);
-              void invoke('ContentNode', 'changeType', { node: nodeId, type: newSchema })
+              void invokeBinding(invoke, 'content-node-change-type', { node: nodeId, type: newSchema })
                 .then(() => onStructureChange());
               return;
             }
@@ -3894,8 +3942,8 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
                 try {
                   // Change the block's type directly — loadChildren reads
                   // ContentNode.type when no Schema membership exists.
-                  contentSchemaCache.set(nodeId, newSchema); await invoke('ContentNode', 'changeType', { node: nodeId, type: newSchema });
-                  await invoke('ContentNode', 'update', { node: nodeId, content: '' });
+                  contentSchemaCache.set(nodeId, newSchema); await invokeBinding(invoke, 'content-node-change-type', { node: nodeId, type: newSchema });
+                  await invokeBinding(invoke, 'update-block-content', { nodeId: nodeId, content: '' });
                   el.textContent = '';
                   onStructureChange();
                 } catch (err) {
@@ -4026,8 +4074,8 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
             });
             void (async () => {
               try {
-                await invoke('ContentNode', 'update', { node: nodeId, content: before });
-                const insertResult = await invoke('ContentNode', 'createWithSchema', {
+                await invokeBinding(invoke, 'update-block-content', { nodeId: nodeId, content: before });
+                const insertResult = await invokeBinding(invoke, 'insert-block', {
                   id: newBlockId,
                   schema: newSchemaForSplit,
                   body: after,
@@ -4064,7 +4112,7 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
                     }
                     order = nextOrder !== null ? (curOrder + nextOrder) / 2 : curOrder + 1;
                   } catch { /* fall through — Outline.create will use Date.now() */ }
-                  await invoke('Outline', 'create', {
+                  await invokeBinding(invoke, 'outline-create', {
                     node: newBlockId,
                     parent: myParent,
                     ...(order !== undefined ? { order } : {}),
@@ -4288,9 +4336,9 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
                 const prevText = prevRes.variant === 'ok' ? String(prevRes.content ?? '') : '';
                 const joinOffset = prevText.length;
                 const merged = prevText + myText;
-                await invoke('ContentNode', 'update', { node: prev, content: merged });
-                await invoke('ContentNode', 'delete', { node: nodeId });
-                await invoke('Outline', 'delete', { node: nodeId });
+                await invokeBinding(invoke, 'update-block-content', { nodeId: prev, content: merged });
+                await invokeBinding(invoke, 'content-node-delete', { node: nodeId });
+                await invokeBinding(invoke, 'outline-delete', { node: nodeId });
                 onStructureChange();
                 // Restore caret at the join point in the previous block.
                 const focusAt = (attempt = 0) => {
@@ -4338,7 +4386,7 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
             onOptimisticDepthChange?.(nodeId, e.shiftKey ? -1 : +1);
             void (async () => {
               try {
-                await invoke('ContentNode', 'update', { node: nodeId, content: currentText });
+                await invokeBinding(invoke, 'update-block-content', { nodeId: nodeId, content: currentText });
                 // Learn who my real parent is so siblings are resolved at the
                 // correct level (not blindly rootNodeId, which breaks nested
                 // blocks from being tab-indented or tab-outdented).
@@ -4373,7 +4421,7 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
                   if (gp.variant !== 'ok') { onOptimisticDepthChange?.(nodeId, +1); return; }
                   const grandparentId = String(gp.parent ?? '') || rootNodeId;
                   pushUndo({ kind: 'reparent', nodeId, oldParent: parentId, newParent: grandparentId });
-                  const result = await invoke('Outline', 'reparent', {
+                  const result = await invokeBinding(invoke, 'outline-reparent', {
                     node: nodeId, newParent: grandparentId,
                   });
                   if (result.variant === 'ok') {
@@ -4388,7 +4436,7 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
                 if (myIndex <= 0) { onOptimisticDepthChange?.(nodeId, -1); return; }
                 const prevSibling = siblings[myIndex - 1];
                 pushUndo({ kind: 'reparent', nodeId, oldParent: myParent, newParent: prevSibling });
-                const result = await invoke('Outline', 'reparent', {
+                const result = await invokeBinding(invoke, 'outline-reparent', {
                   node: nodeId, newParent: prevSibling,
                 });
                 if (result.variant === 'ok') {

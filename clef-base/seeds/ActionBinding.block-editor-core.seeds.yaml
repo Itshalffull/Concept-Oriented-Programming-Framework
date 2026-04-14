@@ -24,3 +24,73 @@ entries:
     parameterMap: '{"id":"context.id","schema":"context.schema","body":"context.content"}'
     executionPolicy: "auto"
     label: "Insert block"
+
+  - name: outline-create
+    binding: outline-create
+    target: "Outline/create"
+    parameterMap: '{"node":"context.node","parent":"context.parent","order":"context.order"}'
+    executionPolicy: "auto"
+    label: "Create outline entry"
+
+  - name: outline-reparent
+    binding: outline-reparent
+    target: "Outline/reparent"
+    parameterMap: '{"node":"context.node","newParent":"context.newParent"}'
+    executionPolicy: "auto"
+    label: "Reparent block"
+
+  - name: outline-set-order
+    binding: outline-set-order
+    target: "Outline/setOrder"
+    parameterMap: '{"node":"context.node","order":"context.order"}'
+    executionPolicy: "auto"
+    label: "Set block order"
+
+  - name: outline-delete
+    binding: outline-delete
+    target: "Outline/delete"
+    parameterMap: '{"node":"context.node"}'
+    executionPolicy: "auto"
+    label: "Delete outline entry"
+
+  - name: content-node-delete
+    binding: content-node-delete
+    target: "ContentNode/delete"
+    parameterMap: '{"node":"context.node"}'
+    executionPolicy: "auto"
+    label: "Delete content node"
+
+  - name: content-node-change-type
+    binding: content-node-change-type
+    target: "ContentNode/changeType"
+    parameterMap: '{"node":"context.node","type":"context.type"}'
+    executionPolicy: "auto"
+    label: "Change block schema"
+
+  - name: outline-get-parent
+    binding: outline-get-parent
+    target: "Outline/getParent"
+    parameterMap: '{"node":"context.node"}'
+    executionPolicy: "auto"
+    label: "Query block parent"
+
+  - name: outline-get-record
+    binding: outline-get-record
+    target: "Outline/getRecord"
+    parameterMap: '{"node":"context.node"}'
+    executionPolicy: "auto"
+    label: "Query outline record"
+
+  - name: outline-children
+    binding: outline-children
+    target: "Outline/children"
+    parameterMap: '{"parent":"context.parent"}'
+    executionPolicy: "auto"
+    label: "List block children"
+
+  - name: content-node-get
+    binding: content-node-get
+    target: "ContentNode/get"
+    parameterMap: '{"node":"context.node"}'
+    executionPolicy: "auto"
+    label: "Read content node"
