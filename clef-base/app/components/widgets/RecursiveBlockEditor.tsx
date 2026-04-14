@@ -381,12 +381,11 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
         const ids = safeParseJsonArray<string>(res.children);
         for (const id of ids) {
           const schema = await resolveSchema(id);
-          // Peek at this node's children count so hasChildren is known
-          // even when we stop descending because of collapse state.
-          const childRes = await invoke('Outline', 'children', { parent: id });
-          const hasChildren = childRes.variant === 'ok'
-            && safeParseJsonArray<string>(childRes.children).length > 0;
-          out.push({ id, schema, displayMode: 'block-editor', depth, parent: parentId, hasChildren });
+          // Default hasChildren:false; post-walk pass counts children
+          // from the walked list. Only collapsed blocks need a separate
+          // probe (they're skipped during DFS so we didn't see their
+          // descendants). Fixes an N+1 that slowed Enter perceptibly.
+          out.push({ id, schema, displayMode: 'block-editor', depth, parent: parentId, hasChildren: false });
           if (!collapsedBlockIds.has(id)) {
             await walk(id, depth + 1, out);
           }
@@ -394,6 +393,20 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
       }
       const childRecords: BlockChild[] = [];
       await walk(rootNodeId, 0, childRecords);
+      // Compute hasChildren for non-collapsed nodes from the walked list;
+      // collapsed nodes get an explicit probe so their ▶ toggle still shows.
+      const parentSet = new Set(childRecords.map((c) => c.parent));
+      for (const rec of childRecords) {
+        if (collapsedBlockIds.has(rec.id)) {
+          try {
+            const r = await invoke('Outline', 'children', { parent: rec.id });
+            rec.hasChildren = r.variant === 'ok'
+              && safeParseJsonArray<string>(r.children).length > 0;
+          } catch { rec.hasChildren = false; }
+        } else {
+          rec.hasChildren = parentSet.has(rec.id);
+        }
+      }
       {
         // For the downstream code that expects `ids` (e.g. widget resolver)
         const ids = childRecords.map((c) => c.id);
