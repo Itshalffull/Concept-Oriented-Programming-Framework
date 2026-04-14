@@ -2987,6 +2987,71 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
           blockEmptyRef.current = text.trim() === '';
           notifyBlockEdit(nodeId, text, invoke);
 
+          // Inline markdown: detect **bold**, _italic_, `code` patterns
+          // just BEFORE the caret and convert to HTML marks. Triggered
+          // on each keystroke; cheap regex test on the tail of text.
+          // Runs in any block (not just paragraph) so headings / lists
+          // can also carry inline marks.
+          if (canEdit && blockContentRef.current) {
+            const el = blockContentRef.current;
+            const sel = window.getSelection();
+            if (sel && sel.rangeCount > 0 && sel.isCollapsed) {
+              const range = sel.getRangeAt(0);
+              const preRange = range.cloneRange();
+              preRange.selectNodeContents(el);
+              preRange.setEnd(range.endContainer, range.endOffset);
+              const caretOffset = preRange.toString().length;
+              const full = el.textContent ?? '';
+              const tail = full.slice(Math.max(0, caretOffset - 50), caretOffset);
+              // Matches **bold**, _italic_, `code`. Requires at least one
+              // non-space inside the markers. Asterisks/underscores must
+              // immediately surround the word.
+              const inlinePatterns: Array<{ re: RegExp; tag: string }> = [
+                { re: /\*\*([^*\n]+)\*\*$/, tag: 'b' },
+                { re: /__([^_\n]+)__$/, tag: 'b' },
+                { re: /(?<!\*)\*([^*\n]+)\*(?!\*)$/, tag: 'i' },
+                { re: /(?<!_)_([^_\n]+)_(?!_)$/, tag: 'i' },
+                { re: /`([^`\n]+)`$/, tag: 'code' },
+              ];
+              for (const { re, tag } of inlinePatterns) {
+                const m = tail.match(re);
+                if (!m) continue;
+                const matchedStr = m[0];
+                const inner = m[1];
+                const matchStart = caretOffset - matchedStr.length;
+                // Build a range over the matched chars
+                function offsetToRange(el: Element, start: number, end: number): Range | null {
+                  const r = document.createRange();
+                  let seen = 0; let startSet = false;
+                  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+                  let n: Node | null;
+                  while ((n = walker.nextNode())) {
+                    const txt = (n as Text).data;
+                    const nStart = seen; const nEnd = seen + txt.length;
+                    if (!startSet && start >= nStart && start <= nEnd) {
+                      r.setStart(n, start - nStart); startSet = true;
+                    }
+                    if (end >= nStart && end <= nEnd) { r.setEnd(n, end - nStart); return r; }
+                    seen = nEnd;
+                  }
+                  return null;
+                }
+                const replaceRange = offsetToRange(el, matchStart, caretOffset);
+                if (replaceRange) {
+                  replaceRange.deleteContents();
+                  const wrap = document.createElement(tag);
+                  wrap.textContent = inner;
+                  replaceRange.insertNode(wrap);
+                  // Move caret after the inserted element
+                  const after = document.createRange();
+                  after.setStartAfter(wrap); after.collapse(true);
+                  sel.removeAllRanges(); sel.addRange(after);
+                  break;
+                }
+              }
+            }
+          }
+
           // Markdown shortcuts (InputRules): when the user types the space
           // that completes a prefix like "# ", "## ", "- ", "> ", "1. ",
           // convert the block's schema. Only runs on a paragraph and only
@@ -3096,8 +3161,25 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
               return;
             }
 
-            // Truncate current block's DOM to `before`
+            // Truncate current block's DOM to `before` AND keep caret at
+            // the truncation point so the cursor doesn't visibly jump to
+            // the start of the block while the async chain below runs.
             el.textContent = before;
+            {
+              const s = window.getSelection();
+              if (s) {
+                const r = document.createRange();
+                // Walk to find the end-of-before position (last text node)
+                const last = el.lastChild;
+                if (last && last.nodeType === Node.TEXT_NODE) {
+                  r.setStart(last, (last as Text).data.length);
+                } else {
+                  r.selectNodeContents(el); r.collapse(false);
+                }
+                r.collapse(true);
+                s.removeAllRanges(); s.addRange(r);
+              }
+            }
 
             // Serialize: persist truncation FIRST, then create new block + outline,
             // THEN refresh children. (Direct concept invokes — see
@@ -3108,6 +3190,15 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
               ? (schema === 'task-done' ? 'task' : schema)  // new task starts unchecked
               : 'paragraph';
             const newBlockId = `${rootNodeId}:block:${Date.now()}`;
+            // Claim focus for the new block synchronously so that when
+            // its BlockSlot mounts (triggered by the async onStructureChange
+            // further down), the BEF-01 effect immediately focuses it.
+            pendingFocusNodeId = newBlockId;
+            pendingFocusAt = 'start';
+            // Seed the cache with the `after` text so the new block's
+            // mount effect can seed DOM content synchronously without
+            // a ContentNode/get round-trip — no flash.
+            contentBodyCache.set(newBlockId, after);
             void (async () => {
               try {
                 await invoke('ContentNode', 'update', { node: nodeId, content: before });
