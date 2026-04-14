@@ -107,6 +107,9 @@ interface BlockChild {
   depth: number;
   /** Outline parent id. Top-level blocks have parent === rootNodeId. */
   parent: string;
+  /** Whether this block has at least one Outline child. Computed during
+   *  DFS walk even for collapsed blocks (so the ▶ toggle can appear). */
+  hasChildren: boolean;
 }
 
 interface ResolvedWidget {
@@ -218,6 +221,13 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
   // selectedBlockIds: the Set of currently selected block IDs.
   // anchorBlockId: the block that initiated the current range (Shift+click anchor).
   const [selectedBlockIds, setSelectedBlockIds] = useState<Set<string>>(new Set());
+
+  // ------- Collapsed blocks (local UI state) ------------------------------
+  // A Set of block ids whose children are hidden. Not persisted across
+  // reloads (would require Outline/getRecord + isCollapsed field; MVP
+  // keeps this ephemeral). Toggle via ▶ arrow rendered per-row when a
+  // block has children.
+  const [collapsedBlockIds, setCollapsedBlockIds] = useState<Set<string>>(new Set());
   const [anchorBlockId, setAnchorBlockId] = useState<string>('');
 
   // ------- find-replace overlay (PP-find-replace) --------
@@ -371,8 +381,15 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
         const ids = safeParseJsonArray<string>(res.children);
         for (const id of ids) {
           const schema = await resolveSchema(id);
-          out.push({ id, schema, displayMode: 'block-editor', depth, parent: parentId });
-          await walk(id, depth + 1, out);  // DFS — children follow parent
+          // Peek at this node's children count so hasChildren is known
+          // even when we stop descending because of collapse state.
+          const childRes = await invoke('Outline', 'children', { parent: id });
+          const hasChildren = childRes.variant === 'ok'
+            && safeParseJsonArray<string>(childRes.children).length > 0;
+          out.push({ id, schema, displayMode: 'block-editor', depth, parent: parentId, hasChildren });
+          if (!collapsedBlockIds.has(id)) {
+            await walk(id, depth + 1, out);
+          }
         }
       }
       const childRecords: BlockChild[] = [];
@@ -420,7 +437,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
     } finally {
       setChildrenLoading(false);
     }
-  }, [rootNodeId, invoke]);
+  }, [rootNodeId, invoke, collapsedBlockIds]);
 
   useEffect(() => {
     loadChildren();
@@ -1826,6 +1843,41 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
 
                   {/* Block row — span gutter + block content */}
                   <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+                    {/* Collapse toggle — ▶ or ▼ when this block has children.
+                        Toggling re-runs loadChildren which skips descendants
+                        of collapsed blocks during the DFS walk. */}
+                    {(() => {
+                      if (!child.hasChildren) return <span style={{ width: '16px', flexShrink: 0 }} />;
+                      const collapsed = collapsedBlockIds.has(child.id);
+                      return (
+                        <button
+                          data-part="collapse-toggle"
+                          aria-label={collapsed ? 'Expand' : 'Collapse'}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCollapsedBlockIds((prev) => {
+                              const next = new Set(prev);
+                              if (next.has(child.id)) next.delete(child.id);
+                              else next.add(child.id);
+                              return next;
+                            });
+                          }}
+                          style={{
+                            width: '16px',
+                            flexShrink: 0,
+                            background: 'transparent',
+                            border: 'none',
+                            color: 'var(--palette-on-surface-variant, rgba(0,0,0,0.5))',
+                            cursor: 'pointer',
+                            padding: 0,
+                            fontSize: '10px',
+                            lineHeight: '1.6',
+                          }}
+                        >
+                          {collapsed ? '▶' : '▼'}
+                        </button>
+                      );
+                    })()}
                     {/* Span gutter indicators (§4.5) — 16px left margin strip */}
                     <SpanGutter
                       fragments={spanFragmentsByBlock.get(child.id) ?? []}
