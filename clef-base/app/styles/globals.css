@@ -3167,6 +3167,19 @@ button, [data-part="button"] {
   padding-left: 1em !important;
 }
 
+/* ─── Divider block ─── */
+[data-part="block-slot"][data-schema="divider"] > [data-part="block-content"] {
+  min-height: 1px !important;
+  padding: 0 !important;
+  border-top: 1px solid var(--palette-outline-variant, #e5e7eb);
+  margin: 1em 0;
+  pointer-events: none;
+}
+[data-part="block-slot"][data-schema="divider"] > [data-part="block-content"]:empty::before {
+  content: '';
+  display: none;
+}
+
 /* ─── Quote block ─── */
 [data-part="block-slot"][data-schema="quote"] > [data-part="block-content"] {
   padding-left: 0.75em;

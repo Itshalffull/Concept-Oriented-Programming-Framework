@@ -3435,10 +3435,12 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
               '1. ': 'numbered-list',
               '> ': 'quote',
               '``` ': 'code',
-              '[] ': 'task',        // unchecked task
-              '[ ] ': 'task',       // unchecked task (with space between brackets)
-              '[x] ': 'task-done',  // checked task
+              '[] ': 'task',
+              '[ ] ': 'task',
+              '[x] ': 'task-done',
               '[X] ': 'task-done',
+              '--- ': 'divider',
+              '___ ': 'divider',
             };
             // ContentEditable inserts NBSP (\u00A0, 160) instead of regular
             // space (32) at certain caret positions. Normalize before match.
