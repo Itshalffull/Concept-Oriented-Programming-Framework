@@ -735,12 +735,13 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
     const ids = Array.from(selectedBlockIds);
     for (const blockId of ids) {
       try {
-        await invoke('ActionBinding', 'invoke', {
-          binding: 'multi-select-delete',
-          context: JSON.stringify({ nodeId: blockId, rootNodeId }),
-        });
+        // Direct dispatch (ActionBinding layer inert): remove
+        // ContentNode + Outline record. loadChildren refreshes view.
+        await invoke('ContentNode', 'delete', { node: blockId });
+        await invoke('Outline', 'delete', { node: blockId });
+        invalidateBlockBody(blockId);
       } catch (err) {
-        console.error('[RecursiveBlockEditor] multi-select-delete failed for block:', blockId, err);
+        console.error('[RecursiveBlockEditor] delete failed for block:', blockId, err);
       }
     }
     clearSelection();
