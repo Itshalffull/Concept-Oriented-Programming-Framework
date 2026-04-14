@@ -45,6 +45,10 @@ import React, {
 import { useKernelInvoke } from '../../../lib/clef-provider';
 import { useInvokeWithFeedback } from '../../../lib/useInvocation';
 import { InvocationStatusIndicator } from './InvocationStatusIndicator';
+import TreeDisplay from './TreeDisplay';
+import BoardDisplay from './BoardDisplay';
+import TableDisplay from './TableDisplay';
+import type { FieldConfig } from './TableDisplay';
 import { safeParseJsonArray } from '../../../lib/safe-json';
 import {
   notifyBlockEdit,
@@ -2449,87 +2453,96 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
                   {/* Drop zone indicator — below block during active drag-over */}
                   <BlockDropZoneIndicator active={isDragOver && dropPosition === 'after'} position="after" />
 
-                  {/* Nested alt-view — if this block has children AND
-                      its view setting is non-blocks, render its direct
-                      children here as outline / list / gallery / board /
-                      table. Descendants are already suppressed from the
-                      flat DFS above. */}
+                  {/* Nested alt-view — delegates to the existing
+                      hierarchy-aware display widgets: TreeDisplay for
+                      outline/list (parent-aware), BoardDisplay for
+                      board (grouped by first parent by default — can
+                      be switched to group by schema), TableDisplay for
+                      table. Each is keyboard-navigable and wired to
+                      the ActionBinding pipeline via the display-nav
+                      CustomEvent they emit. */}
                   {child.hasChildren && (subtreeRenderMode.get(child.id) ?? 'block-children-blocks') !== 'block-children-blocks' && (() => {
                     const mode = subtreeRenderMode.get(child.id)!;
-                    const direct = byParent.get(child.id) ?? [];
-                    const titleLine = (id: string) => {
-                      const s = (contentBodyCache.get(id) ?? '').replace(/<[^>]+>/g, '').trim();
+                    // Gather the descendant rows for this subtree. For
+                    // tree / table we want the WHOLE subtree so the
+                    // hierarchy column is meaningful; for board /
+                    // gallery we want the direct children only (cards
+                    // at this level). Rows carry { id, parent, schema,
+                    // content } which TreeDisplay recognises as the
+                    // adjacency-list hierarchy shape.
+                    const titleLine = (c: string) => {
+                      const s = c.replace(/<[^>]+>/g, '').trim();
                       return s.length > 140 ? s.slice(0, 140) + '…' : (s || '(empty)');
                     };
+                    const collectSubtree = (parentId: string, acc: BlockChild[] = []): BlockChild[] => {
+                      for (const c of byParent.get(parentId) ?? []) {
+                        acc.push(c);
+                        if (c.hasChildren) collectSubtree(c.id, acc);
+                      }
+                      return acc;
+                    };
+                    const subtreeRows = collectSubtree(child.id).map((c) => ({
+                      id: c.id,
+                      parent: c.parent === child.id ? '' : c.parent,  // roots of this mini-tree have no parent inside the set
+                      schema: c.schema,
+                      content: titleLine(contentBodyCache.get(c.id) ?? ''),
+                    }));
+                    const directRows = (byParent.get(child.id) ?? []).map((c) => ({
+                      id: c.id,
+                      parent: c.parent,
+                      schema: c.schema,
+                      content: titleLine(contentBodyCache.get(c.id) ?? ''),
+                    }));
                     const wrap: React.CSSProperties = {
                       marginLeft: (child.depth + 1) * 24,
                       borderLeft: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.08))',
                       paddingLeft: 10,
                       marginTop: 4,
                     };
+                    const fields: FieldConfig[] = [
+                      { key: 'id', label: 'ID', visible: false },
+                      { key: 'schema', label: 'Schema', formatter: 'badge' },
+                      { key: 'content', label: 'Content' },
+                    ];
                     if (mode === 'block-children-outline' || mode === 'block-children-list') {
+                      // TreeDisplay understands the `parent` field on
+                      // each row — renders the full subtree with
+                      // expand/collapse and ARIA tree semantics.
                       return (
                         <div data-part="nested-alt-view" data-view={mode} data-parent-id={child.id} style={wrap}>
-                          <ol style={{ listStyle: mode === 'block-children-list' ? 'decimal' : 'none', margin: 0, padding: mode === 'block-children-list' ? '0 0 0 20px' : 0 }}>
-                            {direct.map((c) => (
-                              <li key={c.id} data-block-id={c.id} data-schema={c.schema} style={{ padding: '2px 0', fontSize: 13 }}>
-                                <span style={{ color: 'var(--palette-outline, #999)', marginRight: 8, fontSize: 10, textTransform: 'uppercase' }}>{c.schema}</span>
-                                {titleLine(c.id)}
-                              </li>
-                            ))}
-                          </ol>
+                          <TreeDisplay data={subtreeRows} fields={fields} />
                         </div>
                       );
                     }
                     if (mode === 'block-children-gallery') {
                       return (
                         <div data-part="nested-alt-view" data-view={mode} data-parent-id={child.id} style={{ ...wrap, display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(180px,1fr))', gap: 8 }}>
-                          {direct.map((c) => (
-                            <div key={c.id} data-block-id={c.id} style={{ border: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.1))', borderRadius: 6, padding: 10, minHeight: 60, fontSize: 12 }}>
-                              <div style={{ fontSize: 10, textTransform: 'uppercase', color: 'var(--palette-outline, #888)', marginBottom: 4 }}>{c.schema}</div>
-                              <div>{titleLine(c.id)}</div>
+                          {directRows.map((row) => (
+                            <div key={row.id as string} data-block-id={row.id as string} style={{ border: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.1))', borderRadius: 6, padding: 10, minHeight: 60, fontSize: 12 }}>
+                              <div style={{ fontSize: 10, textTransform: 'uppercase', color: 'var(--palette-outline, #888)', marginBottom: 4 }}>{row.schema as string}</div>
+                              <div>{row.content as string}</div>
                             </div>
                           ))}
                         </div>
                       );
                     }
                     if (mode === 'block-children-board') {
-                      const cols: Record<string, BlockChild[]> = {};
-                      for (const c of direct) (cols[c.schema] ||= []).push(c);
+                      // BoardDisplay groups by the first parent — the
+                      // clicked block itself. Because every direct
+                      // child of this block has parent=child.id, that
+                      // yields a single column. To get a more useful
+                      // kanban, group by schema which is what users
+                      // actually want for a block-subtree kanban.
                       return (
-                        <div data-part="nested-alt-view" data-view={mode} data-parent-id={child.id} style={{ ...wrap, display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 6 }}>
-                          {Object.entries(cols).map(([schema, col]) => (
-                            <div key={schema} style={{ minWidth: 160, flex: '0 0 160px', background: 'var(--palette-surface-variant, rgba(0,0,0,0.02))', borderRadius: 6, padding: 8 }}>
-                              <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', color: 'var(--palette-outline, #666)', marginBottom: 6 }}>{schema} ({col.length})</div>
-                              {col.map((c) => (
-                                <div key={c.id} data-block-id={c.id} style={{ background: 'var(--palette-surface, #fff)', border: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.08))', borderRadius: 4, padding: 6, marginBottom: 4, fontSize: 12 }}>
-                                  {titleLine(c.id)}
-                                </div>
-                              ))}
-                            </div>
-                          ))}
+                        <div data-part="nested-alt-view" data-view={mode} data-parent-id={child.id} style={wrap}>
+                          <BoardDisplay data={directRows} fields={fields} groupBy="schema" />
                         </div>
                       );
                     }
                     if (mode === 'block-children-table') {
                       return (
                         <div data-part="nested-alt-view" data-view={mode} data-parent-id={child.id} style={wrap}>
-                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                            <thead>
-                              <tr style={{ textAlign: 'left', color: 'var(--palette-outline, #888)', fontSize: 10, textTransform: 'uppercase' }}>
-                                <th style={{ padding: 4, borderBottom: '1px solid var(--palette-outline-variant)' }}>Schema</th>
-                                <th style={{ padding: 4, borderBottom: '1px solid var(--palette-outline-variant)' }}>Content</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {direct.map((c) => (
-                                <tr key={c.id} data-block-id={c.id}>
-                                  <td style={{ padding: 4, borderBottom: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.04))' }}>{c.schema}</td>
-                                  <td style={{ padding: 4, borderBottom: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.04))' }}>{titleLine(c.id)}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
+                          <TableDisplay data={subtreeRows} fields={[...fields, { key: 'parent', label: 'Parent' }]} />
                         </div>
                       );
                     }
