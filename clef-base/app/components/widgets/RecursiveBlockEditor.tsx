@@ -1623,23 +1623,26 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
                     if (!srcBlockId || srcBlockId === child.id) return;
                     const newIndex = dropPosition === 'before' ? childIndex : childIndex + 1;
                     try {
-                      const result = await invoke('ActionBinding', 'invoke', {
-                        binding: 'block-drop',
-                        context: JSON.stringify({
-                          blockId: srcBlockId,
-                          fromParentId: srcParentId,
-                          fromIndex: srcIndex,
-                          toParentId: rootNodeId,
-                          toIndex: newIndex,
-                        }),
+                      // Direct Outline/reparent — the ActionBinding
+                      // dispatch layer is inert. Reparent the dragged
+                      // block to the drop target's parent so it lands
+                      // at the same depth as the drop target.
+                      const destParentRes = await invoke('Outline', 'getParent', {
+                        node: child.id,
+                      });
+                      const destParent = destParentRes.variant === 'ok'
+                        ? String(destParentRes.parent ?? rootNodeId)
+                        : rootNodeId;
+                      const result = await invoke('Outline', 'reparent', {
+                        node: srcBlockId, newParent: destParent,
                       });
                       if (result.variant === 'ok') {
                         loadChildren();
                       } else {
-                        console.warn('[RecursiveBlockEditor] block-drop non-ok:', result.variant);
+                        console.warn('[RecursiveBlockEditor] drop reparent non-ok:', result.variant);
                       }
                     } catch (err) {
-                      console.error('[RecursiveBlockEditor] block-drop failed:', err);
+                      console.error('[RecursiveBlockEditor] drop failed:', err);
                     }
                   }}
                   style={{
