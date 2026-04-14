@@ -1165,6 +1165,39 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
       return;
     }
 
+    // Cmd+A / Ctrl+A — block-level select-all with Notion two-tap semantics:
+    // 1st press: select the currently-focused block (escape from text select).
+    // 2nd press: select all top-level blocks.
+    // 3rd press: clear selection.
+    if (e.key === 'a' && (e.metaKey || e.ctrlKey) && !e.shiftKey) {
+      const target = e.target as HTMLElement;
+      const focusedId = focusedBlockIdRef.current;
+      // Only intercept when inside a block's contenteditable; otherwise
+      // let the browser handle the default.
+      if (!target.isContentEditable || !focusedId) return;
+      const allIds = children.map((c) => c.id);
+      if (selectedBlockIds.size === allIds.length && allIds.length > 0) {
+        // third tap — clear
+        e.preventDefault();
+        clearSelection();
+        return;
+      }
+      if (selectedBlockIds.size <= 1) {
+        // first tap — select current block
+        e.preventDefault();
+        setSelectedBlockIds(new Set([focusedId]));
+        setAnchorBlockId(focusedId);
+        // blur the contentEditable so further arrow keys act at block level
+        (target as HTMLElement).blur();
+        return;
+      }
+      // 2nd tap — select all
+      e.preventDefault();
+      setSelectedBlockIds(new Set(allIds));
+      setAnchorBlockId(focusedId);
+      return;
+    }
+
     // Cmd+C with multi-selection — serialize selected blocks as markdown
     // and copy to clipboard. Inverse of smart-paste. Matches Notion's
     // "select blocks → copy → paste as markdown" round-trip.
