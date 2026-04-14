@@ -3937,43 +3937,55 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
           // convert the block's schema. Only runs on a paragraph and only
           // when the matched prefix is the entire text of the block.
           if (schema === 'paragraph') {
-            const markdownRule: Record<string, string> = {
-              '# ': 'heading',
-              '## ': 'heading-2',
-              '### ': 'heading-3',
-              '- ': 'bullet-list',
-              '* ': 'bullet-list',
-              '1. ': 'numbered-list',
-              '> ': 'quote',
-              '``` ': 'code',
-              '[] ': 'task',
-              '[ ] ': 'task',
-              '[x] ': 'task-done',
-              '[X] ': 'task-done',
-              '--- ': 'divider',
-              '___ ': 'divider',
-            };
             // ContentEditable inserts NBSP (\u00A0, 160) instead of regular
             // space (32) at certain caret positions. Normalize before match.
             const normalizedText = text.replace(/\u00A0/g, ' ');
-            const matched = Object.keys(markdownRule).find((p) => normalizedText === p);
-            if (matched) {
-              const newSchema = markdownRule[matched];
-              const el = e.currentTarget as HTMLDivElement;
-              void (async () => {
+            // Clef-native path: ask InputRule/match for a matching rule.
+            // Seeds (InputRule.block-markdown.seeds.yaml) define the
+            // patterns; the editor just dispatches whatever comes back.
+            // Hardcoded fallback kept for when InputRule isn't yet
+            // registered (fresh DB boot).
+            const hardcodedFallback: Record<string, string> = {
+              '# ': 'heading', '## ': 'heading-2', '### ': 'heading-3',
+              '- ': 'bullet-list', '* ': 'bullet-list', '1. ': 'numbered-list',
+              '> ': 'quote', '``` ': 'code',
+              '[] ': 'task', '[ ] ': 'task', '[x] ': 'task-done', '[X] ': 'task-done',
+              '--- ': 'divider', '___ ': 'divider',
+            };
+            const el = e.currentTarget as HTMLDivElement;
+            void (async () => {
+              try {
+                let newSchema: string | null = null;
                 try {
-                  // Change the block's type directly — loadChildren reads
-                  // ContentNode.type when no Schema membership exists.
-                  contentSchemaCache.set(nodeId, newSchema); await invokeBinding(invoke, 'content-node-change-type', { node: nodeId, type: newSchema });
-                  await invokeBinding(invoke, 'update-block-content', { nodeId: nodeId, content: '' });
-                  el.textContent = '';
-                  onStructureChange();
-                } catch (err) {
-                  console.warn('[RecursiveBlockEditor] markdown shortcut failed:', err);
+                  const match = await invoke('InputRule', 'match', {
+                    kind: 'block-markdown',
+                    input: normalizedText,
+                    scope: 'paragraph',
+                  });
+                  if (match.variant === 'ok') {
+                    const rule = match.rule as Record<string, unknown> | undefined;
+                    if (rule && typeof rule.dispatchArgs === 'string') {
+                      try {
+                        const args = JSON.parse(rule.dispatchArgs);
+                        if (typeof args.type === 'string') newSchema = args.type;
+                      } catch { /* fall through */ }
+                    }
+                  }
+                } catch { /* InputRule not registered — fall back below */ }
+                if (!newSchema) {
+                  newSchema = hardcodedFallback[normalizedText] ?? null;
                 }
-              })();
-              return;
-            }
+                if (!newSchema) return;
+                contentSchemaCache.set(nodeId, newSchema);
+                await invokeBinding(invoke, 'content-node-change-type', { node: nodeId, type: newSchema });
+                await invokeBinding(invoke, 'update-block-content', { nodeId: nodeId, content: '' });
+                el.textContent = '';
+                onStructureChange();
+              } catch (err) {
+                console.warn('[RecursiveBlockEditor] markdown shortcut failed:', err);
+              }
+            })();
+            return;
           }
 
           // LE-16: debounced syntax highlight dispatch for code/latex blocks
