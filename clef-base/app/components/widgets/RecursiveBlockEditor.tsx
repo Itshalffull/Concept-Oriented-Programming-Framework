@@ -2113,6 +2113,38 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
           </ol>
         )}
 
+        {/* Word count + reading time footer */}
+        {!childrenLoading && children.length > 0 && (() => {
+          let words = 0;
+          for (const c of children) {
+            const body = contentBodyCache.get(c.id);
+            if (!body) continue;
+            const text = body.replace(/<[^>]+>/g, ' ').trim();
+            if (text) words += text.split(/\s+/).filter(Boolean).length;
+          }
+          const minutes = Math.max(1, Math.round(words / 200));
+          return (
+            <div
+              data-part="doc-stats"
+              style={{
+                maxWidth: '740px',
+                margin: '2em auto 4em',
+                padding: '0 var(--spacing-md)',
+                fontSize: '12px',
+                color: 'var(--palette-on-surface-variant, #6b7280)',
+                display: 'flex',
+                gap: '1.5em',
+              }}
+            >
+              <span>{words} word{words !== 1 ? 's' : ''}</span>
+              <span>·</span>
+              <span>{minutes} min read</span>
+              <span>·</span>
+              <span>{children.length} block{children.length !== 1 ? 's' : ''}</span>
+            </div>
+          );
+        })()}
+
         {/* Slash menu overlay */}
         {fsmState === 'slash-open' && (
           <SlashMenuOverlay
