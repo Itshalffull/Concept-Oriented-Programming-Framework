@@ -6,7 +6,7 @@ import { createHash } from 'crypto';
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, put, del, branch, complete, completeFrom, mapBindings, putFrom, traverse,
+  createProgram, get as spGet, find, put, del, branch, complete, completeFrom, mapBindings, putFrom, traverse,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -14,6 +14,23 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 type Result = { variant: string; [key: string]: unknown };
 
 const _authenticationHandler: FunctionalConceptHandler = {
+  /**
+   * list() — return all registered users as {user, provider} rows.
+   * Used by the @-mention picker.
+   */
+  list(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'credentials', {}, 'items');
+    return completeFrom(p, 'ok', (bindings) => {
+      const rows = (bindings.items as Array<Record<string, unknown>> | undefined) || [];
+      const users = rows.map((r) => ({
+        user: String(r.user ?? ''),
+        provider: String(r.provider ?? ''),
+      })).filter((u) => u.user);
+      return { items: JSON.stringify(users) };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
   register(input: Record<string, unknown>) {
     if (!input.user || (typeof input.user === 'string' && (input.user as string).trim() === '')) {
       return complete(createProgram(), 'error', { message: 'user is required' }) as StorageProgram<Result>;

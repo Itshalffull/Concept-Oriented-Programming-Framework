@@ -2371,6 +2371,95 @@ const WikilinkPicker: React.FC<WikilinkPickerProps> = ({ query, anchor, invoke, 
   );
 };
 
+/**
+ * MentionPicker — sibling to WikilinkPicker but sources users from
+ * Authentication/list. Selecting a user inserts a
+ * <span data-mention="userId">@username</span>.
+ */
+const MentionPicker: React.FC<{
+  query: string;
+  anchor: { top: number; left: number };
+  invoke: (concept: string, action: string, input: Record<string, unknown>) => Promise<{ variant: string; [k: string]: unknown }>;
+  onSelect: (userId: string) => void;
+  onClose: () => void;
+}> = ({ query, anchor, invoke, onSelect, onClose }) => {
+  const [items, setItems] = useState<Array<{ user: string; provider: string }>>([]);
+  const [selectedIdx, setSelectedIdx] = useState(0);
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await invoke('Authentication', 'list', {});
+        if (cancelled || res.variant !== 'ok') return;
+        const rows: Array<{ user: string; provider: string }> = (() => {
+          try { return JSON.parse(res.items as string || '[]'); }
+          catch { return []; }
+        })();
+        const filtered = rows
+          .filter((r) => !query || r.user.toLowerCase().includes(query.toLowerCase()))
+          .slice(0, 8);
+        setItems(filtered);
+        setSelectedIdx(0);
+      } catch { /* ignore */ }
+    })();
+    return () => { cancelled = true; };
+  }, [query, invoke]);
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') { e.preventDefault(); onClose(); return; }
+      if (e.key === 'ArrowDown') { e.preventDefault(); setSelectedIdx((i) => Math.min(i + 1, items.length - 1)); return; }
+      if (e.key === 'ArrowUp') { e.preventDefault(); setSelectedIdx((i) => Math.max(i - 1, 0)); return; }
+      if (e.key === 'Enter') {
+        if (items.length === 0) return;
+        e.preventDefault(); e.stopPropagation();
+        onSelect((items[selectedIdx] ?? items[0]).user);
+      }
+    }
+    document.addEventListener('keydown', onKey, true);
+    return () => document.removeEventListener('keydown', onKey, true);
+  }, [items, selectedIdx, onSelect, onClose]);
+  if (items.length === 0) return null;
+  return (
+    <div
+      data-part="mention-picker"
+      role="listbox"
+      aria-label="User picker"
+      style={{
+        position: 'fixed',
+        top: `${anchor.top}px`,
+        left: `${anchor.left}px`,
+        zIndex: 1000,
+        background: '#ffffff',
+        border: '1px solid #d1d5db',
+        borderRadius: '6px',
+        minWidth: '200px',
+        maxHeight: '280px',
+        overflowY: 'auto',
+        boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+      }}
+    >
+      {items.map((it, i) => (
+        <button
+          key={it.user}
+          role="option"
+          aria-selected={i === selectedIdx}
+          onMouseEnter={() => setSelectedIdx(i)}
+          onMouseDown={(e) => { e.preventDefault(); onSelect(it.user); }}
+          style={{
+            display: 'block', width: '100%', textAlign: 'left',
+            padding: '6px 10px', border: 'none',
+            background: i === selectedIdx ? '#f3f4f6' : 'transparent',
+            color: '#111827', cursor: 'pointer', fontSize: '13px',
+          }}
+        >
+          @{it.user}
+          <span style={{ color: '#6b7280', marginLeft: '8px', fontSize: '11px' }}>{it.provider}</span>
+        </button>
+      ))}
+    </div>
+  );
+};
+
 const SelectionToolbar: React.FC<{ selection: EditorSelection | null }> = ({ selection }) => {
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
   useEffect(() => {
@@ -2698,6 +2787,14 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
   // textContent. When non-null, the popover renders; key nav intercepts
   // ArrowUp/Down/Enter/Escape.
   const [wikilinkState, setWikilinkState] = useState<{
+    triggerOffset: number;
+    query: string;
+    anchor: { top: number; left: number };
+  } | null>(null);
+
+  // Mention picker — same shape as wikilink but triggered by `@` and
+  // sourced from Authentication/list.
+  const [mentionState, setMentionState] = useState<{
     triggerOffset: number;
     query: string;
     anchor: { top: number; left: number };
@@ -3158,8 +3255,8 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
           blockEmptyRef.current = text.trim() === '';
           notifyBlockEdit(nodeId, text, invoke);
 
-          // Wikilink detection: find the last `[[` before the caret and
-          // compute the query text between `[[` and caret. Open picker.
+          // Wikilink `[[…` and mention `@…` pickers — detect trigger
+          // prefix before the caret and open / update / close the popover.
           if (canEdit && blockContentRef.current) {
             const el = blockContentRef.current;
             const sel = window.getSelection();
@@ -3170,11 +3267,11 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
               preRange.setEnd(range.endContainer, range.endOffset);
               const caretOffset = preRange.toString().length;
               const full = el.textContent ?? '';
+
+              // Wikilink
               const bracketIdx = full.lastIndexOf('[[', caretOffset - 1);
               if (bracketIdx >= 0) {
                 const between = full.slice(bracketIdx + 2, caretOffset);
-                // Close if the between contains a space-and-non-space boundary
-                // or a closing `]]`, or is too long (> 40 chars).
                 if (!between.includes(']') && between.length <= 40) {
                   const rect = range.getBoundingClientRect();
                   setWikilinkState({
@@ -3182,12 +3279,24 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
                     query: between,
                     anchor: { top: rect.bottom + 4, left: rect.left },
                   });
-                } else {
-                  setWikilinkState(null);
-                }
-              } else {
-                setWikilinkState(null);
-              }
+                } else setWikilinkState(null);
+              } else setWikilinkState(null);
+
+              // Mention: find the most recent `@` before caret; require
+              // it to be at start-of-text or preceded by whitespace.
+              const atIdx = full.lastIndexOf('@', caretOffset - 1);
+              const precededByWord = atIdx > 0 && /\S/.test(full[atIdx - 1] || '');
+              if (atIdx >= 0 && !precededByWord) {
+                const between = full.slice(atIdx + 1, caretOffset);
+                if (!/\s/.test(between) && between.length <= 24) {
+                  const rect = range.getBoundingClientRect();
+                  setMentionState({
+                    triggerOffset: atIdx,
+                    query: between,
+                    anchor: { top: rect.bottom + 4, left: rect.left },
+                  });
+                } else setMentionState(null);
+              } else setMentionState(null);
             }
           }
 
@@ -3935,6 +4044,63 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
         anchorRect={linkHoverState.anchorRect}
         open={linkPreviewOpen}
         onDismiss={closeLinkPreview}
+      />
+    )}
+
+    {/* Mention picker — floating listbox triggered by `@` */}
+    {mentionState && (
+      <MentionPicker
+        query={mentionState.query}
+        anchor={mentionState.anchor}
+        invoke={invoke}
+        onClose={() => setMentionState(null)}
+        onSelect={(userId) => {
+          const el = blockContentRef.current;
+          if (!el) { setMentionState(null); return; }
+          const replaceStart = mentionState.triggerOffset;
+          const sel = window.getSelection();
+          if (!sel || sel.rangeCount === 0) { setMentionState(null); return; }
+          const range = sel.getRangeAt(0);
+          const preRange = range.cloneRange();
+          preRange.selectNodeContents(el);
+          preRange.setEnd(range.endContainer, range.endOffset);
+          const caretOffset = preRange.toString().length;
+          const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+          let seen = 0;
+          let startNode: Text | null = null, startOff = 0;
+          let endNode: Text | null = null, endOff = 0;
+          let n: Node | null;
+          while ((n = walker.nextNode())) {
+            const t = n as Text; const len = t.data.length;
+            if (!startNode && replaceStart <= seen + len) {
+              startNode = t; startOff = replaceStart - seen;
+            }
+            if (caretOffset <= seen + len) {
+              endNode = t; endOff = caretOffset - seen; break;
+            }
+            seen += len;
+          }
+          if (startNode && endNode) {
+            const r = document.createRange();
+            r.setStart(startNode, startOff);
+            r.setEnd(endNode, endOff);
+            r.deleteContents();
+            const span = document.createElement('span');
+            span.setAttribute('data-mention', userId);
+            span.style.color = 'var(--palette-primary, #6366f1)';
+            span.style.fontWeight = '500';
+            span.textContent = '@' + userId;
+            r.insertNode(span);
+            // Insert a trailing space so typing continues naturally after.
+            const space = document.createTextNode(' ');
+            r.setStartAfter(span); r.insertNode(space);
+            const after = document.createRange();
+            after.setStartAfter(space); after.collapse(true);
+            sel.removeAllRanges(); sel.addRange(after);
+          }
+          setMentionState(null);
+          blockContentRef.current?.focus();
+        }}
       />
     )}
 
