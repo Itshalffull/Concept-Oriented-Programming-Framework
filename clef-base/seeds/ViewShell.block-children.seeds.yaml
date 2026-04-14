@@ -1,0 +1,88 @@
+# ViewShell seeds — block-children views.
+#
+# Every block-children region in RecursiveBlockEditor resolves through
+# one of these ViewShells. The shell selection is persisted per-parent
+# (localStorage key: `block-children-view:<parentNodeId>`) so switching
+# view types is sticky across reloads.
+#
+# block-children-blocks (default) — recursive nested editors. Each child
+#   mounts its own block editor; children of children recurse.
+# block-children-outline — collapsed outline view: headings + titles,
+#   hides body text beyond the first line.
+# block-children-list — flat compact list of block titles/summaries.
+# block-children-gallery — card grid, read-only preview.
+# block-children-board — kanban grouped by schema (heading/para/task/...).
+# block-children-table — rows of block fields (schema, body, createdAt).
+#
+# All variants share the outline-children-source DataSource and
+# natural-order SortSpec by default; filter and sort are overridable
+# through the right-click settings popover.
+
+concept: ViewShell
+action: create
+entries:
+  - name: block-children-blocks
+    title: "Blocks (editable)"
+    description: "Recursive nested block editors. Each child mounts its own editable block."
+    dataSource: "outline-children-source"
+    filter: "block-children-all"
+    sort: "block-children-order"
+    group: ""
+    projection: ""
+    presentation: "default-blocks"
+    interaction: "block-children-controls"
+
+  - name: block-children-outline
+    title: "Outline"
+    description: "Collapsed outline — headings and first-line summaries only."
+    dataSource: "outline-children-source"
+    filter: "block-children-all"
+    sort: "block-children-order"
+    group: ""
+    projection: "block-children-outline-fields"
+    presentation: "block-children-outline-presentation"
+    interaction: "block-children-controls"
+
+  - name: block-children-list
+    title: "List"
+    description: "Flat compact list of children (read-only)."
+    dataSource: "outline-children-source"
+    filter: "block-children-all"
+    sort: "block-children-order"
+    group: ""
+    projection: "block-children-list-fields"
+    presentation: "block-children-list-presentation"
+    interaction: "block-children-controls"
+
+  - name: block-children-gallery
+    title: "Gallery"
+    description: "Card grid preview of children."
+    dataSource: "outline-children-source"
+    filter: "block-children-all"
+    sort: "block-children-order"
+    group: ""
+    projection: "block-children-list-fields"
+    presentation: "block-children-gallery-presentation"
+    interaction: "block-children-controls"
+
+  - name: block-children-board
+    title: "Board"
+    description: "Kanban-style columns grouped by block schema."
+    dataSource: "outline-children-source"
+    filter: "block-children-all"
+    sort: "block-children-order"
+    group: "block-children-group-by-schema"
+    projection: "block-children-list-fields"
+    presentation: "block-children-board-presentation"
+    interaction: "block-children-controls"
+
+  - name: block-children-table
+    title: "Table"
+    description: "Row per block with schema / body / updated columns."
+    dataSource: "outline-children-source"
+    filter: "block-children-all"
+    sort: "block-children-order"
+    group: ""
+    projection: "block-children-table-fields"
+    presentation: "block-children-table-presentation"
+    interaction: "block-children-controls"

@@ -1,0 +1,30 @@
+# SortSpec seeds — block-children sort orders.
+#
+# block-children-order (default) — preserves the Outline.order value;
+#   this matches Enter-split / Cmd+Shift+Up/Down / drag-to-reorder UX.
+# block-children-created-asc / -desc — by ContentNode.createdAt.
+# block-children-updated-desc — most recently edited first.
+# block-children-schema — group semantically related blocks by schema
+#   (all paragraphs together, all headings together, etc.).
+# block-children-title — alphabetical by first-line text.
+
+concept: SortSpec
+action: create
+entries:
+  - name: block-children-order
+    keys: '[{"field":"order","direction":"asc"}]'
+
+  - name: block-children-created-asc
+    keys: '[{"field":"createdAt","direction":"asc"}]'
+
+  - name: block-children-created-desc
+    keys: '[{"field":"createdAt","direction":"desc"}]'
+
+  - name: block-children-updated-desc
+    keys: '[{"field":"updatedAt","direction":"desc"}]'
+
+  - name: block-children-schema
+    keys: '[{"field":"schema","direction":"asc"},{"field":"order","direction":"asc"}]'
+
+  - name: block-children-title
+    keys: '[{"field":"titleText","direction":"asc"}]'

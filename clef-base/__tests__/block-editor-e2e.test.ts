@@ -55,6 +55,36 @@ describe('Block editor E2E — shipped Notion-parity features', () => {
     expect(pickers).toContain('binding: list-pages');
   });
 
+  it('has ViewShell / FilterSpec / SortSpec seeds for block-children views', async () => {
+    // The block-children region inside every parent resolves through a
+    // named ViewShell. Users swap variants from the gear / right-click
+    // menu; selection persists in localStorage per-parent. The seeds
+    // MUST declare all six view variants + at least three filter rows
+    // + at least six sort rows so the UI menu always has options to
+    // show.
+    const fs = await import('fs');
+    const path = await import('path');
+    const seedsDir = path.resolve(__dirname, '..', 'seeds');
+    const views = fs.readFileSync(path.join(seedsDir, 'ViewShell.block-children.seeds.yaml'), 'utf-8');
+    for (const v of [
+      'block-children-blocks', 'block-children-outline', 'block-children-list',
+      'block-children-gallery', 'block-children-board', 'block-children-table',
+    ]) {
+      expect(views).toContain(`name: ${v}`);
+    }
+    const filters = fs.readFileSync(path.join(seedsDir, 'FilterSpec.block-children.seeds.yaml'), 'utf-8');
+    for (const f of ['block-children-all', 'block-children-unchecked-tasks', 'block-children-headings-only']) {
+      expect(filters).toContain(`name: ${f}`);
+    }
+    const sorts = fs.readFileSync(path.join(seedsDir, 'SortSpec.block-children.seeds.yaml'), 'utf-8');
+    for (const s of [
+      'block-children-order', 'block-children-created-asc', 'block-children-created-desc',
+      'block-children-updated-desc', 'block-children-schema', 'block-children-title',
+    ]) {
+      expect(sorts).toContain(`name: ${s}`);
+    }
+  });
+
   it('has ViewShell seeds for pickers', async () => {
     const fs = await import('fs');
     const path = await import('path');

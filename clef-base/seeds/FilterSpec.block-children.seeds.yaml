@@ -1,0 +1,28 @@
+# FilterSpec seeds — block-children filters.
+#
+# block-children-all (default) — identity pass-through; every child block renders.
+# block-children-by-schema — filters to a user-selected set of schema types
+#   (heading, paragraph, bullet-list, task, etc.). tree is updated at
+#   runtime by the settings popover; starting default shows all.
+# block-children-unchecked-tasks — only blocks where schema = task (not task-done).
+# block-children-headings-only — only heading / heading-2 / heading-3 blocks
+#   (useful for quick outline navigation).
+
+concept: FilterSpec
+action: create
+entries:
+  - name: block-children-all
+    tree: '{"type":"true"}'
+    sourceType: system
+
+  - name: block-children-by-schema
+    tree: '{"type":"in","field":"schema","values":[]}'
+    sourceType: interactive
+
+  - name: block-children-unchecked-tasks
+    tree: '{"type":"eq","field":"schema","value":"task"}'
+    sourceType: system
+
+  - name: block-children-headings-only
+    tree: '{"type":"in","field":"schema","values":["heading","heading-2","heading-3"]}'
+    sourceType: system

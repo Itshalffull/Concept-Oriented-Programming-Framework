@@ -177,6 +177,23 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
   const [children, setChildren] = useState<BlockChild[]>([]);
   const [childrenLoading, setChildrenLoading] = useState(true);
 
+  // ------- block-children view settings — ViewShell-driven filter/sort/view-type --------
+  // Persisted in localStorage keyed by rootNodeId so page reloads keep
+  // the user's last-picked view. Changing this only re-renders; no
+  // server round-trip — the filter/sort are applied client-side.
+  const [blockChildrenSettings, setBlockChildrenSettings] = useState<BlockChildrenSettings>(
+    () => loadBlockChildrenSettings(rootNodeId),
+  );
+  const [blockChildrenMenu, setBlockChildrenMenu] = useState<{ x: number; y: number } | null>(null);
+  const onBlockChildrenSettingsChange = useCallback((next: BlockChildrenSettings) => {
+    setBlockChildrenSettings(next);
+    saveBlockChildrenSettings(rootNodeId, next);
+    // Log the view resolution so Score / Pilot can trace the choice;
+    // the tokens returned are currently unused because interpretation
+    // happens client-side, but the dependency graph is recorded.
+    void invoke('ViewShell', 'resolve', { name: next.view }).catch(() => ({ variant: 'notfound' }));
+  }, [rootNodeId, invoke]);
+
   // ------- resolved widgets — ComponentMapping cache per child --------
   const [resolvedWidgets, setResolvedWidgets] = useState<Map<string, ResolvedWidget>>(new Map());
 
@@ -1898,6 +1915,15 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
             + Insert block
           </button>
         )}
+        <button
+          data-part="block-children-gear"
+          title="View settings — filter, sort, view type"
+          aria-label="Block children view settings"
+          onClick={(e) => setBlockChildrenMenu({ x: e.clientX, y: e.clientY })}
+          style={{ textAlign: 'left', fontSize: '12px', cursor: 'pointer', opacity: 0.75 }}
+        >
+          ⚙ View: {blockChildrenSettings.view.replace('block-children-', '')}
+        </button>
       </div>
 
       {/* ------------------------------------------------------------------ */}
@@ -2021,13 +2047,144 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
               No blocks yet.
             </div>
           )
-        ) : (
+        ) : (() => {
+          // ViewShell-driven filter/sort. applyBlockChildrenFilterSort
+          // works on ChildRow so adapt each BlockChild to {id, schema,
+          // content, order}. Non-blocks views render as read-only
+          // summaries that bypass the editable block map entirely.
+          const asRows: ChildRow[] = children.map((c, idx) => ({
+            id: c.id,
+            schema: c.schema,
+            content: (contentBodyCache.get(c.id) ?? '').replace(/<[^>]+>/g, '').trim(),
+            createdAt: '',
+            updatedAt: '',
+            order: idx,
+          }));
+          const filtered = applyBlockChildrenFilterSort(asRows, blockChildrenSettings);
+          const filteredIds = new Set(filtered.map((r) => r.id));
+          // Preserve original BlockChild order/depth for the blocks view
+          // so the flat-list layout still reflects nesting. The sort
+          // setting only truly matters for non-blocks views (outline /
+          // list / gallery / board / table) where depth is ignored.
+          const orderedChildren = blockChildrenSettings.view === 'block-children-blocks'
+            ? children.filter((c) => filteredIds.has(c.id))
+            : children.filter((c) => filteredIds.has(c.id)).sort((a, b) => {
+                const ai = filtered.findIndex((r) => r.id === a.id);
+                const bi = filtered.findIndex((r) => r.id === b.id);
+                return ai - bi;
+              });
+          const viewMode = blockChildrenSettings.view;
+
+          if (viewMode !== 'block-children-blocks') {
+            const titleLine = (c: string) => {
+              const s = c.replace(/<[^>]+>/g, '').trim();
+              return s.length > 140 ? s.slice(0, 140) + '…' : (s || '(empty)');
+            };
+            const rowText = (id: string) => titleLine(contentBodyCache.get(id) ?? '');
+            if (viewMode === 'block-children-outline' || viewMode === 'block-children-list') {
+              return (
+                <ol
+                  data-part="block-list"
+                  data-view={viewMode}
+                  aria-label="Document blocks outline"
+                  style={{ listStyle: viewMode === 'block-children-list' ? 'decimal' : 'none', margin: 0, padding: viewMode === 'block-children-list' ? '0 0 0 24px' : 0 }}
+                >
+                  {orderedChildren.map((child) => (
+                    <li
+                      key={child.id}
+                      data-block-id={child.id}
+                      data-schema={child.schema}
+                      style={{
+                        padding: '2px 0',
+                        fontSize: child.schema.startsWith('heading') ? 15 : 13,
+                        fontWeight: child.schema === 'heading' ? 700 : child.schema === 'heading-2' ? 600 : 400,
+                        marginLeft: viewMode === 'block-children-outline' ? `${Math.min(child.depth, 6) * 16}px` : 0,
+                      }}
+                    >
+                      <span style={{ color: 'var(--palette-outline, #999)', marginRight: 8, fontSize: 10, textTransform: 'uppercase' }}>{child.schema}</span>
+                      {rowText(child.id)}
+                    </li>
+                  ))}
+                </ol>
+              );
+            }
+            if (viewMode === 'block-children-gallery') {
+              return (
+                <div data-part="block-list" data-view={viewMode} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: 10 }}>
+                  {orderedChildren.map((child) => (
+                    <div key={child.id} data-block-id={child.id} data-schema={child.schema} style={{ border: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.1))', borderRadius: 6, padding: 12, minHeight: 80, fontSize: 12 }}>
+                      <div style={{ fontSize: 10, textTransform: 'uppercase', color: 'var(--palette-outline, #888)', marginBottom: 6 }}>{child.schema}</div>
+                      <div>{rowText(child.id)}</div>
+                    </div>
+                  ))}
+                </div>
+              );
+            }
+            if (viewMode === 'block-children-board') {
+              const cols: Record<string, typeof orderedChildren> = {};
+              for (const c of orderedChildren) (cols[c.schema] ||= []).push(c);
+              return (
+                <div data-part="block-list" data-view={viewMode} style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 12 }}>
+                  {Object.entries(cols).map(([schema, col]) => (
+                    <div key={schema} style={{ minWidth: 200, flex: '0 0 200px', background: 'var(--palette-surface-variant, rgba(0,0,0,0.02))', borderRadius: 6, padding: 10 }}>
+                      <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', color: 'var(--palette-outline, #666)', marginBottom: 8 }}>{schema} ({col.length})</div>
+                      {col.map((child) => (
+                        <div key={child.id} data-block-id={child.id} style={{ background: 'var(--palette-surface, #fff)', border: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.08))', borderRadius: 4, padding: 8, marginBottom: 6, fontSize: 12 }}>
+                          {rowText(child.id)}
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              );
+            }
+            if (viewMode === 'block-children-table') {
+              return (
+                <table data-part="block-list" data-view={viewMode} style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                  <thead>
+                    <tr style={{ textAlign: 'left', color: 'var(--palette-outline, #888)', fontSize: 11, textTransform: 'uppercase' }}>
+                      <th style={{ padding: 6, borderBottom: '1px solid var(--palette-outline-variant)' }}>Schema</th>
+                      <th style={{ padding: 6, borderBottom: '1px solid var(--palette-outline-variant)' }}>Content</th>
+                      <th style={{ padding: 6, borderBottom: '1px solid var(--palette-outline-variant)' }}>Depth</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {orderedChildren.map((child) => (
+                      <tr key={child.id} data-block-id={child.id}>
+                        <td style={{ padding: 6, borderBottom: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.04))' }}>{child.schema}</td>
+                        <td style={{ padding: 6, borderBottom: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.04))' }}>{rowText(child.id)}</td>
+                        <td style={{ padding: 6, borderBottom: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.04))', color: 'var(--palette-outline, #888)' }}>{child.depth}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              );
+            }
+          }
+
+          const shownChildren = orderedChildren;
+          return (<>
+          {blockChildrenMenu && (
+            <BlockChildrenSettingsMenu
+              settings={blockChildrenSettings}
+              onChange={onBlockChildrenSettingsChange}
+              onClose={() => setBlockChildrenMenu(null)}
+              x={blockChildrenMenu.x} y={blockChildrenMenu.y}
+            />
+          )}
           <ol
             data-part="block-list"
+            data-view={viewMode}
             aria-label="Document blocks"
+            onContextMenu={(e) => {
+              const t = e.target as HTMLElement;
+              if (t.closest?.('[contenteditable="true"]')) return;
+              e.preventDefault();
+              setBlockChildrenMenu({ x: e.clientX, y: e.clientY });
+            }}
             style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}
           >
-            {children.map((child, childIndex) => {
+            {shownChildren.map((child, childIndex) => {
               const resolved = resolvedWidgets.get(child.id);
               const isSelected = selectedBlockIds.has(child.id);
               const isHovered = currentHoveredBlockId === child.id;
@@ -2201,7 +2358,8 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
               );
             })}
           </ol>
-        )}
+          </>);
+        })()}
 
         {/* Auto-built TOC — floating right-side index of headings */}
         {!childrenLoading && (() => {
@@ -3044,76 +3202,353 @@ interface BlockSlotChildrenProps {
   onStructureChange: () => void;
 }
 
+/**
+ * ViewShell-driven block-children settings. Each parent's children
+ * list is rendered through a named ViewShell row (seeded in
+ * ViewShell.block-children.seeds.yaml). Users flip variants via the
+ * gear button or right-click on the children container; selection
+ * persists in localStorage keyed by parent nodeId so reloads are sticky.
+ *
+ * Filter and sort operate client-side on the already-fetched child set
+ * — we do NOT re-query on every toggle. The ViewShell resolution only
+ * picks WHICH FilterSpec / SortSpec names apply; the child-side
+ * interpreter of those names is in applyBlockChildrenFilterSort below.
+ */
+const BLOCK_CHILDREN_VIEWS = [
+  'block-children-blocks',
+  'block-children-outline',
+  'block-children-list',
+  'block-children-gallery',
+  'block-children-board',
+  'block-children-table',
+] as const;
+type BlockChildrenView = typeof BLOCK_CHILDREN_VIEWS[number];
+
+const BLOCK_CHILDREN_SORTS = [
+  'block-children-order',
+  'block-children-created-asc',
+  'block-children-created-desc',
+  'block-children-updated-desc',
+  'block-children-schema',
+  'block-children-title',
+] as const;
+type BlockChildrenSort = typeof BLOCK_CHILDREN_SORTS[number];
+
+const BLOCK_CHILDREN_FILTERS = [
+  'block-children-all',
+  'block-children-unchecked-tasks',
+  'block-children-headings-only',
+] as const;
+type BlockChildrenFilter = typeof BLOCK_CHILDREN_FILTERS[number];
+
+interface BlockChildrenSettings {
+  view: BlockChildrenView;
+  sort: BlockChildrenSort;
+  filter: BlockChildrenFilter;
+}
+
+function loadBlockChildrenSettings(parentId: string): BlockChildrenSettings {
+  try {
+    const raw = typeof window !== 'undefined'
+      ? window.localStorage.getItem(`block-children-view:${parentId}`)
+      : null;
+    if (raw) {
+      const s = JSON.parse(raw) as Partial<BlockChildrenSettings>;
+      return {
+        view: (BLOCK_CHILDREN_VIEWS as readonly string[]).includes(s.view as string) ? (s.view as BlockChildrenView) : 'block-children-blocks',
+        sort: (BLOCK_CHILDREN_SORTS as readonly string[]).includes(s.sort as string) ? (s.sort as BlockChildrenSort) : 'block-children-order',
+        filter: (BLOCK_CHILDREN_FILTERS as readonly string[]).includes(s.filter as string) ? (s.filter as BlockChildrenFilter) : 'block-children-all',
+      };
+    }
+  } catch { /* fall through to defaults */ }
+  return { view: 'block-children-blocks', sort: 'block-children-order', filter: 'block-children-all' };
+}
+
+function saveBlockChildrenSettings(parentId: string, s: BlockChildrenSettings) {
+  try {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(`block-children-view:${parentId}`, JSON.stringify(s));
+    }
+  } catch { /* quota / incognito — silently ignore */ }
+}
+
+interface ChildRow {
+  id: string;
+  schema: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+  order: number;
+}
+
+function applyBlockChildrenFilterSort(rows: ChildRow[], s: BlockChildrenSettings): ChildRow[] {
+  let out = rows.slice();
+  // Filter
+  if (s.filter === 'block-children-unchecked-tasks') out = out.filter(r => r.schema === 'task');
+  else if (s.filter === 'block-children-headings-only') out = out.filter(r => r.schema === 'heading' || r.schema === 'heading-2' || r.schema === 'heading-3');
+  // Sort
+  const by = (cmp: (a: ChildRow, b: ChildRow) => number) => { out.sort(cmp); };
+  switch (s.sort) {
+    case 'block-children-created-asc':  by((a, b) => a.createdAt.localeCompare(b.createdAt)); break;
+    case 'block-children-created-desc': by((a, b) => b.createdAt.localeCompare(a.createdAt)); break;
+    case 'block-children-updated-desc': by((a, b) => b.updatedAt.localeCompare(a.updatedAt)); break;
+    case 'block-children-schema':       by((a, b) => a.schema.localeCompare(b.schema) || a.order - b.order); break;
+    case 'block-children-title':        by((a, b) => (a.content || '').localeCompare(b.content || '')); break;
+    default:                            by((a, b) => a.order - b.order); break;
+  }
+  return out;
+}
+
+const BlockChildrenSettingsMenu: React.FC<{
+  settings: BlockChildrenSettings;
+  onChange: (next: BlockChildrenSettings) => void;
+  onClose: () => void;
+  x: number; y: number;
+}> = ({ settings, onChange, onClose, x, y }) => {
+  // Close on click outside
+  useEffect(() => {
+    const close = (e: MouseEvent) => {
+      const t = e.target as HTMLElement;
+      if (!t.closest?.('[data-part="block-children-menu"]')) onClose();
+    };
+    setTimeout(() => document.addEventListener('mousedown', close), 0);
+    return () => document.removeEventListener('mousedown', close);
+  }, [onClose]);
+  const cellStyle: React.CSSProperties = { padding: '4px 10px', cursor: 'pointer', fontSize: 13, borderRadius: 4 };
+  const activeStyle: React.CSSProperties = { background: 'var(--palette-surface-variant, #eef)', fontWeight: 600 };
+  const sectionLabel: React.CSSProperties = { padding: '6px 10px 2px', fontSize: 11, color: 'var(--palette-outline, #888)', textTransform: 'uppercase', letterSpacing: '0.04em' };
+  return (
+    <div
+      data-part="block-children-menu"
+      onContextMenu={(e) => e.preventDefault()}
+      style={{
+        position: 'fixed', top: y, left: x, zIndex: 9999,
+        background: 'var(--palette-surface, #fff)', border: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.12))',
+        borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.15)', padding: 4, minWidth: 220,
+      }}
+    >
+      <div style={sectionLabel}>View</div>
+      {BLOCK_CHILDREN_VIEWS.map((v) => (
+        <div
+          key={v} style={{ ...cellStyle, ...(settings.view === v ? activeStyle : {}) }}
+          onClick={() => { onChange({ ...settings, view: v }); onClose(); }}
+        >{v.replace('block-children-', '')}</div>
+      ))}
+      <div style={sectionLabel}>Sort</div>
+      {BLOCK_CHILDREN_SORTS.map((s) => (
+        <div
+          key={s} style={{ ...cellStyle, ...(settings.sort === s ? activeStyle : {}) }}
+          onClick={() => { onChange({ ...settings, sort: s }); onClose(); }}
+        >{s.replace('block-children-', '')}</div>
+      ))}
+      <div style={sectionLabel}>Filter</div>
+      {BLOCK_CHILDREN_FILTERS.map((f) => (
+        <div
+          key={f} style={{ ...cellStyle, ...(settings.filter === f ? activeStyle : {}) }}
+          onClick={() => { onChange({ ...settings, filter: f }); onClose(); }}
+        >{f.replace('block-children-', '')}</div>
+      ))}
+    </div>
+  );
+};
+
 const BlockSlotChildren: React.FC<BlockSlotChildrenProps> = ({
   parentId, rootNodeId, canEdit, invoke, onBlockContentChange, onStructureChange,
 }) => {
-  const [childIds, setChildIds] = useState<string[]>([]);
-  const [childSchemas, setChildSchemas] = useState<Record<string, string>>({});
+  const [rows, setRows] = useState<ChildRow[]>([]);
+  const [settings, setSettings] = useState<BlockChildrenSettings>(() => loadBlockChildrenSettings(parentId));
+  const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
 
   const loadChildren = useCallback(async () => {
     try {
+      // Resolve the ViewShell for this parent so the config shape is
+      // traceable through Score / Pilot — we don't strictly need the
+      // returned tokens at the moment because filter/sort/view types
+      // are interpreted client-side, but resolving logs the dependency.
+      void invoke('ViewShell', 'resolve', { name: settings.view }).catch(() => ({ variant: 'notfound' }));
       const result = await invoke('Outline', 'children', { parent: parentId });
       if (result.variant !== 'ok') return;
       const ids: string[] = (() => {
         try { return JSON.parse((result.children as string) || '[]'); }
         catch { return []; }
       })();
-      setChildIds(ids);
-      // Resolve each child's schema via ContentNode/get.type
-      const schemaMap: Record<string, string> = {};
-      for (const id of ids) {
+      const next: ChildRow[] = [];
+      for (let i = 0; i < ids.length; i++) {
+        const id = ids[i];
         const r = await invoke('ContentNode', 'get', { node: id });
-        if (r.variant === 'ok') {
-          schemaMap[id] = (r.type as string) || 'paragraph';
-        }
+        if (r.variant !== 'ok') continue;
+        let orderVal = i;
+        try {
+          const rec = await invoke('Outline', 'getRecord', { node: id });
+          if (rec.variant === 'ok' && typeof rec.order === 'number') orderVal = rec.order;
+        } catch { /* fall through with index order */ }
+        next.push({
+          id,
+          schema: (r.type as string) || 'paragraph',
+          content: (r.content as string) || '',
+          createdAt: (r.createdAt as string) || '',
+          updatedAt: (r.updatedAt as string) || '',
+          order: orderVal,
+        });
       }
-      setChildSchemas(schemaMap);
+      setRows(next);
     } catch (err) {
       console.warn('[BlockSlotChildren] load failed:', err);
     }
-  }, [parentId, invoke]);
+  }, [parentId, invoke, settings.view]);
 
   useEffect(() => { void loadChildren(); }, [loadChildren]);
 
-  if (childIds.length === 0) return null;
+  const applied = applyBlockChildrenFilterSort(rows, settings);
+
+  const onSettingsChange = (next: BlockChildrenSettings) => {
+    setSettings(next);
+    saveBlockChildrenSettings(parentId, next);
+  };
+
+  if (rows.length === 0) return null;
+
+  const isBlocks = settings.view === 'block-children-blocks';
+  const titleLine = (c: string) => {
+    const stripped = c.replace(/<[^>]+>/g, '').trim();
+    return stripped.length > 140 ? stripped.slice(0, 140) + '…' : (stripped || '(empty)');
+  };
 
   return (
     <div
       data-part="block-children"
+      data-view={settings.view}
+      data-sort={settings.sort}
+      data-filter={settings.filter}
+      onContextMenu={(e) => {
+        // Right-click anywhere in the children container (except inside
+        // a nested contenteditable) opens the settings menu.
+        const t = e.target as HTMLElement;
+        if (t.closest?.('[contenteditable="true"]')) return;
+        e.preventDefault();
+        setMenu({ x: e.clientX, y: e.clientY });
+      }}
       style={{
+        position: 'relative',
         marginLeft: 'var(--spacing-lg, 24px)',
         borderLeft: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.08))',
         paddingLeft: 'var(--spacing-sm, 8px)',
         marginTop: 'var(--spacing-xs, 4px)',
       }}
     >
-      {childIds.map((childId) => {
-        const schema = childSchemas[childId] || 'paragraph';
+      <button
+        type="button"
+        title="View settings (right-click also opens)"
+        data-part="block-children-gear"
+        onClick={(e) => setMenu({ x: e.clientX, y: e.clientY })}
+        style={{
+          position: 'absolute', top: -2, right: 4, fontSize: 12, lineHeight: 1,
+          padding: '2px 6px', borderRadius: 4, cursor: 'pointer',
+          background: 'transparent', border: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.08))',
+          color: 'var(--palette-outline, #888)', opacity: 0.6,
+        }}
+        onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
+        onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.6')}
+      >⚙</button>
+      {menu && (
+        <BlockChildrenSettingsMenu
+          settings={settings}
+          onChange={onSettingsChange}
+          onClose={() => setMenu(null)}
+          x={menu.x} y={menu.y}
+        />
+      )}
+
+      {isBlocks && applied.map((row) => (
+        <BlockSlot
+          key={row.id}
+          nodeId={row.id}
+          rootNodeId={rootNodeId}
+          schema={row.schema}
+          displayMode="block-editor"
+          resolvedWidget={`${row.schema}-block`}
+          canEdit={canEdit}
+          isSelected={false}
+          editorFlavor="markdown"
+          decorationLayerEntries={[]}
+          onFocus={() => {}}
+          onBlur={() => {}}
+          onBlockContentChange={onBlockContentChange}
+          onStructureChange={() => {
+            void loadChildren();
+            onStructureChange();
+          }}
+        />
+      ))}
+
+      {!isBlocks && settings.view === 'block-children-outline' && (
+        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+          {applied.map((row) => (
+            <li key={row.id} style={{ padding: '2px 0', fontSize: row.schema.startsWith('heading') ? 15 : 13, fontWeight: row.schema === 'heading' ? 700 : row.schema === 'heading-2' ? 600 : 400 }}>
+              <span style={{ color: 'var(--palette-outline, #999)', marginRight: 8, fontSize: 11 }}>{row.schema}</span>
+              {titleLine(row.content)}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {!isBlocks && settings.view === 'block-children-list' && (
+        <ol style={{ margin: 0, paddingLeft: 18, fontSize: 13 }}>
+          {applied.map((row) => (<li key={row.id}>{titleLine(row.content)}</li>))}
+        </ol>
+      )}
+
+      {!isBlocks && settings.view === 'block-children-gallery' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(180px,1fr))', gap: 8, marginTop: 8 }}>
+          {applied.map((row) => (
+            <div key={row.id} style={{ border: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.1))', borderRadius: 6, padding: 10, minHeight: 80, fontSize: 12 }}>
+              <div style={{ fontSize: 10, textTransform: 'uppercase', color: 'var(--palette-outline, #888)', marginBottom: 4 }}>{row.schema}</div>
+              <div>{titleLine(row.content)}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!isBlocks && settings.view === 'block-children-board' && (() => {
+        const cols: Record<string, ChildRow[]> = {};
+        for (const r of applied) { (cols[r.schema] ||= []).push(r); }
+        const colNames = Object.keys(cols);
         return (
-          <BlockSlot
-            key={childId}
-            nodeId={childId}
-            rootNodeId={rootNodeId}
-            schema={schema}
-            displayMode="block-editor"
-            resolvedWidget={`${schema}-block`}
-            canEdit={canEdit}
-            isSelected={false}
-            editorFlavor="markdown"
-            decorationLayerEntries={[]}
-            onFocus={() => {}}
-            onBlur={() => {}}
-            onBlockContentChange={onBlockContentChange}
-            onStructureChange={() => {
-              // Structural change in a nested block: refresh my own
-              // children list AND bubble up so the outer editor refreshes
-              // its root children too.
-              void loadChildren();
-              onStructureChange();
-            }}
-          />
+          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginTop: 8, paddingBottom: 8 }}>
+            {colNames.map((name) => (
+              <div key={name} style={{ minWidth: 180, flex: '0 0 180px', background: 'var(--palette-surface-variant, rgba(0,0,0,0.02))', borderRadius: 6, padding: 8 }}>
+                <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', color: 'var(--palette-outline, #666)', marginBottom: 6 }}>{name} ({cols[name].length})</div>
+                {cols[name].map((row) => (
+                  <div key={row.id} style={{ background: 'var(--palette-surface, #fff)', border: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.08))', borderRadius: 4, padding: 6, marginBottom: 6, fontSize: 12 }}>
+                    {titleLine(row.content)}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
         );
-      })}
+      })()}
+
+      {!isBlocks && settings.view === 'block-children-table' && (
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, marginTop: 4 }}>
+          <thead>
+            <tr style={{ textAlign: 'left', color: 'var(--palette-outline, #888)', fontSize: 11, textTransform: 'uppercase' }}>
+              <th style={{ padding: 4, borderBottom: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.08))' }}>Schema</th>
+              <th style={{ padding: 4, borderBottom: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.08))' }}>Content</th>
+              <th style={{ padding: 4, borderBottom: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.08))' }}>Updated</th>
+            </tr>
+          </thead>
+          <tbody>
+            {applied.map((row) => (
+              <tr key={row.id}>
+                <td style={{ padding: 4, borderBottom: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.04))' }}>{row.schema}</td>
+                <td style={{ padding: 4, borderBottom: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.04))' }}>{titleLine(row.content)}</td>
+                <td style={{ padding: 4, borderBottom: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.04))', color: 'var(--palette-outline, #888)', fontSize: 11 }}>{(row.updatedAt || '').slice(0, 10)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 };
