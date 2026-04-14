@@ -1966,6 +1966,54 @@ function resolveHeadingLevel(schema: string): number | null {
 
 const CLICK_RESET_MS = 400;
 
+/**
+ * Re-focus a block's contentEditable after a structural change remounts it.
+ * Used by Tab / Shift+Tab / other handlers so the caret doesn't jump to the
+ * body when loadChildren → setChildren → React re-keys the BlockSlot subtree.
+ * Sets a module-level pendingFocusNodeId that new BlockSlot mounts claim,
+ * AND polls the DOM in case the block mounted before Tab's async path.
+ */
+let pendingFocusNodeId: string | null = null;
+let pendingFocusAt: 'start' | 'end' = 'end';
+
+/**
+ * Module-level cache of ContentNode body by nodeId. Survives React
+ * re-mounts, so Tab / Shift+Tab / Backspace-merge don't force every
+ * visible block to re-fetch its body from the server on structural
+ * change. Invalidate on: delete, or when we write new content via
+ * update-block-content / changeType.
+ */
+const contentBodyCache = new Map<string, string>();
+export function invalidateBlockBody(nodeId: string) {
+  contentBodyCache.delete(nodeId);
+}
+
+function restoreFocusToBlock(nodeId: string, at: 'start' | 'end' = 'end') {
+  pendingFocusNodeId = nodeId;
+  pendingFocusAt = at;
+  const attempt = (n = 0) => {
+    if (pendingFocusNodeId !== nodeId) return; // superseded
+    const el = document.querySelector<HTMLDivElement>(
+      `[data-part="block-slot"][data-node-id="${nodeId}"] [data-part="block-content"]`,
+    );
+    if (el) {
+      el.focus();
+      const sel = window.getSelection();
+      if (sel) {
+        const r = document.createRange();
+        r.selectNodeContents(el);
+        r.collapse(at === 'start');
+        sel.removeAllRanges();
+        sel.addRange(r);
+      }
+      pendingFocusNodeId = null;
+    } else if (n < 16) {
+      setTimeout(() => attempt(n + 1), 30);
+    }
+  };
+  attempt();
+}
+
 // ===========================================================================
 // BlockSlotChildren — renders nested children of a block.
 // This is where the "recursive view" contract materializes: every BlockSlot
@@ -2361,18 +2409,37 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
   }, []);
 
   // BEF-01: Load initial body from storage on mount so content survives page reload.
+  // Uses module-level cache so Tab/Shift+Tab/Backspace-merge remounts don't force
+  // a network round-trip on every visible block — that's what caused the flash.
   useEffect(() => {
     if (hasInitializedRef.current) return;
+    // Cache hit path: seed DOM synchronously, skip the network.
+    if (contentBodyCache.has(nodeId)) {
+      const body = contentBodyCache.get(nodeId) ?? '';
+      if (blockContentRef.current) {
+        blockContentRef.current.textContent = body;
+        hasInitializedRef.current = true;
+        blockEmptyRef.current = body.trim() === '';
+        if (pendingFocusNodeId === nodeId) {
+          restoreFocusToBlock(nodeId, pendingFocusAt);
+        }
+      }
+      return;
+    }
     let cancelled = false;
     async function loadBody() {
       try {
         const result = await invoke('ContentNode', 'get', { node: nodeId });
         if (cancelled || result.variant !== 'ok') return;
         const body = typeof result.content === 'string' ? result.content : '';
+        contentBodyCache.set(nodeId, body);
         if (blockContentRef.current && !hasInitializedRef.current) {
           blockContentRef.current.textContent = body;
           hasInitializedRef.current = true;
           blockEmptyRef.current = body.trim() === '';
+          if (pendingFocusNodeId === nodeId) {
+            restoreFocusToBlock(nodeId, pendingFocusAt);
+          }
         }
       } catch (err) {
         console.warn('[BlockSlot] initial body load failed:', err);
@@ -2431,6 +2498,8 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
     try {
       // Direct ContentNode/update — ActionBinding layer is inert; see
       // RecursiveBlockEditor.handleCreateFirstBlock comment.
+      // Update cache eagerly so a sibling re-mount sees fresh content.
+      contentBodyCache.set(nodeId, newContent);
       const result = await invoke('ContentNode', 'update', {
         node: nodeId, content: newContent,
       });
@@ -2481,6 +2550,26 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
       {...(isListSchema ? { 'data-keybinding-scope': 'app.editor.list' } : {})}
       onFocus={onFocus}
       onBlur={onBlur}
+      onMouseDown={(e) => {
+        // Task-list checkbox toggle: if this is a task/task-done block
+        // and the click is in the leftmost ~28px of the block-content,
+        // toggle checked state instead of placing the caret.
+        if (schema === 'task' || schema === 'task-done') {
+          const bc = blockContentRef.current;
+          if (bc && e.target instanceof Element) {
+            const rect = bc.getBoundingClientRect();
+            const localX = e.clientX - rect.left;
+            if (localX >= 0 && localX < 28) {
+              e.preventDefault();
+              e.stopPropagation();
+              const newSchema = schema === 'task' ? 'task-done' : 'task';
+              void invoke('ContentNode', 'changeType', { node: nodeId, type: newSchema })
+                .then(() => onStructureChange());
+              return;
+            }
+          }
+        }
+      }}
       onClick={handleSmartClick}
       style={{
         position: 'relative',
@@ -2543,6 +2632,10 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
               '1. ': 'numbered-list',
               '> ': 'quote',
               '``` ': 'code',
+              '[] ': 'task',        // unchecked task
+              '[ ] ': 'task',       // unchecked task (with space between brackets)
+              '[x] ': 'task-done',  // checked task
+              '[X] ': 'task-done',
             };
             // ContentEditable inserts NBSP (\u00A0, 160) instead of regular
             // space (32) at certain caret positions. Normalize before match.
@@ -2630,9 +2723,16 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
                   body: after,
                 });
                 if (insertResult.variant === 'ok') {
+                  // Create the new block as a SIBLING at the same depth as
+                  // the current block (so Enter in a nested block stays
+                  // nested, not jumps to root).
+                  const myParentRes = await invoke('Outline', 'getParent', { node: nodeId });
+                  const myParent = myParentRes.variant === 'ok'
+                    ? String(myParentRes.parent ?? rootNodeId)
+                    : rootNodeId;
                   await invoke('Outline', 'create', {
                     node: newBlockId,
-                    parent: rootNodeId,
+                    parent: myParent,
                   });
                   onStructureChange();
                   // Notion-style: move caret into the newly-created block.
@@ -2844,9 +2944,15 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
             void (async () => {
               try {
                 await invoke('ContentNode', 'update', { node: nodeId, content: currentText });
-                // Get my outline record to learn my parent + order.
+                // Learn who my real parent is so siblings are resolved at the
+                // correct level (not blindly rootNodeId, which breaks nested
+                // blocks from being tab-indented or tab-outdented).
+                const myParentRes = await invoke('Outline', 'getParent', { node: nodeId });
+                const myParent = myParentRes.variant === 'ok'
+                  ? String(myParentRes.parent ?? rootNodeId)
+                  : rootNodeId;
                 const childrenResult = await invoke('Outline', 'children', {
-                  parent: rootNodeId,
+                  parent: myParent,
                 });
                 // children returns only direct children of root. For nested
                 // blocks we need the immediate parent, which BlockSlot knows
@@ -2873,7 +2979,10 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
                   const result = await invoke('Outline', 'reparent', {
                     node: nodeId, newParent: grandparentId,
                   });
-                  if (result.variant === 'ok') onStructureChange();
+                  if (result.variant === 'ok') {
+                    onStructureChange();
+                    restoreFocusToBlock(nodeId);
+                  }
                   return;
                 }
                 // Indent under previous sibling.
@@ -2884,6 +2993,7 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
                 });
                 if (result.variant === 'ok') {
                   onStructureChange();
+                  restoreFocusToBlock(nodeId);
                 }
               } catch (err) {
                 console.warn('[RecursiveBlockEditor] Tab indent failed:', err);

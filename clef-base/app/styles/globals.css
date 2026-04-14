@@ -3098,6 +3098,36 @@ button, [data-part="button"] {
   line-height: 1.3;
 }
 
+/* ─── Task / todo blocks (checkbox) ─── */
+[data-part="block-slot"][data-schema="task"] > [data-part="block-content"],
+[data-part="block-slot"][data-schema="task-done"] > [data-part="block-content"] {
+  padding-left: 1.75em;
+  position: relative;
+}
+[data-part="block-slot"][data-schema="task"] > [data-part="block-content"]::after,
+[data-part="block-slot"][data-schema="task-done"] > [data-part="block-content"]::after {
+  content: '';
+  position: absolute;
+  left: 0.5em;
+  top: 0.45em;
+  width: 0.85em;
+  height: 0.85em;
+  border: 2px solid var(--palette-outline, rgba(0,0,0,0.4));
+  border-radius: 3px;
+  background: var(--palette-surface, #fff);
+  cursor: pointer;
+  pointer-events: auto;
+  box-sizing: border-box;
+}
+[data-part="block-slot"][data-schema="task-done"] > [data-part="block-content"]::after {
+  background: var(--palette-primary, #6366f1);
+  border-color: var(--palette-primary, #6366f1);
+}
+[data-part="block-slot"][data-schema="task-done"] > [data-part="block-content"] {
+  text-decoration: line-through;
+  color: var(--palette-on-surface-variant, rgba(0,0,0,0.5));
+}
+
 /* ─── Quote block ─── */
 [data-part="block-slot"][data-schema="quote"] > [data-part="block-content"] {
   padding-left: 0.75em;
