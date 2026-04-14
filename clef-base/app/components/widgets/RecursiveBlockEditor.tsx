@@ -2538,6 +2538,19 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
   const lastClickTimeRef = useRef(0);
 
   const handleSmartClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    // Cmd/Ctrl-click on a link inside the block → open the URL.
+    // Notion/Obsidian convention: plain click places caret, Cmd-click
+    // navigates. window.open uses a new tab so the editor stays open.
+    if (e.metaKey || e.ctrlKey) {
+      const target = e.target as HTMLElement;
+      const anchor = target.closest('a');
+      if (anchor && anchor.href) {
+        e.preventDefault();
+        e.stopPropagation();
+        window.open(anchor.href, '_blank', 'noopener,noreferrer');
+        return;
+      }
+    }
     const now = Date.now();
     if (now - lastClickTimeRef.current > CLICK_RESET_MS) {
       clickCountRef.current = 0;
