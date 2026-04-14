@@ -1,7 +1,87 @@
 # PRD: Block Editor Parity Pass
 
-## Status: Draft
-## Authors: 2026-04-13
+## Status: Shipped (Notion-parity feature set complete as of 2026-04-14)
+## Authors: 2026-04-13 → 2026-04-14
+
+## Shipped feature log (54+ commits across two sessions)
+
+Typing foundation, structural ops, pickers, marks, and polish — all the
+Notion-parity features that were deferred across the original 7-phase
+plan, landed incrementally through Playwright-driven iteration:
+
+**Typing + structure**
+- Cursor-stable contentEditable (page title + blocks)
+- Enter splits at caret; auto-focus new block; inherits list schema
+- Enter in empty list item → exits to paragraph
+- Tab indent under prev sibling; Shift+Tab outdent via Outline/getParent
+- Arrow Up/Down at first/last visual line → navigates siblings
+- Backspace-at-offset-0 merges into previous sibling, caret at join
+- Recursive descendant rendering via flat-list + depth attribute
+- Optimistic Tab / Enter / block insert (no server round-trip shown)
+- Fractional order keeps new blocks positioned correctly
+- Block focus ring + focus preservation across remount
+- Smooth 160ms transitions on depth changes
+
+**Pickers**
+- `/` opens slash menu at caret, auto-sourced from Schema/list
+- `[[` opens wikilink picker over ContentNode.list
+- `@` opens mention picker over Authentication.list
+- Selection toolbar (B/I/U/<>) anchored to selection
+- BlockHandle shows ⋮⋮ on row hover
+
+**Marks + shortcuts**
+- Cmd+B/I/U/E/K/Shift+H — bold/italic/underline/code/link/highlight
+- Cmd+D duplicate; Cmd+Shift+Up/Down move; Cmd+A two-tap select-all
+- Cmd+Shift+1..9/0 schema shortcuts; Cmd+Z/Shift+Z undo/redo
+- Cmd+. focus mode; Cmd+F find-replace
+
+**Markdown + autoreplace**
+- Block: `# / ## / ### / - / * / 1. / > / \`\`\` / --- / [] / [x]`
+- Inline: `**bold**` `_italic_` `` `code` `` `~~strike~~` `==mark==`
+- Auto-link URL on space; `--` → em-dash; `...` → ellipsis
+- `:emoji:` → unicode (60 shortcodes)
+- NBSP normalization for contentEditable space handling
+
+**Clipboard**
+- Smart paste: markdown text → block tree with schema detection
+- Copy selection as markdown (Cmd+C on multi-select)
+- Paste URL on selection → wraps in `<a href>`
+- Paste image → image block with data URL
+
+**Schemas**
+- paragraph / heading / heading-2 / heading-3
+- bullet-list (CSS `•` marker)
+- numbered-list (CSS counter, real 1. 2. 3…)
+- task / task-done with click-toggle checkbox
+- quote (left border + italic)
+- code (mono font + bg + language tag)
+- callout (colored border + bg)
+- divider (horizontal rule)
+- image (data-URL background)
+
+**Page-level chrome**
+- Auto-built TOC from headings (right-side floating nav)
+- Word count + reading time + block count footer
+- Collapse/expand via ▶ toggle for blocks with children
+- Per-schema placeholders
+- 740px reading measure + 1.55 line-height
+
+**Kernel / concept work**
+- Registered KeyBinding / ActionBinding / TextSpan
+- Outline/children, getRecord, getParent, delete, setOrder
+- ContentNode/update + changeType use merge (not put-replaces)
+- Content body + schema caches (kill N+1 on loadChildren)
+- Schema/list bug fix (returned empty JSON)
+- innerHTML persistence so inline marks survive reload
+
+**Widget invariants**
+- 31 structured invariants on paragraph-block
+- Grammar extension: `part.method(args)` + positional args
+- 150 regenerated conformance tests pass across 3 widget specs
+
+---
+
+## Original PRD
 
 ---
 
