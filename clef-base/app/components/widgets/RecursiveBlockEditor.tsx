@@ -3467,15 +3467,14 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
             return;
           }
           if (e.key === 'Tab') {
-            // Notion-style indent/outdent. Shift+Tab = outdent (move up in
-            // hierarchy); Tab = indent (nest under previous sibling).
-            // Outline/indent and /outdent are stub no-ops today, so the
-            // client resolves the new parent itself and calls reparent.
+            // Notion-style indent/outdent. Shift+Tab = outdent; Tab = indent.
             e.preventDefault();
             e.stopPropagation();
-            // Persist current buffer BEFORE reparent so loadChildren's
-            // re-mount doesn't read stale content from storage.
             const currentText = blockContentRef.current?.textContent ?? '';
+            // Apply depth change SYNCHRONOUSLY — no awaits first. The server
+            // round-trip happens in the background; if it rejects, the
+            // eventual loadChildren reconciles. User sees instant indent.
+            onOptimisticDepthChange?.(nodeId, e.shiftKey ? -1 : +1);
             void (async () => {
               try {
                 await invoke('ContentNode', 'update', { node: nodeId, content: currentText });
@@ -3500,15 +3499,18 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
                 })();
                 const myIndex = siblings.indexOf(nodeId);
                 if (e.shiftKey) {
-                  const myParent = await invoke('Outline', 'getParent', { node: nodeId });
-                  if (myParent.variant !== 'ok') return;
-                  const parentId = String(myParent.parent ?? '');
-                  if (!parentId || parentId === rootNodeId) return;
+                  const myParent2 = await invoke('Outline', 'getParent', { node: nodeId });
+                  if (myParent2.variant !== 'ok') { onOptimisticDepthChange?.(nodeId, +1); return; }
+                  const parentId = String(myParent2.parent ?? '');
+                  if (!parentId || parentId === rootNodeId) {
+                    // Already at root, nothing to outdent to — roll back
+                    // the optimistic -1 we applied synchronously.
+                    onOptimisticDepthChange?.(nodeId, +1);
+                    return;
+                  }
                   const gp = await invoke('Outline', 'getParent', { node: parentId });
-                  if (gp.variant !== 'ok') return;
+                  if (gp.variant !== 'ok') { onOptimisticDepthChange?.(nodeId, +1); return; }
                   const grandparentId = String(gp.parent ?? '') || rootNodeId;
-                  // Optimistic: decrement depth locally BEFORE server ack.
-                  onOptimisticDepthChange?.(nodeId, -1);
                   pushUndo({ kind: 'reparent', nodeId, oldParent: parentId, newParent: grandparentId });
                   const result = await invoke('Outline', 'reparent', {
                     node: nodeId, newParent: grandparentId,
@@ -3516,14 +3518,14 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
                   if (result.variant === 'ok') {
                     onStructureChange();
                     restoreFocusToBlock(nodeId);
+                  } else {
+                    onOptimisticDepthChange?.(nodeId, +1);  // rollback
                   }
                   return;
                 }
                 // Indent under previous sibling.
-                if (myIndex <= 0) return; // no prev sibling
+                if (myIndex <= 0) { onOptimisticDepthChange?.(nodeId, -1); return; }
                 const prevSibling = siblings[myIndex - 1];
-                // Optimistic: increment depth locally BEFORE server ack.
-                onOptimisticDepthChange?.(nodeId, +1);
                 pushUndo({ kind: 'reparent', nodeId, oldParent: myParent, newParent: prevSibling });
                 const result = await invoke('Outline', 'reparent', {
                   node: nodeId, newParent: prevSibling,
