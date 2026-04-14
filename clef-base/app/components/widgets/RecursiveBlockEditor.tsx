@@ -177,22 +177,29 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
   const [children, setChildren] = useState<BlockChild[]>([]);
   const [childrenLoading, setChildrenLoading] = useState(true);
 
-  // ------- block-children view settings — ViewShell-driven filter/sort/view-type --------
-  // Persisted in localStorage keyed by rootNodeId so page reloads keep
-  // the user's last-picked view. Changing this only re-renders; no
-  // server round-trip — the filter/sort are applied client-side.
-  const [blockChildrenSettings, setBlockChildrenSettings] = useState<BlockChildrenSettings>(
-    () => loadBlockChildrenSettings(rootNodeId),
+  // ------- block-children view settings — ViewShell-driven per parent --------
+  // Each parent (root page + every block with children) gets its own
+  // filter/sort/view settings. Persisted as a single blob per page in
+  // localStorage key `block-children-view-map:<rootNodeId>` so reloads
+  // preserve every nested group's chosen view. Applied client-side.
+  const [blockChildrenSettingsByParent, setBlockChildrenSettingsByParent] = useState<Record<string, BlockChildrenSettings>>(
+    () => loadBlockChildrenSettingsMap(rootNodeId),
   );
-  const [blockChildrenMenu, setBlockChildrenMenu] = useState<{ x: number; y: number } | null>(null);
-  const onBlockChildrenSettingsChange = useCallback((next: BlockChildrenSettings) => {
-    setBlockChildrenSettings(next);
-    saveBlockChildrenSettings(rootNodeId, next);
-    // Log the view resolution so Score / Pilot can trace the choice;
-    // the tokens returned are currently unused because interpretation
-    // happens client-side, but the dependency graph is recorded.
+  const [blockChildrenMenu, setBlockChildrenMenu] = useState<{ x: number; y: number; parentId: string } | null>(null);
+  const settingsFor = useCallback((parentId: string): BlockChildrenSettings => {
+    return blockChildrenSettingsByParent[parentId] ?? defaultBlockChildrenSettings();
+  }, [blockChildrenSettingsByParent]);
+  const onBlockChildrenSettingsChange = useCallback((parentId: string, next: BlockChildrenSettings) => {
+    setBlockChildrenSettingsByParent((prev) => {
+      const merged = { ...prev, [parentId]: next };
+      saveBlockChildrenSettingsMap(rootNodeId, merged);
+      return merged;
+    });
     void invoke('ViewShell', 'resolve', { name: next.view }).catch(() => ({ variant: 'notfound' }));
   }, [rootNodeId, invoke]);
+  // The root's own settings live at `rootNodeId`. For hover-scoped
+  // per-block gear rendering we need to know when a block has children.
+  const blockChildrenSettings = settingsFor(rootNodeId);
 
   // ------- resolved widgets — ComponentMapping cache per child --------
   const [resolvedWidgets, setResolvedWidgets] = useState<Map<string, ResolvedWidget>>(new Map());
@@ -1917,9 +1924,9 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
         )}
         <button
           data-part="block-children-gear"
-          title="View settings — filter, sort, view type"
-          aria-label="Block children view settings"
-          onClick={(e) => setBlockChildrenMenu({ x: e.clientX, y: e.clientY })}
+          title="Root view settings — filter, sort, view type"
+          aria-label="Root block children view settings"
+          onClick={(e) => setBlockChildrenMenu({ x: e.clientX, y: e.clientY, parentId: rootNodeId })}
           style={{ textAlign: 'left', fontSize: '12px', cursor: 'pointer', opacity: 0.75 }}
         >
           ⚙ View: {blockChildrenSettings.view.replace('block-children-', '')}
@@ -2052,27 +2059,53 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
           // works on ChildRow so adapt each BlockChild to {id, schema,
           // content, order}. Non-blocks views render as read-only
           // summaries that bypass the editable block map entirely.
-          const asRows: ChildRow[] = children.map((c, idx) => ({
-            id: c.id,
-            schema: c.schema,
-            content: (contentBodyCache.get(c.id) ?? '').replace(/<[^>]+>/g, '').trim(),
-            createdAt: '',
-            updatedAt: '',
-            order: idx,
-          }));
-          const filtered = applyBlockChildrenFilterSort(asRows, blockChildrenSettings);
-          const filteredIds = new Set(filtered.map((r) => r.id));
-          // Preserve original BlockChild order/depth for the blocks view
-          // so the flat-list layout still reflects nesting. The sort
-          // setting only truly matters for non-blocks views (outline /
-          // list / gallery / board / table) where depth is ignored.
-          const orderedChildren = blockChildrenSettings.view === 'block-children-blocks'
-            ? children.filter((c) => filteredIds.has(c.id))
-            : children.filter((c) => filteredIds.has(c.id)).sort((a, b) => {
-                const ai = filtered.findIndex((r) => r.id === a.id);
-                const bi = filtered.findIndex((r) => r.id === b.id);
-                return ai - bi;
-              });
+          // --- Per-parent filter + sort ---
+          // Group the flat DFS list by parent, apply each parent's
+          // BlockChildrenSettings to its direct children, then re-emit
+          // the DFS. Each nested group can be filtered / sorted / viewed
+          // independently — the root's settings only govern its own
+          // direct children. See the per-block gear below.
+          const byParent = new Map<string, BlockChild[]>();
+          for (const c of children) {
+            const g = byParent.get(c.parent) ?? [];
+            g.push(c); byParent.set(c.parent, g);
+          }
+          for (const [pid, group] of byParent) {
+            const s = settingsFor(pid);
+            const rows: ChildRow[] = group.map((c, i) => ({
+              id: c.id, schema: c.schema,
+              content: (contentBodyCache.get(c.id) ?? '').replace(/<[^>]+>/g, '').trim(),
+              createdAt: '', updatedAt: '', order: i,
+            }));
+            const fs = applyBlockChildrenFilterSort(rows, s);
+            const idx = new Map<string, number>();
+            fs.forEach((r, i) => idx.set(r.id, i));
+            const newGroup = group
+              .filter((c) => idx.has(c.id))
+              .sort((a, b) => (idx.get(a.id) ?? 0) - (idx.get(b.id) ?? 0));
+            byParent.set(pid, newGroup);
+          }
+          // A subtree is "suppressed" from the flat list when its
+          // parent's view is anything other than 'blocks'. We render a
+          // nested inline mini-view for it instead, right after the
+          // parent block in the flat order.
+          const subtreeRenderMode = new Map<string, BlockChildrenView>();
+          for (const pid of byParent.keys()) {
+            subtreeRenderMode.set(pid, settingsFor(pid).view);
+          }
+          const orderedChildren: BlockChild[] = [];
+          const walk = (parentId: string) => {
+            for (const c of byParent.get(parentId) ?? []) {
+              orderedChildren.push(c);
+              // If this parent has children AND its view is non-blocks,
+              // don't descend — the alt-view will render its direct kids.
+              if (c.hasChildren) {
+                const mode = subtreeRenderMode.get(c.id) ?? 'block-children-blocks';
+                if (mode === 'block-children-blocks') walk(c.id);
+              }
+            }
+          };
+          walk(rootNodeId);
           const viewMode = blockChildrenSettings.view;
 
           // Toolbar + menu rendered regardless of view mode so the
@@ -2081,9 +2114,10 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
             <div data-part="block-children-toolbar" style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 4, gap: 6 }}>
               <button
                 data-part="block-children-gear-inline"
-                title="View settings — filter, sort, view type (right-click the list also opens)"
+                data-parent-id={rootNodeId}
+                title="Root view settings — filter, sort, view type (right-click the list also opens). Each nested block with children has its own gear too."
                 aria-label="Block children view settings"
-                onClick={(e) => setBlockChildrenMenu({ x: e.clientX, y: e.clientY })}
+                onClick={(e) => setBlockChildrenMenu({ x: e.clientX, y: e.clientY, parentId: rootNodeId })}
                 style={{
                   fontSize: 12, padding: '3px 10px', borderRadius: 6, cursor: 'pointer',
                   background: 'var(--palette-surface, #fff)',
@@ -2093,7 +2127,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
                 onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
                 onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.8')}
               >
-                ⚙ View: {blockChildrenSettings.view.replace('block-children-', '')}
+                ⚙ Root view: {blockChildrenSettings.view.replace('block-children-', '')}
                 {blockChildrenSettings.sort !== 'block-children-order' && ' · sort: ' + blockChildrenSettings.sort.replace('block-children-', '')}
                 {blockChildrenSettings.filter !== 'block-children-all' && ' · filter: ' + blockChildrenSettings.filter.replace('block-children-', '')}
               </button>
@@ -2101,8 +2135,9 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
           );
           const viewSettingsMenu = blockChildrenMenu ? (
             <BlockChildrenSettingsMenu
-              settings={blockChildrenSettings}
-              onChange={onBlockChildrenSettingsChange}
+              settings={settingsFor(blockChildrenMenu.parentId)}
+              parentLabel={blockChildrenMenu.parentId === rootNodeId ? '(root page)' : blockChildrenMenu.parentId}
+              onChange={(next) => onBlockChildrenSettingsChange(blockChildrenMenu.parentId, next)}
               onClose={() => setBlockChildrenMenu(null)}
               x={blockChildrenMenu.x} y={blockChildrenMenu.y}
             />
@@ -2198,8 +2233,22 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
             onContextMenu={(e) => {
               const t = e.target as HTMLElement;
               if (t.closest?.('[contenteditable="true"]')) return;
+              // Walk up to the nearest block-list-item to determine the
+              // clicked-block's parent id. If the user right-clicked an
+              // empty area, fall back to the root.
+              const li = t.closest?.('[data-block-id]') as HTMLElement | null;
+              let scopedParent = rootNodeId;
+              if (li) {
+                const clickedId = li.getAttribute('data-block-id') ?? '';
+                const rec = children.find((c) => c.id === clickedId);
+                // If the clicked block has children, the menu configures
+                // that block's sub-view. Otherwise configure the parent
+                // the clicked block lives under.
+                if (rec?.hasChildren) scopedParent = clickedId;
+                else if (rec?.parent) scopedParent = rec.parent;
+              }
               e.preventDefault();
-              setBlockChildrenMenu({ x: e.clientX, y: e.clientY });
+              setBlockChildrenMenu({ x: e.clientX, y: e.clientY, parentId: scopedParent });
             }}
             style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}
           >
@@ -2276,6 +2325,32 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
                 >
                   {/* Drop zone indicator — above block during active drag-over */}
                   <BlockDropZoneIndicator active={isDragOver && dropPosition === 'before'} position="before" />
+
+                  {/* Per-parent view gear — only for blocks that have
+                      nested children. Lets the user pick filter/sort/
+                      view-type for THIS block's children independently
+                      of the root or any other parent. Hidden by default,
+                      fades in on hover over the row. */}
+                  {child.hasChildren && (
+                    <button
+                      data-part="nested-children-gear"
+                      data-parent-id={child.id}
+                      title="View settings for this block's children"
+                      aria-label="Nested children view settings"
+                      onClick={(e) => { e.stopPropagation(); setBlockChildrenMenu({ x: e.clientX, y: e.clientY, parentId: child.id }); }}
+                      style={{
+                        position: 'absolute',
+                        right: 4, top: 4, zIndex: 7,
+                        fontSize: 11, padding: '1px 6px', borderRadius: 4,
+                        cursor: 'pointer',
+                        background: 'var(--palette-surface, #fff)',
+                        border: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.12))',
+                        color: 'var(--palette-on-surface-variant, #666)',
+                        opacity: isHovered ? 0.9 : 0,
+                        transition: 'opacity 120ms ease',
+                      }}
+                    >⚙ {settingsFor(child.id).view.replace('block-children-', '')}</button>
+                  )}
 
                   {/* Block handle — left gutter, visible on hover.
                       Opacity is driven by the row's isHovered state (from
@@ -2373,6 +2448,93 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
 
                   {/* Drop zone indicator — below block during active drag-over */}
                   <BlockDropZoneIndicator active={isDragOver && dropPosition === 'after'} position="after" />
+
+                  {/* Nested alt-view — if this block has children AND
+                      its view setting is non-blocks, render its direct
+                      children here as outline / list / gallery / board /
+                      table. Descendants are already suppressed from the
+                      flat DFS above. */}
+                  {child.hasChildren && (subtreeRenderMode.get(child.id) ?? 'block-children-blocks') !== 'block-children-blocks' && (() => {
+                    const mode = subtreeRenderMode.get(child.id)!;
+                    const direct = byParent.get(child.id) ?? [];
+                    const titleLine = (id: string) => {
+                      const s = (contentBodyCache.get(id) ?? '').replace(/<[^>]+>/g, '').trim();
+                      return s.length > 140 ? s.slice(0, 140) + '…' : (s || '(empty)');
+                    };
+                    const wrap: React.CSSProperties = {
+                      marginLeft: (child.depth + 1) * 24,
+                      borderLeft: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.08))',
+                      paddingLeft: 10,
+                      marginTop: 4,
+                    };
+                    if (mode === 'block-children-outline' || mode === 'block-children-list') {
+                      return (
+                        <div data-part="nested-alt-view" data-view={mode} data-parent-id={child.id} style={wrap}>
+                          <ol style={{ listStyle: mode === 'block-children-list' ? 'decimal' : 'none', margin: 0, padding: mode === 'block-children-list' ? '0 0 0 20px' : 0 }}>
+                            {direct.map((c) => (
+                              <li key={c.id} data-block-id={c.id} data-schema={c.schema} style={{ padding: '2px 0', fontSize: 13 }}>
+                                <span style={{ color: 'var(--palette-outline, #999)', marginRight: 8, fontSize: 10, textTransform: 'uppercase' }}>{c.schema}</span>
+                                {titleLine(c.id)}
+                              </li>
+                            ))}
+                          </ol>
+                        </div>
+                      );
+                    }
+                    if (mode === 'block-children-gallery') {
+                      return (
+                        <div data-part="nested-alt-view" data-view={mode} data-parent-id={child.id} style={{ ...wrap, display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(180px,1fr))', gap: 8 }}>
+                          {direct.map((c) => (
+                            <div key={c.id} data-block-id={c.id} style={{ border: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.1))', borderRadius: 6, padding: 10, minHeight: 60, fontSize: 12 }}>
+                              <div style={{ fontSize: 10, textTransform: 'uppercase', color: 'var(--palette-outline, #888)', marginBottom: 4 }}>{c.schema}</div>
+                              <div>{titleLine(c.id)}</div>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    }
+                    if (mode === 'block-children-board') {
+                      const cols: Record<string, BlockChild[]> = {};
+                      for (const c of direct) (cols[c.schema] ||= []).push(c);
+                      return (
+                        <div data-part="nested-alt-view" data-view={mode} data-parent-id={child.id} style={{ ...wrap, display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 6 }}>
+                          {Object.entries(cols).map(([schema, col]) => (
+                            <div key={schema} style={{ minWidth: 160, flex: '0 0 160px', background: 'var(--palette-surface-variant, rgba(0,0,0,0.02))', borderRadius: 6, padding: 8 }}>
+                              <div style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', color: 'var(--palette-outline, #666)', marginBottom: 6 }}>{schema} ({col.length})</div>
+                              {col.map((c) => (
+                                <div key={c.id} data-block-id={c.id} style={{ background: 'var(--palette-surface, #fff)', border: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.08))', borderRadius: 4, padding: 6, marginBottom: 4, fontSize: 12 }}>
+                                  {titleLine(c.id)}
+                                </div>
+                              ))}
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    }
+                    if (mode === 'block-children-table') {
+                      return (
+                        <div data-part="nested-alt-view" data-view={mode} data-parent-id={child.id} style={wrap}>
+                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                            <thead>
+                              <tr style={{ textAlign: 'left', color: 'var(--palette-outline, #888)', fontSize: 10, textTransform: 'uppercase' }}>
+                                <th style={{ padding: 4, borderBottom: '1px solid var(--palette-outline-variant)' }}>Schema</th>
+                                <th style={{ padding: 4, borderBottom: '1px solid var(--palette-outline-variant)' }}>Content</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {direct.map((c) => (
+                                <tr key={c.id} data-block-id={c.id}>
+                                  <td style={{ padding: 4, borderBottom: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.04))' }}>{c.schema}</td>
+                                  <td style={{ padding: 4, borderBottom: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.04))' }}>{titleLine(c.id)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
                 </li>
               );
             })}
@@ -3266,6 +3428,39 @@ interface BlockChildrenSettings {
   filter: BlockChildrenFilter;
 }
 
+function defaultBlockChildrenSettings(): BlockChildrenSettings {
+  return { view: 'block-children-blocks', sort: 'block-children-order', filter: 'block-children-all' };
+}
+
+function loadBlockChildrenSettingsMap(rootNodeId: string): Record<string, BlockChildrenSettings> {
+  try {
+    const raw = typeof window !== 'undefined'
+      ? window.localStorage.getItem(`block-children-view-map:${rootNodeId}`)
+      : null;
+    if (raw) {
+      const obj = JSON.parse(raw) as Record<string, Partial<BlockChildrenSettings>>;
+      const clean: Record<string, BlockChildrenSettings> = {};
+      for (const [k, v] of Object.entries(obj)) {
+        clean[k] = {
+          view: (BLOCK_CHILDREN_VIEWS as readonly string[]).includes(v.view as string) ? (v.view as BlockChildrenView) : 'block-children-blocks',
+          sort: (BLOCK_CHILDREN_SORTS as readonly string[]).includes(v.sort as string) ? (v.sort as BlockChildrenSort) : 'block-children-order',
+          filter: (BLOCK_CHILDREN_FILTERS as readonly string[]).includes(v.filter as string) ? (v.filter as BlockChildrenFilter) : 'block-children-all',
+        };
+      }
+      return clean;
+    }
+  } catch { /* ignore */ }
+  return {};
+}
+
+function saveBlockChildrenSettingsMap(rootNodeId: string, map: Record<string, BlockChildrenSettings>) {
+  try {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(`block-children-view-map:${rootNodeId}`, JSON.stringify(map));
+    }
+  } catch { /* ignore */ }
+}
+
 function loadBlockChildrenSettings(parentId: string): BlockChildrenSettings {
   try {
     const raw = typeof window !== 'undefined'
@@ -3320,10 +3515,11 @@ function applyBlockChildrenFilterSort(rows: ChildRow[], s: BlockChildrenSettings
 
 const BlockChildrenSettingsMenu: React.FC<{
   settings: BlockChildrenSettings;
+  parentLabel?: string;
   onChange: (next: BlockChildrenSettings) => void;
   onClose: () => void;
   x: number; y: number;
-}> = ({ settings, onChange, onClose, x, y }) => {
+}> = ({ settings, parentLabel, onChange, onClose, x, y }) => {
   // Close on click outside
   useEffect(() => {
     const close = (e: MouseEvent) => {
@@ -3346,6 +3542,11 @@ const BlockChildrenSettingsMenu: React.FC<{
         borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.15)', padding: 4, minWidth: 220,
       }}
     >
+      {parentLabel && (
+        <div style={{ ...sectionLabel, color: 'var(--palette-on-surface, #333)', fontSize: 10 }}>
+          children of: {parentLabel}
+        </div>
+      )}
       <div style={sectionLabel}>View</div>
       {BLOCK_CHILDREN_VIEWS.map((v) => (
         <div
