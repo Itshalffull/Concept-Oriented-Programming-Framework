@@ -4360,18 +4360,31 @@ button, [data-part="button"] {
   font-weight: 700;
   pointer-events: none;
 }
+/* CSS-counter-driven numbering. The block-list resets the counter; each
+ * numbered-list child increments it. Non-numbered siblings DON'T reset
+ * the counter but DO break the visual run (acceptable trade-off; matches
+ * Notion's "blocks between numbers don't reset count" behavior). */
+[data-part="block-list"] {
+  counter-reset: numbered-list;
+}
+[data-part="block-slot"][data-schema="numbered-list"] {
+  counter-increment: numbered-list;
+}
 [data-part="block-slot"][data-schema="numbered-list"] > [data-part="block-content"] {
-  padding-left: 2em !important;
+  padding-left: 2.25em !important;
   position: relative;
 }
 [data-part="block-slot"][data-schema="numbered-list"] > [data-part="block-content"]::before {
-  content: '1.';  /* TODO: real per-block numbering once siblings know their index */
+  content: counter(numbered-list) ".";
   position: absolute;
   left: 0.4em;
   top: 0.15em;
   color: inherit;
   font-size: 0.9em;
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
   pointer-events: none;
+  min-width: 1.5em;
 }
 
 /* ─── Heading levels ─── */
@@ -4460,6 +4473,23 @@ button, [data-part="button"] {
   background: var(--palette-tertiary-container, #fef3c7) !important;
   border-left: 4px solid var(--palette-tertiary, #f59e0b);
   padding-left: 1em !important;
+}
+
+/* ─── Image block ─── */
+/* content starts as a data: URL; CSS renders it via background-image
+ * plus aspect-fit via padding-top once loaded. For MVP, show the URL as
+ * a clickable label when the background fallback fails. */
+[data-part="block-slot"][data-schema="image"] > [data-part="block-content"] {
+  min-height: 4em;
+  max-height: 480px;
+  overflow: hidden;
+  background-size: contain !important;
+  background-repeat: no-repeat;
+  background-position: center;
+  border-radius: 6px;
+  background-color: var(--palette-surface-container, #f9fafb);
+  color: transparent;
+  padding: 0 !important;
 }
 
 /* ─── Divider block ─── */

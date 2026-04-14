@@ -3217,6 +3217,23 @@ button, [data-part="button"] {
   padding-left: 1em !important;
 }
 
+/* ─── Image block ─── */
+/* content starts as a data: URL; CSS renders it via background-image
+ * plus aspect-fit via padding-top once loaded. For MVP, show the URL as
+ * a clickable label when the background fallback fails. */
+[data-part="block-slot"][data-schema="image"] > [data-part="block-content"] {
+  min-height: 4em;
+  max-height: 480px;
+  overflow: hidden;
+  background-size: contain !important;
+  background-repeat: no-repeat;
+  background-position: center;
+  border-radius: 6px;
+  background-color: var(--palette-surface-container, #f9fafb);
+  color: transparent;
+  padding: 0 !important;
+}
+
 /* ─── Divider block ─── */
 [data-part="block-slot"][data-schema="divider"] > [data-part="block-content"] {
   min-height: 1px !important;

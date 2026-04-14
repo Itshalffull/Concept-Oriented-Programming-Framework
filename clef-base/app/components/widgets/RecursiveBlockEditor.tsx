@@ -1492,6 +1492,44 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
 
     e.preventDefault();
 
+    // Direct path: read the pasted image as a data URL, create an
+    // image-schema block whose content is the data URL. The ActionBinding
+    // dispatch is still attempted for future server-side upload wiring,
+    // but the block-with-data-url approach makes the image appear
+    // immediately without any external storage.
+    const file = imageItem.getAsFile();
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const dataUrl = String(reader.result ?? '');
+          const id = `${rootNodeId}:block:${Date.now()}`;
+          await invoke('ContentNode', 'createWithSchema', {
+            id, schema: 'image', body: dataUrl,
+          });
+          const anchorId = focusedBlockIdRef.current;
+          let order: number | undefined;
+          if (anchorId) {
+            try {
+              const rec = await invoke('Outline', 'getRecord', { node: anchorId });
+              if (rec.variant === 'ok' && typeof rec.order === 'number') {
+                order = rec.order + 0.5;
+              }
+            } catch { /* ignore */ }
+          }
+          await invoke('Outline', 'create', {
+            node: id, parent: rootNodeId,
+            ...(order !== undefined ? { order } : {}),
+          });
+          loadChildren();
+        } catch (err) {
+          console.warn('[RecursiveBlockEditor] image paste failed:', err);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+    return;
+    // eslint-disable-next-line no-unreachable
     const uploadContext = JSON.stringify({
       focusedDocId: rootNodeId,
       cursorBlockId: focusedBlockIdRef.current || null,
@@ -3316,9 +3354,12 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
     if (contentBodyCache.has(nodeId)) {
       const body = contentBodyCache.get(nodeId) ?? '';
       if (blockContentRef.current) {
-        // Use innerHTML so persisted marks (<b>/<i>/<a>/<mark>/wikilinks)
-        // re-render. contentEditable owns the DOM from here on.
-        blockContentRef.current.innerHTML = body;
+        if (schema === 'image' && body.startsWith('data:')) {
+          blockContentRef.current.style.backgroundImage = `url("${body}")`;
+          blockContentRef.current.setAttribute('data-src', body.slice(0, 40) + '...');
+        } else {
+          blockContentRef.current.innerHTML = body;
+        }
         hasInitializedRef.current = true;
         blockEmptyRef.current = (blockContentRef.current.textContent ?? '').trim() === '';
         if (pendingFocusNodeId === nodeId) {
@@ -3335,7 +3376,12 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
         const body = typeof result.content === 'string' ? result.content : '';
         contentBodyCache.set(nodeId, body);
         if (blockContentRef.current && !hasInitializedRef.current) {
-          blockContentRef.current.innerHTML = body;
+          if (schema === 'image' && body.startsWith('data:')) {
+            blockContentRef.current.style.backgroundImage = `url("${body}")`;
+            blockContentRef.current.setAttribute('data-src', body.slice(0, 40) + '...');
+          } else {
+            blockContentRef.current.innerHTML = body;
+          }
           hasInitializedRef.current = true;
           blockEmptyRef.current = (blockContentRef.current.textContent ?? '').trim() === '';
           if (pendingFocusNodeId === nodeId) {
