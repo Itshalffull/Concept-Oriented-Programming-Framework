@@ -1,0 +1,86 @@
+# ComponentMapping seeds — pin every block schema's "block-subtree"
+# display mode to the block-subtree-view widget.
+#
+# The block-subtree widget renders a live recursive subtree rooted at
+# the bound ContentNode: the node itself in its original schema's
+# display mode, each descendant as a nested BlockSlot, a per-parent
+# view-settings gear anywhere hasChildren is true.
+#
+# Used by the RecursiveBlockEditor's nested view shells (outline /
+# list / gallery / board / table) so every "card", "row", or "item"
+# renders recursively instead of as a summary string.
+
+concept: ComponentMapping
+action: create
+entries:
+  - id: paragraph-block-subtree
+    name: paragraph-block-subtree
+    widget_id: block-subtree-view
+    schema: paragraph
+    display_mode: block-subtree
+
+  - id: heading-block-subtree
+    name: heading-block-subtree
+    widget_id: block-subtree-view
+    schema: heading
+    display_mode: block-subtree
+
+  - id: heading-2-block-subtree
+    name: heading-2-block-subtree
+    widget_id: block-subtree-view
+    schema: heading-2
+    display_mode: block-subtree
+
+  - id: heading-3-block-subtree
+    name: heading-3-block-subtree
+    widget_id: block-subtree-view
+    schema: heading-3
+    display_mode: block-subtree
+
+  - id: bullet-list-block-subtree
+    name: bullet-list-block-subtree
+    widget_id: block-subtree-view
+    schema: bullet-list
+    display_mode: block-subtree
+
+  - id: numbered-list-block-subtree
+    name: numbered-list-block-subtree
+    widget_id: block-subtree-view
+    schema: numbered-list
+    display_mode: block-subtree
+
+  - id: task-block-subtree
+    name: task-block-subtree
+    widget_id: block-subtree-view
+    schema: task
+    display_mode: block-subtree
+
+  - id: task-done-block-subtree
+    name: task-done-block-subtree
+    widget_id: block-subtree-view
+    schema: task-done
+    display_mode: block-subtree
+
+  - id: quote-block-subtree
+    name: quote-block-subtree
+    widget_id: block-subtree-view
+    schema: quote
+    display_mode: block-subtree
+
+  - id: code-block-subtree
+    name: code-block-subtree
+    widget_id: block-subtree-view
+    schema: code
+    display_mode: block-subtree
+
+  - id: callout-block-subtree
+    name: callout-block-subtree
+    widget_id: block-subtree-view
+    schema: callout
+    display_mode: block-subtree
+
+  - id: divider-block-subtree
+    name: divider-block-subtree
+    widget_id: block-subtree-view
+    schema: divider
+    display_mode: block-subtree

@@ -49,6 +49,7 @@ import TreeDisplay from './TreeDisplay';
 import BoardDisplay from './BoardDisplay';
 import TableDisplay from './TableDisplay';
 import type { FieldConfig } from './TableDisplay';
+import BlockSubtreeView from './BlockSubtreeView';
 import { safeParseJsonArray } from '../../../lib/safe-json';
 import {
   notifyBlockEdit,
@@ -2508,23 +2509,78 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
                       { key: 'schema', label: 'Schema', formatter: 'badge' },
                       { key: 'content', label: 'Content' },
                     ];
+                    // ─── Reusable "block-subtree" display mode ───
+                    // Every alt-view below renders its items with the
+                    // BlockSubtreeView component (seeded as DisplayMode
+                    // "block-subtree" in DisplayMode.block-subtree.seeds.yaml
+                    // + ComponentMapping.block-subtree.seeds.yaml). Views
+                    // just place the display-mode; the subtree renderer
+                    // keeps the block editable, recursive, and gears-
+                    // per-parent — regardless of the outer shell.
+                    const byId = new Map<string, BlockChild>();
+                    for (const c of children) byId.set(c.id, c);
+                    const renderBlockSlotForSubtree = ({ nodeId, schema, displayMode, key }: { nodeId: string; schema: string; displayMode: string; key: string }) => {
+                      const rec = byId.get(nodeId);
+                      if (!rec) return null;
+                      const resolved = resolvedWidgets.get(nodeId);
+                      return (
+                        <BlockSlot
+                          key={key}
+                          nodeId={rec.id}
+                          schema={schema}
+                          displayMode={displayMode}
+                          resolvedWidget={resolved?.widgetId ?? `${schema}-block`}
+                          canEdit={canEdit}
+                          isSelected={false}
+                          onFocus={() => handleBlockFocus(rec.id, rec.schema)}
+                          onBlur={handleBlockBlur}
+                          onBlockContentChange={undefined}
+                          onStructureChange={loadChildren}
+                          onOptimisticDepthChange={handleOptimisticDepthChange}
+                          onOptimisticInsert={handleOptimisticInsert}
+                          onBlockClick={(e) => handleBlockClick(rec.id, e)}
+                          onSectionSelect={handleSectionSelect}
+                          rootNodeId={rootNodeId}
+                          editorFlavor={editorFlavor}
+                          decorationLayerEntries={decorationLayerEntries}
+                        />
+                      );
+                    };
+                    // Memoized subtreeViewProps slice that every
+                    // BlockSubtreeView mount in this alt-view needs.
+                    const subtreeProps = {
+                      byParent, byId, renderBlockSlot: renderBlockSlotForSubtree,
+                      settingsFor, subtreeRenderMode,
+                      openSettingsMenu: (x: number, y: number, parentId: string) => setBlockChildrenMenu({ x, y, parentId }),
+                    };
+                    const directKids = byParent.get(child.id) ?? [];
                     if (mode === 'block-children-outline' || mode === 'block-children-list') {
-                      // TreeDisplay understands the `parent` field on
-                      // each row — renders the full subtree with
-                      // expand/collapse and ARIA tree semantics.
+                      // Outline / list: vertical stack of the direct
+                      // children, each rendered as a full recursive
+                      // subtree via renderBlockSubtree. Every nested
+                      // BlockSlot keeps its original schema, display
+                      // mode, and carries its own gear if it has kids.
                       return (
                         <div data-part="nested-alt-view" data-view={mode} data-parent-id={child.id} style={wrap}>
-                          <TreeDisplay data={subtreeRows} fields={fields} />
+                          {directKids.map((k) => (
+                            <div key={k.id} data-block-id={k.id} style={{ marginBottom: 4 }}>
+                              <BlockSubtreeView {...subtreeProps} rootId={k.id} keyNamespace={mode} />
+                            </div>
+                          ))}
                         </div>
                       );
                     }
                     if (mode === 'block-children-gallery') {
+                      // Gallery: each direct child is a card; the
+                      // card's contents are the subtree rendered via
+                      // renderBlockSubtree. Per-block gears + nested
+                      // editing work inside each card.
                       return (
-                        <div data-part="nested-alt-view" data-view={mode} data-parent-id={child.id} style={{ ...wrap, display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(180px,1fr))', gap: 8 }}>
-                          {directRows.map((row) => (
-                            <div key={row.id as string} data-block-id={row.id as string} style={{ border: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.1))', borderRadius: 6, padding: 10, minHeight: 60, fontSize: 12 }}>
-                              <div style={{ fontSize: 10, textTransform: 'uppercase', color: 'var(--palette-outline, #888)', marginBottom: 4 }}>{row.schema as string}</div>
-                              <div>{row.content as string}</div>
+                        <div data-part="nested-alt-view" data-view={mode} data-parent-id={child.id} style={{ ...wrap, display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 10 }}>
+                          {directKids.map((k) => (
+                            <div key={k.id} data-block-id={k.id} style={{ border: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.1))', borderRadius: 6, padding: 10, minHeight: 60, fontSize: 13 }}>
+                              <div style={{ fontSize: 10, textTransform: 'uppercase', color: 'var(--palette-outline, #888)', marginBottom: 6 }}>{k.schema}</div>
+                              <BlockSubtreeView {...subtreeProps} rootId={k.id} keyNamespace={mode} />
                             </div>
                           ))}
                         </div>
@@ -2591,91 +2647,10 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
                       // heading stays a heading, etc.) including live
                       // editing and resolved widget. The kanban shell
                       // only wraps the block; the display-mode doesn't
-                      // change just because the VIEW changed. Each row
-                      // looks up its BlockChild record for schema /
-                      // displayMode metadata.
-                      const byId = new Map<string, BlockChild>();
-                      for (const c of children) byId.set(c.id, c);
-                      // Render a single BlockSlot for a given node id
-                      // using its resolved widget + display mode.
-                      const renderOneBlock = (rec: BlockChild, keySuffix = '') => {
-                        const resolved = resolvedWidgets.get(rec.id);
-                        return (
-                          <BlockSlot
-                            key={rec.id + keySuffix}
-                            nodeId={rec.id}
-                            schema={rec.schema}
-                            displayMode={rec.displayMode}
-                            resolvedWidget={resolved?.widgetId ?? `${rec.schema}-block`}
-                            canEdit={canEdit}
-                            isSelected={false}
-                            onFocus={() => handleBlockFocus(rec.id, rec.schema)}
-                            onBlur={handleBlockBlur}
-                            onBlockContentChange={undefined}
-                            onStructureChange={loadChildren}
-                            onOptimisticDepthChange={handleOptimisticDepthChange}
-                            onOptimisticInsert={handleOptimisticInsert}
-                            onBlockClick={(e) => handleBlockClick(rec.id, e)}
-                            onSectionSelect={handleSectionSelect}
-                            rootNodeId={rootNodeId}
-                            editorFlavor={editorFlavor}
-                            decorationLayerEntries={decorationLayerEntries}
-                          />
-                        );
-                      };
-                      // Each card renders the node AND its full
-                      // subtree so the view stays recursive inside the
-                      // kanban shell. We walk byParent from the card's
-                      // root and emit a BlockSlot per descendant with
-                      // depth-proportional indentation.
-                      const renderSubtreeInCard = (rootId: string, depth = 0): React.ReactNode[] => {
-                        const rec = byId.get(rootId);
-                        if (!rec) return [];
-                        const out: React.ReactNode[] = [];
-                        out.push(
-                          <div
-                            key={rec.id + ':node'}
-                            data-part="kanban-subtree-node"
-                            style={{
-                              position: 'relative',
-                              marginLeft: depth * 12,
-                              borderLeft: depth > 0 ? '1px solid var(--palette-outline-variant, rgba(0,0,0,0.08))' : 'none',
-                              paddingLeft: depth > 0 ? 6 : 0,
-                            }}
-                            onMouseEnter={(e) => {
-                              const g = e.currentTarget.querySelector('[data-part="nested-children-gear"]') as HTMLElement | null;
-                              if (g) g.style.opacity = '0.9';
-                            }}
-                            onMouseLeave={(e) => {
-                              const g = e.currentTarget.querySelector('[data-part="nested-children-gear"]') as HTMLElement | null;
-                              if (g) g.style.opacity = '0';
-                            }}
-                          >
-                            {renderOneBlock(rec, ':card')}
-                            {rec.hasChildren && (
-                              <button
-                                data-part="nested-children-gear"
-                                data-parent-id={rec.id}
-                                title="View settings for this block's children"
-                                aria-label="Nested children view settings"
-                                onClick={(e) => { e.stopPropagation(); setBlockChildrenMenu({ x: e.clientX, y: e.clientY, parentId: rec.id }); }}
-                                style={{
-                                  position: 'absolute', right: 4, top: 4, zIndex: 7,
-                                  fontSize: 11, padding: '1px 6px', borderRadius: 4, cursor: 'pointer',
-                                  background: 'var(--palette-surface, #fff)',
-                                  border: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.12))',
-                                  color: 'var(--palette-on-surface-variant, #666)',
-                                  opacity: 0, transition: 'opacity 120ms ease',
-                                }}
-                              >⚙ {settingsFor(rec.id).view.replace('block-children-', '')}</button>
-                            )}
-                          </div>,
-                        );
-                        for (const c of byParent.get(rec.id) ?? []) {
-                          out.push(...renderSubtreeInCard(c.id, depth + 1));
-                        }
-                        return out;
-                      };
+                      // Kanban cards reuse the same DisplayMode-driven
+                      // BlockSubtreeView as every other alt-view, so
+                      // the card shell never has to know about block
+                      // structure — it just asks for the subtree view.
                       const renderBlockCard = (row: Record<string, unknown>) => {
                         const id = String(row.id);
                         if (id.startsWith('__empty__:')) {
@@ -2685,7 +2660,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
                         if (!rec) return <span style={{ fontSize: 12 }}>{String(row.content)}</span>;
                         return (
                           <div data-part="kanban-card-tree" data-root-id={id}>
-                            {renderSubtreeInCard(id, 0)}
+                            <BlockSubtreeView {...subtreeProps} rootId={id} keyNamespace="kanban-card" />
                           </div>
                         );
                       };
@@ -2713,9 +2688,35 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
                       );
                     }
                     if (mode === 'block-children-table') {
+                      // Table where each row is a direct child and its
+                      // content cell renders the full subtree via the
+                      // shared renderBlockSubtree helper. Relationship
+                      // is implicit (rows are siblings of each other,
+                      // all children of the clicked block).
                       return (
                         <div data-part="nested-alt-view" data-view={mode} data-parent-id={child.id} style={wrap}>
-                          <TableDisplay data={subtreeRows} fields={[...fields, { key: 'parent', label: 'Parent' }]} />
+                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                            <thead>
+                              <tr style={{ textAlign: 'left', color: 'var(--palette-outline, #888)', fontSize: 11, textTransform: 'uppercase' }}>
+                                <th style={{ padding: 6, borderBottom: '1px solid var(--palette-outline-variant)', width: 120 }}>Schema</th>
+                                <th style={{ padding: 6, borderBottom: '1px solid var(--palette-outline-variant)' }}>Content</th>
+                                <th style={{ padding: 6, borderBottom: '1px solid var(--palette-outline-variant)', width: 80 }}>Children</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {directKids.map((k) => (
+                                <tr key={k.id} data-block-id={k.id} style={{ verticalAlign: 'top' }}>
+                                  <td style={{ padding: 6, borderBottom: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.04))' }}>{k.schema}</td>
+                                  <td style={{ padding: 6, borderBottom: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.04))' }}>
+                                    <BlockSubtreeView {...subtreeProps} rootId={k.id} keyNamespace="table" />
+                                  </td>
+                                  <td style={{ padding: 6, borderBottom: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.04))', color: 'var(--palette-outline, #888)' }}>
+                                    {(byParent.get(k.id) ?? []).length}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
                         </div>
                       );
                     }

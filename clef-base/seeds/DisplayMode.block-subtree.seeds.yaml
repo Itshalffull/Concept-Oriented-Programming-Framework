@@ -1,0 +1,23 @@
+# DisplayMode seed — "block-subtree".
+#
+# Every block-outliner view (kanban, outline, list, gallery, table, etc.)
+# picks this display mode when it wants to render each item as a live
+# recursive block editor tree rather than a flat one-line summary.
+#
+# The widget registered for (<any-block-schema>, block-subtree) is
+# block-subtree-view (ComponentMapping.block-subtree.seeds.yaml). That
+# widget recursively walks Outline/children and mounts a BlockSlot per
+# descendant, preserving each node's original per-schema display mode
+# inside — so a heading stays a heading, a task stays a task, while
+# the shell around them is a kanban card / table cell / gallery card.
+#
+# Registering the mode under ContentNode schema is the umbrella entry;
+# per-schema ComponentMapping rows pin specific schemas to the
+# block-subtree-view widget.
+
+concept: DisplayMode
+action: create
+entries:
+  - schema: ContentNode
+    mode_id: block-subtree
+    name: Block Subtree

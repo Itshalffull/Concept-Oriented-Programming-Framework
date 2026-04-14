@@ -85,6 +85,29 @@ describe('Block editor E2E — shipped Notion-parity features', () => {
     }
   });
 
+  it('has DisplayMode + ComponentMapping seeds for the reusable block-subtree display', async () => {
+    // The "block-subtree" display mode is the cleffy way to let any
+    // view (kanban, outline, list, gallery, table, …) render its
+    // items as a live recursive block tree instead of a one-line
+    // summary. DisplayMode registers the mode on ContentNode;
+    // ComponentMapping pins every block schema to the
+    // block-subtree-view widget so BlockSlot resolves correctly for
+    // any schema when displayMode === "block-subtree".
+    const fs = await import('fs');
+    const path = await import('path');
+    const seedsDir = path.resolve(__dirname, '..', 'seeds');
+    const dm = fs.readFileSync(path.join(seedsDir, 'DisplayMode.block-subtree.seeds.yaml'), 'utf-8');
+    expect(dm).toContain('mode_id: block-subtree');
+    expect(dm).toContain('schema: ContentNode');
+    const cm = fs.readFileSync(path.join(seedsDir, 'ComponentMapping.block-subtree.seeds.yaml'), 'utf-8');
+    for (const schema of ['paragraph', 'heading', 'heading-2', 'heading-3', 'bullet-list',
+                          'numbered-list', 'task', 'task-done', 'quote', 'code', 'callout', 'divider']) {
+      expect(cm).toContain(`schema: ${schema}`);
+    }
+    expect(cm).toContain('widget_id: block-subtree-view');
+    expect(cm).toContain('display_mode: block-subtree');
+  });
+
   it('has ViewShell seeds for pickers', async () => {
     const fs = await import('fs');
     const path = await import('path');
