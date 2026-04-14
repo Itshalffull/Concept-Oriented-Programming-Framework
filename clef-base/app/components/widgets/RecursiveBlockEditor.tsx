@@ -331,6 +331,16 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
   // Load block children from Outline
   // =========================================================================
 
+  // Optimistic depth adjustment — Tab / Shift+Tab call this BEFORE the
+  // server reparent round-trip so the visual indent updates instantly.
+  // Clamps to [0, Infinity); loadChildren reconciles against the server
+  // truth afterwards.
+  const handleOptimisticDepthChange = useCallback((nodeId: string, delta: number) => {
+    setChildren((prev) => prev.map((c) =>
+      c.id === nodeId ? { ...c, depth: Math.max(0, c.depth + delta) } : c
+    ));
+  }, []);
+
   const loadChildren = useCallback(async () => {
     // NOTE: don't flip childrenLoading on reloads. It's only used for the
     // initial render to show "Loading blocks..." while we first fetch
@@ -1728,6 +1738,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
                         onBlur={handleBlockBlur}
                         onBlockContentChange={undefined}
                         onStructureChange={loadChildren}
+                        onOptimisticDepthChange={handleOptimisticDepthChange}
                         onBlockClick={(e) => handleBlockClick(child.id, e)}
                         onSectionSelect={handleSectionSelect}
                         rootNodeId={rootNodeId}
@@ -2274,6 +2285,9 @@ interface BlockSlotProps {
   onBlockContentChange?: (nodeId: string, content: string) => void;
   /** Called on structural changes: block insert, delete, or reorder. Parent passes loadChildren here. */
   onStructureChange: () => void;
+  /** Optimistic depth adjustment — parent patches local children state
+   *  (no server round-trip) so Tab / Shift+Tab feel instant. */
+  onOptimisticDepthChange?: (nodeId: string, delta: number) => void;
   /** Called on click events to propagate multi-select modifier logic upward. */
   onBlockClick?: (e: React.MouseEvent) => void;
   /**
@@ -2300,6 +2314,7 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
   onBlur,
   onBlockContentChange,
   onStructureChange,
+  onOptimisticDepthChange,
   onBlockClick,
   onSectionSelect,
   rootNodeId,
@@ -3175,10 +3190,6 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
                 })();
                 const myIndex = siblings.indexOf(nodeId);
                 if (e.shiftKey) {
-                  // Outdent: reparent me to my grandparent. Chain two
-                  // Outline/getParent lookups: my parent, then my parent's
-                  // parent. If my parent === rootNodeId we're already at
-                  // the top level and can't outdent further.
                   const myParent = await invoke('Outline', 'getParent', { node: nodeId });
                   if (myParent.variant !== 'ok') return;
                   const parentId = String(myParent.parent ?? '');
@@ -3186,6 +3197,8 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
                   const gp = await invoke('Outline', 'getParent', { node: parentId });
                   if (gp.variant !== 'ok') return;
                   const grandparentId = String(gp.parent ?? '') || rootNodeId;
+                  // Optimistic: decrement depth locally BEFORE server ack.
+                  onOptimisticDepthChange?.(nodeId, -1);
                   const result = await invoke('Outline', 'reparent', {
                     node: nodeId, newParent: grandparentId,
                   });
@@ -3198,6 +3211,8 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
                 // Indent under previous sibling.
                 if (myIndex <= 0) return; // no prev sibling
                 const prevSibling = siblings[myIndex - 1];
+                // Optimistic: increment depth locally BEFORE server ack.
+                onOptimisticDepthChange?.(nodeId, +1);
                 const result = await invoke('Outline', 'reparent', {
                   node: nodeId, newParent: prevSibling,
                 });
