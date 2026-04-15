@@ -412,7 +412,8 @@ export function KeybindingEditor({
   // Data
   // ------------------------------------------------------------------
 
-  const allBindings = useAllBindings('app');
+  // Pass empty string to fetch all scopes; scopeFilter prop can further narrow in the UI
+  const allBindings = useAllBindings('');
   const availablePresets = useAvailablePresets();
   const { activePresetId, activePresetName, refetch: refetchActivePreset } =
     useActivePreset(currentUserId, availablePresets);
@@ -452,6 +453,8 @@ export function KeybindingEditor({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [showOnlyModified, setShowOnlyModified] = useState(false);
+  // Scope filter in the editor UI — '' means "All scopes"
+  const [selectedScope, setSelectedScope] = useState(scopeFilter ?? '');
 
   // Augment bindings with fromPreset flag
   const augmentedBindings: KeyBindingRecord[] = allBindings.map((b) => ({
@@ -460,7 +463,9 @@ export function KeybindingEditor({
   }));
 
   const filteredBindings = augmentedBindings.filter((b) => {
-    if (scopeFilter && !b.scope.startsWith(scopeFilter)) return false;
+    // Use selectedScope (from UI dropdown) if set; fall back to scopeFilter prop
+    const activeScope = selectedScope || scopeFilter;
+    if (activeScope && !b.scope.startsWith(activeScope)) return false;
     if (showOnlyModified && !b.isModified && !b.fromPreset) return false;
     if (selectedCategory && b.category !== selectedCategory) return false;
     if (searchQuery) {
@@ -474,6 +479,7 @@ export function KeybindingEditor({
   });
 
   const categories = Array.from(new Set(allBindings.map((b) => b.category ?? ''))).filter(Boolean);
+  const scopes = Array.from(new Set(allBindings.map((b) => b.scope ?? ''))).filter(Boolean).sort();
 
   // ------------------------------------------------------------------
   // Selected binding (for detail pane)
@@ -1327,6 +1333,30 @@ export function KeybindingEditor({
             fontSize: '0.875rem',
           }}
         />
+
+        {/* Scope filter */}
+        {!scopeFilter && (
+          <select
+            data-part="scope-filter"
+            role="combobox"
+            aria-label="Filter by scope"
+            value={selectedScope}
+            onChange={(e) => setSelectedScope(e.target.value)}
+            style={{
+              padding: '4px 8px',
+              border: '1px solid var(--color-border, #ccc)',
+              borderRadius: '4px',
+              fontSize: '0.875rem',
+            }}
+          >
+            <option value="">All scopes</option>
+            {scopes.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+        )}
 
         {/* Category filter */}
         <select

@@ -367,9 +367,11 @@ const _handler: FunctionalConceptHandler = {
           (o) => [String((o as any).id ?? ''), (o as any).chord as KeyStroke[] | undefined],
         ),
       );
-      const scopeParts = scope.split('.');
+      const scopeParts = scope ? scope.split('.') : null;
       const matched = all
         .filter((rec) => {
+          // Empty scope means "all scopes" (used by KeybindingEditor to show all bindings)
+          if (!scopeParts) return true;
           const bParts = String((rec as any).scope ?? '').split('.');
           if (bParts.length > scopeParts.length) return false;
           return bParts.every((part: string, i: number) => part === scopeParts[i]);

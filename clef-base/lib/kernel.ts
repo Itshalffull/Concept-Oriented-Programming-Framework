@@ -11,6 +11,7 @@ import { mediaAssetHandler } from '../../handlers/ts/app/media-asset.handler';
 import { transcriptHandler } from '../../handlers/ts/media/transcript.handler';
 import { clipHandler } from '../../handlers/ts/media/clip.handler';
 import { keyBindingHandler } from '../../handlers/ts/app/key-binding.handler';
+import { keybindingPresetHandler } from '../../handlers/ts/app/keybinding-preset.handler';
 import { actionBindingHandler } from '../../handlers/ts/app/action-binding.handler';
 import { textSpanHandler } from '../../handlers/ts/app/text-span.handler';
 import { inputRuleHandler } from '../../handlers/ts/app/input-rule.handler';
@@ -110,6 +111,12 @@ const SUPPLEMENTAL_REGISTRY_ENTRIES = [
     uri: 'urn:clef/KeyBinding',
     handler: keyBindingHandler,
     storageName: 'key-binding',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/KeybindingPreset',
+    handler: keybindingPresetHandler,
+    storageName: 'keybinding-preset',
     storageType: 'standard' as const,
   },
   {
