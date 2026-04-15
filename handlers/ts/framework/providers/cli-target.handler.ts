@@ -17,6 +17,20 @@ import type { ConceptManifest, ActionSchema, ActionParamSchema } from '../../../
 import { toKebabCase, toCamelCase, generateFileHeader, generateMarkdownFileHeader, getHierarchicalTrait, getManifestEnrichment } from './codegen-utils.js';
 import type { HierarchicalConfig } from './codegen-utils.js';
 import { renderContent, interpolateVars } from './renderer.handler.js';
+import { isContentNative } from '../content-native-concepts.js';
+
+// --- Content-native CRUD action mapping (CNB-5) ---
+type CrudVerb = 'create' | 'get' | 'update' | 'remove' | 'list';
+
+function classifyCrudAction(actionName: string): CrudVerb | null {
+  const n = actionName.toLowerCase();
+  if (n === 'create') return 'create';
+  if (n === 'get' || n === 'read' || n === 'fetch') return 'get';
+  if (n === 'update' || n === 'patch' || n === 'edit') return 'update';
+  if (n === 'remove' || n === 'delete' || n === 'destroy') return 'remove';
+  if (n === 'list' || n === 'listall' || n === 'index') return 'list';
+  return null;
+}
 
 // --- CLI Command Tree Metadata Types ---
 
@@ -144,6 +158,7 @@ function buildSubcommand(
   overrides: Record<string, unknown>,
   cliConfig?: CliConceptConfig,
   hierConfig?: HierarchicalConfig,
+  contentNative: boolean = false,
 ): string {
   const lines: string[] = [];
   const actionOverride = overrides[action.name] as Record<string, unknown> | undefined;
@@ -222,9 +237,33 @@ function buildSubcommand(
 
   // Action handler — use invokeConcept for direct concept dispatch
   // Wrapped in try/catch so errors are displayed before Commander can swallow them
+  // CNB-5: for content-native CRUD, route through ContentNode instead.
+  const crudVerb = contentNative ? classifyCrudAction(action.name) : null;
   lines.push(`  .action(async (opts) => {`);
   lines.push(`    try {`);
-  lines.push(`      const result = await globalThis.kernel.invokeConcept('urn:clef/${conceptName}', '${action.name}', opts);`);
+  if (crudVerb) {
+    switch (crudVerb) {
+      case 'create':
+        lines.push(`      const result = await globalThis.kernel.handleRequest({ method: 'ContentNode/createWithSchema', schema: '${conceptName}', content: opts });`);
+        break;
+      case 'get':
+        lines.push(`      const result = await globalThis.kernel.handleRequest({ method: 'ContentNode/get', node: \`${conceptName}:\${opts.id}\` });`);
+        break;
+      case 'update': {
+        lines.push(`      const { id: __id, ...__rest } = opts;`);
+        lines.push(`      const result = await globalThis.kernel.handleRequest({ method: 'ContentNode/update', node: \`${conceptName}:\${__id}\`, content: __rest });`);
+        break;
+      }
+      case 'remove':
+        lines.push(`      const result = await globalThis.kernel.handleRequest({ method: 'ContentNode/remove', node: \`${conceptName}:\${opts.id}\` });`);
+        break;
+      case 'list':
+        lines.push(`      const result = await globalThis.kernel.handleRequest({ method: 'ContentNode/listBySchema', schema: '${conceptName}', ...opts });`);
+        break;
+    }
+  } else {
+    lines.push(`      const result = await globalThis.kernel.invokeConcept('urn:clef/${conceptName}', '${action.name}', opts);`);
+  }
   lines.push(`      if (result.variant !== 'ok') {`);
   lines.push(`        console.error(opts.json ? JSON.stringify(result) : \`Error [\${result.variant}]: \${JSON.stringify(result)}\`);`);
   lines.push(`        process.exitCode = 1;`);
@@ -260,6 +299,7 @@ function generateCommandFile(
   overrides: Record<string, unknown>,
   cliConfig?: CliConceptConfig,
   hierConfig?: HierarchicalConfig,
+  contentNative: boolean = false,
 ): string {
   const conceptCamel = toCamelCase(conceptName);
   const kebab = toKebabCase(conceptName);
@@ -291,7 +331,7 @@ function generateCommandFile(
   }
 
   for (const action of manifest.actions) {
-    lines.push(buildSubcommand(action, conceptName, conceptCamel, overrides, cliConfig, hierConfig));
+    lines.push(buildSubcommand(action, conceptName, conceptCamel, overrides, cliConfig, hierConfig, contentNative));
     lines.push('');
   }
 
@@ -367,7 +407,7 @@ const _handler: FunctionalConceptHandler = {
     { let p = createProgram(); p = complete(p, 'ok', { name: 'CliTarget',
       inputKind: 'InterfaceProjection',
       outputKind: 'CliCommands',
-      capabilities: JSON.stringify(['commander', 'help-text', 'hierarchical']),
+      capabilities: JSON.stringify(['commander', 'help-text', 'hierarchical', 'content-native']),
       targetKey: 'cli',
       providerType: 'target' }); return p; }
   },
@@ -437,7 +477,25 @@ const _handler: FunctionalConceptHandler = {
     const kebab = toKebabCase(name);
     const cliConfig = getCliConfig(parsedManifestYaml, name);
     const hierConfig = getHierarchicalTrait(parsedManifestYaml, name);
-    const content = generateCommandFile(manifest, name, overrides, cliConfig, hierConfig);
+
+    // --- Determine content-native mode (CNB-5) ---
+    let config: Record<string, unknown> = {};
+    if (input.config && typeof input.config === 'string') {
+      try {
+        config = JSON.parse(input.config as string) as Record<string, unknown>;
+      } catch { /* non-fatal */ }
+    }
+    const contentNativeFlag = config.contentNative === true;
+    let schemas: Array<{ schema: string }> = [];
+    if (input.schemas && typeof input.schemas === 'string') {
+      try {
+        const parsed = JSON.parse(input.schemas as string);
+        if (Array.isArray(parsed)) schemas = parsed as Array<{ schema: string }>;
+      } catch { /* non-fatal */ }
+    }
+    const useContentNative = contentNativeFlag && isContentNative(name, schemas);
+
+    const content = generateCommandFile(manifest, name, overrides, cliConfig, hierConfig, useContentNative);
 
     const files: Array<{ path: string; content: string }> = [
       {
