@@ -2671,17 +2671,40 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
                             fields={[...fields, { key: 'parent', label: 'Parent' }]}
                             groupBy="parent"
                             renderItem={renderBlockCard}
-                            onCardMove={(rowId, newColumnLabel) => {
+                            onCardMove={async (rowId, newColumnLabel) => {
                               const newParentId = labelToId[newColumnLabel];
                               if (!newParentId || newParentId === rowId) return;
-                              void invokeBinding(invoke, 'outline-reparent', {
-                                node: rowId,
-                                newParent: newParentId,
-                              }).then(() => {
-                                void loadChildren();
-                              }).catch((err) => {
+                              try {
+                                // Reparent first.
+                                await invokeBinding(invoke, 'outline-reparent', {
+                                  node: rowId,
+                                  newParent: newParentId,
+                                });
+                                // Then pin the moved card at the END of
+                                // the new column so drag behavior is
+                                // predictable: cards land where the
+                                // user dropped them, never shuffling.
+                                // Use max(existing orders) + 1 so the
+                                // new position is guaranteed unique.
+                                const siblings = byParent.get(newParentId) ?? [];
+                                const recs = await Promise.all(siblings
+                                  .filter((s) => s.id !== rowId)
+                                  .map((s) => invoke('Outline', 'getRecord', { node: s.id })));
+                                const maxOrder = recs.reduce((m, r) => {
+                                  if (r.variant === 'ok' && typeof r.order === 'number') {
+                                    return Math.max(m, r.order as number);
+                                  }
+                                  return m;
+                                }, 0);
+                                await invokeBinding(invoke, 'outline-set-order', {
+                                  node: rowId,
+                                  order: maxOrder + 1,
+                                });
+                              } catch (err) {
                                 console.warn('[block-children-board] reparent failed:', err);
-                              });
+                              } finally {
+                                void loadChildren();
+                              }
                             }}
                           />
                         </div>
@@ -3609,6 +3632,28 @@ const BLOCK_CHILDREN_FILTERS = [
 ] as const;
 type BlockChildrenFilter = typeof BLOCK_CHILDREN_FILTERS[number];
 
+const VIEW_LABELS: Record<string, string> = {
+  'block-children-blocks': 'Blocks (editable)',
+  'block-children-outline': 'Outline',
+  'block-children-list': 'List',
+  'block-children-gallery': 'Gallery',
+  'block-children-board': 'Board (kanban by parent)',
+  'block-children-table': 'Table',
+};
+const SORT_LABELS: Record<string, string> = {
+  'block-children-order': 'Block order (Outline)',
+  'block-children-created-asc': 'Created (oldest first)',
+  'block-children-created-desc': 'Created (newest first)',
+  'block-children-updated-desc': 'Recently edited',
+  'block-children-schema': 'Schema',
+  'block-children-title': 'Title',
+};
+const FILTER_LABELS: Record<string, string> = {
+  'block-children-all': 'All blocks',
+  'block-children-unchecked-tasks': 'Unchecked tasks only',
+  'block-children-headings-only': 'Headings only',
+};
+
 interface BlockChildrenSettings {
   view: BlockChildrenView;
   sort: BlockChildrenSort;
@@ -3739,21 +3784,21 @@ const BlockChildrenSettingsMenu: React.FC<{
         <div
           key={v} style={{ ...cellStyle, ...(settings.view === v ? activeStyle : {}) }}
           onClick={() => { onChange({ ...settings, view: v }); onClose(); }}
-        >{v.replace('block-children-', '')}</div>
+        >{VIEW_LABELS[v] ?? v.replace('block-children-', '')}</div>
       ))}
       <div style={sectionLabel}>Sort</div>
       {BLOCK_CHILDREN_SORTS.map((s) => (
         <div
           key={s} style={{ ...cellStyle, ...(settings.sort === s ? activeStyle : {}) }}
           onClick={() => { onChange({ ...settings, sort: s }); onClose(); }}
-        >{s.replace('block-children-', '')}</div>
+        >{SORT_LABELS[s] ?? s.replace('block-children-', '')}</div>
       ))}
       <div style={sectionLabel}>Filter</div>
       {BLOCK_CHILDREN_FILTERS.map((f) => (
         <div
           key={f} style={{ ...cellStyle, ...(settings.filter === f ? activeStyle : {}) }}
           onClick={() => { onChange({ ...settings, filter: f }); onClose(); }}
-        >{f.replace('block-children-', '')}</div>
+        >{FILTER_LABELS[f] ?? f.replace('block-children-', '')}</div>
       ))}
     </div>
   );
