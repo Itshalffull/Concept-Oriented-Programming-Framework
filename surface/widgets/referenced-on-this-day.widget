@@ -1,0 +1,281 @@
+@version(1)
+widget referenced-on-this-day {
+
+  purpose {
+    Right-rail panel for the daily notes page that surfaces every ContentNode
+    whose date fields match the given date. Results arrive via
+    ContentNode/listByDateRef and are never derived by scanning nodes
+    client-side. Nodes are grouped by their applied schema so users can
+    scan by category (e.g. "Meeting Notes (3)", "Task (5)"). Each group is
+    collapsible; each node row shows the node title and a short preview
+    snippet and is a clickable link to /admin/content/:nodeId. An empty
+    state message is shown when no nodes are referenced on the given date.
+  }
+
+  requires @1 {
+    fields {
+      nodes: list;
+      date: String;
+    }
+    actions {
+      listByDateRef(date: String);
+    }
+  }
+
+  anatomy {
+    root:          container    { Outer panel wrapper; carries data-state for the panel FSM }
+    panelHeading:  text         { Static heading "Referenced on this day" }
+    groupList:     container    { Ordered list of schema groups }
+    groupHeader:   action       { Clickable heading naming the schema and item count; toggles group collapse }
+    groupLabel:    text         { Schema display name inside the group header }
+    groupCount:    text         { Parenthesized count of items in the group }
+    groupItems:    container    { Collapsible list of node rows within a group }
+    nodeRow:       action       { Clickable row linking to /admin/content/:nodeId }
+    nodeTitle:     text         { Primary label derived from content.title or content.name }
+    nodePreview:   text         { Short preview of the node body content }
+    emptyState:    container    { Message shown when no references exist for the date }
+    emptyMessage:  text         { "Nothing referenced today." prose message }
+    loadingState:  container    { Spinner or skeleton shown while the query is in-flight }
+    errorState:    container    { Error notice shown when the query fails }
+  }
+
+  states {
+    panel {
+      loading [initial] {
+        on RESULTS_LOADED  -> browsing;
+        on NO_RESULTS      -> empty;
+        on QUERY_ERROR     -> error;
+        entry [fetchByDateRef];
+      }
+
+      browsing {
+        on GROUP_TOGGLE    -> browsing;
+        on NODE_NAVIGATE   -> browsing;
+        on REFRESH         -> loading;
+        entry [groupBySchema];
+      }
+
+      empty {
+        on REFRESH         -> loading;
+      }
+
+      error {
+        on REFRESH         -> loading;
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      ArrowDown  -> NAVIGATE_NEXT;
+      ArrowUp    -> NAVIGATE_PREV;
+      Enter      -> NODE_NAVIGATE;
+      Space      -> GROUP_TOGGLE;
+    }
+    focus {
+      trap: false;
+      initial: groupList;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Referenced on this day";
+        aria-live: "polite";
+        data-state: state.panel;
+      };
+      panelHeading -> {
+        role: "heading";
+        aria-level: "2";
+      };
+      groupList -> {
+        role: "list";
+        aria-label: "Schema groups";
+      };
+      groupHeader -> {
+        role: "button";
+        aria-expanded: if self.expanded then "true" else "false";
+        aria-controls: groupItems;
+      };
+      groupItems -> {
+        role: "list";
+        aria-label: "Nodes in group";
+      };
+      nodeRow -> {
+        role: "link";
+        aria-label: self.title;
+      };
+      emptyState -> {
+        role: "status";
+        aria-label: "No references found";
+        aria-live: "polite";
+      };
+      loadingState -> {
+        role: "status";
+        aria-label: "Loading references";
+        aria-live: "polite";
+        aria-busy: "true";
+      };
+      errorState -> {
+        role: "alert";
+        aria-label: "Error loading references";
+      };
+    }
+  }
+
+  props {
+    date:          String
+    initialExpanded: Bool = true
+  }
+
+  connect {
+    root -> {
+      data-part:   "root";
+      data-state:  state.panel;
+      data-date:   ?date;
+    }
+
+    panelHeading -> {
+      data-part:  "panel-heading";
+      text:       "Referenced on this day";
+    }
+
+    groupList -> {
+      data-part:  "group-list";
+    }
+
+    groupHeader -> {
+      data-part:       "group-header";
+      data-schema:     self.schemaName;
+      data-expanded:   if self.expanded then "true" else "false";
+      onClick:         send(GROUP_TOGGLE, { schemaName: self.schemaName });
+      onKeyDown:       send(GROUP_TOGGLE, { schemaName: self.schemaName });
+    }
+
+    groupLabel -> {
+      data-part:  "group-label";
+      text:       self.schemaName;
+    }
+
+    groupCount -> {
+      data-part:  "group-count";
+      text:       self.count;
+    }
+
+    groupItems -> {
+      data-part:       "group-items";
+      data-schema:     self.schemaName;
+      hidden:          if self.expanded then false else true;
+    }
+
+    nodeRow -> {
+      data-part:     "node-row";
+      data-node-id:  self.nodeId;
+      href:          self.href;
+      onClick:       send(NODE_NAVIGATE, { nodeId: self.nodeId });
+    }
+
+    nodeTitle -> {
+      data-part:  "node-title";
+      text:       self.title;
+    }
+
+    nodePreview -> {
+      data-part:  "node-preview";
+      text:       self.preview;
+    }
+
+    emptyState -> {
+      data-part:  "empty-state";
+      hidden:     if state.panel = "empty" then false else true;
+    }
+
+    emptyMessage -> {
+      data-part:  "empty-message";
+      text:       "Nothing referenced today.";
+    }
+
+    loadingState -> {
+      data-part:  "loading-state";
+      hidden:     if state.panel = "loading" then false else true;
+    }
+
+    errorState -> {
+      data-part:  "error-state";
+      hidden:     if state.panel = "error" then false else true;
+    }
+  }
+
+  affordance {
+    serves: editor-panel;
+    specificity: 6;
+    when panelKind = "referenced-on-this-day";
+    bind {
+      date: date;
+    }
+  }
+
+  invariant {
+    example "results loaded transitions to browsing": {
+      after transition(from: "loading", event: "RESULTS_LOADED") -> ok
+      then state.panel = "browsing"
+    }
+
+    example "no results transitions to empty": {
+      after transition(from: "loading", event: "NO_RESULTS") -> ok
+      then state.panel = "empty"
+    }
+
+    example "query error transitions to error state": {
+      after transition(from: "loading", event: "QUERY_ERROR") -> ok
+      then state.panel = "error"
+    }
+
+    example "refresh from empty re-enters loading": {
+      after transition(from: "empty", event: "REFRESH") -> ok
+      then state.panel = "loading"
+    }
+
+    example "refresh from error re-enters loading": {
+      after transition(from: "error", event: "REFRESH") -> ok
+      then state.panel = "loading"
+    }
+
+    example "group toggle stays in browsing state": {
+      after GROUP_TOGGLE(schemaName: "Meeting Notes") -> ok
+      then state.panel = "browsing"
+    }
+
+    forall "all panel states reachable": {
+      given s in panelStates
+      then s.reachable = true
+    }
+
+    always "root data-state reflects panel FSM": {
+      root.dataState = state.panel
+    }
+
+    always "emptyState visible only in empty state": {
+      state.panel = "empty"
+    }
+
+    always "loadingState visible only in loading state": {
+      state.panel = "loading"
+    }
+
+    never "nodes rendered while panel is loading": {
+      state.panel = "loading" and nodeRow.visible = true
+    }
+
+    never "nodeRow fires without a bound nodeId": {
+      nodeRow.dataNodeId = none and nodeRow.active = true
+    }
+
+    action fetchByDateRef {
+      requires: date != none
+      ensures ok: state.panel = "browsing"
+    }
+  }
+
+}
