@@ -23,7 +23,7 @@
 | [MAG-922](https://vibekanban.com) | INV-18 Rename MAG-919 skills or extend claude-skills target to honor workflow-keyed slugs — today generated skills are `/external-handler-gen` and `/integration-test-gen`, mismatch with PRD `/create-external-handler` and `/generate-integration-test` | — |
 | [MAG-923](https://vibekanban.com) ✅ `d5482668` | INV-19 Propagate MAG-918 + MAG-920 implications into grammar docs — scenario kind drives IntegrationTestGen; every handler auto-participates in mock/effect-contract/replay/fuzz via HandlerDescriptor; ExternalHandlerGen output round-trips through TestGeneration | — |
 | [MAG-920](https://vibekanban.com) ✅ `46f1a214` | INV-16 Handlers-as-values test generation — TestPlan consumes StorageProgram descriptions + ExternalHandler manifests; emit mock/replay handler variants, effect-contract tests, FieldTransform-fuzzed inputs (replay + fuzz stubbed) | MAG-921 |
-| [MAG-921](https://vibekanban.com) | INV-17 Finish MAG-920 stubs — ReplayHandlerRenderer cassette I/O + FieldTransform fingerprinting; FieldTransformFuzzRenderer on fast-check arbitraries with shrinking | — |
+| [MAG-921](https://vibekanban.com) ✅ `c3a9473e` | INV-17 Finish MAG-920 stubs — ReplayHandlerRenderer cassette I/O + FieldTransform fingerprinting; FieldTransformFuzzRenderer on fast-check arbitraries with shrinking | — |
 
 Execution order comes from the blocking graph:
 
