@@ -2,7 +2,22 @@
 // Clef Kernel - .sync File Parser
 // ============================================================
 
-import type { CompiledSync, WhenPattern, FieldPattern, WhereEntry, ThenAction, ThenField } from '../../../runtime/types.js';
+import type {
+  CompiledSync,
+  WhenPattern,
+  FieldPattern,
+  WhereEntry,
+  ThenAction,
+  ThenField,
+  InvariantDecl,
+} from '../../../runtime/types.js';
+import {
+  InvariantBodyParser,
+  CONCEPT_OPTIONS,
+  type AssertionContext,
+  type BasicToken,
+  type TokenStream,
+} from './invariant-body-parser.js';
 
 // --- Token Types ---
 
@@ -40,6 +55,11 @@ interface Token {
 
 const SYNC_KEYWORDS = new Set([
   'sync', 'when', 'where', 'then', 'bind', 'filter',
+  // Invariant grammar keywords (shared with concept/widget/derived/view parsers).
+  // See handlers/ts/framework/invariant-body-parser.ts (MAG-911 / INV-7).
+  'invariant', 'example', 'forall', 'always', 'never', 'eventually',
+  'after', 'and', 'given', 'exists', 'ensures', 'requires', 'not', 'old',
+  'in', 'none', 'action',
 ]);
 
 // --- Tokenizer ---
@@ -326,9 +346,56 @@ class SyncFileParser {
       this.skipSeps();
     }
 
+    // Parse optional `invariant { ... }` block(s) attached to this sync.
+    // Same grammar as the concept parser, delegated to the shared
+    // InvariantBodyParser. See invariant-body-parser.ts (MAG-911 / INV-7).
+    const invariants: InvariantDecl[] = [];
+    while (this.peek().type === 'KEYWORD' && this.peek().value === 'invariant') {
+      invariants.push(...this.parseInvariant());
+      this.skipSeps();
+    }
+
     const result: CompiledSync = { name, annotations, when, where, then };
     if (purpose) result.purpose = purpose;
+    if (invariants.length > 0) result.invariants = invariants;
     return result;
+  }
+
+  // ================================================================
+  // Invariant parsing — delegated to shared InvariantBodyParser.
+  // Same grammar/options as the concept parser (CONCEPT_OPTIONS).
+  // See invariant-body-parser.ts (MAG-911 / INV-7).
+  // ================================================================
+
+  private syncInvariantContext(): AssertionContext {
+    return {
+      resolveIdentifier: (name: string) => ({ kind: 'action', action: name }),
+      declaredSymbols: () => [],
+    };
+  }
+
+  private makeInvariantBodyParser(): InvariantBodyParser {
+    const stream: TokenStream = {
+      peek: () => this.peek() as unknown as BasicToken,
+      peekAt: (offset: number) =>
+        (this.peekAt(offset) ?? undefined) as unknown as BasicToken | undefined,
+      advance: () => this.advance() as unknown as BasicToken,
+      expect: (type: string, value?: string) =>
+        this.expect(type as TokenType, value) as unknown as BasicToken,
+      match: (type: string, value?: string) =>
+        (this.match(type as TokenType, value) as unknown as BasicToken | null),
+      expectIdent: () => this.expectIdent() as unknown as BasicToken,
+      skipSeps: () => this.skipSeps(),
+      position: () => this.pos,
+      seek: (pos: number) => { this.pos = pos; },
+    };
+    return new InvariantBodyParser(stream, this.syncInvariantContext(), CONCEPT_OPTIONS);
+  }
+
+  private parseInvariant(): InvariantDecl[] {
+    this.expect('KEYWORD', 'invariant');
+    this.expect('LBRACE');
+    return this.makeInvariantBodyParser().parseInvariantBlock();
   }
 
   private parseWhenClause(): WhenPattern[] {

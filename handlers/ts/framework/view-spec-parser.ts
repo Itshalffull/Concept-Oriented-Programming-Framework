@@ -16,6 +16,13 @@ import type {
   ArgPattern,
   ArgPatternValue,
 } from '../../../runtime/types.js';
+import {
+  InvariantBodyParser,
+  CONCEPT_OPTIONS,
+  type AssertionContext,
+  type BasicToken,
+  type TokenStream,
+} from './invariant-body-parser.js';
 
 // --- ViewSpec AST ---
 
@@ -105,7 +112,7 @@ interface Token {
 
 // Keywords recognized in .view files
 const KEYWORDS = new Set([
-  'view', 'shell', 'purpose', 'invariants', 'features', 'fixture',
+  'view', 'shell', 'purpose', 'invariants', 'invariant', 'features', 'fixture',
   'always', 'never', 'example', 'forall', 'exists',
   'in', 'implies', 'and', 'then', 'after', 'action',
   'requires', 'ensures', 'compile', 'startsWith', 'subset',
@@ -381,6 +388,10 @@ class ViewParser {
       } else if (tok.type === 'KEYWORD' && tok.value === 'invariants') {
         const parsed = this.parseInvariantsBlock();
         invariants.push(...parsed);
+      } else if (tok.type === 'KEYWORD' && tok.value === 'invariant') {
+        // Singular `invariant { ... }` block — delegated to shared
+        // InvariantBodyParser. See invariant-body-parser.ts (MAG-911 / INV-7).
+        invariants.push(...this.parseSharedInvariant());
       } else if (tok.type === 'RBRACE') {
         break;
       } else {
@@ -1221,6 +1232,44 @@ class ViewParser {
       if (tok.type === 'LBRACE') depth++;
       if (tok.type === 'RBRACE') depth--;
     }
+  }
+
+  // ================================================================
+  // Shared invariant parsing — delegated to InvariantBodyParser for
+  // the singular `invariant { ... }` top-level form. The legacy
+  // `invariants { ... }` block continues to use this file's
+  // hand-written parser. See invariant-body-parser.ts (MAG-911 / INV-7).
+  // ================================================================
+
+  private viewInvariantContext(): AssertionContext {
+    return {
+      resolveIdentifier: (name: string) => ({ kind: 'query-column', column: name }),
+      declaredSymbols: () => [],
+    };
+  }
+
+  private makeSharedInvariantBodyParser(): InvariantBodyParser {
+    const stream: TokenStream = {
+      peek: () => this.tokens[this.pos] as unknown as BasicToken,
+      peekAt: (offset: number) =>
+        this.tokens[this.pos + offset] as unknown as BasicToken | undefined,
+      advance: () => this.advance() as unknown as BasicToken,
+      expect: (type: string, value?: string) =>
+        this.expect(type as TokenType, value) as unknown as BasicToken,
+      match: (type: string, value?: string) =>
+        (this.match(type as TokenType, value) as unknown as BasicToken | null),
+      expectIdent: () => this.expectIdent() as unknown as BasicToken,
+      skipSeps: () => this.skipSeps(),
+      position: () => this.pos,
+      seek: (pos: number) => { this.pos = pos; },
+    };
+    return new InvariantBodyParser(stream, this.viewInvariantContext(), CONCEPT_OPTIONS);
+  }
+
+  private parseSharedInvariant(): InvariantDecl[] {
+    this.expect('KEYWORD', 'invariant');
+    this.expect('LBRACE');
+    return this.makeSharedInvariantBodyParser().parseInvariantBlock();
   }
 }
 

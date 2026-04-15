@@ -186,6 +186,12 @@ export interface CompiledSync {
   when: WhenPattern[];
   where: WhereEntry[];
   then: ThenAction[];
+  /**
+   * Declarative invariants attached to this sync. Parsed from
+   * `invariant { ... }` blocks via the shared InvariantBodyParser
+   * (PRD: invariant-grammar-portability, MAG-911 / INV-7).
+   */
+  invariants?: InvariantDecl[];
 }
 
 // --- Binding ---
@@ -516,6 +522,12 @@ export interface DerivedAST {
   };
   /** Operational principle of the composition. */
   principle?: DerivedPrinciple;
+  /**
+   * Declarative invariants attached to this derived concept. Parsed from
+   * `invariant { ... }` blocks via the shared InvariantBodyParser
+   * (PRD: invariant-grammar-portability, MAG-911 / INV-7).
+   */
+  invariants?: InvariantDecl[];
 }
 
 // --- ConceptManifest (language-neutral IR) ---

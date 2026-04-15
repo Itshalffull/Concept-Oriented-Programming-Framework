@@ -14,7 +14,15 @@ import type {
   DerivedPrincipleStep,
   ParamDecl,
   TypeExpr,
+  InvariantDecl,
 } from '../../../runtime/types.js';
+import {
+  InvariantBodyParser,
+  CONCEPT_OPTIONS,
+  type AssertionContext,
+  type BasicToken,
+  type TokenStream,
+} from './invariant-body-parser.js';
 
 // --- Token Types ---
 
@@ -53,6 +61,10 @@ const KEYWORDS = new Set([
   'action', 'query', 'principle', 'matches', 'required',
   'recommended', 'after', 'then', 'and', 'entry', 'triggers',
   'reads', 'on',
+  // Invariant grammar keywords (shared with concept/widget/sync/view parsers).
+  // See handlers/ts/framework/invariant-body-parser.ts (MAG-911 / INV-7).
+  'invariant', 'example', 'forall', 'always', 'never', 'eventually',
+  'given', 'exists', 'ensures', 'requires', 'not', 'old', 'where', 'in', 'none',
 ]);
 
 const CONTEXTUAL_KEYWORDS = new Set(['set', 'list', 'option']);
@@ -296,6 +308,12 @@ class DerivedParser {
         case 'principle':
           ast.principle = this.parsePrinciple();
           break;
+        case 'invariant': {
+          const decls = this.parseInvariant();
+          if (!ast.invariants) ast.invariants = [];
+          ast.invariants.push(...decls);
+          break;
+        }
         default:
           throw new Error(`Derived parse error at line ${keyword.line}: unexpected keyword '${keyword.value}'`);
       }
@@ -871,6 +889,43 @@ class DerivedParser {
     }
 
     throw new Error(`Derived parse error at line ${tok.line}: expected type expression, got ${tok.type}(${tok.value})`);
+  }
+
+  // ================================================================
+  // Invariant parsing — delegated to shared InvariantBodyParser.
+  // Same grammar/options as the concept parser (CONCEPT_OPTIONS).
+  // See invariant-body-parser.ts (MAG-911 / INV-7).
+  // ================================================================
+
+  private derivedInvariantContext(): AssertionContext {
+    return {
+      resolveIdentifier: (name: string) => ({ kind: 'action', action: name }),
+      declaredSymbols: () => [],
+    };
+  }
+
+  private makeInvariantBodyParser(): InvariantBodyParser {
+    const stream: TokenStream = {
+      peek: () => this.tokens[this.pos] as unknown as BasicToken,
+      peekAt: (offset: number) =>
+        this.tokens[this.pos + offset] as unknown as BasicToken | undefined,
+      advance: () => this.advance() as unknown as BasicToken,
+      expect: (type: string, value?: string) =>
+        this.expect(type as TokenType, value) as unknown as BasicToken,
+      match: (type: string, value?: string) =>
+        (this.match(type as TokenType, value) as unknown as BasicToken | null),
+      expectIdent: () => this.expectIdent() as unknown as BasicToken,
+      skipSeps: () => this.skipSeps(),
+      position: () => this.pos,
+      seek: (pos: number) => { this.pos = pos; },
+    };
+    return new InvariantBodyParser(stream, this.derivedInvariantContext(), CONCEPT_OPTIONS);
+  }
+
+  private parseInvariant(): InvariantDecl[] {
+    this.expect('KEYWORD', 'invariant');
+    this.expect('LBRACE');
+    return this.makeInvariantBodyParser().parseInvariantBlock();
   }
 }
 
