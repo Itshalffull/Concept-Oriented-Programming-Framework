@@ -17,6 +17,7 @@ import {
 import { autoInterpret } from '../../runtime/functional-compat.ts';
 import { readdirSync, readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
+import { createHash } from 'crypto';
 
 type Result = { variant: string; [key: string]: unknown };
 
@@ -311,6 +312,37 @@ const _handler: FunctionalConceptHandler = {
     }) as StorageProgram<Result>;
   },
 
+  /**
+   * Reapply a seed: reset applied=false and update the stored content_hash.
+   * The kernel calls this when a YAML file's hash differs from the stored hash.
+   * On the next apply() call the seed will be re-executed.
+   */
+  reapply(input: Record<string, unknown>) {
+    const rawSeed = input.seed;
+    const resolvedSeed = Array.isArray(rawSeed) ? rawSeed[0] : rawSeed;
+    const seedId = resolvedSeed != null ? String(resolvedSeed) : '';
+    const contentHash = input.content_hash as string;
+
+    let p = createProgram();
+    p = get(p, 'seed-data', seedId, 'record');
+
+    return branch(p, 'record',
+      (thenP) => {
+        let b = putFrom(thenP, 'seed-data', seedId, (bindings) => {
+          const record = bindings.record as Record<string, unknown>;
+          return {
+            ...record,
+            applied: false,
+            content_hash: contentHash,
+            updated_at: new Date().toISOString(),
+          };
+        });
+        return complete(b, 'reapplied', { seed: seedId });
+      },
+      (elseP) => complete(elseP, 'notfound', { message: `No seed record with id ${seedId}` }),
+    ) as StorageProgram<Result>;
+  },
+
   reset(input: Record<string, unknown>) {
     // Handle the case where seed is passed as an array (from discover's found list)
     const rawSeed = input.seed;
@@ -367,31 +399,62 @@ export async function discoverFromFilesystem(input: Record<string, unknown>, sto
     }
   }
   const files = allFiles;
-  const found: string[] = [];
+  const found: Array<{ id: string; currentHash: string }> = [];
+
+  // Load all existing seed records so we can upsert by source_path rather than
+  // creating duplicate records on every boot.
+  const allExisting = await storage.find('seed-data', {});
+  const existingByPath = new Map<string, Record<string, unknown>>();
+  for (const rec of allExisting) {
+    const r = rec as Record<string, unknown>;
+    existingByPath.set(r.source_path as string, r);
+  }
 
   for (const { file, dir } of files) {
     const filePath = resolve(dir, file);
     const content = readFileSync(filePath, 'utf8');
+    // Compute fresh hash of the current file contents for change detection.
+    const currentHash = createHash('sha256').update(content).digest('hex');
     const parsed = parseSeedsYaml(content);
 
     for (const seed of parsed) {
-      const id = nextId();
       const conceptUri = normalizeConceptUri(seed.concept_uri);
       const entries = seed.entries.map((e) => JSON.stringify(e));
 
-      await storage.put('seed-data', id, {
-        id,
-        source_path: filePath,
-        concept_uri: conceptUri,
-        action_name: seed.action_name,
-        entries: JSON.stringify(entries),
-        entry_count: entries.length,
-        applied: false,
-        applied_at: null,
-        error_log: '[]',
-      });
-
-      found.push(id);
+      const existing = existingByPath.get(filePath);
+      if (existing) {
+        // Upsert: preserve id, applied status, applied_at, and the stored
+        // content_hash (which records the hash at last-apply time). Only
+        // refresh entries and metadata so the kernel can re-invoke if changed.
+        const id = existing.id as string;
+        await storage.put('seed-data', id, {
+          ...existing,
+          concept_uri: conceptUri,
+          action_name: seed.action_name,
+          entries: JSON.stringify(entries),
+          entry_count: entries.length,
+          // Do NOT overwrite content_hash here — it represents the hash at
+          // last-apply time. The kernel compares stored content_hash vs
+          // currentHash to decide whether to re-apply.
+        });
+        found.push({ id, currentHash });
+      } else {
+        const id = nextId();
+        await storage.put('seed-data', id, {
+          id,
+          source_path: filePath,
+          concept_uri: conceptUri,
+          action_name: seed.action_name,
+          entries: JSON.stringify(entries),
+          entry_count: entries.length,
+          applied: false,
+          applied_at: null,
+          updated_at: null,
+          error_log: '[]',
+          content_hash: null,
+        });
+        found.push({ id, currentHash });
+      }
     }
   }
 

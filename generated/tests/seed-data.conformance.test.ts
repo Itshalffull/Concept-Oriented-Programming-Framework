@@ -473,6 +473,54 @@ describe('SeedData functional handler', () => {
   });
 
 
+  describe('reapply', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = seedDataHandler.reapply({ seed: "seed-1", content_hash: "abc" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = seedDataHandler.reapply({ seed: "seed-1", content_hash: "abc" });
+      if (!program?.instructions) return;
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = seedDataHandler.reapply({ seed: "seed-1", content_hash: "abc" });
+      if (!program?.instructions) return;
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('fixture "changed" -> reapplied', async () => {
+      if (typeof seedDataHandler.reapply !== 'function') return;
+      const storage = createInMemoryStorage();
+      // Setup: register a seed first
+      const regResult = await interpret(seedDataHandler.register({
+        source_path: "/project/seeds/schema.seeds.yaml",
+        concept_uri: "urn:clef/Schema",
+        action_name: "defineSchema",
+        entries: ["{\"schema\":\"Shape\"}"],
+      }), storage);
+      expect(regResult.variant).toBe('ok');
+      const seedId = (regResult as any).output?.seed ?? (regResult as any).seed;
+      const result = await interpret(seedDataHandler.reapply({ seed: seedId, content_hash: "different-hash" }), storage);
+      expect(result.variant).toBe('reapplied');
+    });
+
+    it('fixture "reapply_nonexistent" -> notfound', async () => {
+      if (typeof seedDataHandler.reapply !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(seedDataHandler.reapply({ seed: "seed-999", content_hash: "x" }), storage);
+      expect(result.variant).not.toBe('ok');
+    });
+
+  });
+
   describe('invariant examples', () => {
     it("register-then-status", async () => {
       const storage = createInMemoryStorage();

@@ -17,8 +17,10 @@ concept SeedData [S] {
     entries: S -> list String
     applied: S -> Bool
     applied_at: S -> option DateTime
+    updated_at: S -> option DateTime
     entry_count: S -> Int
     error_log: S -> list String
+    content_hash: S -> option String
   }
 
   capabilities {
@@ -58,18 +60,34 @@ concept SeedData [S] {
     action apply(seed: S) {
       -> ok(seed: S, applied_count: Int) {
         Invoke the concept action once per entry in the seed set.
-        Marks the seed as applied with a timestamp. Entries that
-        fail are logged but do not halt the remaining entries.
+        Marks the seed as applied with a timestamp and stores the
+        content_hash so future boots can detect file changes. Entries
+        that fail are logged but do not halt the remaining entries.
       }
       -> ok(seed: S) {
-        This seed set has already been applied.
+        This seed set has already been applied and the content hash is unchanged.
       }
       -> notfound(message: String) {
         No seed record exists with this identifier.
       }
 
-      fixture valid_apply { seed: $valid_discover.found } after valid_discover
-      fixture apply_nonexistent { seed: "seed-999" } -> error
+      fixture first_time { seed: $valid_register.seed } after valid_register
+      fixture unchanged { seed: $valid_register.seed } after first_time
+      fixture apply_nonexistent { seed: "seed-999" } -> notfound
+    }
+
+    action reapply(seed: S, content_hash: String) {
+      -> reapplied(seed: S) {
+        Reset the applied flag and update the stored content_hash so the
+        seed will be re-applied on the next apply call. Use when the YAML
+        file content has changed since last application.
+      }
+      -> notfound(message: String) {
+        No seed record exists with this identifier.
+      }
+
+      fixture changed { seed: $valid_register.seed, content_hash: "different-hash" } after valid_register -> reapplied
+      fixture reapply_nonexistent { seed: "seed-999", content_hash: "x" } -> notfound
     }
 
     action applyAll() {
@@ -173,5 +191,13 @@ concept SeedData [S] {
 
     ensures ok: source_path != none
 
+  }
+
+  // Section 16.12 — content-hash invariant: a seed whose YAML file has changed
+  // since last application MUST be re-applied on next boot. Seeds are the
+  // declarative source of truth; a stale applied-flag blocks intended state changes.
+  always "stale-hash-requires-reapply" {
+    forall s in seeds:
+      s.applied = true implies s.content_hash != none
   }
 }

@@ -471,18 +471,51 @@ function parseSeedEntries(raw: unknown): Array<Record<string, unknown>> {
   return entries.map((entry) => JSON.parse(entry) as Record<string, unknown>);
 }
 
+// NOTE: From this commit forward, seed re-application is automatic whenever a
+// .seeds.yaml file's SHA-256 content hash changes — no manual intervention needed.
+// One-time migration for existing dbs: delete clef-base/.clef/clef-base.db* before
+// starting the dev server so seeds are re-discovered with fresh hashes.
 async function applyDeclarativeSeeds(kernel: Kernel) {
+  const seedStorage = makeStorage('seed-data');
   const discovery = await discoverFromFilesystem({
     base_path: resolve(CLEF_BASE_ROOT, 'seeds'),
-  }, makeStorage('seed-data'));
+  }, seedStorage);
   if (discovery.variant !== 'ok') {
     throw new Error(String(discovery.message ?? 'Failed to discover seed data'));
   }
 
+  // Build a map of seedId → currentHash from the discovery results so we
+  // can compare against the stored content_hash without re-hashing files.
+  const currentHashById = new Map<string, string>();
+  if (Array.isArray(discovery.found)) {
+    for (const entry of discovery.found as Array<{ id: string; currentHash: string } | string>) {
+      if (typeof entry === 'object' && entry !== null) {
+        currentHashById.set(entry.id, entry.currentHash);
+      }
+    }
+  }
+
   const seeds = await kernel.queryConcept('urn:clef/SeedData', 'seed-data');
   for (const seed of seeds) {
-    if (seed.applied === true) {
+    const seedId = String(seed.id ?? '');
+    const storedHash = seed.content_hash != null ? String(seed.content_hash) : null;
+    const currentHash = currentHashById.get(seedId) ?? null;
+
+    // Determine if this seed needs (re-)application.
+    // Skip only when applied=true AND the stored hash matches the current file hash.
+    const hashMatch = storedHash !== null && currentHash !== null && storedHash === currentHash;
+    if (seed.applied === true && hashMatch) {
       continue;
+    }
+
+    // When the file has changed (or was never hashed), store the current hash
+    // via reapply before applying. This resets applied=false and records the
+    // new hash so the next boot will skip unless the file changes again.
+    if (currentHash !== null) {
+      await kernel.invokeConcept('urn:clef/SeedData', 'reapply', {
+        seed: seedId,
+        content_hash: currentHash,
+      }).catch(() => {});
     }
 
     const conceptUri = String(seed.concept_uri ?? '');
@@ -492,7 +525,7 @@ async function applyDeclarativeSeeds(kernel: Kernel) {
       await kernel.invokeConcept(conceptUri, actionName, entry).catch(() => {});
     }
     await kernel.invokeConcept('urn:clef/SeedData', 'apply', {
-      seed: seed.id,
+      seed: seedId,
     }).catch(() => {});
   }
 }
