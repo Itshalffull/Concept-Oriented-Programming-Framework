@@ -64,7 +64,7 @@ Don't delete — relocate to `/admin/system` or `/admin/stats`. Still useful, ju
 | DN-3 | ContentNode/listByDateRef action | pending | — |
 | DN-4 | daily-note-editor widget | pending | — |
 | DN-5 | daily-note-sidebar widget | pending | — |
-| DN-6 | referenced-on-this-day widget | done | pending |
+| DN-6 | referenced-on-this-day widget | done | 1f57e4c0 |
 | DN-7 | /admin → /admin/daily/:today redirect | pending | — |
 | DN-8 | /admin/daily/:date page + layout | pending | — |
 | DN-9 | /admin/system dashboard relocation | pending | — |
