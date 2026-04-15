@@ -312,6 +312,33 @@ type Result = { variant: string; [key: string]: unknown };
 const canvasHandlerWithList: FunctionalConceptHandler = {
   ..._handler,
 
+  /**
+   * create — Create a blank canvas with an optional name.
+   * Canvas ID is auto-generated from a UUID slug if not provided.
+   * No initial node is required; nodes are added in the editor after creation.
+   */
+  create(input: Record<string, unknown>) {
+    const rawName = (input.name as string | undefined) ?? '';
+    const name = rawName.trim();
+    // Auto-generate canvas ID from name or a random token
+    const slug = name
+      ? name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+      : `canvas-${Date.now().toString(36)}`;
+    const canvasId = `canvas:${slug}`;
+
+    let p = createProgram();
+    // Check for duplicate
+    p = get(p, 'canvas', canvasId, '_existing');
+    return branch(p, '_existing',
+      (b) => complete(b, 'duplicate', { message: `A canvas with id "${canvasId}" already exists.` }),
+      (b) => {
+        const record = { canvas: canvasId, name: name || slug, nodes: '[]', positions: '{}', edges: '[]' };
+        let b2 = put(b, 'canvas', canvasId, record);
+        return complete(b2, 'ok', { id: canvasId });
+      },
+    ) as StorageProgram<Result>;
+  },
+
   list(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'canvas', {}, '_allCanvases');

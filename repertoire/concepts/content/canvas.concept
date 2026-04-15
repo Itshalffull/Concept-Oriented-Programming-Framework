@@ -123,6 +123,20 @@ concept Canvas [V] {
       fixture remove_notfound { canvas: "board-1", connector: "no-such-edge" } after valid_add -> notfound
       fixture remove_missing_canvas { canvas: "nonexistent", connector: "edge-1" } -> error
     }
+
+    action create(name: String) {
+      -> ok(id: V) {
+        Create a blank canvas with no initial nodes. The canvas ID is derived
+        from the name (or auto-generated when name is empty). Users add nodes
+        interactively inside the canvas editor after creation.
+      }
+      -> duplicate(message: String) {
+        A canvas with the derived ID already exists.
+      }
+      fixture nameless { name: "" }
+      fixture named { name: "My Canvas" }
+      fixture duplicate_named { name: "My Canvas" } after named -> duplicate
+    }
   }
 
   example "addNode-then-moveNode": {

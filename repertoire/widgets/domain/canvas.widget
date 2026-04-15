@@ -326,6 +326,7 @@ widget canvas {
     "Keyboard nudge must respect snap-to-grid setting";
     "Minimap viewport indicator must reflect the visible portion of the canvas";
     "Property panel must display only when at least one element is selected";
+    "Canvas creation MUST NOT require the user to enter node IDs or coordinates. Reason: node placement is an interactive concern inside the canvas editor; forcing it in a modal leaks implementation detail.";
   }
 
 }
