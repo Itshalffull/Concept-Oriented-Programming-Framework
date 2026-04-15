@@ -12,7 +12,7 @@ entries:
     fields: '[{"key":"schema","label":"Schema Name"},{"key":"fields","label":"Fields","formatter":"json-count"},{"key":"extends","label":"Extends","formatter":"badge"}]'
 
   - name: workflows-list-fields
-    fields: '[{"key":"workflow","label":"Workflow"},{"key":"states","label":"States","formatter":"json-count"},{"key":"transitions","label":"Transitions","formatter":"json-count"}]'
+    fields: '[{"key":"name","label":"Workflow"},{"key":"states","label":"States","formatter":"json-count"},{"key":"node","label":"ID"}]'
 
   # Shared by: automations-list, automations-rules-list, process-catalog
   - name: automations-fields
