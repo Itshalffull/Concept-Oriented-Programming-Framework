@@ -151,6 +151,7 @@ const _handler: FunctionalConceptHandler = {
             description: (input.description as string) ?? r.description,
             required: input.required !== undefined ? (input.required === true || input.required === 'true') : r.required,
             unique: input.unique !== undefined ? (input.unique === true || input.unique === 'true') : r.unique,
+            typeConfig: (input.typeConfig as string) ?? r.typeConfig,
             validations: (input.validations as string) ?? r.validations,
             defaultValue: (input.defaultValue as string) ?? r.defaultValue,
             widget: (input.widget as string) ?? r.widget,

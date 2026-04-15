@@ -532,6 +532,21 @@ widget schema-fields-editor {
     "DROP calls FieldDefinition/reorder with the new sortOrder for the dragged field";
     "requiredIndicator active only when the field row required property is true";
     "uniqueIndicator active only when the field row unique property is true";
+
+    always "Select field config panel renders options rows after add-option click": {
+      state.name = "config-open" and self.fieldType = "select" implies selectOptionsEditor.dataVisible = "true"
+    }
+
+    example "adding a Select option renders a new option row": {
+      after transition(from: "idle", event: "OPEN_CONFIG") -> ok
+      then state.name = "config-open"
+      then addOptionButton.click() -> ok
+      and selectOptionsEditor.optionCount = old.selectOptionsEditor.optionCount + 1
+    }
+
+    never "Select options editor hidden while config panel is open for select field": {
+      state.name = "config-open" and self.fieldType = "select" and selectOptionsEditor.dataVisible = "false"
+    }
   }
 
 }

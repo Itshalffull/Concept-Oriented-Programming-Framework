@@ -67,7 +67,7 @@ concept FieldDefinition [F] {
       fixture duplicate_field { schema: "article", fieldId: "due_date", label: "Due Date Again", fieldType: "date", cardinality: "single", typeConfig: "{}", required: false, unique: false, validations: "[]", defaultValue: "", widget: "", formatter: "", sortOrder: 99 } after create_ok -> duplicate
     }
 
-    action update(schema: String, fieldId: String, label: String, description: String, required: Bool, unique: Bool, validations: String, defaultValue: String, widget: String, formatter: String, sortOrder: Int) {
+    action update(schema: String, fieldId: String, label: String, description: String, required: Bool, unique: Bool, typeConfig: String, validations: String, defaultValue: String, widget: String, formatter: String, sortOrder: Int) {
       -> ok(id: F) {
         The field's mutable properties have been updated. The fieldId remains unchanged.
       }
@@ -195,6 +195,18 @@ concept FieldDefinition [F] {
     after create(schema: "article", fieldId: "temp_field", label: "Temp", fieldType: "text", cardinality: "single", typeConfig: "{}", required: false, unique: false, validations: "[]", defaultValue: "", widget: "", formatter: "", sortOrder: 99) -> ok(id: f)
     then remove(schema: "article", fieldId: "temp_field") -> ok()
     and get(schema: "article", fieldId: "temp_field") -> not_found(message: m)
+  }
+
+  example "select options persist across update": {
+    after create(schema: "Task", fieldId: "status", label: "Status", fieldType: "select", cardinality: "single", typeConfig: "{}", required: false, unique: false, validations: "[]", defaultValue: "", widget: "", formatter: "", sortOrder: 1) -> ok(id: f)
+    then update(schema: "Task", fieldId: "status", label: "Status", description: "", required: false, unique: false, typeConfig: "{\"options\":[{\"label\":\"To Do\",\"value\":\"option_1\"}]}", validations: "[]", defaultValue: "", widget: "", formatter: "", sortOrder: 1) -> ok(id: f)
+    and get(schema: "Task", fieldId: "status") -> ok(typeConfig: "{\"options\":[{\"label\":\"To Do\",\"value\":\"option_1\"}]}")
+  }
+
+  example "typeConfig preserved when not supplied in update": {
+    after create(schema: "Task", fieldId: "priority", label: "Priority", fieldType: "select", cardinality: "single", typeConfig: "{\"options\":[{\"label\":\"High\",\"value\":\"high\"}]}", required: false, unique: false, validations: "[]", defaultValue: "", widget: "", formatter: "", sortOrder: 2) -> ok(id: f)
+    then update(schema: "Task", fieldId: "priority", label: "Priority (updated)", description: "", required: false, unique: false, typeConfig: "", validations: "[]", defaultValue: "", widget: "", formatter: "", sortOrder: 2) -> ok(id: f)
+    and get(schema: "Task", fieldId: "priority") -> ok(typeConfig: "{\"options\":[{\"label\":\"High\",\"value\":\"high\"}]}")
   }
 
   always "fieldId is immutable after creation": {
