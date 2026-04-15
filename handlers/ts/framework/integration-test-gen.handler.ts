@@ -18,7 +18,10 @@ import {
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
 import { parseConceptFile } from './parser.js';
-import type { FixtureDecl, ActionDecl } from '../../../runtime/types.js';
+import type {
+  FixtureDecl, ActionDecl, InvariantDecl, InvariantASTStep, ActionPattern,
+  ArgPattern, ArgPatternValue,
+} from '../../../runtime/types.js';
 
 type Result = { variant: string; [key: string]: unknown };
 
@@ -271,6 +274,175 @@ function resolveReversal(
     warning: `Action "${actionName}" has no reversal and no inferable cleanup — skipped from integration tests` };
 }
 
+// ── Scenario Invariant Translation ─────────────────────────────
+
+/** Unwrap an ArgPatternValue to a JSON-safe representation. */
+function unwrapArgValue(v: ArgPatternValue): unknown {
+  if (!v || typeof v !== 'object') return v;
+  switch (v.type) {
+    case 'literal':
+      return v.value;
+    case 'ref':
+      // { type:'ref', fixture, field } → "$fixture.field"
+      return `$${(v as unknown as { fixture: string; field: string }).fixture}.${(v as unknown as { field: string }).field}`;
+    default:
+      return (v as unknown as { value?: unknown }).value ?? null;
+  }
+}
+
+function argPatternsToObject(args: ArgPattern[]): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const a of args) {
+    out[a.name] = unwrapArgValue(a.value);
+  }
+  return out;
+}
+
+/**
+ * Translate scenario invariants into ProcessSpec steps. givenSteps are
+ * setup steps, whenSteps are the exercise steps, thenSteps become
+ * CheckVerification assertions on the most recent when-step. Settlement
+ * controls per-step pollUntil / waitForCompletion annotations.
+ */
+function scenarioStepsFromInvariants(
+  invariants: InvariantDecl[] | undefined,
+): ProcessStep[] {
+  if (!invariants || invariants.length === 0) return [];
+  const out: ProcessStep[] = [];
+
+  for (const inv of invariants) {
+    if (inv.kind !== 'scenario') continue;
+
+    const scenarioId = inv.name
+      ? inv.name.replace(/[^A-Za-z0-9_]+/g, '_').toLowerCase()
+      : `scenario_${out.length}`;
+
+    const settlementSettings: Record<string, unknown> = {};
+    if (inv.settlement) {
+      if (inv.settlement.mode === 'async-eventually') {
+        settlementSettings.pollUntil = { timeoutMs: inv.settlement.timeoutMs };
+      } else if (inv.settlement.mode === 'async-with-anchor') {
+        settlementSettings.waitForCompletion = inv.settlement.anchor;
+      }
+    }
+
+    // given steps — external calls with ok assertion
+    let idx = 0;
+    const givenNames: string[] = [];
+    for (const step of inv.givenSteps ?? []) {
+      if (step.kind !== 'action') continue;
+      const name = `${scenarioId}_given_${idx++}`;
+      out.push({
+        type: 'external-call',
+        name,
+        action: (step as ActionPattern).actionName,
+        input: argPatternsToObject((step as ActionPattern).inputArgs),
+        outputBindings: (step as ActionPattern).outputArgs.map(o => o.name),
+        after: givenNames.slice(-1),
+        assertions: [
+          { kind: 'check-verification', expectedVariant: (step as ActionPattern).variantName || 'ok' },
+        ],
+      });
+      givenNames.push(name);
+    }
+
+    // when steps — external calls; carry settlement settings
+    idx = 0;
+    const whenNames: string[] = [];
+    for (const step of inv.whenSteps ?? []) {
+      if (step.kind !== 'action') continue;
+      const name = `${scenarioId}_when_${idx++}`;
+      const pstep: ProcessStep = {
+        type: 'external-call',
+        name,
+        action: (step as ActionPattern).actionName,
+        input: argPatternsToObject((step as ActionPattern).inputArgs),
+        outputBindings: (step as ActionPattern).outputArgs.map(o => o.name),
+        after: whenNames.length > 0
+          ? [whenNames[whenNames.length - 1]]
+          : givenNames.slice(-1),
+        assertions: [
+          { kind: 'check-verification', expectedVariant: (step as ActionPattern).variantName || 'ok' },
+        ],
+      };
+      if (Object.keys(settlementSettings).length > 0) {
+        (pstep as ProcessStep & { settings?: Record<string, unknown> }).settings = { ...settlementSettings };
+      }
+      out.push(pstep);
+      whenNames.push(name);
+    }
+
+    // then steps — each assertion becomes a CheckVerification on the last when-step.
+    // Kind 'action' then-steps (reads) additionally emit an external-call with variant assertion.
+    const lastWhen = whenNames[whenNames.length - 1];
+    idx = 0;
+    for (const step of inv.thenSteps ?? []) {
+      if (step.kind === 'action') {
+        const ap = step as ActionPattern;
+        const name = `${scenarioId}_then_${idx++}`;
+        out.push({
+          type: 'external-call',
+          name,
+          action: ap.actionName,
+          input: argPatternsToObject(ap.inputArgs),
+          outputBindings: ap.outputArgs.map(o => o.name),
+          after: lastWhen ? [lastWhen] : [],
+          assertions: [
+            { kind: 'check-verification', expectedVariant: ap.variantName || 'ok' },
+          ],
+        });
+      } else if (step.kind === 'assertion' && lastWhen) {
+        // attach assertion to the last when-step
+        const host = out.find(s => s.name === lastWhen);
+        if (host) {
+          const a = step as { left: { type: string; field?: string; variable?: string }; operator: string; right: { type: string; value?: unknown } };
+          const field = (a.left as { field?: string }).field;
+          if (field) {
+            host.assertions.push({
+              kind: 'check-verification',
+              expectedVariant: String((a.right as { value?: unknown }).value ?? 'ok'),
+            });
+          }
+        }
+      }
+    }
+  }
+
+  return out;
+}
+
+// ── TestPlan-shaped IR ────────────────────────────────────────
+
+interface ProcessSpecPlan {
+  planId: string;
+  specKind: 'concept';
+  sourceRef: string;
+  concept: string;
+  target: string;
+  auth?: string;
+  fixtureSteps: ProcessStep[];
+  cleanupSteps: ProcessStep[];
+  scenarioSteps: ProcessStep[];
+  skippedActions: Array<{ action: string; reason: string }>;
+}
+
+/**
+ * Render a TestPlan-shaped payload into the final ProcessSpec JSON
+ * representation. This is the core renderer used by both the
+ * process-spec-renderer concept handler and IntegrationTestGen.
+ */
+export function renderTestPlanToProcessSpec(plan: ProcessSpecPlan): ProcessSpec {
+  return {
+    concept: plan.concept,
+    source: plan.sourceRef,
+    target: plan.target,
+    ...(plan.auth ? { auth: plan.auth } : {}),
+    steps: [...plan.fixtureSteps, ...plan.scenarioSteps],
+    cleanupSteps: plan.cleanupSteps,
+    skippedActions: plan.skippedActions,
+  };
+}
+
 /**
  * Build a ProcessSpec JSON from a parsed concept spec and ingest manifest.
  */
@@ -386,17 +558,29 @@ function buildProcessSpec(
     }
   }
 
-  const processSpec: ProcessSpec = {
+  // Extract scenario-derived steps from the concept-level invariants
+  // (these coexist with fixture-chain steps; fixtures come first, then
+  // scenarios).
+  const scenarioSteps = scenarioStepsFromInvariants(ast.invariants);
+
+  // Build the TestPlan-shaped IR, then dispatch to the renderer. The
+  // renderer is a pure function — behavior is identical to the prior
+  // inline construction.
+  const plan: ProcessSpecPlan = {
+    planId: `plan:${source}:${Date.now()}`,
+    specKind: 'concept',
+    sourceRef: source,
     concept: ast.name,
-    source,
-    target: manifest['target'] as string ?? '',
+    target: (manifest['target'] as string) ?? '',
     ...(manifest['auth'] ? { auth: manifest['auth'] as string } : {}),
-    steps,
+    fixtureSteps: steps,
     cleanupSteps,
+    scenarioSteps,
     skippedActions,
   };
 
-  return { processSpec, stepCount: steps.length };
+  const processSpec = renderTestPlanToProcessSpec(plan);
+  return { processSpec, stepCount: processSpec.steps.length };
 }
 
 // ── Handler ────────────────────────────────────────────────────

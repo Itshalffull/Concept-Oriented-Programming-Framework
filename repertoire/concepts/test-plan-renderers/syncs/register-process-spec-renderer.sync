@@ -1,0 +1,16 @@
+# Wire ProcessSpecRenderer/register into PluginRegistry so the rendering
+# dispatch layer can discover and invoke the ProcessSpec backend by name.
+
+sync RegisterProcessSpecRenderer [eager]
+  purpose { Wire ProcessSpecRenderer/register into PluginRegistry. }
+when {
+  ProcessSpecRenderer/register: []
+    => ok(name: ?name; capabilities: ?caps)
+}
+then {
+  PluginRegistry/register: [
+    type: "test-plan-renderer";
+    name: ?name;
+    metadata: { capabilities: ?caps }
+  ]
+}

@@ -1,0 +1,20 @@
+# When ExternalHandlerGen emits a handler for an external API concept,
+# fire the universal TestGeneration pipeline against that concept so the
+# generated handler's invariants are rendered as Playwright tests against
+# the live external API.
+
+sync RunTestsOnExternalHandlerGen [eager]
+  purpose { Drive TestGeneration/run when an external handler is generated. }
+when {
+  ExternalHandlerGen/generate: [
+    manifest: ?manifest;
+    source: ?source;
+    concept: ?concept
+  ]
+    => ok(handlerCode: ?code; actionCount: ?count)
+}
+then {
+  TestGeneration/run: [
+    target: ?concept
+  ]
+}

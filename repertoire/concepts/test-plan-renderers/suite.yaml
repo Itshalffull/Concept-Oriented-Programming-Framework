@@ -21,6 +21,11 @@ concepts:
     params:
       R: { as: playwright-renderer-ref, description: "Reference to a registered Playwright renderer instance" }
 
+  ProcessSpecRenderer:
+    spec: ./process-spec-renderer.concept
+    params:
+      R: { as: process-spec-renderer-ref, description: "Reference to a registered ProcessSpec renderer instance" }
+
 syncs:
   required:
     - path: ./syncs/register-react-renderer.sync
@@ -28,6 +33,9 @@ syncs:
 
     - path: ./syncs/register-playwright-renderer.sync
       description: "PlaywrightRenderer/register -> PluginRegistry/register(test-plan-renderer)"
+
+    - path: ./syncs/register-process-spec-renderer.sync
+      description: "ProcessSpecRenderer/register -> PluginRegistry/register(test-plan-renderer)"
 
 uses:
   - suite: infrastructure

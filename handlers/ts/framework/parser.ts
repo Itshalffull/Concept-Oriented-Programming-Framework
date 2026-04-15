@@ -471,7 +471,8 @@ class Parser {
         case 'always':
         case 'never':
         case 'eventually':
-          ast.invariants.push(this.parseNamedInvariant(keyword.value as 'example' | 'forall' | 'always' | 'never' | 'eventually'));
+        case 'scenario':
+          ast.invariants.push(this.parseNamedInvariant(keyword.value as 'example' | 'forall' | 'always' | 'never' | 'eventually' | 'scenario'));
           break;
         case 'action':
           // Top-level action contract: `action X { requires: ... ensures: ... }`
@@ -1016,7 +1017,7 @@ class Parser {
    * Called when keyword appears at concept body level (not inside `invariant {}`).
    */
   private parseNamedInvariant(
-    keyword: 'example' | 'forall' | 'always' | 'never' | 'eventually',
+    keyword: 'example' | 'forall' | 'always' | 'never' | 'eventually' | 'scenario',
   ): InvariantDecl {
     return this.makeInvariantBodyParser().parseNamedInvariantBody(keyword);
   }

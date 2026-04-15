@@ -20,6 +20,7 @@
 | [MAG-917](https://vibekanban.com) ✅ `83e0a06a` | INV-13 Wire test execution through `Builder/test` so dormant quality-signal syncs fire | — |
 | [MAG-918](https://vibekanban.com) | INV-14 Integrate ExternalHandlerGen + IntegrationTestGen with universal grammar — `scenario` invariants feed IntegrationTestGen alongside fixtures; ExternalHandlerGen-generated handlers participate in TestGeneration pipeline | — |
 | [MAG-919](https://vibekanban.com) | INV-15 Add `/create-external-handler` + `/generate-integration-test` skills — extend `examples/devtools/devtools.interface.yaml`, regen via `scripts/regen-interface.ts` | — |
+| [MAG-920](https://vibekanban.com) | INV-16 Handlers-as-values test generation — TestPlan consumes StorageProgram descriptions + ExternalHandler manifests; emit mock/replay handler variants, effect-contract tests, FieldTransform-fuzzed inputs | — |
 
 Execution order comes from the blocking graph:
 
@@ -1010,3 +1011,52 @@ No new TS orchestration; even the CLI is a dispatcher.
     regen + hand edits can land in a single "update all grammar
     references" commit. Verify by searching for "six invariant
     constructs" — every hit is either updated or deleted.
+
+## Handlers-as-values test generation (MAG-920, INV-16)
+
+ExternalHandlerGen and StorageProgram share a deeper pattern:
+**handlers can be values, not code**. An ExternalHandler manifest IS a
+frozen handler — the code is synthesized by walking declared HTTP
+effects + FieldTransforms. A StorageProgram IS also a frozen handler
+— the code is executed by an interpreter walking declared storage
+instructions. Both are inspectable descriptions; both could feed the
+same test generator.
+
+This card extends the TestPlan IR (MAG-905) to accept three input
+shapes, not just scenario invariants:
+
+1. **Scenario invariants** (already supported, MAG-912).
+2. **StorageProgram descriptions** — extracted via the existing
+   `read-write-set-provider` and `transport-effect-provider` in the
+   monadic suite. For any functional handler, walk its program to
+   generate assertions that the handler reads/writes exactly the
+   declared relations and performs exactly the declared transport
+   effects.
+3. **ExternalHandler manifests** — each action's declared HTTP
+   method/path/auth/FieldTransform is a manifest of expected effects.
+
+Four new renderer/generator outputs emerge:
+
+- **Mock handler variant**: given a manifest or program, emit a
+  handler implementation that returns canned responses shaped by
+  FieldTransform/lens mappings instead of `perform('http', ...)` or
+  real storage writes. Upstream tests of concepts that call an
+  external concept get contract-matching stubs for free.
+- **Record/replay handler variant**: generate a handler that on
+  first run records real HTTP responses keyed by the
+  FieldTransform-shaped request, then replays them thereafter.
+  VCR-style, typed against the manifest. Integration tests become
+  fast and deterministic without losing fidelity.
+- **Effect-contract tests**: walk the program/manifest to emit a
+  test that asserts the handler actually performed the declared
+  effects and ONLY those. Catches regressions where a handler
+  silently adds a write or drops an HTTP call.
+- **FieldTransform-fuzzed tests**: FieldTransform is a typed
+  request shape. Feed it to a property generator, synthesize
+  malformed inputs, verify each maps to the right error variant.
+  Property-based testing without writing property predicates.
+
+Dependency: benefits from but doesn't require MAG-918. The mock/
+replay generators should live alongside the existing renderer
+plugins in `repertoire/concepts/test-plan-renderers/` and
+self-register via the MAG-907 sync pattern.

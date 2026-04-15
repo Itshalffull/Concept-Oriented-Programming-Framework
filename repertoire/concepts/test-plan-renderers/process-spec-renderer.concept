@@ -1,0 +1,79 @@
+@version(1)
+@category("testing")
+concept ProcessSpecRenderer [R] {
+
+  purpose {
+    Render an enriched TestPlan into a ProcessSpec JSON document for
+    integration testing against real external APIs. Each TestPlan step
+    becomes a ProcessSpec step (typed external-call) with assertions
+    derived from variant annotations and settlement-aware step settings
+    (pollUntil, waitForCompletion). This is the renderer that
+    IntegrationTestGen dispatches to when emitting its ProcessSpec output,
+    making ProcessSpec one platform-agnostic target alongside React and
+    Playwright.
+  }
+
+  state {
+    renderers: set R
+
+    identity {
+      name: R -> String
+    }
+
+    metadata {
+      capabilities: R -> String
+    }
+  }
+
+  actions {
+
+    action register() {
+      -> ok(name: String, capabilities: String) {
+        Return static metadata for PluginRegistry. The renderer
+        identifies itself as "process-spec" and declares capabilities:
+        external-call, check-verification, after-chain, fixture-chain,
+        scenario, sync-settlement, async-eventually, async-with-anchor.
+      }
+
+      fixture register_ok {}
+    }
+
+    action render(plan: String) {
+      -> ok(code: String) {
+        Translate the JSON-encoded TestPlan into a ProcessSpec JSON
+        string. The output preserves fixtureSteps + scenarioSteps order,
+        carries cleanupSteps and skippedActions through unchanged, and
+        injects per-step settings { pollUntil, waitForCompletion } for
+        async settlement modalities.
+      }
+      -> error(message: String) {
+        The plan string is not valid JSON, or the JSON does not
+        conform to the TestPlan-shaped payload (missing concept,
+        sourceRef, fixtureSteps, etc.).
+      }
+
+      fixture render_ok {
+        plan: "{\"planId\":\"plan:x:1\",\"specKind\":\"concept\",\"sourceRef\":\"specs/x.concept\",\"concept\":\"X\",\"target\":\"https://api.example.com\",\"fixtureSteps\":[{\"type\":\"external-call\",\"name\":\"create_ok\",\"action\":\"create\",\"input\":{},\"outputBindings\":[],\"after\":[],\"assertions\":[{\"kind\":\"check-verification\",\"expectedVariant\":\"ok\"}]}],\"cleanupSteps\":[],\"scenarioSteps\":[],\"skippedActions\":[]}"
+      }
+      fixture render_bad_json {
+        plan: "not valid json"
+      } -> error
+      fixture render_empty_plan {
+        plan: ""
+      } -> error
+    }
+  }
+
+  example "register then render": {
+    after register() -> ok(name: n, capabilities: caps)
+    then render(plan: "{\"planId\":\"plan:y:1\",\"specKind\":\"concept\",\"sourceRef\":\"specs/y.concept\",\"concept\":\"Y\",\"target\":\"\",\"fixtureSteps\":[],\"cleanupSteps\":[],\"scenarioSteps\":[],\"skippedActions\":[]}") -> ok(code: c)
+  }
+
+  never "register issued without name": {
+    exists r in renderers: r.name = ""
+  }
+
+  always "render registered renderers carry capabilities": {
+    forall r in renderers: r.capabilities != ""
+  }
+}
