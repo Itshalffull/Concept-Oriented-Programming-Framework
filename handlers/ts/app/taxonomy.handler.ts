@@ -3,7 +3,7 @@
 // Taxonomy Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, putFrom, branch, complete, mapBindings,
+  createProgram, get as spGet, find, put, putFrom, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -11,9 +11,10 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 const _taxonomyHandler: FunctionalConceptHandler = {
   list(_input: Record<string, unknown>) {
     let p = createProgram();
-    p = find(p, 'taxonomy', {}, 'items');
-    p = mapBindings(p, (bindings) => JSON.stringify((bindings.items as Array<Record<string, unknown>>) || []), 'itemsJson');
-    return complete(p, 'ok', { items: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    p = find(p, 'taxonomy', {}, 'allItems');
+    return completeFrom(p, 'ok', (bindings) => ({
+      items: JSON.stringify((bindings.allItems as Array<Record<string, unknown>>) ?? []),
+    })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   createVocabulary(input: Record<string, unknown>) {

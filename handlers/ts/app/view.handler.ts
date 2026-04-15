@@ -10,9 +10,10 @@ import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _viewHandler: FunctionalConceptHandler = {
   list(_input: Record<string, unknown>) {
-    let p = createProgram(); p = find(p, 'view', {}, 'items');
-    p = mapBindings(p, (bindings) => JSON.stringify((bindings.items as Array<Record<string, unknown>>) || []), 'itemsJson');
-    return complete(p, 'ok', { items: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    let p = createProgram(); p = find(p, 'view', {}, 'allViews');
+    return completeFrom(p, 'ok', (bindings) => ({
+      items: JSON.stringify((bindings.allViews as Array<Record<string, unknown>>) ?? []),
+    })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
   get(input: Record<string, unknown>) {
     const view = input.view as string;
