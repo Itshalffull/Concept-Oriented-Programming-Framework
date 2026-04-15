@@ -21,6 +21,8 @@ import { flakyTestHandler } from '../../handlers/ts/framework/test/flaky-test.ha
 import { testSelectionHandler } from '../../handlers/ts/framework/test/test-selection.handler';
 import { fieldDefinitionHandler } from '../../handlers/ts/app/field-definition.handler';
 import { formSpecHandler } from '../../handlers/ts/view/form-spec.handler';
+import { scoreApiHandler } from '../../handlers/ts/score/score-api.handler';
+import { scoreIndexHandler } from '../../handlers/ts/score/score-index.handler';
 
 import { REGISTRY_ENTRIES, SYNC_FILES } from '../../generated/kernel-registry';
 import { discoverFromFilesystem } from '../../handlers/ts/seed-data.handler';
@@ -132,6 +134,20 @@ const SUPPLEMENTAL_REGISTRY_ENTRIES = [
     uri: 'urn:clef/FormSpec',
     handler: formSpecHandler,
     storageName: 'form-spec',
+    storageType: 'standard' as const,
+  },
+  // ScoreApi and ScoreIndex share the same storage namespace so that
+  // ScoreIndex/upsertConcept writes are visible to ScoreApi/listConcepts.
+  {
+    uri: 'urn:clef/ScoreIndex',
+    handler: scoreIndexHandler,
+    storageName: 'score-index',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/ScoreApi',
+    handler: scoreApiHandler,
+    storageName: 'score-index',
     storageType: 'standard' as const,
   },
 ];
@@ -299,6 +315,30 @@ async function populateRuntimeRegistry(kernel: Kernel, registrations: RegEntry[]
   }
 }
 
+/**
+ * Populate ScoreApi's concept index from the kernel's registered concepts.
+ *
+ * ScoreApi/listConcepts reads from the 'concepts' relation written by
+ * ScoreIndex/upsertConcept. The ScoreIndex pipeline (ConceptEntity/register
+ * → upsertConcept) doesn't auto-run in clef-base, so we bootstrap it here
+ * by mirroring RuntimeRegistry registrations into the score index. This
+ * step is idempotent — upsertConcept overwrites existing entries by key.
+ */
+async function populateScoreApiIndex(kernel: Kernel, registrations: RegEntry[]) {
+  for (const reg of registrations) {
+    // Derive human-readable concept name from URI (e.g. urn:clef/ContentNode → ContentNode)
+    const conceptName = reg.uri.split('/').pop() ?? reg.uri;
+    if (!conceptName) continue;
+    await kernel.invokeConcept('urn:clef/ScoreIndex', 'upsertConcept', {
+      name: conceptName,
+      purpose: '',
+      actions: [],
+      stateFields: [],
+      file: '',
+    }).catch(() => {});
+  }
+}
+
 async function ensureBootstrapWorkspace(kernel: Kernel) {
   try {
     const existing = await kernel.invokeConcept('urn:clef/Workspace', 'list', { owner: 'system' });
@@ -334,6 +374,9 @@ async function seedData(kernel: Kernel, registrations: RegEntry[], loadedSyncs: 
 
   // Populate RuntimeRegistry with all registered concepts and syncs
   await populateRuntimeRegistry(kernel, registrations, loadedSyncs);
+
+  // Populate ScoreApi index so ConceptActionPicker can list live concepts
+  await populateScoreApiIndex(kernel, registrations);
 
   // Run FileCatalog discovery (scans specs, syncs, surface, repertoire)
   await kernel.invokeConcept('urn:clef/FileCatalog', 'discover', {
