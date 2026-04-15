@@ -42,12 +42,15 @@ export const CanvasBrowserView: React.FC = () => {
     setCreating(true);
     setCreateError(null);
     try {
-      const result = await invoke('Canvas', 'create', { name: createName });
+      const result = await invoke('ContentNode', 'createWithSchema', {
+        schema: 'Canvas',
+        title: createName || 'Untitled Canvas',
+      });
       if (result.variant !== 'ok') {
         setCreateError(String(result.message ?? `Unexpected result: ${result.variant}`));
         return;
       }
-      const newId = result.id as string;
+      const newId = result.node as string;
       setShowCreate(false);
       refetch?.();
       navigateToHref(`/admin/canvas/${encodeURIComponent(newId)}`);

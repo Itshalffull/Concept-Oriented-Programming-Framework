@@ -45,15 +45,34 @@ export const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({
     setSaving(true);
     setError(null);
     try {
-      const result = await invoke('AutomationRule', mode === 'create' ? 'define' : 'update', {
-        rule: ruleId.trim(),
-        trigger: trigger.trim(),
-        conditions: conditions.trim(),
-        actions: actions.trim(),
-      });
-      if (result.variant !== 'ok' && result.variant !== 'updated') {
-        setError(String(result.message ?? `Unexpected variant: ${result.variant}`));
-        return;
+      if (mode === 'create') {
+        const content = JSON.stringify({
+          trigger: trigger.trim(),
+          conditions: conditions.trim(),
+          actions: actions.trim(),
+          enabled: false,
+        });
+        const result = await invoke('ContentNode', 'createWithSchema', {
+          schema: 'AutomationRule',
+          title: ruleId.trim(),
+          node: 'automation-rule:' + ruleId.trim(),
+          content,
+        });
+        if (result.variant !== 'ok') {
+          setError(String(result.message ?? `Unexpected variant: ${result.variant}`));
+          return;
+        }
+      } else {
+        const result = await invoke('AutomationRule', 'update', {
+          rule: ruleId.trim(),
+          trigger: trigger.trim(),
+          conditions: conditions.trim(),
+          actions: actions.trim(),
+        });
+        if (result.variant !== 'ok' && result.variant !== 'updated') {
+          setError(String(result.message ?? `Unexpected variant: ${result.variant}`));
+          return;
+        }
       }
       navigateToHref('/admin/automations/rules');
     } catch (err) {

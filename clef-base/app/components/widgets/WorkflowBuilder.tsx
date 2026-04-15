@@ -61,12 +61,17 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
     setSaving(true);
     setError(null);
     try {
-      // Use Workflow/defineState to register the initial state, then the kernel
-      // applies subsequent state additions via addState syncs.
-      const result = await invoke('Workflow', 'defineState', {
-        workflow: workflowId.trim(),
-        name: initialState.trim(),
-        flags: 'initial',
+      const content = JSON.stringify({
+        name: workflowId.trim(),
+        states: stateNames.length > 0 ? stateNames : [initialState.trim()],
+        initialState: initialState.trim(),
+        transitions: transitionsJson.trim() || '[]',
+      });
+      const result = await invoke('ContentNode', 'createWithSchema', {
+        schema: 'Workflow',
+        title: workflowId.trim(),
+        node: 'workflow:' + workflowId.trim(),
+        content,
       });
       if (result.variant !== 'ok') {
         setError(String(result.message ?? `Unexpected variant: ${result.variant}`));
