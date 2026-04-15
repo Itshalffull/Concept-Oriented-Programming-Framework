@@ -72,6 +72,8 @@ const KEYWORDS = new Set([
   // Structured invariant keywords (shared with concept parser)
   'example', 'forall', 'always', 'never', 'eventually',
   'after', 'then', 'and', 'given', 'exists', 'ensures', 'not', 'old', 'where', 'in', 'none',
+  // Scenario-kind invariant keywords (MAG-912 / INV-8)
+  'scenario', 'fixture', 'settlement', 'assert',
 ]);
 
 // --- Tokenizer ---

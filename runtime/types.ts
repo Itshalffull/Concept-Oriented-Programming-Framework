@@ -293,7 +293,7 @@ export interface ReturnVariant {
  */
 export interface InvariantDecl {
   /** Construct kind. Defaults to 'example' for bare invariant blocks. */
-  kind: 'example' | 'forall' | 'always' | 'never' | 'eventually' | 'requires_ensures';
+  kind: 'example' | 'forall' | 'always' | 'never' | 'eventually' | 'requires_ensures' | 'scenario';
   /** Optional human-readable name (e.g. "happy path", "valid kinds accepted"). */
   name?: string;
   /** Setup steps (for example/forall). */
@@ -308,7 +308,39 @@ export interface InvariantDecl {
   contracts?: ActionContract[];
   /** The action name this contract applies to (for requires_ensures). */
   targetAction?: string;
+  /** Scenario fixture declarations (for kind='scenario'). */
+  fixtures?: ScenarioFixture[];
+  /** Scenario `given` preconditions (for kind='scenario'). */
+  givenSteps?: InvariantASTStep[];
+  /** Scenario `when` action steps (for kind='scenario'). */
+  whenSteps?: InvariantASTStep[];
+  /** Scenario `then` assertion steps (for kind='scenario'). */
+  thenSteps?: InvariantASTStep[];
+  /** Scenario settlement modality (for kind='scenario'). */
+  settlement?: ScenarioSettlement;
 }
+
+/**
+ * A named fixture block declared inside a `scenario { fixture <id> { … } }`.
+ * Fields are captured as ArgPatterns so record/literal values parse uniformly.
+ */
+export interface ScenarioFixture {
+  id: string;
+  /** Optional component/type hint, e.g. `paragraph-block` before the `{`. */
+  component?: string;
+  fields: ArgPattern[];
+}
+
+/**
+ * Settlement modality for a scenario's `then` assertions.
+ *  - sync: assertions check immediately after `when`
+ *  - async-eventually: poll until all pass or timeoutMs elapses
+ *  - async-with-anchor: wait for a completion event before checking
+ */
+export type ScenarioSettlement =
+  | { mode: 'sync' }
+  | { mode: 'async-eventually'; timeoutMs: number }
+  | { mode: 'async-with-anchor'; anchor: string };
 
 /**
  * A quantifier binding: `given x in {set}` or `forall p in state_field`.

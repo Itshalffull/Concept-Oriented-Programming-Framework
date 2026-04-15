@@ -69,6 +69,8 @@ const KEYWORDS = new Set([
   'example', 'forall', 'always', 'never', 'eventually',
   'given', 'exists', 'ensures', 'not', 'old', 'where',
   'fixture',
+  // Scenario-kind invariant keywords (MAG-912 / INV-8)
+  'scenario', 'settlement', 'assert',
 ]);
 
 // These are only keywords inside type expressions. Everywhere else

@@ -35,6 +35,8 @@ import type {
   QuantifierBinding,
   QuantifierDomain,
   ActionContract,
+  ScenarioFixture,
+  ScenarioSettlement,
 } from '../../../runtime/types.js';
 
 // --- Token stream abstraction ----------------------------------------------
@@ -203,7 +205,42 @@ export const WIDGET_OPTIONS: InvariantBodyParserOptions = {
 
 // --- Shared parser ---------------------------------------------------------
 
-type NamedKind = 'example' | 'forall' | 'always' | 'never' | 'eventually';
+type NamedKind = 'example' | 'forall' | 'always' | 'never' | 'eventually' | 'scenario';
+
+// ============================================================
+// Scenario-kind grammar (MAG-912 / INV-8)
+// ------------------------------------------------------------
+// The `scenario` kind is a richer invariant shape for multi-block,
+// given/when/then behavioral tests with a settlement modality.
+// PRD §2 sketches the shape but leaves some punctuation details
+// underspecified; this parser fixes the following grammar:
+//
+//   scenario ["name"] [":"] "{"
+//     { fixture <id> [":" <component>] "{" <argPatterns> "}" }   // zero or more
+//     [ given "{" <step> { (";" | "and") <step> } "}" ]
+//     [ when  "{" <step> { (";" | "and") <step> } "}" ]
+//     then  "{" <step> { (";" | "and") <step> } "}"
+//     [ settlement ":" <settlement> ]
+//   "}"
+//
+//   <step>       := <invariant AST step — action pattern or assertion>
+//                 | "assert" <invariant AST step>        // optional keyword
+//
+//   <settlement> := "sync"
+//                 | "async-eventually"    "{" "timeoutMs" ":" <int> "}"
+//                 | "async-with-anchor"   "{" "anchor"    ":" <string> "}"
+//
+// Notes on tokenisation:
+//   * `async-eventually` / `async-with-anchor` contain a hyphen, which both
+//     tokenisers drop — so these modality names are written as STRING_LIT:
+//     e.g. `settlement: "async-eventually" { timeoutMs: 5000 }`.
+//     `sync` is written bare (IDENT/KEYWORD).
+//   * Fixture component hint after the colon may be a dotted/hyphenated
+//     identifier written as a STRING_LIT to survive tokenisation.
+//   * The `then` block is required; missing `then` is a parse error.
+//   * Steps inside given/when/then may be separated by SEP/SEMICOLON tokens
+//     or the `and` keyword; mirroring the existing `then ... and ...` chain.
+// ============================================================
 
 export class InvariantBodyParser {
   private positionalArgCounter = 0;
@@ -247,7 +284,8 @@ export class InvariantBodyParser {
     const isNamedSubInvariant = tok.type === 'KEYWORD' && (
       tok.value === 'example' || tok.value === 'forall' ||
       tok.value === 'always' || tok.value === 'never' ||
-      tok.value === 'eventually' || tok.value === 'action'
+      tok.value === 'eventually' || tok.value === 'action' ||
+      tok.value === 'scenario'
     );
 
     // Widget legacy-prose mode: `invariant { "text"; "text"; }`
@@ -257,7 +295,7 @@ export class InvariantBodyParser {
         if (t.type === 'KEYWORD' && (
           t.value === 'example' || t.value === 'forall' ||
           t.value === 'always' || t.value === 'never' ||
-          t.value === 'eventually'
+          t.value === 'eventually' || t.value === 'scenario'
         )) {
           results.push(this.parseNamedInvariantBody(t.value as NamedKind));
           this.stream.match('SEMICOLON');
@@ -296,7 +334,7 @@ export class InvariantBodyParser {
         } else if (kw.type === 'KEYWORD' && (
           kw.value === 'example' || kw.value === 'forall' ||
           kw.value === 'always' || kw.value === 'never' ||
-          kw.value === 'eventually'
+          kw.value === 'eventually' || kw.value === 'scenario'
         )) {
           results.push(this.parseNamedInvariantBody(kw.value as NamedKind));
         } else if (legacyProseStrings && kw.type === 'STRING_LIT') {
@@ -357,6 +395,7 @@ export class InvariantBodyParser {
     if (keyword === 'always') return this.parseAlwaysBody(name);
     if (keyword === 'never') return this.parseNeverBody(name);
     if (keyword === 'eventually') return this.parseEventuallyBody(name);
+    if (keyword === 'scenario') return this.parseScenarioBody(name);
 
     this.skipToClosingBrace();
     return { kind: keyword, name, afterPatterns: [], thenPatterns: [] };
@@ -659,6 +698,286 @@ export class InvariantBodyParser {
 
     this.stream.expect('RBRACE');
     return { kind, name, afterPatterns: [], thenPatterns: thenSteps, quantifiers };
+  }
+
+  // ------------------------------------------------------------------
+  // Scenario kind (MAG-912 / INV-8)
+  // ------------------------------------------------------------------
+
+  private parseScenarioBody(name?: string): InvariantDecl {
+    const save = this.stream.position();
+    try {
+      return this.parseScenarioBodyStructured(name);
+    } catch (e) {
+      if (!this.opts.withFallback) throw e;
+      this.stream.seek(save);
+      this.skipToClosingBrace();
+      return {
+        kind: 'scenario',
+        name,
+        afterPatterns: [],
+        thenPatterns: [],
+        fixtures: [],
+        givenSteps: [],
+        whenSteps: [],
+        thenSteps: [],
+      };
+    }
+  }
+
+  private isKw(value: string): boolean {
+    const t = this.stream.peek();
+    return (t.type === 'KEYWORD' || t.type === 'IDENT') && t.value === value;
+  }
+
+  private parseScenarioBodyStructured(name?: string): InvariantDecl {
+    const fixtures: ScenarioFixture[] = [];
+    let givenSteps: InvariantASTStep[] | undefined;
+    let whenSteps: InvariantASTStep[] | undefined;
+    let thenSteps: InvariantASTStep[] | undefined;
+    let settlement: ScenarioSettlement | undefined;
+
+    this.skipSeps();
+
+    // 1. Zero or more fixture blocks
+    while (this.isKw('fixture')) {
+      this.stream.advance(); // consume 'fixture'
+      fixtures.push(this.parseScenarioFixture());
+      this.skipSeps();
+    }
+
+    // 2. Optional given block
+    this.skipSeps();
+    if (this.isKw('given')) {
+      this.stream.advance();
+      this.stream.expect('LBRACE');
+      givenSteps = this.parseScenarioStepList();
+    }
+
+    // 3. Optional when block
+    this.skipSeps();
+    if (this.isKw('when')) {
+      this.stream.advance();
+      this.stream.expect('LBRACE');
+      whenSteps = this.parseScenarioStepList();
+    }
+
+    // 4. Required then block
+    this.skipSeps();
+    if (!this.isKw('then')) {
+      throw this.errorAt(
+        this.stream.peek(),
+        `scenario requires a 'then' block`,
+      );
+    }
+    this.stream.advance();
+    this.stream.expect('LBRACE');
+    thenSteps = this.parseScenarioStepList();
+    if (thenSteps.length === 0) {
+      throw this.errorAt(
+        this.stream.peek(),
+        `scenario 'then' block must contain at least one assertion`,
+      );
+    }
+
+    // 5. Optional settlement
+    this.skipSeps();
+    if (this.isKw('settlement')) {
+      this.stream.advance();
+      if (this.stream.peek().type === 'COLON') this.stream.advance();
+      this.skipSeps();
+      settlement = this.parseScenarioSettlement();
+    }
+
+    this.skipSeps();
+    this.stream.expect('RBRACE');
+
+    return {
+      kind: 'scenario',
+      name,
+      afterPatterns: [],
+      thenPatterns: [],
+      fixtures,
+      givenSteps: givenSteps ?? [],
+      whenSteps: whenSteps ?? [],
+      thenSteps,
+      settlement,
+    };
+  }
+
+  private parseScenarioFixture(): ScenarioFixture {
+    this.skipSeps();
+    const idTok = this.stream.peek();
+    let id: string;
+    if (idTok.type === 'STRING_LIT') {
+      id = this.stream.advance().value;
+    } else {
+      id = this.stream.expectIdent().value;
+    }
+
+    // Optional `: component` hint (component may be an ident or string)
+    let component: string | undefined;
+    this.skipSeps();
+    if (this.stream.peek().type === 'COLON') {
+      this.stream.advance();
+      this.skipSeps();
+      const ct = this.stream.peek();
+      if (ct.type === 'STRING_LIT') {
+        component = this.stream.advance().value;
+      } else if (ct.type === 'IDENT' || ct.type === 'KEYWORD') {
+        component = this.stream.advance().value;
+      }
+    }
+
+    // Optional bare component hint before the `{` (no colon)
+    this.skipSeps();
+    if (!component) {
+      const ct = this.stream.peek();
+      if (ct.type === 'IDENT' || (ct.type === 'KEYWORD' && ct.value !== 'fixture' &&
+          ct.value !== 'given' && ct.value !== 'when' && ct.value !== 'then')) {
+        const next = this.stream.peekAt(1);
+        if (next && next.type === 'LBRACE') {
+          component = this.stream.advance().value;
+        }
+      } else if (ct.type === 'STRING_LIT') {
+        const next = this.stream.peekAt(1);
+        if (next && next.type === 'LBRACE') {
+          component = this.stream.advance().value;
+        }
+      }
+    }
+
+    this.skipSeps();
+    this.stream.expect('LBRACE');
+    this.skipSeps();
+
+    const fields: ArgPattern[] = [];
+    if (this.stream.peek().type !== 'RBRACE') {
+      fields.push(this.parseArgPattern());
+      while (true) {
+        this.skipSeps();
+        if (this.stream.peek().type === 'RBRACE') break;
+        if (this.stream.peek().type === 'COMMA') {
+          this.stream.advance();
+          this.skipSeps();
+          if (this.stream.peek().type === 'RBRACE') break;
+          fields.push(this.parseArgPattern());
+          continue;
+        }
+        // Also allow SEP/SEMICOLON-separated fields
+        fields.push(this.parseArgPattern());
+      }
+    }
+    this.stream.expect('RBRACE');
+    return { id, component, fields };
+  }
+
+  private parseScenarioStepList(): InvariantASTStep[] {
+    const steps: InvariantASTStep[] = [];
+    this.skipSeps();
+    while (this.stream.peek().type !== 'RBRACE' && this.stream.peek().type !== 'EOF') {
+      // Optional leading `assert` keyword (ignored — grammar sugar)
+      if (this.isKw('assert')) this.stream.advance();
+      this.skipSeps();
+      if (this.stream.peek().type === 'RBRACE') break;
+      steps.push(this.parseInvariantASTStep());
+
+      // Consume step separators: SEP, SEMICOLON, or `and` keyword
+      while (true) {
+        this.skipSeps();
+        const t = this.stream.peek();
+        if (t.type === 'SEMICOLON') {
+          this.stream.advance();
+          continue;
+        }
+        if (t.type === 'KEYWORD' && t.value === 'and') {
+          this.stream.advance();
+          break; // fall through to next step
+        }
+        break;
+      }
+    }
+    this.stream.expect('RBRACE');
+    return steps;
+  }
+
+  private parseScenarioSettlement(): ScenarioSettlement {
+    const tok = this.stream.peek();
+
+    // "sync" as bare identifier/keyword
+    if ((tok.type === 'IDENT' || tok.type === 'KEYWORD') && tok.value === 'sync') {
+      this.stream.advance();
+      return { mode: 'sync' };
+    }
+
+    // Modality as STRING_LIT (since hyphens don't survive tokenisation)
+    if (tok.type === 'STRING_LIT') {
+      const mode = this.stream.advance().value;
+      if (mode === 'sync') {
+        return { mode: 'sync' };
+      }
+      if (mode === 'async-eventually') {
+        this.skipSeps();
+        this.stream.expect('LBRACE');
+        const fields = this.parseSettlementFieldBlock();
+        const timeoutMs = Number(fields.timeoutMs);
+        if (!Number.isFinite(timeoutMs)) {
+          throw this.errorAt(
+            tok,
+            `settlement 'async-eventually' requires numeric timeoutMs`,
+          );
+        }
+        return { mode: 'async-eventually', timeoutMs };
+      }
+      if (mode === 'async-with-anchor') {
+        this.skipSeps();
+        this.stream.expect('LBRACE');
+        const fields = this.parseSettlementFieldBlock();
+        const anchor = fields.anchor;
+        if (typeof anchor !== 'string' || anchor.length === 0) {
+          throw this.errorAt(
+            tok,
+            `settlement 'async-with-anchor' requires string anchor`,
+          );
+        }
+        return { mode: 'async-with-anchor', anchor };
+      }
+      throw this.errorAt(tok, `unknown settlement modality '${mode}'`);
+    }
+
+    throw this.errorAt(
+      tok,
+      `expected settlement modality (sync | "async-eventually" {…} | "async-with-anchor" {…})`,
+    );
+  }
+
+  private parseSettlementFieldBlock(): Record<string, string | number> {
+    const out: Record<string, string | number> = {};
+    this.skipSeps();
+    while (this.stream.peek().type !== 'RBRACE' && this.stream.peek().type !== 'EOF') {
+      const keyTok = this.stream.peek();
+      const key = this.stream.expectIdent().value;
+      this.skipSeps();
+      this.stream.expect('COLON');
+      this.skipSeps();
+      const vt = this.stream.peek();
+      if (vt.type === 'INT_LIT') {
+        out[key] = parseInt(this.stream.advance().value, 10);
+      } else if (this.opts.supportsFloatLit && vt.type === 'FLOAT_LIT') {
+        out[key] = parseFloat(this.stream.advance().value);
+      } else if (vt.type === 'STRING_LIT') {
+        out[key] = this.stream.advance().value;
+      } else {
+        throw this.errorAt(keyTok, `settlement field '${key}' must be int or string`);
+      }
+      this.skipSeps();
+      if (this.stream.peek().type === 'COMMA') {
+        this.stream.advance();
+        this.skipSeps();
+      }
+    }
+    this.stream.expect('RBRACE');
+    return out;
   }
 
   private parseActionContractStructured(targetAction: string): InvariantDecl {
