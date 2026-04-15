@@ -259,23 +259,31 @@ concept InvariantParser [S]
     get(invariant: Id) : (ast: Json) or (notfound)
 ```
 
+**AssertionContext is a plugin kind, not a new concept.** The
+repertoire already has `PluginRegistry [P]` (see
+`repertoire/concepts/infrastructure/plugin-registry.concept`) with
+`register(type, name, metadata)` / `discover(type)` /
+`createInstance(plugin, config)`. The cleffy move is to register each
+host spec's context as a plugin:
+
 ```
-concept AssertionContext [C]
-  purpose
-    resolve an identifier in a specific host spec's namespace
-    so the shared InvariantParser can validate references without
-    knowing whether it's parsing a concept, widget, view, sync,
-    or derived spec.
-  state
-    contexts: set of Context with
-      contextId: Id; specKind: String;
-      declaredSymbols: list of { name: String; kind: String };
-  actions
-    register(contextId: Id, specKind: String, symbols: Json) : (ok)
-    resolve(contextId: Id, name: String)
-      : (kind: String; info: Json) or (notfound)
-    clear(contextId: Id) : (ok)
+# Seeds, not new concepts.
+PluginRegistry/register type: "assertion-context", name: "concept",
+  metadata: '{ "resolverHandler": "ConceptAssertionContext.resolve",
+               "declaredSymbols": ["action-names", "state-fields", …] }'
+
+PluginRegistry/register type: "assertion-context", name: "widget",
+  metadata: '{ "resolverHandler": "WidgetAssertionContext.resolve",
+               "declaredSymbols": ["anatomy-parts", "fsm-fields", …] }'
+
+PluginRegistry/register type: "assertion-context", name: "view",   …
+PluginRegistry/register type: "assertion-context", name: "sync",   …
+PluginRegistry/register type: "assertion-context", name: "derived", …
 ```
+
+The `InvariantParser` consults `PluginRegistry/discover(type:
+"assertion-context")` at parse time and routes identifier resolution
+to the matching resolver. Adding a sixth spec kind is one seed row.
 
 ```
 concept TestPlan [T]
@@ -292,19 +300,20 @@ concept TestPlan [T]
     listFor(invariantId: Id) : (plans: Json)
 ```
 
+**TestPlanRenderer is also a plugin kind, not a new concept.**
+Same pattern. Each platform registers itself via PluginRegistry:
+
 ```
-concept TestPlanRenderer [R]
-  purpose
-    translate a TestPlan to runtime test code for a target platform
-  state
-    renderers: set of Renderer with
-      platform: String;  -- react | playwright | vue | swiftui | …
-      universalProbeTable: Json;  -- probe-name → emit-snippet fn id
-  actions
-    register(platform: String, probeTable: Json) : (ok) or (duplicate)
-    render(planId: Id, platform: String)
-      : (code: String) or (notfound) or (unsupportedProbe: String)
+PluginRegistry/register type: "test-plan-renderer", name: "react",
+  metadata: '{ "probeTable": "reactProbes", "entryHandler": "renderReactTestFile" }'
+
+PluginRegistry/register type: "test-plan-renderer", name: "playwright", …
+PluginRegistry/register type: "test-plan-renderer", name: "vue",        …
+PluginRegistry/register type: "test-plan-renderer", name: "swiftui",    …
 ```
+
+Render-for-each-platform just calls `PluginRegistry/discover(type:
+"test-plan-renderer")` and iterates. Adding a platform is one seed.
 
 ### Syncs wire the pipeline
 
@@ -369,33 +378,106 @@ invisible to Score / Pilot / SeedData / RuntimeRegistry. Modeling as
 concepts + syncs puts the invariant pipeline in the same layer the
 rest of Clef's own tooling occupies.
 
-### Does every spec kind need invariants? Honest scope
+### Does every spec kind need invariants?
 
-| Kind | Invariants make sense? | Why |
-|---|---|---|
-| **Concept** | ✓ strong | Canonical Jackson case. Concepts own state + action contracts; invariants codify both. `requires_ensures`, state integrity (`never two users with same email`), variant safety. |
-| **Widget** | ✓ strong | FSM + ARIA + anatomy. Invariants are the contract between the abstract spec and platform renderers. Focus behavior, keyboard dispatch, state transitions. |
-| **View** | ✗ weak at this level | A view is an ASSEMBLY of FilterSpec + SortSpec + ProjectionSpec + DataSourceSpec + PresentationSpec + InteractionSpec. Invariants really belong on those component specs where the actual state lives — `FilterSpec { always "tree has root node" }`, `ProjectionSpec { forall f in fields: f.key in source.fields }`. View-level invariants mostly re-phrase component invariants. **Keep the parse support already in place but stop driving adoption at this layer.** |
-| **Sync** | ~ optional, not default | Sync guards already live in `when` + `where` + `guard`. A sync already declares its pre- and post-conditions via its clauses. Adding a second invariant layer is mostly redundant for normal syncs. There's a narrow useful slice — *dispatch syncs that fan out across multiple actions* (InvokeViaBinding, ExecuteReversal) where "fires exactly once", "never forwards to unresolved target", etc. are worth stating explicitly. Keep support OPT-IN, not encouraged for every sync. |
-| **Derived** | ✗ weak | Derived concepts are packaging. Their "emergent" properties are really integration tests exercising the composed sync chain — better placed as concept-level test fixtures, not as structural invariants of the composition. Skip. |
+Thinking through this honestly rather than narrowing reflexively.
+Each spec kind has a DIFFERENT shape of thing worth asserting,
+and all five carry some. The key question per kind is "what class
+of failure does an invariant catch here that the spec itself
+doesn't?"
 
-So the real target set is **concept + widget** as first-class
-carriers, plus **sync** as opt-in for dispatch-fan-out syncs. The
-earlier "all five" framing was overreach.
+**Concept — ✓ strong.** Canonical Jackson case. Concepts own state
++ actions + variants. Invariants codify contracts the spec can't
+directly express:
+- `requires_ensures` on actions (pre/post-conditions on each
+  variant) — these ARE the contract, not a restatement of it
+- State integrity across actions: `never two users with the same
+  email`, `always every Outline child has a valid parent id`
+- Variant completeness: `forall action a: exists handler variant`
 
-What this changes for the unification work:
+**Widget — ✓ strong.** FSM + anatomy + ARIA + keyboard. Invariants
+are the cross-platform contract between the spec and every
+renderer (React, Playwright, SwiftUI, etc.). Without them there's
+no way to verify a renderer matches the spec:
+- Transition closure (`after FOCUS from idle -> focused`)
+- ARIA consistency (`always body.aria-readonly = props.readOnly`)
+- Focus trap guarantees (`never focus leaves modal when trap=true`)
+- Keyboard dispatch (`keydown Enter in editing -> ENTER_BLOCK`)
 
-- The shared `InvariantParser` + `AssertionContext` still delivers
-  the win (~500 lines of parser duplication collapsed, real
-  runtime tests for concept + widget invariants).
-- Adding grammar to `.sync` is a small optional extension for
-  dispatch fan-out syncs only, behind a conscious authoring choice.
-- **Skip** adding invariants to `.derived` and `.view` until a
-  concrete use case appears that genuinely can't be expressed at
-  the component-spec layer.
+**View — ✓ meaningful for cross-component consistency.** I was
+too quick to dismiss this earlier. A view is an assembly, but the
+assembly has properties no single component owns:
+- `forall f in ProjectionSpec.fields: f.key in DataSourceSpec.fields`
+  — projection can only surface fields the data source provides
+- `FilterSpec.tree references only DataSourceSpec.fields` —
+  filter can't reference a column the data source doesn't emit
+- `SortSpec.keys ⊆ (DataSourceSpec.fields ∪ ProjectionSpec.fields)`
+- `PresentationSpec.displayType compatible with InteractionSpec`
+  (board needs a groupField, table needs column specs)
 
-Worked example of the sync slice where invariants DO earn their
-weight — InvokeViaBinding's dispatch fan-out:
+These are **cross-component** invariants. Neither FilterSpec
+alone nor DataSourceSpec alone can state them; only the
+assembly. Also specific: `example "filter+sort preserves row
+count"` at the view level is a real integration contract. View
+invariants earn their weight; they're NOT redundant with
+component invariants.
+
+**Sync — ✓ meaningful for runtime behavior.** Syncs have
+`when / where / then`, which declare a DISPATCH contract but
+not the runtime guarantees:
+- `fires exactly once per trigger firing` (no re-entry, no
+  double-dispatch) — NOT in when/where/then
+- `data flow preservation` (`forall firing: then.input.ctx =
+  when.match.ctx`) — the sync can SHADOW a variable; invariants
+  catch that
+- `completion variant coverage` (`every X/action ok completion
+  eventually triggers Y`) — emergent from the where-clause but
+  worth stating
+- `negative conditions` (`never forwards to an unresolved
+  target`) — the where might silently filter; invariants make
+  filtered-out cases observable
+
+Most syncs won't need invariants. **Complex dispatch fan-out syncs
+(InvokeViaBinding, ExecuteReversal, automation-dispatch) definitely
+do.** Not opt-in-only; they're first-class for syncs that do real
+dispatch logic.
+
+**Derived — ✓ meaningful for emergent contracts.** Derived
+concepts are the compositional surface a user programs against.
+Their invariants state what the composition GUARANTEES:
+- `every ContentNode/save eventually produces a SearchIndex/index`
+  — emergent from the sync chain, observable only at the derived
+  composition level
+- `the composition doesn't create action cycles` — structural
+- `ClefBase.ContentFoundation.save(node) -> SearchIndex has
+  node OR ContentHash has node` — contract the caller can rely
+  on
+- `required syncs fire; recommended syncs may be absent`
+
+These are NOT "just integration tests dressed up". They are the
+PROMISES a derived concept makes to its users. Skipping them
+means the composition's behavior is whatever the sync wiring
+happens to do, which isn't the Jackson methodology.
+
+### Different shapes per spec kind
+
+All five kinds benefit from invariants, but the DOMINANT shape
+differs:
+
+| Kind | Dominant invariant shape |
+|---|---|
+| Concept | `requires_ensures` + state integrity (`always`, `never`) |
+| Widget | FSM transitions (`after EVENT -> state`) + ARIA coupling (`always`) |
+| View | Cross-component consistency (`forall` over the assembly) |
+| Sync | Dispatch behavior (`fires-exactly-once`, `eventually`, `never`) |
+| Derived | Emergent guarantees (`eventually`, `implies`, `always across chain`) |
+
+These don't require separate grammars — they require the **same**
+grammar reading identifiers in **different namespaces**. Which is
+what `AssertionContext` plugins give us.
+
+Worked example of a sync invariant that earns its weight —
+InvokeViaBinding:
 
 ```
 sync InvokeViaBinding [eager]
@@ -412,12 +494,35 @@ sync InvokeViaBinding [eager]
       forall (b, ctx) in firings:
         firings[b].input = ctx
     }
+    eventually "every invoke completes": {
+      after ActionBinding/invoke(binding: ?b) -> ok
+      eventually Binding/invoke(binding: ?b) -> ok | error
+    }
   }
 ```
 
-Don't seed a sync with invariants just because the grammar allows
-it. The bar is: *the sync has dispatch logic whose failure modes
-aren't already caught by its clauses*.
+Worked derived example — ContentFoundation's save contract:
+
+```
+derived ContentFoundation composes
+  ContentNode, ContentStorage, ContentHash, Outline, …
+  syncs content-node-save-indexes: required, …
+
+  invariant {
+    always "save propagates through SearchIndex": {
+      forall n in saved_content_nodes:
+        eventually n.id in SearchIndex.indexed
+    }
+    never "save leaves dangling outline": {
+      exists n: n in ContentNode
+        and Outline.parentOf(n) = none
+        and n != page_root
+    }
+  }
+```
+
+These are real guarantees a caller of ContentFoundation relies on.
+Worth writing, worth generating tests for.
 
 ### Even "generate all tests" is cleffy
 
@@ -558,40 +663,44 @@ Every step is itself a Clef concept spec + handler + sync wiring.
 No new TS orchestration; even the CLI is a dispatcher.
 
 1. **Concept specs + handlers land first** (no grammar change yet):
-   `InvariantParser`, `AssertionContext`, `TestPlan`,
-   `TestPlanRenderer`, `TestArtifact`. Plus four syncs:
+   `InvariantParser`, `TestPlan`, `TestArtifact`. Plus four syncs:
    `ExtractInvariantsOnParse`, `BuildTestPlanOnInvariantParse`,
    `RenderForEachRegisteredPlatform`, `WriteArtifactOnRender`.
    Plus derived concept `TestGeneration` composing all of them.
-   Use the existing concept + sync scaffolds (`/create-concept`,
-   `/create-sync`, `/create-derived-concept`).
+   **`AssertionContext` and `TestPlanRenderer` are NOT new concepts
+   — they ride on existing `PluginRegistry` (plugin types
+   `"assertion-context"` and `"test-plan-renderer"`).** Use
+   `/create-concept`, `/create-sync`, `/create-derived-concept`.
 
-2. **Seed initial AssertionContexts** — one row each for concept,
-   widget, and (opt-in) sync. Declared symbols are mined from
-   the existing parsers' symbol tables.
+2. **Seed initial assertion-context plugins** via
+   `PluginRegistry/register` — one row each for concept, widget,
+   view, sync, derived. Declared symbols mined from the existing
+   parsers' symbol tables.
 
-3. **Seed initial TestPlanRenderer rows** with universal probe
-   tables for React + Playwright. Vue / Svelte / Vanilla /
-   SwiftUI / Jetpack land as follow-up seeds.
+3. **Seed initial test-plan-renderer plugins** for React +
+   Playwright. Vue / Svelte / Vanilla / SwiftUI / Jetpack land as
+   follow-up seeds.
 
-4. **Migrate the current parsers** (concept-parser, widget-
-   spec-parser) to call `InvariantParser/parse` instead of their
-   inlined `parseInvariant` methods. View keeps its parse path
-   for now but stops driving adoption (see scope table above).
+4. **Migrate current parsers** (concept-parser, widget-spec-parser,
+   view-spec-parser, sync-parser, derived-parser) to call
+   `InvariantParser/parse` with the matching assertion-context
+   plugin. All five spec kinds parse invariants through one path.
 
-5. **`scenario` kind** added to `InvariantParser`. Lands in
-   concept + widget + opt-in sync simultaneously because the
-   parser is shared.
+5. **`scenario` kind** added to `InvariantParser`. Lands in every
+   spec kind simultaneously.
 
 6. **Replace `scripts/generate-*.ts` with thin dispatchers** that
    call `TestGeneration/run`. Real work moves into the concept
-   pipeline; the script is a 10-line CLI wrapper.
+   pipeline.
 
-7. **Retrofit existing invariants**: paragraph-block's 81, every
-   concept spec — start generating real tests. Adopt invariants
-   in a handful of high-leverage dispatch syncs (InvokeViaBinding,
-   ExecuteReversal). Leave view + derived alone unless a concrete
-   case appears.
+7. **Retrofit existing invariants** on concept + widget specs
+   (the current backlog), then add meaningful invariants to
+   dispatch syncs (InvokeViaBinding, ExecuteReversal,
+   automation-dispatch), cross-component view specs, and
+   high-value derived concepts (ContentFoundation,
+   InfrastructureCore, ProcessPlatform). Each addition flows
+   through the same concept pipeline, producing real tests on
+   every registered platform.
 
 8. **Score + Pilot integration**. Because every pipeline step is
    a concept action, `ScoreApi/getFlow --from TestGeneration/run`
