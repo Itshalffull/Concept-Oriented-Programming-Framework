@@ -123,3 +123,8 @@ entries:
   - entity: role
     key: displayWidget
     value: block-editor
+
+  # === DailyNote (DN-10) ===
+  - entity: DailyNote
+    key: displayWidget
+    value: daily-note-editor

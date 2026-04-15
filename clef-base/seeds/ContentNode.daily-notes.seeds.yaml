@@ -1,0 +1,24 @@
+# Sample DailyNote ContentNodes for the three days bracketing first boot (DN-10).
+# These give the sidebar data immediately on first launch so users see a
+# populated journal rather than an empty state.
+
+concept: ContentNode
+action: create
+entries:
+  - node: daily-note:2026-04-13
+    type: daily-note
+    content: '{"date":"2026-04-13","summary":""}'
+    schemas: '["DailyNote"]'
+    createdBy: system
+
+  - node: daily-note:2026-04-14
+    type: daily-note
+    content: '{"date":"2026-04-14","summary":""}'
+    schemas: '["DailyNote"]'
+    createdBy: system
+
+  - node: daily-note:2026-04-15
+    type: daily-note
+    content: '{"date":"2026-04-15","summary":""}'
+    schemas: '["DailyNote"]'
+    createdBy: system

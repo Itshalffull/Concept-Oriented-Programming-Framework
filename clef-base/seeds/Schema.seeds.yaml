@@ -59,3 +59,5 @@ entries:
     fields: 'name,purpose,composedConcepts,composedDerived,requiredSyncs,recommendedSyncs'
   - schema: Suite
     fields: 'name,version,description,conceptCount,syncCount,dependencies'
+  - schema: DailyNote
+    fields: 'date,summary'
