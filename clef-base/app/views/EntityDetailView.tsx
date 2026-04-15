@@ -61,17 +61,22 @@ const SCHEMA_COLORS: Record<string, 'primary' | 'success' | 'warning' | 'info' |
 };
 
 export const EntityDetailView: React.FC<EntityDetailViewProps> = ({ id }) => {
-  const { data, loading, error } = useConceptQuery<Record<string, unknown>>('ContentNode', 'get', { node: id });
-  const { data: schemasResult, refetch: refetchSchemas } = useConceptQuery<{ schemas: string }>('Schema', 'getSchemasFor', { entity_id: id });
+  const { data, loading, error, refetch: refetchNode } = useConceptQuery<Record<string, unknown>>('ContentNode', 'get', { node: id });
+  // Schema memberships are read from ContentNode/get's `schemas` field (ContentNode's membership
+  // namespace), which is populated by ContentNode/recordSchema (backfill seed) and
+  // ContentNode/createWithSchema. Schema/getSchemasFor reads a separate Schema-namespace
+  // membership table only written by Schema/applyTo. After apply/remove we refetch the
+  // ContentNode/get call so both sources stay in sync.
+  const refetchSchemas = refetchNode;
   const { data: allSchemaDefs } = useConceptQuery<Record<string, unknown>[]>('Schema', 'list');
   const { navigateToHref } = useNavigator();
 
   // TEV-9: probe the primary schema's noStructuredZone Property.
   // We only probe when at least one schema is applied, because schema-less nodes
   // already collapse the structured zone unconditionally.
-  // NOTE: schemas is derived from schemasResult below; we re-derive inline here
+  // NOTE: schemas is derived from data?.schemas below; we re-derive inline here
   // so the hook call is unconditional (Rules of Hooks).
-  const _schemasEarly = safeParseJsonArray<string>(schemasResult?.schemas);
+  const _schemasEarly = safeParseJsonArray<string>(data?.schemas as string | string[] | undefined);
   const _primarySchemaEarly = _schemasEarly[0] ?? '';
   const { data: noStructuredZoneProp } = useConceptQuery<{ value?: string }>(
     _primarySchemaEarly ? 'Property' : '__none__',
@@ -94,8 +99,12 @@ export const EntityDetailView: React.FC<EntityDetailViewProps> = ({ id }) => {
   const schemaApplyInvocation = useInvokeWithFeedback();
   const schemaRemoveInvocation = useInvokeWithFeedback();
 
-  // Parse schemas from the response
-  const schemas = safeParseJsonArray<string>(schemasResult?.schemas);
+  // Parse schemas from ContentNode/get's schemas field (ContentNode membership namespace).
+  // This is the authoritative source for seeded nodes — ContentNode/recordSchema and
+  // ContentNode/createWithSchema both write here. Schema/applyTo writes to Schema's own
+  // membership namespace, but after apply/remove we call refetchSchemas (= refetchNode)
+  // so the ContentNode/get result updates to reflect the change.
+  const schemas = safeParseJsonArray<string>(data?.schemas as string | string[] | undefined);
 
   // Available schemas for the apply dropdown
   const availableSchemas = (allSchemaDefs ?? [])

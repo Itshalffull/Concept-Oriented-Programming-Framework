@@ -250,7 +250,7 @@ entries:
     title: Backlinks
     description: Entities that link to this entity.
     dataSource: content-node-list-backlink-source
-    filter: backlinks-context-filter
+    filter: ''
     sort: natural-order
     group: ''
     projection: backlinks-fields

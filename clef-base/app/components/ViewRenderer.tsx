@@ -695,6 +695,38 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
   const displayData_base = useMemo(() => {
     let filtered = flatData;
 
+    // Apply contextual filters client-side.
+    // Contextual filters are not in the interactive-filter toggle UI and are not
+    // pushed to the backend via the DataSourceSpec params, so we must evaluate them
+    // here against the fetched rows.  The context_binding path is resolved from the
+    // `context` prop: "context.entity" → context?.entityId.
+    if (contextualFilters.length > 0 && context) {
+      filtered = filtered.filter((row) => {
+        return contextualFilters.every((f) => {
+          // Resolve the bound value from context
+          let boundValue: string | undefined;
+          if (f.context_binding === 'context.entity') {
+            boundValue = context.entityId;
+          } else if (f.context_binding) {
+            // Generic: strip "context." prefix and look up in context object
+            const key = f.context_binding.replace(/^context\./, '');
+            boundValue = context[key];
+          }
+          if (!boundValue) {
+            // Can't resolve — apply fallback_behavior
+            return f.fallback_behavior !== 'hide';
+          }
+          // Apply the filter: default operator is "equals"
+          const rowVal = String(row[f.field] ?? '');
+          switch (f.operator ?? 'equals') {
+            case 'equals': return rowVal === boundValue;
+            case 'contains': return rowVal.includes(boundValue);
+            default: return rowVal === boundValue;
+          }
+        });
+      });
+    }
+
     // Apply interactive toggle-group filters via FilterNode tree evaluation
     if (interactiveFilters.length > 0 && Object.keys(activeFilters).length > 0) {
       const filterTree = buildFilterTree(activeFilters, interactiveFilters);
@@ -737,7 +769,7 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
     }
 
     return filtered;
-  }, [flatData, activeFilters, interactiveFilters, toolbarFilterConditions, toolbarSortKeys, sortKeys]);
+  }, [flatData, activeFilters, interactiveFilters, contextualFilters, context, toolbarFilterConditions, toolbarSortKeys, sortKeys]);
 
   // Apply optimistic board moves on top of the filtered+sorted data so that
   // dragged cards appear in their target column immediately while the action

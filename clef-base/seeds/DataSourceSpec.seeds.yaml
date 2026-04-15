@@ -72,7 +72,7 @@ entries:
 
   - name: content-node-list-backlink-source
     kind: concept-action
-    config: '{"concept":"ContentNode","action":"list","params":{"type":"backlink"}}'
+    config: '{"concept":"Backlink","action":"getBacklinks","params":{"entity":"{{entityId}}"}}'
 
   - name: check-verification-list-step-source
     kind: concept-action
