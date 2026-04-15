@@ -18,6 +18,7 @@
 | [MAG-915](https://vibekanban.com) | INV-11 Propagate grammar update through every reference surface | MAG-916 |
 | [MAG-916](https://vibekanban.com) | INV-12 Additional platform renderers (Vue / Svelte / Vanilla / SwiftUI / Jetpack) — low priority | — |
 | [MAG-917](https://vibekanban.com) | INV-13 Wire test execution through `Builder/test` so dormant quality-signal syncs fire | — |
+| [MAG-918](https://vibekanban.com) | INV-14 Integrate ExternalHandlerGen + IntegrationTestGen with universal grammar — `scenario` invariants feed IntegrationTestGen alongside fixtures; ExternalHandlerGen-generated handlers participate in TestGeneration pipeline | — |
 
 Execution order comes from the blocking graph:
 
@@ -765,6 +766,55 @@ dispatchers") now has a corresponding sibling: a step that runs
 the generated tests through `Builder/test` so the quality signal
 chain actually fires. Track as a separate follow-up card below if
 not folded into INV-9 directly.
+
+## External handler integration (MAG-918, INV-14)
+
+Two existing devtools concepts already generate code from concept
+specs against the **fixture** annotation:
+
+- `specs/framework/external-handler-gen.concept` — given an ingest
+  manifest, emits a handler that wraps an external REST API as a
+  first-class Clef concept, with one `perform('http', ...)` per action.
+- `specs/framework/integration-test-gen.concept` — walks fixture
+  `after` chains in a concept spec, topologically sorts them, and
+  emits a `ProcessSpec` whose steps are `external-call` invocations.
+  `-> error` / `-> notfound` annotations become CheckVerification
+  assertions on the expected variant.
+
+These overlap heavily with the universal grammar work:
+
+1. **`scenario` invariants are integration tests**. The MAG-912
+   scenario kind (multi-fixture given/when/then + settlement
+   modalities) is the same shape IntegrationTestGen produces by
+   hand from fixture chains. After MAG-912 lands, IntegrationTestGen
+   should consume `scenario` invariants directly — emitting a
+   step per `when` action and a CheckVerification per `then` assert,
+   with settlement modality controlling whether the step waits for a
+   completion event vs. polling.
+
+2. **ExternalHandlerGen-generated handlers should round-trip through
+   TestGeneration**. A handler emitted by ExternalHandlerGen is a
+   normal Clef handler; once registered, the TestGeneration pipeline
+   (MAG-909) should be able to render its concept's invariants as
+   Playwright tests that hit the real external API. Today nothing
+   wires the two together — the generated handler exists in isolation.
+
+3. **Shared assertion vocabulary**. IntegrationTestGen's variant-
+   assertion pattern (`-> error` becomes a CheckVerification on
+   `Variant === 'error'`) duplicates the assertion shape produced by
+   the AssertionContext plugins (MAG-906). Both should emit through
+   the same TestPlan IR (MAG-905) so a single set of renderers
+   (React, Playwright, ProcessSpec) covers all three sources:
+   in-spec invariants, fixture chains, and scenario blocks.
+
+Card MAG-918 is the integration work: extend IntegrationTestGen to
+read scenario invariants alongside fixture chains, register
+ExternalHandlerGen-generated handlers with the TestGeneration
+pipeline, and reroute IntegrationTestGen's emission through TestPlan
++ a new `process-spec` renderer plugin so the ProcessSpec output
+becomes one renderer among many. Blocked on MAG-912 (scenario kind)
+and MAG-907 (renderer plugin pattern) — both already landed except
+scenario, so MAG-918 unblocks the moment MAG-912 does.
 
 ## File layout — repertoire testing suite, NOT clef-base
 
