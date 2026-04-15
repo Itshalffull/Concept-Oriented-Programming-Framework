@@ -332,6 +332,7 @@ const _handler: FunctionalConceptHandler = {
           schema: f.schema,
           label: f.label,
           description: f.description,
+          type: f.fieldType,
           fieldType: f.fieldType,
           order: f.sortOrder,
           required: f.required,

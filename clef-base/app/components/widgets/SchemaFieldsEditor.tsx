@@ -346,11 +346,15 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
     setActionError(null);
     setActionPending(true);
     const label = `New ${FIELD_TYPE_REGISTRY[type]?.label ?? type} field`;
+    // Generate a stable unique fieldId by combining type + timestamp.
+    // User can rename later through label editing.
+    const fieldId = `${type}_${Date.now().toString(36)}`;
     try {
       const result = await invoke('FieldDefinition', 'create', {
         schema: schemaId,
+        fieldId,
         label,
-        type,
+        fieldType: type,
         required: false,
         unique: false,
       });
