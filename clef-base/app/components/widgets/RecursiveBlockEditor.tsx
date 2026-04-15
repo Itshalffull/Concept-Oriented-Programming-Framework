@@ -5370,6 +5370,42 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
                     node: nodeId, newParent: grandparentId,
                   });
                   if (result.variant === 'ok') {
+                    // Outline/reparent preserves the old order value,
+                    // which was assigned under the now-old-parent's
+                    // sibling set. Under grandparent, that number often
+                    // sorts before the old-parent itself, visually
+                    // making the outdented block jump ABOVE its former
+                    // parent. Fix by computing a fractional order
+                    // between old-parent.order and the sibling that
+                    // follows old-parent in grandparent.children, so
+                    // the block lands immediately after its former
+                    // parent — Notion / Roam outdent behavior.
+                    try {
+                      const gpKidsRes = await invoke('Outline', 'children', { parent: grandparentId });
+                      const gpKids: string[] = gpKidsRes.variant === 'ok'
+                        ? (() => { try { return JSON.parse((gpKidsRes.children as string) || '[]'); } catch { return []; } })()
+                        : [];
+                      const parentIdx = gpKids.indexOf(parentId);
+                      const parentRec = await invoke('Outline', 'getRecord', { node: parentId });
+                      const parentOrder = parentRec.variant === 'ok' && typeof parentRec.order === 'number'
+                        ? parentRec.order
+                        : Date.now();
+                      let nextOrder: number | null = null;
+                      // Find the next sibling (skipping the freshly-
+                      // reparented block itself) and take its order.
+                      for (let i = parentIdx + 1; i < gpKids.length; i++) {
+                        if (gpKids[i] === nodeId) continue;
+                        const r = await invoke('Outline', 'getRecord', { node: gpKids[i] });
+                        if (r.variant === 'ok' && typeof r.order === 'number') {
+                          nextOrder = r.order;
+                          break;
+                        }
+                      }
+                      const newOrder = nextOrder !== null ? (parentOrder + nextOrder) / 2 : parentOrder + 1;
+                      await invokeBinding(invoke, 'outline-set-order', { node: nodeId, order: newOrder });
+                    } catch (err) {
+                      console.warn('[RecursiveBlockEditor] post-outdent order fix failed:', err);
+                    }
                     onStructureChange();
                     restoreFocusToBlock(nodeId);
                   } else {
