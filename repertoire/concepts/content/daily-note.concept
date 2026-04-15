@@ -15,6 +15,15 @@ concept DailyNote [D] {
   }
 
   actions {
+    action getOrCreate(date: String) {
+      -> ok(note: D, created: Bool) {
+        Returns the note for the given YYYY-MM-DD date, creating it if it does not exist. The note id is always in the form daily-note:{date}.
+      }
+
+      fixture getOrCreate_today { date: "2026-04-15" }
+      fixture getOrCreate_existing { date: "2026-04-15" } after getOrCreate_today
+    }
+
     action getOrCreateToday(note: D) {
       -> ok(note: D, created: Bool) {
         Returns today's note, creating it from the configured template if it does not yet exist.

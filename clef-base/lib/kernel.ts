@@ -63,6 +63,7 @@ import { conversationHandler } from '../../handlers/ts/llm-conversation/conversa
 // Taxonomy aliases — Vocabulary and TaxonomyTerm are schema-level concepts
 // backed by the Taxonomy handler which manages the shared taxonomy storage.
 import { taxonomyHandler } from '../../handlers/ts/app/taxonomy.handler';
+import { dailyNoteHandler } from '../../handlers/ts/app/daily-note.handler';
 
 import { REGISTRY_ENTRIES, SYNC_FILES } from '../../generated/kernel-registry';
 import { discoverFromFilesystem, parseSeedsYaml } from '../../handlers/ts/seed-data.handler';
@@ -370,6 +371,12 @@ const SUPPLEMENTAL_REGISTRY_ENTRIES = [
     uri: 'urn:clef/TaxonomyTerm',
     handler: taxonomyHandler,
     storageName: 'taxonomy',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/DailyNote',
+    handler: dailyNoteHandler,
+    storageName: 'daily-note',
     storageType: 'standard' as const,
   },
 ];

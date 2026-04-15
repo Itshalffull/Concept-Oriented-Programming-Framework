@@ -9,25 +9,49 @@ import {
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 const _dailyNoteHandler: FunctionalConceptHandler = {
-  getOrCreateToday(input: Record<string, unknown>) {
-    const note = input.note as string;
-    // Extract date from note name if it matches "daily-YYYY-MM-DD" pattern
-    const dateMatch = note.match(/(\d{4}-\d{2}-\d{2})/);
-    const today = dateMatch ? dateMatch[1] : new Date().toISOString().slice(0, 10);
+  getOrCreate(input: Record<string, unknown>) {
+    const date = input.date as string;
+    const nodeId = `daily-note:${date}`;
 
     let p = createProgram();
-    p = spGet(p, 'dailyNote', note, 'existingNote');
+    p = spGet(p, 'dailyNote', nodeId, 'existingNote');
     p = branch(p, 'existingNote',
-      (b) => complete(b, 'ok', { note, created: false }),
+      (b) => complete(b, 'ok', { note: nodeId, created: false }),
       (b) => {
-        let b2 = put(b, 'dailyNote', note, {
-          note,
+        let b2 = put(b, 'dailyNote', nodeId, {
+          note: nodeId,
+          date,
+          dateFormat: 'YYYY-MM-DD',
+          templateId: '',
+          targetFolder: '',
+        });
+        return complete(b2, 'ok', { note: nodeId, created: true });
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
+  getOrCreateToday(input: Record<string, unknown>) {
+    const note = input.note as string;
+    // Extract date from note name if it matches "daily-YYYY-MM-DD" or "daily-note:YYYY-MM-DD" pattern
+    const dateMatch = note.match(/(\d{4}-\d{2}-\d{2})/);
+    const today = dateMatch ? dateMatch[1] : new Date().toISOString().slice(0, 10);
+    // Normalize key to use "daily-note:" prefix
+    const nodeId = note.startsWith('daily-note:') ? note : `daily-note:${today}`;
+
+    let p = createProgram();
+    p = spGet(p, 'dailyNote', nodeId, 'existingNote');
+    p = branch(p, 'existingNote',
+      (b) => complete(b, 'ok', { note: nodeId, created: false }),
+      (b) => {
+        let b2 = put(b, 'dailyNote', nodeId, {
+          note: nodeId,
           date: today,
           dateFormat: 'YYYY-MM-DD',
           templateId: '',
           targetFolder: '',
         });
-        return complete(b2, 'ok', { note, created: true });
+        return complete(b2, 'ok', { note: nodeId, created: true });
       },
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
