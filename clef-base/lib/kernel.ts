@@ -410,8 +410,10 @@ export function getKernel(): Kernel {
   // Wire ViewShell kernel reference so resolveHydrated can dispatch cross-concept gets
   setViewShellKernel(kernel);
 
-  // Seed data + populate RuntimeRegistry + reflect entities
-  _seedPromise = seedData(kernel, result.registrations, result.loadedSyncs).then(() => bootstrapIdentity(kernel));
+  // Seed data + populate RuntimeRegistry + reflect entities.
+  // Pass `concepts` (ConceptRegistration[]) alongside result.registrations so
+  // populateScoreApiIndex can extract action names from handler object keys.
+  _seedPromise = seedData(kernel, result.registrations, result.loadedSyncs, concepts).then(() => bootstrapIdentity(kernel));
 
   _kernel = kernel;
   return kernel;
@@ -511,16 +513,25 @@ async function populateRuntimeRegistry(kernel: Kernel, registrations: RegEntry[]
  * → upsertConcept) doesn't auto-run in clef-base, so we bootstrap it here
  * by mirroring RuntimeRegistry registrations into the score index. This
  * step is idempotent — upsertConcept overwrites existing entries by key.
+ *
+ * Action names are extracted from the handler object's own keys —
+ * ConceptHandler is an index-signature type whose keys are action names.
+ * This is the authoritative source of truth for what actions a concept exposes.
  */
-async function populateScoreApiIndex(kernel: Kernel, registrations: RegEntry[]) {
-  for (const reg of registrations) {
+async function populateScoreApiIndex(kernel: Kernel, concepts: ConceptRegistration[]) {
+  for (const concept of concepts) {
     // Derive human-readable concept name from URI (e.g. urn:clef/ContentNode → ContentNode)
-    const conceptName = reg.uri.split('/').pop() ?? reg.uri;
+    const conceptName = concept.uri.split('/').pop() ?? concept.uri;
     if (!conceptName) continue;
+
+    // Extract action names from handler keys — ConceptHandler is an index-signature
+    // interface so Object.keys gives the actual registered action names.
+    const actionNames = Object.keys(concept.handler).filter(k => typeof concept.handler[k] === 'function');
+
     await kernel.invokeConcept('urn:clef/ScoreIndex', 'upsertConcept', {
       name: conceptName,
       purpose: '',
-      actions: [],
+      actions: actionNames,
       stateFields: [],
       file: '',
     }).catch(() => {});
@@ -603,15 +614,17 @@ async function ensureKeyBindings(kernel: Kernel) {
   }
 }
 
-async function seedData(kernel: Kernel, registrations: RegEntry[], loadedSyncs: string[]) {
+async function seedData(kernel: Kernel, registrations: RegEntry[], loadedSyncs: string[], concepts: ConceptRegistration[]) {
   if (_seeded) return;
   _seeded = true;
 
   // Populate RuntimeRegistry with all registered concepts and syncs
   await populateRuntimeRegistry(kernel, registrations, loadedSyncs);
 
-  // Populate ScoreApi index so ConceptActionPicker can list live concepts
-  await populateScoreApiIndex(kernel, registrations);
+  // Populate ScoreApi index so ConceptActionPicker can list live concepts.
+  // Pass the full ConceptRegistration array so action names can be extracted
+  // from the handler object keys.
+  await populateScoreApiIndex(kernel, concepts);
 
   // Run FileCatalog discovery (scans specs, syncs, surface, repertoire)
   await kernel.invokeConcept('urn:clef/FileCatalog', 'discover', {
