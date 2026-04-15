@@ -342,6 +342,14 @@ widget keybinding-editor {
     never "conflictWarning active outside conflict state": {
       state = "idle"
     }
+
+    # Boot parity — the list must never be empty on first render.
+    # KeyBinding/listByScope('app') returns the platform defaults seeded at boot.
+    # An empty list indicates the seed loader failed to register the default bindings
+    # (e.g., chord field received as JSON string instead of parsed array).
+    never "list is empty on first render when no search or category filter is active": {
+      modifiedFilterActive = false
+    }
   }
 
 }

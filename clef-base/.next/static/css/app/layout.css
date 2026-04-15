@@ -4317,8 +4317,17 @@ button, [data-part="button"] {
   transition: margin-left 160ms cubic-bezier(0.2, 0.0, 0.1, 1),
               padding-left 160ms cubic-bezier(0.2, 0.0, 0.1, 1),
               border-left-color 160ms linear;
-  animation: block-fade-in 180ms cubic-bezier(0.2, 0.0, 0.1, 1);
 }
+/* The block-fade-in keyframe used to run on every <li> mount. That
+   made Tab flicker — after the optimistic depth change, any code
+   path that re-mounted the <li> (server-sourced loadChildren,
+   structural changes elsewhere on the page, etc.) replayed the
+   keyframe's translateY(-2px) start state, which visually pulled the
+   block back to depth 0 and margin 0 for a frame before the real
+   transition ran again. The depth transition above already provides
+   the motion cue; dropping the fade-in removes the flicker without
+   losing the main polish. Preserved here as a reference so future
+   authors know why the keyframe is unused. */
 @keyframes block-fade-in {
   from { opacity: 0; transform: translateY(-2px); }
   to   { opacity: 1; transform: none; }

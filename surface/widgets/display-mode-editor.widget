@@ -299,6 +299,17 @@ widget display-mode-editor {
     "ADD_MODE is disabled when readOnly is true";
     "Keyboard ArrowLeft/ArrowRight on modeSelector navigates between mode tabs with roving tabindex";
     "All modes from DisplayMode/list are represented as modeTab parts";
+
+    # Card binding parity — when DisplayMode records are rendered as cards (e.g. in the
+    # /admin/display-modes list view), each card must show actual field values, not just
+    # field label text with empty value spans. The FieldPlacement sources (mode_id, schema,
+    # name, layout, component_mapping) must resolve to non-empty content for any seeded
+    # DisplayMode record. This is validated at boot via the FlatFieldsRenderer path:
+    # DisplayMode:card → fp-mode-id-heading (source_field: mode_id) → entity.mode_id.
+    never "DisplayMode card renders field label without resolved value for seeded records": {
+      exists card in displayedCards:
+        card.fieldLabelsCount > 0 and card.resolvedValuesCount = 0
+    }
   }
 
 }
