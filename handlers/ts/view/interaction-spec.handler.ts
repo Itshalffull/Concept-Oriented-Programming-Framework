@@ -199,6 +199,67 @@ const _handler: FunctionalConceptHandler = {
         }),
     ) as StorageProgram<Result>;
   },
+
+  /**
+   * Replace all fields of an existing interaction spec.
+   * Used by the seed re-apply path to update seeded specs when their
+   * YAML source changes between boots.
+   */
+  update(input: Record<string, unknown>) {
+    const name = input.name as string;
+    const createForm = (input.createForm ?? '') as string;
+    const rowClick = (input.rowClick ?? '') as string;
+    const rowActions = (input.rowActions ?? '[]') as string;
+    const pickerMode = (input.pickerMode ?? false) as boolean;
+    const createProgramRef = (input.createProgram ?? null) as string | null;
+    const actionProgramRef = (input.actionProgram ?? null) as string | null;
+    const createSurface = (input.create_surface ?? null) as string | null;
+    const createModeHint = (input.create_mode_hint ?? null) as string | null;
+
+    if (!name || name.trim() === '') {
+      return complete(createProgram(), 'error', {
+        message: 'name is required',
+      }) as StorageProgram<Result>;
+    }
+
+    const validModeHints = ['modal', 'page', 'panel'];
+    if (createModeHint !== null && !validModeHints.includes(createModeHint)) {
+      return complete(createProgram(), 'error', {
+        message: `create_mode_hint must be one of "modal", "page", or "panel"; got "${createModeHint}"`,
+      }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = get(p, 'interaction', name, 'existing');
+
+    return branch(
+      p,
+      'existing',
+      // existing != null — overwrite all fields
+      (b) => {
+        const b2 = mergeFrom(b, 'interaction', name, (bindings) => {
+          const existing = bindings.existing as Record<string, unknown>;
+          return {
+            ...existing,
+            createForm,
+            rowClick,
+            rowActions,
+            pickerMode,
+            createProgram: createProgramRef,
+            actionProgram: actionProgramRef,
+            create_surface: createSurface,
+            create_mode_hint: createModeHint,
+          };
+        });
+        return complete(b2, 'ok', { interaction: name });
+      },
+      // existing == null — notfound
+      (b) =>
+        complete(b, 'notfound', {
+          message: `No interaction spec with name "${name}" found`,
+        }),
+    ) as StorageProgram<Result>;
+  },
 };
 
 export const interactionSpecHandler = autoInterpret(_handler);

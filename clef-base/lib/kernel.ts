@@ -524,8 +524,17 @@ async function applyDeclarativeSeeds(kernel: Kernel) {
     const conceptUri = String(seed.concept_uri ?? '');
     const actionName = String(seed.action_name ?? '');
     const entries = parseSeedEntries(seed.entries);
+    // isReapply is true when the file hash changed — existing records must be
+    // updated, not silently skipped as duplicates (Section 16.12).
+    const isReapply = storedHash !== null && currentHash !== null && storedHash !== currentHash;
     for (const entry of entries) {
-      await kernel.invokeConcept(conceptUri, actionName, entry).catch(() => {});
+      const result = await kernel.invokeConcept(conceptUri, actionName, entry).catch(() => ({ variant: 'error' }));
+      // When re-applying a changed seed, if the create action returns duplicate,
+      // fall back to update so the existing record is replaced with the new
+      // seed values instead of being left stale.
+      if (isReapply && (result.variant === 'duplicate' || result.variant === 'already_exists')) {
+        await kernel.invokeConcept(conceptUri, 'update', entry).catch(() => {});
+      }
     }
     await kernel.invokeConcept('urn:clef/SeedData', 'apply', {
       seed: seedId,

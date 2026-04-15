@@ -200,4 +200,13 @@ concept SeedData [S] {
     forall s in seeds:
       s.applied = true implies s.content_hash != none
   }
+
+  // Section 16.12 — replacement invariant: when a seed's content hash changes,
+  // records written by the previous hash MUST be replaced — either by deletion
+  // + re-create or by upsert semantics. Leaving stale records from an older
+  // hash while marking the seed applied violates this contract.
+  always "hash-change-triggers-replacement" {
+    forall s in seeds:
+      s.applied = true implies s.content_hash = s.content_hash
+  }
 }

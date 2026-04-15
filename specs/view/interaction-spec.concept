@@ -114,6 +114,24 @@ concept InteractionSpec [I] {
       fixture setCreateBinding_empty_binding { name: "content-list-controls", binding: "" } after create_content_controls -> error
     }
 
+    action update(name: String, createForm: String, rowClick: String, rowActions: String, pickerMode: Bool, createProgram: option String, actionProgram: option String, create_surface: option String, create_mode_hint: option String) {
+      -> ok(interaction: I) {
+        Replace all fields of an existing interaction spec identified by name.
+        Used by the seed re-apply path to update seeded specs when their
+        YAML source file changes between boots.
+      }
+      -> notfound(message: String) {
+        No interaction spec with this name is registered.
+      }
+      -> error(message: String) {
+        The name is empty, or create_mode_hint is set to a value other than
+        "modal", "page", or "panel".
+      }
+      fixture update_ok { name: "content-list-controls", createForm: '{"concept":"ContentNode","action":"createWithSchema","fields":[{"name":"title","label":"Title","required":true}]}', rowClick: '{"navigateTo":"/content/{node}"}', rowActions: '[]', pickerMode: false, createProgram: none, actionProgram: none, create_surface: none, create_mode_hint: none } after create_content_controls
+      fixture update_notfound { name: "nonexistent-spec", createForm: '', rowClick: '', rowActions: '[]', pickerMode: false, createProgram: none, actionProgram: none, create_surface: none, create_mode_hint: none } -> notfound
+      fixture update_empty_name { name: "", createForm: '', rowClick: '', rowActions: '[]', pickerMode: false, createProgram: none, actionProgram: none, create_surface: none, create_mode_hint: none } -> error
+    }
+
   }
 
   example "create then get returns interaction": {
