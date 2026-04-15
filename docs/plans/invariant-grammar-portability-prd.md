@@ -712,3 +712,67 @@ No new TS orchestration; even the CLI is a dispatcher.
 9. **Per-platform translation tables** (Vue / Svelte / Vanilla /
    SwiftUI / Jetpack) land as each platform needs enforcement.
    `TestPlanRenderer/register` + seed + done — no spec changes.
+
+10. **Propagate the grammar update through every reference
+    surface.** Missing any of these turns generated tests and AI
+    authoring helpers silently out of date.
+
+    **Generated from `examples/devtools/devtools.interface.yaml`
+    → regenerate via `scripts/regen-interface.ts`:**
+    - `CLAUDE.md`, `AGENTS.md`, `GEMINI.md` (project instructions;
+      currently describe "six invariant constructs" — becomes seven
+      with `scenario`, plus the note that the same grammar lands on
+      widget/view/sync/derived)
+    - `.claude/agents/*.md`, `.codex/agents/*.md`,
+      `.gemini/agents/*.md` — concept-scaffold-gen,
+      handler-scaffold-gen, sync-scaffold-gen,
+      surface-component-scaffold-gen, etc. need the new kind and
+      the cross-spec story
+    - `.claude/mcp/*` and `.codex/mcp/*` (tool help text for
+      TestGen, SpecParser, WidgetParser, SyncParser — all gain
+      `scenario` support, all flow through `InvariantParser`)
+    - `.claude/skills/*/SKILL.md` and the sibling
+      `.codex/skills/*/SKILL.md` / `.gemini/skills/*/SKILL.md`
+      (auto-generated with a `<!-- Auto-generated -->` header;
+      don't hand-edit those)
+    - `cli/src/*` (commands + help) — `clef generate-tests`,
+      `clef parse`, etc.
+
+    **Manifest text inside `examples/devtools/devtools.interface.yaml`:**
+    - `project-instructions` section (lines ~2766 ff.) describing
+      the six invariant constructs — update to seven + the
+      AssertionContext-plugin pattern
+    - `agents` section prompts (concept-scaffold-gen and
+      sync-scaffold-gen get the new authoring story)
+    - `skills` sections that reference invariant authoring rules
+      (lines ~2820, ~2924)
+    - Help text for MCP tools (TestGen/generate, TestGen/coverage,
+      SpecParser/parse, SyncCompiler/compile — every one touching
+      invariants)
+
+    **Hand-authored files (no auto-gen header — must edit by hand):**
+    - `.claude/skills/create-concept/references/concept-grammar.md`
+    - `.claude/skills/create-widget/references/widget-grammar.md`
+    - Sibling copies in `.codex/skills/…` and `.gemini/skills/…`
+      if those exist under the same path
+    - `docs/plans/clef-fv.md` Section 1 (referenced by the
+      devtools manifest; currently lists the six invariant
+      constructs — add `scenario`, note the shared-parser pattern)
+
+    **New reference docs to author:**
+    - `references/sync-grammar.md` (`sync-parser` skill) — gains an
+      invariant section
+    - `references/derived-grammar.md` — same (already exists per
+      line 7991 of the manifest; extend)
+    - `references/view-grammar.md` — extend the existing invariant
+      section with the cross-component-consistency examples
+
+    **Regen command** (already in CLAUDE.md):
+    ```
+    npx tsx --tsconfig tsconfig.json scripts/regen-interface.ts
+    ```
+
+    Ship the parser + concept-pipeline changes first; then the
+    regen + hand edits can land in a single "update all grammar
+    references" commit. Verify by searching for "six invariant
+    constructs" — every hit is either updated or deleted.
