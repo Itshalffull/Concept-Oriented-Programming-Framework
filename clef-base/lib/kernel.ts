@@ -66,7 +66,6 @@ const SUPPLEMENTAL_REGISTRY_ENTRIES = [
     storageName: 'clip',
     storageType: 'standard' as const,
   },
-<<<<<<< HEAD
   {
     uri: 'urn:clef/KeyBinding',
     handler: keyBindingHandler,
