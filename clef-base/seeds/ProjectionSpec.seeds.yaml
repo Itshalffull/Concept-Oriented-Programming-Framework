@@ -16,7 +16,7 @@ entries:
 
   # Shared by: automations-list, automations-rules-list, process-catalog
   - name: automations-fields
-    fields: '[{"key":"rule","label":"Rule"},{"key":"trigger","label":"Trigger"},{"key":"conditions","label":"Conditions"},{"key":"enabled","label":"Enabled","formatter":"boolean-badge"}]'
+    fields: '[{"key":"rule","label":"Rule"},{"key":"trigger","label":"Trigger"},{"key":"conditions","label":"Conditions","formatter":"condition-summary"},{"key":"enabled","label":"Enabled","formatter":"boolean-badge"}]'
 
   - name: taxonomy-list-fields
     fields: '[{"key":"vocab","label":"Vocabulary ID"},{"key":"name","label":"Name"},{"key":"terms","label":"Terms","formatter":"json-count"}]'
@@ -66,7 +66,7 @@ entries:
     fields: '[{"key":"node","label":"Entity"},{"key":"schemas","label":"Schemas","formatter":"schema-badges"}]'
 
   - name: version-spaces-list-fields
-    fields: '[{"key":"name","label":"Space"},{"key":"status","label":"Status","formatter":"badge"},{"key":"owner","label":"Owner"},{"key":"overrideCount","label":"Overrides"}]'
+    fields: '[{"key":"name","label":"Space"},{"key":"status","label":"Status","formatter":"badge"},{"key":"created_by","label":"Owner"},{"key":"visibility","label":"Visibility","formatter":"badge"}]'
 
   - name: backlinks-fields
     fields: '[{"key":"node","label":"Source"},{"key":"type","label":"Type","formatter":"badge"}]'

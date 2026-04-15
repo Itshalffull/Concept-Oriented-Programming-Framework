@@ -68,7 +68,7 @@ entries:
 
   - name: content-node-list-version-space-source
     kind: concept-action
-    config: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"VersionSpace"}}'
+    config: '{"concept":"VersionSpace","action":"list"}'
 
   - name: content-node-list-backlink-source
     kind: concept-action
