@@ -22,5 +22,13 @@
     "concept": "InteractionSpec",
     "action": "setCreateBinding",
     "alwaysLoaded": false
+  },
+  {
+    "name": "interaction_spec_update",
+    "briefDescription": "Replace all fields of an existing interaction spec identified by name .",
+    "category": "InteractionSpec",
+    "concept": "InteractionSpec",
+    "action": "update",
+    "alwaysLoaded": false
   }
 ]

@@ -4,7 +4,7 @@
 
 export async function handleLensStructuralDiffProviderSkill(
   command: string,
-  args: Record<string, string>,
+  args: Record<string, any>,
   kernel: { handleRequest: (input: Record<string, unknown>) => Promise<any> },
 ): Promise<string> {
   const result = await kernel.handleRequest({ method: command, ...args });

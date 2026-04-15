@@ -130,5 +130,81 @@ export const interactionSpecTools = [
         "binding"
       ]
     }
+  },
+  {
+    "type": "tool",
+    "name": "interaction_spec_update",
+    "description": "Update interactionspec — Replace all fields of an existing interaction spec identified by name . \n Used by the seed re apply path to update seeded specs when their \n YAML source file changes between boots .",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "createForm": {
+          "type": "string"
+        },
+        "rowClick": {
+          "type": "string"
+        },
+        "rowActions": {
+          "type": "string"
+        },
+        "pickerMode": {
+          "type": "boolean"
+        },
+        "createProgram": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actionProgram": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "create_surface": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "create_mode_hint": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "createForm",
+        "rowClick",
+        "rowActions",
+        "pickerMode",
+        "createProgram",
+        "actionProgram",
+        "create_surface",
+        "create_mode_hint"
+      ]
+    }
   }
 ];

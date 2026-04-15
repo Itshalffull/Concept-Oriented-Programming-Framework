@@ -47,3 +47,10 @@ Set the ActionBinding ID to use for the create form action of the named
  interaction spec . Replaces any previously set create binding .
 
 **Arguments:** `$0` **name** (string), `$1` **binding** (string)
+
+### update
+Replace all fields of an existing interaction spec identified by name . 
+ Used by the seed re apply path to update seeded specs when their 
+ YAML source file changes between boots .
+
+**Arguments:** `$0` **name** (string), `$1` **createForm** (string), `$2` **rowClick** (string), `$3` **rowActions** (string), `$4` **pickerMode** (bool), `$5` **createProgram** (string?), `$6` **actionProgram** (string?), `$7` **create_surface** (string?), `$8` **create_mode_hint** (string?)

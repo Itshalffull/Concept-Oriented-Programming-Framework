@@ -116,8 +116,36 @@ interactionSpecCommand
     }
   });
 
+interactionSpecCommand
+  .command('update')
+  .description('Replace all fields of an existing interaction spec identified by name . Used by the seed re apply path to update seeded specs when their YAML source file changes between boots .')
+  .requiredOption('--name <name>', 'Name')
+  .requiredOption('--create-form <createForm>', 'Create Form')
+  .requiredOption('--row-click <rowClick>', 'Row Click')
+  .requiredOption('--row-actions <rowActions>', 'Row Actions')
+  .requiredOption('--picker-mode <pickerMode>', 'Picker Mode')
+  .requiredOption('--create-program <createProgram>', 'Create Program')
+  .requiredOption('--action-program <actionProgram>', 'Action Program')
+  .requiredOption('--create-surface <create_surface>', 'Create_surface')
+  .requiredOption('--create-mode-hint <create_mode_hint>', 'Create_mode_hint')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/InteractionSpec', 'update', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
+  });
+
 export const interactionSpecCommandTree = {
   group: 'interaction-spec',
   description: 'Manage named interaction configurations that govern controls , row actions , navigation , and picker behaviors for a view . Each interaction spec captures whether a create form is available ( as a serialized CreateFormConfig JSON ) , a row click navigation rule ( as a serialized RowClickConfig JSON ) , a list of per row action buttons ( as a serialized RowActionConfig [ ] JSON ) , and whether the view operates in picker mode . Interaction specs are independent of data source , filter , sort , and presentation concerns they describe only what a user can do with the rows displayed',
-  commands: [{ action: 'create', command: 'create' }, { action: 'get', command: 'get' }, { action: 'list', command: 'list' }, { action: 'addRowAction', command: 'add-row-action' }, { action: 'setCreateBinding', command: 'set-create-binding' }],
+  commands: [{ action: 'create', command: 'create' }, { action: 'get', command: 'get' }, { action: 'list', command: 'list' }, { action: 'addRowAction', command: 'add-row-action' }, { action: 'setCreateBinding', command: 'set-create-binding' }, { action: 'update', command: 'update' }],
 };
