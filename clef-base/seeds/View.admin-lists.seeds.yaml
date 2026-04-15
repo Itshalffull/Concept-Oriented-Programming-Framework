@@ -174,6 +174,40 @@ entries:
     description: Resolved effective permission set — inherited and direct grants merged and evaluated for the current principal.
     defaultDisplayMode: table-row
 
+  # /admin/transcripts  →  transcripts-list
+  - view: transcripts-list
+    dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Transcript"}}'
+    layout: table
+    visibleFields: '[{"key":"node","label":"Transcript"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Source"},{"key":"createdAt","label":"Created","formatter":"date"}]'
+    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    title: Transcripts
+    description: Conversation and session transcripts — recorded exchanges between users, agents, and the system.
+    defaultDisplayMode: table-row
+
+  # /admin/sources  →  source-library
+  - view: source-library
+    dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Source"}}'
+    layout: table
+    visibleFields: '[{"key":"node","label":"Source"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Added By"},{"key":"createdAt","label":"Added","formatter":"date"}]'
+    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    title: Source Library
+    description: Knowledge sources connected to the workspace — documents, URLs, databases, and external feeds used by agents and search.
+    defaultDisplayMode: table-row
+
+  # /admin/syncs  →  syncs-list
+  # dataSource uses RuntimeRegistry/listSyncs — the live sync set registered at boot.
+  # RuntimeRegistry is a kernel concept that exposes the sync engine's registered rules.
+  # If shape mismatch occurs (RuntimeRegistry not registered or action name differs),
+  # the ViewRenderer will fall back gracefully and return an empty result set.
+  - view: syncs-list
+    dataSource: '{"concept":"RuntimeRegistry","action":"listSyncs"}'
+    layout: table
+    visibleFields: '[{"key":"sync_name","label":"NAME"},{"key":"source","label":"SOURCE"},{"key":"suite","label":"SUITE"}]'
+    controls: '{}'
+    title: Sync Rules
+    description: Synchronization rules wiring concepts together through pattern matching on completions.
+    defaultDisplayMode: table-row
+
   # /admin/layout-builder  →  layout:layout-builder  →  layouts-list view
   # The layout-builder destination was pointing at a non-existent 'builder' layout.
   # Fixed to use 'layout:layout-builder' which renders this layouts-list view inside a Layout.
