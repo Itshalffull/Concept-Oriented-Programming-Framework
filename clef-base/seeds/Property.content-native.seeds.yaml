@@ -128,3 +128,11 @@ entries:
   - entity: DailyNote
     key: displayWidget
     value: daily-note-editor
+
+  # === noStructuredZone — TEV-9 ===
+  # Content types flagged with noStructuredZone: true render the content-body-only
+  # layout (blocks + related) instead of the triple-zone layout (structured + blocks + related).
+  # Use for purely free-form types that have no typed schema fields to display.
+  - entity: DailyNote
+    key: noStructuredZone
+    value: "true"

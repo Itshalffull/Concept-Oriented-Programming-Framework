@@ -93,6 +93,12 @@ entries:
     title: ''
     description: Three-column daily notes workspace — recent notes rail, center block editor, and right-rail referenced nodes.
     children: '[{"type":"widget","id":"daily-note-sidebar"},{"type":"widget","id":"daily-note-editor"},{"type":"widget","id":"referenced-on-this-day"}]'
+  - layout: content-body-only
+    name: Content Body Only
+    kind: stack
+    title: ''
+    description: Two-zone entity page for schema-less or free-form-only content — block editor body and related entities, no structured properties zone.
+    children: '[{"type":"area","id":"content","content_mode":"unstructured"},{"type":"area","id":"related","content_mode":"structured","content_refs":[{"type":"view_embed","view":"backlinks"},{"type":"view_embed","view":"similar-entities"},{"type":"view_embed","view":"unlinked-references"},{"type":"view_embed","view":"graph-neighbors"}]}]'
   - layout: layout-builder
     name: Layout Builder
     kind: stack

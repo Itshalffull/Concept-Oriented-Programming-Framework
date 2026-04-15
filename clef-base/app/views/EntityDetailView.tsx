@@ -65,6 +65,19 @@ export const EntityDetailView: React.FC<EntityDetailViewProps> = ({ id }) => {
   const { data: schemasResult, refetch: refetchSchemas } = useConceptQuery<{ schemas: string }>('Schema', 'getSchemasFor', { entity_id: id });
   const { data: allSchemaDefs } = useConceptQuery<Record<string, unknown>[]>('Schema', 'list');
   const { navigateToHref } = useNavigator();
+
+  // TEV-9: probe the primary schema's noStructuredZone Property.
+  // We only probe when at least one schema is applied, because schema-less nodes
+  // already collapse the structured zone unconditionally.
+  // NOTE: schemas is derived from schemasResult below; we re-derive inline here
+  // so the hook call is unconditional (Rules of Hooks).
+  const _schemasEarly = safeParseJsonArray<string>(schemasResult?.schemas);
+  const _primarySchemaEarly = _schemasEarly[0] ?? '';
+  const { data: noStructuredZoneProp } = useConceptQuery<{ value?: string }>(
+    _primarySchemaEarly ? 'Property' : '__none__',
+    'get',
+    { entity: _primarySchemaEarly, key: 'noStructuredZone' },
+  );
   const [displayMode, setDisplayMode] = useState('entity-page');
   const [showVersionPins, setShowVersionPins] = useState(false);
   const versionPins = useVersionPins(id);
@@ -138,6 +151,15 @@ export const EntityDetailView: React.FC<EntityDetailViewProps> = ({ id }) => {
 
   const primarySchema = schemas[0] ?? 'default';
   const displayName = String(data.node ?? id).replace(/^(concept|schema|sync|suite|theme|view|widget|display-mode|workflow|automation-rule|taxonomy):/, '');
+
+  // TEV-9: choose entity-detail (triple-zone) vs content-body-only (two-zone).
+  // Collapse the structured zone when:
+  //   (a) no schemas are applied — nothing to display in the structured zone, OR
+  //   (b) the primary schema has Property noStructuredZone = "true" (e.g. DailyNote)
+  const _noStructuredZoneFlag = noStructuredZoneProp?.value === 'true';
+  const entityLayoutId = (schemas.length === 0 || _noStructuredZoneFlag)
+    ? 'content-body-only'
+    : 'entity-detail';
 
   const editorFlavor = pickEditorFlavor(schemas);
 
@@ -353,14 +375,13 @@ export const EntityDetailView: React.FC<EntityDetailViewProps> = ({ id }) => {
         </Card>
       )}
 
-      {/* Triple-zone layout — renders entity-properties, entity-content, entity-same-schema,
-          backlinks, similar-entities, unlinked-references, and graph-neighbors ViewShells
-          via the entity-detail Layout seed. The RecursiveBlockEditor fallback is used for
-          content-types that opt out of the layout system (e.g. DailyNote) — keyed by a
-          DisplayMode strategy in a follow-up (TEV-8). */}
+      {/* TEV-9: Layout selection — triple-zone (entity-detail) for schema-typed content,
+          two-zone (content-body-only) for schema-less nodes or schemas flagged with
+          noStructuredZone: true (e.g. DailyNote — a free-form journal entry has no typed
+          properties to edit structurally). */}
       {displayMode === 'entity-page' ? (
         <LayoutRenderer
-          layoutId="entity-detail"
+          layoutId={entityLayoutId}
           context={{ entityId: String(data.node ?? id), entityPrimarySchema: primarySchema }}
         />
       ) : (
