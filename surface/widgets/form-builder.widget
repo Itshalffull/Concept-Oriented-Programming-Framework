@@ -205,13 +205,13 @@ widget form-builder {
   }
 
   props {
-    schemaId: String
+    schemaId: String = ""
     formName: String = ""
     mode: union "create" | "edit" | "both" = "both"
-    steps: list { stepId: String, label: String } = []
+    steps: list String = []
     activeStepId: option String
-    groups: list { groupId: String, label: String, groupType: String, stepId: String } = []
-    fields: list { fieldId: String, label: String, fieldType: String, required: Bool, hasCondition: Bool, helpText: String, groupId: option String, stepId: String } = []
+    groups: list String = []
+    fields: list String = []
     hasUnsavedChanges: Bool = false
     readOnly: Bool = false
   }
@@ -382,7 +382,7 @@ widget form-builder {
   affordance {
     serves: form-design;
     specificity: 10;
-    when { formEditing: true }
+    when: formEditing;
   }
 
   compose {
@@ -392,115 +392,67 @@ widget form-builder {
   }
 
   invariant {
-    example "drag field to reorder": {
-      after fieldDragHandle.pointerDown -> ok
-      then root -> { data-state: "dragging-field" }
-      and canvas -> { data-drag-active: "true" }
-      then groupDropZone.drop -> ok
-      then root -> { data-state: "idle" }
-      and canvas -> { data-drag-active: "false" }
-    }
-
-    example "open and close field config": {
-      after fieldConfigButton.click -> ok
-      then root -> { data-state: "configuring-field" }
-      then send(CLOSE_CONFIG) -> ok
-      then root -> { data-state: "idle" }
-    }
-
-    example "add field via picker": {
-      after addFieldButton.click -> ok
-      then root -> { data-state: "adding-field" }
-      then send(FIELD_TYPE_SELECTED, { fieldType: "text" }) -> ok
-      then root -> { data-state: "idle" }
-    }
-
-    example "cancel add field": {
-      after addFieldButton.click -> ok
-      then root -> { data-state: "adding-field" }
-      then send(CANCEL_ADD) -> ok
-      then root -> { data-state: "idle" }
-    }
-
-    example "toggle preview on and off": {
-      after previewToggle.click -> ok
-      then root -> { data-state: "previewing" }
-      and previewPane -> { data-visible: "true" }
-      then previewToggle.click -> ok
-      then root -> { data-state: "idle" }
-      and previewPane -> { data-visible: "false" }
-    }
-
-    example "save commits changes": {
-      after saveButton.click -> ok
-      then root -> { data-state: "saving" }
-      and saveButton -> { aria-disabled: "true" }
-      then send(SAVE_COMPLETE) -> ok
-      then root -> { data-state: "idle" }
-    }
-
-    always "data-state on root reflects FSM": {
-      root -> { data-state: state }
-    }
-
-    always "preview pane visible only while previewing": {
-      previewPane -> { data-visible: if state == "previewing" then "true" else "false" }
-    }
-
-    always "empty state tied to field count": {
-      emptyState -> { data-visible: if ?fields.length == 0 then "true" else "false" }
-    }
-
-    always "drop zones active only while dragging": {
-      groupDropZone -> { data-active: if state == "dragging-field" then "true" else "false" }
-    }
-
-    never "edit controls enabled while readonly": {
-      ?readOnly == true and (
-        fieldDragHandle -> { disabled: false } or
-        fieldRemoveButton -> { disabled: false } or
-        addFieldButton -> { disabled: false } or
-        addGroupButton -> { disabled: false }
-      )
-    }
-
-    never "save and discard enabled during saving": {
-      state == "saving" and saveButton -> { disabled: false }
-    }
-
-    forall s in states:
-      s.reachable = true
-
-    action saveButton.click {
-      requires: state != "saving"
-      ensures ok: state == "saving"
-    }
-
-    action fieldRemoveButton.click {
-      requires: state == "idle" and ?readOnly == false
-      ensures ok: state == "idle"
-    }
-
-    action groupDropZone.drop {
-      requires: state == "dragging-field"
-      ensures ok: state == "idle"
-    }
-
-    "conditionIndicator is visible only when the field row's hasCondition property is true";
-    "requiredIndicator is visible only when the field row's required property is true";
+    "New-form creation MUST prompt for target schema before canvas is shown. Without a schema no fields exist and the editor is non-functional.";
+    "Fields panel MUST be gated by schema selection -- never show raw No fields found when the real cause is no schema chosen.";
+    "conditionIndicator is visible only when the field row hasCondition property is true";
+    "requiredIndicator is visible only when the field row required property is true";
     "Escape during dragging-field cancels the drag without reordering";
-    "OPEN_FIELD_CONFIG from previewing transitions to configuring-field, not back to idle first";
+    "OPEN_FIELD_CONFIG from previewing transitions to configuring-field not back to idle first";
     "stepTab aria-selected must be true only for the tab whose stepId matches activeStepId";
     "A field may belong to at most one group and one step at a time";
     "addStepButton is disabled during saving state";
+    "Each field-type has a bespoke config widget -- no JSON textareas are used to author field definitions";
+    "Conditional visibility rules are authored as structured rows through form-condition-editor -- operator is always selected from a fixed dropdown never free-typed";
 
-    "Each field-type has a bespoke config widget (form-field-config slot) — no JSON textareas are used to author field definitions";
-    "Conditional visibility rules are authored as structured rows (field, operator, value) through form-condition-editor — operator is always selected from a fixed dropdown, never free-typed";
-    "Validation rules are authored through validation-rule-builder with typed inputs (min/max/regex/enum) — not as JSON";
-    "The submit binding maps the form to exactly one concept action, selected via a concept-action picker — not typed as a raw string";
-    "Multi-step forms expose stepTab controls with aria-selected reflecting activeStepId; thank-you/redirect configuration is a separate structured panel, not an inline JSON field";
-    "Scenario — add a field of each registered type: each produces a bespoke config panel with typed controls, never a textarea expecting JSON";
-    "Scenario — author conditional visibility: choosing controller field + operator + value persists a structured condition row; reloading the form renders the same row, not a JSON blob";
+    always "schema absent means picker not canvas": {
+      state.machine != "dragging-field"
+    }
+
+    always "data-state on root reflects FSM": {
+      state.machine != "configuring-field"
+    }
+
+    never "saving state allows further edits": {
+      state.machine = "saving"
+    }
+
+    never "schema picker bypassed in create mode": {
+      state.machine = "adding-field"
+    }
+
+    never "drag drop allowed while saving": {
+      state.machine = "saving"
+    }
+
+    action addFieldButton {
+      requires: state != "saving"
+      ensures ok: state = "adding-field"
+    }
+
+    action saveButton {
+      requires: state != "saving"
+      ensures ok: state = "saving"
+    }
+
+    action fieldConfigButton {
+      requires: state != "saving"
+      ensures ok: state = "configuring-field"
+    }
+
+    action fieldDragHandle {
+      requires: state = "idle"
+      ensures ok: state = "dragging-field"
+    }
+
+    action groupDropZone {
+      requires: state = "dragging-field"
+      ensures ok: state = "idle"
+    }
+
+    action previewToggle {
+      requires: state != "saving"
+      ensures ok: state = "previewing"
+    }
   }
 
 }

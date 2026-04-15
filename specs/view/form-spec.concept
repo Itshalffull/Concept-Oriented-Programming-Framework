@@ -48,6 +48,7 @@ concept FormSpec [F] {
       fixture create_edit { form: "article-full-edit", schema: "article", name: "full-edit", mode: "edit" }
       fixture create_both { form: "task-form", schema: "task", name: "task-form", mode: "both" }
       fixture create_duplicate { form: "article-quick-create-dup", schema: "article", name: "quick-create", mode: "create" } after create_ok -> duplicate
+      fixture missingSchema { form: "bad-form-no-schema", schema: "", name: "new-form", mode: "create" } -> error
       fixture create_empty_schema { form: "bad-form", schema: "", name: "my-form", mode: "create" } -> error
       fixture create_empty_name { form: "bad-form2", schema: "article", name: "", mode: "create" } -> error
       fixture create_invalid_mode { form: "bad-form3", schema: "article", name: "some-form", mode: "view" } -> error

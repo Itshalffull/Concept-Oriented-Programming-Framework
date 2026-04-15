@@ -22,6 +22,7 @@ import React, {
   useMemo,
 } from 'react';
 import { useKernelInvoke } from '../../../lib/clef-provider';
+import { useConceptQuery } from '../../../lib/use-concept-query';
 import type {
   FormSpec,
   FormGroup,
@@ -35,7 +36,9 @@ import type { ConditionOperator } from '../../../lib/form-conditions';
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface FormBuilderProps {
-  schemaId: string;
+  /** The schema to build a form for. Optional in create mode — when absent
+   *  the builder renders a full-screen schema picker before showing the canvas. */
+  schemaId?: string;
   /** If editing an existing FormSpec by name, or "default" for new. */
   formName?: string;
   mode?: 'create' | 'edit';
@@ -873,6 +876,161 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
   return null;
 };
 
+// ─── SchemaPickerScreen ───────────────────────────────────────────────────────
+//
+// Full-screen overlay shown on /admin/form-builder/new when no ?schema= param
+// is present. Lists all registered schemas and navigates to
+// /admin/form-builder/new?schema=<id> on selection (see Section 10.1).
+
+interface SchemaEntry {
+  id: string;
+  label?: string;
+  description?: string;
+}
+
+const SchemaPickerScreen: React.FC = () => {
+  const { data: schemas, loading } = useConceptQuery<SchemaEntry[]>('Schema', 'list');
+  const [filter, setFilter] = useState('');
+
+  const visible = useMemo(() => {
+    const q = filter.toLowerCase();
+    return (schemas ?? []).filter(
+      (s) =>
+        !q ||
+        (s.id ?? '').toLowerCase().includes(q) ||
+        (s.label ?? '').toLowerCase().includes(q),
+    );
+  }, [schemas, filter]);
+
+  function handleSelect(id: string) {
+    // Navigate to the form-builder/new route with the selected schema.
+    // Use window.location so it works without a router import.
+    window.location.href = `/admin/form-builder/new?schema=${encodeURIComponent(id)}`;
+  }
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        height: '100%',
+        padding: 'var(--spacing-xl)',
+        background: 'var(--palette-background)',
+        overflowY: 'auto',
+      }}
+      data-part="schema-picker"
+      data-state="picking-schema"
+    >
+      <div
+        style={{
+          width: '100%',
+          maxWidth: 560,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--spacing-lg)',
+        }}
+      >
+        <div>
+          <h2
+            style={{
+              fontSize: 'var(--typography-heading-md-size)',
+              fontWeight: 'var(--typography-heading-md-weight)',
+              color: 'var(--palette-on-surface)',
+              margin: 0,
+            }}
+          >
+            Choose a schema for this form
+          </h2>
+          <p
+            style={{
+              fontSize: 'var(--typography-body-md-size)',
+              color: 'var(--palette-on-surface-variant)',
+              marginTop: 'var(--spacing-xs)',
+            }}
+          >
+            The form will collect fields defined on the selected schema.
+            You can change the layout after creation.
+          </p>
+        </div>
+
+        <input
+          type="search"
+          placeholder="Filter schemas..."
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          style={{
+            width: '100%',
+            padding: 'var(--spacing-sm) var(--spacing-md)',
+            borderRadius: 'var(--radius-sm)',
+            border: '1px solid var(--palette-outline)',
+            background: 'var(--palette-surface-variant)',
+            color: 'var(--palette-on-surface)',
+            fontSize: 'var(--typography-body-md-size)',
+            fontFamily: 'inherit',
+            boxSizing: 'border-box' as const,
+          }}
+          aria-label="Filter schemas"
+          data-part="schema-filter"
+          autoFocus
+        />
+
+        {loading ? (
+          <div style={{ color: 'var(--palette-on-surface-variant)', textAlign: 'center', padding: 'var(--spacing-xl)' }}>
+            Loading schemas...
+          </div>
+        ) : visible.length === 0 ? (
+          <div style={{ color: 'var(--palette-on-surface-variant)', textAlign: 'center', padding: 'var(--spacing-xl)' }}>
+            {filter ? `No schemas match "${filter}".` : 'No schemas found. Create a schema first.'}
+          </div>
+        ) : (
+          <ul
+            style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}
+            role="listbox"
+            aria-label="Available schemas"
+          >
+            {visible.map((schema) => (
+              <li key={schema.id} role="option" aria-selected="false">
+                <button
+                  type="button"
+                  onClick={() => handleSelect(schema.id)}
+                  style={{
+                    width: '100%',
+                    textAlign: 'left',
+                    padding: 'var(--spacing-sm) var(--spacing-md)',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--palette-outline)',
+                    background: 'var(--palette-surface)',
+                    color: 'var(--palette-on-surface)',
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    fontSize: 'var(--typography-body-md-size)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '2px',
+                  }}
+                  data-part="schema-option"
+                  data-schema-id={schema.id}
+                >
+                  <span style={{ fontWeight: 'var(--typography-label-md-weight)' }}>
+                    {schema.label ?? schema.id}
+                  </span>
+                  {schema.description && (
+                    <span style={{ fontSize: 'var(--typography-body-sm-size)', color: 'var(--palette-on-surface-variant)' }}>
+                      {schema.description}
+                    </span>
+                  )}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // ─── FormBuilder ──────────────────────────────────────────────────────────────
 
 export const FormBuilder: React.FC<FormBuilderProps> = ({
@@ -917,7 +1075,10 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({
   // ── Load ── (skipped in create mode — defaults are pre-set in useState)
   useEffect(() => {
     if (isCreate) {
-      // In create mode, still load the field definitions for the palette
+      // In create mode, load field definitions for the palette — but only
+      // once a schema is chosen. Without a schemaId the SchemaPickerScreen
+      // is shown instead, so there is nothing to load yet.
+      if (!schemaId) return;
       let cancelled = false;
       invoke('FieldDefinition', 'list', { schemaId }).then((defsResult) => {
         if (cancelled) return;
@@ -1224,6 +1385,15 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({
       setSaving(false);
     }
   }, [formSpec, invoke, schemaId, formName, isCreate]);
+
+  // ── Render: schema picker ──
+  // When entering /admin/form-builder/new with no ?schema= param, show a
+  // full-screen schema picker before ever rendering the canvas or field palette.
+  // This prevents the permanent "No fields found for this schema" empty state
+  // that results from querying FieldDefinition/list without a valid schemaId.
+  if (isCreate && !schemaId) {
+    return <SchemaPickerScreen />;
+  }
 
   // ── Render: loading ──
   if (loading) {
