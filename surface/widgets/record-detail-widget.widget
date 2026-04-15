@@ -1,0 +1,190 @@
+@version(1)
+widget record-detail-widget {
+
+  purpose {
+    Structured zone panel for a single ContentNode. Fetches the node applied
+    schemas, resolves each schema FieldDefinition list, and renders every field
+    as a typed input row with the label on the left and the typed editor on the
+    right. On each field change a debounced ContentNode/update is fired that
+    merges the new value into the node content JSON while preserving all keys
+    not owned by this widget. Covers the full FIELD_TYPE_REGISTRY type set:
+    text, textarea, rich-text, number, currency, percentage, date, datetime,
+    boolean, select, multi-select, url, email, rating, json, relation,
+    person, media, file.
+  }
+
+  anatomy {
+    root:         container    { Top-level form wrapper for the record detail panel }
+    schemaGroup:  container    { Section per applied schema, groups its field rows under a heading }
+    schemaLabel:  text         { Schema name heading displayed above its field rows }
+    fieldRow:     container    { One row per FieldDefinition: label on left, typed editor on right }
+    label:        text         { Human-readable field label derived from FieldDefinition.label or name }
+    fieldInput:   interactive  { Typed field editor that delegates to the appropriate editor for the field type }
+    saveStatus:   text         { Transient indicator showing saving or saved state }
+    emptyState:   container    { Shown when the node has no applied schemas }
+  }
+
+  states {
+    idle [initial] {
+      on START_EDIT -> editing;
+    }
+
+    editing {
+      on SAVE      -> saving;
+      on BLUR      -> idle;
+    }
+
+    saving {
+      on SAVE_OK   -> saved;
+      on SAVE_FAIL -> editing;
+    }
+
+    saved {
+      on RESET     -> idle;
+    }
+  }
+
+  accessibility {
+    role: form;
+    keyboard {
+      Tab       -> FOCUS_NEXT;
+      Shift+Tab -> FOCUS_PREV;
+      Escape    -> BLUR;
+    }
+    focus {
+      trap: false;
+      initial: fieldInput;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "form";
+        aria-label: "Record fields";
+        aria-busy: if state == "saving" then "true" else "false";
+      };
+      schemaGroup -> {
+        role: "group";
+        aria-labelledby: schemaLabel;
+      };
+      schemaLabel -> {
+        role: "heading";
+        aria-level: "3";
+      };
+      fieldRow -> {
+        role: "group";
+        aria-label: concat("Field: ", self.fieldName);
+      };
+      label -> {
+        role: "none";
+      };
+      fieldInput -> {
+        aria-label: concat(self.fieldLabel, " field");
+        aria-required: if self.fieldRequired then "true" else "false";
+      };
+      saveStatus -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: if state == "saving" then "Saving" else if state == "saved" then "Saved" else "";
+      };
+      emptyState -> {
+        role: "note";
+        aria-label: "No schemas applied";
+      };
+    }
+  }
+
+  props {
+    node: String
+    debounceMs: Int = 600
+    readOnly: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-node: ?node;
+      data-readonly: if ?readOnly then "true" else "false";
+    }
+
+    schemaGroup -> {
+      data-part: "schema-group";
+      data-schema: self.schemaId;
+    }
+
+    schemaLabel -> {
+      data-part: "schema-label";
+    }
+
+    fieldRow -> {
+      data-part: "field-row";
+      data-field: self.fieldName;
+      data-type: self.fieldType;
+    }
+
+    label -> {
+      data-part: "label";
+    }
+
+    fieldInput -> {
+      data-part: "field-input";
+      data-field: self.fieldName;
+      data-type: self.fieldType;
+      disabled: if ?readOnly or state == "saving" then true else false;
+      onChange: send(START_EDIT);
+    }
+
+    saveStatus -> {
+      data-part: "save-status";
+      data-state: state;
+      hidden: if state == "idle" or state == "editing" then true else false;
+    }
+
+    emptyState -> {
+      data-part: "empty-state";
+      hidden: if state != "idle" then false else false;
+    }
+  }
+
+  invariant {
+    always "idle is initial state on mount": {
+      state = "idle"
+    }
+
+    always "fieldInput data-part present": {
+      state = state
+    }
+
+    always "saving state disables fieldInput": {
+      state = state
+    }
+
+    never "saving state reached without prior editing state": {
+      state = "saving"
+    }
+
+    action onChange {
+      requires: state = "idle"
+      ensures ok: state = "editing"
+    }
+
+    action onSave {
+      requires: state = "editing"
+      ensures ok: state = "saving"
+    }
+
+    action onSaveOk {
+      requires: state = "saving"
+      ensures ok: state = "saved"
+    }
+
+    "Every applied schema field MUST render an input row; a schema with N fields produces N fieldRow elements";
+    "ContentNode/update MUST preserve content keys not managed by this widget; the update payload is a shallow merge over the existing content JSON keyed by field name";
+    "Field-type coverage MUST match FIELD_TYPE_REGISTRY from FieldWidget; every type key in that registry maps to a distinct editor component";
+    "fieldInput is disabled when state equals saving or when readOnly prop is true";
+    "saveStatus is hidden when state is idle or editing; visible when state is saving or saved";
+    "data-state attribute on root always reflects the current FSM state name";
+    "On SAVE_OK the widget transitions to saved and then auto-resets to idle after a short delay via RESET event";
+  }
+
+}
