@@ -116,7 +116,14 @@ const _handler: FunctionalConceptHandler = {
     const category = String(input.category ?? '');
     const scope = String(input.scope ?? '');
     const priority = Number(input.priority ?? 0);
-    const chord = Array.isArray(input.chord) ? (input.chord as KeyStroke[]) : [];
+    // Accept either a parsed array (from JS callers) or a JSON string (from YAML seed loader).
+    const chord = (() => {
+      if (Array.isArray(input.chord)) return input.chord as KeyStroke[];
+      if (typeof input.chord === 'string' && input.chord.trim().startsWith('[')) {
+        try { return JSON.parse(input.chord) as KeyStroke[]; } catch { /* fall through */ }
+      }
+      return [] as KeyStroke[];
+    })();
     const phase = String(input.phase ?? '');
     const onlyOutsideTextInput = input.onlyOutsideTextInput === true || input.onlyOutsideTextInput === 'true';
     const overridesBrowser = input.overridesBrowser === true || input.overridesBrowser === 'true';
@@ -298,6 +305,44 @@ const _handler: FunctionalConceptHandler = {
         (b2) => complete(b2, 'none', {}) as StorageProgram<Result>,
       ) as StorageProgram<Result>,
     ) as StorageProgram<Result>;
+  },
+
+  // ─── Concept action: list ────────────────────────────────────────────────
+  // Returns all registered bindings with override chain applied.
+  // Satisfies admin routes that call KeyBinding/list without a scope argument.
+  list(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'bindings', {}, 'allBindings');
+    p = find(p, 'userChord', {}, 'allUserOverrides');
+    p = find(p, 'workspaceChord', {}, 'allWorkspaceOverrides');
+    return completeFrom(p, 'ok', (bindings) => {
+      const all = (bindings.allBindings as Array<Record<string, unknown>>) ?? [];
+      const userChordMap = new Map(
+        ((bindings.allUserOverrides as Array<Record<string, unknown>>) ?? []).map(
+          (o) => [String((o as any).id ?? ''), (o as any).chord as KeyStroke[] | undefined],
+        ),
+      );
+      const workspaceChordMap = new Map(
+        ((bindings.allWorkspaceOverrides as Array<Record<string, unknown>>) ?? []).map(
+          (o) => [String((o as any).id ?? ''), (o as any).chord as KeyStroke[] | undefined],
+        ),
+      );
+      const listed = all
+        .sort((a, c) => Number((c as any).priority ?? 0) - Number((a as any).priority ?? 0))
+        .map((r) => {
+          const id = String((r as any).id ?? '');
+          const userChord = userChordMap.get(id) ?? null;
+          const workspaceChord = workspaceChordMap.get(id) ?? null;
+          return {
+            ...(r as object),
+            binding: id,
+            userChord,
+            workspaceChord,
+            isModified: userChord !== null,
+          };
+        });
+      return { bindings: listed };
+    }) as StorageProgram<Result>;
   },
 
   // ─── Concept action: listByScope ─────────────────────────────────────────

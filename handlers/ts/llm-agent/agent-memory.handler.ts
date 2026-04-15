@@ -4,12 +4,12 @@
 // working memory, episodic, semantic, procedural. The agent actively manages
 // its own memory via tool calls — self-editing memory, not passive storage.
 // See Architecture doc for concept spec details.
-import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
   createProgram, get, find, put, putFrom, del, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
-} from '../../runtime/storage-program.ts';
-import { autoInterpret } from '../../runtime/functional-compat.ts';
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 

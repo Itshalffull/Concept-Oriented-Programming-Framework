@@ -296,6 +296,39 @@ const _handler: FunctionalConceptHandler = {
 const handler: FunctionalConceptHandler = {
   ..._handler,
 
+  list(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'process-run', {}, '_allRuns');
+    return completeFrom(p, 'ok', (bindings) => {
+      const all = (bindings._allRuns as Array<Record<string, unknown>>) ?? [];
+      const runs = all.filter((rec) => rec.id !== '__registered');
+      return { runs };
+    }) as StorageProgram<Result>;
+  },
+
+  stats(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'process-run', {}, '_allRuns');
+    return completeFrom(p, 'ok', (bindings) => {
+      const all = (bindings._allRuns as Array<Record<string, unknown>>) ?? [];
+      const runs = all.filter((rec) => rec.id !== '__registered');
+      const total = runs.length;
+      const byStatus: Record<string, number> = {};
+      for (const run of runs) {
+        const status = (run.status as string) ?? 'unknown';
+        byStatus[status] = (byStatus[status] ?? 0) + 1;
+      }
+      return {
+        total,
+        running: byStatus['running'] ?? 0,
+        completed: byStatus['completed'] ?? 0,
+        failed: byStatus['failed'] ?? 0,
+        cancelled: byStatus['cancelled'] ?? 0,
+        by_status: JSON.stringify(byStatus),
+      };
+    }) as StorageProgram<Result>;
+  },
+
   complete(input: Record<string, unknown>) {
     const runId = input.run as string;
     const outputData = input.output as string;

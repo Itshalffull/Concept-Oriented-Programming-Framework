@@ -332,6 +332,19 @@ const _handler: FunctionalConceptHandler = {
       (b) => complete(b, 'notfound', { message: `No step run found with id: ${stepId}` }),
     ) as StorageProgram<Result>;
   },
+  list(input: Record<string, unknown>) {
+    const runRef = input.run_ref as string | undefined;
+    let p = createProgram();
+    p = find(p, 'step-run', {}, '_allStepRuns');
+    return completeFrom(p, 'ok', (bindings) => {
+      const all = (bindings._allStepRuns as Array<Record<string, unknown>>) ?? [];
+      let stepRuns = all.filter((rec) => rec.id !== '__registered');
+      if (runRef) {
+        stepRuns = stepRuns.filter((rec) => rec.run_ref === runRef);
+      }
+      return { step_runs: stepRuns };
+    }) as StorageProgram<Result>;
+  },
 };
 
 export const stepRunHandler = autoInterpret(_handler);

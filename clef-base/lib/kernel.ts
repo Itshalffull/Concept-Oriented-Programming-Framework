@@ -1,5 +1,5 @@
 import { resolve } from 'path';
-import { existsSync } from 'fs';
+import { existsSync, readdirSync, readFileSync } from 'fs';
 import { bootKernel } from '../../handlers/ts/framework/kernel-boot.handler';
 import type { ConceptRegistration, RegEntry } from '../../handlers/ts/framework/kernel-boot.handler';
 import { createStorageFromEnv } from '../../runtime/adapters/upstash-storage';
@@ -23,9 +23,43 @@ import { fieldDefinitionHandler } from '../../handlers/ts/app/field-definition.h
 import { formSpecHandler } from '../../handlers/ts/view/form-spec.handler';
 import { scoreApiHandler } from '../../handlers/ts/score/score-api.handler';
 import { scoreIndexHandler } from '../../handlers/ts/score/score-index.handler';
+// Process Platform
+import { processSpecHandler } from '../../handlers/ts/process-foundation/process-spec.handler';
+import { processRunHandler } from '../../handlers/ts/process-foundation/process-run.handler';
+import { stepRunHandler } from '../../handlers/ts/process-foundation/step-run.handler';
+import { workItemHandler } from '../../handlers/ts/process-human/work-item.handler';
+import { processConversationHandler } from '../../handlers/ts/process-conversation.handler';
+// Agent / LLM Platform
+import { agentSessionHandler } from '../../handlers/ts/app/agent-session.handler';
+import { agentTriggerHandler } from '../../handlers/ts/app/agent-trigger.handler';
+import { constitutionHandler } from '../../handlers/ts/llm-agent/constitution.handler';
+// Governance Platform
+import { proposalHandler } from '../../handlers/ts/app/governance/proposal.handler';
+import { policyHandler } from '../../handlers/ts/app/governance/policy.handler';
+import { roleHandler } from '../../handlers/ts/app/governance/role.handler';
+import { circleHandler } from '../../handlers/ts/app/governance/circle.handler';
+// Verification
+import { checkVerificationHandler } from '../../handlers/ts/app/check-verification.handler';
+// Versioning
+import { versionSpaceHandler } from '../../handlers/ts/version-space.handler';
+// Canvas
+import { canvasHandler } from '../../handlers/ts/app/canvas.handler';
+// Research / Evidence Platform
+import { claimHandler } from '../../handlers/ts/app/claim.handler';
+import { researchProjectHandler } from '../../handlers/ts/app/research-project.handler';
+import { citationHandler } from '../../handlers/ts/app/citation.handler';
+// Governance — reputation, audit trail, permission
+import { reputationHandler } from '../../handlers/ts/app/governance/reputation.handler';
+import { auditTrailHandler } from '../../handlers/ts/app/governance/audit-trail.handler';
+import { permissionHandler } from '../../handlers/ts/app/governance/permission.handler';
+// Notification
+import { notificationHandler } from '../../handlers/ts/app/notification.handler';
+// LLM / Agent — memory and conversation
+import { agentMemoryHandler } from '../../handlers/ts/llm-agent/agent-memory.handler';
+import { conversationHandler } from '../../handlers/ts/llm-conversation/conversation.handler';
 
 import { REGISTRY_ENTRIES, SYNC_FILES } from '../../generated/kernel-registry';
-import { discoverFromFilesystem } from '../../handlers/ts/seed-data.handler';
+import { discoverFromFilesystem, parseSeedsYaml } from '../../handlers/ts/seed-data.handler';
 import { setEntityReflectorKernel } from '../../handlers/ts/app/entity-reflector.handler';
 import { setViewShellKernel } from '../../handlers/ts/view/view-shell.handler';
 import { bootstrapIdentity, getIdentityStorage } from './identity';
@@ -148,6 +182,160 @@ const SUPPLEMENTAL_REGISTRY_ENTRIES = [
     uri: 'urn:clef/ScoreApi',
     handler: scoreApiHandler,
     storageName: 'score-index',
+    storageType: 'standard' as const,
+  },
+  // Process Platform
+  {
+    uri: 'urn:clef/ProcessSpec',
+    handler: processSpecHandler,
+    storageName: 'process-spec',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/ProcessRun',
+    handler: processRunHandler,
+    storageName: 'process-run',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/StepRun',
+    handler: stepRunHandler,
+    storageName: 'step-run',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/WorkItem',
+    handler: workItemHandler,
+    storageName: 'work-item',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/ProcessConversation',
+    handler: processConversationHandler,
+    storageName: 'process-conversation',
+    storageType: 'standard' as const,
+  },
+  // Agent / LLM Platform
+  {
+    uri: 'urn:clef/AgentSession',
+    handler: agentSessionHandler,
+    storageName: 'agent-session',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/AgentTrigger',
+    handler: agentTriggerHandler,
+    storageName: 'agent-trigger',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/Constitution',
+    handler: constitutionHandler,
+    storageName: 'constitution',
+    storageType: 'standard' as const,
+  },
+  // Governance Platform
+  {
+    uri: 'urn:clef/Proposal',
+    handler: proposalHandler,
+    storageName: 'proposal',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/Policy',
+    handler: policyHandler,
+    storageName: 'policy',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/Role',
+    handler: roleHandler,
+    storageName: 'role',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/Circle',
+    handler: circleHandler,
+    storageName: 'circle',
+    storageType: 'standard' as const,
+  },
+  // Verification
+  {
+    uri: 'urn:clef/CheckVerification',
+    handler: checkVerificationHandler,
+    storageName: 'check-verification',
+    storageType: 'standard' as const,
+  },
+  // Versioning
+  {
+    uri: 'urn:clef/VersionSpace',
+    handler: versionSpaceHandler,
+    storageName: 'version-space',
+    storageType: 'standard' as const,
+  },
+  // Canvas
+  {
+    uri: 'urn:clef/Canvas',
+    handler: canvasHandler,
+    storageName: 'canvas',
+    storageType: 'standard' as const,
+  },
+  // Research / Evidence Platform
+  {
+    uri: 'urn:clef/Claim',
+    handler: claimHandler,
+    storageName: 'claim',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/ResearchProject',
+    handler: researchProjectHandler,
+    storageName: 'research-project',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/Citation',
+    handler: citationHandler,
+    storageName: 'citation',
+    storageType: 'standard' as const,
+  },
+  // Governance — reputation, audit trail, permission
+  {
+    uri: 'urn:clef/Reputation',
+    handler: reputationHandler,
+    storageName: 'reputation',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/AuditTrail',
+    handler: auditTrailHandler,
+    storageName: 'audit-trail',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/Permission',
+    handler: permissionHandler,
+    storageName: 'permission',
+    storageType: 'standard' as const,
+  },
+  // Notification
+  {
+    uri: 'urn:clef/Notification',
+    handler: notificationHandler,
+    storageName: 'notification',
+    storageType: 'standard' as const,
+  },
+  // LLM / Agent — memory and conversation
+  {
+    uri: 'urn:clef/AgentMemory',
+    handler: agentMemoryHandler,
+    storageName: 'agent-memory',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/Conversation',
+    handler: conversationHandler,
+    storageName: 'conversation',
     storageType: 'standard' as const,
   },
 ];
@@ -368,6 +556,53 @@ async function ensureBootstrapWorkspace(kernel: Kernel) {
   }
 }
 
+/**
+ * Recovery guard: if no KeyBinding entries exist after declarative seeding (which can
+ * happen when earlier boots marked seeds as applied while the handler silently rejected
+ * all entries due to chord-string parsing), force-re-register all KeyBinding seed files.
+ *
+ * This is idempotent: if all entries already exist the handler returns 'duplicate' and
+ * no state changes. The guard fires only when the bindings relation is completely empty.
+ */
+async function ensureKeyBindings(kernel: Kernel) {
+  try {
+    const check = await kernel.invokeConcept('urn:clef/KeyBinding', 'listByScope', { scope: 'app' });
+    if (check.variant !== 'ok') return;
+    const existing = check.bindings;
+    const count = Array.isArray(existing)
+      ? existing.length
+      : typeof existing === 'string' && existing.trim()
+        ? (JSON.parse(existing) as unknown[]).length
+        : 0;
+    if (count > 0) return; // already populated — nothing to do
+
+    // Zero bindings found — re-run all KeyBinding seed files
+    const seedsDir = resolve(CLEF_BASE_ROOT, 'seeds');
+    if (!existsSync(seedsDir)) return;
+    const allFiles: string[] = [];
+    for (const entry of readdirSync(seedsDir, { withFileTypes: true })) {
+      if (!entry.isDirectory() && entry.name.startsWith('KeyBinding') && entry.name.endsWith('.seeds.yaml')) {
+        allFiles.push(resolve(seedsDir, entry.name));
+      }
+    }
+    for (const filePath of allFiles) {
+      const content = readFileSync(filePath, 'utf8');
+      const parsed = parseSeedsYaml(content);
+      for (const seed of parsed) {
+        for (const entry of seed.entries) {
+          await kernel.invokeConcept(
+            seed.concept_uri.startsWith('urn:') ? seed.concept_uri : `urn:clef/${seed.concept_uri}`,
+            seed.action_name,
+            entry,
+          ).catch(() => {}); // duplicate entries return 'duplicate' — that's fine
+        }
+      }
+    }
+  } catch {
+    // ensureKeyBindings is best-effort — don't fail boot
+  }
+}
+
 async function seedData(kernel: Kernel, registrations: RegEntry[], loadedSyncs: string[]) {
   if (_seeded) return;
   _seeded = true;
@@ -393,6 +628,11 @@ async function seedData(kernel: Kernel, registrations: RegEntry[], loadedSyncs: 
 
   // Apply declarative seeds (Schema, View, ContentNode, etc.)
   await applyDeclarativeSeeds(kernel);
+
+  // Recovery: earlier boots could mark KeyBinding seeds as applied even when
+  // all entries silently failed (chord was a JSON string, handler expected array).
+  // If no bindings exist after seeding, force re-registration from seed files.
+  await ensureKeyBindings(kernel);
 
   // Earlier broken boots could mark Workspace seeds as applied before the
   // concept existed. Ensure the shell still has a default workspace.

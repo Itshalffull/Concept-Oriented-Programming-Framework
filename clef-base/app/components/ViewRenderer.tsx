@@ -1090,12 +1090,16 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
     const shouldUseDisplayMode = useDisplayMode && !!defaultDisplayMode && !isInlineMode;
     const holisticLayouts = new Set(['graph', 'stat-cards', 'canvas', 'detail', 'content-body', 'calendar', 'timeline', 'tree']);
 
-    // Build a renderItem function for layout components that support it
-    const renderDisplayModeItem = shouldUseDisplayMode && !holisticLayouts.has(effectiveLayout)
+    // Build a renderItem function for layout components that support it.
+    // Only apply DisplayMode rendering for ContentNode data sources.
+    // Non-ContentNode data sources (DisplayMode, Schema, Theme, etc.) use plain
+    // ProjectionSpec field rendering to avoid meta-circular rendering problems
+    // (e.g., DisplayMode records rendered through an unconfigured ComponentMapping).
+    const isContentNodeSource = dataSource?.concept === 'ContentNode';
+    const renderDisplayModeItem = shouldUseDisplayMode && !holisticLayouts.has(effectiveLayout) && isContentNodeSource
       ? (row: Record<string, unknown>, onClick?: () => void) => {
           const rowSchema = (row.schemas as string[])?.[0]
             ?? (row.type as string)
-            ?? dataSource?.concept
             ?? 'ContentNode';
           return (
             <DisplayModeRenderer

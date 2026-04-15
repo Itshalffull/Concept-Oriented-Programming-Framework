@@ -555,6 +555,15 @@ const handler: FunctionalConceptHandler = {
       (b) => complete(b, 'notfound', { message: `No spec found with id: ${specId}` }),
     ) as StorageProgram<Result>;
   },
+  list(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'process-spec', {}, '_allSpecs');
+    return completeFrom(p, 'ok', (bindings) => {
+      const all = (bindings._allSpecs as Array<Record<string, unknown>>) ?? [];
+      const specs = all.filter((rec) => rec.id !== '__registered');
+      return { specs };
+    }) as StorageProgram<Result>;
+  },
 };
 
 export const processSpecHandler = autoInterpret(handler);

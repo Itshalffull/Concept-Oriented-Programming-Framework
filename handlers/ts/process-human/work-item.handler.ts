@@ -7,13 +7,13 @@
 // delegating, and releasing. See process-human suite.
 // ============================================================
 
-import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
+import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
   createProgram, get, put, putFrom, branch, complete, completeFrom,
   mapBindings,
   type StorageProgram,
-} from '../../runtime/storage-program.ts';
-import { autoInterpret } from '../../runtime/functional-compat.ts';
+} from '../../../runtime/storage-program.ts';
+import { autoInterpret } from '../../../runtime/functional-compat.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
@@ -333,6 +333,27 @@ const _handler: FunctionalConceptHandler = {
         );
       })(),
     );
+  },
+  list(input: Record<string, unknown>) {
+    const assignee = input.assignee as string | undefined;
+    const processRef = input.process_ref as string | undefined;
+    const status = input.status as string | undefined;
+    let p = createProgram();
+    p = find(p, 'work_item', {}, '_allItems');
+    return completeFrom(p, 'ok', (bindings) => {
+      const all = (bindings._allItems as Array<Record<string, unknown>>) ?? [];
+      let items = all;
+      if (assignee) {
+        items = items.filter((rec) => rec.assignee === assignee);
+      }
+      if (processRef) {
+        items = items.filter((rec) => rec.process_ref === processRef);
+      }
+      if (status) {
+        items = items.filter((rec) => rec.status === status);
+      }
+      return { items };
+    }) as StorageProgram<Result>;
   },
 };
 

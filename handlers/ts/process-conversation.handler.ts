@@ -166,6 +166,20 @@ const _handler: FunctionalConceptHandler = {
     );
   },
 
+  list(input: Record<string, unknown>) {
+    const runRef = input.run_ref as string | undefined;
+    let p = createProgram();
+    p = find(p, 'binding', {}, '_allBindings');
+    return completeFrom(p, 'ok', (bindings) => {
+      const all = (bindings._allBindings as Array<Record<string, unknown>>) ?? [];
+      let conversations = all;
+      if (runRef) {
+        conversations = conversations.filter((rec) => rec.process_run === runRef);
+      }
+      return { conversations };
+    });
+  },
+
   complete_step(input: Record<string, unknown>) {
     const pc = input.pc as string;
 
