@@ -474,7 +474,7 @@ export const CreateForm: React.FC<CreateFormProps> = ({
             )}
 
             <form onSubmit={handleSubmit}>
-              {fields.map((field) => (
+              {(fields ?? []).map((field) => (
                 <div key={field.name} data-part="field-panel-row">
                   <label
                     htmlFor={`field-${field.name}`}
