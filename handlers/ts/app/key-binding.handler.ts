@@ -373,8 +373,8 @@ const _handler: FunctionalConceptHandler = {
           // Empty scope means "all scopes" (used by KeybindingEditor to show all bindings)
           if (!scopeParts) return true;
           const bParts = String((rec as any).scope ?? '').split('.');
-          if (bParts.length > scopeParts.length) return false;
-          return bParts.every((part: string, i: number) => part === scopeParts[i]);
+          if (scopeParts.length > bParts.length) return false;
+          return scopeParts.every((part: string, i: number) => part === bParts[i]);
         })
         .sort((a, c) => Number((c as any).priority ?? 0) - Number((a as any).priority ?? 0))
         .map((r) => {

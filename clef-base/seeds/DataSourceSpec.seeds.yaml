@@ -14,7 +14,7 @@ entries:
 
   - name: workflow-list-source
     kind: concept-action
-    config: '{"concept":"Workflow","action":"list"}'
+    config: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Workflow"}}'
 
   - name: automation-rule-list-source
     kind: concept-action

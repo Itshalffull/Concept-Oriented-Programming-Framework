@@ -20,7 +20,7 @@ entries:
   - destination: canvas
     name: canvas
     targetConcept: Canvas
-    targetView: entity-detail
+    targetView: layout:entity-detail
     href: /admin/canvas
     icon: "◇"
     group: Content

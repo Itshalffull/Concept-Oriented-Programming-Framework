@@ -6,7 +6,7 @@ action: create
 entries:
   - name: process-spec-list-source
     kind: concept-action
-    config: '{"concept":"ProcessSpec","action":"list"}'
+    config: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"ProcessSpec"}}'
 
   - name: process-run-list-source
     kind: concept-action
