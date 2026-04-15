@@ -5,7 +5,7 @@
 // templating, and inbox tracking.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, del, branch, complete,
+  createProgram, get as spGet, find, put, del, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -158,7 +158,9 @@ const _notificationHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'notification', {}, 'allNotifications');
-    return complete(p, 'ok', { notifications: JSON.stringify([]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => ({
+      notifications: JSON.stringify((bindings.allNotifications as Array<Record<string, unknown>>) ?? []),
+    })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
 

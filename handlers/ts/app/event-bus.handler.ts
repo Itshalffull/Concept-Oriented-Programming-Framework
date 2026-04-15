@@ -3,7 +3,7 @@
 // EventBus Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, del, delFrom, branch, complete,
+  createProgram, get as spGet, find, put, del, delFrom, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -82,7 +82,9 @@ const _eventBusHandler: FunctionalConceptHandler = {
       timestamp: Date.now(),
     });
 
-    return complete(p, 'ok', { results: JSON.stringify([]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => ({
+      results: JSON.stringify((bindings.allSubscriptions as Array<Record<string, unknown>>) ?? []),
+    })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   dispatchAsync(input: Record<string, unknown>) {
@@ -111,7 +113,9 @@ const _eventBusHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'eventHistory', { event }, 'allHistory');
-    return complete(p, 'ok', { entries: JSON.stringify([]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => ({
+      entries: JSON.stringify((bindings.allHistory as Array<Record<string, unknown>>) ?? []),
+    })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
 

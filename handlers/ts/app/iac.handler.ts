@@ -4,7 +4,7 @@
 // Coordinate infrastructure-as-code generation and application across IaC providers.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, find, put, del, complete,
+  createProgram, find, put, del, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -96,7 +96,9 @@ const _iacHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'resource', {}, 'allResources');
-    return complete(p, 'ok', { destroyed: JSON.stringify([]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => ({
+      destroyed: JSON.stringify((bindings.allResources as Array<Record<string, unknown>>) ?? []),
+    })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
 

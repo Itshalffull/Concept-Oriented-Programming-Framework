@@ -3,7 +3,7 @@
 // Emitter Concept Implementation (Clef Bind)
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, del, branch, complete,
+  createProgram, get as spGet, find, put, del, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -84,7 +84,9 @@ const _interfaceEmitterHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'file', {}, 'allFiles');
-    return complete(p, 'ok', { removed: JSON.stringify([]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => ({
+      removed: JSON.stringify((bindings.allFiles as Array<Record<string, unknown>>) ?? []),
+    })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   manifest(input: Record<string, unknown>) {
@@ -92,7 +94,10 @@ const _interfaceEmitterHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'file', {}, 'allFiles');
-    return complete(p, 'ok', { files: JSON.stringify([]), totalBytes: 0 }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => ({
+      files: JSON.stringify((bindings.allFiles as Array<Record<string, unknown>>) ?? []),
+      totalBytes: 0,
+    })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
 

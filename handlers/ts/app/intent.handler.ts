@@ -2,7 +2,7 @@
 // @migrated dsl-constructs 2026-03-18
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, branch, complete,
+  createProgram, get as spGet, find, put, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -71,7 +71,9 @@ const _intentHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'intent', query, 'results');
-    return complete(p, 'ok', { matches: JSON.stringify([]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => ({
+      matches: JSON.stringify((bindings.results as Array<Record<string, unknown>>) ?? []),
+    })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   suggestFromDescription(input: Record<string, unknown>) {

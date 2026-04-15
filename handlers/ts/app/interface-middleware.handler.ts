@@ -3,7 +3,7 @@
 // Middleware Concept Implementation (Clef Bind)
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, branch, complete,
+  createProgram, get as spGet, find, put, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -15,10 +15,10 @@ const _interfaceMiddlewareHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'middleware', {}, 'allDefinitions');
-    return complete(p, 'ok', {
-      middlewares: JSON.stringify([]),
+    return completeFrom(p, 'ok', (bindings) => ({
+      middlewares: JSON.stringify((bindings.allDefinitions as Array<Record<string, unknown>>) ?? []),
       order: JSON.stringify([]),
-    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   inject(input: Record<string, unknown>) {

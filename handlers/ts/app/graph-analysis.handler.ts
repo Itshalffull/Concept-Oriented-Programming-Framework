@@ -864,7 +864,9 @@ const _graphAnalysisHandler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'graph-result', {}, 'allResults');
-    return complete(p, 'ok', { results: JSON.stringify([]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => ({
+      results: JSON.stringify((bindings.allResults as Array<Record<string, unknown>>) ?? []),
+    })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   clearResults(input: Record<string, unknown>) {

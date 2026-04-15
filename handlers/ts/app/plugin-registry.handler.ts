@@ -3,7 +3,7 @@
 // PluginRegistry Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, del, branch, complete,
+  createProgram, get as spGet, find, put, del, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -75,7 +75,9 @@ const _pluginRegistryHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = find(p, 'pluginregistry', { type }, 'allDefinitions');
 
-    return complete(p, 'ok', { plugins: JSON.stringify([]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => ({
+      plugins: JSON.stringify((bindings.allDefinitions as Array<Record<string, unknown>>) ?? []),
+    })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   createInstance(input: Record<string, unknown>) {
@@ -118,7 +120,9 @@ const _pluginRegistryHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = find(p, 'pluginregistry', { type }, 'allDefinitions');
 
-    return complete(p, 'ok', { definitions: JSON.stringify([]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => ({
+      definitions: JSON.stringify((bindings.allDefinitions as Array<Record<string, unknown>>) ?? []),
+    })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   alterDefinitions(input: Record<string, unknown>) {

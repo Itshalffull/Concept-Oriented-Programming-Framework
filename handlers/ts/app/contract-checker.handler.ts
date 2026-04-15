@@ -138,7 +138,10 @@ const _contractCheckerHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = find(p, 'widgetRegistry', conceptName as unknown as Record<string, unknown>, 'allEntries');
     // Per-widget checking resolved at runtime
-    return complete(p, 'ok', { checker, results: JSON.stringify([]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => ({
+      checker,
+      results: JSON.stringify((bindings.allEntries as Array<Record<string, unknown>>) ?? []),
+    })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   checkSuite(input: Record<string, unknown>) {
@@ -151,7 +154,10 @@ const _contractCheckerHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = find(p, 'widgetRegistry', suiteName as unknown as Record<string, unknown>, 'allEntries');
     // Per-widget per-concept checking resolved at runtime
-    return complete(p, 'ok', { checker, results: JSON.stringify([]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => ({
+      checker,
+      results: JSON.stringify((bindings.allEntries as Array<Record<string, unknown>>) ?? []),
+    })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   suggest(input: Record<string, unknown>) {
