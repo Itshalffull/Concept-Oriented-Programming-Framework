@@ -80,6 +80,11 @@ const _researchProjectHandler: FunctionalConceptHandler = {
       ? perspectives.split(',').map((s) => s.trim()).filter(Boolean)
       : [];
 
+    // Use caller-supplied status when valid, otherwise default to 'active'.
+    // Field is stored as project_status to match view seeds (visibleFields + filters).
+    const requestedStatus = toStr(input.status);
+    const initialStatus = VALID_STATUSES.has(requestedStatus) ? requestedStatus : 'active';
+
     const record = {
       project: projectId,
       query,
@@ -95,7 +100,7 @@ const _researchProjectHandler: FunctionalConceptHandler = {
       search_calls_used: 0,
       allowed_source_types: 'web_page,pdf,document,dataset,api_response',
       require_credibility_tier: null,
-      status: 'draft',
+      project_status: initialStatus,
       created_at: now,
       completed_at: null,
       process_run_id: null,
@@ -189,7 +194,7 @@ const _researchProjectHandler: FunctionalConceptHandler = {
     p = mapBindings(p, (bindings) => {
       const rec = bindings.existing as Record<string, unknown> | null;
       if (!rec) return null;
-      const current_status = rec.status as string;
+      const current_status = (rec.project_status ?? rec.status) as string;
       const allowed = VALID_TRANSITIONS[current_status];
       return {
         current_status,
@@ -215,7 +220,7 @@ const _researchProjectHandler: FunctionalConceptHandler = {
           }) as StorageProgram<Result>,
           // Valid transition — apply it
           (ok) => {
-            const updates: Record<string, unknown> = { status: new_status };
+            const updates: Record<string, unknown> = { project_status: new_status };
             if (new_status === 'completed' || new_status === 'cancelled') {
               updates.completed_at = new Date().toISOString();
             }
@@ -262,7 +267,7 @@ const _researchProjectHandler: FunctionalConceptHandler = {
         return {
           project: projectId,
           query: rec.query as string,
-          status: rec.status as string,
+          project_status: (rec.project_status ?? rec.status) as string,
           tokens_used: (rec.tokens_used as number) || 0,
           search_calls_used: (rec.search_calls_used as number) || 0,
         };
@@ -281,7 +286,7 @@ const _researchProjectHandler: FunctionalConceptHandler = {
 
     const criteria: Record<string, unknown> = {};
     if (status_filter && status_filter.trim() !== '') {
-      criteria.status = status_filter;
+      criteria.project_status = status_filter;
     }
 
     let p = createProgram();
