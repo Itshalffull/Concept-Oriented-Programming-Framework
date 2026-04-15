@@ -2711,33 +2711,52 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
                       );
                     }
                     if (mode === 'block-children-table') {
-                      // Table where each row is a direct child and its
-                      // content cell renders the full subtree via the
-                      // shared renderBlockSubtree helper. Relationship
-                      // is implicit (rows are siblings of each other,
-                      // all children of the clicked block).
+                      // Roam-style table:
+                      //   row  = direct child of the clicked block
+                      //   col  = Nth-position grandchild per row
+                      //   cell = that grandchild rendered as a full
+                      //          block subtree (recursive, editable)
+                      // Column count = max grandchild count across
+                      // rows so every row fills the table width.
+                      // First column is always the row's "header"
+                      // (the direct child itself) so the row is
+                      // self-labeling.
+                      const rows = directKids;
+                      const colCount = rows.reduce((m, r) => Math.max(m, (byParent.get(r.id) ?? []).length), 0);
                       return (
-                        <div data-part="nested-alt-view" data-view={mode} data-parent-id={child.id} style={wrap}>
-                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                        <div data-part="nested-alt-view" data-view={mode} data-parent-id={child.id} style={{ ...wrap, overflowX: 'auto' }}>
+                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, tableLayout: 'fixed' }}>
                             <thead>
                               <tr style={{ textAlign: 'left', color: 'var(--palette-outline, #888)', fontSize: 11, textTransform: 'uppercase' }}>
-                                <th style={{ padding: 6, borderBottom: '1px solid var(--palette-outline-variant)', width: 120 }}>Schema</th>
-                                <th style={{ padding: 6, borderBottom: '1px solid var(--palette-outline-variant)' }}>Content</th>
-                                <th style={{ padding: 6, borderBottom: '1px solid var(--palette-outline-variant)', width: 80 }}>Children</th>
+                                <th style={{ padding: 6, borderBottom: '1px solid var(--palette-outline-variant)', minWidth: 200 }}>Row</th>
+                                {Array.from({ length: colCount }).map((_, i) => (
+                                  <th key={i} style={{ padding: 6, borderBottom: '1px solid var(--palette-outline-variant)', minWidth: 160 }}>
+                                    Col {i + 1}
+                                  </th>
+                                ))}
                               </tr>
                             </thead>
                             <tbody>
-                              {directKids.map((k) => (
-                                <tr key={k.id} data-block-id={k.id} style={{ verticalAlign: 'top' }}>
-                                  <td style={{ padding: 6, borderBottom: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.04))' }}>{k.schema}</td>
-                                  <td style={{ padding: 6, borderBottom: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.04))' }}>
-                                    <BlockSubtreeView {...subtreeProps} rootId={k.id} keyNamespace="table" />
-                                  </td>
-                                  <td style={{ padding: 6, borderBottom: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.04))', color: 'var(--palette-outline, #888)' }}>
-                                    {(byParent.get(k.id) ?? []).length}
-                                  </td>
-                                </tr>
-                              ))}
+                              {rows.map((row) => {
+                                const cells = byParent.get(row.id) ?? [];
+                                return (
+                                  <tr key={row.id} data-block-id={row.id} style={{ verticalAlign: 'top' }}>
+                                    <td style={{ padding: 6, borderBottom: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.04))' }}>
+                                      <BlockSubtreeView {...subtreeProps} rootId={row.id} keyNamespace="roam-row" />
+                                    </td>
+                                    {Array.from({ length: colCount }).map((_, i) => {
+                                      const cell = cells[i];
+                                      return (
+                                        <td key={i} style={{ padding: 6, borderBottom: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.04))' }}>
+                                          {cell
+                                            ? <BlockSubtreeView {...subtreeProps} rootId={cell.id} keyNamespace={`roam-cell-${i}`} />
+                                            : <span style={{ color: 'var(--palette-outline, #ccc)', fontStyle: 'italic', fontSize: 11 }}>—</span>}
+                                        </td>
+                                      );
+                                    })}
+                                  </tr>
+                                );
+                              })}
                             </tbody>
                           </table>
                         </div>
