@@ -20,6 +20,7 @@ import { qualitySignalHandler } from '../../handlers/ts/framework/test/quality-s
 import { flakyTestHandler } from '../../handlers/ts/framework/test/flaky-test.handler';
 import { testSelectionHandler } from '../../handlers/ts/framework/test/test-selection.handler';
 import { fieldDefinitionHandler } from '../../handlers/ts/app/field-definition.handler';
+import { formSpecHandler } from '../../handlers/ts/view/form-spec.handler';
 
 import { REGISTRY_ENTRIES, SYNC_FILES } from '../../generated/kernel-registry';
 import { discoverFromFilesystem } from '../../handlers/ts/seed-data.handler';
@@ -125,6 +126,12 @@ const SUPPLEMENTAL_REGISTRY_ENTRIES = [
     uri: 'urn:clef/FieldDefinition',
     handler: fieldDefinitionHandler,
     storageName: 'field-definition',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/FormSpec',
+    handler: formSpecHandler,
+    storageName: 'form-spec',
     storageType: 'standard' as const,
   },
 ];

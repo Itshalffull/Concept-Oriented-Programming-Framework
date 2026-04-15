@@ -104,6 +104,14 @@ export default async function AdminPage({
     );
   }
 
+  if (slug[0] === 'automations' && slug[1] && slug[1] !== 'catalog' && slug[1] !== 'rules') {
+    return (
+      <HostedPage>
+        <EntityDetailView id={decodeURIComponent(slug[1])} />
+      </HostedPage>
+    );
+  }
+
   // User Sync list: /admin/automation/user-syncs
   if (path === 'automation/user-syncs') {
     return (
