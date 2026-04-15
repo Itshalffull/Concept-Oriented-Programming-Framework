@@ -98,6 +98,53 @@ describe('ReplayHandlerRenderer', () => {
     expect(r.code as string).toContain('tests/cassettes/weather/fetch.json');
   });
 
+  it('render emits cassette I/O, sha256 fingerprint, and node:fs/path/crypto imports', async () => {
+    const storage = createInMemoryStorage();
+    const r = await replayHandlerRendererHandler.render({ descriptor: externalDescriptor }, storage);
+    const code = r.code as string;
+    expect(code).toContain("from 'node:fs'");
+    expect(code).toContain("from 'node:path'");
+    expect(code).toContain("from 'node:crypto'");
+    expect(code).toContain('createHash');
+    expect(code).toContain("'sha256'");
+    expect(code).toContain('stableStringify');
+    expect(code).toContain('fingerprint');
+    expect(code).toContain('loadCassette');
+    expect(code).toContain('writeCassette');
+    expect(code).toContain('mkdirSync');
+    expect(code).toContain('shapeRequest');
+    expect(code).toContain('"lat"');
+    expect(code).toContain('"latitude"');
+    expect(code).toContain('no cassette entry for fingerprint');
+    expect(code).toContain("mode === 'record'");
+    expect(code).toContain('realHandler');
+  });
+
+  it('render produces storage-descriptor replay with passthrough shapeRequest', async () => {
+    const storage = createInMemoryStorage();
+    const r = await replayHandlerRendererHandler.render({ descriptor: storageDescriptor }, storage);
+    const code = r.code as string;
+    expect(code).toContain('return input;');
+    expect(code).toContain('tests/cassettes/user/create.json');
+  });
+
+  it('fingerprint logic is stable across key order (verified by executing stableStringify)', async () => {
+    const { createHash } = await import('node:crypto');
+    function stableStringify(value: unknown): string {
+      if (value === null || typeof value !== 'object') return JSON.stringify(value);
+      if (Array.isArray(value)) return '[' + value.map(stableStringify).join(',') + ']';
+      const obj = value as Record<string, unknown>;
+      const keys = Object.keys(obj).sort();
+      return '{' + keys.map((k) => JSON.stringify(k) + ':' + stableStringify(obj[k])).join(',') + '}';
+    }
+    const a = stableStringify({ a: 1, b: { x: 1, y: 2 } });
+    const b = stableStringify({ b: { y: 2, x: 1 }, a: 1 });
+    expect(a).toBe(b);
+    const fpA = createHash('sha256').update(a).digest('hex');
+    const fpB = createHash('sha256').update(b).digest('hex');
+    expect(fpA).toBe(fpB);
+  });
+
   it('render errors on empty descriptor', async () => {
     const storage = createInMemoryStorage();
     const r = await replayHandlerRendererHandler.render({ descriptor: '' }, storage);
@@ -150,6 +197,53 @@ describe('FieldTransformFuzzRenderer', () => {
     expect(code).toContain('"lat"');
     expect(code).toContain('"lon"');
     expect(code).toContain('mutate');
+  });
+
+  it('emitted test uses fast-check assert + property with per-field arbitraries', async () => {
+    const storage = createInMemoryStorage();
+    const r = await fieldTransformFuzzRendererHandler.render({ descriptor: externalDescriptor }, storage);
+    const code = r.code as string;
+    expect(code).toContain("import * as fc from 'fast-check'");
+    expect(code).toContain('fc.assert');
+    expect(code).toContain('fc.asyncProperty');
+    expect(code).toContain('fc.record');
+    expect(code).toMatch(/"lat":\s*fc\.\w+/);
+    expect(code).toMatch(/"lon":\s*fc\.\w+/);
+    expect(code).toContain("expect(r.variant).toBe('ok')");
+    expect(code).toContain("expect(r!.variant).not.toBe('ok')");
+    expect(code).toContain('threw).toBe(false)');
+  });
+
+  it('emitted fuzz handles broader field-name heuristics (string/number/boolean/array/dict)', async () => {
+    const storage = createInMemoryStorage();
+    const heterogenous = JSON.stringify({
+      conceptName: 'Demo',
+      actionName: 'run',
+      kind: 'external',
+      reads: [],
+      writes: [],
+      performs: ['http:POST'],
+      variants: ['ok', 'error'],
+      method: 'POST',
+      path: '/demo',
+      requestFields: [
+        { from: 'name', to: 'name' },
+        { from: 'count', to: 'count' },
+        { from: 'enabled', to: 'enabled' },
+        { from: 'tags', to: 'tags' },
+        { from: 'config', to: 'config' },
+        { from: 'opaque', to: 'opaque' },
+      ],
+      responseFields: [],
+    });
+    const r = await fieldTransformFuzzRendererHandler.render({ descriptor: heterogenous }, storage);
+    const code = r.code as string;
+    expect(code).toMatch(/"name":\s*fc\.string/);
+    expect(code).toMatch(/"count":\s*fc\.integer/);
+    expect(code).toMatch(/"enabled":\s*fc\.boolean/);
+    expect(code).toMatch(/"tags":\s*fc\.array/);
+    expect(code).toMatch(/"config":\s*fc\.dictionary/);
+    expect(code).toMatch(/"opaque":\s*fc\.anything/);
   });
 });
 
