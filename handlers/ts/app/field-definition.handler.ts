@@ -336,6 +336,7 @@ const _handler: FunctionalConceptHandler = {
           fieldType: f.fieldType,
           order: f.sortOrder,
           required: f.required,
+          unique: f.unique,
           defaultValue: f.defaultValue,
           typeConfig: f.typeConfig,
           widget: f.widget,

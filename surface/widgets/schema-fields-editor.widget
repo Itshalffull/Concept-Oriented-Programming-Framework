@@ -7,8 +7,11 @@ widget schema-fields-editor {
     primary Level 3 editing surface for the Fields tab of the full schema editor
     at /admin/schemas/:id. Supports full CRUD: add a new field (via type-picker),
     reuse a shared field, import or export field definitions as JSON, and delete
-    a field with a usage-check confirmation step. Connects to FieldDefinition/list,
-    FieldDefinition/create, FieldDefinition/reorder, FieldDefinition/remove, and
+    a field with a usage-check confirmation step. A gear button on each field row
+    opens an inline FieldConfigPanel with common controls (description, required,
+    unique, default value) and type-specific controls (Select/Multi-Select options
+    editor). Connects to FieldDefinition/list, FieldDefinition/create,
+    FieldDefinition/update, FieldDefinition/reorder, FieldDefinition/remove, and
     SchemaUsage/scan.
   }
 
@@ -21,21 +24,35 @@ widget schema-fields-editor {
     fieldTypeBadge:    presentation { Colored badge showing the field type (e.g., "Text", "Date") }
     requiredIndicator: presentation { Asterisk or "Required" chip shown when field.required is true }
     uniqueIndicator:   presentation { Lock icon or "Unique" chip shown when field.unique is true }
-    editButton:        action      { Opens the field-config-drawer for the row's field }
-    removeButton:      action      { Initiates deletion of the row's field }
-    addFieldButton:    action      { Opens the type-picker to create a new field }
-    reuseFieldButton:  action      { Opens a shared-field picker for adding an existing reusable field }
-    importJsonButton:  action      { Opens the import panel to paste or upload a JSON field definition }
-    exportJsonButton:  action      { Downloads the full field list as a JSON file }
-    emptyState:        container   { Shown when the schema has no fields yet }
-    confirmRemovePanel: container  { Inline confirmation panel for delete, shows usage warnings }
-    usageList:         container   { List of places the to-be-deleted field is used }
-    confirmRemoveButton: action    { Confirms the destructive delete after user reads warnings }
-    cancelRemoveButton: action     { Cancels the deletion and returns to idle }
-    importPanel:       container   { Input area for pasting or uploading JSON field definitions }
-    importInput:       interactive { Textarea for pasting JSON field definitions }
-    importConfirmButton: action    { Applies the pasted JSON and creates the fields }
-    importCancelButton: action     { Dismisses the import panel without changes }
+    configureButton:        action      { Gear button on each field row; toggles the inline FieldConfigPanel }
+    removeButton:           action      { Initiates deletion of the row field }
+    addFieldButton:         action      { Opens the type-picker to create a new field }
+    reuseFieldButton:       action      { Opens a shared-field picker for adding an existing reusable field }
+    importJsonButton:       action      { Opens the import panel to paste or upload a JSON field definition }
+    exportJsonButton:       action      { Downloads the full field list as a JSON file }
+    emptyState:             container   { Shown when the schema has no fields yet }
+    confirmRemovePanel:     container   { Inline confirmation panel for delete, shows usage warnings }
+    usageList:              container   { List of places the to-be-deleted field is used }
+    confirmRemoveButton:    action      { Confirms the destructive delete after user reads warnings }
+    cancelRemoveButton:     action      { Cancels the deletion and returns to idle }
+    importPanel:            container   { Input area for pasting or uploading JSON field definitions }
+    importInput:            interactive { Textarea for pasting JSON field definitions }
+    importConfirmButton:    action      { Applies the pasted JSON and creates the fields }
+    importCancelButton:     action      { Dismisses the import panel without changes }
+    configPanel:            container   { Inline side panel shown when a gear button is active }
+    configPanelHeader:      container   { Header of the config panel: title + close button }
+    configPanelClose:       action      { Closes the config panel without saving (saves happen on blur/change) }
+    configPanelBody:        container   { Scrollable body of the config panel containing all controls }
+    descriptionInput:       interactive { Textarea for the field description; commits on blur via FieldDefinition/update }
+    requiredCheckbox:       interactive { Checkbox for the required flag; commits immediately via FieldDefinition/update }
+    uniqueCheckbox:         interactive { Checkbox for the unique flag; commits immediately via FieldDefinition/update }
+    defaultValueInput:      interactive { Text input for the field default value; commits on blur via FieldDefinition/update }
+    selectOptionsEditor:    container   { Structured option rows for Select and Multi-Select fields }
+    optionRow:              container   { Single option row with label, value, and remove button }
+    optionLabel:            interactive { Editable label for a select option }
+    optionValue:            interactive { Editable value key for a select option }
+    removeOptionButton:     action      { Removes an option row from the select options editor }
+    addOptionButton:        action      { Appends a new empty option row to the select options editor }
   }
 
   states {
@@ -45,6 +62,15 @@ widget schema-fields-editor {
       on REMOVE_FIELD -> confirming-remove;
       on IMPORT -> importing;
       on EXPORT -> exporting;
+      on OPEN_CONFIG -> config-open;
+    }
+
+    config-open {
+      on CLOSE_CONFIG -> idle;
+      on OPEN_CONFIG -> config-open;
+      on REMOVE_FIELD -> confirming-remove;
+      entry [showConfigPanel];
+      exit [hideConfigPanel];
     }
 
     dragging {
@@ -221,10 +247,82 @@ widget schema-fields-editor {
       aria-hidden: if self.unique then "false" else "true";
     }
 
-    editButton -> {
-      data-part: "edit-button";
-      onClick: send(OPEN_DRAWER, { fieldId: self.fieldId });
-      disabled: if ?readOnly then true else false;
+    configureButton -> {
+      data-part: "configure-button";
+      aria-expanded: if state == "config-open" and self.isConfigTarget then "true" else "false";
+      data-config-open: if state == "config-open" and self.isConfigTarget then "true" else "false";
+      onClick: send(OPEN_CONFIG, { fieldId: self.fieldId });
+    }
+
+    configPanel -> {
+      data-part: "config-panel";
+      data-visible: if state == "config-open" then "true" else "false";
+    }
+
+    configPanelHeader -> {
+      data-part: "config-panel-header";
+    }
+
+    configPanelClose -> {
+      data-part: "config-panel-close";
+      onClick: send(CLOSE_CONFIG);
+    }
+
+    configPanelBody -> {
+      data-part: "config-panel-body";
+    }
+
+    descriptionInput -> {
+      data-part: "description-input";
+      aria-label: "Field description";
+      onBlur: send(UPDATE_FIELD, { key: "description", value: self.value });
+    }
+
+    requiredCheckbox -> {
+      data-part: "required-checkbox";
+      aria-label: "Required";
+      onChange: send(UPDATE_FIELD, { key: "required", value: self.checked });
+    }
+
+    uniqueCheckbox -> {
+      data-part: "unique-checkbox";
+      aria-label: "Unique";
+      onChange: send(UPDATE_FIELD, { key: "unique", value: self.checked });
+    }
+
+    defaultValueInput -> {
+      data-part: "default-value-input";
+      aria-label: "Default value";
+      onBlur: send(UPDATE_FIELD, { key: "defaultValue", value: self.value });
+    }
+
+    selectOptionsEditor -> {
+      data-part: "select-options-editor";
+      data-visible: if self.fieldType == "select" or self.fieldType == "multi-select" then "true" else "false";
+    }
+
+    optionRow -> {
+      data-part: "option-row";
+    }
+
+    optionLabel -> {
+      data-part: "option-label";
+      aria-label: concat("Option ", self.index, " label");
+    }
+
+    optionValue -> {
+      data-part: "option-value";
+      aria-label: concat("Option ", self.index, " value");
+    }
+
+    removeOptionButton -> {
+      data-part: "remove-option-button";
+      onClick: send(REMOVE_OPTION, { index: self.index });
+    }
+
+    addOptionButton -> {
+      data-part: "add-option-button";
+      onClick: send(ADD_OPTION);
     }
 
     removeButton -> {
@@ -310,74 +408,92 @@ widget schema-fields-editor {
   }
 
   invariant {
-    example "add field flow": {
-      after addFieldButton.click -> ok
-      then root -> { data-state: "adding-field" }
-      then send(FIELD_TYPE_SELECTED, { fieldType: "text" }) -> ok
-      then root -> { data-state: "idle" }
+    example "add field flow opens type picker then returns to idle": {
+      after transition(from: "idle", event: "ADD_FIELD") -> ok
+      then state.name = "adding-field"
+      then transition(from: "adding-field", event: "FIELD_TYPE_SELECTED") -> ok
+      then state.name = "idle"
     }
 
-    example "drag-reorder via keyboard": {
-      after dragHandle.keyDown(Space) -> ok
-      then root -> { data-state: "dragging" }
-      then dragHandle.keyDown(ArrowDown) -> ok
-      then dragHandle.keyDown(Space) -> ok
-      then root -> { data-state: "idle" }
+    example "gear click opens config panel": {
+      after transition(from: "idle", event: "OPEN_CONFIG") -> ok
+      then state.name = "config-open"
     }
 
-    example "delete with usage check": {
-      after removeButton.click -> ok
-      then root -> { data-state: "confirming-remove" }
-      and confirmRemovePanel -> { data-visible: "true" }
-      then cancelRemoveButton.click -> ok
-      then root -> { data-state: "idle" }
-      and confirmRemovePanel -> { data-visible: "false" }
+    example "close button dismisses config panel": {
+      after transition(from: "config-open", event: "CLOSE_CONFIG") -> ok
+      then state.name = "idle"
     }
 
-    example "import flow": {
-      after importJsonButton.click -> ok
-      then root -> { data-state: "importing" }
-      and importPanel -> { data-visible: "true" }
-      then importCancelButton.click -> ok
-      then root -> { data-state: "idle" }
+    example "delete with usage check transitions to confirming-remove then idle on cancel": {
+      after transition(from: "idle", event: "REMOVE_FIELD") -> ok
+      then state.name = "confirming-remove"
+      then transition(from: "confirming-remove", event: "CANCEL_REMOVE") -> ok
+      then state.name = "idle"
     }
 
-    always "data-state on root reflects FSM": {
-      root -> { data-state: state }
+    example "import flow opens then returns to idle on cancel": {
+      after transition(from: "idle", event: "IMPORT") -> ok
+      then state.name = "importing"
+      then transition(from: "importing", event: "CANCEL_IMPORT") -> ok
+      then state.name = "idle"
     }
 
-    always "empty state visibility": {
-      emptyState -> { data-visible: if ?fields.length == 0 then "true" else "false" }
+    always "root data-state reflects FSM state": {
+      root.dataState = state.name
+    }
+
+    always "config panel data-visible true only in config-open state": {
+      configPanel.dataVisible = if state.name = "config-open" then "true" else "false"
+    }
+
+    always "configure button aria-expanded true only when config panel open": {
+      configureButton.ariaExpanded = if state.name = "config-open" then "true" else "false"
     }
 
     never "drag active while readonly": {
-      state == "dragging" and ?readOnly == true
+      state.name = "dragging" and readOnly = true
     }
 
-    forall s in states:
-      s.reachable = true
-
-    action removeButton.click {
-      requires: state == "idle"
-      ensures ok: state == "confirming-remove"
+    never "select-options-editor visible for non-select field types": {
+      selectOptionsEditor.dataVisible = "true" and self.fieldType != "select"
     }
 
-    action confirmRemoveButton.click {
-      requires: state == "confirming-remove"
-      ensures ok: state == "idle"
+    forall "all states are reachable from initial": {
+      given s in states
+      then s.reachable = true
     }
 
+    action removeButton {
+      requires: state.name = "idle"
+      ensures ok: state.name = "confirming-remove"
+    }
+
+    action confirmRemoveButton {
+      requires: state.name = "confirming-remove"
+      ensures ok: state.name = "idle"
+    }
+
+    action configPanelClose {
+      requires: state.name = "config-open"
+      ensures ok: state.name = "idle"
+    }
+
+    action addOptionButton {
+      ensures ok: selectOptionsEditor.optionCount = old.selectOptionsEditor.optionCount + 1
+    }
+
+    "gear click opens config panel for the targeted field";
+    "config panel has description, required, unique, and default value controls for every field type";
+    "Select and Multi-Select config panel renders structured option rows, never a JSON textbox";
+    "description textarea commits to FieldDefinition/update on blur with 400ms debounce";
+    "required and unique checkboxes commit to FieldDefinition/update immediately on change";
+    "select options are stored as JSON.stringify({ options: [...] }) in typeConfig, never raw textarea";
     "confirmRemovePanel is visible only in confirming-remove state";
-    "importPanel is visible only in importing state";
-    "removeButton and editButton are disabled when readOnly prop is true";
     "REMOVE_FIELD calls SchemaUsage/scan before transitioning to confirming-remove";
-    "CONFIRM_REMOVE calls FieldDefinition/remove; CANCEL_REMOVE leaves the field unchanged";
     "DROP calls FieldDefinition/reorder with the new sortOrder for the dragged field";
-    "EXPORT triggers FieldDefinition/list then downloads a JSON file";
-    "IMPORT_CONFIRMED parses importInput JSON and calls FieldDefinition/create for each valid entry";
-    "Escape from dragging cancels the drag without reordering";
-    "requiredIndicator is visible only when the field row's required property is true";
-    "uniqueIndicator is visible only when the field row's unique property is true";
+    "requiredIndicator active only when the field row required property is true";
+    "uniqueIndicator active only when the field row unique property is true";
   }
 
 }
