@@ -1,5 +1,39 @@
 # Universal Invariant Grammar — Concepts, Widgets, Views, Syncs Share One Shape
 
+## Kanban (MAG-904 parent, anthropics/concept-oriented-programming-framework)
+
+| Card | Title | Blocks |
+|---|---|---|
+| [MAG-904](https://vibekanban.com) | **INV: Universal Invariant Grammar + Clefy Test Pipeline** (parent) | — |
+| [MAG-905](https://vibekanban.com) | INV-1 Concepts — InvariantParser [S], TestPlan [T], TestArtifact [A] | MAG-906, MAG-907, MAG-908, MAG-910 |
+| [MAG-906](https://vibekanban.com) | INV-2 Seed AssertionContext plugins (concept/widget/view/sync/derived) | MAG-910, MAG-911 |
+| [MAG-907](https://vibekanban.com) | INV-3 Seed test-plan-renderer plugins (React + Playwright) | MAG-909, MAG-913 |
+| [MAG-908](https://vibekanban.com) | INV-4 Syncs wire the pipeline (Extract / Build / Render / Write / Prune) | MAG-909 |
+| [MAG-909](https://vibekanban.com) | INV-5 Derived concept TestGeneration composing the pipeline | MAG-913 |
+| [MAG-910](https://vibekanban.com) | INV-6 Migrate concept-parser + widget-spec-parser to delegate to InvariantParser | MAG-911, MAG-912 |
+| [MAG-911](https://vibekanban.com) | INV-7 Extend view-parser + sync-parser + derived-parser with invariant support | MAG-914 |
+| [MAG-912](https://vibekanban.com) | INV-8 Add `scenario` kind — multi-block fixtures + given/when/then + settlement modalities | MAG-914, MAG-915 |
+| [MAG-913](https://vibekanban.com) | INV-9 Replace `scripts/generate-*.ts` with thin `TestGeneration/run` dispatchers | MAG-914 |
+| [MAG-914](https://vibekanban.com) | INV-10 Retrofit existing invariants + proof-of-life cross-kind invariants | MAG-915, MAG-916 |
+| [MAG-915](https://vibekanban.com) | INV-11 Propagate grammar update through every reference surface | MAG-916 |
+| [MAG-916](https://vibekanban.com) | INV-12 Additional platform renderers (Vue / Svelte / Vanilla / SwiftUI / Jetpack) — low priority | — |
+
+Execution order comes from the blocking graph:
+
+```
+MAG-905 ──┬─► MAG-906 ──┬─► MAG-910 ──┬─► MAG-911 ─► MAG-914 ─┬─► MAG-915 ─► MAG-916
+          │             │             │                      │
+          ├─► MAG-907 ──┼─► MAG-909 ──┤   MAG-912 ────────────┤
+          │             │             │                      │
+          └─► MAG-908 ──┘             └─► MAG-912 ────────────┤
+                                                              │
+                                          MAG-913 ────────────┘
+```
+
+Leaf parallelism: after MAG-905 lands, MAG-906 / MAG-907 / MAG-908 run
+concurrently. After MAG-910 lands, MAG-911 / MAG-912 run concurrently.
+MAG-913 and MAG-909 run the moment their prerequisites complete.
+
 ## Cross-spec audit — where we actually are
 
 Invariant syntax already runs across four spec kinds. Most of the
