@@ -1,0 +1,39 @@
+# repertoire/concepts/test-plan-renderers/suite.yaml
+suite:
+  name: test-plan-renderers
+  version: 0.1.0
+  description: >
+    TestPlanRenderer plugins that translate platform-agnostic TestPlans into
+    runnable test files for specific frameworks. Each renderer implements the
+    universal register()/render() contract and self-describes its supported
+    probe namespace and settlement modalities. v0.1.0 ships React (vitest +
+    React Testing Library) and Playwright backends; Vue, Svelte, Vanilla,
+    SwiftUI, and Jetpack Compose will be added in future releases.
+
+concepts:
+  ReactRenderer:
+    spec: ./react-renderer.concept
+    params:
+      R: { as: react-renderer-ref, description: "Reference to a registered React renderer instance" }
+
+  PlaywrightRenderer:
+    spec: ./playwright-renderer.concept
+    params:
+      R: { as: playwright-renderer-ref, description: "Reference to a registered Playwright renderer instance" }
+
+syncs:
+  required:
+    - path: ./syncs/register-react-renderer.sync
+      description: "ReactRenderer/register -> PluginRegistry/register(test-plan-renderer)"
+
+    - path: ./syncs/register-playwright-renderer.sync
+      description: "PlaywrightRenderer/register -> PluginRegistry/register(test-plan-renderer)"
+
+uses:
+  - suite: infrastructure
+    concepts:
+      - name: PluginRegistry
+
+  - suite: testing
+    concepts:
+      - name: TestPlan

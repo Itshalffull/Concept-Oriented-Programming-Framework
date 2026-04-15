@@ -1,0 +1,16 @@
+# Wire ReactRenderer/register into PluginRegistry so the rendering
+# dispatch layer can discover and invoke the React backend by name.
+
+sync RegisterReactRenderer [eager]
+  purpose { Wire ReactRenderer/register into PluginRegistry. }
+when {
+  ReactRenderer/register: []
+    => ok(name: ?name; capabilities: ?caps)
+}
+then {
+  PluginRegistry/register: [
+    type: "test-plan-renderer";
+    name: ?name;
+    metadata: { capabilities: ?caps }
+  ]
+}

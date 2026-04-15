@@ -1,0 +1,93 @@
+@version(1)
+@category("testing")
+concept PlaywrightRenderer [R] {
+
+  purpose {
+    Render an enriched TestPlan into a Playwright Test file. Translates
+    the universal probe namespace (body.textContent, state.<field>,
+    block("A").depth, …) into Playwright primitives (locator, keyboard,
+    toHaveText). Playwright's polling model naturally handles
+    never-within settlement — a probe that must not become true within a
+    timeout — making this renderer the preferred choice for timing-sensitive
+    and browser-environment invariants.
+  }
+
+  state {
+    renderers: set R
+
+    identity {
+      name: R -> String
+    }
+
+    metadata {
+      capabilities: R -> String
+    }
+  }
+
+  actions {
+
+    action register() {
+      -> ok(name: String, capabilities: String) {
+        Return static metadata for PluginRegistry. The renderer
+        identifies itself as "playwright" and declares the capability set
+        it supports: playwright-test, locator, keyboard, toHaveText,
+        timeout-based-settlement, immediately, eventually, and
+        never-within settlement modalities.
+      }
+
+      fixture register_ok {}
+    }
+
+    action render(plan: String) {
+      -> ok(code: String) {
+        Translate the JSON-encoded TestPlan into a complete Playwright
+        test file. The returned string is valid TypeScript that can be
+        written directly to disk and executed with `npx playwright test`.
+        Playwright locators are resolved against the universal probe
+        namespace, and never-within is implemented via
+        `expect(locator).not.toBeVisible({ timeout })`.
+      }
+      -> unsupportedProbe(probe: String) {
+        The TestPlan references a probe from the universal namespace
+        that PlaywrightRenderer does not support. The probe name is
+        returned so the caller can try another renderer or report the
+        gap. Note that PlaywrightRenderer supports a wider probe set
+        than ReactRenderer, including never-within.
+      }
+      -> error(message: String) {
+        The plan string is not valid JSON, or the JSON does not
+        conform to the TestPlan schema, or a required field is
+        missing. No code is emitted.
+      }
+
+      fixture render_ok {
+        plan: "{\"planId\":\"tp-nav-depth\",\"invariantId\":\"inv-nav-depth\",\"specKind\":\"widget\",\"fixturesJson\":\"[]\",\"stepsJson\":\"[{\\\"action\\\":\\\"click\\\",\\\"selector\\\":\\\"button[data-testid=open]\\\"}]\",\"observationsJson\":\"[{\\\"probe\\\":\\\"body.textContent\\\",\\\"expected\\\":\\\"Hello\\\"}]\",\"settlementJson\":{\"modality\":\"immediately\"}}"
+      }
+      fixture render_ok_never_within {
+        plan: "{\"planId\":\"tp-no-toast\",\"invariantId\":\"inv-no-toast\",\"specKind\":\"widget\",\"fixturesJson\":\"[]\",\"stepsJson\":\"[]\",\"observationsJson\":\"[{\\\"probe\\\":\\\"body.textContent\\\",\\\"expected\\\":\\\"\\\"}]\",\"settlementJson\":{\"modality\":\"never-within\",\"timeoutMs\":500}}"
+      }
+      fixture render_unsupported_probe {
+        plan: "{\"planId\":\"tp-custom\",\"invariantId\":\"inv-custom\",\"specKind\":\"concept\",\"fixturesJson\":\"[]\",\"stepsJson\":\"[]\",\"observationsJson\":\"[{\\\"probe\\\":\\\"kernel.internal.rawBytes\\\",\\\"expected\\\":\\\"\\\"}]\",\"settlementJson\":{\"modality\":\"immediately\"}}"
+      } -> unsupportedProbe
+      fixture render_bad_json {
+        plan: "not valid json"
+      } -> error
+      fixture render_empty_plan {
+        plan: ""
+      } -> error
+    }
+  }
+
+  example "register then render never-within": {
+    after register() -> ok(name: n, capabilities: caps)
+    then render(plan: "{\"planId\":\"tp-no-toast\",\"invariantId\":\"inv-no-toast\",\"specKind\":\"widget\",\"fixturesJson\":\"[]\",\"stepsJson\":\"[]\",\"observationsJson\":\"[{\\\"probe\\\":\\\"body.textContent\\\",\\\"expected\\\":\\\"\\\"}]\",\"settlementJson\":{\"modality\":\"never-within\",\"timeoutMs\":500}}") -> ok(code: c)
+  }
+
+  never "register issued without name": {
+    exists r in renderers: r.name = ""
+  }
+
+  always "ok render returns non-empty code": {
+    forall r in renderers: r.capabilities != ""
+  }
+}

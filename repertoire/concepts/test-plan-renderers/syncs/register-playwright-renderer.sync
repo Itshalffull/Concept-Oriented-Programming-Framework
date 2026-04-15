@@ -1,0 +1,16 @@
+# Wire PlaywrightRenderer/register into PluginRegistry so the rendering
+# dispatch layer can discover and invoke the Playwright backend by name.
+
+sync RegisterPlaywrightRenderer [eager]
+  purpose { Wire PlaywrightRenderer/register into PluginRegistry. }
+when {
+  PlaywrightRenderer/register: []
+    => ok(name: ?name; capabilities: ?caps)
+}
+then {
+  PluginRegistry/register: [
+    type: "test-plan-renderer";
+    name: ?name;
+    metadata: { capabilities: ?caps }
+  ]
+}
