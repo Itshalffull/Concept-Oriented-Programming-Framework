@@ -321,15 +321,26 @@ const _handler: FunctionalConceptHandler = {
 
     let p = createProgram();
     p = find(p, 'field', {}, 'allFields');
-    p = mapBindings(p, (bindings) => {
+    return completeFrom(p, 'ok', (bindings) => {
       const allFields = (bindings.allFields as FieldRecord[]) ?? [];
       const schemaFields = allFields
         .filter((f) => f.schema === schema)
-        .sort((a, b) => a.sortOrder - b.sortOrder);
-      return JSON.stringify(schemaFields);
-    }, 'fieldsJson');
-
-    return complete(p, 'ok', { fields: '' }) as StorageProgram<Result>;
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map((f) => ({
+          id: f.id,
+          fieldId: f.fieldId,
+          schema: f.schema,
+          label: f.label,
+          description: f.description,
+          fieldType: f.fieldType,
+          order: f.sortOrder,
+          required: f.required,
+          defaultValue: f.defaultValue,
+          typeConfig: f.typeConfig,
+          widget: f.widget,
+        }));
+      return { items: JSON.stringify(schemaFields), fields: '' };
+    }) as StorageProgram<Result>;
   },
 
   promote(input: Record<string, unknown>) {
