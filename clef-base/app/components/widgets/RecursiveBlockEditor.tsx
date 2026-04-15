@@ -5232,47 +5232,40 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
             if (e.key === 'ArrowUp' && !onFirstLine) return;
             if (e.key === 'ArrowDown' && !onLastLine) return;
             e.preventDefault();
-            void (async () => {
-              try {
-                // Look up my actual parent so siblings resolve at the
-                // correct depth (nested blocks have non-root parents).
-                const myParentRes = await invoke('Outline', 'getParent', { node: nodeId });
-                const myParent = myParentRes.variant === 'ok'
-                  ? String(myParentRes.parent ?? rootNodeId)
-                  : rootNodeId;
-                const siblingsRes = await invoke('Outline', 'children', { parent: myParent });
-                if (siblingsRes.variant !== 'ok') return;
-                const siblings: string[] = (() => {
-                  try { return JSON.parse((siblingsRes.children as string) || '[]'); }
-                  catch { return []; }
-                })();
-                const myIndex = siblings.indexOf(nodeId);
-                const targetIndex = e.key === 'ArrowUp' ? myIndex - 1 : myIndex + 1;
-                if (targetIndex < 0 || targetIndex >= siblings.length) return;
-                const targetId = siblings[targetIndex];
-                const targetEl = document.querySelector<HTMLDivElement>(
-                  `[data-part="block-slot"][data-node-id="${targetId}"] [data-part="block-content"]`,
-                );
-                if (!targetEl) return;
-                targetEl.focus();
-                const s = window.getSelection();
-                if (!s) return;
-                const r = document.createRange();
-                if (e.key === 'ArrowUp') {
-                  // Place caret at end of previous block
-                  r.selectNodeContents(targetEl);
-                  r.collapse(false);
-                } else {
-                  // Place caret at start of next block
-                  r.setStart(targetEl, 0);
-                  r.collapse(true);
-                }
-                s.removeAllRanges();
-                s.addRange(r);
-              } catch (err) {
-                console.warn('[RecursiveBlockEditor] Arrow nav failed:', err);
+            try {
+              // Walk the rendered DOM for every visible block body in
+              // document order — this respects the flat-list render
+              // AND collapsed state (collapsed descendants aren't in
+              // the DOM). Matches Notion/Roam: ArrowUp/ArrowDown jumps
+              // to ANY visible block, not just direct siblings.
+              const all = Array.from(document.querySelectorAll<HTMLDivElement>(
+                '[data-part="block-slot"] [data-part="block-content"]',
+              ));
+              const me = blockContentRef.current;
+              if (!me) return;
+              const myIdx = all.indexOf(me);
+              if (myIdx < 0) return;
+              const targetIdx = e.key === 'ArrowUp' ? myIdx - 1 : myIdx + 1;
+              if (targetIdx < 0 || targetIdx >= all.length) return;
+              const targetEl = all[targetIdx];
+              targetEl.focus();
+              const s = window.getSelection();
+              if (!s) return;
+              const r = document.createRange();
+              if (e.key === 'ArrowUp') {
+                r.selectNodeContents(targetEl);
+                r.collapse(false); // end of previous block
+              } else {
+                r.setStart(targetEl, 0);
+                r.collapse(true); // start of next block
               }
-            })();
+              s.removeAllRanges();
+              s.addRange(r);
+              // Ensure the target block is visible after focus move.
+              targetEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            } catch (err) {
+              console.warn('[RecursiveBlockEditor] Arrow nav failed:', err);
+            }
             return;
           }
           if (e.key === 'Backspace') {
