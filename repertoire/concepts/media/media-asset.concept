@@ -81,6 +81,13 @@ concept MediaAsset [M] {
       reversal: setDimensions
     }
 
+    action list() {
+      -> ok(items: String) {
+        Return a JSON-stringified array of all media asset records.
+      }
+      fixture empty {} -> ok
+    }
+
     action getMedia(asset: M) {
       -> ok(asset: M, metadata: String, thumbnail: String) {
         Returns the full asset with extracted metadata and
