@@ -264,13 +264,19 @@ const _contentNodeHandler: FunctionalConceptHandler = {
         }
       }
 
-      // Filter nodes and enrich with schemas
+      // Filter nodes and enrich with schemas + expand content JSON fields
       let results = nodes
         .filter(n => matchingIds.has(n.node as string))
-        .map(n => ({
-          ...n,
-          schemas: schemasByEntity.get(n.node as string) ?? [],
-        }));
+        .map(n => {
+          const contentExpanded = parseStructuredValue(n.content as unknown);
+          return {
+            ...n,
+            schemas: schemasByEntity.get(n.node as string) ?? [],
+            // Spread structured content fields so projection keys (spec_name, run_status, etc.)
+            // are accessible as top-level row fields. Node-level fields take precedence.
+            ...(contentExpanded ?? {}),
+          };
+        });
 
       // Apply pagination
       const start = offset ?? 0;

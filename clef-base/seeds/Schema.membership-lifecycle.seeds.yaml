@@ -22,3 +22,13 @@ entries:
     schema: Taxonomy
   - entity_id: taxonomy:schema-categories
     schema: Taxonomy
+
+  # --- Process spec nodes get Schema "ProcessSpec" ---
+  - entity_id: process-spec:user-onboarding
+    schema: ProcessSpec
+  - entity_id: process-spec:content-review
+    schema: ProcessSpec
+  - entity_id: process-spec:schema-migration
+    schema: ProcessSpec
+  - entity_id: process-spec:data-sync
+    schema: ProcessSpec
