@@ -1,0 +1,22 @@
+# When ContentNode/createWithSchema completes ok, mirror the membership
+# into Schema's storage by calling Schema/applyTo.
+#
+# This bridges the two-namespace gap: createWithSchema writes membership
+# into ContentNode's storage namespace, while Schema/listMemberships reads
+# from Schema's storage namespace. Without this sync the ViewRenderer's
+# schema-enrichment query (Schema/listMemberships) returns empty for nodes
+# created via createWithSchema rather than via Schema/applyTo.
+#
+# Schema/applyTo is idempotent — if the membership already exists it returns
+# ok. If the schema is not yet defined in Schema's storage it returns notfound;
+# this is non-fatal and the membership will be recorded via
+# schema-apply-records-membership.sync once the schema is defined.
+
+sync ContentNodeCreateAppliesSchema [eventual]
+  purpose: "Mirror ContentNode/createWithSchema schema membership into Schema storage so Schema/listMemberships reflects the applied schema"
+when {
+  ContentNode/createWithSchema: [ node: ?node; schema: ?schema ] => [ ok: _ ]
+}
+then {
+  Schema/applyTo: [ entity_id: ?node; schema: ?schema ]
+}

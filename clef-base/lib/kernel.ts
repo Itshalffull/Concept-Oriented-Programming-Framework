@@ -359,6 +359,9 @@ const SUPPLEMENTAL_SYNC_FILES = [
   // with Schema/applyTo and Schema/removeFrom (fix for three-source inconsistency).
   'clef-base/suites/entity-lifecycle/syncs/schema-apply-records-membership.sync',
   'clef-base/suites/entity-lifecycle/syncs/schema-remove-forgets-membership.sync',
+  // Bridge createWithSchema → Schema storage so Schema/listMemberships reflects
+  // nodes created via ContentNode/createWithSchema (fixes schemas: [] in ViewRenderer).
+  'clef-base/suites/entity-lifecycle/syncs/content-node-create-applies-schema.sync',
 ];
 
 // process.cwd() is the clef-base/ dir when Next.js runs; __filename
