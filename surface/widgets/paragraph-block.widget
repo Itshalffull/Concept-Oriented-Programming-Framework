@@ -558,6 +558,75 @@ widget paragraph-block {
       requires: state.edit = "editing" and body.collapseToggle = true and body.hasChildren = true
       ensures ok: state.edit = "editing"
     }
+
+    # --- Outdent ordering contract (landed 2026-04-14) ---
+    # Shift+Tab on a nested block must place it IMMEDIATELY AFTER
+    # its former parent in the grandparent's children list — not
+    # above, not at the end. Outline/reparent alone preserves the
+    # old order value (computed against the deeper sibling set),
+    # which usually sorts before the former parent. The editor
+    # follows reparent with an outline-set-order call that pins the
+    # block to a fractional order between parentOrder and the next
+    # sibling's order. This invariant records the observable
+    # contract; the full cross-block assertion requires a grammar
+    # extension, so we encode the FSM-visible slice: the block
+    # leaves editing while the reparent + set-order round trip
+    # completes, then is refocused at its new position.
+    action body {
+      requires: state.edit = "editing" and body.shiftTabKey = true and body.hasFormerParent = true
+      ensures ok: state.edit = "idle"
+    }
+    never "outdented block sorts above its former parent": {
+      event.outdentCompleted = true
+      and body.sortIndexUnderGrandparent = "before-former-parent"
+    }
+
+    # --- Per-parent nested view contract ---
+    # Each parent with children carries its own BlockChildrenSettings
+    # (view / sort / filter) keyed by parent nodeId. Changing a
+    # nested parent's view MUST NOT mutate the root's settings, and
+    # vice versa. The gear button on this block opens a menu scoped
+    # to THIS parent's entry in the settings map.
+    action body {
+      requires: state.edit = "editing" and body.nestedGearClicked = true
+      ensures ok: state.edit = "editing"
+    }
+    never "root view setting change propagates into a nested parent": {
+      event.rootViewChanged = true
+      and body.nestedParentViewChanged = true
+    }
+    never "nested parent view change propagates into root": {
+      event.nestedParentViewChanged = true
+      and body.rootViewChanged = true
+    }
+
+    # --- Block-subtree display mode contract ---
+    # The "block-subtree" DisplayMode is the cleffy way to let any
+    # view (kanban, outline, list, gallery, board, table) render
+    # each item as a live recursive block tree. Resolving a block
+    # with displayMode="block-subtree" must produce the
+    # block-subtree-view widget regardless of schema. This is a
+    # ComponentMapping assertion; the widget-local slice is that
+    # the block's FSM continues to behave normally (focus/blur/
+    # input) regardless of which wrapping shell mounted it.
+    action body {
+      requires: state.edit = "focused" and body.displayMode = "block-subtree" and body.input = true
+      ensures ok: state.edit = "editing"
+    }
+
+    # --- Kanban drag-reparent contract ---
+    # Dropping a block into a different column in the board view
+    # reparents the block AND pins it to the end of the new column
+    # via outline-set-order. The block leaves editing while the
+    # two-step reparent + order round trip settles.
+    action body {
+      requires: state.edit = "editing" and body.kanbanDropOnNewColumn = true
+      ensures ok: state.edit = "idle"
+    }
+    never "kanban dropped card keeps old-column order": {
+      event.kanbanReparentCompleted = true
+      and body.sortIndexUnderNewColumn = "not-last"
+    }
   }
 
 }
