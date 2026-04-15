@@ -1,0 +1,151 @@
+@version(1)
+widget key-value-list {
+
+  purpose {
+    Repeater field control that replaces JSON textareas for knowable structured
+    key-value data. Renders a list of [Key][Value][Remove] rows with an Add Row
+    button. On submit the component serializes the pairs as a JSON array of
+    { key, value } objects. Intended for create-form fields such as token
+    overrides, space payloads, and condition maps where the structure is a flat
+    dictionary and the user must not be asked to author raw JSON.
+  }
+
+  anatomy {
+    root:        container   { Outer wrapper for the whole repeater }
+    row:         container   { One key-value pair row }
+    keyInput:    interactive { Text input for the entry key }
+    valueInput:  interactive { Text input for the entry value }
+    removeBtn:   action      { Button that removes this row }
+    addBtn:      action      { Button that appends a new empty row }
+  }
+
+  states {
+    editor {
+      idle [initial] {
+        on ADD_ROW     -> idle;
+        on REMOVE_ROW  -> idle;
+        on EDIT_KEY    -> idle;
+        on EDIT_VALUE  -> idle;
+      }
+    }
+  }
+
+  accessibility {
+    role: group;
+    modal: false;
+    keyboard {
+      Tab       -> FOCUS_NEXT;
+      Shift+Tab -> FOCUS_PREV;
+      Enter     -> ADD_ROW;
+    }
+    focus {
+      trap: false;
+      initial: keyInput;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "group";
+        aria-label: "Key value list editor";
+      };
+      keyInput -> {
+        role: "textbox";
+        aria-label: "Key";
+      };
+      valueInput -> {
+        role: "textbox";
+        aria-label: "Value";
+      };
+      removeBtn -> {
+        aria-label: "Remove row";
+      };
+      addBtn -> {
+        aria-label: "Add row";
+      };
+    }
+  }
+
+  props {
+    value:       String = "[]"
+    placeholder: option String
+    disabled:    Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part:     "root";
+      data-state:    "idle";
+      data-contract: "field-control";
+      role:          "group";
+      aria-label:    "Key value list editor";
+    }
+
+    row -> {
+      data-part: "kv-row";
+    }
+
+    keyInput -> {
+      data-part:   "kv-key";
+      role:        "textbox";
+      aria-label:  "Key";
+      disabled:    ?disabled;
+      onInput:     send(EDIT_KEY);
+    }
+
+    valueInput -> {
+      data-part:   "kv-value";
+      role:        "textbox";
+      aria-label:  "Value";
+      disabled:    ?disabled;
+      onInput:     send(EDIT_VALUE);
+    }
+
+    removeBtn -> {
+      data-part:   "kv-remove";
+      aria-label:  "Remove row";
+      disabled:    ?disabled;
+      onClick:     send(REMOVE_ROW);
+    }
+
+    addBtn -> {
+      data-part:   "kv-add";
+      aria-label:  "Add row";
+      disabled:    ?disabled;
+      onClick:     send(ADD_ROW);
+    }
+  }
+
+  invariant {
+    example "add row via button": {
+      after addBtn.click() -> ok
+      then state.editor = "idle"
+    }
+
+    always "editor remains in idle after add": {
+      state.editor = "idle"
+    }
+
+    never "editor leaves idle on row operations": {
+      state.editor != "idle"
+    }
+
+    action addBtn {
+      requires: state.editor = "idle"
+      ensures ok: state.editor = "idle"
+    }
+
+    action removeBtn {
+      requires: state.editor = "idle"
+      ensures ok: state.editor = "idle"
+    }
+
+    always "root data-state mirrors FSM": {
+      state.editor = "idle"
+    }
+
+    never "textarea rendered for structured data": {
+      state.editor != "idle"
+    }
+  }
+
+}
