@@ -217,6 +217,28 @@ concept ProcessSpec [P] {
       fixture removeEdge_notfound { spec: "nonexistent-spec", fromKey: "s1", toKey: "s2" } -> notfound
       fixture removeEdge_locked { spec: $publish_ok.spec, fromKey: "s1", toKey: "s2" } after publish_ok -> locked
     }
+
+    action updateStep(spec: P, stepId: String, config: Bytes) {
+      -> ok(spec: P) {
+        Merges the config patch into the step whose key equals stepId,
+        leaving all other step properties unchanged. Only allowed when
+        status is draft.
+      }
+      -> notfound(message: String) {
+        No spec with this identifier exists, or no step with stepId exists.
+      }
+      -> locked(message: String) {
+        Spec is active or deprecated. Only draft specs may be modified.
+      }
+      -> error(message: String) {
+        The config payload is not valid JSON or an internal decode error occurred.
+      }
+      fixture updateStep_ok { spec: $create_ok.spec, stepId: "s1", config: "{\"label\":\"Step 1 updated\"}" } after create_ok
+      fixture updateStep_notfound_spec { spec: "nonexistent-spec", stepId: "s1", config: "{}" } -> notfound
+      fixture updateStep_notfound_step { spec: $create_ok.spec, stepId: "no-such-step", config: "{}" } after create_ok -> notfound
+      fixture updateStep_locked { spec: $publish_ok.spec, stepId: "s1", config: "{}" } after publish_ok -> locked
+      fixture updateStep_bad_json { spec: $create_ok.spec, stepId: "s1", config: "not-json" } after create_ok -> error
+    }
   }
 
   example "create then get": {
@@ -281,4 +303,25 @@ concept ProcessSpec [P] {
     requires: fromKey != "" && toKey != ""
     ensures ok: spec != none
   }
-}
+
+  action updateStep {
+    requires: stepId != ""
+    ensures ok: spec != none
+    ensures notfound: stepId != ""
+  }
+
+  example "updateStep merges config into matching step": {
+    after create(name: "proc", steps: "[{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]") -> ok(spec: p)
+    then updateStep(spec: p, stepId: "s1", config: "{\"label\":\"Reviewed\"}") -> ok(spec: p)
+    then get(spec: p) -> ok(spec: p, name: "proc", version: 1, status: "draft")
+  }
+
+  never "updateStep succeeds on active or deprecated spec": {
+    exists p in specs:
+    p.status != "draft" and updateStep(spec: p, stepId: "s1", config: "{}") = ok
+  }
+
+  never "updateStep returns ok for nonexistent stepId": {
+    exists p in specs:
+    updateStep(spec: p, stepId: "nonexistent-key", config: "{}") = ok
+  }

@@ -111,4 +111,30 @@ concept Binding [B, C] {
     requires: field != ""
     ensures ok: signalId != none
   }
+
+  // Response-unwrap contract for list-shaped vs. scalar actions.
+  // A "list-shaped" action is any invoke whose action name begins with
+  // list, find, query, search, or all. For these the result payload is
+  // an array and consumers MUST use it directly as the data array.
+  // For all other action shapes (get, read, resolve, ...) the payload
+  // is a scalar object and consumers MUST NOT scan it for an embedded
+  // array - doing so silently returns wrong data when the object happens
+  // to contain an unrelated array field.
+
+  never "scalar action response auto-unwrapped as array": {
+    exists b in concept:
+      b.mode = "coupled"
+      and b.lastAction != "list"
+      and b.lastAction != "find"
+      and b.lastAction != "query"
+      and b.lastAction != "search"
+      and b.lastAction != "all"
+      and b.responseUnwrapped = true
+  }
+
+  always "list-shaped invoke result is returned as direct array": {
+    forall b in concept:
+      b.actionPrefix in {"list", "find", "query", "search", "all"}
+      and b.resultKind = "array"
+  }
 }

@@ -483,6 +483,47 @@ widget schema-fields-editor {
       ensures ok: selectOptionsEditor.optionCount = old.selectOptionsEditor.optionCount + 1
     }
 
+    never "blur handler reads stale closure value instead of event target": {
+      descriptionInput.onBlurValue != descriptionInput.eventTargetValue
+    }
+
+    never "default value blur handler reads stale closure value instead of event target": {
+      defaultValueInput.onBlurValue != defaultValueInput.eventTargetValue
+    }
+
+    never "remove button passes composite storage key as fieldId": {
+      removeButton.fieldIdArg = concat(?schema, "::", self.fieldId)
+    }
+
+    never "remove handler invoked with key named field instead of fieldId": {
+      removeButton.callArgKey = "field"
+    }
+
+    example "description persists across reload": {
+      after transition(from: "idle", event: "OPEN_CONFIG") -> ok
+      then descriptionInput.blur(value: "my description") -> ok
+      and UPDATE_FIELD(key: "description", value: "my description") -> ok
+      then state.name = "config-open"
+      and descriptionInput.persistedValue = "my description"
+    }
+
+    example "remove field initiates usage check then removes on confirm": {
+      after transition(from: "idle", event: "REMOVE_FIELD") -> ok
+      then state.name = "confirming-remove"
+      then transition(from: "confirming-remove", event: "CONFIRM_REMOVE") -> ok
+      then state.name = "idle"
+      and fieldList.fieldCount = old.fieldList.fieldCount - 1
+    }
+
+    never "SchemaFieldsEditor in create mode renders without schemaId input";
+    never "SchemaFieldsEditor in create mode renders without a Save/Create button";
+
+    example "user fills schemaId and title then clicks Create": {
+      after transition(from: "idle", event: "CREATE_SCHEMA") -> ok
+      then state.name = "idle"
+      and root -> { "data-state": "idle" }
+    }
+
     "gear click opens config panel for the targeted field";
     "config panel has description, required, unique, and default value controls for every field type";
     "Select and Multi-Select config panel renders structured option rows, never a JSON textbox";

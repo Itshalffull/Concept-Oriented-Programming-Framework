@@ -254,14 +254,29 @@ concept ScoreIndex [X] {
     then stats() -> ok(conceptCount: c, syncCount: s, symbolCount: y, fileCount: f2, lastUpdated: t)
   }
 
+  example "upserted concept carries non-empty actions list": {
+    after upsertConcept(name: "Flag", purpose: "Feature flags", actions: ["create", "enable", "disable"], stateFields: ["flags"], file: "/specs/flag.concept") -> ok(index: x)
+    then x.actions != []
+  }
+
   always "every indexes entry has conceptName": {
     forall x in indexes:
       x.conceptName != none
   }
 
+  always "indexed concept has non-empty actions list": {
+    forall x in indexes:
+      x.actions != []
+  }
+
   never "empty conceptName in indexes": {
     exists x in indexes:
       x.conceptName = ""
+  }
+
+  never "concept indexed with empty actions list": {
+    exists x in indexes:
+      x.actions = []
   }
 
   action upsertConcept {
