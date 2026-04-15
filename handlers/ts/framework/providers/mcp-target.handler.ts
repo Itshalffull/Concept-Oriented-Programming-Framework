@@ -17,6 +17,28 @@ import type { ConceptManifest, ActionSchema, ActionParamSchema } from '../../../
 import { toKebabCase, toSnakeCase, typeToJsonSchema, inferMcpType, generateFileHeader, getHierarchicalTrait, getManifestEnrichment } from './codegen-utils.js';
 import type { HierarchicalConfig } from './codegen-utils.js';
 import { renderContent, interpolateVars } from './renderer.handler.js';
+import { isContentNative } from '../content-native-concepts.js';
+
+// --- Content-native CRUD action mapping (CNB-6) ---
+type CrudVerb = 'create' | 'get' | 'update' | 'remove' | 'list';
+
+function classifyCrudAction(actionName: string): CrudVerb | null {
+  const n = actionName.toLowerCase();
+  if (n === 'create') return 'create';
+  if (n === 'get' || n === 'read' || n === 'fetch') return 'get';
+  if (n === 'update' || n === 'patch' || n === 'edit') return 'update';
+  if (n === 'remove' || n === 'delete' || n === 'destroy') return 'remove';
+  if (n === 'list' || n === 'listall' || n === 'index') return 'list';
+  return null;
+}
+
+const CRUD_TO_CONTENT_NODE: Record<CrudVerb, string> = {
+  create: 'ContentNode/createWithSchema',
+  get: 'ContentNode/get',
+  update: 'ContentNode/update',
+  remove: 'ContentNode/remove',
+  list: 'ContentNode/listBySchema',
+};
 
 // --- MCP Entry Types ---
 
@@ -128,6 +150,77 @@ function buildResourceTemplateEntry(
 function toPascalLabel(name: string): string {
   const spaced = name.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase();
   return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+}
+
+/**
+ * Build a content-native tool entry (CNB-6). The tool name keeps the
+ * concept-action convention (e.g. create_canvas, list_canvases), but
+ * the input schema and dispatch metadata describe the underlying
+ * ContentNode operation the MCP server should invoke.
+ */
+function buildContentNativeToolEntry(
+  conceptName: string,
+  action: ActionSchema,
+  verb: CrudVerb,
+  overrideDesc?: string,
+): McpToolEntry {
+  const schemaName = conceptName;
+  const snakeConcept = toSnakeCase(conceptName);
+  const baseName = `${snakeConcept}_${toSnakeCase(action.name)}`;
+  // Pluralise list for idiomatic tool naming (list_canvases)
+  const name = verb === 'list' ? `${toSnakeCase(action.name)}_${snakeConcept}s` : baseName;
+
+  const description = overrideDesc
+    || `${action.variants[0]?.prose || `Execute ${action.name}`}`;
+
+  const properties: Record<string, unknown> = {};
+  const required: string[] = [];
+
+  switch (verb) {
+    case 'create': {
+      for (const param of action.params) {
+        properties[param.name] = typeToJsonSchema(param.type);
+        required.push(param.name);
+      }
+      break;
+    }
+    case 'get':
+    case 'remove': {
+      properties.id = { type: 'string', description: `ID of the ${conceptName} node` };
+      required.push('id');
+      break;
+    }
+    case 'update': {
+      properties.id = { type: 'string', description: `ID of the ${conceptName} node` };
+      required.push('id');
+      for (const param of action.params) {
+        if (param.name === 'id') continue;
+        properties[param.name] = typeToJsonSchema(param.type);
+      }
+      break;
+    }
+    case 'list': {
+      // No required params for list; optional filters may exist.
+      for (const param of action.params) {
+        properties[param.name] = typeToJsonSchema(param.type);
+      }
+      break;
+    }
+  }
+
+  return {
+    type: 'tool' as const,
+    name,
+    description: `${toPascalLabel(action.name)} ${conceptName.toLowerCase()} — ${description} (routes through ${CRUD_TO_CONTENT_NODE[verb]}, schema="${schemaName}")`,
+    inputSchema: {
+      type: 'object',
+      properties,
+      required,
+      'x-clef-content-native': true,
+      'x-clef-schema': schemaName,
+      'x-clef-dispatches-to': CRUD_TO_CONTENT_NODE[verb],
+    },
+  };
 }
 
 // --- Hierarchical Entry Builder ---
@@ -251,6 +344,7 @@ function generateToolsFile(
   conceptName: string,
   overrides: Record<string, Record<string, unknown>>,
   hierConfig?: HierarchicalConfig,
+  contentNative: boolean = false,
 ): string {
   const camel = conceptName.charAt(0).toLowerCase() + conceptName.slice(1);
   const uriBase = `${toKebabCase(manifest.uri?.split('/')[0] || conceptName)}:/`;
@@ -265,6 +359,15 @@ function generateToolsFile(
 
     // Determine classification: use override if present, otherwise infer
     const mcpType = overrideType || inferMcpType(action.name);
+
+    // CNB-6: content-native CRUD tools route through ContentNode.
+    if (contentNative) {
+      const crudVerb = classifyCrudAction(action.name);
+      if (crudVerb) {
+        entries.push(buildContentNativeToolEntry(conceptName, action, crudVerb, overrideDesc));
+        continue;
+      }
+    }
 
     switch (mcpType) {
       case 'tool':
@@ -343,7 +446,7 @@ const _handler: FunctionalConceptHandler = {
     { let p = createProgram(); p = complete(p, 'ok', { name: 'McpTarget',
       inputKind: 'InterfaceProjection',
       outputKind: 'McpTools',
-      capabilities: JSON.stringify(['tools', 'resources', 'resource-templates', 'hierarchical']),
+      capabilities: JSON.stringify(['tools', 'resources', 'resource-templates', 'hierarchical', 'content-native']),
       targetKey: 'mcp',
       providerType: 'target' }); return p; }
   },
@@ -409,7 +512,25 @@ const _handler: FunctionalConceptHandler = {
     }
     const hierConfig = getHierarchicalTrait(parsedManifestYaml, name);
     const kebab = toKebabCase(name);
-    const content = generateToolsFile(manifest, name, overrides, hierConfig);
+
+    // --- Determine content-native mode (CNB-6) ---
+    let config: Record<string, unknown> = {};
+    if (input.config && typeof input.config === 'string') {
+      try {
+        config = JSON.parse(input.config as string) as Record<string, unknown>;
+      } catch { /* non-fatal */ }
+    }
+    const contentNativeFlag = config.contentNative === true;
+    let schemas: Array<{ schema: string }> = [];
+    if (input.schemas && typeof input.schemas === 'string') {
+      try {
+        const parsed = JSON.parse(input.schemas as string);
+        if (Array.isArray(parsed)) schemas = parsed as Array<{ schema: string }>;
+      } catch { /* non-fatal */ }
+    }
+    const useContentNative = contentNativeFlag && isContentNative(name, schemas);
+
+    const content = generateToolsFile(manifest, name, overrides, hierConfig, useContentNative);
 
     const files: Array<{ path: string; content: string }> = [
       {

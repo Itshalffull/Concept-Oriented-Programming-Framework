@@ -1,5 +1,6 @@
 import { notFound, redirect } from 'next/navigation';
 import { HostedPage } from '../../components/HostedPage';
+import { DailyNotePage } from '../../components/DailyNotePage';
 import { LayoutRenderer } from '../../components/LayoutRenderer';
 import { ViewRenderer } from '../../components/ViewRenderer';
 import { ViewEditor } from '../../components/ViewEditor';
@@ -41,6 +42,18 @@ export default async function AdminPage({
   if (path === '') {
     const today = new Date().toISOString().slice(0, 10);
     redirect(`/admin/daily/${today}`);
+  }
+
+  // DN-8: /admin/daily/:date — daily notes workspace.
+  // Renders DailyNotePage (left rail + center editor + right rail) for the given date.
+  // /admin/daily without a date redirects to today.
+  if (slug[0] === 'daily') {
+    const date = slug[1] ?? new Date().toISOString().slice(0, 10);
+    return (
+      <HostedPage>
+        <DailyNotePage date={date} />
+      </HostedPage>
+    );
   }
 
   if (slug[0] === 'content' && slug[1]) {
