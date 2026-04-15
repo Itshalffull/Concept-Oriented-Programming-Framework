@@ -318,6 +318,25 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionPending, setActionPending] = useState(false);
+  const [editingLabelId, setEditingLabelId] = useState<string | null>(null);
+  const [editingLabelValue, setEditingLabelValue] = useState('');
+
+  const commitLabel = useCallback(async (field: FieldRow) => {
+    const newLabel = editingLabelValue.trim();
+    setEditingLabelId(null);
+    if (!newLabel || newLabel === field.label) return;
+    try {
+      const result = await invoke('FieldDefinition', 'rename', {
+        schema: schemaId,
+        fieldId: (field as FieldRow & { fieldId?: string }).fieldId ?? field.id,
+        newLabel,
+      });
+      if (result.variant === 'ok') refetch();
+      else setActionError((result.message as string | undefined) ?? 'Failed to rename field.');
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Failed to rename field.');
+    }
+  }, [editingLabelValue, invoke, schemaId, refetch]);
 
   // Drag state
   const dragIndexRef = useRef<number>(-1);
@@ -613,10 +632,40 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
                 {typeCfg?.icon ?? field.type.charAt(0).toUpperCase()}
               </span>
 
-              {/* Label */}
-              <span data-part="field-label" style={fieldLabelStyle}>
-                {field.label}
-              </span>
+              {/* Label — click to edit */}
+              {editingLabelId === field.id ? (
+                <input
+                  data-part="field-label-input"
+                  autoFocus
+                  value={editingLabelValue}
+                  onChange={(e) => setEditingLabelValue(e.target.value)}
+                  onBlur={() => commitLabel(field)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      commitLabel(field);
+                    } else if (e.key === 'Escape') {
+                      e.preventDefault();
+                      setEditingLabelId(null);
+                    }
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  style={{ ...fieldLabelStyle, border: '1px solid var(--palette-primary)', padding: '2px 6px', borderRadius: 'var(--radius-xs)', fontFamily: 'inherit' }}
+                />
+              ) : (
+                <span
+                  data-part="field-label"
+                  style={{ ...fieldLabelStyle, cursor: 'text' }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEditingLabelId(field.id);
+                    setEditingLabelValue(field.label);
+                  }}
+                  title="Click to rename"
+                >
+                  {field.label}
+                </span>
+              )}
 
               {/* Type badge */}
               <span data-part="type-badge" style={typeBadgeStyle}>
