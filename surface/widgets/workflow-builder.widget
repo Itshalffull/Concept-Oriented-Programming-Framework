@@ -1,0 +1,511 @@
+@version(1)
+widget workflow-builder {
+
+  purpose {
+    State-machine editor for creating and editing Workflow records — NOT a
+    sequential automation flow. A Workflow is defined by a set of named states
+    and a transition table mapping (fromState, event, toState, optional guard)
+    tuples. The editor presents a two-panel layout: a states list on the left
+    where states are added, renamed, and deleted, and a transitions grid on the
+    right where each transition row is fully typed. The initialState must be
+    explicitly set and must reference a state in the states list. Save validates
+    that no transition references a state that does not exist in the states list
+    (dangling-reference guard) and that initialState is present. Accepts mode
+    "create" | "edit" and context props per the Tier 1a bespoke-editor contract.
+  }
+
+  requires @1 {
+    fields {
+      workflowId:   String;
+      states:       list;
+      transitions:  list;
+      initialState: String;
+    }
+    actions {
+      create();
+      update();
+      addState();
+      removeState();
+      addTransition();
+      removeTransition();
+    }
+  }
+
+  anatomy {
+    root:                  container    { Top-level wrapper; carries data-state reflecting FSM and data-mode }
+    statesPanel:           container    { Left panel containing the states list and add-state controls }
+    statesPanelHeading:    text         { "States" heading with count badge }
+    stateList:             container    { Ordered list of defined state names }
+    stateRow:              container    { One state row: editable name, initial-state radio, remove button }
+    stateNameInput:        interactive  { Editable text field for the state name }
+    setInitialButton:      action       { Marks this state as the workflow initialState }
+    initialStateBadge:     presentation { Visual marker on the row currently designated as initialState }
+    removeStateButton:     action       { Removes the state; disabled when transitions reference it }
+    addStateInput:         interactive  { Text input for typing a new state name }
+    addStateButton:        action       { Appends the new state to the states list }
+    emptyStatesState:      container    { Placeholder shown when the states list is empty }
+    transitionsPanel:      container    { Right panel containing the transitions grid and add-transition controls }
+    transitionsPanelHeading: text       { "Transitions" heading with row count badge }
+    transitionList:        container    { Grid of all defined transitions }
+    transitionRow:         container    { One transition row: fromState, event, toState, optional guard, remove }
+    fromStatePicker:       interactive  { Dropdown scoped to current states for the transition source }
+    eventInput:            interactive  { Text input for the event name (UPPER_SNAKE_CASE by convention) }
+    toStatePicker:         interactive  { Dropdown scoped to current states for the transition target }
+    guardInput:            interactive  { Optional text input for a guard expression on the transition }
+    removeTransitionButton: action      { Removes this transition row }
+    addTransitionButton:   action       { Appends a new blank transition row }
+    emptyTransitionsState: container    { Placeholder shown when the transitions list is empty }
+    validationPanel:       container    { Inline validation panel listing dangling references and missing initialState }
+    validationMessage:     text         { Human-readable validation error, e.g. "State 'review' not in states list" }
+    saveBar:               container    { Sticky bottom bar with Save and Cancel/Discard buttons }
+    saveButton:            action       { Persists the workflow via Workflow/create or Workflow/update }
+    discardButton:         action       { Discards edits; navigates away in create mode }
+    statusBadge:           text         { Shows the current workflow status in edit mode }
+  }
+
+  states {
+    // Main editor machine
+    editor {
+      editing [initial] {
+        on ADD_STATE           -> editing;
+        on REMOVE_STATE        -> editing;
+        on RENAME_STATE        -> editing;
+        on SET_INITIAL         -> editing;
+        on ADD_TRANSITION      -> editing;
+        on REMOVE_TRANSITION   -> editing;
+        on UPDATE_TRANSITION   -> editing;
+        on SAVE_START          -> validating;
+      }
+
+      validating {
+        on VALIDATION_OK       -> saving;
+        on VALIDATION_FAILED   -> validationError;
+        entry [runDanglingCheck; checkInitialState];
+      }
+
+      saving {
+        on SAVE_OK             -> saved;
+        on SAVE_ERROR          -> saveErrored;
+        entry [disableSaveBar];
+        exit [enableSaveBar];
+      }
+
+      saved {
+        on EDIT                -> editing;
+      }
+
+      validationError {
+        on DISMISS_ERRORS      -> editing;
+        on EDIT                -> editing;
+        entry [showValidationPanel];
+        exit [hideValidationPanel];
+      }
+
+      saveErrored {
+        on DISMISS_ERROR       -> editing;
+        on SAVE_START          -> validating;
+        entry [showValidationPanel];
+        exit [hideValidationPanel];
+      }
+    }
+
+    // Guard: tracks whether the states list is non-empty and initialState is set
+    readiness [parallel] {
+      notReady [initial] {
+        on INITIAL_STATE_SET   -> ready;
+      }
+      ready {
+        on INITIAL_STATE_CLEARED -> notReady;
+      }
+    }
+  }
+
+  accessibility {
+    role: form;
+    keyboard {
+      Ctrl+Enter  -> SAVE_START;
+      Escape      -> DISMISS_ERRORS;
+      Tab         -> FOCUS_NEXT;
+      ArrowDown   -> FOCUS_NEXT_ROW;
+      ArrowUp     -> FOCUS_PREV_ROW;
+      Delete      -> REMOVE_STATE;
+    }
+    focus {
+      trap: false;
+      initial: addStateInput;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "form";
+        aria-label: "Workflow state-machine editor";
+        aria-busy: if state.editor == "saving" then "true" else "false";
+      };
+      statesPanel -> {
+        role: "region";
+        aria-label: "States";
+      };
+      stateList -> {
+        role: "list";
+        aria-label: "Workflow states";
+        aria-live: "polite";
+      };
+      stateRow -> {
+        role: "listitem";
+        aria-label: "State row";
+      };
+      stateNameInput -> {
+        role: "textbox";
+        aria-label: "State name";
+        aria-required: "true";
+      };
+      setInitialButton -> {
+        role: "radio";
+        aria-label: "Set as initial state";
+      };
+      removeStateButton -> {
+        role: "button";
+        aria-label: "Remove state";
+        aria-disabled: if state.editor == "saving" then "true" else "false";
+      };
+      addStateInput -> {
+        role: "textbox";
+        aria-label: "New state name";
+        aria-required: "true";
+      };
+      addStateButton -> {
+        role: "button";
+        aria-label: "Add state";
+        aria-disabled: if state.editor == "saving" then "true" else "false";
+      };
+      transitionsPanel -> {
+        role: "region";
+        aria-label: "Transitions";
+      };
+      transitionList -> {
+        role: "list";
+        aria-label: "Workflow transitions";
+        aria-live: "polite";
+      };
+      transitionRow -> {
+        role: "listitem";
+        aria-label: "Transition row";
+      };
+      fromStatePicker -> {
+        role: "combobox";
+        aria-label: "From state";
+        aria-required: "true";
+      };
+      eventInput -> {
+        role: "textbox";
+        aria-label: "Event name";
+        aria-required: "true";
+      };
+      toStatePicker -> {
+        role: "combobox";
+        aria-label: "To state";
+        aria-required: "true";
+      };
+      guardInput -> {
+        role: "textbox";
+        aria-label: "Guard expression (optional)";
+      };
+      removeTransitionButton -> {
+        role: "button";
+        aria-label: "Remove transition";
+      };
+      addTransitionButton -> {
+        role: "button";
+        aria-label: "Add transition";
+        aria-disabled: if state.editor == "saving" then "true" else "false";
+      };
+      validationPanel -> {
+        role: "alert";
+        aria-live: "assertive";
+        aria-hidden: if state.editor != "validationError" and state.editor != "saveErrored" then "true" else "false";
+      };
+      saveButton -> {
+        role: "button";
+        aria-label: "Save workflow";
+        aria-disabled: if state.editor == "saving" or state.readiness == "notReady" then "true" else "false";
+      };
+      discardButton -> {
+        role: "button";
+        aria-label: "Discard changes";
+      };
+      statusBadge -> {
+        role: "status";
+        aria-live: "polite";
+      };
+    }
+  }
+
+  props {
+    mode:         union "create" | "edit" = "edit"
+    context:      option Workflow
+    workflowId:   option String
+    workflowName: String = ""
+    states:       list WorkflowState = []
+    transitions:  list WorkflowTransition = []
+    initialState: String = ""
+    status:       String = "draft"
+    readOnly:     Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part:     "root";
+      data-state:    state.editor;
+      data-mode:     ?mode;
+      data-readiness: state.readiness;
+    }
+
+    statesPanel -> {
+      data-part:  "states-panel";
+      data-empty: if ?states.length == 0 then "true" else "false";
+    }
+
+    statesPanelHeading -> {
+      data-part: "states-panel-heading";
+    }
+
+    stateList -> {
+      data-part: "state-list";
+    }
+
+    stateRow -> {
+      data-part:    "state-row";
+      data-initial: if self.name == ?initialState then "true" else "false";
+    }
+
+    stateNameInput -> {
+      data-part: "state-name-input";
+      value:     self.name;
+      disabled:  if state.editor == "saving" or ?readOnly then true else false;
+      onInput:   send(RENAME_STATE);
+    }
+
+    setInitialButton -> {
+      data-part: "set-initial-button";
+      onClick:   send(SET_INITIAL);
+      disabled:  if ?readOnly then true else false;
+    }
+
+    initialStateBadge -> {
+      data-part:    "initial-state-badge";
+      data-visible: if self.name == ?initialState then "true" else "false";
+    }
+
+    removeStateButton -> {
+      data-part: "remove-state-button";
+      onClick:   send(REMOVE_STATE, { name: self.name });
+      disabled:  if state.editor == "saving" or ?readOnly then true else false;
+    }
+
+    addStateInput -> {
+      data-part:   "add-state-input";
+      placeholder: "e.g. draft";
+      disabled:    if state.editor == "saving" or ?readOnly then true else false;
+      onKeyDown:   if key == "Enter" then send(ADD_STATE) else noop;
+    }
+
+    addStateButton -> {
+      data-part: "add-state-button";
+      onClick:   send(ADD_STATE);
+      disabled:  if state.editor == "saving" or ?readOnly then true else false;
+    }
+
+    emptyStatesState -> {
+      data-part:    "empty-states-state";
+      data-visible: if ?states.length == 0 then "true" else "false";
+    }
+
+    transitionsPanel -> {
+      data-part:  "transitions-panel";
+      data-empty: if ?transitions.length == 0 then "true" else "false";
+    }
+
+    transitionsPanelHeading -> {
+      data-part: "transitions-panel-heading";
+    }
+
+    transitionList -> {
+      data-part: "transition-list";
+    }
+
+    transitionRow -> {
+      data-part:  "transition-row";
+      data-valid: if self.fromState != "" and self.event != "" and self.toState != "" then "true" else "false";
+    }
+
+    fromStatePicker -> {
+      data-part: "from-state-picker";
+      value:     self.fromState;
+      disabled:  if state.editor == "saving" or ?readOnly then true else false;
+      onChange:  send(UPDATE_TRANSITION);
+    }
+
+    eventInput -> {
+      data-part:   "event-input";
+      value:       self.event;
+      placeholder: "e.g. SUBMIT";
+      disabled:    if state.editor == "saving" or ?readOnly then true else false;
+      onInput:     send(UPDATE_TRANSITION);
+    }
+
+    toStatePicker -> {
+      data-part: "to-state-picker";
+      value:     self.toState;
+      disabled:  if state.editor == "saving" or ?readOnly then true else false;
+      onChange:  send(UPDATE_TRANSITION);
+    }
+
+    guardInput -> {
+      data-part:   "guard-input";
+      value:       self.guard;
+      placeholder: "optional guard";
+      disabled:    if state.editor == "saving" or ?readOnly then true else false;
+      onInput:     send(UPDATE_TRANSITION);
+    }
+
+    removeTransitionButton -> {
+      data-part: "remove-transition-button";
+      onClick:   send(REMOVE_TRANSITION);
+      disabled:  if ?readOnly then true else false;
+    }
+
+    addTransitionButton -> {
+      data-part: "add-transition-button";
+      onClick:   send(ADD_TRANSITION);
+      disabled:  if state.editor == "saving" or ?readOnly then true else false;
+    }
+
+    emptyTransitionsState -> {
+      data-part:    "empty-transitions-state";
+      data-visible: if ?transitions.length == 0 then "true" else "false";
+    }
+
+    validationPanel -> {
+      data-part:    "validation-panel";
+      data-visible: if state.editor == "validationError" or state.editor == "saveErrored" then "true" else "false";
+    }
+
+    validationMessage -> {
+      data-part: "validation-message";
+    }
+
+    saveBar -> {
+      data-part:   "save-bar";
+      data-saving: if state.editor == "saving" then "true" else "false";
+    }
+
+    saveButton -> {
+      data-part: "save-button";
+      onClick:   send(SAVE_START);
+      disabled:  if state.editor == "saving" or state.readiness == "notReady" or ?readOnly then true else false;
+    }
+
+    discardButton -> {
+      data-part: "discard-button";
+      onClick:   send(DISMISS_ERRORS);
+      disabled:  if state.editor == "saving" then true else false;
+    }
+
+    statusBadge -> {
+      data-part:   "status-badge";
+      data-status: ?status;
+      hidden:      if ?mode == "create" then true else false;
+    }
+  }
+
+  affordance {
+    serves: group-section;
+    specificity: 9;
+    when: concept = "Workflow";
+    bind {
+      states: states;
+      transitions: transitions;
+      initialState: initialState;
+    }
+  }
+
+  invariant {
+    example "add state appears in state list": {
+      after addStateButton() -> ok
+      then emptyStatesState.data-visible = "false"
+      and stateList.data-part = "state-list"
+    }
+
+    example "set initial marks state row": {
+      after setInitialButton() -> ok
+      then root.data-readiness = "ready"
+      and stateRow.data-initial = "true"
+    }
+
+    example "save triggers validation before saving": {
+      after saveButton() -> ok
+      then root.data-state = "validating"
+    }
+
+    example "validation failure surfaces panel and stays in validationError": {
+      after saveButton() -> ok
+      then root.data-state = "validating"
+      then validationFailed() -> ok
+      then root.data-state = "validationError"
+      and validationPanel.data-visible = "true"
+    }
+
+    example "save succeeds after validation passes": {
+      after saveButton() -> ok
+      then root.data-state = "validating"
+      then validationOk() -> ok
+      then root.data-state = "saving"
+      then saveOk() -> ok
+      then root.data-state = "saved"
+    }
+
+    example "remove state disabled when transitions reference it": {
+      after addTransitionButton() -> ok
+      then removeStateButton.disabled = true
+    }
+
+    always "data-state on root reflects editor FSM": {
+      root.data-state = state.editor
+    }
+
+    always "save button disabled when readiness is notReady": {
+      saveButton.disabled = true
+    }
+
+    always "validation runs before any save is attempted": {
+      state.editor != "saving"
+    }
+
+    never "transition fromState or toState references a state not in states list": {
+      transitionRow.data-valid = "false" and root.data-state = "saving"
+    }
+
+    never "workflow saves without an initialState": {
+      root.data-state = "saving" and state.readiness = "notReady"
+    }
+
+    never "workflow-builder is flow-builder — state machines differ from sequential flows": {
+      root.data-part = "flow-builder"
+    }
+
+    action saveButton {
+      requires: state.editor = "editing"
+      ensures ok: state.editor = "validating"
+    }
+
+    action addStateButton {
+      requires: state.editor = "editing"
+      ensures ok: emptyStatesState.data-visible = "false"
+    }
+
+    action setInitialButton {
+      requires: state.editor = "editing"
+      ensures ok: state.readiness = "ready"
+    }
+  }
+}
