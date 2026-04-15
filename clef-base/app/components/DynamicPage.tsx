@@ -59,7 +59,10 @@ function resolvePageKind(destination: ResolvedDestination): { kind: 'view' | 'la
 
   // Convention-based: "list" suffix → view, otherwise → layout
   if (targetView === 'list') {
-    return { kind: 'view', id: LIST_VIEW_ALIASES[name] ?? 'list' };
+    // Prefer an explicit alias, else try the ${name}-list convention which
+    // most seeded list views follow (e.g. workspaces → workspaces-list).
+    // Falls back to the literal "list" string only if nothing better.
+    return { kind: 'view', id: LIST_VIEW_ALIASES[name] ?? `${name}-list` };
   }
   if (targetView.endsWith('-list')) {
     return { kind: 'view', id: targetView };
