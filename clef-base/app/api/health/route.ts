@@ -1,16 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getRegisteredConcepts, ensureSeeded, getKernel } from '@/lib/kernel';
+import { getRegisteredConcepts, getRegisteredSyncs, ensureSeeded, getKernel } from '@/lib/kernel';
 
 // Note: POST handler below is a temporary test endpoint for sync chain debugging.
 
 export async function GET() {
   await ensureSeeded();
-  const concepts = await getRegisteredConcepts();
+  const [concepts, syncs] = await Promise.all([
+    getRegisteredConcepts(),
+    getRegisteredSyncs(),
+  ]);
   return NextResponse.json({
     status: 'ok',
     service: 'clef-base',
     concepts,
     conceptCount: concepts.length,
+    syncs: syncs.length,
+    syncCount: syncs.length,
     auth: 'repertoire-identity',
   });
 }

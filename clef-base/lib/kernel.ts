@@ -670,14 +670,29 @@ async function seedData(kernel: Kernel, registrations: RegEntry[], loadedSyncs: 
   });
 }
 
-export function getRegisteredConcepts() {
-  getKernel(); // ensure initialized
-  // Query RuntimeRegistry for live data instead of stale array
-  return _kernel!.invokeConcept('urn:clef/RuntimeRegistry', 'listConcepts', {}).then(result => {
-    if (result.variant === 'ok') {
-      const concepts = JSON.parse(result.concepts as string) as Array<Record<string, unknown>>;
-      return concepts.map(c => ({ uri: c.uri as string, hasStorage: c.has_storage as boolean }));
-    }
-    return [];
-  });
+export async function getRegisteredConcepts() {
+  // Ensure seeding is complete before reading — populateRuntimeRegistry must
+  // have written all concepts into the 'concept' relation before listConcepts
+  // can return a non-empty result. Callers that await ensureSeeded() before
+  // calling this function are safe either way; callers that do not (e.g. direct
+  // utility use) are protected by this await.
+  await ensureSeeded();
+  const result = await _kernel!.invokeConcept('urn:clef/RuntimeRegistry', 'listConcepts', {});
+  if (result.variant === 'ok') {
+    const concepts = JSON.parse(result.concepts as string) as Array<Record<string, unknown>>;
+    return concepts.map(c => ({ uri: c.uri as string, hasStorage: c.has_storage as boolean }));
+  }
+  return [];
+}
+
+export async function getRegisteredSyncs(): Promise<string[]> {
+  // Same seeding guarantee as getRegisteredConcepts — populateRuntimeRegistry
+  // writes all sync names before listSyncs can return a non-empty result.
+  await ensureSeeded();
+  const result = await _kernel!.invokeConcept('urn:clef/RuntimeRegistry', 'listSyncs', {});
+  if (result.variant === 'ok') {
+    const syncs = JSON.parse(result.syncs as string) as Array<Record<string, unknown>>;
+    return syncs.map(s => s.sync_name as string);
+  }
+  return [];
 }

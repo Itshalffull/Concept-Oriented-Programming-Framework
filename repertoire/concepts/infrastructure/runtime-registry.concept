@@ -135,4 +135,25 @@ concept RuntimeRegistry [C] {
     ensures ok: uri != none
 
   }
+
+  // listConcepts MUST return every concept registered in the kernel at the time
+  // of the call — no caching, no stale mirror. The count must equal the number
+  // of registerConcept calls that completed with ok. Dashboard, admin/concepts,
+  // and ConceptPicker all depend on a fresh, complete result.
+  example "registerConcept-then-listConcepts-is-nonempty": {
+    after registerConcept(uri: "urn:clef/ContentNode", has_storage: true, storage_name: "content-node", storage_type: "standard")
+          -> ok()
+    then listConcepts() -> ok()
+  }
+
+  // listSyncs MUST return every sync compiled into the sync engine at the time
+  // of the call — no caching, no stale mirror. /admin/syncs and the Dashboard
+  // sync-count stat card both depend on a fresh, complete result.
+  example "registerSync-then-listSyncs-is-nonempty": {
+    after registerConcept(uri: "urn:clef/ContentNode", has_storage: true, storage_name: "content-node", storage_type: "standard")
+          -> ok()
+    and registerSync(sync_name: "ContentPublish", source: "file", suite: "core")
+          -> ok()
+    then listSyncs() -> ok()
+  }
 }

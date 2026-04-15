@@ -99,9 +99,16 @@ export const DashboardView: React.FC = () => {
 
         const concepts: { uri: string; hasStorage: boolean }[] =
           Array.isArray(health.concepts) ? health.concepts as { uri: string; hasStorage: boolean }[] : [];
+        // health.syncCount is populated by the API from RuntimeRegistry/listSyncs.
+        // Fall back to health.syncs (legacy field) then 0 if neither is present.
+        const syncCount = typeof health.syncCount === 'number'
+          ? health.syncCount
+          : typeof health.syncs === 'number'
+            ? health.syncs
+            : 0;
         setState({
           concepts,
-          syncs: 50,
+          syncs: syncCount,
           health: { status: typeof health.status === 'string' ? health.status : 'ok' },
         });
       } catch (err) {
