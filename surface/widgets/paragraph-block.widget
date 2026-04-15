@@ -627,6 +627,50 @@ widget paragraph-block {
       event.kanbanReparentCompleted = true
       and body.sortIndexUnderNewColumn = "not-last"
     }
+
+    # --- Optimistic depth sticky-override contract ---
+    # Tab / Shift+Tab apply an optimistic depth delta synchronously
+    # so the indent animates on the same frame as the keystroke.
+    # Between that optimistic update and the server reparent commit,
+    # any intermediate loadChildren (triggered by focus/blur effects
+    # or parallel subscriptions) MUST NOT flash the block back to
+    # its old depth. The editor records a pending-depth override in
+    # optimisticDepthRef and merges it into every setChildren until
+    # a fresh walk confirms the expected depth.
+    never "intermediate refresh flashes pre-tab depth": {
+      event.tabKeyPressed = true
+      and event.optimisticDepthApplied = true
+      and event.intermediateLoadChildren = true
+      and body.renderedDepth = "pre-tab"
+    }
+    always "optimistic depth override wins until server catches up": {
+      body.tabKey = true
+    }
+
+    # --- Arrow navigation contract ---
+    # ArrowUp / ArrowDown on the first / last visual line of this
+    # block MUST move the caret to the previous / next VISIBLE
+    # block in document order — not just a direct sibling. Collapsed
+    # descendants are naturally skipped because they aren't in the
+    # DOM. The target is scrolled into view (nearest boundary) so
+    # long pages follow the caret.
+    action body {
+      requires: state.edit = "editing" and body.arrowUpKey = true and body.onFirstLine = true and body.hasPreviousVisibleBlock = true
+      ensures ok: state.edit = "idle"
+    }
+    action body {
+      requires: state.edit = "editing" and body.arrowDownKey = true and body.onLastLine = true and body.hasNextVisibleBlock = true
+      ensures ok: state.edit = "idle"
+    }
+    never "arrow nav stops at sibling-group boundary": {
+      event.arrowNavAttempted = true
+      and body.hasPreviousVisibleBlock = true
+      and body.arrowNavCancelled = true
+    }
+    never "arrow nav crosses into a collapsed descendant": {
+      event.arrowNavFired = true
+      and body.targetInCollapsedSubtree = true
+    }
   }
 
 }
