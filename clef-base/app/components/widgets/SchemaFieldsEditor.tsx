@@ -19,6 +19,7 @@ import React, {
   useRef,
   useEffect,
 } from 'react';
+import { useRouter } from 'next/navigation';
 import { useKernelInvoke } from '../../../lib/clef-provider';
 import { useConceptQuery } from '../../../lib/use-concept-query';
 import { FIELD_TYPE_REGISTRY } from './FieldWidget';
@@ -26,7 +27,7 @@ import { FIELD_TYPE_REGISTRY } from './FieldWidget';
 // ─── Props ─────────────────────────────────────────────────────────────────────
 
 export interface SchemaFieldsEditorProps {
-  schemaId: string;
+  schemaId?: string;
   onFieldSelect?: (fieldId: string) => void;
   mode?: 'create' | 'edit';
   context?: { schemaId?: string; fields?: FieldRow[] } | null;
@@ -349,6 +350,65 @@ const inputStyle: React.CSSProperties = {
 const sectionDividerStyle: React.CSSProperties = {
   borderTop: '1px solid var(--palette-outline-variant)',
   paddingTop: 'var(--spacing-md)',
+};
+
+// ─── Create-mode form styles ───────────────────────────────────────────────────
+
+const createFormStyle: React.CSSProperties = {
+  padding: 'var(--spacing-md)',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 'var(--spacing-md)',
+  borderBottom: '1px solid var(--palette-outline)',
+};
+
+const createFormTitleStyle: React.CSSProperties = {
+  fontSize: 'var(--typography-label-lg-size)',
+  fontWeight: 'var(--typography-label-lg-weight)' as React.CSSProperties['fontWeight'],
+  color: 'var(--palette-on-surface)',
+  marginBottom: 'var(--spacing-xs)',
+};
+
+const createFormSubtitleStyle: React.CSSProperties = {
+  fontSize: 'var(--typography-body-sm-size)',
+  color: 'var(--palette-on-surface-variant)',
+  marginBottom: 'var(--spacing-sm)',
+};
+
+const createButtonStyle: React.CSSProperties = {
+  padding: '8px 20px',
+  borderRadius: 'var(--radius-sm)',
+  border: 'none',
+  background: 'var(--palette-primary)',
+  color: 'var(--palette-on-primary)',
+  cursor: 'pointer',
+  fontSize: 'var(--typography-body-sm-size)',
+  fontFamily: 'inherit',
+  fontWeight: 600,
+  alignSelf: 'flex-start',
+};
+
+const createButtonDisabledStyle: React.CSSProperties = {
+  ...createButtonStyle,
+  opacity: 0.5,
+  cursor: 'not-allowed',
+};
+
+const fieldLockMessageStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: 'var(--spacing-lg) var(--spacing-md)',
+  color: 'var(--palette-on-surface-variant)',
+  fontSize: 'var(--typography-body-sm-size)',
+  textAlign: 'center',
+  gap: 'var(--spacing-xs)',
+};
+
+const errorTextStyle: React.CSSProperties = {
+  fontSize: '11px',
+  color: 'var(--palette-error)',
+  marginTop: 2,
 };
 
 // ─── FieldTypePicker ────────────────────────────────────────────────────────────
@@ -735,6 +795,15 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
 
 // ─── SchemaFieldsEditor ────────────────────────────────────────────────────────
 
+// Validate that a schema ID is non-empty and in kebab-case format.
+function validateSchemaId(id: string): string | null {
+  if (!id.trim()) return 'Schema ID is required.';
+  if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(id.trim())) {
+    return 'Schema ID must be kebab-case (lowercase letters, digits, hyphens; e.g. my-schema).';
+  }
+  return null;
+}
+
 export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
   schemaId,
   onFieldSelect,
@@ -742,7 +811,45 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
   context,
 }) => {
   const invoke = useKernelInvoke();
+  const router = useRouter();
   const isCreate = mode === 'create';
+
+  // ── Create-mode form state ─────────────────────────────────────────────────
+  const [schemaIdInput, setSchemaIdInput] = useState('');
+  const [displayNameInput, setDisplayNameInput] = useState('');
+  const [descriptionInput, setDescriptionInput] = useState('');
+  const [schemaIdError, setSchemaIdError] = useState<string | null>(null);
+  const [createPending, setCreatePending] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+
+  const handleCreateSchema = useCallback(async () => {
+    const idErr = validateSchemaId(schemaIdInput);
+    setSchemaIdError(idErr);
+    if (idErr) return;
+
+    setCreatePending(true);
+    setCreateError(null);
+    try {
+      const result = await invoke('Schema', 'defineSchema', {
+        schema: schemaIdInput.trim(),
+        label: displayNameInput.trim() || schemaIdInput.trim(),
+        fields: '',
+        category: '',
+        icon: '',
+      });
+      if (result.variant === 'ok') {
+        router.push(`/admin/schemas/${encodeURIComponent(schemaIdInput.trim())}`);
+      } else if (result.variant === 'exists') {
+        setCreateError(`Schema "${schemaIdInput.trim()}" already exists.`);
+      } else {
+        setCreateError((result.message as string | undefined) ?? 'Failed to create schema.');
+      }
+    } catch (err) {
+      setCreateError(err instanceof Error ? err.message : 'Failed to create schema.');
+    } finally {
+      setCreatePending(false);
+    }
+  }, [invoke, router, schemaIdInput, displayNameInput]);
 
   // Load fields from kernel (skipped in create mode — field list starts empty)
   const { data: rawFields, loading, error, refetch } = useConceptQuery<FieldRow[]>(
@@ -954,18 +1061,133 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
           fontWeight: 'var(--typography-label-md-weight)' as React.CSSProperties['fontWeight'],
           color: 'var(--palette-on-surface)',
         }}>
-          {isCreate ? 'New Schema Fields' : 'Fields'}
+          {isCreate ? 'Create Schema' : 'Fields'}
         </span>
-        <span style={{
-          fontSize: 'var(--typography-body-sm-size)',
-          color: 'var(--palette-on-surface-variant)',
-        }}>
-          {fields.length} {fields.length === 1 ? 'field' : 'fields'}
-        </span>
+        {!isCreate && (
+          <span style={{
+            fontSize: 'var(--typography-body-sm-size)',
+            color: 'var(--palette-on-surface-variant)',
+          }}>
+            {fields.length} {fields.length === 1 ? 'field' : 'fields'}
+          </span>
+        )}
       </div>
 
-      {/* Action error banner */}
-      {actionError && (
+      {/* Create-mode form: schema ID, display name, description, Create button */}
+      {isCreate && (
+        <div data-part="create-form" style={createFormStyle}>
+          <div>
+            <p style={createFormSubtitleStyle}>
+              Define the schema identity before adding fields. Fields can be added after saving.
+            </p>
+          </div>
+
+          {/* Schema ID */}
+          <div>
+            <label style={formLabelStyle} htmlFor="create-schema-id">
+              Schema ID <span style={{ color: 'var(--palette-error)' }}>*</span>
+            </label>
+            <input
+              id="create-schema-id"
+              data-part="schema-id-input"
+              type="text"
+              style={{
+                ...inputStyle,
+                borderColor: schemaIdError ? 'var(--palette-error)' : undefined,
+              }}
+              value={schemaIdInput}
+              placeholder="my-schema"
+              aria-label="Schema ID"
+              aria-required="true"
+              aria-describedby={schemaIdError ? 'create-schema-id-error' : undefined}
+              onChange={(e) => {
+                setSchemaIdInput(e.target.value);
+                if (schemaIdError) setSchemaIdError(null);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleCreateSchema();
+                }
+              }}
+            />
+            {schemaIdError && (
+              <p id="create-schema-id-error" style={errorTextStyle} role="alert">
+                {schemaIdError}
+              </p>
+            )}
+          </div>
+
+          {/* Display name / title */}
+          <div>
+            <label style={formLabelStyle} htmlFor="create-display-name">
+              Display Name
+            </label>
+            <input
+              id="create-display-name"
+              data-part="display-name-input"
+              type="text"
+              style={inputStyle}
+              value={displayNameInput}
+              placeholder="My Schema"
+              aria-label="Display name"
+              onChange={(e) => setDisplayNameInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleCreateSchema();
+                }
+              }}
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label style={formLabelStyle} htmlFor="create-description">
+              Description
+            </label>
+            <textarea
+              id="create-description"
+              data-part="description-input"
+              style={textareaStyle}
+              value={descriptionInput}
+              placeholder="Describe what this schema is for..."
+              aria-label="Description"
+              rows={2}
+              onChange={(e) => setDescriptionInput(e.target.value)}
+            />
+          </div>
+
+          {/* Create error */}
+          {createError && (
+            <p style={errorTextStyle} role="alert" data-part="create-error">
+              {createError}
+            </p>
+          )}
+
+          {/* Create button */}
+          <button
+            type="button"
+            data-part="create-schema-button"
+            style={createPending ? createButtonDisabledStyle : createButtonStyle}
+            disabled={createPending}
+            aria-label="Create schema"
+            onClick={handleCreateSchema}
+          >
+            {createPending ? 'Creating...' : 'Create Schema'}
+          </button>
+        </div>
+      )}
+
+      {/* Create-mode field lock: fields can only be added after schema is saved */}
+      {isCreate && (
+        <div data-part="field-lock-message" style={fieldLockMessageStyle}>
+          <span>Save the schema above to start adding fields.</span>
+        </div>
+      )}
+
+      {/* Action error banner (edit mode only) */}
+      {!isCreate && actionError && (
         <div style={{
           padding: 'var(--spacing-xs) var(--spacing-md)',
           background: 'var(--palette-error-container)',
@@ -988,8 +1210,8 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
         </div>
       )}
 
-      {/* Delete warning banner */}
-      {deleteWarning && (
+      {/* Delete warning banner (edit mode only) */}
+      {!isCreate && deleteWarning && (
         <div style={warningStyle} data-part="delete-warning">
           <div style={{ marginBottom: 4 }}>{deleteWarning}</div>
           <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
@@ -1031,8 +1253,8 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
         </div>
       )}
 
-      {/* Field list */}
-      <div data-part="field-list" style={fieldListStyle} role="list" aria-label="Schema fields">
+      {/* Field list — hidden in create mode until schema is saved */}
+      {!isCreate && <div data-part="field-list" style={fieldListStyle} role="list" aria-label="Schema fields">
         {fields.length === 0 && (
           <div style={{
             padding: 'var(--spacing-lg) var(--spacing-md)',
@@ -1178,7 +1400,7 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
               {isConfigOpen && (
                 <FieldConfigPanel
                   field={field}
-                  schemaId={schemaId}
+                  schemaId={schemaId ?? ''}
                   onClose={handleConfigPanelClose}
                   onUpdated={refetch}
                 />
@@ -1186,26 +1408,30 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
             </div>
           );
         })}
-      </div>
+      </div>}
 
-      {/* Add field button */}
-      <button
-        type="button"
-        data-part="add-field-button"
-        style={addBtnStyle}
-        onClick={handleAddClick}
-      >
-        <span style={{ fontSize: 16, lineHeight: 1 }}>+</span>
-        <span>Add field</span>
-      </button>
+      {!isCreate && (
+        <>
+          {/* Add field button */}
+          <button
+            type="button"
+            data-part="add-field-button"
+            style={addBtnStyle}
+            onClick={handleAddClick}
+          >
+            <span style={{ fontSize: 16, lineHeight: 1 }}>+</span>
+            <span>Add field</span>
+          </button>
 
-      {/* Inline type picker */}
-      {typePickerOpen && (
-        <FieldTypePicker
-          anchorPos={typePickerPos}
-          onSelect={handleTypeSelect}
-          onClose={() => setTypePickerOpen(false)}
-        />
+          {/* Inline type picker */}
+          {typePickerOpen && (
+            <FieldTypePicker
+              anchorPos={typePickerPos}
+              onSelect={handleTypeSelect}
+              onClose={() => setTypePickerOpen(false)}
+            />
+          )}
+        </>
       )}
     </div>
   );

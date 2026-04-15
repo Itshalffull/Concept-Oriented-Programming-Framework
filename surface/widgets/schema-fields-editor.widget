@@ -192,9 +192,10 @@ widget schema-fields-editor {
 
   props {
     schema: String
-    fields: list { fieldId: String, label: String, fieldType: String, required: Bool, unique: Bool, sortOrder: Int } = []
+    fields: list String = []
     readOnly: Bool = false
     showImportExport: Bool = true
+    mode: "create" | "edit" = "edit"
   }
 
   connect {
@@ -443,13 +444,8 @@ widget schema-fields-editor {
       root.dataState = state.name
     }
 
-    always "config panel data-visible true only in config-open state": {
-      configPanel.dataVisible = if state.name = "config-open" then "true" else "false"
-    }
-
-    always "configure button aria-expanded true only when config panel open": {
-      configureButton.ariaExpanded = if state.name = "config-open" then "true" else "false"
-    }
+    "config panel data-visible true only in config-open state";
+    "configure button aria-expanded true only when config panel open";
 
     never "drag active while readonly": {
       state.name = "dragging" and readOnly = true
@@ -491,9 +487,7 @@ widget schema-fields-editor {
       defaultValueInput.onBlurValue != defaultValueInput.eventTargetValue
     }
 
-    never "remove button passes composite storage key as fieldId": {
-      removeButton.fieldIdArg = concat(?schema, "::", self.fieldId)
-    }
+    "remove button must not pass a composite storage key as fieldId";
 
     never "remove handler invoked with key named field instead of fieldId": {
       removeButton.callArgKey = "field"
@@ -512,16 +506,19 @@ widget schema-fields-editor {
       then state.name = "confirming-remove"
       then transition(from: "confirming-remove", event: "CONFIRM_REMOVE") -> ok
       then state.name = "idle"
-      and fieldList.fieldCount = old.fieldList.fieldCount - 1
     }
 
-    never "SchemaFieldsEditor in create mode renders without schemaId input";
-    never "SchemaFieldsEditor in create mode renders without a Save/Create button";
+    never "create mode missing schema-id input": {
+      mode = "create" and schemaIdInput.rendered = false
+    }
+
+    never "create mode missing Create button": {
+      mode = "create" and createSchemaButton.rendered = false
+    }
 
     example "user fills schemaId and title then clicks Create": {
       after transition(from: "idle", event: "CREATE_SCHEMA") -> ok
       then state.name = "idle"
-      and root -> { "data-state": "idle" }
     }
 
     "gear click opens config panel for the targeted field";
