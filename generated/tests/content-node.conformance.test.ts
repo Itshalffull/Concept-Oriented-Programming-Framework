@@ -613,7 +613,7 @@ describe('ContentNode functional handler', () => {
 
   describe('createWithSchema', () => {
     it('builds a valid StorageProgram', () => {
-      const program = contentNodeHandler.createWithSchema({ id: "node-schema-1", schema: "Page", body: "Initial content" });
+      const program = contentNodeHandler.createWithSchema({ node: "node-schema-1", schema: "Page", body: "Initial content" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -621,21 +621,21 @@ describe('ContentNode functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = contentNodeHandler.createWithSchema({ id: "node-schema-1", schema: "Page", body: "Initial content" });
+      const program = contentNodeHandler.createWithSchema({ node: "node-schema-1", schema: "Page", body: "Initial content" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = contentNodeHandler.createWithSchema({ id: "node-schema-1", schema: "Page", body: "Initial content" });
+      const program = contentNodeHandler.createWithSchema({ node: "node-schema-1", schema: "Page", body: "Initial content" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = contentNodeHandler.createWithSchema({ id: "node-schema-1", schema: "Page", body: "Initial content" });
+      const program = contentNodeHandler.createWithSchema({ node: "node-schema-1", schema: "Page", body: "Initial content" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -648,7 +648,7 @@ describe('ContentNode functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = contentNodeHandler.createWithSchema({ id: "node-schema-1", schema: "Page", body: "Initial content" });
+      const program = contentNodeHandler.createWithSchema({ node: "node-schema-1", schema: "Page", body: "Initial content" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -656,7 +656,7 @@ describe('ContentNode functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof contentNodeHandler.createWithSchema !== 'function') return;
-      const result = await interpret(contentNodeHandler.createWithSchema({ id: "node-schema-1", schema: "Page", body: "Initial content" }), storage);
+      const result = await interpret(contentNodeHandler.createWithSchema({ node: "node-schema-1", schema: "Page", body: "Initial content" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -668,7 +668,7 @@ describe('ContentNode functional handler', () => {
       const storage = createInMemoryStorage();
       const afterResult_create_page_node = await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
       const _pool = Object.assign({}, (afterResult_create_page_node?.output ?? {}));
-      const _fixtureInput = { id: "node-schema-1", schema: "Page", body: "Initial content" } as Record<string, unknown>;
+      const _fixtureInput = { node: "node-schema-1", schema: "Page", body: "Initial content" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
           const cur = _fixtureInput[k];
@@ -683,14 +683,14 @@ describe('ContentNode functional handler', () => {
     it('fixture "create_with_schema_empty_id" -> error', async () => {
       if (typeof contentNodeHandler.createWithSchema !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(contentNodeHandler.createWithSchema({ id: "", schema: "Page", body: "" }), storage);
+      const result = await interpret(contentNodeHandler.createWithSchema({ node: "", schema: "Page", body: "" }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
     it('fixture "create_with_schema_empty_schema" -> error', async () => {
       if (typeof contentNodeHandler.createWithSchema !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(contentNodeHandler.createWithSchema({ id: "node-schema-2", schema: "", body: "" }), storage);
+      const result = await interpret(contentNodeHandler.createWithSchema({ node: "node-schema-2", schema: "", body: "" }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -698,7 +698,7 @@ describe('ContentNode functional handler', () => {
       if (typeof contentNodeHandler.createWithSchema !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_page_node = await interpret(contentNodeHandler.create({ node: "node-1", type: "page", content: "Welcome to my wiki", createdBy: "alice" }), storage);
-      const result = await interpret(contentNodeHandler.createWithSchema({ id: afterResult_create_page_node?.output?.["node"], schema: "Page", body: "dup" }), storage);
+      const result = await interpret(contentNodeHandler.createWithSchema({ node: afterResult_create_page_node?.output?.["node"], schema: "Page", body: "dup" }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('duplicate'));
     });
@@ -811,19 +811,29 @@ describe('ContentNode functional handler', () => {
   describe('invariant examples', () => {
     it("createWithSchema-then-get", async () => {
       const storage = createInMemoryStorage();
-      const createWithSchemaResult0 = await interpret(contentNodeHandler.createWithSchema({ id: "schema-node-1", schema: "Page", body: "Hello" }), storage);
+      const createWithSchemaResult0 = await interpret(contentNodeHandler.createWithSchema({ node: "schema-node-1", schema: "Page", body: "Hello" }), storage);
       expect(createWithSchemaResult0.variant).toBe("ok");
       let node = createWithSchemaResult0.output["node"];
       const thenResult0 = await interpret(contentNodeHandler.get({ node: "schema-node-1" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
+    it("createWithSchema-get-includes-schema", async () => {
+      const storage = createInMemoryStorage();
+      const createWithSchemaResult0 = await interpret(contentNodeHandler.createWithSchema({ node: "parity-node-1", schema: "Task", body: "Test" }), storage);
+      expect(createWithSchemaResult0.variant).toBe("ok");
+      const thenResult0 = await interpret(contentNodeHandler.get({ node: "parity-node-1" }), storage);
+      expect(thenResult0.variant).toBe("ok");
+      expect(Array.isArray(thenResult0.output?.schemas)).toBe(true);
+      expect(thenResult0.output?.schemas).toContain("Task");
+    });
+
     it("createWithSchema-duplicate", async () => {
       const storage = createInMemoryStorage();
-      const createWithSchemaResult0 = await interpret(contentNodeHandler.createWithSchema({ id: "dup-node-1", schema: "Page", body: "First" }), storage);
+      const createWithSchemaResult0 = await interpret(contentNodeHandler.createWithSchema({ node: "dup-node-1", schema: "Page", body: "First" }), storage);
       expect(createWithSchemaResult0.variant).toBe("ok");
       let node = createWithSchemaResult0.output["node"];
-      const thenResult0 = await interpret(contentNodeHandler.createWithSchema({ id: "dup-node-1", schema: "Page", body: "Second" }), storage);
+      const thenResult0 = await interpret(contentNodeHandler.createWithSchema({ node: "dup-node-1", schema: "Page", body: "Second" }), storage);
       expect(thenResult0.variant).toBe("duplicate");
     });
 

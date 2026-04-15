@@ -92,10 +92,25 @@ const _contentNodeHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'node', node, 'record');
     p = branch(p, 'record',
-      (b) => completeFrom(b, 'ok', (bindings) => {
+      (b) => {
+        // Also read all memberships to build the schemas list for this node
+        let b2 = find(b, 'membership', {}, 'allMemberships');
+        return completeFrom(b2, 'ok', (bindings) => {
           const record = bindings.record as Record<string, unknown>;
-          return { node: record.node as string, type: record.type as string, content: record.content as string, metadata: (record.metadata as string) || '' };
-        }),
+          const memberships = (bindings.allMemberships as Array<Record<string, unknown>>) || [];
+          const schemas = memberships
+            .filter(m => m.entity_id === node)
+            .map(m => m.schema as string)
+            .filter(Boolean);
+          return {
+            node: record.node as string,
+            type: record.type as string,
+            content: record.content as string,
+            metadata: (record.metadata as string) || '',
+            schemas,
+          };
+        });
+      },
       (b) => complete(b, 'notfound', { message: 'Node not found' }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
@@ -411,26 +426,27 @@ const _contentNodeHandler: FunctionalConceptHandler = {
   },
 
   createWithSchema(input: Record<string, unknown>) {
-    const id = (input.id as string | undefined) ?? '';
+    // Accept 'node' (canonical) or 'id' (deprecated alias) for backward compatibility
+    const node = ((input.node ?? input.id) as string | undefined) ?? '';
     const schema = (input.schema as string | undefined) ?? '';
     const body = (input.body as string | undefined) ?? '';
 
-    if (!id || id.trim() === '') {
-      return complete(createProgram(), 'error', { message: 'id is required' }) as StorageProgram<Result>;
+    if (!node || node.trim() === '') {
+      return complete(createProgram(), 'error', { message: 'node is required' }) as StorageProgram<Result>;
     }
     if (!schema || schema.trim() === '') {
       return complete(createProgram(), 'error', { message: 'schema is required' }) as StorageProgram<Result>;
     }
 
     let p = createProgram();
-    p = spGet(p, 'node', id, '_existing');
+    p = spGet(p, 'node', node, '_existing');
     p = branch(p, '_existing',
-      (b) => complete(b, 'duplicate', { message: `A node with id '${id}' already exists` }),
+      (b) => complete(b, 'duplicate', { message: `A node with id '${node}' already exists` }),
       (b) => {
         const now = new Date().toISOString();
         // Create the node AND record the schema membership atomically
-        let b2 = put(b, 'node', id, {
-          node: id,
+        let b2 = put(b, 'node', node, {
+          node,
           type: schema.toLowerCase(),
           content: body,
           metadata: '',
@@ -439,12 +455,12 @@ const _contentNodeHandler: FunctionalConceptHandler = {
           updatedAt: now,
         });
         // Record schema membership so listBySchema can find this node
-        b2 = put(b2, 'membership', `${id}::${schema}`, {
-          entity_id: id,
+        b2 = put(b2, 'membership', `${node}::${schema}`, {
+          entity_id: node,
           schema,
           appliedAt: now,
         });
-        return complete(b2, 'ok', { node: id });
+        return complete(b2, 'ok', { node });
       },
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;

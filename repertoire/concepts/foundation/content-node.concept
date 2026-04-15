@@ -62,8 +62,9 @@ concept ContentNode [N] {
     }
 
     action get(node: N) {
-      -> ok(node: N, type: String, content: String, metadata: String) {
-        Return the node's type, content, and metadata.
+      -> ok(node: N, type: String, content: String, metadata: String, schemas: list String) {
+        Return the node's type, content, metadata, and the list of schema names applied to it.
+        schemas is empty when no schemas have been applied.
       }
       -> notfound(message: String) {
         The node does not exist.
@@ -129,24 +130,24 @@ concept ContentNode [N] {
       fixture set_title_missing { node: "nonexistent-node", title: "Title" } -> notfound
     }
 
-    action createWithSchema(id: N, schema: String, body: String) {
+    action createWithSchema(node: N, schema: String, body: String) {
       -> ok(node: N) {
-        Atomically create a new ContentNode with the given id and immediately
+        Atomically create a new ContentNode with the given node id and immediately
         apply a schema classification to it in a single operation, eliminating
         the race window that would exist between a standalone create and a
         subsequent Schema/applyTo call.
       }
       -> duplicate(message: String) {
-        A ContentNode with this id already exists. No writes are performed.
+        A ContentNode with this node id already exists. No writes are performed.
       }
       -> error(message: String) {
-        The id is empty, schema is empty, or an unexpected storage error occurred.
+        The node id is empty, schema is empty, or an unexpected storage error occurred.
       }
 
-      fixture create_with_schema_ok { id: "node-schema-1", schema: "Page", body: "Initial content" }
-      fixture create_with_schema_empty_id { id: "", schema: "Page", body: "" } -> error
-      fixture create_with_schema_empty_schema { id: "node-schema-2", schema: "", body: "" } -> error
-      fixture create_with_schema_duplicate { id: $create_page_node.node, schema: "Page", body: "dup" } after create_page_node -> duplicate
+      fixture create_with_schema_ok { node: "node-schema-1", schema: "Page", body: "Initial content" }
+      fixture create_with_schema_empty_id { node: "", schema: "Page", body: "" } -> error
+      fixture create_with_schema_empty_schema { node: "node-schema-2", schema: "", body: "" } -> error
+      fixture create_with_schema_duplicate { node: $create_page_node.node, schema: "Page", body: "dup" } after create_page_node -> duplicate
     }
 
     action clone(source: String, newId: String, includeChildren: Bool) {
@@ -175,7 +176,7 @@ concept ContentNode [N] {
 
   example "createWithSchema-then-get": {
 
-    after createWithSchema(id: "schema-node-1", schema: "Page", body: "Hello") -> ok(node: "schema-node-1")
+    after createWithSchema(node: "schema-node-1", schema: "Page", body: "Hello") -> ok(node: "schema-node-1")
 
         then get(node: "schema-node-1") -> ok(node: "schema-node-1", type: "page", content: "Hello", metadata: "")
 
@@ -183,9 +184,9 @@ concept ContentNode [N] {
 
   example "createWithSchema-duplicate": {
 
-    after createWithSchema(id: "dup-node-1", schema: "Page", body: "First") -> ok(node: "dup-node-1")
+    after createWithSchema(node: "dup-node-1", schema: "Page", body: "First") -> ok(node: "dup-node-1")
 
-        then createWithSchema(id: "dup-node-1", schema: "Page", body: "Second") -> duplicate(message: m)
+        then createWithSchema(node: "dup-node-1", schema: "Page", body: "Second") -> duplicate(message: m)
 
   }
 
@@ -257,6 +258,29 @@ concept ContentNode [N] {
     requires: node != ""
 
     ensures ok: node != none
+
+  }
+
+  never "get returns node without schemas field when schemas exist" {
+
+    exists n in nodes:
+      n.schemas = none
+
+  }
+
+  example "createWithSchema-get-includes-schema": {
+
+    after createWithSchema(node: "parity-node-1", schema: "Task", body: "Test") -> ok(node: "parity-node-1")
+
+        then get(node: "parity-node-1") -> ok(node: "parity-node-1")
+
+  }
+
+  never "createWithSchema ok without schema binding" {
+
+    exists n in nodes:
+      createWithSchema(node: n, schema: s, body: b) = ok
+      and listBySchema(schema: s) not contains n
 
   }
 }
