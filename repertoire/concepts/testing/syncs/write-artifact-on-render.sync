@@ -1,0 +1,45 @@
+# Persist rendered test file as a content-hashed TestArtifact — Architecture doc Section 7.1
+#
+# Trigger: ReactRenderer/render is the concrete renderer concept introduced in MAG-907
+# (repertoire/concepts/test-plan-renderers/react-renderer.concept). When additional renderer
+# concepts land (PlaywrightRenderer, etc.) a corresponding sync should be added for each, or
+# this sync generalised if the sync grammar gains disjunctive when-clauses.
+#
+# Where-clause joins: ReactRenderer/render returns ok(code: String) — it does not carry
+# specKind, sourceRef, or platform in its completion output. These fields are obtained by
+# joining through TestPlan state (planId -> specKind, invariantId) and InvariantParser state
+# (invariantId -> sourceRef). The `platform` is fixed to "react" for this renderer — a
+# generalised version would bind it from PluginRegistry once all renderers share a common
+# render interface carrying the platform name out in their completion.
+#
+# TODO: once TestPlanRenderer interface is formalised in MAG-907 and all renderers emit
+# `platform` + `specKind` + `sourceRef` in their ok completion, this sync's where-clause
+# can be simplified to drop the state joins. Track as a follow-up to MAG-907.
+#
+# outputPath derivation: TestArtifact/write determines the final file path from its inputs.
+# Inline path derivation (e.g., concat("generated/tests/", ?src)) is left as a TODO — Clef's
+# sync grammar supports concat() expressions in field assignments but the exact output path
+# convention is established by TestArtifact's handler, not by this sync.
+
+sync WriteArtifactOnRender [eager]
+  purpose {
+    After ReactRenderer/render produces test code, persist it as a TestArtifact using
+    content-hashing so regeneration is a diff, not a blind overwrite.
+  }
+when {
+  ReactRenderer/render: [ plan: ?planId ]
+    => ok(code: ?code)
+}
+where {
+  TestPlan: { ?planId specKind: ?k; invariantId: ?inv }
+  InvariantParser: { ?inv sourceRef: ?src }
+}
+then {
+  TestArtifact/write: [
+    specKind: ?k;
+    sourceRef: ?src;
+    platform: "react";
+    outputPath: concat("generated/tests/", ?src, ".react.test.ts");
+    content: ?code
+  ]
+}

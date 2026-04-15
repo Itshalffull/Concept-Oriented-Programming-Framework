@@ -1,0 +1,26 @@
+# Compile each parsed invariant into a TestPlan — Architecture doc Section 7.1 (invariant grammar portability)
+#
+# Fan-out note: InvariantParser/parse => ok returns `invariants: String` — a JSON array of invariant
+# identifiers, not a single identifier. Clef's sync grammar does not provide a native "one then per
+# item in a collection" dispatch within a then-clause. The approach taken here is to dispatch a single
+# TestPlan/build call with the full JSON array and let TestPlan iterate internally.
+# If TestPlan/build later gains a `buildBatch(invariants: String)` action this sync should be updated
+# to use that action name to make the intent explicit. Until then, TestPlan/build receives
+# `invariantId` bound to the full `?invs` JSON array and is expected to detect the array shape and
+# iterate. This is a known grammar limitation tracked in the invariant grammar portability PRD (MAG-908).
+
+sync BuildTestPlanOnInvariantParse [eager]
+  purpose {
+    After InvariantParser/parse completes, compile every extracted invariant into an enriched
+    platform-agnostic TestPlan. Dispatches TestPlan/build with the full invariant-ids payload
+    so TestPlan can iterate over them internally (Clef has no native per-item then fan-out).
+  }
+when {
+  InvariantParser/parse: [ specKind: ?kind; sourceRef: ?src ]
+    => ok(invariants: ?invs)
+}
+then {
+  TestPlan/build: [
+    invariantId: ?invs
+  ]
+}

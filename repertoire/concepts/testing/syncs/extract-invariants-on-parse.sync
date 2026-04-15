@@ -1,0 +1,76 @@
+# Extract invariants when any spec parser completes — Architecture doc Section 7.1 (invariant grammar portability)
+#
+# Clef's sync grammar does not support OR (disjunctive) when-clauses across different concept/action
+# pairs in a single sync; a single when-clause matches ONE concept's action completion. Consequently
+# this capability is expressed as three syncs — one per supported spec kind — following the same
+# one-sync-per-kind pattern used elsewhere in the suite (e.g., emit-generated-*.sync files).
+#
+# Binding note: SpecParser/parse receives only `source: String` — there is no file-path parameter in
+# the current spec. InvariantParser/parse requires `sourceRef` as an identity key. Until a richer
+# parse signature (source: String, path: String) lands on the upstream parsers (tracked in MAG-909),
+# `sourceRef` is bound to the source text itself. This is semantically correct because content-hash
+# identity still uniquely identifies the source; the limitation is that human-readable file paths
+# will not appear in InvariantParser state until the upstream signature is extended.
+#
+# WidgetParser/parse takes (widget: W, source: String). `widget` is the opaque widget ID, which is
+# used as `sourceRef` so InvariantParser rows can be correlated back to widget identity.
+
+sync ExtractInvariantsOnConceptParse [eager]
+  purpose {
+    When SpecParser/parse completes, forward the source text to InvariantParser so its
+    invariant blocks are extracted and stored under the concept AssertionContext plugin.
+    Decouples parsing from invariant extraction so each concern can evolve independently.
+  }
+when {
+  SpecParser/parse: [ source: ?src ]
+    => ok(spec: ?spec; ast: ?ast)
+}
+then {
+  InvariantParser/parse: [
+    specKind: "concept";
+    sourceRef: ?src;
+    source: ?src;
+    contextId: "ctx-concept-default"
+  ]
+}
+
+---
+
+sync ExtractInvariantsOnWidgetParse [eager]
+  purpose {
+    When WidgetParser/parse completes, forward the widget source to InvariantParser so its
+    invariant blocks are extracted using the widget AssertionContext plugin. The widget ID
+    is used as sourceRef so InvariantParser rows correlate back to widget identity.
+  }
+when {
+  WidgetParser/parse: [ widget: ?widgetId; source: ?src ]
+    => ok(widget: ?w; ast: ?ast)
+}
+then {
+  InvariantParser/parse: [
+    specKind: "widget";
+    sourceRef: ?widgetId;
+    source: ?src;
+    contextId: "ctx-widget-default"
+  ]
+}
+
+---
+
+sync ExtractInvariantsOnSyncParse [eager]
+  purpose {
+    When SyncParser/parse completes, forward the sync source to InvariantParser so any
+    invariant annotations embedded in the sync file are extracted and stored.
+  }
+when {
+  SyncParser/parse: [ source: ?src; manifests: ?manifests ]
+    => ok(sync: ?sy; ast: ?ast)
+}
+then {
+  InvariantParser/parse: [
+    specKind: "sync";
+    sourceRef: ?src;
+    source: ?src;
+    contextId: "ctx-concept-default"
+  ]
+}

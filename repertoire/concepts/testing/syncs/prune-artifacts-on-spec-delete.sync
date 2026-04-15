@@ -1,0 +1,29 @@
+# Remove generated test artifacts when a spec is deleted — Architecture doc Section 7.1
+#
+# Trigger concept: the PRD names "SpecRegistry/delete" but no such concept exists in the codebase.
+# Spec-lifecycle events are managed by the Resource concept (repertoire/concepts/codegen/resource.concept)
+# which tracks input resources (files, configs) for generation pipelines. Resource/remove fires when
+# a locator is removed from tracking — semantically equivalent to "a spec was deleted" for the
+# purposes of this pipeline. The `locator` field maps to the same path value used as `sourceRef`
+# in InvariantParser rows and TestArtifact rows, so TestArtifact/prune can match by spec identity.
+#
+# Resource/remove returns two variants that both use the `ok` name but with different output fields
+# (an existing-record return and a not-found return). The when-clause matches on the
+# `resource: ?r` output field which is only present when an actual record was removed; the
+# not-found variant carries only `locator: ?loc` and will not match, which is the correct
+# semantics — no artifacts to prune if no resource was tracked.
+
+sync PruneArtifactsOnSpecDelete [eager]
+  purpose {
+    When a spec resource is removed from tracking via Resource/remove, clean up all
+    generated TestArtifact rows for that spec so stale test files do not accumulate.
+  }
+when {
+  Resource/remove: [ locator: ?loc ]
+    => ok(resource: ?r)
+}
+then {
+  TestArtifact/prune: [
+    spec: ?loc
+  ]
+}

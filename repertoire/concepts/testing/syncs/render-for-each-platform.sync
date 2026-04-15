@@ -1,0 +1,40 @@
+# Render the completed plan once per registered test-plan-renderer plugin — Architecture doc Section 7.1
+#
+# Platform fan-out: PluginRegistry state is queried in the where-clause. Registered renderers are
+# stored under type "test-plan-renderer" (see register-react-renderer.sync and
+# register-playwright-renderer.sync). Because PluginRegistry state uses `definitions: set P` with a
+# name field, the where-clause binds ?platform to the `name` of each matching definition. If multiple
+# renderers are registered, the sync engine executes the then-clause once per matching row —
+# one PluginRegistry/dispatch call per platform. This is the fan-out mechanism available in the
+# current Clef sync grammar (no native "for each" in then-clauses).
+#
+# PluginRegistry state field names: the plugin-registry.concept state has `definitions: set P`,
+# `cache: P -> String`, and `metadata: P -> String`. The type/name attributes are stored in the
+# registered metadata JSON rather than as first-class state relations. The concept-state query
+# pattern used here (`PluginRegistry: { ?p type: "test-plan-renderer"; name: ?platform }`) relies on
+# the convention established by ViewResolverDispatchesToProvider — if PluginRegistry's state schema
+# is tightened to expose `type` and `name` as direct relations this sync requires no change.
+#
+# Render action: the renderer concept is MAG-907 work (test-plan-renderers/). Until that card lands
+# the dispatch target is PluginRegistry/dispatch so the concept name remains data-driven.
+
+sync RenderForEachRegisteredPlatform [eager]
+  purpose {
+    For every test-plan-renderer plugin registered in PluginRegistry, dispatch a render
+    call so that the completed plan is emitted for each registered platform independently.
+  }
+when {
+  TestPlan/build: [ invariantId: ?inv ]
+    => ok(plan: ?planId)
+}
+where {
+  PluginRegistry: { ?plugin type: "test-plan-renderer"; name: ?platform }
+}
+then {
+  PluginRegistry/dispatch: [
+    type: "test-plan-renderer";
+    plugin_id: ?platform;
+    action: "render";
+    payload: ?planId
+  ]
+}
