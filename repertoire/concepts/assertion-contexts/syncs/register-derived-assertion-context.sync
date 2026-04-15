@@ -1,0 +1,16 @@
+# Wire DerivedAssertionContext/register into PluginRegistry for InvariantParser discovery.
+# Follows the canonical plugin registration pattern from register-instance-providers.sync.
+
+sync RegisterDerivedAssertionContext [eager]
+  purpose { Wire DerivedAssertionContext/register into PluginRegistry. }
+when {
+  DerivedAssertionContext/register: [ name: ?name; declaredSymbols: ?syms ]
+    => ok(name: ?name; declaredSymbols: ?syms)
+}
+then {
+  PluginRegistry/register: [
+    type: "assertion-context";
+    name: ?name;
+    metadata: { declaredSymbols: ?syms; kind: "derived" }
+  ]
+}

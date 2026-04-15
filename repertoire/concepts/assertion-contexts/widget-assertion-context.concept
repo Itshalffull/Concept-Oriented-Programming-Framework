@@ -1,0 +1,106 @@
+@version(1)
+@category("testing")
+concept WidgetAssertionContext [W] {
+
+  purpose {
+    Resolve widget-spec identifiers for the InvariantParser. Maintains a
+    registry of named contexts carrying the symbol vocabulary declared by
+    a widget spec (anatomy parts, FSM fields, prop names, and event names),
+    so the parser can validate scope references without coupling to the
+    widget loader.
+  }
+
+  state {
+    contexts: set W
+    contextId: W -> String
+    declaredSymbols: W -> String
+  }
+
+  actions {
+
+    action register(name: String, declaredSymbols: String) {
+      -> ok(name: String, declaredSymbols: String) {
+        Record a new widget-spec assertion context under the given name with
+        its declared symbol vocabulary. The symbols list is a JSON array of
+        strings from the set ["anatomy-parts", "fsm-fields", "prop-names",
+        "event-names"].
+      }
+
+      fixture register_ok {
+        name: "ButtonWidget",
+        declaredSymbols: "[\"anatomy-parts\",\"fsm-fields\",\"prop-names\",\"event-names\"]"
+      }
+
+      fixture register_parts_only {
+        name: "IconWidget",
+        declaredSymbols: "[\"anatomy-parts\",\"prop-names\"]"
+      }
+
+      fixture register_empty_name {
+        name: "",
+        declaredSymbols: "[\"anatomy-parts\",\"fsm-fields\",\"prop-names\",\"event-names\"]"
+      } -> error
+    }
+
+    action resolve(contextId: String, name: String) {
+      -> ok(kind: String, info: String) {
+        Look up a declared symbol by name within the given context and return
+        its kind ("anatomy-parts", "fsm-fields", "prop-names", or
+        "event-names") and any associated metadata as a JSON string.
+      }
+      -> notfound(message: String) {
+        No context with the given contextId exists, or no symbol named
+        name is declared within that context.
+      }
+
+      fixture resolve_ok { contextId: $register_ok.name, name: "anatomy-parts" } after register_ok
+      fixture resolve_missing_ctx { contextId: "ctx-nonexistent", name: "root" } -> notfound
+      fixture resolve_missing_sym { contextId: $register_ok.name, name: "unknown-part" } after register_ok -> notfound
+    }
+
+    action clear(contextId: String) {
+      -> ok {
+        Remove the assertion context and all its declared symbols from the
+        registry. Subsequent resolve calls for this contextId return notfound.
+      }
+      -> notfound(message: String) {
+        No context with the given contextId exists.
+      }
+
+      fixture clear_ok { contextId: $register_ok.name } after register_ok
+      fixture clear_missing { contextId: "ctx-nonexistent" } -> notfound
+    }
+  }
+
+  example "register then resolve": {
+    after register(name: "CardWidget", declaredSymbols: "[\"anatomy-parts\",\"fsm-fields\",\"prop-names\",\"event-names\"]")
+      -> ok(name: n, declaredSymbols: _)
+    then resolve(contextId: n, name: "fsm-fields") -> ok(kind: _, info: _)
+  }
+
+  example "clear removes context": {
+    after register(name: "TempWidget", declaredSymbols: "[\"anatomy-parts\"]")
+      -> ok(name: n, declaredSymbols: _)
+    and  clear(contextId: n) -> ok
+    then resolve(contextId: n, name: "anatomy-parts") -> notfound(message: _)
+  }
+
+  never "register issued without declaredSymbols": {
+    exists w in contexts:
+      w.declaredSymbols = ""
+  }
+
+  always "resolve returns notfound for unknown name": {
+    forall w in contexts:
+      w.contextId != none
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: name != ""
+  }
+
+  action resolve {
+    requires: contextId != "" and name != ""
+  }
+}

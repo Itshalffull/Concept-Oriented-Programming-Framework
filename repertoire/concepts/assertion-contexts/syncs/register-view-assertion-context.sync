@@ -1,0 +1,16 @@
+# Wire ViewAssertionContext/register into PluginRegistry for InvariantParser discovery.
+# Follows the canonical plugin registration pattern from register-instance-providers.sync.
+
+sync RegisterViewAssertionContext [eager]
+  purpose { Wire ViewAssertionContext/register into PluginRegistry. }
+when {
+  ViewAssertionContext/register: [ name: ?name; declaredSymbols: ?syms ]
+    => ok(name: ?name; declaredSymbols: ?syms)
+}
+then {
+  PluginRegistry/register: [
+    type: "assertion-context";
+    name: ?name;
+    metadata: { declaredSymbols: ?syms; kind: "view" }
+  ]
+}

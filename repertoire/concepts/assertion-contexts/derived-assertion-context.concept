@@ -1,0 +1,106 @@
+@version(1)
+@category("testing")
+concept DerivedAssertionContext [D] {
+
+  purpose {
+    Resolve derived-concept identifiers for the InvariantParser. Maintains a
+    registry of named contexts carrying the symbol vocabulary declared by a
+    derived-concept spec (composed concepts, required syncs, and derived
+    actions), so the parser can validate scope references without coupling
+    to the derived-concept loader.
+  }
+
+  state {
+    contexts: set D
+    contextId: D -> String
+    declaredSymbols: D -> String
+  }
+
+  actions {
+
+    action register(name: String, declaredSymbols: String) {
+      -> ok(name: String, declaredSymbols: String) {
+        Record a new derived-concept assertion context under the given name
+        with its declared symbol vocabulary. The symbols list is a JSON array
+        of strings from the set ["composed-concepts", "required-syncs",
+        "derived-actions"].
+      }
+
+      fixture register_ok {
+        name: "TaskBoardDerived",
+        declaredSymbols: "[\"composed-concepts\",\"required-syncs\",\"derived-actions\"]"
+      }
+
+      fixture register_concepts_only {
+        name: "SimpleDerived",
+        declaredSymbols: "[\"composed-concepts\",\"derived-actions\"]"
+      }
+
+      fixture register_empty_name {
+        name: "",
+        declaredSymbols: "[\"composed-concepts\",\"required-syncs\",\"derived-actions\"]"
+      } -> error
+    }
+
+    action resolve(contextId: String, name: String) {
+      -> ok(kind: String, info: String) {
+        Look up a declared symbol by name within the given context and return
+        its kind ("composed-concepts", "required-syncs", or "derived-actions")
+        and any associated metadata as a JSON string.
+      }
+      -> notfound(message: String) {
+        No context with the given contextId exists, or no symbol named
+        name is declared within that context.
+      }
+
+      fixture resolve_ok { contextId: $register_ok.name, name: "composed-concepts" } after register_ok
+      fixture resolve_missing_ctx { contextId: "ctx-nonexistent", name: "Task" } -> notfound
+      fixture resolve_missing_sym { contextId: $register_ok.name, name: "unknown-concept" } after register_ok -> notfound
+    }
+
+    action clear(contextId: String) {
+      -> ok {
+        Remove the assertion context and all its declared symbols from the
+        registry. Subsequent resolve calls for this contextId return notfound.
+      }
+      -> notfound(message: String) {
+        No context with the given contextId exists.
+      }
+
+      fixture clear_ok { contextId: $register_ok.name } after register_ok
+      fixture clear_missing { contextId: "ctx-nonexistent" } -> notfound
+    }
+  }
+
+  example "register then resolve": {
+    after register(name: "ContentPlatform", declaredSymbols: "[\"composed-concepts\",\"required-syncs\",\"derived-actions\"]")
+      -> ok(name: n, declaredSymbols: _)
+    then resolve(contextId: n, name: "required-syncs") -> ok(kind: _, info: _)
+  }
+
+  example "clear removes context": {
+    after register(name: "TempDerived", declaredSymbols: "[\"composed-concepts\"]")
+      -> ok(name: n, declaredSymbols: _)
+    and  clear(contextId: n) -> ok
+    then resolve(contextId: n, name: "composed-concepts") -> notfound(message: _)
+  }
+
+  never "register issued without declaredSymbols": {
+    exists d in contexts:
+      d.declaredSymbols = ""
+  }
+
+  always "resolve returns notfound for unknown name": {
+    forall d in contexts:
+      d.contextId != none
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: name != ""
+  }
+
+  action resolve {
+    requires: contextId != "" and name != ""
+  }
+}

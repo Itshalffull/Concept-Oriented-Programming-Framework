@@ -1,0 +1,60 @@
+# repertoire/concepts/assertion-contexts/suite.yaml
+suite:
+  name: assertion-contexts
+  version: 0.1.0
+  description: >
+    AssertionContext plugins for each Clef spec kind — concept, widget, view,
+    sync, and derived. Each concept implements a universal register/resolve/clear
+    contract: register() declares a named context with per-kind symbol vocabulary
+    (e.g. action-names/state-fields/variant-names for concept specs); resolve()
+    looks up a declared symbol by name within a context; clear() removes a context.
+    Five companion syncs fan each concept's register() completion into
+    PluginRegistry so the InvariantParser can discover contexts at runtime.
+
+concepts:
+  ConceptAssertionContext:
+    spec: ./concept-assertion-context.concept
+    params:
+      C: { as: concept-context-ref, description: "Reference to a concept-spec assertion context" }
+
+  WidgetAssertionContext:
+    spec: ./widget-assertion-context.concept
+    params:
+      W: { as: widget-context-ref, description: "Reference to a widget-spec assertion context" }
+
+  ViewAssertionContext:
+    spec: ./view-assertion-context.concept
+    params:
+      V: { as: view-context-ref, description: "Reference to a view-spec assertion context" }
+
+  SyncAssertionContext:
+    spec: ./sync-assertion-context.concept
+    params:
+      S: { as: sync-context-ref, description: "Reference to a sync-spec assertion context" }
+
+  DerivedAssertionContext:
+    spec: ./derived-assertion-context.concept
+    params:
+      D: { as: derived-context-ref, description: "Reference to a derived-concept assertion context" }
+
+syncs:
+  required:
+    - path: ./syncs/register-concept-assertion-context.sync
+      description: "ConceptAssertionContext/register -> PluginRegistry/register(assertion-context, kind=concept)"
+
+    - path: ./syncs/register-widget-assertion-context.sync
+      description: "WidgetAssertionContext/register -> PluginRegistry/register(assertion-context, kind=widget)"
+
+    - path: ./syncs/register-view-assertion-context.sync
+      description: "ViewAssertionContext/register -> PluginRegistry/register(assertion-context, kind=view)"
+
+    - path: ./syncs/register-sync-assertion-context.sync
+      description: "SyncAssertionContext/register -> PluginRegistry/register(assertion-context, kind=sync)"
+
+    - path: ./syncs/register-derived-assertion-context.sync
+      description: "DerivedAssertionContext/register -> PluginRegistry/register(assertion-context, kind=derived)"
+
+uses:
+  - suite: infrastructure
+    concepts:
+      - name: PluginRegistry

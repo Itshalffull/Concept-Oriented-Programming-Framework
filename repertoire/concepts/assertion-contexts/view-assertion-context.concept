@@ -1,0 +1,106 @@
+@version(1)
+@category("testing")
+concept ViewAssertionContext [V] {
+
+  purpose {
+    Resolve view-spec identifiers for the InvariantParser. Maintains a
+    registry of named contexts carrying the symbol vocabulary declared by
+    a view spec (data-source fields, projection keys, filter columns, and
+    sort keys), so the parser can validate scope references without coupling
+    to the view loader.
+  }
+
+  state {
+    contexts: set V
+    contextId: V -> String
+    declaredSymbols: V -> String
+  }
+
+  actions {
+
+    action register(name: String, declaredSymbols: String) {
+      -> ok(name: String, declaredSymbols: String) {
+        Record a new view-spec assertion context under the given name with
+        its declared symbol vocabulary. The symbols list is a JSON array of
+        strings from the set ["data-source-fields", "projection-keys",
+        "filter-columns", "sort-keys"].
+      }
+
+      fixture register_ok {
+        name: "ContentListView",
+        declaredSymbols: "[\"data-source-fields\",\"projection-keys\",\"filter-columns\",\"sort-keys\"]"
+      }
+
+      fixture register_filter_only {
+        name: "SearchView",
+        declaredSymbols: "[\"filter-columns\",\"sort-keys\"]"
+      }
+
+      fixture register_empty_name {
+        name: "",
+        declaredSymbols: "[\"data-source-fields\",\"projection-keys\",\"filter-columns\",\"sort-keys\"]"
+      } -> error
+    }
+
+    action resolve(contextId: String, name: String) {
+      -> ok(kind: String, info: String) {
+        Look up a declared symbol by name within the given context and return
+        its kind ("data-source-fields", "projection-keys", "filter-columns",
+        or "sort-keys") and any associated metadata as a JSON string.
+      }
+      -> notfound(message: String) {
+        No context with the given contextId exists, or no symbol named
+        name is declared within that context.
+      }
+
+      fixture resolve_ok { contextId: $register_ok.name, name: "projection-keys" } after register_ok
+      fixture resolve_missing_ctx { contextId: "ctx-nonexistent", name: "name" } -> notfound
+      fixture resolve_missing_sym { contextId: $register_ok.name, name: "unknown-col" } after register_ok -> notfound
+    }
+
+    action clear(contextId: String) {
+      -> ok {
+        Remove the assertion context and all its declared symbols from the
+        registry. Subsequent resolve calls for this contextId return notfound.
+      }
+      -> notfound(message: String) {
+        No context with the given contextId exists.
+      }
+
+      fixture clear_ok { contextId: $register_ok.name } after register_ok
+      fixture clear_missing { contextId: "ctx-nonexistent" } -> notfound
+    }
+  }
+
+  example "register then resolve": {
+    after register(name: "TaskBoardView", declaredSymbols: "[\"data-source-fields\",\"projection-keys\",\"filter-columns\",\"sort-keys\"]")
+      -> ok(name: n, declaredSymbols: _)
+    then resolve(contextId: n, name: "sort-keys") -> ok(kind: _, info: _)
+  }
+
+  example "clear removes context": {
+    after register(name: "TempView", declaredSymbols: "[\"filter-columns\"]")
+      -> ok(name: n, declaredSymbols: _)
+    and  clear(contextId: n) -> ok
+    then resolve(contextId: n, name: "filter-columns") -> notfound(message: _)
+  }
+
+  never "register issued without declaredSymbols": {
+    exists v in contexts:
+      v.declaredSymbols = ""
+  }
+
+  always "resolve returns notfound for unknown name": {
+    forall v in contexts:
+      v.contextId != none
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: name != ""
+  }
+
+  action resolve {
+    requires: contextId != "" and name != ""
+  }
+}

@@ -1,0 +1,16 @@
+# Wire ConceptAssertionContext/register into PluginRegistry for InvariantParser discovery.
+# Follows the canonical plugin registration pattern from register-instance-providers.sync.
+
+sync RegisterConceptAssertionContext [eager]
+  purpose { Wire ConceptAssertionContext/register into PluginRegistry. }
+when {
+  ConceptAssertionContext/register: [ name: ?name; declaredSymbols: ?syms ]
+    => ok(name: ?name; declaredSymbols: ?syms)
+}
+then {
+  PluginRegistry/register: [
+    type: "assertion-context";
+    name: ?name;
+    metadata: { declaredSymbols: ?syms; kind: "concept" }
+  ]
+}

@@ -1,0 +1,16 @@
+# Wire SyncAssertionContext/register into PluginRegistry for InvariantParser discovery.
+# Follows the canonical plugin registration pattern from register-instance-providers.sync.
+
+sync RegisterSyncAssertionContext [eager]
+  purpose { Wire SyncAssertionContext/register into PluginRegistry. }
+when {
+  SyncAssertionContext/register: [ name: ?name; declaredSymbols: ?syms ]
+    => ok(name: ?name; declaredSymbols: ?syms)
+}
+then {
+  PluginRegistry/register: [
+    type: "assertion-context";
+    name: ?name;
+    metadata: { declaredSymbols: ?syms; kind: "sync" }
+  ]
+}

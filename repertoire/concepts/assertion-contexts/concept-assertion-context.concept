@@ -1,0 +1,104 @@
+@version(1)
+@category("testing")
+concept ConceptAssertionContext [C] {
+
+  purpose {
+    Resolve concept-spec identifiers for the InvariantParser. Maintains a
+    registry of named contexts, each carrying the symbol vocabulary declared
+    by a concept spec (action names, state fields, and variant names), so the
+    parser can validate scope references without coupling to the spec loader.
+  }
+
+  state {
+    contexts: set C
+    contextId: C -> String
+    declaredSymbols: C -> String
+  }
+
+  actions {
+
+    action register(name: String, declaredSymbols: String) {
+      -> ok(name: String, declaredSymbols: String) {
+        Record a new concept-spec assertion context under the given name with
+        its declared symbol vocabulary. The symbols list is a JSON array of
+        strings from the set ["action-names", "state-fields", "variant-names"].
+      }
+
+      fixture register_ok {
+        name: "ConceptAssertionContext",
+        declaredSymbols: "[\"action-names\",\"state-fields\",\"variant-names\"]"
+      }
+
+      fixture register_minimal {
+        name: "SimpleSpec",
+        declaredSymbols: "[\"action-names\"]"
+      }
+
+      fixture register_empty_name {
+        name: "",
+        declaredSymbols: "[\"action-names\",\"state-fields\",\"variant-names\"]"
+      } -> error
+    }
+
+    action resolve(contextId: String, name: String) {
+      -> ok(kind: String, info: String) {
+        Look up a declared symbol by name within the given context and return
+        its kind ("action-names", "state-fields", or "variant-names") and any
+        associated metadata as a JSON string.
+      }
+      -> notfound(message: String) {
+        No context with the given contextId exists, or no symbol named
+        name is declared within that context.
+      }
+
+      fixture resolve_ok { contextId: $register_ok.name, name: "register" } after register_ok
+      fixture resolve_missing_ctx { contextId: "ctx-nonexistent", name: "register" } -> notfound
+      fixture resolve_missing_sym { contextId: $register_ok.name, name: "unknown-sym" } after register_ok -> notfound
+    }
+
+    action clear(contextId: String) {
+      -> ok {
+        Remove the assertion context and all its declared symbols from the
+        registry. Subsequent resolve calls for this contextId return notfound.
+      }
+      -> notfound(message: String) {
+        No context with the given contextId exists.
+      }
+
+      fixture clear_ok { contextId: $register_ok.name } after register_ok
+      fixture clear_missing { contextId: "ctx-nonexistent" } -> notfound
+    }
+  }
+
+  example "register then resolve": {
+    after register(name: "UserSpec", declaredSymbols: "[\"action-names\",\"state-fields\",\"variant-names\"]")
+      -> ok(name: n, declaredSymbols: _)
+    then resolve(contextId: n, name: "action-names") -> ok(kind: _, info: _)
+  }
+
+  example "clear removes context": {
+    after register(name: "TempSpec", declaredSymbols: "[\"action-names\"]")
+      -> ok(name: n, declaredSymbols: _)
+    and  clear(contextId: n) -> ok
+    then resolve(contextId: n, name: "action-names") -> notfound(message: _)
+  }
+
+  never "register issued without declaredSymbols": {
+    exists c in contexts:
+      c.declaredSymbols = ""
+  }
+
+  always "resolve returns notfound for unknown name": {
+    forall c in contexts:
+      c.contextId != none
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: name != ""
+  }
+
+  action resolve {
+    requires: contextId != "" and name != ""
+  }
+}

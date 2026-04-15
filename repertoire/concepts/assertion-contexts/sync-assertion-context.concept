@@ -1,0 +1,106 @@
+@version(1)
+@category("testing")
+concept SyncAssertionContext [S] {
+
+  purpose {
+    Resolve sync-spec identifiers for the InvariantParser. Maintains a
+    registry of named contexts carrying the symbol vocabulary declared by
+    a sync spec (when-bindings, where-bindings, and completion variants),
+    so the parser can validate scope references without coupling to the
+    sync loader.
+  }
+
+  state {
+    contexts: set S
+    contextId: S -> String
+    declaredSymbols: S -> String
+  }
+
+  actions {
+
+    action register(name: String, declaredSymbols: String) {
+      -> ok(name: String, declaredSymbols: String) {
+        Record a new sync-spec assertion context under the given name with
+        its declared symbol vocabulary. The symbols list is a JSON array of
+        strings from the set ["when-bindings", "where-bindings",
+        "completion-variants"].
+      }
+
+      fixture register_ok {
+        name: "RegisterConceptSync",
+        declaredSymbols: "[\"when-bindings\",\"where-bindings\",\"completion-variants\"]"
+      }
+
+      fixture register_bindings_only {
+        name: "SimpleSync",
+        declaredSymbols: "[\"when-bindings\",\"completion-variants\"]"
+      }
+
+      fixture register_empty_name {
+        name: "",
+        declaredSymbols: "[\"when-bindings\",\"where-bindings\",\"completion-variants\"]"
+      } -> error
+    }
+
+    action resolve(contextId: String, name: String) {
+      -> ok(kind: String, info: String) {
+        Look up a declared symbol by name within the given context and return
+        its kind ("when-bindings", "where-bindings", or "completion-variants")
+        and any associated metadata as a JSON string.
+      }
+      -> notfound(message: String) {
+        No context with the given contextId exists, or no symbol named
+        name is declared within that context.
+      }
+
+      fixture resolve_ok { contextId: $register_ok.name, name: "when-bindings" } after register_ok
+      fixture resolve_missing_ctx { contextId: "ctx-nonexistent", name: "ok" } -> notfound
+      fixture resolve_missing_sym { contextId: $register_ok.name, name: "unknown-var" } after register_ok -> notfound
+    }
+
+    action clear(contextId: String) {
+      -> ok {
+        Remove the assertion context and all its declared symbols from the
+        registry. Subsequent resolve calls for this contextId return notfound.
+      }
+      -> notfound(message: String) {
+        No context with the given contextId exists.
+      }
+
+      fixture clear_ok { contextId: $register_ok.name } after register_ok
+      fixture clear_missing { contextId: "ctx-nonexistent" } -> notfound
+    }
+  }
+
+  example "register then resolve": {
+    after register(name: "NotifyOnCreate", declaredSymbols: "[\"when-bindings\",\"where-bindings\",\"completion-variants\"]")
+      -> ok(name: n, declaredSymbols: _)
+    then resolve(contextId: n, name: "completion-variants") -> ok(kind: _, info: _)
+  }
+
+  example "clear removes context": {
+    after register(name: "TempSync", declaredSymbols: "[\"when-bindings\"]")
+      -> ok(name: n, declaredSymbols: _)
+    and  clear(contextId: n) -> ok
+    then resolve(contextId: n, name: "when-bindings") -> notfound(message: _)
+  }
+
+  never "register issued without declaredSymbols": {
+    exists s in contexts:
+      s.declaredSymbols = ""
+  }
+
+  always "resolve returns notfound for unknown name": {
+    forall s in contexts:
+      s.contextId != none
+  }
+
+  action register {
+    requires: name != ""
+    ensures ok: name != ""
+  }
+
+  action resolve {
+    requires: contextId != "" and name != ""
+  }
+}
