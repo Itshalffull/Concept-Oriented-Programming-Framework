@@ -23,13 +23,17 @@ import { UserSyncEditorView } from '../../views/UserSyncEditorView';
 import { RecursiveEditorView } from '../../views/RecursiveEditorView';
 import { PersonaEditorView } from '../../views/PersonaEditorView';
 import { MediaLibraryView } from '../../views/MediaLibraryView';
+import { TaxonomyView } from '../../views/TaxonomyView';
 
 export default async function AdminPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug?: string[] }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { slug = [] } = await params;
+  const resolvedSearch = searchParams ? await searchParams : {};
   const path = slug.join('/');
 
   if (path === '') {
@@ -147,10 +151,32 @@ export default async function AdminPage({
     );
   }
 
+  // Bug #94: /admin/taxonomy/:vocab — vocabulary detail / term editor.
+  // Stub: renders TaxonomyView (full list); initialVocab pre-selection is a follow-up.
+  // TODO: add initialVocab prop to TaxonomyView and pre-select the vocab from the URL.
+  if (slug[0] === 'taxonomy' && slug[1]) {
+    return (
+      <HostedPage>
+        <TaxonomyView />
+      </HostedPage>
+    );
+  }
+
   if (path === 'themes') {
     return (
       <HostedPage>
         <ViewRenderer viewId="themes-list" />
+      </HostedPage>
+    );
+  }
+
+  // Bug #92: /admin/themes/:id — theme detail / token editor.
+  // Stub: renders theme entity via EntityDetailView; a dedicated ThemeEditor widget is a follow-up.
+  // TODO: build a ThemeEditor widget that shows token overrides, extends graph, and activate/deactivate actions.
+  if (slug[0] === 'themes' && slug[1]) {
+    return (
+      <HostedPage>
+        <EntityDetailView id={`theme:${decodeURIComponent(slug[1])}`} />
       </HostedPage>
     );
   }
@@ -224,9 +250,28 @@ export default async function AdminPage({
   }
 
   if (slug[0] === 'form-builder' && slug[1] === 'new') {
+    // Accept ?schema=<id> so deep links from schema-editor work.
+    // FormBuilder renders a full-screen schema picker when schemaId is absent.
+    const schemaParam = resolvedSearch['schema'];
+    const schemaId = typeof schemaParam === 'string' ? schemaParam : undefined;
     return (
       <HostedPage>
-        <FormBuilder mode="create" context={null} />
+        <FormBuilder mode="create" context={null} schemaId={schemaId} />
+      </HostedPage>
+    );
+  }
+
+  // Bug #85: /admin/form-builder/:name — edit an existing FormSpec by name.
+  // FormSpec names use "schema:mode" convention (e.g. "Article:default").
+  // FormBuilder resolves the schema from the name via FormSpec/resolve.
+  if (slug[0] === 'form-builder' && slug[1] && slug[1] !== 'new') {
+    const formName = decodeURIComponent(slug.slice(1).join('/'));
+    // Extract schemaId from the form name (convention: "schema:mode" or just the form name).
+    const colonIdx = formName.indexOf(':');
+    const schemaId = colonIdx !== -1 ? formName.slice(0, colonIdx) : formName;
+    return (
+      <HostedPage>
+        <FormBuilder schemaId={schemaId} formName={formName} mode="edit" />
       </HostedPage>
     );
   }

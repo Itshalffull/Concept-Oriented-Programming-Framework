@@ -1,6 +1,14 @@
 # InteractionSpec seeds extracted from View.seeds.yaml.
 # Per-view interaction controls: createForm, rowClick, rowActions, pickerMode.
 # Deduplicated where configurations are identical.
+#
+# INVARIANT: Every seeded list or card view MUST declare a non-empty rowClick.navigateTo
+# when the entity it displays has a dedicated edit surface (form-builder, schema-editor,
+# view-builder, theme detail, vocabulary detail, etc.).
+# Reason: list/card views without row navigation are dead-ends — users can browse but
+# cannot drill into or edit any entity.  rowClick: '{}' is only acceptable for read-only
+# audit/analytics views (syncs-list, installed-suites, step-checks, etc.) where no
+# per-entity edit surface exists.
 
 concept: InteractionSpec
 action: create
@@ -43,13 +51,13 @@ entries:
   # taxonomy-list
   - name: taxonomy-list-controls
     createForm: '{"concept":"Taxonomy","action":"createVocabulary","fields":[{"name":"vocab","label":"Vocabulary ID","required":true},{"name":"name","label":"Display Name","required":true}]}'
-    rowClick: '{}'
+    rowClick: '{"navigateTo":"/admin/taxonomy/{vocab}"}'
     rowActions: '[]'
     pickerMode: false
   # themes-list
   - name: themes-list-controls
     createForm: '{"concept":"Theme","action":"create","fields":[{"name":"theme","label":"Theme ID","required":true},{"name":"name","label":"Display Name","required":true},{"name":"overrides","label":"Token Overrides (JSON)","type":"textarea"}]}'
-    rowClick: '{}'
+    rowClick: '{"navigateTo":"/admin/themes/{id}"}'
     rowActions: '[{"key":"activate","concept":"Theme","action":"activate","params":{"theme":"id"},"label":"Activate","variant":"filled","condition":{"field":"active","equals":false}},{"key":"deactivate","concept":"Theme","action":"deactivate","params":{"theme":"id"},"label":"Deactivate","variant":"outlined","condition":{"field":"active","equals":true}}]'
     pickerMode: false
   # display-modes-list
@@ -61,7 +69,7 @@ entries:
   # views-list
   - name: views-list-controls
     createForm: '{"concept":"View","action":"create","fields":[{"name":"view","label":"View ID","required":true},{"name":"dataSource","label":"Data Source (JSON)","required":true,"type":"textarea"},{"name":"layout","label":"Display Type","type":"select","options":["table","card-grid","tree","board","calendar","timeline","graph"]},{"name":"defaultDisplayMode","label":"Item Display Mode","placeholder":"e.g. card, table-row, compact"},{"name":"title","label":"Title"},{"name":"description","label":"Description"}]}'
-    rowClick: '{"navigateTo":"/view-builder/{view}"}'
+    rowClick: '{"navigateTo":"/admin/view-builder/{view}"}'
     rowActions: '[]'
     pickerMode: false
     create_surface: view-editor
@@ -135,7 +143,7 @@ entries:
   # form-list
   - name: form-list-controls
     createForm: '{}'
-    rowClick: '{"navigateTo":"/admin/forms/{schema}"}'
+    rowClick: '{"navigateTo":"/admin/form-builder/{name}"}'
     rowActions: '[]'
     pickerMode: false
     create_surface: form-builder

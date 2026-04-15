@@ -23,7 +23,7 @@ entries:
     dataSource: '{"concept":"FormSpec","action":"list"}'
     layout: table
     visibleFields: '[{"key":"name","label":"Form Name"},{"key":"schema","label":"Schema","formatter":"badge"},{"key":"mode","label":"Mode","formatter":"badge"}]'
-    controls: '{"create":{"concept":"FormSpec","action":"create","fields":[{"name":"name","label":"Form Name","required":true},{"name":"schema","label":"Schema","required":true}]},"rowClick":{"navigateTo":"/admin/forms/{schema}"}}'
+    controls: '{"create":{"concept":"FormSpec","action":"create","fields":[{"name":"name","label":"Form Name","required":true},{"name":"schema","label":"Schema","required":true}]},"rowClick":{"navigateTo":"/admin/form-builder/{name}"}}'
     title: Forms
     description: Form specifications — each FormSpec targets a schema and defines field arrangement, groups, and steps.
     defaultDisplayMode: table-row
