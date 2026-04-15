@@ -16,7 +16,7 @@ const _proposalHandler: FunctionalConceptHandler = {
     if (!input.title || (typeof input.title === 'string' && (input.title as string).trim() === '')) {
       return complete(createProgram(), 'error', { message: 'title is required' }) as StorageProgram<Result>;
     }
-    const id = `proposal-${Date.now()}`;
+    const id = (input.proposal as string | undefined) ?? `proposal-${Date.now()}`;
     let p = createProgram();
     p = put(p, 'proposal', id, {
       id, proposer: input.proposer, title: input.title, description: input.description,

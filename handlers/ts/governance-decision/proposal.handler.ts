@@ -48,7 +48,7 @@ const _handler: FunctionalConceptHandler = {
       return complete(createProgram(), 'invalid', { reason: 'at least one action is required' }) as StorageProgram<Result>;
     }
 
-    const id = nextId();
+    const id = (input.proposal as string | undefined) ?? nextId();
     const now = new Date().toISOString();
     let p = createProgram();
     p = put(p, 'proposal', id, {
