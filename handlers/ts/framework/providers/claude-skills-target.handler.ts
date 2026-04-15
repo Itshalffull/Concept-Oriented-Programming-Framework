@@ -35,6 +35,20 @@ import {
   type HierarchicalConfig,
 } from './codegen-utils.js';
 import { renderContent, renderKey, interpolateVars, filterByTier } from './renderer.handler.js';
+import { isContentNative } from '../content-native-concepts.js';
+
+// --- Content-native CRUD action mapping (CNB-7) ---
+type CrudVerb = 'create' | 'get' | 'update' | 'remove' | 'list';
+
+function classifyCrudAction(actionName: string): CrudVerb | null {
+  const n = actionName.toLowerCase();
+  if (n === 'create') return 'create';
+  if (n === 'get' || n === 'read' || n === 'fetch') return 'get';
+  if (n === 'update' || n === 'patch' || n === 'edit') return 'update';
+  if (n === 'remove' || n === 'delete' || n === 'destroy') return 'remove';
+  if (n === 'list' || n === 'listall' || n === 'index') return 'list';
+  return null;
+}
 
 // --- Type Display ---
 
@@ -555,6 +569,7 @@ function renderMultiConceptSkill(
 function generateCommandRunner(
   manifest: ConceptManifest,
   conceptName: string,
+  contentNative: boolean = false,
 ): string {
   const pascal = toPascalCase(conceptName);
   const camel = toCamelCase(conceptName);
@@ -563,13 +578,42 @@ function generateCommandRunner(
 
   lines.push(generateFileHeader('claude-skills', conceptName));
 
-  // Handler function
+  // Handler function — content-native mode rewrites CRUD commands to
+  // ContentNode operations so SDK callers (e.g. canvas.create(data)) hit
+  // the content pool instead of the concept handler directly.
   lines.push(`export async function handle${pascal}Skill(`);
   lines.push('  command: string,');
-  lines.push('  args: Record<string, string>,');
+  lines.push('  args: Record<string, any>,');
   lines.push('  kernel: { handleRequest: (input: Record<string, unknown>) => Promise<any> },');
   lines.push('): Promise<string> {');
-  lines.push('  const result = await kernel.handleRequest({ method: command, ...args });');
+
+  if (contentNative) {
+    lines.push(`  const crudMap: Record<string, string> = {`);
+    lines.push(`    create: 'ContentNode/createWithSchema',`);
+    lines.push(`    get: 'ContentNode/get', read: 'ContentNode/get', fetch: 'ContentNode/get',`);
+    lines.push(`    update: 'ContentNode/update', patch: 'ContentNode/update', edit: 'ContentNode/update',`);
+    lines.push(`    remove: 'ContentNode/remove', delete: 'ContentNode/remove', destroy: 'ContentNode/remove',`);
+    lines.push(`    list: 'ContentNode/listBySchema', listAll: 'ContentNode/listBySchema', index: 'ContentNode/listBySchema',`);
+    lines.push(`  };`);
+    lines.push(`  const cnMethod = crudMap[command];`);
+    lines.push(`  let request: Record<string, unknown>;`);
+    lines.push(`  if (cnMethod === 'ContentNode/createWithSchema') {`);
+    lines.push(`    request = { method: cnMethod, schema: '${conceptName}', content: args };`);
+    lines.push(`  } else if (cnMethod === 'ContentNode/get' || cnMethod === 'ContentNode/remove') {`);
+    lines.push(`    request = { method: cnMethod, node: \`${conceptName}:\${args.id}\` };`);
+    lines.push(`  } else if (cnMethod === 'ContentNode/update') {`);
+    lines.push(`    const { id, ...rest } = args;`);
+    lines.push(`    request = { method: cnMethod, node: \`${conceptName}:\${id}\`, content: rest };`);
+    lines.push(`  } else if (cnMethod === 'ContentNode/listBySchema') {`);
+    lines.push(`    request = { method: cnMethod, schema: '${conceptName}', ...args };`);
+    lines.push(`  } else {`);
+    lines.push(`    request = { method: command, ...args };`);
+    lines.push(`  }`);
+    lines.push(`  const result = await kernel.handleRequest(request);`);
+  } else {
+    lines.push('  const result = await kernel.handleRequest({ method: command, ...args });');
+  }
+
   lines.push('  if (result.error) return `Error: ${result.error}`;');
   lines.push('  return JSON.stringify(result.body, null, 2);');
   lines.push('}');
@@ -579,6 +623,23 @@ function generateCommandRunner(
   const commandList = actionNames.map((n) => `'${n}'`).join(', ');
   lines.push(`export const ${camel}SkillCommands = [${commandList}];`);
   lines.push('');
+
+  if (contentNative) {
+    // SDK-style convenience object: canvas.create(data), canvas.get(id), etc.
+    lines.push(`export const ${camel} = {`);
+    lines.push(`  create: (data: Record<string, unknown>, kernel: any) =>`);
+    lines.push(`    kernel.handleRequest({ method: 'ContentNode/createWithSchema', schema: '${conceptName}', content: data }),`);
+    lines.push(`  get: (id: string, kernel: any) =>`);
+    lines.push(`    kernel.handleRequest({ method: 'ContentNode/get', node: \`${conceptName}:\${id}\` }),`);
+    lines.push(`  update: (id: string, data: Record<string, unknown>, kernel: any) =>`);
+    lines.push(`    kernel.handleRequest({ method: 'ContentNode/update', node: \`${conceptName}:\${id}\`, content: data }),`);
+    lines.push(`  remove: (id: string, kernel: any) =>`);
+    lines.push(`    kernel.handleRequest({ method: 'ContentNode/remove', node: \`${conceptName}:\${id}\` }),`);
+    lines.push(`  list: (filters: Record<string, unknown> = {}, kernel: any) =>`);
+    lines.push(`    kernel.handleRequest({ method: 'ContentNode/listBySchema', schema: '${conceptName}', ...filters }),`);
+    lines.push(`};`);
+    lines.push('');
+  }
 
   return lines.join('\n');
 }
@@ -590,7 +651,7 @@ const _handler: FunctionalConceptHandler = {
     { let p = createProgram(); p = complete(p, 'ok', { name: 'ClaudeSkillsTarget',
       inputKind: 'InterfaceProjection',
       outputKind: 'ClaudeSkills',
-      capabilities: JSON.stringify(['skill-md', 'command-runner', 'enrichment']),
+      capabilities: JSON.stringify(['skill-md', 'command-runner', 'enrichment', 'content-native']),
       targetKey: 'claude-skills',
       providerType: 'target' }); return p; }
   },
@@ -660,8 +721,19 @@ const _handler: FunctionalConceptHandler = {
 
     const files: Array<{ path: string; content: string }> = [];
 
+    // --- Determine content-native mode (CNB-7) ---
+    const contentNativeFlag = config.contentNative === true;
+    let schemas: Array<{ schema: string }> = [];
+    if (input.schemas && typeof input.schemas === 'string') {
+      try {
+        const parsed = JSON.parse(input.schemas as string);
+        if (Array.isArray(parsed)) schemas = parsed as Array<{ schema: string }>;
+      } catch { /* non-fatal */ }
+    }
+    const useContentNative = contentNativeFlag && isContentNative(name, schemas);
+
     // Always emit the per-concept command runner
-    const tsContent = generateCommandRunner(manifest, name);
+    const tsContent = generateCommandRunner(manifest, name, useContentNative);
     files.push({
       path: `${kebab}/${kebab}.commands.ts`,
       content: tsContent,
@@ -753,9 +825,10 @@ const _handler: FunctionalConceptHandler = {
           for (const m of group.concepts) {
             const mKebab = toKebabCase(m.name);
             if (mKebab !== kebab) {
+              const mUseCN = contentNativeFlag && isContentNative(m.name, schemas);
               files.push({
                 path: `${group.name}/${mKebab}.commands.ts`,
-                content: generateCommandRunner(m, m.name),
+                content: generateCommandRunner(m, m.name, mUseCN),
               });
             } else {
               const existingIdx = files.findIndex((f) => f.path === `${kebab}/${kebab}.commands.ts`);
