@@ -171,4 +171,21 @@ concept Origin [O] {
     requires: entityId != ""
     ensures ok: fields != none
   }
+
+  # Proof-of-life cross-kind invariant — a scenario with a fixture,
+  # a when step, two then asserts, and synchronous settlement.
+  # Exercises the `scenario` kind landed in MAG-912 (INV-8).
+  invariant {
+    scenario "registering an origin makes it retrievable via get": {
+      fixture o1 { origin: "scenario-origin", kind: "space", qualifier: "vs-1", displayName: "scenario", resolverConfig: '{"spaceId":"vs-1"}' }
+      when {
+        register(origin: "scenario-origin", kind: "space", qualifier: "vs-1", displayName: "scenario", resolverConfig: '{"spaceId":"vs-1"}') -> ok
+      }
+      then {
+        get(origin: "scenario-origin") -> ok(kind: k, qualifier: q, displayName: dn, status: s, resolverConfig: rc)
+        and s = "connected"
+      }
+      settlement: sync
+    }
+  }
 }

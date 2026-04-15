@@ -21,3 +21,15 @@ then {
     action: "get";
     input: ?entityId ]
 }
+invariant {
+  always "kernel-origin resolution always targets the configured connection": {
+    forall trigger in firings:
+    trigger.where.kind = "kernel"
+    and trigger.then.connection = trigger.where.resolverConfig.connectionId
+  }
+
+  never "non-kernel origin reaches Connection/invoke": {
+    exists trigger in firings:
+    trigger.where.kind != "kernel"
+  }
+}

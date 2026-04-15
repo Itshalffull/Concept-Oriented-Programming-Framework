@@ -151,10 +151,37 @@ widget diff-unified {
       s.inbound_count = 0
     }
 
-    "Character-level changes must be highlighted at the word/character boundary"
-    "Added characters/words must be visually distinct from removed ones"
-    "Unchanged content within a partially changed line must not be highlighted"
-    "Whitespace toggle must show/hide whitespace markers (spaces, tabs, newlines)"
+    always "character-level changes highlighted at word/character boundary": {
+      content.dataChangeGranularity = "character"
+    }
+
+    always "added and removed spans are visually distinct": {
+      content.dataAddedColor != none and content.dataRemovedColor != none
+    }
+
+    never "unchanged content within a partially changed line is highlighted": {
+      content.dataUnchangedHighlighted = "true"
+    }
+
+    always "whitespace markers reflect the toggle state": {
+      content.dataShowWhitespace = state
+    }
+
+    # Proof-of-life behavioral invariant exercising given/when/then
+    # via a sync-settled scenario on a widget (MAG-912 / INV-8).
+    scenario "toggling whitespace flips the FSM and surfaces markers": {
+      given {
+        state = "normal"
+      }
+      when {
+        transition(from: "normal", event: "TOGGLE_WHITESPACE") -> ok
+      }
+      then {
+        state = "showWhitespace"
+        and content.dataShowWhitespace = "showWhitespace"
+      }
+      settlement: sync
+    }
   }
 
 }

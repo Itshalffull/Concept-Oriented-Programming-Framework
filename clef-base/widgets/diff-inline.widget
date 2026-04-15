@@ -214,11 +214,29 @@ widget diff-inline {
       s.inbound_count = 0
     }
 
-    "Insertions must be highlighted in green; deletions in red with strikethrough"
-    "Three-way diffs must show conflict markers for ancestor content changed by both sides"
-    "Interactive mode must show accept/reject buttons per hunk"
-    "Non-interactive mode must hide all hunk action buttons"
-    "Line numbers must be continuous across hunks"
+    always "insertion color class is green": {
+      content.dataInsertionColor = "green"
+    }
+
+    always "deletion color class is red with strikethrough": {
+      content.dataDeletionColor = "red" and content.dataDeletionStrikethrough = "true"
+    }
+
+    always "three-way diffs show conflict markers": {
+      content.dataConflictMarkersMode = "three-way"
+    }
+
+    always "interactive mode exposes accept/reject buttons per hunk": {
+      acceptButton.hidden = "false" and rejectButton.hidden = "false"
+    }
+
+    never "non-interactive mode shows hunk action buttons": {
+      content.dataInteractive = "false" and acceptButton.hidden = "false"
+    }
+
+    always "line numbers render continuously across hunks": {
+      content.dataLineNumbersMode = "continuous"
+    }
   }
 
 }

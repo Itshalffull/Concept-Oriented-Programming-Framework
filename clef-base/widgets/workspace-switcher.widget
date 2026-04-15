@@ -308,11 +308,25 @@ widget workspace-switcher {
       ensures ok: state.operation = "confirming-delete"
     }
 
-    "trigger aria-expanded must always reflect state.panel == open"
-    "dropdown listbox must be hidden when state.panel == closed"
-    "exactly one workspaceItem may have aria-selected true at any time"
-    "renameInput must be hidden unless state.operation == editing"
-    "confirmDialog must be hidden unless state.operation == confirming-delete"
+    always "trigger aria-expanded reflects open panel state": {
+      state.panel = "open" and trigger.ariaExpanded = "true"
+    }
+
+    never "trigger aria-expanded true while panel closed": {
+      state.panel = "closed" and trigger.ariaExpanded = "true"
+    }
+
+    always "dropdown is hidden when panel closed": {
+      state.panel = "closed" and dropdown.hidden = "true"
+    }
+
+    always "renameInput hidden unless editing": {
+      state.operation != "editing" and renameInput.hidden = "true"
+    }
+
+    always "confirmDialog hidden unless confirming-delete": {
+      state.operation != "confirming-delete" and confirmDialog.hidden = "true"
+    }
   }
 
 }

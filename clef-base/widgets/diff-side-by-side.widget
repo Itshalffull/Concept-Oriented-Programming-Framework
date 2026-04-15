@@ -249,11 +249,21 @@ widget diff-side-by-side {
       s.inbound_count = 0
     }
 
-    "Source and target columns must have synchronized field row alignment"
-    "Changed fields must be highlighted; matching fields must be dimmed"
-    "Three-way mode must show the ancestor column between source and target"
-    "Interactive mode must show use-left/use-right/use-both controls per changed field"
-    "Scroll position must sync across all visible columns"
+    always "source and target columns share field row alignment": {
+      sourceColumn.dataRowCount = targetColumn.dataRowCount
+    }
+
+    always "three-way mode shows ancestor column": {
+      ancestorColumn.dataMode = "three-way" and ancestorColumn.hidden = "false"
+    }
+
+    always "interactive mode exposes per-field merge controls": {
+      useLeftButton.hidden = "false"
+    }
+
+    never "non-interactive mode shows merge controls": {
+      sourceColumn.dataInteractive = "false" and useLeftButton.hidden = "false"
+    }
   }
 
 }

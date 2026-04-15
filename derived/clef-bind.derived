@@ -37,4 +37,16 @@ derived ClefBind [P] {
     and  renderDocs(concept: c, format: f)
     then structured documentation is emitted alongside generated interfaces
   }
+
+  invariant {
+    always "every bind run produces at least one generated artifact": {
+      forall run in bindRuns:
+      run.artifactCount > 0
+    }
+
+    never "bind succeeds without invoking any target generator": {
+      exists run in bindRuns:
+      run.status = "ok" and run.targetsInvoked = 0
+    }
+  }
 }

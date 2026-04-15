@@ -52,4 +52,16 @@ view "view-editor" {
       ia startsWith "View/" or ia startsWith "ViewShell/" or ia startsWith "FilterSpec/" or ia startsWith "SortSpec/" or ia startsWith "ProjectionSpec/" or ia startsWith "PresentationSpec/"
     }
   }
+
+  # Proof-of-life cross-kind invariant exercising the singular
+  # `invariant { ... }` form that MAG-911 added to the view parser.
+  invariant {
+    always "editor presentation is detail-mode": {
+      presentation.displayType = "detail"
+    }
+
+    never "editor view drops the live preview pane hint": {
+      presentation.hints.showPreviewPane = false
+    }
+  }
 }
