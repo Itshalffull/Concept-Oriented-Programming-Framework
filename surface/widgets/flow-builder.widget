@@ -291,6 +291,14 @@ widget flow-builder {
     "Tab key moves focus between palette, viewToggle, centerPane, and inspector in document order";
     "ArrowUp/ArrowDown within the palette roving tabindex among paletteItems";
     "ArrowUp/ArrowDown within centerPane (Steps mode) delegate to flow-steps-view navigation";
+
+    "Each step-config field has a bespoke typed editor — no JSON textareas anywhere in the inspector";
+    "Input mappings bind each parameter to one of: step-output (dropdown of upstream steps), variable (named), or literal — never a freeform JSON blob";
+    "The step-output source dropdown lists only steps whose stepIndex is strictly less than the currently selected step";
+    "Output bindings bind each output path to exactly one variable name — authored as structured rows, not JSON";
+    "ConfigEditor rows carry an explicit valueType in {string, number, boolean, structured}; the save path rejects nested values that fail type coercion rather than falling back to raw text";
+    "Scenario — select step, set input binding: selecting a step and choosing step-output populates a dropdown of prior steps; picking one persists { stepId, path } to the step config";
+    "Scenario — round-trip: config authored through structured rows, saved, reloaded, renders identical rows with the same typed values (no drift into JSON representation)";
   }
 
 }

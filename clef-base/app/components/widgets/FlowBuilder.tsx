@@ -811,75 +811,305 @@ const ActionBindingPicker: React.FC<ActionBindingPickerProps> = ({
 };
 
 // ---------------------------------------------------------------------------
-// ConfigEditor — generic JSON config editor (kernel-mediated)
+// ConfigEditor — structured key/value config editor (kernel-mediated).
+//
+// Replaces the former JSON textarea. Each row is (key, typed-value) with an
+// explicit type selector: string, number, boolean, or structured (JSON for
+// nested objects/arrays as an escape hatch, authored through a focused
+// sub-field rather than a freeform wall of JSON). Users never hand-write
+// outer-level JSON; the shape is assembled row-by-row.
+//
+// "conceptAction" is hidden from the generic editor because it is already
+// authored via ActionBindingPicker above.
 // ---------------------------------------------------------------------------
+
+type ConfigValueType = 'string' | 'number' | 'boolean' | 'structured';
+
+interface ConfigRow {
+  id: string;
+  key: string;
+  valueType: ConfigValueType;
+  stringValue: string;
+  numberValue: string;
+  booleanValue: boolean;
+  structuredValue: string; // serialized JSON for nested values only
+}
 
 interface ConfigEditorProps {
   id: string;
   processSpecId: string;
   stepId: string;
-  initialValue: string;
+  initialValue: string; // serialized JSON of existing config
   onSaved: (parsed: Record<string, unknown>) => void;
+}
+
+const HIDDEN_CONFIG_KEYS = new Set([
+  'conceptAction',
+  'inputMapping',
+  'outputMapping',
+  'onError',
+  'fallbackStep',
+  'retry',
+]);
+
+function classifyValue(v: unknown): ConfigValueType {
+  if (typeof v === 'string') return 'string';
+  if (typeof v === 'number') return 'number';
+  if (typeof v === 'boolean') return 'boolean';
+  return 'structured';
+}
+
+function decodeRows(raw: string): ConfigRow[] {
+  let parsed: Record<string, unknown> = {};
+  try { parsed = JSON.parse(raw) as Record<string, unknown>; } catch { /* empty */ }
+  return Object.entries(parsed)
+    .filter(([k]) => !HIDDEN_CONFIG_KEYS.has(k))
+    .map(([k, v], i): ConfigRow => {
+      const t = classifyValue(v);
+      return {
+        id: `row-${i}-${k}`,
+        key: k,
+        valueType: t,
+        stringValue: t === 'string' ? String(v) : '',
+        numberValue: t === 'number' ? String(v) : '',
+        booleanValue: t === 'boolean' ? Boolean(v) : false,
+        structuredValue: t === 'structured' ? JSON.stringify(v, null, 2) : '',
+      };
+    });
+}
+
+function encodeRows(
+  rows: ConfigRow[],
+  initialRaw: string,
+): { ok: true; value: Record<string, unknown> } | { ok: false; error: string } {
+  const out: Record<string, unknown> = {};
+  // Preserve hidden keys (owned by other sub-editors).
+  try {
+    const existing = JSON.parse(initialRaw) as Record<string, unknown>;
+    for (const k of Object.keys(existing)) {
+      if (HIDDEN_CONFIG_KEYS.has(k)) out[k] = existing[k];
+    }
+  } catch { /* ignore */ }
+  for (const r of rows) {
+    const key = r.key.trim();
+    if (!key) continue;
+    if (HIDDEN_CONFIG_KEYS.has(key)) {
+      return { ok: false, error: `"${key}" is owned by another editor tab` };
+    }
+    switch (r.valueType) {
+      case 'string':  out[key] = r.stringValue; break;
+      case 'number': {
+        const n = Number(r.numberValue);
+        if (!Number.isFinite(n)) return { ok: false, error: `"${key}": not a number` };
+        out[key] = n;
+        break;
+      }
+      case 'boolean': out[key] = r.booleanValue; break;
+      case 'structured': {
+        const txt = r.structuredValue.trim();
+        if (!txt) { out[key] = null; break; }
+        try { out[key] = JSON.parse(txt); }
+        catch { return { ok: false, error: `"${key}": invalid nested value` }; }
+        break;
+      }
+    }
+  }
+  return { ok: true, value: out };
 }
 
 const ConfigEditor: React.FC<ConfigEditorProps> = ({
   id, processSpecId, stepId, initialValue, onSaved,
 }) => {
   const invoke = useKernelInvoke();
-  const [raw, setRaw] = useState(initialValue);
+  const [rows, setRows] = useState<ConfigRow[]>(() => decodeRows(initialValue));
   const [saving, setSaving] = useState(false);
-  const [parseError, setParseError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => { setRaw(initialValue); }, [initialValue]);
+  useEffect(() => { setRows(decodeRows(initialValue)); }, [initialValue]);
+
+  const updateRow = useCallback((rowId: string, patch: Partial<ConfigRow>) => {
+    setRows(prev => prev.map(r => r.id === rowId ? { ...r, ...patch } : r));
+  }, []);
+
+  const removeRow = useCallback((rowId: string) => {
+    setRows(prev => prev.filter(r => r.id !== rowId));
+  }, []);
+
+  const addRow = useCallback(() => {
+    setRows(prev => [...prev, {
+      id: `row-${Date.now()}-${prev.length}`,
+      key: '', valueType: 'string',
+      stringValue: '', numberValue: '', booleanValue: false, structuredValue: '',
+    }]);
+  }, []);
 
   const handleSave = useCallback(async () => {
-    setParseError(null);
-    let parsed: Record<string, unknown>;
-    try {
-      parsed = JSON.parse(raw) as Record<string, unknown>;
-    } catch {
-      setParseError('Invalid JSON');
-      return;
-    }
+    setError(null);
+    const enc = encodeRows(rows, initialValue);
+    if (!enc.ok) { setError(enc.error); return; }
     setSaving(true);
     try {
       const result = await invoke('ProcessSpec', 'updateStep', {
         spec: processSpecId,
         stepId,
-        config: raw,
+        config: JSON.stringify(enc.value),
       });
       if (result && (result as Record<string, unknown>).variant === 'ok') {
-        onSaved(parsed);
+        onSaved(enc.value);
       } else {
-        setParseError('Save failed');
+        setError('Save failed');
       }
     } catch (err) {
-      setParseError(err instanceof Error ? err.message : 'Save failed');
+      setError(err instanceof Error ? err.message : 'Save failed');
     } finally {
       setSaving(false);
     }
-  }, [invoke, processSpecId, stepId, raw, onSaved]);
+  }, [invoke, processSpecId, stepId, rows, initialValue, onSaved]);
+
+  const rowStyle: React.CSSProperties = {
+    display: 'grid',
+    gridTemplateColumns: '1fr 90px 1.4fr 22px',
+    gap: 4,
+    marginBottom: 4,
+    alignItems: 'start',
+  };
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    fontFamily: 'var(--typography-font-family)',
+    fontSize: '11px',
+    padding: '3px 5px',
+    border: '1px solid var(--palette-outline-variant)',
+    borderRadius: 'var(--radius-xs, 2px)',
+    background: 'var(--palette-surface-variant)',
+    color: 'var(--palette-on-surface)',
+  };
 
   return (
-    <div data-part="config-editor">
-      <textarea
-        id={id}
-        value={raw}
-        onChange={(e) => setRaw(e.target.value)}
-        rows={4}
+    <div data-part="config-editor" id={id}>
+      <div
         style={{
-          width: '100%',
-          fontFamily: 'var(--typography-font-family-mono)',
-          fontSize: '11px',
-          padding: '4px 6px',
-          border: `1px solid ${parseError ? 'var(--palette-error)' : 'var(--palette-outline-variant)'}`,
-          borderRadius: 'var(--radius-xs, 2px)',
-          background: 'var(--palette-surface-variant)',
-          color: 'var(--palette-on-surface)',
-          resize: 'vertical',
+          ...rowStyle,
+          fontSize: '10px',
+          color: 'var(--palette-on-surface-variant)',
+          textTransform: 'uppercase',
+          letterSpacing: '0.06em',
+          marginBottom: 2,
         }}
-      />
-      <div style={{ display: 'flex', gap: 'var(--spacing-xs)', marginTop: '4px', alignItems: 'center' }}>
+      >
+        <span>Key</span>
+        <span>Type</span>
+        <span>Value</span>
+        <span />
+      </div>
+      {rows.length === 0 && (
+        <p style={{ fontSize: '11px', color: 'var(--palette-on-surface-variant)', margin: '4px 0' }}>
+          No config entries. Click "Add entry" to configure this step.
+        </p>
+      )}
+      {rows.map(r => (
+        <div key={r.id} data-part="config-row" data-config-key={r.key} style={rowStyle}>
+          <input
+            type="text"
+            data-part="config-key-input"
+            value={r.key}
+            onChange={e => updateRow(r.id, { key: e.target.value })}
+            placeholder="key"
+            aria-label={`Config key for row ${r.id}`}
+            style={inputStyle}
+          />
+          <select
+            data-part="config-type-select"
+            value={r.valueType}
+            onChange={e => updateRow(r.id, { valueType: e.target.value as ConfigValueType })}
+            aria-label={`Type for ${r.key || 'new row'}`}
+            style={inputStyle}
+          >
+            <option value="string">String</option>
+            <option value="number">Number</option>
+            <option value="boolean">Boolean</option>
+            <option value="structured">Structured</option>
+          </select>
+          {r.valueType === 'string' && (
+            <input
+              type="text"
+              data-part="config-value-input"
+              value={r.stringValue}
+              onChange={e => updateRow(r.id, { stringValue: e.target.value })}
+              placeholder="value"
+              aria-label={`String value for ${r.key || 'row'}`}
+              style={inputStyle}
+            />
+          )}
+          {r.valueType === 'number' && (
+            <input
+              type="number"
+              data-part="config-value-input"
+              value={r.numberValue}
+              onChange={e => updateRow(r.id, { numberValue: e.target.value })}
+              placeholder="0"
+              aria-label={`Number value for ${r.key || 'row'}`}
+              style={inputStyle}
+            />
+          )}
+          {r.valueType === 'boolean' && (
+            <select
+              data-part="config-value-input"
+              value={r.booleanValue ? 'true' : 'false'}
+              onChange={e => updateRow(r.id, { booleanValue: e.target.value === 'true' })}
+              aria-label={`Boolean value for ${r.key || 'row'}`}
+              style={inputStyle}
+            >
+              <option value="true">true</option>
+              <option value="false">false</option>
+            </select>
+          )}
+          {r.valueType === 'structured' && (
+            <input
+              type="text"
+              data-part="config-value-input"
+              value={r.structuredValue}
+              onChange={e => updateRow(r.id, { structuredValue: e.target.value })}
+              placeholder='e.g. ["a","b"] or {"k":1}'
+              aria-label={`Structured value for ${r.key || 'row'}`}
+              style={{ ...inputStyle, fontFamily: 'var(--typography-font-family-mono)' }}
+            />
+          )}
+          <button
+            type="button"
+            data-part="config-row-remove"
+            onClick={() => removeRow(r.id)}
+            aria-label={`Remove ${r.key || 'row'}`}
+            style={{
+              background: 'transparent',
+              border: '1px solid var(--palette-outline-variant)',
+              borderRadius: 'var(--radius-xs, 2px)',
+              color: 'var(--palette-on-surface-variant)',
+              cursor: 'pointer',
+              fontSize: '11px',
+              padding: 0,
+            }}
+          >
+            ×
+          </button>
+        </div>
+      ))}
+      <div style={{ display: 'flex', gap: 'var(--spacing-xs)', marginTop: 6, alignItems: 'center' }}>
+        <button
+          type="button"
+          data-part="config-add-row"
+          onClick={addRow}
+          style={{
+            fontSize: '11px',
+            padding: '2px 8px',
+            background: 'transparent',
+            border: '1px dashed var(--palette-outline-variant)',
+            borderRadius: 'var(--radius-xs, 2px)',
+            color: 'var(--palette-on-surface)',
+            cursor: 'pointer',
+          }}
+        >
+          + Add entry
+        </button>
         <button
           data-part="button"
           data-variant="filled"
@@ -889,8 +1119,8 @@ const ConfigEditor: React.FC<ConfigEditorProps> = ({
         >
           {saving ? 'Saving…' : 'Save'}
         </button>
-        {parseError && (
-          <span role="alert" style={{ fontSize: '11px', color: 'var(--palette-error)' }}>{parseError}</span>
+        {error && (
+          <span role="alert" style={{ fontSize: '11px', color: 'var(--palette-error)' }}>{error}</span>
         )}
       </div>
     </div>
@@ -908,38 +1138,169 @@ interface DataMappingEditorProps {
   onSaved: (updated: Record<string, unknown>) => void;
 }
 
+// Structured input-mapping row. Each parameter name on the current step is
+// bound to a source: a literal value, the output of an upstream step, or a
+// named variable previously produced in the run.
+type InputSourceKind = 'literal' | 'step-output' | 'variable';
+
+interface InputMapRow {
+  id: string;
+  paramKey: string;
+  sourceKind: InputSourceKind;
+  literalValue: string;
+  stepId: string;
+  stepOutputPath: string; // dot-path into the source step's output
+  variableName: string;
+}
+
+interface OutputMapRow {
+  id: string;
+  outputPath: string; // dot-path into this step's output
+  variableName: string;
+}
+
+interface UpstreamStep {
+  stepId: string;
+  stepLabel: string;
+  stepKind: string;
+  stepIndex: number;
+}
+
+function decodeInputMap(raw: unknown): InputMapRow[] {
+  if (!raw || typeof raw !== 'object') return [];
+  const obj = raw as Record<string, unknown>;
+  return Object.entries(obj).map(([paramKey, val], i): InputMapRow => {
+    const base: InputMapRow = {
+      id: `in-${i}-${paramKey}`,
+      paramKey,
+      sourceKind: 'literal',
+      literalValue: '',
+      stepId: '',
+      stepOutputPath: '',
+      variableName: '',
+    };
+    if (val && typeof val === 'object') {
+      const v = val as Record<string, unknown>;
+      if (typeof v.stepId === 'string') {
+        return { ...base, sourceKind: 'step-output',
+          stepId: v.stepId, stepOutputPath: String(v.path ?? '') };
+      }
+      if (typeof v.variable === 'string') {
+        return { ...base, sourceKind: 'variable', variableName: v.variable };
+      }
+    }
+    return { ...base, sourceKind: 'literal', literalValue: typeof val === 'string' ? val : JSON.stringify(val) };
+  });
+}
+
+function encodeInputMap(rows: InputMapRow[]): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const r of rows) {
+    const k = r.paramKey.trim();
+    if (!k) continue;
+    if (r.sourceKind === 'literal') out[k] = r.literalValue;
+    else if (r.sourceKind === 'step-output') out[k] = { stepId: r.stepId, path: r.stepOutputPath };
+    else if (r.sourceKind === 'variable') out[k] = { variable: r.variableName };
+  }
+  return out;
+}
+
+function decodeOutputMap(raw: unknown): OutputMapRow[] {
+  if (!raw || typeof raw !== 'object') return [];
+  return Object.entries(raw as Record<string, unknown>).map(([outputPath, variableName], i): OutputMapRow => ({
+    id: `out-${i}-${outputPath}`,
+    outputPath,
+    variableName: typeof variableName === 'string' ? variableName : String(variableName),
+  }));
+}
+
+function encodeOutputMap(rows: OutputMapRow[]): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const r of rows) {
+    const p = r.outputPath.trim();
+    const v = r.variableName.trim();
+    if (p && v) out[p] = v;
+  }
+  return out;
+}
+
 const DataMappingEditor: React.FC<DataMappingEditorProps> = ({
   processSpecId, stepId, config, onSaved,
 }) => {
   const invoke = useKernelInvoke();
-  const [inputMap, setInputMap] = useState<string>(
-    JSON.stringify(config.inputMapping ?? {}, null, 2),
-  );
-  const [outputMap, setOutputMap] = useState<string>(
-    JSON.stringify(config.outputMapping ?? {}, null, 2),
-  );
+  const [upstreamSteps, setUpstreamSteps] = useState<UpstreamStep[]>([]);
+  const [inputRows, setInputRows] = useState<InputMapRow[]>(() => decodeInputMap(config.inputMapping));
+  const [outputRows, setOutputRows] = useState<OutputMapRow[]>(() => decodeOutputMap(config.outputMapping));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setInputMap(JSON.stringify(config.inputMapping ?? {}, null, 2));
-    setOutputMap(JSON.stringify(config.outputMapping ?? {}, null, 2));
+    setInputRows(decodeInputMap(config.inputMapping));
+    setOutputRows(decodeOutputMap(config.outputMapping));
   }, [config]);
+
+  // Fetch sibling steps to populate the "source step" dropdown with
+  // only steps that precede this one.
+  useEffect(() => {
+    if (!processSpecId) return;
+    let cancelled = false;
+    invoke('ProcessSpec', 'getSteps', { spec: processSpecId })
+      .then((result) => {
+        if (cancelled) return;
+        if (result && (result as Record<string, unknown>).variant === 'ok') {
+          const r = result as Record<string, unknown>;
+          let raw: unknown[] = [];
+          try {
+            raw = Array.isArray(r.steps) ? (r.steps as unknown[])
+              : JSON.parse(String(r.steps ?? '[]')) as unknown[];
+          } catch { raw = []; }
+          const selfStep = (raw as Array<Record<string, unknown>>).find(s => s.stepId === stepId);
+          const selfIndex = typeof selfStep?.stepIndex === 'number' ? selfStep.stepIndex : Number.POSITIVE_INFINITY;
+          const upstream = (raw as Array<Record<string, unknown>>)
+            .filter(s => typeof s.stepIndex === 'number' && (s.stepIndex as number) < selfIndex)
+            .map((s): UpstreamStep => ({
+              stepId: String(s.stepId ?? ''),
+              stepLabel: String(s.stepLabel ?? s.stepId ?? ''),
+              stepKind: String(s.stepKind ?? 'action'),
+              stepIndex: Number(s.stepIndex ?? 0),
+            }));
+          setUpstreamSteps(upstream);
+        }
+      })
+      .catch(() => { /* non-fatal */ });
+    return () => { cancelled = true; };
+  }, [processSpecId, stepId, invoke]);
+
+  const updateInput = (rowId: string, patch: Partial<InputMapRow>) =>
+    setInputRows(prev => prev.map(r => r.id === rowId ? { ...r, ...patch } : r));
+  const removeInput = (rowId: string) =>
+    setInputRows(prev => prev.filter(r => r.id !== rowId));
+  const addInput = () =>
+    setInputRows(prev => [...prev, {
+      id: `in-${Date.now()}-${prev.length}`,
+      paramKey: '', sourceKind: 'step-output',
+      literalValue: '', stepId: '', stepOutputPath: '', variableName: '',
+    }]);
+
+  const updateOutput = (rowId: string, patch: Partial<OutputMapRow>) =>
+    setOutputRows(prev => prev.map(r => r.id === rowId ? { ...r, ...patch } : r));
+  const removeOutput = (rowId: string) =>
+    setOutputRows(prev => prev.filter(r => r.id !== rowId));
+  const addOutput = () =>
+    setOutputRows(prev => [...prev, {
+      id: `out-${Date.now()}-${prev.length}`,
+      outputPath: '', variableName: '',
+    }]);
 
   const handleSave = useCallback(async () => {
     setError(null);
-    let inputParsed: unknown;
-    let outputParsed: unknown;
-    try {
-      inputParsed = JSON.parse(inputMap);
-      outputParsed = JSON.parse(outputMap);
-    } catch {
-      setError('Invalid JSON in mapping');
-      return;
-    }
     setSaving(true);
     try {
-      const updated = { ...config, inputMapping: inputParsed, outputMapping: outputParsed };
+      const updated = {
+        ...config,
+        inputMapping: encodeInputMap(inputRows),
+        outputMapping: encodeOutputMap(outputRows),
+      };
       const result = await invoke('ProcessSpec', 'updateStep', {
         spec: processSpecId,
         stepId,
@@ -955,52 +1316,198 @@ const DataMappingEditor: React.FC<DataMappingEditorProps> = ({
     } finally {
       setSaving(false);
     }
-  }, [invoke, processSpecId, stepId, config, inputMap, outputMap, onSaved]);
+  }, [invoke, processSpecId, stepId, config, inputRows, outputRows, onSaved]);
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    fontFamily: 'var(--typography-font-family)',
+    fontSize: '11px',
+    padding: '3px 5px',
+    border: '1px solid var(--palette-outline-variant)',
+    borderRadius: 'var(--radius-xs, 2px)',
+    background: 'var(--palette-surface-variant)',
+    color: 'var(--palette-on-surface)',
+  };
+  const removeBtn = (onClick: () => void, label: string): React.ReactElement => (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      style={{
+        background: 'transparent',
+        border: '1px solid var(--palette-outline-variant)',
+        borderRadius: 'var(--radius-xs, 2px)',
+        color: 'var(--palette-on-surface-variant)',
+        cursor: 'pointer',
+        fontSize: '11px',
+        padding: 0,
+      }}
+    >×</button>
+  );
 
   return (
     <div data-part="data-mapping-editor">
-      <div style={{ marginBottom: 'var(--spacing-sm)' }}>
-        <label style={{ display: 'block', fontSize: '11px', color: 'var(--palette-on-surface-variant)', marginBottom: 2 }}>
+      {/* Input mapping — typed rows */}
+      <div style={{ marginBottom: 'var(--spacing-md)' }}>
+        <div style={{ fontSize: '11px', color: 'var(--palette-on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>
           Input mapping
-        </label>
-        <textarea
-          value={inputMap}
-          onChange={(e) => setInputMap(e.target.value)}
-          rows={3}
+        </div>
+        {inputRows.length === 0 && (
+          <p style={{ fontSize: '11px', color: 'var(--palette-on-surface-variant)', margin: '4px 0' }}>
+            No input bindings. Parameters default to this step&apos;s static config.
+          </p>
+        )}
+        {inputRows.map(r => (
+          <div
+            key={r.id}
+            data-part="input-mapping-row"
+            data-param-key={r.paramKey}
+            data-source-kind={r.sourceKind}
+            style={{ display: 'grid', gridTemplateColumns: '1fr 110px 1.4fr 22px', gap: 4, marginBottom: 4, alignItems: 'center' }}
+          >
+            <input
+              type="text"
+              data-part="input-mapping-param"
+              value={r.paramKey}
+              onChange={e => updateInput(r.id, { paramKey: e.target.value })}
+              placeholder="parameter"
+              aria-label="Parameter name"
+              style={inputStyle}
+            />
+            <select
+              data-part="input-mapping-source-kind"
+              value={r.sourceKind}
+              onChange={e => updateInput(r.id, { sourceKind: e.target.value as InputSourceKind })}
+              aria-label="Source kind"
+              style={inputStyle}
+            >
+              <option value="step-output">Step output</option>
+              <option value="variable">Variable</option>
+              <option value="literal">Literal</option>
+            </select>
+            {r.sourceKind === 'literal' && (
+              <input
+                type="text"
+                data-part="input-mapping-literal"
+                value={r.literalValue}
+                onChange={e => updateInput(r.id, { literalValue: e.target.value })}
+                placeholder="value"
+                aria-label="Literal value"
+                style={inputStyle}
+              />
+            )}
+            {r.sourceKind === 'variable' && (
+              <input
+                type="text"
+                data-part="input-mapping-variable"
+                value={r.variableName}
+                onChange={e => updateInput(r.id, { variableName: e.target.value })}
+                placeholder="variableName"
+                aria-label="Variable name"
+                style={{ ...inputStyle, fontFamily: 'var(--typography-font-family-mono)' }}
+              />
+            )}
+            {r.sourceKind === 'step-output' && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
+                <select
+                  data-part="input-mapping-step"
+                  value={r.stepId}
+                  onChange={e => updateInput(r.id, { stepId: e.target.value })}
+                  aria-label="Source step"
+                  style={inputStyle}
+                >
+                  <option value="">— select step —</option>
+                  {upstreamSteps.map(s => (
+                    <option key={s.stepId} value={s.stepId}>
+                      {`#${s.stepIndex + 1} ${s.stepLabel} (${s.stepKind})`}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  data-part="input-mapping-step-path"
+                  value={r.stepOutputPath}
+                  onChange={e => updateInput(r.id, { stepOutputPath: e.target.value })}
+                  placeholder="output.field"
+                  aria-label="Output path on source step"
+                  style={{ ...inputStyle, fontFamily: 'var(--typography-font-family-mono)' }}
+                />
+              </div>
+            )}
+            {removeBtn(() => removeInput(r.id), `Remove binding for ${r.paramKey || 'row'}`)}
+          </div>
+        ))}
+        <button
+          type="button"
+          data-part="input-mapping-add"
+          onClick={addInput}
           style={{
-            width: '100%',
-            fontFamily: 'var(--typography-font-family-mono)',
             fontSize: '11px',
-            padding: '4px 6px',
-            border: '1px solid var(--palette-outline-variant)',
+            padding: '2px 8px',
+            background: 'transparent',
+            border: '1px dashed var(--palette-outline-variant)',
             borderRadius: 'var(--radius-xs, 2px)',
-            background: 'var(--palette-surface-variant)',
             color: 'var(--palette-on-surface)',
-            resize: 'vertical',
+            cursor: 'pointer',
+            marginTop: 4,
           }}
-        />
+        >+ Add input binding</button>
       </div>
+
+      {/* Output mapping — typed rows */}
       <div style={{ marginBottom: 'var(--spacing-sm)' }}>
-        <label style={{ display: 'block', fontSize: '11px', color: 'var(--palette-on-surface-variant)', marginBottom: 2 }}>
-          Output binding
-        </label>
-        <textarea
-          value={outputMap}
-          onChange={(e) => setOutputMap(e.target.value)}
-          rows={3}
+        <div style={{ fontSize: '11px', color: 'var(--palette-on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>
+          Output bindings
+        </div>
+        {outputRows.length === 0 && (
+          <p style={{ fontSize: '11px', color: 'var(--palette-on-surface-variant)', margin: '4px 0' }}>
+            No output bindings. Step results won&apos;t be exposed as named variables.
+          </p>
+        )}
+        {outputRows.map(r => (
+          <div
+            key={r.id}
+            data-part="output-mapping-row"
+            style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 22px', gap: 4, marginBottom: 4, alignItems: 'center' }}
+          >
+            <input
+              type="text"
+              data-part="output-mapping-path"
+              value={r.outputPath}
+              onChange={e => updateOutput(r.id, { outputPath: e.target.value })}
+              placeholder="output.field"
+              aria-label="Output path"
+              style={{ ...inputStyle, fontFamily: 'var(--typography-font-family-mono)' }}
+            />
+            <input
+              type="text"
+              data-part="output-mapping-variable"
+              value={r.variableName}
+              onChange={e => updateOutput(r.id, { variableName: e.target.value })}
+              placeholder="variableName"
+              aria-label="Variable name"
+              style={{ ...inputStyle, fontFamily: 'var(--typography-font-family-mono)' }}
+            />
+            {removeBtn(() => removeOutput(r.id), `Remove output ${r.outputPath || 'row'}`)}
+          </div>
+        ))}
+        <button
+          type="button"
+          data-part="output-mapping-add"
+          onClick={addOutput}
           style={{
-            width: '100%',
-            fontFamily: 'var(--typography-font-family-mono)',
             fontSize: '11px',
-            padding: '4px 6px',
-            border: '1px solid var(--palette-outline-variant)',
+            padding: '2px 8px',
+            background: 'transparent',
+            border: '1px dashed var(--palette-outline-variant)',
             borderRadius: 'var(--radius-xs, 2px)',
-            background: 'var(--palette-surface-variant)',
             color: 'var(--palette-on-surface)',
-            resize: 'vertical',
+            cursor: 'pointer',
+            marginTop: 4,
           }}
-        />
+        >+ Add output binding</button>
       </div>
+
       <div style={{ display: 'flex', gap: 'var(--spacing-xs)', alignItems: 'center' }}>
         <button
           data-part="button"
