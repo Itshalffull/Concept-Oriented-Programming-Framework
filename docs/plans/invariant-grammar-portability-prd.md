@@ -1,4 +1,38 @@
-# Widget Invariant Grammar — Universal Contracts, Using The Existing IR
+# Universal Invariant Grammar — Concepts, Widgets, Views, Syncs Share One Shape
+
+## Cross-spec audit — where we actually are
+
+Invariant syntax already runs across four spec kinds. Most of the
+unification work is already done; what's missing is code reuse and
+test codegen for everything but concepts.
+
+| Aspect | Concept (.concept) | Widget (.widget) | View (.view) | Sync (.sync) | Derived (.derived) |
+|---|---|---|---|---|---|
+| Has `invariant { }` block | ✓ (also top-level) | ✓ | ✓ | ✗ | ✗ |
+| `example` | ✓ | ✓ | ✓ | — | — |
+| `forall` | ✓ | ✓ | ✓ | — | — |
+| `always` | ✓ | ✓ | ✓ | — | — |
+| `never` | ✓ | ✓ | ✓ | — | — |
+| `eventually` | ✓ | ✓ | ✓ | — | — |
+| `requires_ensures` (action contract) | ✓ | ✓ | ✗ | — | — |
+| Parser file | `handlers/ts/framework/parser.ts` | `widget-spec-parser.ts` | `view-spec-parser.ts` | `sync-parser.ts` | `derived-parser.ts` |
+| Shared parser helpers | none | none | none | — | — |
+| Shared AST type | `InvariantDecl` (`runtime/types.ts`) ✓ | same | same | — | — |
+| Test codegen produces real assertions | ✓ via `test-gen.handler.ts` | ✗ stubs only | ✗ not rendered | — | — |
+
+**Big findings**:
+
+- **AST is already unified.** All three invariant-bearing parsers
+  emit the same `InvariantDecl` type from `runtime/types.ts`:
+  ```ts
+  { kind: 'example' | 'forall' | 'always' | 'never' | 'eventually' | 'requires_ensures',
+    name?, afterPatterns[], thenPatterns[], whenClause?, quantifiers?, contracts?, targetAction? }
+  ```
+- **Grammar keywords are identical** across concept, widget, view.
+- **Parser logic is 95% copy-pasted** across three files — `parseQuantifierBinding`, `parseWhenClause`, `parseInvariantASTStep` exist three times with near-identical bodies.
+- **Namespace differences are the only real divergence**: concept assertions reference action names + state fields; widget assertions reference anatomy parts + FSM states; view assertions reference query result columns.
+- **Sync has no invariants**; its "guards" live implicitly in `when` + `where` clauses.
+- **Derived has no invariants**; it's a pure composition declaration.
 
 ## Problem statement
 
@@ -197,27 +231,121 @@ Playwright's table maps the same namespace to `page.locator(...)`,
 Adding Vue / Svelte / SwiftUI / Jetpack is "write one of these tables".
 The WidgetTestPlan doesn't change; widgets don't change.
 
-## Scope of first cut
+## Unification story — concept, widget, view share one parser
 
-1. **Parser**: add `scenario` kind, reuse existing parse helpers for
-   `afterPatterns` / `thenPatterns`; introduce `fixtures` parsing.
-2. **`buildWidgetTestPlan`**: map every invariant kind
-   (example / forall / always / never / eventually / requires_ensures /
-   scenario) to enriched `WidgetTestAssertion` with populated
-   `fixtures` / `steps` / `observations`.
-3. **React renderer**: consume the enriched fields. `example` → real
-   vitest; `scenario` → multi-fixture mount + step dispatch + settlement-
-   aware assertions. Falls back to the current stub when fields absent.
-4. **Playwright renderer**: same enrichment consumption; emits
-   `.spec.ts` files targeting the dev server.
-5. **Retrofit existing invariants**: the 81 paragraph-block entries
-   start generating real tests once `buildWidgetTestPlan` fills
-   `steps` / `observations` from the already-parsed `afterPatterns` /
-   `thenPatterns`.
+The AST is already one thing. The parsers aren't. The cleanest
+unification, before any platform renderer work, is:
 
-Vue / Svelte / Vanilla / SwiftUI / Jetpack: remain stubs until
-someone writes their translation table. Adding a platform is
-additive.
+### Shared `InvariantBodyParser` helper class
+
+Extract the duplicated grammar logic into one helper that all three
+spec parsers delegate to:
+
+```ts
+class InvariantBodyParser {
+  constructor(
+    private tokens: TokenStream,
+    private ctx: AssertionContext,   // injected per spec kind
+  ) {}
+  parseInvariantBlock(): InvariantDecl[] { … }
+  parseQuantifierBinding(): QuantifierBinding { … }
+  parseWhenClause(): InvariantWhenClause { … }
+  parseInvariantASTStep(): InvariantASTStep { … }
+  parseAssertionExpr(): AssertionExpr { … }
+}
+
+interface AssertionContext {
+  /** Resolve an identifier in the host spec's namespace. */
+  resolveIdentifier(name: string):
+    | { kind: 'action', concept: string, action: string }     // concept
+    | { kind: 'part', part: string }                          // widget anatomy
+    | { kind: 'state', field: string }                        // widget FSM / concept state
+    | { kind: 'query-column', column: string }                // view
+    | { kind: 'fixture', fixture: string }                    // scenario
+    | undefined;
+  /** Declared top-level names, for error messages and completion. */
+  declaredSymbols(): string[];
+}
+```
+
+Each spec parser (concept, widget, view) injects its own
+`AssertionContext`. Concept resolves action + state names; widget
+resolves anatomy parts + FSM fields; view resolves query-result
+columns. ~500 lines of copy-paste evaporates.
+
+### Extend invariants to sync and derived
+
+Today neither `.sync` nor `.derived` has invariants. Both SHOULD.
+
+- **Sync invariants** would assert post-conditions on sync firings:
+
+  ```
+  sync InvokeViaBinding [eager]
+    when { ActionBinding/invoke: [ binding: ?b; context: ?ctx ] => ok(…) }
+    where { ActionBinding: { ?b target: ?target } }
+    then { Binding/invoke: [ binding: ?b; action: ?target; input: ?ctx ] }
+
+    invariant {
+      example "binding fires exactly once per invoke": {
+        after ActionBinding/invoke(binding: "update-block") -> ok
+        then fired(Binding/invoke) = 1
+      }
+      never "forwards to unresolved target": {
+        event.targetResolved = false
+        and event.bindingInvokeFired = true
+      }
+    }
+  ```
+
+- **Derived invariants** would assert emergent properties of the
+  composition (e.g., that ClefBase's ContentFoundation really does
+  route every ContentNode save through the SearchIndex):
+
+  ```
+  derived ContentPlatform composes ContentFoundation, ClassificationSystem, …
+    invariant {
+      always "every ContentNode save indexes in SearchIndex": {
+        forall n in saved_content_nodes: n in SearchIndex.indexed
+      }
+    }
+  ```
+
+Both cases: same `InvariantDecl` AST, same parser helper, new
+`AssertionContext` implementations (sync resolves when-clause
+bindings and completion variants; derived resolves its composed
+concepts' public actions + state fields).
+
+## Scope of first cut (after unification)
+
+1. **Extract `InvariantBodyParser` + `AssertionContext`.** Refactor
+   concept-parser, widget-spec-parser, view-spec-parser to delegate.
+   No grammar change; no AST change; behavior-equivalent. ~500 line
+   net deletion.
+
+2. **Add `scenario` kind** to the shared parser. Extends the
+   existing `given / when / then` slot in `InvariantDecl` with
+   `fixtures: Fixture[]`. Lands in all four spec kinds simultaneously
+   because they share one parser now.
+
+3. **Extend `WidgetTestAssertion`** with optional structured
+   `fixtures` / `steps` / `observations` / `settlement` fields
+   (already described earlier in this PRD). Same enrichment on the
+   concept-side `TestPlan` so both IRs carry the same data.
+
+4. **Unify codegen**: have `test-gen.handler.ts` and
+   `widget-component-test-plan.handler.ts` delegate invariant
+   rendering to ONE new module `test-plan-invariants.ts` that
+   knows how to emit real React / Playwright / Vue / Vitest /
+   XCUITest code from the enriched assertion shape. View specs get
+   a third client of the same module.
+
+5. **Add invariant blocks to sync and derived parsers**, injecting
+   their own `AssertionContext` implementations. No new grammar —
+   same keywords, same AST, same codegen.
+
+6. **Retrofit existing invariants**: paragraph-block's 81, every
+   concept spec's invariants, every view's — start generating real
+   tests with no spec changes required.
 
 ## What gets enforced
 
@@ -247,17 +375,39 @@ emits a real vitest test. Playwright renderer emits an equivalent
 
 ## Execution plan (follow-up, not in this session)
 
-1. Parser + AST: `scenario` kind, `fixtures / when / then` parsing.
-   Unit tests over a handful of scenario fixtures. No renderer work.
-2. `buildWidgetTestPlan` enrichment: populate new
-   `fixtures / steps / observations` fields on `WidgetTestAssertion`
-   for every kind, driven off the existing invariant AST. No renderer
-   work yet; validate by inspecting emitted JSON plans.
-3. React renderer: consume enriched fields, emit real vitest for one
-   worked paragraph-block scenario. Ship the proof.
-4. Playwright renderer: same for a `.spec.ts`.
-5. Retrofit existing invariants: with the pipeline live, the 81
-   paragraph-block entries start generating real assertions with no
-   spec changes required.
-6. Vue / Svelte / Vanilla / SwiftUI / Jetpack translation tables as
-   platforms need them.
+All work is sequenced so nothing breaks grammar along the way.
+
+1. **Extract `InvariantBodyParser` + `AssertionContext`.** Pure
+   refactor of concept / widget / view parsers to delegate. Unit
+   tests on each spec kind assert grammar behavior unchanged.
+
+2. **`scenario` kind** added to the shared parser. Lands in all
+   spec kinds simultaneously. Parse-only; no codegen yet.
+
+3. **Enrich `InvariantDecl` consumers**: `WidgetTestAssertion` +
+   concept-side `TestPlanExample` / `TestPlanForall` / etc. gain
+   optional structured `fixtures` / `steps` / `observations` /
+   `settlement` fields. Populated by the plan builders from the
+   existing AST. Backward compatible.
+
+4. **Unified codegen module** `test-plan-invariants.ts`. Takes
+   enriched plan entries + target platform (react / playwright /
+   vitest-node / etc.) + universal probe namespace table. Emits
+   real assertions. Concepts, widgets, views all invoke it.
+
+5. **Add invariants to sync + derived**. Parser extension, new
+   `AssertionContext` implementations (sync: when-binding +
+   completion variant names; derived: composed concepts' action +
+   state names). No grammar change.
+
+6. **Retrofit existing specs**: paragraph-block's 81, every
+   concept spec, every view spec — start generating real tests.
+   Add invariants to high-value syncs (the dispatch chain:
+   InvokeViaBinding, PushUndoOnReversible, ExecuteReversal,
+   TrackInvocationStart/Complete) and core derived concepts
+   (ContentFoundation, LLMPlatform, ProcessPlatform).
+
+7. **Per-platform translation tables** (Vue / Svelte / Vanilla /
+   SwiftUI / Jetpack) land as each platform needs enforcement.
+   Widget + concept + view + sync + derived specs never change
+   when a new platform lands — that's the whole point.
