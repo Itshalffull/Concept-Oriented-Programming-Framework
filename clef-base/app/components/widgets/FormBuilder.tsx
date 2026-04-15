@@ -883,7 +883,9 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
 // /admin/form-builder/new?schema=<id> on selection (see Section 10.1).
 
 interface SchemaEntry {
-  id: string;
+  schema: string;  // primary key field on Schema records
+  id?: string;     // fallback for legacy responses
+  displayName?: string;
   label?: string;
   description?: string;
 }
@@ -897,15 +899,17 @@ const SchemaPickerScreen: React.FC = () => {
     return (schemas ?? []).filter(
       (s) =>
         !q ||
-        (s.id ?? '').toLowerCase().includes(q) ||
-        (s.label ?? '').toLowerCase().includes(q),
+        (s.schema ?? '').toLowerCase().includes(q) ||
+        (s.displayName ?? s.label ?? '').toLowerCase().includes(q),
     );
   }, [schemas, filter]);
 
-  function handleSelect(id: string) {
-    // Navigate to the form-builder/new route with the selected schema.
-    // Use window.location so it works without a router import.
-    window.location.href = `/admin/form-builder/new?schema=${encodeURIComponent(id)}`;
+  function handleSelect(item: SchemaEntry) {
+    // Read item.schema (the primary key on Schema records).
+    // item.id is intentionally NOT used -- Schema records key on "schema",
+    // not "id"; using id silently produces malformed URLs (schema=undefined).
+    const schemaKey = item.schema ?? item.id;
+    window.location.href = `/admin/form-builder/new?schema=${encodeURIComponent(schemaKey)}`;
   }
 
   return (
@@ -991,10 +995,10 @@ const SchemaPickerScreen: React.FC = () => {
             aria-label="Available schemas"
           >
             {visible.map((schema) => (
-              <li key={schema.id} role="option" aria-selected="false">
+              <li key={schema.schema ?? schema.id} role="option" aria-selected="false">
                 <button
                   type="button"
-                  onClick={() => handleSelect(schema.id)}
+                  onClick={() => handleSelect(schema)}
                   style={{
                     width: '100%',
                     textAlign: 'left',
@@ -1011,10 +1015,10 @@ const SchemaPickerScreen: React.FC = () => {
                     gap: '2px',
                   }}
                   data-part="schema-option"
-                  data-schema-id={schema.id}
+                  data-schema-id={schema.schema ?? schema.id}
                 >
                   <span style={{ fontWeight: 'var(--typography-label-md-weight)' }}>
-                    {schema.label ?? schema.id}
+                    {schema.displayName ?? schema.label ?? schema.schema}
                   </span>
                   {schema.description && (
                     <span style={{ fontSize: 'var(--typography-body-sm-size)', color: 'var(--palette-on-surface-variant)' }}>

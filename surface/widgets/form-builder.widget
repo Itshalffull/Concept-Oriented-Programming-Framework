@@ -453,6 +453,10 @@ widget form-builder {
       requires: state != "saving"
       ensures ok: state = "previewing"
     }
+
+    never "picker navigates to schema=undefined": {
+      state.machine = "adding-field"
+    }
   }
 
 }
