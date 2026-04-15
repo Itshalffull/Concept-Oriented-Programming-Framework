@@ -24,12 +24,16 @@ export const interfaceScaffoldGenTools = [
           "items": {
             "type": "string"
           }
+        },
+        "targetConfigJson": {
+          "type": "string"
         }
       },
       "required": [
         "name",
         "targets",
-        "sdks"
+        "sdks",
+        "targetConfigJson"
       ]
     }
   },

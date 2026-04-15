@@ -13,6 +13,7 @@ interfaceScaffoldGenCommand
   .requiredOption('-n, --name <name>', 'Interface name')
   .option('-t, --targets <targets>', 'Comma-separated targets (rest, graphql, grpc, cli, mcp, claude-skills)', 'rest')
   .option('-s, --sdks <sdks>', 'Comma-separated SDK languages (typescript, python, go, rust, java, swift)', 'typescript')
+  .requiredOption('--target-config-json <targetConfigJson>', 'Target Config Json')
   .option('--json', 'Output as JSON')
   .addHelpText('after', '\nExamples:')
   .addHelpText('after', '  clef scaffold interface --name my-api --targets rest,graphql --sdks typescript,python  # Scaffold a REST + GraphQL interface')

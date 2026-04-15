@@ -21,10 +21,17 @@ concept InterfaceScaffoldGen [I] {
   }
 
   actions {
-    action generate(name: String, targets: list String, sdks: list String) {
+    action generate(name: String, targets: list String, sdks: list String, targetConfigJson: String) {
       description {
         Generate an interface.yaml manifest with target-specific
         defaults, SDK configurations, and concept overrides.
+        The optional targetConfigJson is a JSON-encoded map of
+        per-target settings keyed by target name
+        (e.g., '{"rest":{"contentNative":true}}').
+        When contentNative is true for a target, the generator emits
+        CRUD bindings that route through ContentNode/createWithSchema,
+        get, update, remove, and listBySchema instead of direct concept
+        dispatch. Non-CRUD actions are unaffected.
       }
       -> ok(files: list File, filesGenerated: Int) {
         Interface manifest generated.
@@ -35,6 +42,7 @@ concept InterfaceScaffoldGen [I] {
 
       fixture valid_generate { name: "commerce-api", targets: ["rest", "graphql"], sdks: ["typescript", "python"] }
       fixture minimal_generate { name: "my-api", targets: ["rest"], sdks: ["typescript"] }
+      fixture content_native_rest { name: "clef-base-content", targets: ["rest"], sdks: ["typescript"], targetConfigJson: "{\"rest\":{\"contentNative\":true}}" }
       fixture empty_name { name: "", targets: [], sdks: [] } -> error
     }
 
@@ -99,6 +107,12 @@ concept InterfaceScaffoldGen [I] {
 
   example "generate produces interface manifest": {
     after generate(name: "my-api", targets: ["rest", "graphql"], sdks: ["typescript"])
+      -> ok(files: f, filesGenerated: n)
+    then n > 0
+  }
+
+  example "generate with contentNative rest target emits manifest with flag preserved": {
+    after generate(name: "clef-base-content", targets: ["rest"], sdks: ["typescript"], targetConfigJson: "{\"rest\":{\"contentNative\":true}}")
       -> ok(files: f, filesGenerated: n)
     then n > 0
   }

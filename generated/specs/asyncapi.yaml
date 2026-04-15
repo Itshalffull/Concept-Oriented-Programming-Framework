@@ -2205,6 +2205,11 @@ channels:
     messages:
       interactionSpecSetCreateBindingCompleted:
         $ref: '#/components/messages/InteractionSpecSetCreateBindingCompleted'
+  interaction-spec/updated:
+    description: Fires when InteractionSpec/update completes with ok
+    messages:
+      interactionSpecUpdated:
+        $ref: '#/components/messages/InteractionSpecUpdated'
   view-shell/created:
     description: Fires when ViewShell/create completes with ok
     messages:
@@ -5410,6 +5415,13 @@ operations:
     summary: Publish event when InteractionSpec/setCreateBinding completes
     messages:
       - $ref: '#/channels/interaction-spec/setCreateBindingCompleted/messages/interactionSpecSetCreateBindingCompleted'
+  publishInteractionSpecUpdated:
+    action: send
+    channel:
+      $ref: '#/channels/interaction-spec/updated'
+    summary: Publish event when InteractionSpec/update completes
+    messages:
+      - $ref: '#/channels/interaction-spec/updated/messages/interactionSpecUpdated'
   publishViewShellCreated:
     action: send
     channel:
@@ -8229,6 +8241,12 @@ components:
       contentType: application/json
       payload:
         $ref: '#/components/schemas/InteractionSpecSetCreateBindingCompletedPayload'
+    InteractionSpecUpdated:
+      name: InteractionSpecUpdated
+      title: InteractionSpec Updated Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/InteractionSpecUpdatedPayload'
     ViewShellCreated:
       name: ViewShellCreated
       title: ViewShell Created Event
@@ -15831,6 +15849,15 @@ components:
         interaction:
           type: string
       required: [variant, interaction]
+    InteractionSpecUpdatedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        interaction:
+          type: string
+      required: [variant, interaction]
     ViewShellCreatedPayload:
       type: object
       properties:
@@ -17383,7 +17410,9 @@ components:
           type: array
           items:
             type: string
-      required: [name, targets, sdks]
+        targetConfigJson:
+          type: string
+      required: [name, targets, sdks, targetConfigJson]
     InterfaceScaffoldGenGenerateOkResponse:
       type: object
       properties:
@@ -32958,6 +32987,67 @@ components:
           type: string
       required: [variant, message]
     InteractionSpecSetCreateBindingErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    InteractionSpecUpdateInput:
+      type: object
+      properties:
+        name:
+          type: string
+        createForm:
+          type: string
+        rowClick:
+          type: string
+        rowActions:
+          type: string
+        pickerMode:
+          type: boolean
+        createProgram:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        actionProgram:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        create_surface:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        create_mode_hint:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+      required: [name, createForm, rowClick, rowActions, pickerMode, createProgram, actionProgram, create_surface, create_mode_hint]
+    InteractionSpecUpdateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        interaction:
+          type: string
+      required: [variant, interaction]
+    InteractionSpecUpdateNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    InteractionSpecUpdateErrorResponse:
       type: object
       properties:
         variant:

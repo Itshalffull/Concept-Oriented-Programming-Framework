@@ -21,10 +21,12 @@ targets:
     basePath: /api
     framework: hono
     versioning: url
+    contentNative: false   # optional, default false
   graphql:
     path: /graphql
     relay: true
     subscriptions: true
+    contentNative: false   # optional, default false
   grpc:
     package: app.v1
   cli:
@@ -36,6 +38,33 @@ targets:
   claude-skills:
     name: my-skills
     progressive: true
+```
+
+### `contentNative` flag (per-target)
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `contentNative` | boolean | `false` | When `true`, CRUD bindings for schema-backed concepts route through `ContentNode/createWithSchema`, `get`, `update`, `remove`, and `listBySchema` (with `schema` set to the concept name) instead of dispatching directly to the concept handler. Non-CRUD concept actions are emitted unchanged. |
+
+Use `contentNative: true` for targets that serve Clef Base content-native
+entities (Canvas, Workflow, AutomationRule, etc.) so that every entity
+lifecycle operation goes through the content pool and picks up versioning,
+authorization, and provenance hooks automatically.
+
+```yaml
+# Content-native REST + MCP targets
+targets:
+  rest:
+    basePath: /api
+    contentNative: true
+  mcp:
+    name: clef-base-mcp
+    transport: stdio
+    contentNative: true
+# Non-content-native CLI target (infra/admin concepts, direct dispatch)
+  cli:
+    name: clef-admin
+    contentNative: false
 ```
 
 ## SDKs

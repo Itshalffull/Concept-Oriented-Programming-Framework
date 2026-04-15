@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-15T12:23:59.492Z",
+  "generatedAt": "2026-04-15T20:55:16.069Z",
   "files": [
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/spec-parser/spec-parser.commands.ts",
@@ -364,7 +364,7 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/interface-scaffold-gen/SKILL.md",
       "relativePath": "claude-skills/interface-scaffold-gen/SKILL.md",
-      "hash": "6080082f5e2eed244beb902034c6aa5f1e60a212dfcc548046ea45a59a4c3775",
+      "hash": "700f1773731a33402031235cb2e03e3897eb30eed4dc55d0b62d659920d89a3a",
       "target": "claude-skills"
     },
     {
@@ -376,7 +376,7 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/interface-scaffold-gen/references/interface-manifest-schema.md",
       "relativePath": "claude-skills/interface-scaffold-gen/references/interface-manifest-schema.md",
-      "hash": "f1720ebc4febcb096a179f005c3b29e2ebc26d9ca8c8c087563ac01a8c317f31",
+      "hash": "87d9af24e383972b902727d39785b92e8363eebef8c632600534097ff63990fd",
       "target": "claude-skills"
     },
     {
@@ -1756,13 +1756,13 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/interaction-spec/interaction-spec.commands.ts",
       "relativePath": "claude-skills/interaction-spec/interaction-spec.commands.ts",
-      "hash": "eb1db892a391a57d1a14d85952c8ed71688e244854385ca46da659d0fbdb7759",
+      "hash": "abcb83b178774b20c942fd89205438bea42f72880d15317db3441b4337994082",
       "target": "claude-skills"
     },
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/interaction-spec/SKILL.md",
       "relativePath": "claude-skills/interaction-spec/SKILL.md",
-      "hash": "8af9b7fbd6acafbb4de82e4fe4019c4d356bce367498f7d1bccc67368c2844c0",
+      "hash": "26e4ea580a91c9442290dd7a7d8a2cec03ad8d98c800a5063e837d83fb0db290",
       "target": "claude-skills"
     },
     {
@@ -2050,13 +2050,13 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/cli/src/interface-scaffold-gen/interface-scaffold-gen.command.ts",
       "relativePath": "cli/interface-scaffold-gen/interface-scaffold-gen.command.ts",
-      "hash": "d1f0879b261597f30ab17d56420a6ad7a5913c15e646394679b24d751ad2be9d",
+      "hash": "70b4f9f7c60f3d8558ed7ce110433366da60b4f1de5c2bf8f8275f75051859b2",
       "target": "cli"
     },
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/cli/src/interface-scaffold-gen/interface-scaffold-gen.help.md",
       "relativePath": "cli/interface-scaffold-gen/interface-scaffold-gen.help.md",
-      "hash": "b3fc82e59a3b7e712c3625b30a9a0e33c7d47ab361f352633c7af4fe4acfca3e",
+      "hash": "402b26c0f8a033448d84ab71c26738d3092ceaf38ed8cfd1585d3ca1b08e059e",
       "target": "cli"
     },
     {
@@ -2770,7 +2770,7 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/cli/src/interaction-spec/interaction-spec.command.ts",
       "relativePath": "cli/interaction-spec/interaction-spec.command.ts",
-      "hash": "eb02e5966fd7210cbf64d34ffdc32f55360d04b65f32f989ee22540c18198c69",
+      "hash": "092856cf9f25b8e5cfa2d4b395beb406c48631093aee91052a68f0b01e40ca5c",
       "target": "cli"
     },
     {
@@ -3094,7 +3094,7 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/mcp/interface-scaffold-gen/interface-scaffold-gen.tools.ts",
       "relativePath": "mcp/interface-scaffold-gen/interface-scaffold-gen.tools.ts",
-      "hash": "1da57c6bbef87aedb8fcf709162fc41df63df084ba427669242cf10b6cf189da",
+      "hash": "83c66cee0de0bd3152b1cbbc5ee32a84352912088a31b9af1959ed790240fedf",
       "target": "mcp"
     },
     {
@@ -3106,7 +3106,7 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/mcp/interface-scaffold-gen/interface-scaffold-gen.help.md",
       "relativePath": "mcp/interface-scaffold-gen/interface-scaffold-gen.help.md",
-      "hash": "3a05ee9e5aba01c5992c5adecd33c5f7cd891e042a5a4b613b69a004f1fe914b",
+      "hash": "d74cfe8d97e8deb68eefc15262847326d960416d47c35daa49299d907eb2d7b4",
       "target": "mcp"
     },
     {
@@ -4438,13 +4438,13 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/mcp/interaction-spec/interaction-spec.tools.ts",
       "relativePath": "mcp/interaction-spec/interaction-spec.tools.ts",
-      "hash": "6e1225a7d6b49488ee1f44c9c59d05331217017f1c3114e37c13533d0a2dcf3f",
+      "hash": "c607db6d8a197b4696c0a1d11d1bfe14b6aeab0b791c9a853f388d1272500e2a",
       "target": "mcp"
     },
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/mcp/interaction-spec/interaction-spec.catalog.json",
       "relativePath": "mcp/interaction-spec/interaction-spec.catalog.json",
-      "hash": "297fea33e78fd8d5267407d53ec3f13eda49d88dac6eea1561b006c57cc3aa83",
+      "hash": "b5894fbb8230a73c38c8fddaadbe15cdcac8c7470a5723f66e443cf1161434d6",
       "target": "mcp"
     },
     {
@@ -4606,13 +4606,13 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/generated/specs/openapi.yaml",
       "relativePath": "openapi/openapi.yaml",
-      "hash": "94f81416f7bd0ae23bd9c1ea669516d1f75b322d3e731ed147bc55f549953438",
+      "hash": "84eb33b2e1be2dfd38659f3eb4b7b50e1ffa74f77eb30aa083c0e0c84cf59f9a",
       "target": "openapi"
     },
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/generated/specs/asyncapi.yaml",
       "relativePath": "asyncapi/asyncapi.yaml",
-      "hash": "86806a7ab6a1d5f64adb77b40cd1bc7a9a00b5e7436a3e46a4dec5fb4b6b256c",
+      "hash": "513ecc7787397f47754ec5b5894fe3976d1dd4a5f4c26b72d8626d3476b8be20",
       "target": "asyncapi"
     },
     {

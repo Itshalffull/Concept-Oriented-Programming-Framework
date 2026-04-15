@@ -21,6 +21,7 @@ Scaffold an interface.yaml for **{input}** with target configs, SDK settings, an
 - [ ] All files written through Emitter (not directly to disk)?
 - [ ] Source provenance attached to each file?
 - [ ] Generation step recorded in GenerationPlan?
+- [ ] contentNative: true set on targets that serve content-pool entities?
 ## References
 
 - [Interface manifest (interface.yaml) schema reference](references/interface-manifest-schema.md)
@@ -34,6 +35,7 @@ Scaffold an interface.yaml for **{input}** with target configs, SDK settings, an
 | name | String | Interface name |
 | targets | list String | Target types (rest, graphql, grpc, cli, mcp, claude-skills) |
 | sdks | list String | SDK languages (typescript, python, go, rust, java, swift) |
+| targetConfigJson | String (JSON) | Per-target settings JSON, e.g. `'{"rest":{"contentNative":true}}'` |
 | concepts | list String | Concepts with per-concept overrides |
 | openapi | Boolean | Generate OpenAPI spec (default: true) |
 | asyncapi | Boolean | Generate AsyncAPI spec (default: false) |

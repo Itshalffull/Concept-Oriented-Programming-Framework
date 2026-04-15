@@ -44,9 +44,16 @@ Dry-run the generation using Emitter content-addressing to classify each output 
 ### Step 3: Generate Interface Manifest
 
 Generate an interface . yaml manifest with target specific 
- defaults , SDK configurations , and concept overrides .
+ defaults , SDK configurations , and concept overrides . 
+ The optional targetConfigJson is a JSON encoded map of 
+ per target settings keyed by target name 
+ ( e . g . , { rest : { contentNative : true } } ) . 
+ When contentNative is true for a target , the generator emits 
+ CRUD bindings that route through ContentNode createWithSchema , 
+ get , update , remove , and listBySchema instead of direct concept 
+ dispatch . Non CRUD actions are unaffected .
 
-**Arguments:** `$0` **name** (string), `$1` **targets** (string[]), `$2` **sdks** (string[])
+**Arguments:** `$0` **name** (string), `$1` **targets** (string[]), `$2` **sdks** (string[]), `$3` **targetConfigJson** (string)
 
 **Checklist:**
 - [ ] Interface name is valid?
@@ -58,6 +65,7 @@ Generate an interface . yaml manifest with target specific
 - [ ] All files written through Emitter (not directly to disk)?
 - [ ] Source provenance attached to each file?
 - [ ] Generation step recorded in GenerationPlan?
+- [ ] contentNative: true set on targets that serve content-pool entities?
 
 **Examples:**
 *Generate a REST + GraphQL interface*
@@ -86,6 +94,7 @@ Refine the generated interface.yaml: configure targets (CLI, REST, MCP, Claude S
 | name | String | Interface name |
 | targets | list String | Target types (rest, graphql, grpc, cli, mcp, claude-skills) |
 | sdks | list String | SDK languages (typescript, python, go, rust, java, swift) |
+| targetConfigJson | String (JSON) | Per-target settings JSON, e.g. `'{"rest":{"contentNative":true}}'` |
 | concepts | list String | Concepts with per-concept overrides |
 | openapi | Boolean | Generate OpenAPI spec (default: true) |
 | asyncapi | Boolean | Generate AsyncAPI spec (default: false) |

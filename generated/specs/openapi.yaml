@@ -26931,6 +26931,61 @@ paths:
                         type: array
                         items:
                           type: string
+    put:
+      operationId: InteractionSpec_update
+      summary: Update InteractionSpec
+      tags:
+        - InteractionSpec
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: InteractionSpec identifier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InteractionSpecUpdateInput'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InteractionSpecUpdateOkResponse'
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      body:
+                        type: array
+                        items:
+                          type: string
   /api/interaction-specs/{id}/set-create-binding:
     post:
       operationId: InteractionSpec_setCreateBinding
@@ -30122,7 +30177,9 @@ components:
           type: array
           items:
             type: string
-      required: [name, targets, sdks]
+        targetConfigJson:
+          type: string
+      required: [name, targets, sdks, targetConfigJson]
     InterfaceScaffoldGenGenerateOkResponse:
       type: object
       properties:
@@ -47955,6 +48012,67 @@ components:
           type: string
       required: [variant, message]
     InteractionSpecSetCreateBindingErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    InteractionSpecUpdateInput:
+      type: object
+      properties:
+        name:
+          type: string
+        createForm:
+          type: string
+        rowClick:
+          type: string
+        rowActions:
+          type: string
+        pickerMode:
+          type: boolean
+        createProgram:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        actionProgram:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        create_surface:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+        create_mode_hint:
+          oneOf:
+
+            - type: string
+            - type: 'null'
+      required: [name, createForm, rowClick, rowActions, pickerMode, createProgram, actionProgram, create_surface, create_mode_hint]
+    InteractionSpecUpdateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        interaction:
+          type: string
+      required: [variant, interaction]
+    InteractionSpecUpdateNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+        message:
+          type: string
+      required: [variant, message]
+    InteractionSpecUpdateErrorResponse:
       type: object
       properties:
         variant:

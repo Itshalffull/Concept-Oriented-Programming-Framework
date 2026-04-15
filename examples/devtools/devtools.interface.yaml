@@ -2612,6 +2612,7 @@ workflows:
         - "All files written through Emitter (not directly to disk)?"
         - "Source provenance attached to each file?"
         - "Generation step recorded in GenerationPlan?"
+        - "contentNative: true set on targets that serve content-pool entities?"
     design-principles:
       - title: "Target Independence"
         rule: "Each target (REST, GraphQL, CLI, etc.) generates independently — they share concept specs but produce separate output trees."
@@ -2644,10 +2645,12 @@ workflows:
               basePath: /api
               framework: hono
               versioning: url
+              contentNative: false   # optional, default false
             graphql:
               path: /graphql
               relay: true
               subscriptions: true
+              contentNative: false   # optional, default false
             grpc:
               package: app.v1
             cli:
@@ -2659,6 +2662,33 @@ workflows:
             claude-skills:
               name: my-skills
               progressive: true
+          ```
+
+          ### `contentNative` flag (per-target)
+
+          | Field | Type | Default | Description |
+          |-------|------|---------|-------------|
+          | `contentNative` | boolean | `false` | When `true`, CRUD bindings for schema-backed concepts route through `ContentNode/createWithSchema`, `get`, `update`, `remove`, and `listBySchema` (with `schema` set to the concept name) instead of dispatching directly to the concept handler. Non-CRUD concept actions are emitted unchanged. |
+
+          Use `contentNative: true` for targets that serve Clef Base content-native
+          entities (Canvas, Workflow, AutomationRule, etc.) so that every entity
+          lifecycle operation goes through the content pool and picks up versioning,
+          authorization, and provenance hooks automatically.
+
+          ```yaml
+          # Content-native REST + MCP targets
+          targets:
+            rest:
+              basePath: /api
+              contentNative: true
+            mcp:
+              name: clef-base-mcp
+              transport: stdio
+              contentNative: true
+          # Non-content-native CLI target (infra/admin concepts, direct dispatch)
+            cli:
+              name: clef-admin
+              contentNative: false
           ```
 
           ## SDKs
@@ -2727,6 +2757,7 @@ workflows:
         | name | String | Interface name |
         | targets | list String | Target types (rest, graphql, grpc, cli, mcp, claude-skills) |
         | sdks | list String | SDK languages (typescript, python, go, rust, java, swift) |
+        | targetConfigJson | String (JSON) | Per-target settings JSON, e.g. `'{"rest":{"contentNative":true}}'` |
         | concepts | list String | Concepts with per-concept overrides |
         | openapi | Boolean | Generate OpenAPI spec (default: true) |
         | asyncapi | Boolean | Generate AsyncAPI spec (default: false) |
