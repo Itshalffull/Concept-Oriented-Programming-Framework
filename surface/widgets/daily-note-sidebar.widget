@@ -1,0 +1,175 @@
+@version(1)
+widget daily-note-sidebar {
+
+  purpose {
+    Left-rail navigation panel for daily notes. Shows the 14 most recent daily
+    notes in descending order (most recent first), each row displaying the ISO
+    date, human-readable day-of-week, and a one-line content preview when available.
+    A calendar date picker at the bottom lets the user jump to any arbitrary date.
+    Clicking any row navigates to that date editor. The list is populated by
+    querying ContentNode/listBySchema with schema DailyNote, sorted by node id
+    descending, limited to 14 results.
+  }
+
+  anatomy {
+    root:           container    { Top-level sidebar wrapper; carries data-state }
+    noteList:       container    { Ordered list of recent daily note entries }
+    noteItem:       action       { Single row representing one daily note }
+    noteDate:       text         { ISO date label for a note row e.g. 2026-04-15 }
+    noteDayLabel:   text         { Human-readable day-of-week label e.g. Wednesday }
+    notePreview:    text         { One-line content preview extracted from the note body }
+    calendarPicker: interactive  { ISO date input for jumping directly to any date }
+    calendarLabel:  text         { Label for the calendar picker control }
+  }
+
+  states {
+    loading [initial] {
+      on LOADED -> idle;
+      on ERROR  -> error;
+      entry [fetchRecentNotes];
+    }
+    idle {
+      on SELECT_DATE  -> idle;
+      on JUMP_TO_DATE -> idle;
+      on REFRESH      -> loading;
+    }
+    error {
+      on RETRY -> loading;
+    }
+  }
+
+  accessibility {
+    role: navigation;
+    keyboard {
+      ArrowDown  -> FOCUS_NEXT_NOTE;
+      ArrowUp    -> FOCUS_PREV_NOTE;
+      Enter      -> SELECT_DATE;
+      Tab        -> FOCUS_NEXT;
+      Shift+Tab  -> FOCUS_PREV;
+    }
+    focus {
+      trap: false;
+      initial: noteItem;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "navigation";
+        aria-label: "Daily notes history";
+        aria-busy: if state == "loading" then "true" else "false";
+      };
+      noteList -> {
+        role: "list";
+        aria-label: "Recent daily notes";
+      };
+      noteItem -> {
+        role: "listitem";
+      };
+      calendarPicker -> {
+        role: "textbox";
+        aria-label: "Jump to date";
+      };
+    }
+  }
+
+  props {
+    activeDate: String = ""
+    limit: Int = 14
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+    }
+
+    noteList -> {
+      data-part: "note-list";
+      aria-busy: if state == "loading" then "true" else "false";
+    }
+
+    noteItem -> {
+      data-part: "note-item";
+      onClick: send(SELECT_DATE);
+      tabindex: "0";
+    }
+
+    noteDate -> {
+      data-part: "note-date";
+    }
+
+    noteDayLabel -> {
+      data-part: "note-day-label";
+    }
+
+    notePreview -> {
+      data-part: "note-preview";
+    }
+
+    calendarPicker -> {
+      data-part: "calendar-picker";
+      onInput: send(JUMP_TO_DATE);
+      aria-label: "Jump to date";
+    }
+
+    calendarLabel -> {
+      data-part: "calendar-label";
+    }
+  }
+
+  invariant {
+    example "loading transitions to idle on LOADED": {
+      after transition(from: "loading", event: "LOADED") -> ok
+      then state = "idle"
+    }
+
+    example "loading transitions to error on ERROR": {
+      after transition(from: "loading", event: "ERROR") -> ok
+      then state = "error"
+    }
+
+    example "error transitions to loading on RETRY": {
+      after transition(from: "error", event: "RETRY") -> ok
+      then state = "loading"
+    }
+
+    example "idle stays idle on SELECT_DATE": {
+      after transition(from: "idle", event: "SELECT_DATE") -> ok
+      then state = "idle"
+    }
+
+    example "idle stays idle on JUMP_TO_DATE": {
+      after transition(from: "idle", event: "JUMP_TO_DATE") -> ok
+      then state = "idle"
+    }
+
+    always "data-state on root reflects FSM state": {
+      root.dataState = state
+    }
+
+    always "data-state on root reflects FSM state": {
+      root.dataState = state
+    }
+
+    always "noteList mounted in all states": {
+      noteList.mounted = true
+    }
+
+    never "noteList hidden while idle": {
+      noteList.hidden = true and state = "idle"
+    }
+
+    never "calendarPicker disabled while idle": {
+      calendarPicker.disabled = true and state = "idle"
+    }
+
+    action noteItem {
+      requires: state = "idle"
+      ensures ok: state = "idle"
+    }
+
+    "At most 14 entries rendered regardless of how many daily notes exist";
+    "activeDate prop highlights the currently viewed date in the list";
+  }
+
+}

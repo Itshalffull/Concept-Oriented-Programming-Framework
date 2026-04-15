@@ -1,0 +1,189 @@
+@version(1)
+widget daily-note-editor {
+
+  purpose {
+    Center editing surface for a single daily note page at /admin/daily/:date.
+    Displays the ISO date as a large header alongside the human-readable day-of-week
+    (e.g. "Wednesday, April 15"). Prev/next navigation arrows step through adjacent
+    calendar days and a "Jump to today" button navigates back to the current date.
+    The block editor body is wired to the ContentNode keyed daily-note:{date}.
+    If no node exists yet, the block editor shows empty blocks; the first keystroke
+    triggers DailyNote creation via existing get-or-create behavior.
+  }
+
+  anatomy {
+    root:          container     { Top-level wrapper; carries data-state and data-date }
+    header:        container     { Row containing date heading and navigation controls }
+    dateHeading:   text          { Large ISO date heading e.g. 2026-04-15 }
+    dayLabel:      text          { Human-readable day-of-week plus short date e.g. Wednesday April 15 }
+    prevButton:    action        { Arrow button navigating to the previous calendar day }
+    nextButton:    action        { Arrow button navigating to the next calendar day }
+    todayButton:   action        { Button that navigates to the current day daily note }
+    editorBody:    container     { Block editor host wired to the daily-note ContentNode }
+  }
+
+  states {
+    loading [initial] {
+      on LOADED   -> idle;
+      on ERROR    -> error;
+      entry [resolveNode];
+    }
+    idle {
+      on NAV_PREV  -> loading;
+      on NAV_NEXT  -> loading;
+      on NAV_TODAY -> loading;
+      on ERROR     -> error;
+    }
+    error {
+      on RETRY     -> loading;
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      ArrowLeft  -> NAV_PREV;
+      ArrowRight -> NAV_NEXT;
+      Escape     -> NAV_TODAY;
+    }
+    focus {
+      trap: false;
+      initial: editorBody;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Daily note editor";
+        aria-busy: if state == "loading" then "true" else "false";
+      };
+      prevButton -> {
+        role: "button";
+        aria-label: "Previous day";
+      };
+      nextButton -> {
+        role: "button";
+        aria-label: "Next day";
+      };
+      todayButton -> {
+        role: "button";
+        aria-label: "Jump to today";
+      };
+      editorBody -> {
+        role: "region";
+        aria-label: "Note body";
+      };
+    }
+  }
+
+  props {
+    date: String
+    today: String = ""
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      data-date: ?date;
+    }
+
+    header -> {
+      data-part: "header";
+    }
+
+    dateHeading -> {
+      data-part: "date-heading";
+    }
+
+    dayLabel -> {
+      data-part: "day-label";
+    }
+
+    prevButton -> {
+      data-part: "prev-button";
+      onClick: send(NAV_PREV);
+      aria-label: "Previous day";
+      disabled: if state == "loading" then true else false;
+    }
+
+    nextButton -> {
+      data-part: "next-button";
+      onClick: send(NAV_NEXT);
+      aria-label: "Next day";
+      disabled: if state == "loading" then true else false;
+    }
+
+    todayButton -> {
+      data-part: "today-button";
+      onClick: send(NAV_TODAY);
+      aria-label: "Jump to today";
+      hidden: if ?date == ?today then true else false;
+    }
+
+    editorBody -> {
+      data-part: "editor-body";
+    }
+  }
+
+  invariant {
+    example "loading transitions to idle on LOADED": {
+      after transition(from: "loading", event: "LOADED") -> ok
+      then state = "idle"
+    }
+
+    example "loading transitions to error on ERROR": {
+      after transition(from: "loading", event: "ERROR") -> ok
+      then state = "error"
+    }
+
+    example "idle transitions to loading on NAV_PREV": {
+      after transition(from: "idle", event: "NAV_PREV") -> ok
+      then state = "loading"
+    }
+
+    example "idle transitions to loading on NAV_NEXT": {
+      after transition(from: "idle", event: "NAV_NEXT") -> ok
+      then state = "loading"
+    }
+
+    example "idle transitions to loading on NAV_TODAY": {
+      after transition(from: "idle", event: "NAV_TODAY") -> ok
+      then state = "loading"
+    }
+
+    always "data-state on root reflects FSM state": {
+      root.dataState = state
+    }
+
+    always "FSM starts in loading state": {
+      state = "loading"
+    }
+
+    always "header mounted in all states": {
+      header.mounted = true
+    }
+
+    never "prevButton enabled while loading": {
+      prevButton.disabled = false and state = "loading"
+    }
+
+    never "nextButton enabled while loading": {
+      nextButton.disabled = false and state = "loading"
+    }
+
+    action prevButton {
+      requires: state = "idle"
+      ensures ok: state = "loading"
+    }
+
+    action nextButton {
+      requires: state = "idle"
+      ensures ok: state = "loading"
+    }
+
+    "todayButton is hidden when the displayed date equals today";
+    "Keyboard ArrowLeft fires NAV_PREV and ArrowRight fires NAV_NEXT";
+  }
+
+}
