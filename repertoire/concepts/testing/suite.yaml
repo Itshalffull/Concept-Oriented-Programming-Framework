@@ -1,15 +1,17 @@
 # repertoire/concepts/testing/suite.yaml
 suite:
   name: testing
-  version: 0.3.0
+  version: 0.4.0
   description: >
     Cross-layer testing, quality publishing, and automated test generation.
-    Seven concepts spanning generation, build, and deploy: snapshot testing
+    Ten concepts spanning generation, build, and deploy: snapshot testing
     for generated output stability, conformance testing for spec fidelity,
     test selection for change-aware test optimization, cross-target contract
     testing for interoperability verification, flaky test management for
     reliability tracking and quarantine, quality signal normalization for
-    rollups and deploy gates, and test generation from concept invariants.
+    rollups and deploy gates, test generation from concept invariants,
+    invariant parsing across all spec-kinds, platform-agnostic test plan
+    compilation, and content-hashed test artifact tracking.
 
 concepts:
   Snapshot:
@@ -48,6 +50,22 @@ concepts:
     spec: ./test-gen.concept
     params:
       T: { as: test-gen-ref, description: "Test generation record reference" }
+
+  # Added in v0.4.0 (MAG-905 / INV-1)
+  InvariantParser:
+    spec: ./invariant-parser.concept
+    params:
+      S: { as: invariant-row-ref, description: "Reference to a parsed invariant row" }
+
+  TestPlan:
+    spec: ./test-plan.concept
+    params:
+      T: { as: test-plan-ref, description: "Reference to a compiled platform-agnostic test plan" }
+
+  TestArtifact:
+    spec: ./test-artifact.concept
+    params:
+      A: { as: test-artifact-ref, description: "Reference to a tracked generated test file artifact" }
 
 syncs:
   required:

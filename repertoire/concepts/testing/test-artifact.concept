@@ -1,0 +1,151 @@
+@version(1)
+@category("testing")
+concept TestArtifact [A] {
+
+  purpose {
+    Track generated test files for a given spec-and-platform pair using
+    content-hashing so that regeneration is a diff, not a blind overwrite.
+    When new content matches the existing hash the artifact is returned
+    unchanged; when hashes differ a 'changed' signal is emitted so build
+    caches and CI pipelines can respond without re-running unaffected tests.
+  }
+
+  state {
+    artifacts: set A
+
+    identity {
+      artifactId: A -> String
+      sourceRef: A -> String
+      platform: A -> String
+    }
+
+    content {
+      specKind: A -> String
+      outputPath: A -> String
+      contentHash: A -> String
+      writtenAt: A -> DateTime
+    }
+  }
+
+  actions {
+
+    action write(specKind: String, sourceRef: String, platform: String, outputPath: String, content: String) {
+      -> ok(artifact: String, changed: Bool) {
+        Compute the SHA-256 hex digest of content. Look up the existing
+        artifact for the (sourceRef, platform) pair. If none exists,
+        create a new artifact row, write the file, and return changed=true.
+        If one exists and the digest matches, return changed=false and skip
+        the write. If the digest differs, update the row, write the file,
+        and return changed=true.
+      }
+      -> error(message: String) {
+        A required parameter is empty, the content could not be hashed, or
+        a storage failure occurred during the write.
+      }
+
+      fixture write_new {
+        specKind: "concept",
+        sourceRef: "specs/user.concept",
+        platform: "vitest",
+        outputPath: "generated/tests/user.conformance.test.ts",
+        content: "import { describe } from 'vitest';\ndescribe('User', () => {});\n"
+      }
+      fixture write_same_again {
+        specKind: "concept",
+        sourceRef: "specs/user.concept",
+        platform: "vitest",
+        outputPath: "generated/tests/user.conformance.test.ts",
+        content: "import { describe } from 'vitest';\ndescribe('User', () => {});\n"
+      } after write_new
+      fixture write_updated {
+        specKind: "concept",
+        sourceRef: "specs/user.concept",
+        platform: "vitest",
+        outputPath: "generated/tests/user.conformance.test.ts",
+        content: "import { describe, it } from 'vitest';\ndescribe('User', () => { it('creates', () => {}); });\n"
+      } after write_new
+      fixture write_empty_sourceRef {
+        specKind: "concept",
+        sourceRef: "",
+        platform: "vitest",
+        outputPath: "generated/tests/out.ts",
+        content: "// test"
+      } -> error
+      fixture write_empty_platform {
+        specKind: "concept",
+        sourceRef: "specs/user.concept",
+        platform: "",
+        outputPath: "generated/tests/out.ts",
+        content: "// test"
+      } -> error
+    }
+
+    action list(specKind: String) {
+      -> ok(artifacts: String) {
+        Return a JSON array of all artifact records whose specKind matches
+        the given value. An empty array is a valid ok response when no
+        artifacts have been written for that kind.
+      }
+
+      fixture list_concept { specKind: "concept" } after write_new
+      fixture list_empty { specKind: "widget" }
+    }
+
+    action prune(spec: String) {
+      -> ok(removed: Int) {
+        Remove every artifact whose sourceRef matches the given spec
+        identifier. Returns the count of rows deleted, which may be zero
+        if no artifacts existed for that spec.
+      }
+
+      fixture prune_existing { spec: "specs/user.concept" } after write_new
+      fixture prune_missing { spec: "specs/no-such-spec.concept" }
+    }
+
+    action get(artifact: String) {
+      -> ok(artifact: String) {
+        Return the full artifact record as a JSON object, including
+        outputPath, contentHash, platform, specKind, and writtenAt.
+      }
+      -> notfound(message: String) {
+        No artifact exists with this identifier.
+      }
+
+      fixture get_ok { artifact: $write_new.artifact } after write_new
+      fixture get_missing { artifact: "art-does-not-exist" } -> notfound
+    }
+  }
+
+  example "write then retrieve": {
+    after write(
+      specKind: "concept",
+      sourceRef: "specs/user.concept",
+      platform: "vitest",
+      outputPath: "generated/tests/user.conformance.test.ts",
+      content: "describe('User', () => {});"
+    ) -> ok(artifact: a, changed: true)
+    then get(artifact: a) -> ok(artifact: doc)
+    and list(specKind: "concept") -> ok(artifacts: arts)
+  }
+
+  example "unchanged write returns changed=false": {
+    after write(specKind: "concept", sourceRef: "specs/foo.concept", platform: "vitest", outputPath: "out/foo.ts", content: "// v1")
+      -> ok(artifact: a1, changed: true)
+    then write(specKind: "concept", sourceRef: "specs/foo.concept", platform: "vitest", outputPath: "out/foo.ts", content: "// v1")
+      -> ok(artifact: a2, changed: false)
+  }
+
+  always "contentHash matches SHA256 hex format": {
+    forall a in artifacts: a.contentHash.length = 64
+  }
+
+  never "duplicate (sourceRef, platform) artifacts": {
+    exists a1 in artifacts, a2 in artifacts:
+      a1 != a2 and a1.sourceRef = a2.sourceRef and a1.platform = a2.platform
+  }
+
+  action write {
+    requires: sourceRef != "" and platform != "" and outputPath != ""
+    ensures ok: artifacts contains artifact with artifact.sourceRef = sourceRef and artifact.platform = platform
+  }
+}

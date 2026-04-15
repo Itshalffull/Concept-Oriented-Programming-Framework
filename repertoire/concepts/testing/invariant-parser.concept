@@ -1,0 +1,157 @@
+@version(1)
+@category("testing")
+concept InvariantParser [S] {
+
+  purpose {
+    Parse invariant blocks from any spec-kind (concept, widget, view, sync,
+    derived) using a pluggable AssertionContext for identifier resolution.
+    Produces a shared InvariantDecl AST consumed downstream by TestPlan and
+    TestPlanRenderer. Keeps parsing logic independent of execution and
+    rendering so each concern can evolve separately.
+  }
+
+  state {
+    rows: set S
+
+    identity {
+      invariantId: S -> String
+      name: S -> String
+    }
+
+    classification {
+      specKind: S -> String
+      kind: S -> String
+    }
+
+    source {
+      sourceRef: S -> String
+      contextId: S -> String
+      astJson: S -> String
+    }
+  }
+
+  actions {
+
+    action parse(specKind: String, sourceRef: String, source: String, contextId: String) {
+      -> ok(invariants: String) {
+        Parse all invariant blocks from the given source text, resolve
+        identifiers against the named AssertionContext, persist one row per
+        invariant found, and return the full set as a JSON array.
+      }
+      -> unknownSpecKind(specKind: String) {
+        The specKind value is not one of the recognised kinds (concept,
+        widget, view, sync, derived); no rows are written.
+      }
+      -> missingContext(contextId: String) {
+        No AssertionContext has been registered under the given contextId;
+        parsing cannot resolve identifiers without it.
+      }
+      -> error(message: String) {
+        The source text failed to parse, or a storage failure occurred
+        while persisting the invariant rows.
+      }
+
+      fixture parse_concept_ok {
+        specKind: "concept",
+        sourceRef: "src/user.concept",
+        source: "example \"create then get\": { after create(name: \"Alice\") -> ok(id: x) then get(id: x) -> ok }",
+        contextId: "ctx-concept-default"
+      }
+      fixture parse_widget_ok {
+        specKind: "widget",
+        sourceRef: "surface/button.widget",
+        source: "always \"root present\": { root != none }",
+        contextId: "ctx-widget-default"
+      }
+      fixture parse_unknown_kind {
+        specKind: "spreadsheet",
+        sourceRef: "src/data.xlsx",
+        source: "",
+        contextId: "ctx-concept-default"
+      } -> unknownSpecKind
+      fixture parse_missing_context {
+        specKind: "concept",
+        sourceRef: "src/user.concept",
+        source: "always \"ok\": { true }",
+        contextId: "ctx-no-such-context"
+      } -> missingContext
+      fixture parse_bad_source {
+        specKind: "sync",
+        sourceRef: "syncs/notify.sync",
+        source: "!!! not valid syntax !!!",
+        contextId: "ctx-concept-default"
+      } -> error
+    }
+
+    action list(specKind: String) {
+      -> ok(invariants: String) {
+        Return a JSON array of all InvariantRow records whose specKind
+        matches the given value. An empty array is a valid ok response
+        when no rows have been parsed for that kind.
+      }
+
+      fixture list_concept { specKind: "concept" } after parse_concept_ok
+      fixture list_widget { specKind: "widget" } after parse_widget_ok
+      fixture list_empty { specKind: "view" }
+    }
+
+    action get(invariant: String) {
+      -> ok(ast: String) {
+        Return the full astJson for the invariant row identified by the
+        given opaque identifier.
+      }
+      -> notfound(message: String) {
+        No invariant row exists with this identifier.
+      }
+
+      fixture get_ok { invariant: $parse_concept_ok.invariants } after parse_concept_ok
+      fixture get_missing { invariant: "inv-does-not-exist" } -> notfound
+    }
+
+    action delete(invariant: String) {
+      -> ok {
+        The invariant row has been removed and will no longer appear in
+        list results or be reachable by get.
+      }
+      -> notfound(message: String) {
+        No invariant row exists with this identifier; nothing was removed.
+      }
+
+      fixture delete_ok { invariant: $parse_concept_ok.invariants } after parse_concept_ok
+      fixture delete_missing { invariant: "inv-no-such-id" } -> notfound
+    }
+  }
+
+  example "parse concept then retrieve": {
+    after parse(
+      specKind: "concept",
+      sourceRef: "specs/user.concept",
+      source: "example \"roundtrip\": { after create(name: \"Bob\") -> ok(id: x) then get(id: x) -> ok }",
+      contextId: "ctx-concept-default"
+    ) -> ok(invariants: inv)
+    then list(specKind: "concept") -> ok(invariants: rows)
+  }
+
+  forall "unknown spec kinds rejected": {
+    given k in {"spreadsheet", "csv", "pdf", "binary"}
+    after parse(specKind: k, sourceRef: "x", source: "", contextId: "ctx-concept-default")
+      -> unknownSpecKind
+  }
+
+  always "every row has a non-empty contextId": {
+    forall r in rows: r.contextId != ""
+  }
+
+  always "every ok parse row has astJson": {
+    forall r in rows: r.astJson != ""
+  }
+
+  never "invariant row without contextId": {
+    exists r in rows: r.contextId = ""
+  }
+
+  action parse {
+    requires: specKind in {"concept", "widget", "view", "sync", "derived"}
+    ensures ok: rows contains result invariant ids
+  }
+}

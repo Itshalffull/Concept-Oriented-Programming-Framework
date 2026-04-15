@@ -1,0 +1,120 @@
+@version(1)
+@category("testing")
+concept TestPlan [T] {
+
+  purpose {
+    Compile an enriched, platform-agnostic test plan from a parsed
+    InvariantRow. Each plan captures the fixtures needed to set up state,
+    the ordered steps that exercise the invariant, the observations that
+    must hold after execution, and the settlement modality that governs
+    pass/fail judgement. Plans are consumed by TestPlanRenderer plugins
+    that emit runtime test code for specific platforms.
+  }
+
+  state {
+    plans: set T
+
+    identity {
+      planId: T -> String
+      invariantId: T -> String
+    }
+
+    specification {
+      specKind: T -> String
+      fixturesJson: T -> String
+      stepsJson: T -> String
+      observationsJson: T -> String
+      settlementJson: T -> String
+    }
+  }
+
+  actions {
+
+    action build(invariantId: String) {
+      -> ok(plan: String) {
+        Look up the InvariantRow for the given invariantId, compile it
+        into a platform-agnostic TestPlan (fixtures, steps, observations,
+        settlement), persist the plan, and return the new plan identifier.
+      }
+      -> notfound(invariantId: String) {
+        No InvariantRow exists with the given invariantId; no plan is
+        created. The caller must parse the invariant before building a plan.
+      }
+      -> error(message: String) {
+        The InvariantRow was found but could not be compiled into a valid
+        plan, or a storage failure occurred while persisting the result.
+      }
+
+      fixture build_ok {
+        invariantId: "inv-concept-create-then-get"
+      }
+      fixture build_notfound {
+        invariantId: "inv-no-such-invariant"
+      } -> notfound
+      fixture build_empty_id {
+        invariantId: ""
+      } -> error
+    }
+
+    action get(plan: String) {
+      -> ok(plan: String) {
+        Return the full TestPlan as a JSON object, including fixtures,
+        steps, observations, and settlement configuration.
+      }
+      -> notfound(message: String) {
+        No plan exists with this identifier.
+      }
+
+      fixture get_ok { plan: $build_ok.plan } after build_ok
+      fixture get_missing { plan: "tp-does-not-exist" } -> notfound
+    }
+
+    action listFor(invariantId: String) {
+      -> ok(plans: String) {
+        Return a JSON array of all plans compiled from the given
+        invariantId. An empty array is a valid ok response when no
+        plans have been built for that invariant yet.
+      }
+
+      fixture listFor_ok { invariantId: "inv-concept-create-then-get" } after build_ok
+      fixture listFor_empty { invariantId: "inv-no-plans-yet" }
+    }
+
+    action delete(plan: String) {
+      -> ok {
+        The plan has been removed and will no longer appear in list
+        results or be reachable by get.
+      }
+      -> notfound(message: String) {
+        No plan exists with this identifier; nothing was removed.
+      }
+
+      fixture delete_ok { plan: $build_ok.plan } after build_ok
+      fixture delete_missing { plan: "tp-no-such-id" } -> notfound
+    }
+  }
+
+  example "build then retrieve": {
+    after build(invariantId: "inv-concept-create-then-get") -> ok(plan: p)
+    then get(plan: p) -> ok(plan: doc)
+    and listFor(invariantId: "inv-concept-create-then-get") -> ok(plans: ps)
+  }
+
+  always "every plan references a real invariant row": {
+    forall p in plans: p.invariantId != ""
+  }
+
+  always "every plan has non-empty steps": {
+    forall p in plans: p.stepsJson != ""
+  }
+
+  never "duplicate plan per invariantId": {
+    exists p1 in plans, p2 in plans:
+      p1 != p2 and p1.invariantId = p2.invariantId
+  }
+
+  action build {
+    requires: invariantId != ""
+    ensures ok: plans contains plan with plan.invariantId = invariantId
+  }
+}
