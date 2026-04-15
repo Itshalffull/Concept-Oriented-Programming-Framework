@@ -1,0 +1,187 @@
+# View seeds for admin destinations that had targetView: 'list' but no matching
+# ${name}-list view. Each view below corresponds to a DestinationCatalog entry.
+# Seeded as View entries (simpler than ViewShell; ViewRenderer falls back to
+# View/get when ViewShell/resolveHydrated finds nothing).
+
+concept: View
+action: create
+entries:
+
+  # /admin/workspaces  →  workspaces-list
+  - view: workspaces-list
+    dataSource: '{"concept":"Workspace","action":"list"}'
+    layout: table
+    visibleFields: '[{"key":"workspace","label":"ID","formatter":"code"},{"key":"name","label":"Name"},{"key":"owner","label":"Owner"},{"key":"description","label":"Description","formatter":"truncate"},{"key":"isDefault","label":"Default","formatter":"boolean-badge"},{"key":"updatedAt","label":"Updated","formatter":"date"}]'
+    controls: '{}'
+    title: Workspaces
+    description: Named pane/tab/split layout snapshots saved per user. Workspaces preserve panel arrangements across sessions.
+    defaultDisplayMode: table-row
+
+  # /admin/forms  →  forms-list
+  # (ViewShell form-list exists but is named 'form-list'; this aliases to forms-list)
+  - view: forms-list
+    dataSource: '{"concept":"FormSpec","action":"list"}'
+    layout: table
+    visibleFields: '[{"key":"name","label":"Form Name"},{"key":"schema","label":"Schema","formatter":"badge"},{"key":"mode","label":"Mode","formatter":"badge"}]'
+    controls: '{"create":{"concept":"FormSpec","action":"create","fields":[{"name":"name","label":"Form Name","required":true},{"name":"schema","label":"Schema","required":true}]},"rowClick":{"navigateTo":"/admin/forms/{schema}"}}'
+    title: Forms
+    description: Form specifications — each FormSpec targets a schema and defines field arrangement, groups, and steps.
+    defaultDisplayMode: table-row
+
+  # /admin/agents/triggers  →  agent-triggers-list
+  # AgentTrigger concept has a handler but is not yet registered in the kernel.
+  # Uses ContentNode/listBySchema to show trigger entities stored as content nodes.
+  # To enable full trigger management, register AgentTrigger in SUPPLEMENTAL_REGISTRY_ENTRIES.
+  - view: agent-triggers-list
+    dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"AgentTrigger"}}'
+    layout: table
+    visibleFields: '[{"key":"node","label":"Trigger"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Agent"},{"key":"createdAt","label":"Created","formatter":"date"}]'
+    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    title: Agent Triggers
+    description: Event-driven trigger rules that activate agent personas when specified events occur.
+    defaultDisplayMode: table-row
+
+  # /admin/governance/circles  →  circles-list
+  - view: circles-list
+    dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Circle"}}'
+    layout: table
+    visibleFields: '[{"key":"node","label":"Circle"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Created By"},{"key":"createdAt","label":"Created","formatter":"date"}]'
+    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    title: Circles
+    description: Organizational governance circles — teams, working groups, and accountability units.
+    defaultDisplayMode: table-row
+
+  # /admin/governance/constitutions  →  constitutions-list
+  - view: constitutions-list
+    dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Constitution"}}'
+    layout: table
+    visibleFields: '[{"key":"node","label":"Constitution"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Created By"},{"key":"createdAt","label":"Created","formatter":"date"}]'
+    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    title: Constitutions
+    description: Governance constitutions — foundational documents defining organizational rules and values.
+    defaultDisplayMode: table-row
+
+  # /admin/governance/policies  →  policies-list
+  - view: policies-list
+    dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Policy"}}'
+    layout: table
+    visibleFields: '[{"key":"node","label":"Policy"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Created By"},{"key":"createdAt","label":"Created","formatter":"date"}]'
+    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    title: Policies
+    description: Governance policies — documented rules and procedures that guide organizational behavior.
+    defaultDisplayMode: table-row
+
+  # /admin/governance/roles  →  roles-list
+  - view: roles-list
+    dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Role"}}'
+    layout: table
+    visibleFields: '[{"key":"node","label":"Role"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Created By"},{"key":"createdAt","label":"Created","formatter":"date"}]'
+    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    title: Roles
+    description: Governance roles — named responsibilities and accountabilities assigned to circle members.
+    defaultDisplayMode: table-row
+
+  # /admin/agents  →  agent-library (targetView: agent-library, not 'list')
+  # The agent-personas destination resolves to view 'agent-library' which was never seeded.
+  - view: agent-library
+    dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"AgentPersona"}}'
+    layout: card-grid
+    visibleFields: '[{"key":"node","label":"Agent"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Author"},{"key":"createdAt","label":"Created","formatter":"date"}]'
+    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    title: Agent Library
+    description: Content-native agent persona pages. Each page is an agent definition — prompt blocks, memory bindings, tool configurations, and triggers.
+    defaultDisplayMode: card
+    filters: '[{"field":"schemas","label":"Type","type":"toggle-group"}]'
+
+  # /admin/agents/sessions  →  active-sessions
+  - view: active-sessions
+    dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"AgentSession"}}'
+    layout: table
+    visibleFields: '[{"key":"node","label":"Session ID","formatter":"code"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Agent"},{"key":"createdAt","label":"Started","formatter":"date"}]'
+    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    title: Active Sessions
+    description: Running agent session records. Each session tracks an agent execution thread — conversation history, tool calls, and completion status.
+    defaultDisplayMode: table-row
+    filters: '[{"field":"schemas","label":"Status","type":"toggle-group"}]'
+
+  # /admin/governance/proposals  →  active-proposals
+  - view: active-proposals
+    dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Proposal"}}'
+    layout: table
+    visibleFields: '[{"key":"node","label":"Proposal"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Proposer"},{"key":"createdAt","label":"Submitted","formatter":"date"}]'
+    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    title: Proposals
+    description: Governance proposals awaiting review or vote — policy changes, role assignments, and constitutional amendments.
+    defaultDisplayMode: table-row
+
+  # /admin/governance/reputation  →  reputation-leaderboard
+  - view: reputation-leaderboard
+    dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Reputation"}}'
+    layout: table
+    visibleFields: '[{"key":"node","label":"Member"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Source"},{"key":"createdAt","label":"Updated","formatter":"date"}]'
+    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    title: Reputation Leaderboard
+    description: Member reputation scores — contributions, endorsements, and participation metrics.
+    defaultDisplayMode: table-row
+
+  # /admin/governance/activity  →  governance-activity
+  - view: governance-activity
+    dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"AuditTrail"}}'
+    layout: table
+    visibleFields: '[{"key":"node","label":"Event"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Actor"},{"key":"createdAt","label":"Time","formatter":"date"}]'
+    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    title: Governance Activity
+    description: Audit trail of governance events — decisions, votes, transitions, and role changes.
+    defaultDisplayMode: table-row
+
+  # /admin/governance/org-designer  →  org-designer
+  - view: org-designer
+    dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Circle"}}'
+    layout: table
+    visibleFields: '[{"key":"node","label":"Circle"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Lead Link"},{"key":"createdAt","label":"Created","formatter":"date"}]'
+    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    title: Org Designer
+    description: Organizational structure view — circles and their relationships. Use the Canvas section for visual org chart editing.
+    defaultDisplayMode: table-row
+
+  # /admin/governance/permissions  →  permissions-by-subject
+  - view: permissions-by-subject
+    dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Permission"}}'
+    layout: table
+    visibleFields: '[{"key":"node","label":"Permission"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Granted By"},{"key":"createdAt","label":"Granted","formatter":"date"}]'
+    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    title: Permissions by Subject
+    description: Access permissions grouped by subject — users and roles and what they can do.
+    defaultDisplayMode: table-row
+
+  # /admin/governance/permissions/by-resource  →  permissions-by-resource
+  - view: permissions-by-resource
+    dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Permission"}}'
+    layout: table
+    visibleFields: '[{"key":"node","label":"Resource"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Granted By"},{"key":"createdAt","label":"Granted","formatter":"date"}]'
+    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    title: Permissions by Resource
+    description: Access permissions grouped by resource — what subjects can access each entity or concept.
+    defaultDisplayMode: table-row
+
+  # /admin/governance/permissions/effective  →  effective-permissions
+  - view: effective-permissions
+    dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Permission"}}'
+    layout: table
+    visibleFields: '[{"key":"node","label":"Permission"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Source"},{"key":"createdAt","label":"Applied","formatter":"date"}]'
+    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    title: Effective Permissions
+    description: Resolved effective permission set — inherited and direct grants merged and evaluated for the current principal.
+    defaultDisplayMode: table-row
+
+  # /admin/layout-builder  →  layout:layout-builder  →  layouts-list view
+  # The layout-builder destination was pointing at a non-existent 'builder' layout.
+  # Fixed to use 'layout:layout-builder' which renders this layouts-list view inside a Layout.
+  - view: layouts-list
+    dataSource: '{"concept":"Layout","action":"list"}'
+    layout: table
+    visibleFields: '[{"key":"layout","label":"Layout ID","formatter":"code"},{"key":"name","label":"Name"},{"key":"kind","label":"Kind","formatter":"badge"},{"key":"title","label":"Title"},{"key":"description","label":"Description","formatter":"truncate"}]'
+    controls: '{"create":{"concept":"Layout","action":"create","fields":[{"name":"layout","label":"Layout ID","required":true},{"name":"name","label":"Display Name","required":true},{"name":"kind","label":"Kind","required":true,"type":"select","options":["stack","grid","split","sidebar"]}]}}'
+    title: Layout Builder
+    description: Named layout definitions — stack, grid, split, and sidebar arrangements. Each layout composes multiple views into a spatial arrangement.
+    defaultDisplayMode: table-row

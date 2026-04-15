@@ -87,3 +87,9 @@ entries:
     title: ''
     description: Four-zone entity page — three structural zones (entity properties, entity content, related entities) plus an explicit fourth layout region for sections, tabs, sidebars, and controls.
     children: '[{"type":"area","id":"fields","content_mode":"structured","content_refs":[]},{"type":"area","id":"content","content_mode":"unstructured"},{"type":"area","id":"related","content_mode":"structured","content_refs":[{"type":"view_embed","view":"backlinks"},{"type":"view_embed","view":"similar-entities"},{"type":"view_embed","view":"unlinked-references"},{"type":"view_embed","view":"graph-neighbors"}]},{"type":"region","id":"page-layout","content_mode":"composed","region_kind":"section","region_refs":[]}]'
+  - layout: layout-builder
+    name: Layout Builder
+    kind: stack
+    title: Layout Builder
+    description: Visual canvas for composing SplitLayout trees — add panes, adjust split ratios, assign view slots, and save named layouts.
+    children: '[{"type":"view","id":"layouts-list"}]'

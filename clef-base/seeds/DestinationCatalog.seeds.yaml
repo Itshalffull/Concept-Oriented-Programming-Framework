@@ -131,8 +131,8 @@ entries:
     group: System
   - destination: layout-builder
     name: layout-builder
-    targetConcept: SplitLayout
-    targetView: builder
+    targetConcept: Layout
+    targetView: layout:layout-builder
     href: /admin/layout-builder
     icon: "⊞"
     group: Surface
