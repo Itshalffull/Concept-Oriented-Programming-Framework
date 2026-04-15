@@ -231,89 +231,268 @@ Playwright's table maps the same namespace to `page.locator(...)`,
 Adding Vue / Svelte / SwiftUI / Jetpack is "write one of these tables".
 The WidgetTestPlan doesn't change; widgets don't change.
 
-## Unification story — concept, widget, view share one parser
+## Unification story — modeled as concepts + syncs
 
-The AST is already one thing. The parsers aren't. The cleanest
-unification, before any platform renderer work, is:
+The AST is already one thing. The parsers aren't. And the cleffiest
+unification isn't "extract a TS helper class" — it's "express the
+whole pipeline as concepts wired by syncs". Which is what the rest
+of the framework already does for parsing + codegen.
 
-### Shared `InvariantBodyParser` helper class
+### Concepts
 
-Extract the duplicated grammar logic into one helper that all three
-spec parsers delegate to:
+New concepts (small, independent, Jackson's methodology):
 
-```ts
-class InvariantBodyParser {
-  constructor(
-    private tokens: TokenStream,
-    private ctx: AssertionContext,   // injected per spec kind
-  ) {}
-  parseInvariantBlock(): InvariantDecl[] { … }
-  parseQuantifierBinding(): QuantifierBinding { … }
-  parseWhenClause(): InvariantWhenClause { … }
-  parseInvariantASTStep(): InvariantASTStep { … }
-  parseAssertionExpr(): AssertionExpr { … }
-}
-
-interface AssertionContext {
-  /** Resolve an identifier in the host spec's namespace. */
-  resolveIdentifier(name: string):
-    | { kind: 'action', concept: string, action: string }     // concept
-    | { kind: 'part', part: string }                          // widget anatomy
-    | { kind: 'state', field: string }                        // widget FSM / concept state
-    | { kind: 'query-column', column: string }                // view
-    | { kind: 'fixture', fixture: string }                    // scenario
-    | undefined;
-  /** Declared top-level names, for error messages and completion. */
-  declaredSymbols(): string[];
-}
+```
+concept InvariantParser [S]
+  purpose
+    parse invariant blocks from any spec-kind source using a resolver
+  state
+    rows: set of InvariantRow with
+      invariantId: Id; specKind: String; sourceRef: Id;
+      kind: String;  -- example | forall | always | never |
+                        eventually | requires_ensures | scenario
+      name: String; astJson: String;
+  actions
+    parse(specKind: String, sourceRef: Id, source: String,
+          contextId: Id) : (invariants: Json) or (error: String)
+    list(specKind: String) : (invariants: Json)
+    get(invariant: Id) : (ast: Json) or (notfound)
 ```
 
-Each spec parser (concept, widget, view) injects its own
-`AssertionContext`. Concept resolves action + state names; widget
-resolves anatomy parts + FSM fields; view resolves query-result
-columns. ~500 lines of copy-paste evaporates.
+```
+concept AssertionContext [C]
+  purpose
+    resolve an identifier in a specific host spec's namespace
+    so the shared InvariantParser can validate references without
+    knowing whether it's parsing a concept, widget, view, sync,
+    or derived spec.
+  state
+    contexts: set of Context with
+      contextId: Id; specKind: String;
+      declaredSymbols: list of { name: String; kind: String };
+  actions
+    register(contextId: Id, specKind: String, symbols: Json) : (ok)
+    resolve(contextId: Id, name: String)
+      : (kind: String; info: Json) or (notfound)
+    clear(contextId: Id) : (ok)
+```
 
-### Extend invariants to sync and derived
+```
+concept TestPlan [T]
+  purpose
+    enriched plan row per invariant, platform-agnostic
+  state
+    plans: set of Plan with
+      planId: Id; invariantId: Id; specKind: String;
+      fixtures: Json; steps: Json; observations: Json;
+      settlement: Json;
+  actions
+    build(invariantId: Id) : (plan: Id) or (error: String)
+    get(plan: Id) : (plan: Json) or (notfound)
+    listFor(invariantId: Id) : (plans: Json)
+```
 
-Today neither `.sync` nor `.derived` has invariants. Both SHOULD.
+```
+concept TestPlanRenderer [R]
+  purpose
+    translate a TestPlan to runtime test code for a target platform
+  state
+    renderers: set of Renderer with
+      platform: String;  -- react | playwright | vue | swiftui | …
+      universalProbeTable: Json;  -- probe-name → emit-snippet fn id
+  actions
+    register(platform: String, probeTable: Json) : (ok) or (duplicate)
+    render(planId: Id, platform: String)
+      : (code: String) or (notfound) or (unsupportedProbe: String)
+```
 
-- **Sync invariants** would assert post-conditions on sync firings:
+### Syncs wire the pipeline
 
-  ```
-  sync InvokeViaBinding [eager]
-    when { ActionBinding/invoke: [ binding: ?b; context: ?ctx ] => ok(…) }
-    where { ActionBinding: { ?b target: ?target } }
-    then { Binding/invoke: [ binding: ?b; action: ?target; input: ?ctx ] }
+```
+sync ExtractInvariantsOnParse [eager]
+  purpose: when any spec parser completes, extract invariant blocks
+           through the shared InvariantParser using the host spec's
+           AssertionContext.
+  when {
+    ConceptParser/parse:    [ ?src ] => ok(contextId: ?ctx, source: ?s)
+    | WidgetParser/parse:   [ ?src ] => ok(contextId: ?ctx, source: ?s)
+    | ViewSpecParser/parse: [ ?src ] => ok(contextId: ?ctx, source: ?s)
+    | SyncParser/parse:     [ ?src ] => ok(contextId: ?ctx, source: ?s)
+    | DerivedParser/parse:  [ ?src ] => ok(contextId: ?ctx, source: ?s)
+  }
+  then {
+    InvariantParser/parse: [
+      specKind: ?kind; sourceRef: ?src; source: ?s; contextId: ?ctx
+    ]
+  }
 
-    invariant {
-      example "binding fires exactly once per invoke": {
-        after ActionBinding/invoke(binding: "update-block") -> ok
-        then fired(Binding/invoke) = 1
-      }
-      never "forwards to unresolved target": {
-        event.targetResolved = false
-        and event.bindingInvokeFired = true
-      }
+sync BuildTestPlanOnInvariantParse [eager]
+  when { InvariantParser/parse: [ ?src ] => ok(invariants: ?invs) }
+  then { TestPlan/build: [ invariantId: ?eachId ] } -- per invariant
+
+sync RenderForEachRegisteredPlatform [eager]
+  when { TestPlan/build: [ ?inv ] => ok(plan: ?planId) }
+  where { TestPlanRenderer: { ?r platform: ?p } }
+  then { TestPlanRenderer/render: [ planId: ?planId; platform: ?p ] }
+```
+
+### Why this is the cleffy shape
+
+- **Each step is an independent concept.** Swap, replace, or extend
+  any one without touching the others (Jackson's methodology).
+
+- **Pipeline is a sync chain.** No hardcoded orchestration.
+  Registering a new platform renderer (say, `jetpack-compose`) is
+  one `TestPlanRenderer/register` call; `RenderForEachRegisteredPlatform`
+  picks it up automatically on the next parse.
+
+- **Each spec kind gets its own AssertionContext row.** Seeded at
+  boot: `AssertionContext/register` for concept, widget, view, sync,
+  derived. The `InvariantParser` never knows which it's parsing.
+
+- **The universal probe namespace is a concept data row**
+  (`TestPlanRenderer.universalProbeTable`), not a compile-time
+  TypeScript object. Change the React probe for `body.type("h")`
+  at runtime by updating one row.
+
+- **Score + Pilot can trace the whole pipeline.** Because every
+  step is a concept action, parse-to-render is a standard completion
+  chain: visible in FlowTrace, queryable via `ScoreApi/getFlow`.
+
+- **Seeds, not code, wire the scope.** `AssertionContext.register`
+  lives in a seed file per spec kind. `TestPlanRenderer.register`
+  lives in per-platform seed files. Adding a platform = seed the
+  renderer + ship the probe table; done.
+
+`InvariantBodyParser` as a pure TS class would have worked but been
+invisible to Score / Pilot / SeedData / RuntimeRegistry. Modeling as
+concepts + syncs puts the invariant pipeline in the same layer the
+rest of Clef's own tooling occupies.
+
+### Does every spec kind need invariants? Honest scope
+
+| Kind | Invariants make sense? | Why |
+|---|---|---|
+| **Concept** | ✓ strong | Canonical Jackson case. Concepts own state + action contracts; invariants codify both. `requires_ensures`, state integrity (`never two users with same email`), variant safety. |
+| **Widget** | ✓ strong | FSM + ARIA + anatomy. Invariants are the contract between the abstract spec and platform renderers. Focus behavior, keyboard dispatch, state transitions. |
+| **View** | ✗ weak at this level | A view is an ASSEMBLY of FilterSpec + SortSpec + ProjectionSpec + DataSourceSpec + PresentationSpec + InteractionSpec. Invariants really belong on those component specs where the actual state lives — `FilterSpec { always "tree has root node" }`, `ProjectionSpec { forall f in fields: f.key in source.fields }`. View-level invariants mostly re-phrase component invariants. **Keep the parse support already in place but stop driving adoption at this layer.** |
+| **Sync** | ~ optional, not default | Sync guards already live in `when` + `where` + `guard`. A sync already declares its pre- and post-conditions via its clauses. Adding a second invariant layer is mostly redundant for normal syncs. There's a narrow useful slice — *dispatch syncs that fan out across multiple actions* (InvokeViaBinding, ExecuteReversal) where "fires exactly once", "never forwards to unresolved target", etc. are worth stating explicitly. Keep support OPT-IN, not encouraged for every sync. |
+| **Derived** | ✗ weak | Derived concepts are packaging. Their "emergent" properties are really integration tests exercising the composed sync chain — better placed as concept-level test fixtures, not as structural invariants of the composition. Skip. |
+
+So the real target set is **concept + widget** as first-class
+carriers, plus **sync** as opt-in for dispatch-fan-out syncs. The
+earlier "all five" framing was overreach.
+
+What this changes for the unification work:
+
+- The shared `InvariantParser` + `AssertionContext` still delivers
+  the win (~500 lines of parser duplication collapsed, real
+  runtime tests for concept + widget invariants).
+- Adding grammar to `.sync` is a small optional extension for
+  dispatch fan-out syncs only, behind a conscious authoring choice.
+- **Skip** adding invariants to `.derived` and `.view` until a
+  concrete use case appears that genuinely can't be expressed at
+  the component-spec layer.
+
+Worked example of the sync slice where invariants DO earn their
+weight — InvokeViaBinding's dispatch fan-out:
+
+```
+sync InvokeViaBinding [eager]
+  when { ActionBinding/invoke: [ binding: ?b; context: ?ctx ] => ok(…) }
+  where { ActionBinding: { ?b target: ?target } }
+  then { Binding/invoke: [ binding: ?b; action: ?target; input: ?ctx ] }
+
+  invariant {
+    never "forwards to unresolved target": {
+      event.targetResolved = false
+      and event.bindingInvokeFired = true
     }
-  ```
-
-- **Derived invariants** would assert emergent properties of the
-  composition (e.g., that ClefBase's ContentFoundation really does
-  route every ContentNode save through the SearchIndex):
-
-  ```
-  derived ContentPlatform composes ContentFoundation, ClassificationSystem, …
-    invariant {
-      always "every ContentNode save indexes in SearchIndex": {
-        forall n in saved_content_nodes: n in SearchIndex.indexed
-      }
+    always "context passes through unchanged": {
+      forall (b, ctx) in firings:
+        firings[b].input = ctx
     }
-  ```
+  }
+```
 
-Both cases: same `InvariantDecl` AST, same parser helper, new
-`AssertionContext` implementations (sync resolves when-clause
-bindings and completion variants; derived resolves its composed
-concepts' public actions + state fields).
+Don't seed a sync with invariants just because the grammar allows
+it. The bar is: *the sync has dispatch logic whose failure modes
+aren't already caught by its clauses*.
+
+### Even "generate all tests" is cleffy
+
+Today's entry points are imperative scripts — `scripts/generate-all-tests.ts`
+and `scripts/generate-widget-tests.ts` — that walk the filesystem,
+parse specs in-process, and write test files. In the cleffy shape,
+the script becomes a thin CLI that dispatches a top-level derived
+concept; every step is a traceable concept action.
+
+One more concept:
+
+```
+concept TestArtifact [A]
+  purpose
+    track generated test files for a given spec+platform pair so
+    regeneration is a diff, not a blind overwrite.
+  state
+    artifacts: set of Artifact with
+      artifactId: Id; specKind: String; sourceRef: Id;
+      platform: String; outputPath: String;
+      contentHash: String; writtenAt: DateTime;
+  actions
+    write(specKind, sourceRef, platform, outputPath, content: String)
+      : (artifact: Id; changed: Bool)
+    list(specKind?: String, platform?: String) : (artifacts: Json)
+    prune(spec: Id) : (removed: Int)
+```
+
+And a derived concept composing the whole pipeline:
+
+```
+derived TestGeneration composes
+  SpecDiscovery, InvariantParser, AssertionContext,
+  TestPlan, TestPlanRenderer, TestArtifact
+  syncs
+    extract-invariants-on-parse:    required
+    build-test-plan-on-invariant:   required
+    render-for-each-platform:       required
+    write-artifact-on-render:       required
+    prune-artifacts-on-spec-delete: recommended
+```
+
+Syncs for the last two:
+
+```
+sync WriteArtifactOnRender [eager]
+  when { TestPlanRenderer/render: [ ?plan ] => ok(code: ?code) }
+  where { TestPlan: { ?plan invariantId: ?inv; specKind: ?k; platform: ?p } }
+        { InvariantParser: { ?inv sourceRef: ?src } }
+  then { TestArtifact/write: [
+           specKind: ?k; sourceRef: ?src; platform: ?p;
+           outputPath: derivedPath(?k, ?src, ?p);
+           content: ?code
+         ] }
+
+sync PruneArtifactsOnSpecDelete [eager]
+  when { SpecRegistry/delete: [ spec: ?s ] => ok }
+  then { TestArtifact/prune: [ spec: ?s ] }
+```
+
+The CLI just invokes `TestGeneration/run`:
+
+```ts
+// scripts/generate-all-tests.ts — thin dispatch
+import { getKernel } from '../clef-base/lib/kernel';
+const kernel = getKernel();
+await kernel.invokeConcept('urn:clef/TestGeneration', 'run', { target: 'all' });
+```
+
+Every step is visible to Score (`getFlow --from TestGeneration/run`),
+Pilot (`pilot/where` shows the pipeline), and FlowTrace (the parse →
+extract → plan → render → write causal chain). Failing tests are
+flagged as completions of `TestPlanRenderer/render` with variant
+`unsupportedProbe`. Seeding a new platform renderer makes it
+auto-regenerate on every subsequent `TestGeneration/run`.
 
 ## Scope of first cut (after unification)
 
@@ -375,39 +554,52 @@ emits a real vitest test. Playwright renderer emits an equivalent
 
 ## Execution plan (follow-up, not in this session)
 
-All work is sequenced so nothing breaks grammar along the way.
+Every step is itself a Clef concept spec + handler + sync wiring.
+No new TS orchestration; even the CLI is a dispatcher.
 
-1. **Extract `InvariantBodyParser` + `AssertionContext`.** Pure
-   refactor of concept / widget / view parsers to delegate. Unit
-   tests on each spec kind assert grammar behavior unchanged.
+1. **Concept specs + handlers land first** (no grammar change yet):
+   `InvariantParser`, `AssertionContext`, `TestPlan`,
+   `TestPlanRenderer`, `TestArtifact`. Plus four syncs:
+   `ExtractInvariantsOnParse`, `BuildTestPlanOnInvariantParse`,
+   `RenderForEachRegisteredPlatform`, `WriteArtifactOnRender`.
+   Plus derived concept `TestGeneration` composing all of them.
+   Use the existing concept + sync scaffolds (`/create-concept`,
+   `/create-sync`, `/create-derived-concept`).
 
-2. **`scenario` kind** added to the shared parser. Lands in all
-   spec kinds simultaneously. Parse-only; no codegen yet.
+2. **Seed initial AssertionContexts** — one row each for concept,
+   widget, and (opt-in) sync. Declared symbols are mined from
+   the existing parsers' symbol tables.
 
-3. **Enrich `InvariantDecl` consumers**: `WidgetTestAssertion` +
-   concept-side `TestPlanExample` / `TestPlanForall` / etc. gain
-   optional structured `fixtures` / `steps` / `observations` /
-   `settlement` fields. Populated by the plan builders from the
-   existing AST. Backward compatible.
+3. **Seed initial TestPlanRenderer rows** with universal probe
+   tables for React + Playwright. Vue / Svelte / Vanilla /
+   SwiftUI / Jetpack land as follow-up seeds.
 
-4. **Unified codegen module** `test-plan-invariants.ts`. Takes
-   enriched plan entries + target platform (react / playwright /
-   vitest-node / etc.) + universal probe namespace table. Emits
-   real assertions. Concepts, widgets, views all invoke it.
+4. **Migrate the current parsers** (concept-parser, widget-
+   spec-parser) to call `InvariantParser/parse` instead of their
+   inlined `parseInvariant` methods. View keeps its parse path
+   for now but stops driving adoption (see scope table above).
 
-5. **Add invariants to sync + derived**. Parser extension, new
-   `AssertionContext` implementations (sync: when-binding +
-   completion variant names; derived: composed concepts' action +
-   state names). No grammar change.
+5. **`scenario` kind** added to `InvariantParser`. Lands in
+   concept + widget + opt-in sync simultaneously because the
+   parser is shared.
 
-6. **Retrofit existing specs**: paragraph-block's 81, every
-   concept spec, every view spec — start generating real tests.
-   Add invariants to high-value syncs (the dispatch chain:
-   InvokeViaBinding, PushUndoOnReversible, ExecuteReversal,
-   TrackInvocationStart/Complete) and core derived concepts
-   (ContentFoundation, LLMPlatform, ProcessPlatform).
+6. **Replace `scripts/generate-*.ts` with thin dispatchers** that
+   call `TestGeneration/run`. Real work moves into the concept
+   pipeline; the script is a 10-line CLI wrapper.
 
-7. **Per-platform translation tables** (Vue / Svelte / Vanilla /
+7. **Retrofit existing invariants**: paragraph-block's 81, every
+   concept spec — start generating real tests. Adopt invariants
+   in a handful of high-leverage dispatch syncs (InvokeViaBinding,
+   ExecuteReversal). Leave view + derived alone unless a concrete
+   case appears.
+
+8. **Score + Pilot integration**. Because every pipeline step is
+   a concept action, `ScoreApi/getFlow --from TestGeneration/run`
+   traces spec → invariants → plans → rendered code → written
+   artifacts without extra instrumentation. Failures surface as
+   completion variants (e.g., `TestPlanRenderer/render` ok vs
+   unsupportedProbe), which is queryable through the same API.
+
+9. **Per-platform translation tables** (Vue / Svelte / Vanilla /
    SwiftUI / Jetpack) land as each platform needs enforcement.
-   Widget + concept + view + sync + derived specs never change
-   when a new platform lands — that's the whole point.
+   `TestPlanRenderer/register` + seed + done — no spec changes.
