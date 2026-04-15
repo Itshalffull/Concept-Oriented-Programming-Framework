@@ -31,6 +31,33 @@ import {
 } from './codegen-utils.js';
 
 import type { HierarchicalConfig } from './codegen-utils.js';
+import { isContentNative } from '../content-native-concepts.js';
+
+// --- Content-native CRUD action mapping (CNB-4) ---
+//
+// Schema-backed concepts (those whose name matches a registered Schema)
+// have their CRUD surface rewritten to ContentNode operations when the
+// GraphQL target's `contentNative: true` flag is set.
+//
+// Mapping:
+//   create            -> ContentNode/createWithSchema { schema, content: input }
+//   get / read        -> ContentNode/get              { node: `${schema}:${id}` }
+//   update / patch    -> ContentNode/update           { node, content }
+//   remove / delete   -> ContentNode/remove           { node }
+//   list              -> ContentNode/listBySchema     { schema }
+//
+// Non-CRUD concept actions stay as direct kernel dispatch.
+type CrudVerb = 'create' | 'get' | 'update' | 'remove' | 'list';
+
+function classifyCrudAction(actionName: string): CrudVerb | null {
+  const n = actionName.toLowerCase();
+  if (n === 'create') return 'create';
+  if (n === 'get' || n === 'read' || n === 'fetch') return 'get';
+  if (n === 'update' || n === 'patch' || n === 'edit') return 'update';
+  if (n === 'remove' || n === 'delete' || n === 'destroy') return 'remove';
+  if (n === 'list' || n === 'listall' || n === 'index') return 'list';
+  return null;
+}
 
 // --- Internal Types ---
 
@@ -210,6 +237,30 @@ function buildResolverBody(
   return `(_: unknown, args: any, ctx: { kernel: any }) =>\n      ctx.kernel.handleRequest({ method: '${action.name}', ...args })`;
 }
 
+/**
+ * Build a content-native resolver body that routes a CRUD action through
+ * ContentNode operations instead of the concept handler.
+ */
+function buildContentNativeResolverBody(
+  verb: CrudVerb,
+  schemaName: string,
+  usesInputType: boolean,
+): string {
+  const argShape = usesInputType ? 'args.input' : 'args';
+  switch (verb) {
+    case 'create':
+      return `(_: unknown, args: any, ctx: { kernel: any }) =>\n      ctx.kernel.handleRequest({ method: 'ContentNode/createWithSchema', schema: '${schemaName}', content: ${argShape} })`;
+    case 'get':
+      return `(_: unknown, args: any, ctx: { kernel: any }) =>\n      ctx.kernel.handleRequest({ method: 'ContentNode/get', node: \`${schemaName}:\${args.id}\` })`;
+    case 'update':
+      return `(_: unknown, args: any, ctx: { kernel: any }) => {\n      const { id, ...rest } = ${usesInputType ? 'args.input' : 'args'};\n      return ctx.kernel.handleRequest({ method: 'ContentNode/update', node: \`${schemaName}:\${id}\`, content: rest });\n    }`;
+    case 'remove':
+      return `(_: unknown, args: any, ctx: { kernel: any }) =>\n      ctx.kernel.handleRequest({ method: 'ContentNode/remove', node: \`${schemaName}:\${args.id}\` })`;
+    case 'list':
+      return `(_: unknown, args: any, ctx: { kernel: any }) =>\n      ctx.kernel.handleRequest({ method: 'ContentNode/listBySchema', schema: '${schemaName}', ...args })`;
+  }
+}
+
 // --- Main File Generation ---
 
 /**
@@ -220,6 +271,7 @@ function generateSchemaFile(
   manifest: ConceptManifest,
   overrides: Record<string, Record<string, unknown>>,
   hierConfig?: HierarchicalConfig,
+  contentNative: boolean = false,
 ): string {
   const name = manifest.name;
   const camelName = name.charAt(0).toLowerCase() + name.slice(1);
@@ -273,7 +325,10 @@ function generateSchemaFile(
       : name;
 
     const fieldLine = `    ${fieldName}${args}: ${returnType}`;
-    const resolverBody = buildResolverBody(action, usesInput);
+    const crudVerb = contentNative ? classifyCrudAction(action.name) : null;
+    const resolverBody = crudVerb
+      ? buildContentNativeResolverBody(crudVerb, name, usesInput)
+      : buildResolverBody(action, usesInput);
 
     if (op === 'query') {
       queryFields.push(fieldLine);
@@ -333,7 +388,7 @@ const _handler: FunctionalConceptHandler = {
     { let p = createProgram(); p = complete(p, 'ok', { name: 'GraphqlTarget',
       inputKind: 'InterfaceProjection',
       outputKind: 'GraphQLSchema',
-      capabilities: JSON.stringify(['sdl', 'resolvers', 'hierarchical']),
+      capabilities: JSON.stringify(['sdl', 'resolvers', 'hierarchical', 'content-native']),
       targetKey: 'graphql',
       providerType: 'target' }); return p; }
   },
@@ -417,10 +472,22 @@ const _handler: FunctionalConceptHandler = {
     }
     const hierConfig = getHierarchicalTrait(parsedManifestYaml, manifest.name);
 
+    // --- Determine content-native mode (CNB-4) ---
+    const contentNativeFlag = _config.contentNative === true;
+    let schemas: Array<{ schema: string }> = [];
+    if (input.schemas && typeof input.schemas === 'string') {
+      try {
+        const parsed = JSON.parse(input.schemas);
+        if (Array.isArray(parsed)) schemas = parsed as Array<{ schema: string }>;
+      } catch { /* non-fatal */ }
+    }
+    const useContentNative =
+      contentNativeFlag && isContentNative(manifest.name, schemas);
+
     // --- Generate schema file ---
     const kebabName = toKebabCase(manifest.name);
     const filePath = `${kebabName}/schema.graphql.ts`;
-    const fileContent = generateSchemaFile(manifest, overrides, hierConfig);
+    const fileContent = generateSchemaFile(manifest, overrides, hierConfig, useContentNative);
 
     const files: OutputFile[] = [{ path: filePath, content: fileContent }];
 

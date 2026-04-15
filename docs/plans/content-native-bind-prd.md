@@ -65,7 +65,7 @@ For non-content-native concepts (infrastructure like RuntimeRegistry, ScoreApi),
 | CNB-1 | interface.yaml contentNative flag | done | 8af267f3 |
 | CNB-2 | content-native concept enumeration helper | done | 45318631 |
 | CNB-3 | REST target rewrite | done | d57da518 |
-| CNB-4 | GraphQL target rewrite | pending | — |
+| CNB-4 | GraphQL target rewrite | done | PENDING-CNB4 |
 | CNB-5 | CLI target rewrite | pending | — |
 | CNB-6 | MCP target rewrite | pending | — |
 | CNB-7 | Skills target rewrite | pending | — |
