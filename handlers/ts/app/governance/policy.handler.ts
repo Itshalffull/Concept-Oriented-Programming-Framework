@@ -4,7 +4,7 @@
 // ADICO-encoded governance rules with deontic modality.
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, branch, complete, completeFrom,
+  createProgram, get, put, find, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
@@ -109,6 +109,16 @@ const _policyHandler: FunctionalConceptHandler = {
     );
 
     return p as StorageProgram<Result>;
+  },
+
+  list(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'policy', {}, '_allPolicies');
+    return completeFrom(p, 'ok', (bindings) => {
+      const all = (bindings._allPolicies as Array<Record<string, unknown>>) ?? [];
+      const policies = all.filter((rec) => rec.id !== '__registered');
+      return { policies };
+    }) as StorageProgram<Result>;
   },
 };
 

@@ -281,4 +281,22 @@ const _checkVerificationHandler: FunctionalConceptHandler = {
   },
 };
 
-export const checkVerificationHandler = autoInterpret(_checkVerificationHandler);
+const checkVerificationHandlerWithList: FunctionalConceptHandler = {
+  ..._checkVerificationHandler,
+
+  list(input: Record<string, unknown>) {
+    const stepRef = input.step_ref as string | undefined;
+    const status = input.status as string | undefined;
+    let p = createProgram();
+    p = find(p, 'verification', {}, '_allVerifications');
+    return completeFrom(p, 'ok', (bindings) => {
+      const all = (bindings._allVerifications as Array<Record<string, unknown>>) ?? [];
+      let verifications = all;
+      if (stepRef) verifications = verifications.filter((rec) => rec.step_ref === stepRef);
+      if (status) verifications = verifications.filter((rec) => rec.status === status);
+      return { verifications };
+    }) as StorageProgram<Result>;
+  },
+};
+
+export const checkVerificationHandler = autoInterpret(checkVerificationHandlerWithList);

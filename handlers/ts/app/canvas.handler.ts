@@ -2,7 +2,7 @@
 // Canvas Concept Implementation
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, putFrom, del, branch, complete, completeFrom, mapBindings,
+  createProgram, get, put, putFrom, del, find, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -307,4 +307,20 @@ const _handler: FunctionalConceptHandler = {
   },
 };
 
-export const canvasHandler = autoInterpret(_handler);
+type Result = { variant: string; [key: string]: unknown };
+
+const canvasHandlerWithList: FunctionalConceptHandler = {
+  ..._handler,
+
+  list(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'canvas', {}, '_allCanvases');
+    return completeFrom(p, 'ok', (bindings) => {
+      const all = (bindings._allCanvases as Array<Record<string, unknown>>) ?? [];
+      const canvases = all.filter((rec) => rec.id !== '__registered');
+      return { canvases };
+    }) as StorageProgram<Result>;
+  },
+};
+
+export const canvasHandler = autoInterpret(canvasHandlerWithList);

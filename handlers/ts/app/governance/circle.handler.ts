@@ -4,7 +4,7 @@
 // Nested governance groups with holacratic jurisdiction management.
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, del, putFrom, branch, complete, completeFrom,
+  createProgram, get, put, del, find, putFrom, branch, complete, completeFrom,
   mapBindings, type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
@@ -105,4 +105,18 @@ const _circleHandler: FunctionalConceptHandler = {
   },
 };
 
-export const circleHandler = autoInterpret(_circleHandler);
+const circleHandlerWithList: FunctionalConceptHandler = {
+  ..._circleHandler,
+
+  list(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'circle', {}, '_allCircles');
+    return completeFrom(p, 'ok', (bindings) => {
+      const all = (bindings._allCircles as Array<Record<string, unknown>>) ?? [];
+      const circles = all.filter((rec) => rec.id !== '__registered');
+      return { circles };
+    }) as StorageProgram<Result>;
+  },
+};
+
+export const circleHandler = autoInterpret(circleHandlerWithList);

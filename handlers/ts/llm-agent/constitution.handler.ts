@@ -306,6 +306,16 @@ const _handler: FunctionalConceptHandler = {
       })(),
     ) as StorageProgram<Result>;
   },
+
+  list(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'constitution', {}, '_allConstitutions');
+    return completeFrom(p, 'ok', (bindings) => {
+      const all = (bindings._allConstitutions as Array<Record<string, unknown>>) ?? [];
+      const constitutions = all.filter((rec) => rec.id !== '__registered');
+      return { constitutions };
+    }) as StorageProgram<Result>;
+  },
 };
 
 export const constitutionHandler = autoInterpret(_handler);

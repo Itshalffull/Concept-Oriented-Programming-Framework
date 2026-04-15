@@ -521,6 +521,20 @@ const _handler: FunctionalConceptHandler = {
   },
 };
 
-export const versionSpaceHandler = autoInterpret(_handler);
+const versionSpaceHandlerImpl: FunctionalConceptHandler = {
+  ..._handler,
+
+  list(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'spaces', {}, '_allSpaces');
+    return completeFrom(p, 'ok', (bindings) => {
+      const all = (bindings._allSpaces as Array<Record<string, unknown>>) ?? [];
+      const spaces = all.filter((rec) => rec.id !== '__registered');
+      return { spaces };
+    }) as StorageProgram<Result>;
+  },
+};
+
+export const versionSpaceHandler = autoInterpret(versionSpaceHandlerImpl);
 
 export default versionSpaceHandler;

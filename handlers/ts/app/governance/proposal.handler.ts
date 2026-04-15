@@ -4,7 +4,7 @@
 // Formal request for collective decision with Draft->Active->Passed/Failed lifecycle.
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, branch, complete,
+  createProgram, get, put, find, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
@@ -87,6 +87,16 @@ const _proposalHandler: FunctionalConceptHandler = {
     );
 
     return p as StorageProgram<Result>;
+  },
+
+  list(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'proposal', {}, '_allProposals');
+    return completeFrom(p, 'ok', (bindings) => {
+      const all = (bindings._allProposals as Array<Record<string, unknown>>) ?? [];
+      const proposals = all.filter((rec) => rec.id !== '__registered');
+      return { proposals };
+    }) as StorageProgram<Result>;
   },
 };
 

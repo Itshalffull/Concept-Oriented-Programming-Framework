@@ -9,7 +9,7 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, putFrom, branch, complete, completeFrom,
+  createProgram, get, put, putFrom, find, branch, complete, completeFrom,
   mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';

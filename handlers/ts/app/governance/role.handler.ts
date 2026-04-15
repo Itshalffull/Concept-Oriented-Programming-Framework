@@ -4,7 +4,7 @@
 // Named capacities with permissions, assignment, and revocation.
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, del, branch, complete,
+  createProgram, get, put, del, find, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
@@ -92,4 +92,18 @@ const _roleHandler: FunctionalConceptHandler = {
   },
 };
 
-export const roleHandler = autoInterpret(_roleHandler);
+const roleHandlerWithList: FunctionalConceptHandler = {
+  ..._roleHandler,
+
+  list(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'role', {}, '_allRoles');
+    return completeFrom(p, 'ok', (bindings) => {
+      const all = (bindings._allRoles as Array<Record<string, unknown>>) ?? [];
+      const roles = all.filter((rec) => rec.id !== '__registered');
+      return { roles };
+    }) as StorageProgram<Result>;
+  },
+};
+
+export const roleHandler = autoInterpret(roleHandlerWithList);
