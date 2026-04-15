@@ -1,0 +1,179 @@
+@version(1)
+widget view-editor {
+
+  purpose {
+    Full-featured view builder and editor for Clef Base data views. Composes
+    multiple configuration panels: data source (concept/action/params),
+    display style, field configurator, filter condition builder (Notion-style),
+    sort builder (field + direction), and controls configurator. Codifies
+    schema-driven typed parameter inputs, condition-row filters with
+    type-aware operators, field-direction sort rows, and structured
+    create-button field rows -- replacing all raw JSON textareas.
+  }
+
+  anatomy {
+    root:                    container    { Top-level editor layout wrapper }
+    headerBar:               container    { Page header with back, title, save buttons }
+    backButton:              action       { Navigate back to view list }
+    saveButton:              action       { Persist current view configuration }
+    previewToggleButton:     action       { Show or hide the live preview pane }
+    editorColumn:            container    { Left column containing all configuration panels }
+    previewColumn:           container    { Right column with ViewRenderer live preview }
+
+    sourcePanel:             container    { Data source panel: concept/action picker + params }
+    conceptActionPicker:     interactive  { Two-pane picker for selecting concept and action }
+    paramEditor:             container    { Schema-driven parameter editor for selected action }
+    paramField:              interactive  { Single typed input control for one action parameter }
+    additionalParamRow:      interactive  { Key/value row for extra params not in the action signature }
+    addParamButton:          action       { Add an additional parameter key/value row }
+
+    filterPanel:             container    { Filter panel: condition rows with field/operator/value }
+    filterRow:               container    { Single filter condition row: field + operator + value + remove }
+    filterFieldPicker:       interactive  { Dropdown selecting a concept state field to filter on }
+    filterOperatorDropdown:  interactive  { Type-aware operator selector for the chosen field }
+    filterValueInput:        interactive  { Typed value control adapted to field type and operator }
+    filterRemoveButton:      action       { Remove this filter condition row }
+    addFilterButton:         action       { Add a new filter condition row }
+
+    sortPanel:               container    { Sort panel: field + direction rows }
+    sortRow:                 container    { Single sort rule row: field + direction + remove }
+    sortFieldPicker:         interactive  { Dropdown selecting a concept state field to sort by }
+    sortDirectionSelect:     interactive  { Direction selector: ascending or descending }
+    sortRemoveButton:        action       { Remove this sort row }
+    addSortButton:           action       { Add a new sort row }
+
+    createFieldPanel:        container    { Create button fields panel: structured name/label/type rows }
+    createFieldRow:          container    { Single create field row: name + label + type dropdown }
+    createFieldNameInput:    interactive  { Field name input in create button config }
+    createFieldLabelInput:   interactive  { Display label input in create button config }
+    createFieldTypeSelect:   interactive  { Type dropdown (text/string/number/date/boolean/select) }
+    createFieldRemoveButton: action       { Remove this create field row }
+    addCreateFieldButton:    action       { Add a new create field row }
+  }
+
+  states {
+    idle [initial] {
+      on SAVE -> saving;
+    }
+    saving {
+      on SAVE_SUCCESS -> saved;
+      on SAVE_ERROR   -> idle;
+    }
+    saved {
+      on FLASH_DONE -> idle;
+      entry [startSavedFlash];
+    }
+  }
+
+  accessibility {
+    role: form;
+    keyboard {
+      Tab         -> FOCUS_NEXT;
+      Escape      -> CANCEL;
+    }
+    focus {
+      trap: false;
+      initial: conceptActionPicker;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "main";
+        aria-label: "View editor";
+        data-state: state;
+      };
+      saveButton -> {
+        role: "button";
+        aria-label: if state == "saving" then "Saving..." else "Save view";
+        aria-disabled: if state == "saving" then "true" else "false";
+        aria-busy: if state == "saving" then "true" else "false";
+      };
+      filterRow -> {
+        role: "group";
+        aria-label: "Filter condition";
+      };
+      sortRow -> {
+        role: "group";
+        aria-label: "Sort rule";
+      };
+      createFieldRow -> {
+        role: "group";
+        aria-label: "Create button field";
+      };
+    }
+  }
+
+  props {
+    viewId:              String
+    mode:                union "create" | "edit" = "edit"
+    context:             option String
+    hasUnsavedChanges:   Bool = false
+    conceptName:         option String
+    actionName:          option String
+    actionInputs:        list String = []
+    conceptStateFields:  list String = []
+  }
+
+  connect {
+    root -> {
+      data-part:  "root";
+      data-state: state;
+    }
+
+    saveButton -> {
+      data-part:  "save-button";
+      disabled:   if state == "saving" then true else false;
+      onClick:    send(SAVE);
+    }
+
+    addFilterButton -> {
+      data-part: "add-filter-button";
+      onClick:   send(ADD_FILTER);
+    }
+
+    addSortButton -> {
+      data-part: "add-sort-button";
+      onClick:   send(ADD_SORT);
+    }
+
+    addParamButton -> {
+      data-part: "add-param-button";
+      onClick:   send(ADD_PARAM);
+    }
+
+    addCreateFieldButton -> {
+      data-part: "add-create-field-button";
+      onClick:   send(ADD_CREATE_FIELD);
+    }
+
+    filterRow -> {
+      data-part: "filter-row";
+    }
+
+    sortRow -> {
+      data-part: "sort-row";
+    }
+
+    createFieldRow -> {
+      data-part: "create-field-row";
+    }
+  }
+
+  invariant {
+    "params control MUST NOT render a JSON textarea when the selected action has a known signature -- typed controls (toggle for Boolean, number input for Int/Float, date picker for Date/DateTime, enum dropdown for union, text input for String) are rendered per declared input field instead";
+    "when actionInputs is non-empty, paramEditor renders exactly one typed paramField per declared input where the input type matches the declared field type: Boolean -> checkbox toggle, Int|Float|Number -> number input, Date|DateTime -> date input, union type -> select dropdown, all other types -> text input";
+    "paramEditor always renders an additionalParamRow section for ad-hoc key/value params not in the action signature; this section is always present regardless of whether actionInputs is empty or not";
+    "filter row MUST include field, operator, and value controls where operator options depend on the resolved field type: string/text -> is/isNot/contains/notContains/startsWith/endsWith/isEmpty/isNotEmpty; number -> eq/neq/gt/gte/lt/lte/isEmpty/isNotEmpty; date -> before/after/on/isEmpty/isNotEmpty; boolean -> is; select -> is/isNot/isEmpty/isNotEmpty; multi-select -> contains/notContains/isEmpty/isNotEmpty";
+    "filterFieldPicker is populated from conceptStateFields when conceptName is set; falls back to free-text input when conceptStateFields is empty";
+    "filterOperatorDropdown is always present in every filterRow and its options change when the field type changes";
+    "filterValueInput is absent (TypedValueInput returns null) when filterOperatorDropdown is set to a unary operator such as isEmpty or isNotEmpty";
+    "sort row MUST include field and direction controls: sortFieldPicker selects a concept state field, sortDirectionSelect has exactly two options (ascending and descending)";
+    "sortFieldPicker is populated from conceptStateFields when conceptName is set; falls back to free-text input when conceptStateFields is empty";
+    "createFieldRow MUST render createFieldNameInput (text), createFieldLabelInput (text), and createFieldTypeSelect (dropdown with at least text/string/number/date/boolean/select options) -- no JSON textarea";
+    "all four JSON textareas that previously existed (params JSON, filter JSON, sort JSON, create-fields JSON) are entirely absent from the rendered DOM -- no textarea element exists in these editor sections";
+    "saving the view persists filters as structured FilterConfig objects with id/field/fieldType/operator/value rather than the legacy toggle-group shape";
+    "all three FSM states are reachable: idle is initial; SAVE reaches saving from idle; SAVE_SUCCESS reaches saved from saving; FLASH_DONE reaches idle from saved";
+    "saveButton is disabled when state is saving; data-state on root reflects the current FSM state at all times";
+  }
+
+}

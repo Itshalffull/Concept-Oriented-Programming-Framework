@@ -19,7 +19,7 @@
  * Theme-aware via CSS custom properties throughout.
  */
 
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Card } from './widgets/Card';
 import { Badge } from './widgets/Badge';
 import { useConceptQuery } from '../../lib/use-concept-query';
@@ -27,6 +27,15 @@ import { useKernelInvoke, useNavigator } from '../../lib/clef-provider';
 import { ViewRenderer } from './ViewRenderer';
 import { ViewEditorToolbar } from './widgets/ViewEditorToolbar';
 import { ConceptActionPicker } from './widgets/ConceptActionPicker';
+import type { ConceptActionSpec as _ConceptActionSpec } from './widgets/ConceptActionPicker';
+
+/** Extended action spec that includes input param definitions */
+interface ConceptActionSpec extends _ConceptActionSpec {
+  inputs?: Array<{ name: string; type: string; required?: boolean }>;
+}
+import { FieldPickerDropdown, type FieldDef } from './widgets/FieldPickerDropdown';
+import { OperatorDropdown, type FieldType, getOperatorsForType, isUnaryOperator } from './widgets/OperatorDropdown';
+import { TypedValueInput } from './widgets/TypedValueInput';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -59,11 +68,13 @@ interface FieldConfig {
 }
 
 interface FilterConfig {
+  id: string;
   field: string;
+  fieldType: FieldType;
+  operator: string;
+  value: string;
+  /** legacy fields — preserved for round-trip serialization */
   label?: string;
-  type: 'toggle-group';
-  defaultOn?: string[];
-  defaultOff?: string[];
 }
 
 interface SortConfig {
@@ -168,6 +179,73 @@ function safeParse<T>(json: string | undefined | null, fallback: T): T {
   try { return JSON.parse(json) as T; } catch { return fallback; }
 }
 
+/** Map a concept spec type string to a FieldPickerDropdown FieldType */
+function conceptTypeToFieldType(typeStr: string): FieldType {
+  const t = (typeStr ?? '').toLowerCase().trim();
+  if (t === 'bool' || t === 'boolean') return 'boolean';
+  if (t === 'int' || t === 'float' || t === 'number') return 'number';
+  if (t === 'date' || t === 'datetime') return 'date';
+  if (t.startsWith('list') || t.startsWith('set ') || t === 'set') return 'multi-select';
+  if (t.startsWith('union') || t.includes('|')) return 'select';
+  return 'string';
+}
+
+/** Map an action input param type to a FieldType for the typed param widget */
+function paramTypeToFieldType(typeStr: string): FieldType {
+  return conceptTypeToFieldType(typeStr);
+}
+
+/** Extract a unique id for a filter — stable across re-renders */
+let _filterIdSeq = 1;
+function newFilterId(): string {
+  return `filter-${Date.now()}-${_filterIdSeq++}`;
+}
+
+// ── Hook: concept state fields from ScoreApi ─────────────────────────────────
+
+interface ConceptStateField {
+  name: string;
+  type: string;
+}
+
+const _stateFieldsCache = new Map<string, ConceptStateField[]>();
+
+function useConceptStateFields(conceptName: string): ConceptStateField[] {
+  const invoke = useKernelInvoke();
+  const [fields, setFields] = useState<ConceptStateField[]>(() => _stateFieldsCache.get(conceptName) ?? []);
+  const lastFetched = useRef<string>('');
+
+  useEffect(() => {
+    if (!conceptName || lastFetched.current === conceptName) return;
+    const cached = _stateFieldsCache.get(conceptName);
+    if (cached) { setFields(cached); lastFetched.current = conceptName; return; }
+    lastFetched.current = conceptName;
+    invoke('ScoreApi', 'getConcept', { name: conceptName })
+      .then((result: Record<string, unknown>) => {
+        if (result.variant !== 'ok') return;
+        // getConcept returns stateFields as array of {name, type} or strings
+        let raw: unknown[] = [];
+        if (Array.isArray(result.stateFields)) raw = result.stateFields as unknown[];
+        else if (typeof result.stateFields === 'string') {
+          try { raw = JSON.parse(result.stateFields as string); } catch { raw = []; }
+        }
+        const parsed: ConceptStateField[] = raw.map((f) => {
+          if (typeof f === 'string') return { name: f, type: 'string' };
+          const fo = f as Record<string, unknown>;
+          return {
+            name: String(fo.name ?? fo.key ?? ''),
+            type: String(fo.type ?? fo.fieldType ?? 'string'),
+          };
+        }).filter((f) => f.name !== '');
+        _stateFieldsCache.set(conceptName, parsed);
+        setFields(parsed);
+      })
+      .catch(() => { /* silent — fall back to empty */ });
+  }, [conceptName, invoke]);
+
+  return fields;
+}
+
 // ── Sub-components ───────────────────────────────────────────────────────────
 
 /** Panel wrapper — a themed Card section with a title */
@@ -204,33 +282,231 @@ const EditorPanel: React.FC<{
 
 // ── Source Selector ──────────────────────────────────────────────────────────
 
+/**
+ * Schema-driven parameter editor for a concept action.
+ *
+ * When an action with a known signature is selected, renders one typed control
+ * per input field (Boolean -> toggle, Number -> number input, Date -> date
+ * picker, enum -> dropdown, String -> text input). Also exposes an "Additional
+ * parameters" section for ad-hoc key/value pairs not present in the signature.
+ *
+ * Invariant: no raw JSON textarea is rendered when the action has a known
+ * signature. The JSON textarea fallback is only shown if actionSpec is absent.
+ */
+const ParamEditor: React.FC<{
+  actionSpec: ConceptActionSpec | null;
+  params: Record<string, unknown>;
+  onChange: (params: Record<string, unknown>) => void;
+}> = ({ actionSpec, params, onChange }) => {
+  // Additional (ad-hoc) params — key/value pairs not in the signature
+  const knownKeys = useMemo(
+    () => new Set((actionSpec?.inputs ?? []).map((f) => f.name)),
+    [actionSpec],
+  );
+  const additionalEntries = useMemo(
+    () => Object.entries(params).filter(([k]) => !knownKeys.has(k)),
+    [params, knownKeys],
+  );
+
+  const setParam = useCallback((key: string, value: unknown) => {
+    onChange({ ...params, [key]: value });
+  }, [params, onChange]);
+
+  const removeAdditional = useCallback((key: string) => {
+    const next = { ...params };
+    delete next[key];
+    onChange(next);
+  }, [params, onChange]);
+
+  const addAdditional = useCallback(() => {
+    onChange({ ...params, '': '' });
+  }, [params, onChange]);
+
+  const updateAdditionalKey = useCallback((oldKey: string, newKey: string) => {
+    const next: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(params)) {
+      next[k === oldKey ? newKey : k] = v;
+    }
+    onChange(next);
+  }, [params, onChange]);
+
+  // Fallback: no action spec — show generic key/value editor (never a JSON textarea)
+  if (!actionSpec || !actionSpec.inputs || actionSpec.inputs.length === 0) {
+    return (
+      <div>
+        <label style={{ ...labelStyle, color: 'var(--palette-on-surface-variant)', fontWeight: 'normal' }}>
+          Parameters (no declared inputs)
+        </label>
+        {additionalEntries.map(([key, val]) => (
+          <div key={key} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 28px', gap: 'var(--spacing-xs)', marginBottom: 'var(--spacing-xs)' }}>
+            <input
+              type="text"
+              value={key}
+              onChange={(e) => updateAdditionalKey(key, e.target.value)}
+              placeholder="param name"
+              style={{ ...inputStyle, padding: '2px 6px', fontSize: 'var(--typography-body-sm-size)' }}
+            />
+            <input
+              type="text"
+              value={String(val ?? '')}
+              onChange={(e) => setParam(key, e.target.value)}
+              placeholder="value"
+              style={{ ...inputStyle, padding: '2px 6px', fontSize: 'var(--typography-body-sm-size)' }}
+            />
+            <button onClick={() => removeAdditional(key)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--palette-error)', fontSize: '14px' }}>×</button>
+          </div>
+        ))}
+        <button
+          data-part="button" data-variant="outlined"
+          onClick={addAdditional}
+          style={{ marginTop: 'var(--spacing-xs)', fontSize: 'var(--typography-body-sm-size)' }}
+        >
+          + Add Parameter
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
+      {/* Signature-driven typed fields */}
+      {(actionSpec.inputs ?? []).map((field) => {
+        const ft = paramTypeToFieldType(field.type);
+        const rawVal = params[field.name];
+        const strVal = rawVal === undefined || rawVal === null ? '' : String(rawVal);
+        return (
+          <div key={field.name} style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: 'var(--spacing-sm)', alignItems: 'center' }}>
+            <label style={{ ...labelStyle, marginBottom: 0, fontSize: 'var(--typography-label-sm-size)' }}>
+              {field.name}
+              <span style={{ marginLeft: 4, fontWeight: 'normal', color: 'var(--palette-on-surface-variant)', fontSize: '11px' }}>
+                ({field.type})
+              </span>
+            </label>
+            {ft === 'boolean' ? (
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 'var(--typography-body-sm-size)' }}>
+                <input
+                  type="checkbox"
+                  checked={rawVal === true || rawVal === 'true'}
+                  onChange={(e) => setParam(field.name, e.target.checked)}
+                />
+                {rawVal === true || rawVal === 'true' ? 'true' : 'false'}
+              </label>
+            ) : ft === 'number' ? (
+              <input
+                type="number"
+                value={strVal}
+                onChange={(e) => setParam(field.name, e.target.value === '' ? undefined : Number(e.target.value))}
+                placeholder={field.name}
+                style={{ ...inputStyle, padding: '4px 8px', fontSize: 'var(--typography-body-sm-size)' }}
+              />
+            ) : ft === 'date' ? (
+              <input
+                type="date"
+                value={strVal}
+                onChange={(e) => setParam(field.name, e.target.value)}
+                style={{ ...inputStyle, padding: '4px 8px', fontSize: 'var(--typography-body-sm-size)' }}
+              />
+            ) : ft === 'select' ? (
+              <select
+                value={strVal}
+                onChange={(e) => setParam(field.name, e.target.value)}
+                style={{ ...inputStyle, padding: '4px 8px', fontSize: 'var(--typography-body-sm-size)' }}
+              >
+                <option value="">—</option>
+                {/* Extract enum values from type like `union "a" | "b"` */}
+                {(field.type.match(/"([^"]+)"/g) ?? []).map((m) => {
+                  const v = m.replace(/"/g, '');
+                  return <option key={v} value={v}>{v}</option>;
+                })}
+              </select>
+            ) : (
+              <input
+                type="text"
+                value={strVal}
+                onChange={(e) => setParam(field.name, e.target.value)}
+                placeholder={field.name}
+                style={{ ...inputStyle, padding: '4px 8px', fontSize: 'var(--typography-body-sm-size)' }}
+              />
+            )}
+          </div>
+        );
+      })}
+
+      {/* Additional parameters not in the signature */}
+      {additionalEntries.length > 0 && (
+        <div style={{ borderTop: '1px solid var(--palette-outline-variant)', paddingTop: 'var(--spacing-sm)', marginTop: 'var(--spacing-xs)' }}>
+          <label style={{ ...labelStyle, fontSize: 'var(--typography-label-sm-size)', color: 'var(--palette-on-surface-variant)' }}>
+            Additional parameters
+          </label>
+          {additionalEntries.map(([key, val]) => (
+            <div key={key} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 28px', gap: 'var(--spacing-xs)', marginBottom: 'var(--spacing-xs)' }}>
+              <input
+                type="text"
+                value={key}
+                onChange={(e) => updateAdditionalKey(key, e.target.value)}
+                placeholder="param name"
+                style={{ ...inputStyle, padding: '2px 6px', fontSize: 'var(--typography-body-sm-size)' }}
+              />
+              <input
+                type="text"
+                value={String(val ?? '')}
+                onChange={(e) => setParam(key, e.target.value)}
+                placeholder="value"
+                style={{ ...inputStyle, padding: '2px 6px', fontSize: 'var(--typography-body-sm-size)' }}
+              />
+              <button onClick={() => removeAdditional(key)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--palette-error)', fontSize: '14px' }}>×</button>
+            </div>
+          ))}
+        </div>
+      )}
+      <button
+        data-part="button" data-variant="outlined"
+        onClick={addAdditional}
+        style={{ fontSize: 'var(--typography-body-sm-size)', alignSelf: 'flex-start' }}
+      >
+        + Add Parameter
+      </button>
+    </div>
+  );
+};
+
 const SourceSelector: React.FC<{
   dataSource: DataSourceConfig;
   onChange: (ds: DataSourceConfig) => void;
 }> = ({ dataSource, onChange }) => {
-  const paramsStr = dataSource.params ? JSON.stringify(dataSource.params, null, 2) : '';
-  const [paramsText, setParamsText] = useState(paramsStr);
-  const [paramsError, setParamsError] = useState<string | null>(null);
+  const invoke = useKernelInvoke();
+  const [actionSpec, setActionSpec] = useState<ConceptActionSpec | null>(null);
 
+  // Fetch full action spec (with inputs) from ScoreApi when concept+action known
   useEffect(() => {
-    setParamsText(dataSource.params ? JSON.stringify(dataSource.params, null, 2) : '');
-  }, [dataSource.params]);
-
-  const handleParamsChange = useCallback((text: string) => {
-    setParamsText(text);
-    if (!text.trim()) {
-      setParamsError(null);
-      onChange({ ...dataSource, params: undefined });
-      return;
-    }
-    try {
-      const parsed = JSON.parse(text);
-      setParamsError(null);
-      onChange({ ...dataSource, params: parsed });
-    } catch {
-      setParamsError('Invalid JSON');
-    }
-  }, [dataSource, onChange]);
+    if (!dataSource.concept || !dataSource.action) { setActionSpec(null); return; }
+    invoke('ScoreApi', 'getAction', { concept: dataSource.concept, action: dataSource.action })
+      .then((result: Record<string, unknown>) => {
+        if (result.variant !== 'ok') return;
+        const raw = (result.action ?? {}) as Record<string, unknown>;
+        // Build augmented spec with inputs if available
+        const inputs = Array.isArray(raw.inputs)
+          ? (raw.inputs as Array<Record<string, unknown>>).map((i) => ({
+              name: String(i.name ?? i.key ?? ''),
+              type: String(i.type ?? 'String'),
+              required: Boolean(i.required ?? false),
+            })).filter((i) => i.name !== '')
+          : Array.isArray(raw.params)
+            ? (raw.params as Array<Record<string, unknown>>).map((i) => ({
+                name: String(i.name ?? i.key ?? ''),
+                type: String(i.type ?? 'String'),
+                required: Boolean(i.required ?? false),
+              })).filter((i) => i.name !== '')
+            : [];
+        setActionSpec({
+          name: String(raw.name ?? dataSource.action),
+          description: typeof raw.description === 'string' ? raw.description : undefined,
+          variants: [],
+          inputs,
+        });
+      })
+      .catch(() => { /* silent — leave current spec */ });
+  }, [dataSource.concept, dataSource.action, invoke]);
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 'var(--spacing-md)' }}>
@@ -238,30 +514,21 @@ const SourceSelector: React.FC<{
         <label style={labelStyle}>Concept / Action</label>
         <ConceptActionPicker
           value={dataSource.concept && dataSource.action ? { concept: dataSource.concept, action: dataSource.action } : undefined}
-          onChange={(v) => onChange({ ...dataSource, concept: v.concept, action: v.action })}
+          onChange={(v) => {
+            onChange({ ...dataSource, concept: v.concept, action: v.action });
+            setActionSpec(null); // will be re-fetched by effect
+          }}
           filter="query"
           placeholder="Search query actions…"
         />
       </div>
-      <div style={{ gridColumn: '1 / -1' }}>
-        <label style={labelStyle}>
-          Parameters <span style={{ fontWeight: 'normal', color: 'var(--palette-on-surface-variant)' }}>(JSON, optional)</span>
-        </label>
-        <textarea
-          value={paramsText}
-          onChange={(e) => handleParamsChange(e.target.value)}
-          placeholder='{"schemaFilter": "Article"}'
-          rows={3}
-          style={{
-            ...inputStyle,
-            fontFamily: 'var(--typography-font-family-mono)',
-            fontSize: 'var(--typography-code-sm-size)',
-            resize: 'vertical',
-          }}
+      <div>
+        <label style={labelStyle}>Parameters</label>
+        <ParamEditor
+          actionSpec={actionSpec}
+          params={dataSource.params ?? {}}
+          onChange={(p) => onChange({ ...dataSource, params: Object.keys(p).length ? p : undefined })}
         />
-        {paramsError && (
-          <span style={{ color: 'var(--palette-error)', fontSize: 'var(--typography-body-sm-size)' }}>{paramsError}</span>
-        )}
       </div>
     </div>
   );
@@ -452,85 +719,150 @@ const FieldConfigurator: React.FC<{
 
 // ── Filter Configurator ──────────────────────────────────────────────────────
 
+/**
+ * Notion-style filter condition builder.
+ *
+ * Each row is [field dropdown] [operator dropdown] [value input] [remove].
+ * Field dropdown: concept state fields when concept is known; free-text fallback.
+ * Operator dropdown: adapts to field type (string/number/date/boolean/select).
+ * Value input: typed appropriately by TypedValueInput.
+ *
+ * Invariant: filter row MUST include field, operator, and value controls where
+ * operator options depend on the resolved field type.
+ */
 const FilterConfigurator: React.FC<{
   filters: FilterConfig[];
+  conceptName?: string;
   onChange: (filters: FilterConfig[]) => void;
-}> = ({ filters, onChange }) => {
+}> = ({ filters, conceptName, onChange }) => {
+  const stateFields = useConceptStateFields(conceptName ?? '');
+
+  const availableFields: FieldDef[] = useMemo(() => {
+    if (stateFields.length > 0) {
+      return stateFields.map((f) => ({
+        key: f.name,
+        label: f.name,
+        type: conceptTypeToFieldType(f.type) as FieldDef['type'],
+      }));
+    }
+    // Fallback: synthesize from existing filter fields
+    const seen = new Set<string>();
+    return filters
+      .filter((f) => f.field && !seen.has(f.field) && seen.add(f.field))
+      .map((f) => ({ key: f.field, label: f.field, type: f.fieldType as FieldDef['type'] }));
+  }, [stateFields, filters]);
+
   const addFilter = useCallback(() => {
-    onChange([...filters, { field: '', type: 'toggle-group' }]);
+    const firstField = availableFields[0];
+    onChange([...filters, {
+      id: newFilterId(),
+      field: firstField?.key ?? '',
+      fieldType: (firstField?.type as FieldType) ?? 'string',
+      operator: getOperatorsForType((firstField?.type as FieldType) ?? 'string')[0]?.value ?? 'eq',
+      value: '',
+    }]);
+  }, [filters, onChange, availableFields]);
+
+  const removeFilter = useCallback((id: string) => {
+    onChange(filters.filter((f) => f.id !== id));
   }, [filters, onChange]);
 
-  const removeFilter = useCallback((index: number) => {
-    onChange(filters.filter((_, i) => i !== index));
+  const updateFilter = useCallback((id: string, patch: Partial<FilterConfig>) => {
+    onChange(filters.map((f) => f.id === id ? { ...f, ...patch } : f));
   }, [filters, onChange]);
 
-  const updateFilter = useCallback((index: number, patch: Partial<FilterConfig>) => {
-    onChange(filters.map((f, i) => i === index ? { ...f, ...patch } : f));
-  }, [filters, onChange]);
+  const handleFieldChange = useCallback((id: string, fieldKey: string, fieldType?: FieldDef['type']) => {
+    const ft = (fieldType as FieldType) ?? 'string';
+    const defaultOp = getOperatorsForType(ft)[0]?.value ?? 'eq';
+    updateFilter(id, { field: fieldKey, fieldType: ft, operator: defaultOp, value: '' });
+  }, [updateFilter]);
 
   return (
     <div>
       {filters.length === 0 ? (
         <p style={{ color: 'var(--palette-on-surface-variant)', margin: '0 0 var(--spacing-sm) 0', fontSize: 'var(--typography-body-sm-size)' }}>
-          No filters configured. Add filters to let users narrow results in the view header.
+          No filters configured. Add condition rows to filter the view results.
         </p>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
-          {filters.map((filter, index) => (
-            <div
-              key={index}
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr 1fr 32px',
-                gap: 'var(--spacing-xs)',
-                padding: 'var(--spacing-sm)',
-                background: 'var(--palette-surface)',
-                border: '1px solid var(--palette-outline-variant)',
-                borderRadius: 'var(--radius-sm)',
-                alignItems: 'end',
-              }}
-            >
-              <div>
-                <label style={{ ...labelStyle, fontSize: 'var(--typography-label-sm-size)' }}>Field</label>
-                <input
-                  type="text"
-                  value={filter.field}
-                  onChange={(e) => updateFilter(index, { field: e.target.value })}
-                  placeholder="e.g. schemas"
-                  style={{ ...inputStyle, padding: '2px 6px', fontSize: 'var(--typography-body-sm-size)' }}
-                />
-              </div>
-              <div>
-                <label style={{ ...labelStyle, fontSize: 'var(--typography-label-sm-size)' }}>Label</label>
-                <input
-                  type="text"
-                  value={filter.label ?? ''}
-                  onChange={(e) => updateFilter(index, { label: e.target.value || undefined })}
-                  placeholder="display label"
-                  style={{ ...inputStyle, padding: '2px 6px', fontSize: 'var(--typography-body-sm-size)' }}
-                />
-              </div>
-              <div>
-                <label style={{ ...labelStyle, fontSize: 'var(--typography-label-sm-size)' }}>Type</label>
-                <select
-                  value={filter.type}
-                  onChange={(e) => updateFilter(index, { type: e.target.value as 'toggle-group' })}
-                  style={{ ...inputStyle, padding: '2px 4px', fontSize: 'var(--typography-body-sm-size)' }}
-                >
-                  <option value="toggle-group">Toggle Group</option>
-                </select>
-              </div>
-              <button
-                onClick={() => removeFilter(index)}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
+          {/* Column headers */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 140px 1fr 28px',
+            gap: 'var(--spacing-xs)',
+            padding: '2px var(--spacing-xs)',
+            fontSize: 'var(--typography-label-sm-size)',
+            color: 'var(--palette-on-surface-variant)',
+            fontWeight: 600,
+          }}>
+            <span>Field</span>
+            <span>Operator</span>
+            <span>Value</span>
+            <span />
+          </div>
+          {/* Condition rows */}
+          {filters.map((filter) => {
+            const unary = isUnaryOperator(filter.operator, filter.fieldType);
+            return (
+              <div
+                key={filter.id}
+                data-part="filter-row"
                 style={{
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  color: 'var(--palette-error)', fontSize: '14px', padding: 0,
-                  alignSelf: 'center',
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 140px 1fr 28px',
+                  gap: 'var(--spacing-xs)',
+                  alignItems: 'center',
+                  padding: 'var(--spacing-xs)',
+                  background: 'var(--palette-surface)',
+                  border: '1px solid var(--palette-outline-variant)',
+                  borderRadius: 'var(--radius-sm)',
                 }}
-                title="Remove filter"
-              >×</button>
-            </div>
-          ))}
+              >
+                {/* Field picker */}
+                {availableFields.length > 0 ? (
+                  <FieldPickerDropdown
+                    fields={availableFields}
+                    currentField={filter.field}
+                    onChange={(key, ft) => handleFieldChange(filter.id, key, ft)}
+                    groupBy="type"
+                    placeholder="Select field…"
+                  />
+                ) : (
+                  <input
+                    type="text"
+                    value={filter.field}
+                    onChange={(e) => updateFilter(filter.id, { field: e.target.value })}
+                    placeholder="field name"
+                    style={{ ...inputStyle, padding: '4px 6px', fontSize: 'var(--typography-body-sm-size)' }}
+                  />
+                )}
+                {/* Operator dropdown */}
+                <OperatorDropdown
+                  fieldType={filter.fieldType}
+                  currentOperator={filter.operator}
+                  onChange={(op) => updateFilter(filter.id, { operator: op })}
+                />
+                {/* Typed value input */}
+                <TypedValueInput
+                  fieldType={filter.fieldType}
+                  value={filter.value}
+                  onChange={(v) => updateFilter(filter.id, { value: v })}
+                  operatorIsUnary={unary}
+                  placeholder="value"
+                />
+                {unary && <span />}
+                {/* Remove */}
+                <button
+                  onClick={() => removeFilter(filter.id)}
+                  style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    color: 'var(--palette-error)', fontSize: '14px', padding: 0,
+                  }}
+                  title="Remove filter"
+                >×</button>
+              </div>
+            );
+          })}
         </div>
       )}
       <button
@@ -547,15 +879,36 @@ const FilterConfigurator: React.FC<{
 
 // ── Sort/Group Configurator ──────────────────────────────────────────────────
 
+/**
+ * Sort builder: each row is [field dropdown] [asc/desc toggle] [remove].
+ * Field dropdown is populated from concept state fields when concept is known.
+ *
+ * Invariant: sort row MUST include field and direction controls.
+ */
 const SortGroupConfigurator: React.FC<{
   sorts: SortConfig[];
   groups: string;
+  conceptName?: string;
   onSortsChange: (sorts: SortConfig[]) => void;
   onGroupsChange: (groups: string) => void;
-}> = ({ sorts, groups, onSortsChange, onGroupsChange }) => {
+}> = ({ sorts, groups, conceptName, onSortsChange, onGroupsChange }) => {
+  const stateFields = useConceptStateFields(conceptName ?? '');
+
+  const sortFields: FieldDef[] = useMemo(() => {
+    if (stateFields.length > 0) {
+      return stateFields.map((f) => ({ key: f.name, label: f.name, type: conceptTypeToFieldType(f.type) as FieldDef['type'] }));
+    }
+    // Fallback: unique fields from existing sorts
+    const seen = new Set<string>();
+    return sorts
+      .filter((s) => s.field && !seen.has(s.field) && seen.add(s.field))
+      .map((s) => ({ key: s.field, label: s.field }));
+  }, [stateFields, sorts]);
+
   const addSort = useCallback(() => {
-    onSortsChange([...sorts, { field: '', direction: 'asc' }]);
-  }, [sorts, onSortsChange]);
+    const firstField = sortFields[0];
+    onSortsChange([...sorts, { field: firstField?.key ?? '', direction: 'asc' }]);
+  }, [sorts, onSortsChange, sortFields]);
 
   const removeSort = useCallback((index: number) => {
     onSortsChange(sorts.filter((_, i) => i !== index));
@@ -578,22 +931,42 @@ const SortGroupConfigurator: React.FC<{
           </p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
+            {/* Header */}
+            <div style={{
+              display: 'grid', gridTemplateColumns: '1fr 80px 28px', gap: 'var(--spacing-xs)',
+              padding: '2px 4px', fontSize: 'var(--typography-label-sm-size)',
+              color: 'var(--palette-on-surface-variant)', fontWeight: 600,
+            }}>
+              <span>Field</span>
+              <span>Direction</span>
+              <span />
+            </div>
             {sorts.map((sort, index) => (
-              <div key={index} style={{ display: 'flex', gap: 'var(--spacing-xs)', alignItems: 'center' }}>
-                <input
-                  type="text"
-                  value={sort.field}
-                  onChange={(e) => updateSort(index, { field: e.target.value })}
-                  placeholder="field"
-                  style={{ ...inputStyle, flex: 1, padding: '2px 6px', fontSize: 'var(--typography-body-sm-size)' }}
-                />
+              <div key={index} data-part="sort-row" style={{ display: 'grid', gridTemplateColumns: '1fr 80px 28px', gap: 'var(--spacing-xs)', alignItems: 'center' }}>
+                {/* Field picker or text input fallback */}
+                {sortFields.length > 0 ? (
+                  <FieldPickerDropdown
+                    fields={sortFields}
+                    currentField={sort.field}
+                    onChange={(key) => updateSort(index, { field: key })}
+                    placeholder="Select field…"
+                  />
+                ) : (
+                  <input
+                    type="text"
+                    value={sort.field}
+                    onChange={(e) => updateSort(index, { field: e.target.value })}
+                    placeholder="field"
+                    style={{ ...inputStyle, padding: '4px 6px', fontSize: 'var(--typography-body-sm-size)' }}
+                  />
+                )}
                 <select
                   value={sort.direction}
                   onChange={(e) => updateSort(index, { direction: e.target.value as 'asc' | 'desc' })}
-                  style={{ ...inputStyle, width: '70px', padding: '2px 4px', fontSize: 'var(--typography-body-sm-size)' }}
+                  style={{ ...inputStyle, padding: '4px 6px', fontSize: 'var(--typography-body-sm-size)' }}
                 >
-                  <option value="asc">Asc</option>
-                  <option value="desc">Desc</option>
+                  <option value="asc">Asc ↑</option>
+                  <option value="desc">Desc ↓</option>
                 </select>
                 <button
                   onClick={() => removeSort(index)}
@@ -633,35 +1006,42 @@ const SortGroupConfigurator: React.FC<{
   );
 };
 
+// ── Field type options for Create Button fields ──────────────────────────────
+
+const FIELD_TYPE_OPTIONS = [
+  { value: 'text', label: 'Text' },
+  { value: 'string', label: 'String' },
+  { value: 'number', label: 'Number' },
+  { value: 'date', label: 'Date' },
+  { value: 'boolean', label: 'Boolean' },
+  { value: 'select', label: 'Select' },
+  { value: 'multi-select', label: 'Multi-select' },
+];
+
 // ── Controls Configurator ────────────────────────────────────────────────────
+
+type CreateField = NonNullable<ControlsConfig['create']>['fields'][number];
 
 const ControlsConfigurator: React.FC<{
   controls: ControlsConfig;
   onChange: (controls: ControlsConfig) => void;
 }> = ({ controls, onChange }) => {
-  const [createFieldsText, setCreateFieldsText] = useState(
-    controls.create?.fields ? JSON.stringify(controls.create.fields, null, 2) : ''
-  );
-  const [fieldsError, setFieldsError] = useState<string | null>(null);
+  const updateCreateField = useCallback((index: number, patch: Partial<CreateField>) => {
+    if (!controls.create) return;
+    const fields = controls.create.fields.map((f, i) => i === index ? { ...f, ...patch } : f);
+    onChange({ ...controls, create: { ...controls.create, fields } });
+  }, [controls, onChange]);
 
-  const handleCreateFieldsChange = useCallback((text: string) => {
-    setCreateFieldsText(text);
-    if (!text.trim()) {
-      setFieldsError(null);
-      if (controls.create) {
-        onChange({ ...controls, create: { ...controls.create, fields: [] } });
-      }
-      return;
-    }
-    try {
-      const parsed = JSON.parse(text);
-      setFieldsError(null);
-      if (controls.create) {
-        onChange({ ...controls, create: { ...controls.create, fields: parsed } });
-      }
-    } catch {
-      setFieldsError('Invalid JSON');
-    }
+  const addCreateField = useCallback(() => {
+    if (!controls.create) return;
+    const fields = [...controls.create.fields, { name: '', label: '', type: 'string' }];
+    onChange({ ...controls, create: { ...controls.create, fields } });
+  }, [controls, onChange]);
+
+  const removeCreateField = useCallback((index: number) => {
+    if (!controls.create) return;
+    const fields = controls.create.fields.filter((_, i) => i !== index);
+    onChange({ ...controls, create: { ...controls.create, fields } });
   }, [controls, onChange]);
 
   const addRowAction = useCallback(() => {
@@ -766,22 +1146,60 @@ const ControlsConfigurator: React.FC<{
               </div>
               <div>
                 <label style={{ ...labelStyle, fontSize: 'var(--typography-label-sm-size)' }}>
-                  Fields <span style={{ fontWeight: 'normal', color: 'var(--palette-on-surface-variant)' }}>(JSON array)</span>
+                  Fields
                 </label>
-                <textarea
-                  value={createFieldsText}
-                  onChange={(e) => handleCreateFieldsChange(e.target.value)}
-                  rows={4}
-                  style={{
-                    ...inputStyle,
-                    fontFamily: 'var(--typography-font-family-mono)',
-                    fontSize: 'var(--typography-code-sm-size)',
-                    resize: 'vertical',
-                  }}
-                />
-                {fieldsError && (
-                  <span style={{ color: 'var(--palette-error)', fontSize: 'var(--typography-body-sm-size)' }}>{fieldsError}</span>
+                {/* Structured field rows: name / label / type */}
+                {(controls.create?.fields ?? []).length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)', marginBottom: 'var(--spacing-xs)' }}>
+                    {/* Header */}
+                    <div style={{
+                      display: 'grid', gridTemplateColumns: '1fr 1fr 100px 28px', gap: 'var(--spacing-xs)',
+                      padding: '2px 4px', fontSize: 'var(--typography-label-sm-size)',
+                      color: 'var(--palette-on-surface-variant)', fontWeight: 600,
+                    }}>
+                      <span>Name</span><span>Label</span><span>Type</span><span />
+                    </div>
+                    {(controls.create?.fields ?? []).map((field, idx) => (
+                      <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 100px 28px', gap: 'var(--spacing-xs)', alignItems: 'center' }}>
+                        <input
+                          type="text"
+                          value={field.name}
+                          onChange={(e) => updateCreateField(idx, { name: e.target.value })}
+                          placeholder="field name"
+                          style={{ ...inputStyle, padding: '3px 6px', fontSize: 'var(--typography-body-sm-size)' }}
+                        />
+                        <input
+                          type="text"
+                          value={field.label ?? ''}
+                          onChange={(e) => updateCreateField(idx, { label: e.target.value || undefined })}
+                          placeholder="display label"
+                          style={{ ...inputStyle, padding: '3px 6px', fontSize: 'var(--typography-body-sm-size)' }}
+                        />
+                        <select
+                          value={field.type ?? 'string'}
+                          onChange={(e) => updateCreateField(idx, { type: e.target.value })}
+                          style={{ ...inputStyle, padding: '3px 4px', fontSize: 'var(--typography-body-sm-size)' }}
+                        >
+                          {FIELD_TYPE_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                          ))}
+                        </select>
+                        <button
+                          onClick={() => removeCreateField(idx)}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--palette-error)', fontSize: '14px', padding: 0 }}
+                          title="Remove field"
+                        >×</button>
+                      </div>
+                    ))}
+                  </div>
                 )}
+                <button
+                  data-part="button" data-variant="outlined"
+                  onClick={addCreateField}
+                  style={{ fontSize: 'var(--typography-body-sm-size)' }}
+                >
+                  + Add Field
+                </button>
               </div>
             </div>
           )}
@@ -964,7 +1382,16 @@ export const ViewEditor: React.FC<ViewEditorProps> = ({ viewId, mode = 'edit', c
       setDataSource(safeParse<DataSourceConfig>(viewConfig.dataSource, { concept: '', action: 'list' }));
       setLayout(viewConfig.layout ?? 'table');
       setFields(safeParse<FieldConfig[]>(viewConfig.visibleFields, []));
-      setFilters(safeParse<FilterConfig[]>(viewConfig.filters, []));
+      setFilters(
+        safeParse<FilterConfig[]>(viewConfig.filters, []).map((f, i) => ({
+          id: (f as { id?: string }).id ?? newFilterId(),
+          field: f.field ?? '',
+          fieldType: (f as { fieldType?: FieldType }).fieldType ?? 'string',
+          operator: (f as { operator?: string }).operator ?? 'eq',
+          value: (f as { value?: string }).value ?? '',
+          label: f.label,
+        }))
+      );
       setSorts(safeParse<SortConfig[]>(viewConfig.sorts, []));
       setGroups(safeParse<string>(viewConfig.groups, '') || (typeof viewConfig.groups === 'string' && !viewConfig.groups.startsWith('[') ? viewConfig.groups : ''));
       setControls(safeParse<ControlsConfig>(viewConfig.controls, {}));
@@ -1204,7 +1631,7 @@ export const ViewEditor: React.FC<ViewEditorProps> = ({ viewId, mode = 'edit', c
             collapsed={collapsedPanels['filters']}
             onToggle={() => togglePanel('filters')}
           >
-            <FilterConfigurator filters={filters} onChange={setFilters} />
+            <FilterConfigurator filters={filters} conceptName={dataSource.concept || undefined} onChange={setFilters} />
           </EditorPanel>
 
           {/* Sort & Group */}
@@ -1216,6 +1643,7 @@ export const ViewEditor: React.FC<ViewEditorProps> = ({ viewId, mode = 'edit', c
             <SortGroupConfigurator
               sorts={sorts}
               groups={groups}
+              conceptName={dataSource.concept || undefined}
               onSortsChange={setSorts}
               onGroupsChange={setGroups}
             />
