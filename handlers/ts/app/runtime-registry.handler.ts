@@ -10,7 +10,7 @@
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, branch, complete,
+  createProgram, get as spGet, find, put, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -94,13 +94,17 @@ const _runtimeRegistryHandler: FunctionalConceptHandler = {
   listConcepts(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'concept', {}, 'concepts');
-    return complete(p, 'ok', { concepts: JSON.stringify([]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => ({
+      concepts: JSON.stringify((bindings.concepts as Array<Record<string, unknown>>) ?? []),
+    })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   listSyncs(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'sync', {}, 'syncs');
-    return complete(p, 'ok', { syncs: JSON.stringify([]) }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => ({
+      syncs: JSON.stringify((bindings.syncs as Array<Record<string, unknown>>) ?? []),
+    })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   isLoaded(input: Record<string, unknown>) {
