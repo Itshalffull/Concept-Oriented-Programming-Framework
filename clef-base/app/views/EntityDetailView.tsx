@@ -20,7 +20,7 @@ import { EmptyState } from '../components/widgets/EmptyState';
 import { safeParseJsonArray } from '../../lib/safe-json';
 import { DisplayAsPicker } from '../components/widgets/DisplayAsPicker';
 import { RecursiveBlockEditor, type EditorFlavor } from '../components/widgets/RecursiveBlockEditor';
-// LayoutRenderer import removed — RecursiveBlockEditor is now the sole editor (PP-delete-legacy).
+import { LayoutRenderer } from '../components/LayoutRenderer';
 import { useConceptQuery } from '../../lib/use-concept-query';
 import { useNavigator } from '../../lib/clef-provider';
 import { useVersionPins, VersionPinInfo } from '../../lib/use-version-pins';
@@ -196,7 +196,7 @@ export const EntityDetailView: React.FC<EntityDetailViewProps> = ({ id }) => {
                     style={{ fontSize: '11px', padding: '1px 6px' }}
                     onClick={async () => {
                       try {
-                        const result = await schemaRemoveInvocation.invoke('Schema', 'remove', {
+                        const result = await schemaRemoveInvocation.invoke('Schema', 'removeFrom', {
                           entity_id: id,
                           schema: s,
                         });
@@ -353,17 +353,28 @@ export const EntityDetailView: React.FC<EntityDetailViewProps> = ({ id }) => {
         </Card>
       )}
 
-      {/* RecursiveBlockEditor — unconditional sole editor (PP-delete-legacy). */}
-      <div
-        data-part="recursive-editor-host"
-        style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}
-      >
-        <RecursiveBlockEditor
-          rootNodeId={String(data.node ?? id)}
-          editorFlavor={editorFlavor}
-          canEdit={true}
+      {/* Triple-zone layout — renders entity-properties, entity-content, entity-same-schema,
+          backlinks, similar-entities, unlinked-references, and graph-neighbors ViewShells
+          via the entity-detail Layout seed. The RecursiveBlockEditor fallback is used for
+          content-types that opt out of the layout system (e.g. DailyNote) — keyed by a
+          DisplayMode strategy in a follow-up (TEV-8). */}
+      {displayMode === 'entity-page' ? (
+        <LayoutRenderer
+          layoutId="entity-detail"
+          context={{ entityId: String(data.node ?? id), entityPrimarySchema: primarySchema }}
         />
-      </div>
+      ) : (
+        <div
+          data-part="recursive-editor-host"
+          style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}
+        >
+          <RecursiveBlockEditor
+            rootNodeId={String(data.node ?? id)}
+            editorFlavor={editorFlavor}
+            canEdit={true}
+          />
+        </div>
+      )}
     </div>
   );
 };

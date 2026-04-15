@@ -12,7 +12,7 @@ display_mode:
 target_schemas:
   - "*"
 
-layout: triple-zone-layout
+layout: triple-zone-default
 
 zone_mapping:
   fieldset:
