@@ -70,10 +70,14 @@ export interface UseContentNativeCreateResult {
    * Generates an id, invokes ContentNode/createWithSchema, then navigates to
    * the entity detail page on success.
    *
+   * @param schemaId - The schema to apply to the new node.
+   * @param title - Optional user-supplied title stored on the node so the
+   *   page shows a human-readable name instead of its raw UUID.
+   *
    * Returns `{ entityId }` on success, or `{ error }` if the kernel returned
    * a non-ok variant or if a network error occurred.
    */
-  create: (schemaId: string) => Promise<{ entityId: string } | { error: string }>;
+  create: (schemaId: string, title?: string) => Promise<{ entityId: string } | { error: string }>;
   /** True while the kernel round-trip is in flight. */
   isPending: boolean;
 }
@@ -84,7 +88,7 @@ export function useContentNativeCreate(): UseContentNativeCreateResult {
   const [isPending, setIsPending] = useState(false);
 
   const create = useCallback(
-    async (schemaId: string): Promise<{ entityId: string } | { error: string }> => {
+    async (schemaId: string, title?: string): Promise<{ entityId: string } | { error: string }> => {
       const entityId = generateUUID();
       setIsPending(true);
 
@@ -94,6 +98,7 @@ export function useContentNativeCreate(): UseContentNativeCreateResult {
           node: entityId,
           schema: schemaId,
           body: '',
+          title: title ?? '',
         });
       } catch (err) {
         setIsPending(false);

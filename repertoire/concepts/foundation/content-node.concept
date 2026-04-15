@@ -130,7 +130,7 @@ concept ContentNode [N] {
       fixture set_title_missing { node: "nonexistent-node", title: "Title" } -> notfound
     }
 
-    action createWithSchema(node: N, schema: String, body: String) {
+    action createWithSchema(node: N, schema: String, body: String, title: option String) {
       -> ok(node: N) {
         Atomically create a new ContentNode with the given node id and immediately
         apply a schema classification to it in a single operation, eliminating
@@ -148,6 +148,37 @@ concept ContentNode [N] {
       fixture create_with_schema_empty_id { node: "", schema: "Page", body: "" } -> error
       fixture create_with_schema_empty_schema { node: "node-schema-2", schema: "", body: "" } -> error
       fixture create_with_schema_duplicate { node: $create_page_node.node, schema: "Page", body: "dup" } after create_page_node -> duplicate
+    }
+
+    action recordSchema(node: N, schema: String) {
+      -> ok() {
+        Record that a schema has been applied to this node, mirroring the membership
+        written by Schema/applyTo into ContentNode's own storage so that ContentNode/get
+        returns consistent schema data regardless of which pathway applied the schema.
+        Idempotent: calling again for an already-recorded membership is a no-op.
+      }
+      -> error(message: String) {
+        The node or schema parameter is empty.
+      }
+
+      fixture record_schema_ok { node: $create_page_node.node, schema: "Page" } after create_page_node
+      fixture record_schema_empty_node { node: "", schema: "Page" } -> error
+      fixture record_schema_empty_schema { node: "node-1", schema: "" } -> error
+    }
+
+    action forgetSchema(node: N, schema: String) {
+      -> ok() {
+        Remove a schema membership from this node's local membership table,
+        mirroring a Schema/removeFrom operation so ContentNode/get stops
+        listing the schema. Idempotent: if the membership is already absent,
+        returns ok without error.
+      }
+      -> error(message: String) {
+        The node or schema parameter is empty.
+      }
+
+      fixture forget_schema_ok { node: $create_page_node.node, schema: "Page" } after create_page_node, record_schema_ok
+      fixture forget_schema_empty_node { node: "", schema: "Page" } -> error
     }
 
     action clone(source: String, newId: String, includeChildren: Bool) {
@@ -282,5 +313,46 @@ concept ContentNode [N] {
       createWithSchema(node: n, schema: s, body: b) = ok
       and listBySchema(schema: s) not contains n
 
+  }
+
+  always "get.schemas reflects every applied schema regardless of apply pathway" {
+    forall n in nodes:
+      get(node: n).schemas != none
+  }
+
+  never "applyTo succeeds without being visible to get" {
+    exists n in nodes:
+      recordSchema(node: n, schema: s) = ok
+      and get(node: n).schemas not contains s
+  }
+
+  example "recordSchema-then-get-includes-schema": {
+    after create(node: "rs-node-1", type: "page", content: "", createdBy: "system") -> ok(node: "rs-node-1")
+        then recordSchema(node: "rs-node-1", schema: "Task") -> ok()
+        and get(node: "rs-node-1") -> ok(node: "rs-node-1")
+  }
+
+  example "forgetSchema-then-get-excludes-schema": {
+    after create(node: "fs-node-1", type: "page", content: "", createdBy: "system") -> ok(node: "fs-node-1")
+        after recordSchema(node: "fs-node-1", schema: "Task") -> ok()
+        then forgetSchema(node: "fs-node-1", schema: "Task") -> ok()
+        and get(node: "fs-node-1") -> ok(node: "fs-node-1")
+  }
+
+  example "createWithSchema-persists-schema-membership": {
+    after createWithSchema(node: "inv-node-1", schema: "Article", body: "") -> ok(node: "inv-node-1")
+        then get(node: "inv-node-1") -> ok(node: "inv-node-1", schemas: ["Article"])
+  }
+
+  example "createWithSchema-persists-title": {
+    after createWithSchema(node: "inv-node-2", schema: "Article", body: "") -> ok(node: "inv-node-2")
+        then setTitle(node: "inv-node-2", title: "My Article") -> ok(node: "inv-node-2")
+        and get(node: "inv-node-2") -> ok(node: "inv-node-2")
+  }
+
+  never "setTitle wipes existing content" {
+    exists n in nodes:
+      setTitle(node: n, title: t) = ok
+      and get(node: n).content = none
   }
 }

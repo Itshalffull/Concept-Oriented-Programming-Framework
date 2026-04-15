@@ -155,6 +155,9 @@ export const CreateForm: React.FC<CreateFormProps> = ({
   const { create: contentNativeCreate, isPending: contentNativeIsPending } =
     useContentNativeCreate();
 
+  // Tier 1b title-prompt state — user types a title before the node is created.
+  const [tier1bTitle, setTier1bTitle] = useState('');
+
   // Seed form values from initialValues when the modal opens; reset on close.
   const [values, setValues] = useState<Record<string, string>>(initialValues ?? {});
   const [submitting, setSubmitting] = useState(false);
@@ -291,26 +294,25 @@ export const CreateForm: React.FC<CreateFormProps> = ({
   }, [open, schemaId, destinationId, invoke]);
 
   // -------------------------------------------------------------------------
-  // Tier 1b — content-native create (fires once tier state resolves)
+  // Tier 1b — content-native create (requires title prompt before firing)
   // -------------------------------------------------------------------------
 
+  // Reset tier1bTitle when the modal closes so stale values don't reappear.
   useEffect(() => {
-    if (!open) return;
-    if (tierState.status !== 'resolved') return;
-    if (!tierState.displayWidget) return;
-    if (!schemaId) return;
+    if (!open) setTier1bTitle('');
+  }, [open]);
 
-    // Fire content-native create automatically — no form to show.
-    contentNativeCreate(schemaId).then((result) => {
-      if ('error' in result) {
-        setError(result.error);
-      } else {
-        // Navigation already happened inside the hook. Close the modal.
-        onClose();
-      }
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tierState.status, tierState.displayWidget]);
+  const handleTier1bSubmit = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!schemaId) return;
+    const result = await contentNativeCreate(schemaId, tier1bTitle.trim());
+    if ('error' in result) {
+      setError(result.error);
+    } else {
+      // Navigation already happened inside the hook. Close the modal.
+      onClose();
+    }
+  }, [contentNativeCreate, schemaId, tier1bTitle, onClose]);
 
   // -------------------------------------------------------------------------
   // Tier 1a — navigate to page route when create_mode_hint is "page"
@@ -436,18 +438,49 @@ export const CreateForm: React.FC<CreateFormProps> = ({
           <SurfaceComp mode="create" context={null} initialValues={initialValues ?? {}} />
 
         ) : tier1b ? (
-          // Tier 1b — content-native create; hook navigates automatically.
-          // While the kernel round-trip is in flight, show a spinner.
-          // If the hook returned an error (captured in the error state), show it.
-          <div data-part="field-panel-subtitle">
-            {error ? (
-              <span data-part="field-error">{error}</span>
-            ) : (
-              contentNativeIsPending
-                ? 'Creating...'
-                : 'Redirecting to editor...'
+          // Tier 1b — content-native create.
+          // Prompt for a title before creating the node so the page shows a
+          // human-readable name instead of its raw UUID.
+          <form onSubmit={handleTier1bSubmit}>
+            {error && (
+              <div data-part="field-error">{error}</div>
             )}
-          </div>
+            <div data-part="field-panel-row">
+              <label htmlFor="tier1b-title" data-part="field-label">
+                Title <span data-part="field-required">*</span>
+              </label>
+              <input
+                id="tier1b-title"
+                type="text"
+                value={tier1bTitle}
+                onChange={(e) => setTier1bTitle(e.target.value)}
+                placeholder="Enter a title..."
+                required
+                autoFocus
+                data-surface="mag651-field-control"
+                data-contract="field-control"
+              />
+            </div>
+            <div data-part="field-actions" style={{ marginTop: 'var(--spacing-lg)' }}>
+              <button
+                type="button"
+                data-part="button"
+                data-variant="outlined"
+                onClick={onClose}
+                disabled={contentNativeIsPending}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                data-part="button"
+                data-variant="filled"
+                disabled={contentNativeIsPending || !tier1bTitle.trim()}
+              >
+                {contentNativeIsPending ? 'Creating...' : 'Create'}
+              </button>
+            </div>
+          </form>
 
         ) : tier2 ? (
           // Tier 2 — FormSpec-driven rendering via FormRenderer.

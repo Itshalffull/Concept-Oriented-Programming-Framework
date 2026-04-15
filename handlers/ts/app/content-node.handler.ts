@@ -297,7 +297,9 @@ const _contentNodeHandler: FunctionalConceptHandler = {
     p = spGet(p, 'node', node, 'existing');
     p = branch(p, 'existing',
       (b) => {
-        let b2 = put(b, 'node', node, {
+        // merge preserves all existing fields (type, content, metadata, etc.)
+        // while updating only title + updatedAt. put would wipe other fields.
+        let b2 = merge(b, 'node', node, {
           title,
           updatedAt: new Date().toISOString(),
         });
@@ -430,6 +432,7 @@ const _contentNodeHandler: FunctionalConceptHandler = {
     const node = ((input.node ?? input.id) as string | undefined) ?? '';
     const schema = (input.schema as string | undefined) ?? '';
     const body = (input.body as string | undefined) ?? '';
+    const title = (input.title as string | undefined) ?? '';
 
     if (!node || node.trim() === '') {
       return complete(createProgram(), 'error', { message: 'node is required' }) as StorageProgram<Result>;
@@ -449,6 +452,7 @@ const _contentNodeHandler: FunctionalConceptHandler = {
           node,
           type: schema.toLowerCase(),
           content: body,
+          title,
           metadata: '',
           createdBy: 'system',
           createdAt: now,
@@ -462,6 +466,58 @@ const _contentNodeHandler: FunctionalConceptHandler = {
         });
         return complete(b2, 'ok', { node });
       },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
+  recordSchema(input: Record<string, unknown>) {
+    // Written by the schema-apply-records-membership sync when Schema/applyTo completes.
+    // Ensures ContentNode/get's membership query reflects schemas applied via Schema/applyTo
+    // (not just those written by createWithSchema), keeping the two storage namespaces in sync.
+    const node = input.node as string;
+    const schema = input.schema as string;
+
+    if (!node || !schema) {
+      return complete(createProgram(), 'error', { message: 'node and schema are required' }) as StorageProgram<Result>;
+    }
+
+    const membershipKey = `${node}::${schema}`;
+    let p = createProgram();
+    p = spGet(p, 'membership', membershipKey, 'existing');
+    p = branch(p, 'existing',
+      (b) => complete(b, 'ok', {}), // already recorded — idempotent
+      (b) => {
+        let b2 = put(b, 'membership', membershipKey, {
+          entity_id: node,
+          schema,
+          appliedAt: new Date().toISOString(),
+        });
+        return complete(b2, 'ok', {});
+      },
+    );
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
+  forgetSchema(input: Record<string, unknown>) {
+    // Written by the schema-remove-forgets-membership sync when Schema/removeFrom completes.
+    // Mirrors the removal into ContentNode's membership table so ContentNode/get
+    // stops listing the schema after it has been removed via Schema/removeFrom.
+    const node = input.node as string;
+    const schema = input.schema as string;
+
+    if (!node || !schema) {
+      return complete(createProgram(), 'error', { message: 'node and schema are required' }) as StorageProgram<Result>;
+    }
+
+    const membershipKey = `${node}::${schema}`;
+    let p = createProgram();
+    p = spGet(p, 'membership', membershipKey, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = del(b, 'membership', membershipKey);
+        return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'ok', {}), // not present — already consistent, idempotent
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
