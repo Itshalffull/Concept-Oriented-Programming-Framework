@@ -20,7 +20,8 @@
 | [MAG-917](https://vibekanban.com) ✅ `83e0a06a` | INV-13 Wire test execution through `Builder/test` so dormant quality-signal syncs fire | — |
 | [MAG-918](https://vibekanban.com) ✅ `7a07bdc2` | INV-14 Integrate ExternalHandlerGen + IntegrationTestGen with universal grammar — `scenario` invariants feed IntegrationTestGen alongside fixtures; ExternalHandlerGen-generated handlers participate in TestGeneration pipeline | — |
 | [MAG-919](https://vibekanban.com) | INV-15 Add `/create-external-handler` + `/generate-integration-test` skills — extend `examples/devtools/devtools.interface.yaml`, regen via `scripts/regen-interface.ts` | — |
-| [MAG-920](https://vibekanban.com) ✅ `46f1a214` | INV-16 Handlers-as-values test generation — TestPlan consumes StorageProgram descriptions + ExternalHandler manifests; emit mock/replay handler variants, effect-contract tests, FieldTransform-fuzzed inputs (replay + fuzz stubbed) | — |
+| [MAG-920](https://vibekanban.com) ✅ `46f1a214` | INV-16 Handlers-as-values test generation — TestPlan consumes StorageProgram descriptions + ExternalHandler manifests; emit mock/replay handler variants, effect-contract tests, FieldTransform-fuzzed inputs (replay + fuzz stubbed) | MAG-921 |
+| [MAG-921](https://vibekanban.com) | INV-17 Finish MAG-920 stubs — ReplayHandlerRenderer cassette I/O + FieldTransform fingerprinting; FieldTransformFuzzRenderer on fast-check arbitraries with shrinking | — |
 
 Execution order comes from the blocking graph:
 
