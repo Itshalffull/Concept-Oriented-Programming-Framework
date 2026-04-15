@@ -67,5 +67,5 @@ Don't delete — relocate to `/admin/system` or `/admin/stats`. Still useful, ju
 | DN-6 | referenced-on-this-day widget | done | 1f57e4c0 |
 | DN-7 | /admin → /admin/daily/:today redirect | done | 8d34fbe1 |
 | DN-8 | /admin/daily/:date page + layout | done | b221e2e9 |
-| DN-9 | /admin/system dashboard relocation | pending | — |
+| DN-9 | /admin/system dashboard relocation | done | d017319d |
 | DN-10 | DailyNote schema properties + template | done | 5e649ec9 |
