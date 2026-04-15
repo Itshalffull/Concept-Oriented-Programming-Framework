@@ -35,6 +35,44 @@ import {
 
 import type { HttpRoute, HierarchicalConfig } from './codegen-utils.js';
 import { renderContent, interpolateVars } from './renderer.handler.js';
+import { isContentNative } from '../content-native-concepts.js';
+
+// --- Content-native CRUD action mapping (CNB-3) ---
+//
+// Schema-backed concepts (those whose name matches a registered Schema)
+// have their CRUD surface rewritten to ContentNode operations when the
+// REST target's `contentNative: true` flag is set. See CNB PRD.
+//
+// Mapping:
+//   create         -> ContentNode/createWithSchema { schema, ...content }
+//   get / read     -> ContentNode/get              { node: `${schema}:${id}` }
+//   update / patch -> ContentNode/update           { node, content }
+//   remove / delete/
+//   destroy        -> ContentNode/remove           { node }
+//   list / listAll/
+//   index          -> ContentNode/listBySchema     { schema }
+//
+// Non-CRUD concept actions (e.g. Workflow/addTransition) remain as direct
+// concept dispatch, mounted under `/{schema-lower}/:id/{actionName}`.
+type CrudVerb = 'create' | 'get' | 'update' | 'remove' | 'list';
+
+function classifyCrudAction(actionName: string): CrudVerb | null {
+  const n = actionName.toLowerCase();
+  if (n === 'create') return 'create';
+  if (n === 'get' || n === 'read' || n === 'fetch') return 'get';
+  if (n === 'update' || n === 'patch' || n === 'edit') return 'update';
+  if (n === 'remove' || n === 'delete' || n === 'destroy') return 'remove';
+  if (n === 'list' || n === 'listall' || n === 'index') return 'list';
+  return null;
+}
+
+const CRUD_TO_CONTENT_NODE: Record<CrudVerb, { action: string; method: string }> = {
+  create: { action: 'createWithSchema', method: 'POST' },
+  get: { action: 'get', method: 'GET' },
+  update: { action: 'update', method: 'PATCH' },
+  remove: { action: 'remove', method: 'DELETE' },
+  list: { action: 'listBySchema', method: 'GET' },
+};
 
 // --- Internal Types ---
 
@@ -127,6 +165,88 @@ function generateRouteHandler(
 }
 
 /**
+ * Generate a Hono route handler that routes a content-native CRUD action
+ * through ContentNode instead of dispatching to the concept directly.
+ *
+ * The handler constructs the correct ContentNode payload from the REST
+ * request shape (path params + JSON body / query), preserves the
+ * kernel's error/variant mapping, and returns HTTP status codes matching
+ * the original inferred route.
+ */
+function generateContentNativeRouteHandler(
+  action: ActionSchema,
+  verb: CrudVerb,
+  route: HttpRoute,
+  schemaName: string,
+): string {
+  const honoPath = toHonoPath(route.path);
+  const methodFn = honoMethodCall(route.method);
+  const mapping = CRUD_TO_CONTENT_NODE[verb];
+  const lines: string[] = [];
+
+  lines.push(`// ${route.method} ${route.path} — ${action.name} (content-native -> ContentNode/${mapping.action})`);
+  lines.push(`app.${methodFn}('${honoPath}', async (c: Context) => {`);
+
+  switch (verb) {
+    case 'create': {
+      lines.push(`  const body = await c.req.json();`);
+      lines.push(`  const result = await c.var.kernel.handleRequest({`);
+      lines.push(`    method: 'ContentNode/createWithSchema',`);
+      lines.push(`    schema: '${schemaName}',`);
+      lines.push(`    content: body,`);
+      lines.push(`  });`);
+      break;
+    }
+    case 'get': {
+      lines.push(`  const id = c.req.param('id');`);
+      lines.push(`  const result = await c.var.kernel.handleRequest({`);
+      lines.push(`    method: 'ContentNode/get',`);
+      lines.push(`    node: \`${schemaName}:\${id}\`,`);
+      lines.push(`  });`);
+      break;
+    }
+    case 'update': {
+      lines.push(`  const id = c.req.param('id');`);
+      lines.push(`  const body = await c.req.json();`);
+      lines.push(`  const result = await c.var.kernel.handleRequest({`);
+      lines.push(`    method: 'ContentNode/update',`);
+      lines.push(`    node: \`${schemaName}:\${id}\`,`);
+      lines.push(`    content: body,`);
+      lines.push(`  });`);
+      break;
+    }
+    case 'remove': {
+      lines.push(`  const id = c.req.param('id');`);
+      lines.push(`  const result = await c.var.kernel.handleRequest({`);
+      lines.push(`    method: 'ContentNode/remove',`);
+      lines.push(`    node: \`${schemaName}:\${id}\`,`);
+      lines.push(`  });`);
+      break;
+    }
+    case 'list': {
+      lines.push(`  const query = c.req.query();`);
+      lines.push(`  const result = await c.var.kernel.handleRequest({`);
+      lines.push(`    method: 'ContentNode/listBySchema',`);
+      lines.push(`    schema: '${schemaName}',`);
+      lines.push(`    ...query,`);
+      lines.push(`  });`);
+      break;
+    }
+  }
+
+  // Preserve error codes + variant mapping from the original route.
+  if (route.statusCodes.notFound) {
+    lines.push(`  if (result.variant === 'notFound') return c.json({ errors: { body: ['not found'] } }, ${route.statusCodes.notFound});`);
+  }
+  lines.push(`  if (result.error) return c.json({ errors: { body: [result.error] } }, ${route.statusCodes.error ?? 422});`);
+  lines.push(`  return c.json(result.body, ${route.statusCodes.ok});`);
+
+  lines.push(`});`);
+
+  return lines.join('\n');
+}
+
+/**
  * Generate a Hono route handler for a @hierarchical trait endpoint.
  * Produces children, ancestors, and descendants sub-resource routes.
  */
@@ -165,11 +285,32 @@ function generateHierarchicalHandler(route: HttpRoute, conceptName: string, acti
 /**
  * Generate the full routes.ts file content for a single concept.
  */
+/**
+ * Compute the content-native REST paths for a schema-backed concept.
+ * Collection path = `/{schema-lower}`; item path = `/{schema-lower}/:id`;
+ * domain (non-CRUD) action path = `/{schema-lower}/:id/{actionName}`.
+ */
+function contentNativePaths(schemaName: string): {
+  basePath: string;
+  itemPath: string;
+  actionPath: (actionName: string) => string;
+} {
+  const slug = schemaName.toLowerCase();
+  const basePath = `/${slug}`;
+  const itemPath = `/${slug}/{id}`;
+  return {
+    basePath,
+    itemPath,
+    actionPath: (actionName: string) => `${itemPath}/${actionName}`,
+  };
+}
+
 function generateRoutesFile(
   manifest: ConceptManifest,
   overrides: Record<string, Record<string, unknown>>,
   basePath: string,
   hierConfig?: HierarchicalConfig,
+  contentNative: boolean = false,
 ): { content: string; routes: RouteSummary[] } {
   const header = generateFileHeader('rest', manifest.name);
   const routerName = `${toPascalCase(manifest.name).charAt(0).toLowerCase()}${toPascalCase(manifest.name).slice(1)}Router`;
@@ -181,6 +322,8 @@ function generateRoutesFile(
 
   const routeBlocks: string[] = [];
   const routeSummaries: RouteSummary[] = [];
+
+  const cnPaths = contentNative ? contentNativePaths(manifest.name) : null;
 
   for (const action of manifest.actions) {
     // Check for per-action overrides (method, path)
@@ -195,6 +338,47 @@ function generateRoutesFile(
       };
     } else {
       route = inferHttpRoute(action.name, basePath);
+    }
+
+    // Content-native rewrite: CRUD actions route through ContentNode;
+    // non-CRUD (domain) actions stay as direct concept dispatch but are
+    // mounted under `/{schema-lower}/:id/{actionName}`.
+    if (cnPaths && !actionOverride.path) {
+      const crudVerb = classifyCrudAction(action.name);
+      if (crudVerb) {
+        const mapping = CRUD_TO_CONTENT_NODE[crudVerb];
+        const cnRoute: HttpRoute = {
+          method: mapping.method,
+          path: crudVerb === 'create' || crudVerb === 'list'
+            ? cnPaths.basePath
+            : cnPaths.itemPath,
+          statusCodes: inferHttpRoute(action.name, basePath).statusCodes,
+        };
+        routeBlocks.push(
+          generateContentNativeRouteHandler(action, crudVerb, cnRoute, manifest.name),
+        );
+        routeSummaries.push({
+          action: `ContentNode/${mapping.action}`,
+          method: cnRoute.method,
+          path: cnRoute.path,
+          statusCodes: cnRoute.statusCodes,
+        });
+        continue;
+      }
+      // Non-CRUD domain action: concept dispatch under item path.
+      const domainRoute: HttpRoute = {
+        method: 'POST',
+        path: cnPaths.actionPath(action.name),
+        statusCodes: inferHttpRoute(action.name, basePath).statusCodes,
+      };
+      routeBlocks.push(generateRouteHandler(action, domainRoute, manifest.name));
+      routeSummaries.push({
+        action: action.name,
+        method: domainRoute.method,
+        path: domainRoute.path,
+        statusCodes: domainRoute.statusCodes,
+      });
+      continue;
     }
 
     routeBlocks.push(generateRouteHandler(action, route, manifest.name));
@@ -235,6 +419,104 @@ function generateRoutesFile(
   ].join('\n');
 
   return { content: body, routes: routeSummaries };
+}
+
+// --- Content-Native OpenAPI Generator (CNB-3) ---
+
+/**
+ * Generate an OpenAPI 3.1 spec fragment documenting the content-native
+ * shape of a schema-backed concept's REST surface. Each CRUD path is
+ * annotated with the underlying ContentNode action it dispatches to via
+ * an `x-clef-content-native` extension, and the request/response bodies
+ * reflect the `{ schema, content, node }` payload structure actually
+ * constructed by the generated route handlers.
+ */
+function generateContentNativeOpenApi(
+  manifest: ConceptManifest,
+  basePath: string,
+  routes: RouteSummary[],
+): string {
+  const schemaName = manifest.name;
+  const paths: Record<string, Record<string, unknown>> = {};
+
+  for (const r of routes) {
+    const path = toHonoPath(r.path).replace(/:(\w+)/g, '{$1}');
+    const method = r.method.toLowerCase();
+    paths[path] = paths[path] || {};
+
+    const isContentNativeRoute = r.action.startsWith('ContentNode/');
+    const op: Record<string, unknown> = {
+      summary: r.action,
+      'x-clef-content-native': isContentNativeRoute,
+      'x-clef-dispatches-to': r.action,
+      'x-clef-schema': schemaName,
+      responses: {
+        [String(r.statusCodes.ok)]: { description: 'ok' },
+        ...(r.statusCodes.notFound
+          ? { [String(r.statusCodes.notFound)]: { description: 'not found' } }
+          : {}),
+        [String(r.statusCodes.error ?? 422)]: { description: 'error' },
+      },
+    };
+
+    // Describe request body shape based on which ContentNode action runs.
+    if (isContentNativeRoute) {
+      if (r.action === 'ContentNode/createWithSchema') {
+        op.requestBody = {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                description: `Content payload stored under schema ${schemaName}`,
+                'x-clef-wrapped-as': {
+                  method: 'ContentNode/createWithSchema',
+                  schema: schemaName,
+                  content: '<body>',
+                },
+              },
+            },
+          },
+        };
+      } else if (r.action === 'ContentNode/update') {
+        op.requestBody = {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                'x-clef-wrapped-as': {
+                  method: 'ContentNode/update',
+                  node: `${schemaName}:{id}`,
+                  content: '<body>',
+                },
+              },
+            },
+          },
+        };
+      }
+    }
+
+    (paths[path] as Record<string, unknown>)[method] = op;
+  }
+
+  const spec = {
+    openapi: '3.1.0',
+    info: {
+      title: `${schemaName} (content-native)`,
+      version: '1.0.0',
+      description:
+        `Content-native REST surface for ${schemaName}. CRUD operations ` +
+        `route through ContentNode with schema="${schemaName}"; domain ` +
+        `actions remain direct concept dispatch.`,
+    },
+    'x-clef-content-native': true,
+    'x-clef-schema': schemaName,
+    'x-clef-base-path': basePath,
+    paths,
+  };
+
+  return JSON.stringify(spec, null, 2);
 }
 
 // --- REST API Documentation Generator ---
@@ -291,7 +573,7 @@ const _handler: FunctionalConceptHandler = {
       name: 'RestTarget',
       inputKind: 'InterfaceProjection',
       outputKind: 'RestRoutes',
-      capabilities: JSON.stringify(['hono-routes', 'api-docs', 'hierarchical']),
+      capabilities: JSON.stringify(['hono-routes', 'api-docs', 'hierarchical', 'content-native']),
       targetKey: 'rest',
       providerType: 'target',
 
@@ -369,10 +651,30 @@ const _handler: FunctionalConceptHandler = {
       }
     }
 
+    // --- Determine content-native mode (CNB-3) ---
+    //
+    // `contentNative` is set on the REST target config in interface.yaml.
+    // `schemas` is a JSON array of registered Schema entries used to decide
+    // whether this specific concept is schema-backed.
+    const contentNativeFlag = config.contentNative === true;
+    let schemas: Array<{ schema: string }> = [];
+    if (input.schemas && typeof input.schemas === 'string') {
+      try {
+        const parsed = JSON.parse(input.schemas);
+        if (Array.isArray(parsed)) schemas = parsed as Array<{ schema: string }>;
+      } catch {
+        // Non-fatal: treat as no schemas registered.
+      }
+    }
+    const useContentNative =
+      contentNativeFlag && isContentNative(manifest.name, schemas);
+
     // --- Determine base path ---
 
     const kebabName = toKebabCase(manifest.name);
-    const defaultBasePath = `/${kebabName}s`;
+    const defaultBasePath = useContentNative
+      ? `/${manifest.name.toLowerCase()}`
+      : `/${kebabName}s`;
     const basePath = (config.path as string) || defaultBasePath;
 
     // Detect @hierarchical trait
@@ -398,7 +700,13 @@ const _handler: FunctionalConceptHandler = {
 
     // --- Generate route file ---
 
-    const { content, routes } = generateRoutesFile(manifest, overrides, basePath, hierConfig);
+    const { content, routes } = generateRoutesFile(
+      manifest,
+      overrides,
+      basePath,
+      hierConfig,
+      useContentNative,
+    );
 
     const files: GeneratedFile[] = [
       {
@@ -413,6 +721,15 @@ const _handler: FunctionalConceptHandler = {
       files.push({
         path: `${kebabName}/api-docs.md`,
         content: helpMd,
+      });
+    }
+
+    // Content-native OpenAPI fragment (CNB-3) — documents the content-pool
+    // shape so API consumers see that CRUD routes speak ContentNode.
+    if (useContentNative) {
+      files.push({
+        path: `${kebabName}/openapi.content-native.json`,
+        content: generateContentNativeOpenApi(manifest, basePath, routes),
       });
     }
 
