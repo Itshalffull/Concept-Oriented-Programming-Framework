@@ -6,9 +6,9 @@
 |---|---|---|
 | [MAG-904](https://vibekanban.com) | **INV: Universal Invariant Grammar + Clefy Test Pipeline** (parent) | — |
 | [MAG-905](https://vibekanban.com) ✅ `dd0e05cb` | INV-1 Concepts — InvariantParser [S], TestPlan [T], TestArtifact [A] | MAG-906, MAG-907, MAG-908, MAG-910 |
-| [MAG-906](https://vibekanban.com) | INV-2 Seed AssertionContext plugins (concept/widget/view/sync/derived) | MAG-910, MAG-911 |
-| [MAG-907](https://vibekanban.com) | INV-3 Seed test-plan-renderer plugins (React + Playwright) | MAG-909, MAG-913 |
-| [MAG-908](https://vibekanban.com) | INV-4 Syncs wire the pipeline (Extract / Build / Render / Write / Prune) | MAG-909 |
+| [MAG-906](https://vibekanban.com) ✅ `129dea56` | INV-2 AssertionContext plugins (concept/widget/view/sync/derived) | MAG-910, MAG-911 |
+| [MAG-907](https://vibekanban.com) ✅ `ab4e357e` | INV-3 TestPlanRenderer plugins (React + Playwright) | MAG-909, MAG-913 |
+| [MAG-908](https://vibekanban.com) ✅ `c2d7d361` | INV-4 Syncs wire the pipeline (Extract / Build / Render / Write / Prune) | MAG-909 |
 | [MAG-909](https://vibekanban.com) | INV-5 Derived concept TestGeneration composing the pipeline | MAG-913 |
 | [MAG-910](https://vibekanban.com) | INV-6 Migrate concept-parser + widget-spec-parser to delegate to InvariantParser | MAG-911, MAG-912 |
 | [MAG-911](https://vibekanban.com) | INV-7 Extend view-parser + sync-parser + derived-parser with invariant support | MAG-914 |
