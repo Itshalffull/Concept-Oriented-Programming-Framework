@@ -10,11 +10,11 @@ concept Schema [S] {
   }
   actions {
     action defineSchema(schema: S, fields: String) {
-      -> ok() { Create a new schema with the given fields. }
+      -> ok() { Create a new schema with the given fields. Fields may be empty to create a schema shell; add fields later via addField. }
       -> ok(message: String) { Schema already exists. }
 
       fixture create_article { schema: "article", fields: "title,body,author" }
-      fixture missing_fields { schema: "empty", fields: "" } -> error
+      fixture empty { schema: "empty-schema", fields: "" }
     }
     action addField(schema: S, field: String) {
       -> ok() { Add a field to an existing schema. }
@@ -69,6 +69,11 @@ concept Schema [S] {
     forall s in schemas:
       s.fields != none
   }
+
+  example "defineSchema accepts zero-field input (shell create)": {
+    after defineSchema(schema: "shell-schema", fields: "") -> ok()
+        then addField(schema: "shell-schema", field: "title") -> ok()
+  }
   never "orphaned-extends" {
     exists s in schemas:
       s.extends = none
@@ -76,5 +81,24 @@ concept Schema [S] {
   action addField {
     requires: schema != ""
     ensures ok: schema != none
+  }
+
+  never "applyTo succeeds without the result being visible via getSchemasFor" {
+    exists s in schemas:
+      applyTo(entity_id: e, schema: s) = ok
+      and getSchemasFor(entity_id: e).schemas not contains s
+  }
+
+  example "applyTo-then-getSchemasFor": {
+    after defineSchema(schema: "tag", fields: "label") -> ok()
+        then applyTo(entity_id: "doc-1", schema: "tag") -> ok()
+        and getSchemasFor(entity_id: "doc-1") -> ok()
+  }
+
+  example "applyTo-removeFrom-getSchemasFor": {
+    after defineSchema(schema: "cat", fields: "name") -> ok()
+        after applyTo(entity_id: "doc-2", schema: "cat") -> ok()
+        then removeFrom(entity_id: "doc-2", schema: "cat") -> ok()
+        and getSchemasFor(entity_id: "doc-2") -> ok()
   }
 }

@@ -91,11 +91,11 @@ describe('Schema functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "missing_fields" -> error', async () => {
+    it('fixture "empty" -> ok (schema shell, fields added later via addField)', async () => {
       if (typeof schemaHandler.defineSchema !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(schemaHandler.defineSchema({ schema: "empty", fields: "" }), storage);
-      expect(result.variant).not.toBe('ok');
+      const result = await interpret(schemaHandler.defineSchema({ schema: "empty-schema", fields: "" }), storage);
+      expect(result.variant).toBe('ok');
     });
 
   });

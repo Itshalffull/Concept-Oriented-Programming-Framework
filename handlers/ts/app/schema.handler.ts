@@ -37,14 +37,20 @@ const _schemaHandler: FunctionalConceptHandler = {
   },
 
   defineSchema(input: Record<string, unknown>) {
-    if (!input.fields || (typeof input.fields === 'string' && (input.fields as string).trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'fields is required' }) as StorageProgram<Result>;
-    }
+    // fields is optional — schema editor UI creates a shell first, then adds fields
+    // one by one via FieldDefinition/create (two-step UX). An empty fields param
+    // stores an empty list and returns ok.
     const schema = input.schema as string;
-    const fields = input.fields as string;
+    const rawFields = input.fields as string | undefined;
     const label = (input.label as string | undefined) ?? schema;
     const category = (input.category as string | undefined) ?? '';
     const icon = (input.icon as string | undefined) ?? '';
+
+    // Normalise: undefined/null/empty string → empty list; otherwise split by comma.
+    const fieldList: string[] =
+      rawFields && rawFields.trim() !== ''
+        ? rawFields.split(',').map((f) => f.trim()).filter(Boolean)
+        : [];
 
     let p = createProgram();
     p = spGet(p, 'schema', schema, 'existing');
@@ -56,7 +62,7 @@ const _schemaHandler: FunctionalConceptHandler = {
           label,
           category,
           icon,
-          fields: JSON.stringify(fields.split(',')),
+          fields: JSON.stringify(fieldList),
           extends: '',
           createdAt: new Date().toISOString(),
         });
