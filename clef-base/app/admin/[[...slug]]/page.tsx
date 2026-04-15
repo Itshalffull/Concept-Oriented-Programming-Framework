@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { HostedPage } from '../../components/HostedPage';
 import { LayoutRenderer } from '../../components/LayoutRenderer';
 import { ViewRenderer } from '../../components/ViewRenderer';
@@ -39,11 +39,8 @@ export default async function AdminPage({
   const path = slug.join('/');
 
   if (path === '') {
-    return (
-      <HostedPage>
-        <LayoutRenderer layoutId="dashboard" />
-      </HostedPage>
-    );
+    const today = new Date().toISOString().slice(0, 10);
+    redirect(`/admin/daily/${today}`);
   }
 
   if (slug[0] === 'content' && slug[1]) {
