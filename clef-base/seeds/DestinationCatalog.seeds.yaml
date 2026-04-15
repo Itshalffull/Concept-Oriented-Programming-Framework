@@ -80,6 +80,13 @@ entries:
     href: /admin/syncs
     icon: "⇄"
     group: Platform
+  - destination: system
+    name: system
+    targetConcept: AppShell
+    targetView: system-stats
+    href: /admin/system
+    icon: "📊"
+    group: Platform
   - destination: score
     name: score
     targetConcept: Score

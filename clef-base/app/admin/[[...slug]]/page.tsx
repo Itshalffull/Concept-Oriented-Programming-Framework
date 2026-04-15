@@ -355,6 +355,14 @@ export default async function AdminPage({
     );
   }
 
+  if (path === 'system') {
+    return (
+      <HostedPage>
+        <LayoutRenderer layoutId="dashboard" />
+      </HostedPage>
+    );
+  }
+
   if (path === 'score') {
     return (
       <HostedPage>

@@ -6,8 +6,8 @@ entries:
   - layout: dashboard
     name: Dashboard
     kind: stack
-    title: Dashboard
-    description: System overview with live stats and registered concepts.
+    title: System Stats
+    description: Live system telemetry: concept counts, sync counts, node totals, performance metrics.
     children: '[{"type":"view","id":"dashboard-stats"},{"type":"view","id":"dashboard-concepts"},{"type":"view","id":"content-list"}]'
   - layout: score
     name: Score
