@@ -4,7 +4,7 @@
 // (who, where, what) grant model with optional conditions.
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, del, branch, complete,
+  createProgram, get, find, put, del, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
@@ -65,6 +65,19 @@ const _permissionHandler: FunctionalConceptHandler = {
     );
 
     return p as StorageProgram<Result>;
+  },
+
+  list(input: Record<string, unknown>) {
+    const subject = input.subject as string | undefined;
+    let p = createProgram();
+    p = find(p, 'grant', {}, 'all');
+    return completeFrom(p, 'ok', (bindings) => {
+      let items = (bindings.all as Array<Record<string, unknown>>) ?? [];
+      if (subject) {
+        items = items.filter((g) => g.who === subject);
+      }
+      return { items: JSON.stringify(items) };
+    }) as StorageProgram<Result>;
   },
 };
 

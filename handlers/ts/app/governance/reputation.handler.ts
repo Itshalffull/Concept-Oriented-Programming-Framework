@@ -2,7 +2,7 @@
 // Reputation Concept Handler
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, putFrom, branch, complete, completeFrom, mapBindings,
+  createProgram, get, find, putFrom, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../../runtime/functional-compat.ts';
@@ -165,6 +165,14 @@ const _reputationHandler: FunctionalConceptHandler = {
         newScore: bindings._newScore as number,
       })),
     ) as StorageProgram<Result>;
+  },
+
+  list(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = find(p, 'reputation', {}, 'all');
+    return completeFrom(p, 'ok', (bindings) => ({
+      items: JSON.stringify((bindings.all as Array<Record<string, unknown>>) ?? []),
+    })) as StorageProgram<Result>;
   },
 };
 

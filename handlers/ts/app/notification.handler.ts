@@ -154,13 +154,25 @@ const _notificationHandler: FunctionalConceptHandler = {
     if (!input.user || (typeof input.user === 'string' && (input.user as string).trim() === '')) {
       return complete(createProgram(), 'error', { message: 'user is required' }) as StorageProgram<Result>;
     }
-    const user = input.user as string;
 
     let p = createProgram();
     p = find(p, 'notification', {}, 'allNotifications');
     return completeFrom(p, 'ok', (bindings) => ({
       notifications: JSON.stringify((bindings.allNotifications as Array<Record<string, unknown>>) ?? []),
     })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
+  list(input: Record<string, unknown>) {
+    const recipient = input.recipient as string | undefined;
+    let p = createProgram();
+    p = find(p, 'notification', {}, 'all');
+    return completeFrom(p, 'ok', (bindings) => {
+      let items = (bindings.all as Array<Record<string, unknown>>) ?? [];
+      if (recipient) {
+        items = items.filter((n) => n.user === recipient);
+      }
+      return { items: JSON.stringify(items) };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
 
