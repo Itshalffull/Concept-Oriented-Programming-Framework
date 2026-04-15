@@ -135,6 +135,13 @@ interface ControlsConfig {
       required?: boolean;
       placeholder?: string;
     }>;
+    /**
+     * Schema ID for content-native Tier 1b / Tier 2 create routing.
+     * When set, CreateForm probes Property/get(schemaId, "displayWidget") to
+     * trigger content-native create (ContentNode/createWithSchema + navigate
+     * to block editor). Falls through to FormSpec/resolve for Tier 2.
+     */
+    schemaId?: string;
   };
   rowClick?: {
     navigateTo: string;
@@ -1455,6 +1462,7 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
           action={controls.create.action}
           title={`Create ${viewTitle.replace(/s$/, '')}`}
           fields={controls.create.fields as Array<{ name: string; label?: string; type?: 'text' | 'textarea' | 'select'; options?: string[]; required?: boolean; placeholder?: string }>}
+          schemaId={controls.create.schemaId}
           destinationId={interactionSpecName ?? undefined}
           initialValues={Object.keys(createInitialValues).length > 0 ? createInitialValues : undefined}
         />

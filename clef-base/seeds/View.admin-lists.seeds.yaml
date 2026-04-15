@@ -46,7 +46,7 @@ entries:
     dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Circle"}}'
     layout: table
     visibleFields: '[{"key":"node","label":"Circle"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Created By"},{"key":"createdAt","label":"Created","formatter":"date"}]'
-    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    controls: '{"create":{"concept":"ContentNode","action":"createWithSchema","schemaId":"circle","fields":[]},"rowClick":{"navigateTo":"/content/{node}"}}'
     title: Circles
     description: Organizational governance circles — teams, working groups, and accountability units.
     defaultDisplayMode: table-row
@@ -56,7 +56,7 @@ entries:
     dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Constitution"}}'
     layout: table
     visibleFields: '[{"key":"node","label":"Constitution"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Created By"},{"key":"createdAt","label":"Created","formatter":"date"}]'
-    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    controls: '{"create":{"concept":"ContentNode","action":"createWithSchema","schemaId":"constitution","fields":[]},"rowClick":{"navigateTo":"/content/{node}"}}'
     title: Constitutions
     description: Governance constitutions — foundational documents defining organizational rules and values.
     defaultDisplayMode: table-row
@@ -66,7 +66,7 @@ entries:
     dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Policy"}}'
     layout: table
     visibleFields: '[{"key":"node","label":"Policy"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Created By"},{"key":"createdAt","label":"Created","formatter":"date"}]'
-    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    controls: '{"create":{"concept":"ContentNode","action":"createWithSchema","schemaId":"policy","fields":[]},"rowClick":{"navigateTo":"/content/{node}"}}'
     title: Policies
     description: Governance policies — documented rules and procedures that guide organizational behavior.
     defaultDisplayMode: table-row
@@ -76,24 +76,28 @@ entries:
     dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Role"}}'
     layout: table
     visibleFields: '[{"key":"node","label":"Role"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Created By"},{"key":"createdAt","label":"Created","formatter":"date"}]'
-    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    controls: '{"create":{"concept":"ContentNode","action":"createWithSchema","schemaId":"role","fields":[]},"rowClick":{"navigateTo":"/content/{node}"}}'
     title: Roles
     description: Governance roles — named responsibilities and accountabilities assigned to circle members.
     defaultDisplayMode: table-row
 
   # /admin/agents  →  agent-library (targetView: agent-library, not 'list')
   # The agent-personas destination resolves to view 'agent-library' which was never seeded.
+  # Bug #102: add controls.create so the Create Agent button appears. Tier 1b routing via
+  # schemaId="agent-persona" picks up the displayWidget Property (block-editor) and fires
+  # ContentNode/createWithSchema → navigates to /content/[id] (block editor).
   - view: agent-library
     dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"AgentPersona"}}'
     layout: card-grid
     visibleFields: '[{"key":"node","label":"Agent"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Author"},{"key":"createdAt","label":"Created","formatter":"date"}]'
-    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    controls: '{"create":{"concept":"ContentNode","action":"createWithSchema","schemaId":"agent-persona","fields":[]},"rowClick":{"navigateTo":"/content/{node}"}}'
     title: Agent Library
     description: Content-native agent persona pages. Each page is an agent definition — prompt blocks, memory bindings, tool configurations, and triggers.
     defaultDisplayMode: card
     filters: '[{"field":"schemas","label":"Type","type":"toggle-group"}]'
 
   # /admin/agents/sessions  →  active-sessions
+  # Sessions are system-generated (not user-created), so no create button.
   - view: active-sessions
     dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"AgentSession"}}'
     layout: table
@@ -109,12 +113,13 @@ entries:
     dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Proposal"}}'
     layout: table
     visibleFields: '[{"key":"node","label":"Proposal"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Proposer"},{"key":"createdAt","label":"Submitted","formatter":"date"}]'
-    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    controls: '{"create":{"concept":"ContentNode","action":"createWithSchema","schemaId":"proposal","fields":[]},"rowClick":{"navigateTo":"/content/{node}"}}'
     title: Proposals
     description: Governance proposals awaiting review or vote — policy changes, role assignments, and constitutional amendments.
     defaultDisplayMode: table-row
 
   # /admin/governance/reputation  →  reputation-leaderboard
+  # Reputation scores are system-computed (not user-created), so no create button.
   - view: reputation-leaderboard
     dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Reputation"}}'
     layout: table
@@ -125,6 +130,7 @@ entries:
     defaultDisplayMode: table-row
 
   # /admin/governance/activity  →  governance-activity
+  # Audit trail entries are system-generated (not user-created), so no create button.
   - view: governance-activity
     dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"AuditTrail"}}'
     layout: table
@@ -135,6 +141,7 @@ entries:
     defaultDisplayMode: table-row
 
   # /admin/governance/org-designer  →  org-designer
+  # Circle creation goes through circles-list; org-designer is a structural view.
   - view: org-designer
     dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Circle"}}'
     layout: table
