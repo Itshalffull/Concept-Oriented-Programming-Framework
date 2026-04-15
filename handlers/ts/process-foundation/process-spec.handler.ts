@@ -281,6 +281,89 @@ const handler: FunctionalConceptHandler = {
     ) as StorageProgram<Result>;
   },
 
+  updateStep(input: Record<string, unknown>) {
+    const specId = input.spec as string;
+    const stepKey = (input.stepId ?? input.stepKey) as string;
+    const patchRaw = input.step as string | undefined;
+    const configRaw = input.config as string | undefined;
+
+    if (!stepKey || stepKey.trim() === '') {
+      return complete(createProgram(), 'error', { message: 'stepId is required' }) as StorageProgram<Result>;
+    }
+
+    // Parse the incoming patch. Callers can supply either a full replacement
+    // step as `step` (JSON) or a narrower `config` (JSON) that gets merged in.
+    let stepPatch: Record<string, unknown> = {};
+    let configPatch: Record<string, unknown> | null = null;
+    try {
+      if (patchRaw) stepPatch = JSON.parse(patchRaw);
+      if (configRaw) configPatch = JSON.parse(configRaw);
+    } catch {
+      return complete(createProgram(), 'error', { message: 'step or config is not valid JSON' }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = get(p, 'process-spec', specId, 'existing');
+    return branch(p, 'existing',
+      (b) => {
+        let b2 = mapBindings(b, (bindings) => {
+          const rec = bindings.existing as Record<string, unknown>;
+          return rec.status as string;
+        }, '_status');
+        return branch(b2,
+          (bindings) => {
+            const status = bindings._status as string;
+            return status === 'active' || status === 'deprecated';
+          },
+          (b3) => complete(b3, 'locked', { message: 'Spec is not in draft status and cannot be modified' }),
+          (b3) => {
+            let b4 = mapBindings(b3, (bindings) => {
+              const rec = bindings.existing as Record<string, unknown>;
+              try {
+                return JSON.parse(rec.steps as string) as Array<Record<string, unknown>>;
+              } catch {
+                return null;
+              }
+            }, '_steps');
+            return branch(b4,
+              (bindings) => bindings._steps === null,
+              (b5) => complete(b5, 'error', { message: 'Failed to decode stored steps' }),
+              (b5) => {
+                let b6 = mapBindings(b5, (bindings) => {
+                  const steps = bindings._steps as Array<Record<string, unknown>>;
+                  return steps.findIndex((s) => s.key === stepKey);
+                }, '_index');
+                return branch(b6,
+                  (bindings) => (bindings._index as number) < 0,
+                  (b7) => complete(b7, 'notfound', { message: `Step with key ${stepKey} not found` }),
+                  (b7) => {
+                    const b8 = putFrom(b7, 'process-spec', specId, (bindings) => {
+                      const rec = bindings.existing as Record<string, unknown>;
+                      const steps = [...(bindings._steps as Array<Record<string, unknown>>)];
+                      const idx = bindings._index as number;
+                      const current = steps[idx];
+                      const mergedConfig = configPatch
+                        ? { ...(current.config as Record<string, unknown> ?? {}), ...configPatch }
+                        : current.config;
+                      steps[idx] = {
+                        ...current,
+                        ...stepPatch,
+                        ...(configPatch ? { config: mergedConfig } : {}),
+                      };
+                      return { ...rec, steps: JSON.stringify(steps) };
+                    });
+                    return complete(b8, 'ok', { spec: specId, stepId: stepKey });
+                  },
+                );
+              },
+            );
+          },
+        );
+      },
+      (b) => complete(b, 'notfound', { message: `No spec found with id: ${specId}` }),
+    ) as StorageProgram<Result>;
+  },
+
   removeStep(input: Record<string, unknown>) {
     const specId = input.spec as string;
     const stepKey = input.stepKey as string;
