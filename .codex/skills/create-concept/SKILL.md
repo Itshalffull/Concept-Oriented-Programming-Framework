@@ -247,7 +247,12 @@ The operational principle is a "defining story" — a scenario that proves the c
 
 **Every concept MUST have at least one invariant.** A concept without invariants has no machine-verifiable behavioral contract and cannot generate meaningful conformance tests.
 
-**Six invariant constructs** (use all that apply — aim for 2-5 per concept):
+**Seven invariant constructs** (use all that apply — aim for 2-5 per concept).
+The same grammar is shared across `.concept`, `.widget`, `.view`, `.sync`,
+and `.derived` specs via the universal parser at
+`handlers/ts/framework/invariant-body-parser.ts`. Per-kind variation is
+limited to the `AssertionContext` plugin that resolves identifiers. See
+`docs/concept-grammar.md` for the full cross-kind grammar reference.
 
 ```
 // Named example — concrete scenario (generates conformance test)
@@ -379,6 +384,34 @@ capabilities {
 ```
 
 Most concepts don't need this section.
+
+### Step 6b: Plugin Pattern — register action + sync to PluginRegistry
+
+If the concept is a **plugin** for an extensibility point (e.g., a new
+test-plan renderer, a new assertion-context plugin, a new analysis
+provider, a new storage/transport adapter, a new FilterRepresentation
+provider), follow the canonical Clef plugin pattern:
+
+1. **Add a `register()` action** to the concept that returns static
+   metadata for `PluginRegistry`:
+   ```
+   action register() {
+     -> ok(name: String, inputKind: String, outputKind: String,
+           capabilities: list String) {
+       Return static metadata for PluginRegistry.
+     }
+   }
+   ```
+
+2. **Author a companion sync** in the matching `syncs/` directory that
+   registers every instance on `<Concept>/register -> ok` into
+   `PluginRegistry/register`. Canonical examples:
+   - `syncs/execution/register-instance-providers.sync`
+   - `syncs/framework/register-framework-generators.sync`
+
+3. **Dispatch calls** go through `PluginRegistry/resolve` (or the
+   hosting concept's registry action) rather than importing concepts
+   directly. This preserves concept independence.
 
 ### Step 7: Check Against Anti-Patterns
 

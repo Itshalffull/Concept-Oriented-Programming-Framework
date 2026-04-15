@@ -33,18 +33,44 @@ widget widget-name {
 }
 ```
 
-## Invariant Grammar (from handlers/ts/framework/widget-spec-parser.ts)
+## Invariant Grammar (from handlers/ts/framework/invariant-body-parser.ts)
 
-The `invariant { }` block accepts FIVE structured kinds plus legacy prose strings. Each structured form generates a WidgetComponentTest conformance test. Prose strings do NOT generate tests — they are documentation only.
+The `invariant { }` block is parsed by the universal InvariantBodyParser
+shared across .concept, .widget, .view, .sync, and .derived specs. It
+accepts SEVEN structured kinds plus legacy prose strings:
+`example`, `forall`, `always`, `never`, `eventually`, `action
+requires/ensures`, and `scenario` (multi-block fixtures + given/when/then
++ settlement). Each structured form generates a WidgetComponentTest
+conformance test. Prose strings do NOT generate tests — they are
+documentation only.
 
 ### Structured forms
 
 ```
 invariant {
-  # example: concrete before/after scenario
+  # example: concrete before/after scenario. Action patterns
+  # accept either a plain event name or a dotted part.method form:
+  #   after EVENT_NAME(arg: value) -> variant_tag
+  #   after part.method("positional") -> variant_tag
+  # Positional args (bare literals, no `name:`) are synthesized into
+  # _0, _1, ... slots so renderers can interpret them as positional.
+  # Canonical methods: type, focus, blur, click, press, selectRange.
+  # Each framework renderer translates them: React →
+  # userEvent.type/focus/click; Playwright → pressSequentially/focus;
+  # Vue → trigger("keydown"); Svelte → userEvent.type; SwiftUI →
+  # XCUIElement.typeText; WinUI → UIAutomation.SendKeys.
   example "name of the scenario" {
     after EVENT_NAME() -> variant_tag
     then OTHER_EVENT() -> variant_tag
+  }
+
+  # Example using dotted method + positional literals:
+  example "typing preserves key order" {
+    after render(readOnly: false) -> ok
+    and body.focus() -> ok
+    and body.type("h") -> ok
+    and body.type("i") -> ok
+    then body.textContent = "hi"
   }
 
   # always: temporal invariant with optional forall quantifier
@@ -70,6 +96,20 @@ invariant {
   action saveButton {
     requires: state.lifecycle = "dirty"
     ensures ok: state.lifecycle = "saving"
+  }
+
+  # scenario: multi-block behavioral test (fixtures + given/when/then + settlement)
+  scenario "typing a character appends it to body" {
+    fixture f1 { readOnly: false, initialText: "" }
+    when {
+      render(readOnly: false) -> ok
+      and body.focus() -> ok
+      and body.type("a") -> ok
+    }
+    then {
+      body.textContent = "a"
+    }
+    settlement: sync
   }
 
   # legacy prose (documentation only, no test generation)

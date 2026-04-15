@@ -350,6 +350,46 @@ channels:
     messages:
       derivedScaffoldGenRegisterCompleted:
         $ref: '#/components/messages/DerivedScaffoldGenRegisterCompleted'
+  external-handler-gen/generateCompleted:
+    description: Fires when ExternalHandlerGen/generate completes with ok
+    messages:
+      externalHandlerGenGenerateCompleted:
+        $ref: '#/components/messages/ExternalHandlerGenGenerateCompleted'
+  external-handler-gen/generateAllCompleted:
+    description: Fires when ExternalHandlerGen/generateAll completes with ok
+    messages:
+      externalHandlerGenGenerateAllCompleted:
+        $ref: '#/components/messages/ExternalHandlerGenGenerateAllCompleted'
+  external-handler-gen/previewCompleted:
+    description: Fires when ExternalHandlerGen/preview completes with ok
+    messages:
+      externalHandlerGenPreviewCompleted:
+        $ref: '#/components/messages/ExternalHandlerGenPreviewCompleted'
+  external-handler-gen/registerCompleted:
+    description: Fires when ExternalHandlerGen/register completes with ok
+    messages:
+      externalHandlerGenRegisterCompleted:
+        $ref: '#/components/messages/ExternalHandlerGenRegisterCompleted'
+  integration-test-gen/generateCompleted:
+    description: Fires when IntegrationTestGen/generate completes with ok
+    messages:
+      integrationTestGenGenerateCompleted:
+        $ref: '#/components/messages/IntegrationTestGenGenerateCompleted'
+  integration-test-gen/runCompleted:
+    description: Fires when IntegrationTestGen/run completes with ok
+    messages:
+      integrationTestGenRunCompleted:
+        $ref: '#/components/messages/IntegrationTestGenRunCompleted'
+  integration-test-gen/previewCompleted:
+    description: Fires when IntegrationTestGen/preview completes with ok
+    messages:
+      integrationTestGenPreviewCompleted:
+        $ref: '#/components/messages/IntegrationTestGenPreviewCompleted'
+  integration-test-gen/registerCompleted:
+    description: Fires when IntegrationTestGen/register completes with ok
+    messages:
+      integrationTestGenRegisterCompleted:
+        $ref: '#/components/messages/IntegrationTestGenRegisterCompleted'
   generator/planCompleted:
     description: Fires when Generator/plan completes with ok
     messages:
@@ -2773,6 +2813,62 @@ operations:
     summary: Publish event when DerivedScaffoldGen/register completes
     messages:
       - $ref: '#/channels/derived-scaffold-gen/registerCompleted/messages/derivedScaffoldGenRegisterCompleted'
+  publishExternalHandlerGenGenerateCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/external-handler-gen/generateCompleted'
+    summary: Publish event when ExternalHandlerGen/generate completes
+    messages:
+      - $ref: '#/channels/external-handler-gen/generateCompleted/messages/externalHandlerGenGenerateCompleted'
+  publishExternalHandlerGenGenerateAllCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/external-handler-gen/generateAllCompleted'
+    summary: Publish event when ExternalHandlerGen/generateAll completes
+    messages:
+      - $ref: '#/channels/external-handler-gen/generateAllCompleted/messages/externalHandlerGenGenerateAllCompleted'
+  publishExternalHandlerGenPreviewCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/external-handler-gen/previewCompleted'
+    summary: Publish event when ExternalHandlerGen/preview completes
+    messages:
+      - $ref: '#/channels/external-handler-gen/previewCompleted/messages/externalHandlerGenPreviewCompleted'
+  publishExternalHandlerGenRegisterCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/external-handler-gen/registerCompleted'
+    summary: Publish event when ExternalHandlerGen/register completes
+    messages:
+      - $ref: '#/channels/external-handler-gen/registerCompleted/messages/externalHandlerGenRegisterCompleted'
+  publishIntegrationTestGenGenerateCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/integration-test-gen/generateCompleted'
+    summary: Publish event when IntegrationTestGen/generate completes
+    messages:
+      - $ref: '#/channels/integration-test-gen/generateCompleted/messages/integrationTestGenGenerateCompleted'
+  publishIntegrationTestGenRunCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/integration-test-gen/runCompleted'
+    summary: Publish event when IntegrationTestGen/run completes
+    messages:
+      - $ref: '#/channels/integration-test-gen/runCompleted/messages/integrationTestGenRunCompleted'
+  publishIntegrationTestGenPreviewCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/integration-test-gen/previewCompleted'
+    summary: Publish event when IntegrationTestGen/preview completes
+    messages:
+      - $ref: '#/channels/integration-test-gen/previewCompleted/messages/integrationTestGenPreviewCompleted'
+  publishIntegrationTestGenRegisterCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/integration-test-gen/registerCompleted'
+    summary: Publish event when IntegrationTestGen/register completes
+    messages:
+      - $ref: '#/channels/integration-test-gen/registerCompleted/messages/integrationTestGenRegisterCompleted'
   publishGeneratorPlanCompleted:
     action: send
     channel:
@@ -5907,6 +6003,54 @@ components:
       contentType: application/json
       payload:
         $ref: '#/components/schemas/DerivedScaffoldGenRegisterCompletedPayload'
+    ExternalHandlerGenGenerateCompleted:
+      name: ExternalHandlerGenGenerateCompleted
+      title: ExternalHandlerGen GenerateCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ExternalHandlerGenGenerateCompletedPayload'
+    ExternalHandlerGenGenerateAllCompleted:
+      name: ExternalHandlerGenGenerateAllCompleted
+      title: ExternalHandlerGen GenerateAllCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ExternalHandlerGenGenerateAllCompletedPayload'
+    ExternalHandlerGenPreviewCompleted:
+      name: ExternalHandlerGenPreviewCompleted
+      title: ExternalHandlerGen PreviewCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ExternalHandlerGenPreviewCompletedPayload'
+    ExternalHandlerGenRegisterCompleted:
+      name: ExternalHandlerGenRegisterCompleted
+      title: ExternalHandlerGen RegisterCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/ExternalHandlerGenRegisterCompletedPayload'
+    IntegrationTestGenGenerateCompleted:
+      name: IntegrationTestGenGenerateCompleted
+      title: IntegrationTestGen GenerateCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/IntegrationTestGenGenerateCompletedPayload'
+    IntegrationTestGenRunCompleted:
+      name: IntegrationTestGenRunCompleted
+      title: IntegrationTestGen RunCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/IntegrationTestGenRunCompletedPayload'
+    IntegrationTestGenPreviewCompleted:
+      name: IntegrationTestGenPreviewCompleted
+      title: IntegrationTestGen PreviewCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/IntegrationTestGenPreviewCompletedPayload'
+    IntegrationTestGenRegisterCompleted:
+      name: IntegrationTestGenRegisterCompleted
+      title: IntegrationTestGen RegisterCompleted Event
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/IntegrationTestGenRegisterCompletedPayload'
     GeneratorPlanCompleted:
       name: GeneratorPlanCompleted
       title: Generator PlanCompleted Event
@@ -8590,6 +8734,38 @@ components:
         value:
           type: string
       required: [name, value]
+    ExternalHandlerGen:
+      type: object
+      properties:
+        source:
+          type: string
+        concept:
+          type: string
+        handlerCode:
+          type: string
+        generatedAt:
+          type: string
+          format: date-time
+        value:
+          type: string
+      required: [source, concept, handlerCode, generatedAt, value]
+    IntegrationTestGen:
+      type: object
+      properties:
+        concept:
+          type: string
+        source:
+          type: string
+        processSpec:
+          type: string
+        stepCount:
+          type: integer
+        generatedAt:
+          type: string
+          format: date-time
+        value:
+          type: string
+      required: [concept, source, processSpec, stepCount, generatedAt, value]
     Generator:
       type: object
       properties:
@@ -11824,6 +12000,106 @@ components:
           type: integer
       required: [variant, files, wouldWrite, wouldSkip]
     DerivedScaffoldGenRegisterCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        name:
+          type: string
+        inputKind:
+          type: string
+        outputKind:
+          type: string
+        capabilities:
+          type: array
+          items:
+            type: string
+      required: [variant, name, inputKind, outputKind, capabilities]
+    ExternalHandlerGenGenerateCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        handlerCode:
+          type: string
+        actionCount:
+          type: integer
+      required: [variant, handlerCode, actionCount]
+    ExternalHandlerGenGenerateAllCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        handlers:
+          type: string
+        count:
+          type: integer
+      required: [variant, handlers, count]
+    ExternalHandlerGenPreviewCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        preview:
+          type: string
+      required: [variant, preview]
+    ExternalHandlerGenRegisterCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        name:
+          type: string
+        inputKind:
+          type: string
+        outputKind:
+          type: string
+        capabilities:
+          type: array
+          items:
+            type: string
+      required: [variant, name, inputKind, outputKind, capabilities]
+    IntegrationTestGenGenerateCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        processSpec:
+          type: string
+        stepCount:
+          type: integer
+      required: [variant, processSpec, stepCount]
+    IntegrationTestGenRunCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        results:
+          type: string
+        passed:
+          type: integer
+        failed:
+          type: integer
+      required: [variant, results, passed, failed]
+    IntegrationTestGenPreviewCompletedPayload:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        steps:
+          type: string
+        stepCount:
+          type: integer
+      required: [variant, steps, stepCount]
+    IntegrationTestGenRegisterCompletedPayload:
       type: object
       properties:
         variant:
@@ -18191,6 +18467,232 @@ components:
           type: string
       required: [variant, message]
     DerivedScaffoldGenRegisterOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        name:
+          type: string
+        inputKind:
+          type: string
+        outputKind:
+          type: string
+        capabilities:
+          type: array
+          items:
+            type: string
+      required: [variant, name, inputKind, outputKind, capabilities]
+    ExternalHandlerGenGenerateInput:
+      type: object
+      properties:
+        manifest:
+          type: string
+        source:
+          type: string
+        concept:
+          type: string
+      required: [manifest, source, concept]
+    ExternalHandlerGenGenerateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        handlerCode:
+          type: string
+        actionCount:
+          type: integer
+      required: [variant, handlerCode, actionCount]
+    ExternalHandlerGenGenerateInvalidResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [invalid]
+        message:
+          type: string
+      required: [variant, message]
+    ExternalHandlerGenGenerateAllInput:
+      type: object
+      properties:
+        manifest:
+          type: string
+      required: [manifest]
+    ExternalHandlerGenGenerateAllOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        handlers:
+          type: string
+        count:
+          type: integer
+      required: [variant, handlers, count]
+    ExternalHandlerGenGenerateAllInvalidResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [invalid]
+        message:
+          type: string
+      required: [variant, message]
+    ExternalHandlerGenPreviewInput:
+      type: object
+      properties:
+        manifest:
+          type: string
+        source:
+          type: string
+        concept:
+          type: string
+        action:
+          type: string
+      required: [manifest, source, concept, action]
+    ExternalHandlerGenPreviewOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        preview:
+          type: string
+      required: [variant, preview]
+    ExternalHandlerGenPreviewNotfoundResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [notfound]
+      required: [variant]
+    ExternalHandlerGenListOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        generations:
+          type: array
+          items:
+            type: string
+      required: [variant, generations]
+    ExternalHandlerGenRegisterOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        name:
+          type: string
+        inputKind:
+          type: string
+        outputKind:
+          type: string
+        capabilities:
+          type: array
+          items:
+            type: string
+      required: [variant, name, inputKind, outputKind, capabilities]
+    IntegrationTestGenGenerateInput:
+      type: object
+      properties:
+        conceptSpec:
+          type: string
+        ingestManifest:
+          type: string
+        source:
+          type: string
+      required: [conceptSpec, ingestManifest, source]
+    IntegrationTestGenGenerateOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        processSpec:
+          type: string
+        stepCount:
+          type: integer
+      required: [variant, processSpec, stepCount]
+    IntegrationTestGenGenerateInvalidResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [invalid]
+        message:
+          type: string
+      required: [variant, message]
+    IntegrationTestGenRunInput:
+      type: object
+      properties:
+        processSpec:
+          type: string
+      required: [processSpec]
+    IntegrationTestGenRunOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        results:
+          type: string
+        passed:
+          type: integer
+        failed:
+          type: integer
+      required: [variant, results, passed, failed]
+    IntegrationTestGenRunErrorResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [error]
+        message:
+          type: string
+      required: [variant, message]
+    IntegrationTestGenPreviewInput:
+      type: object
+      properties:
+        conceptSpec:
+          type: string
+        source:
+          type: string
+      required: [conceptSpec, source]
+    IntegrationTestGenPreviewOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        steps:
+          type: string
+        stepCount:
+          type: integer
+      required: [variant, steps, stepCount]
+    IntegrationTestGenPreviewInvalidResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [invalid]
+        message:
+          type: string
+      required: [variant, message]
+    IntegrationTestGenListOkResponse:
+      type: object
+      properties:
+        variant:
+          type: string
+          enum: [ok]
+        generations:
+          type: array
+          items:
+            type: string
+      required: [variant, generations]
+    IntegrationTestGenRegisterOkResponse:
       type: object
       properties:
         variant:

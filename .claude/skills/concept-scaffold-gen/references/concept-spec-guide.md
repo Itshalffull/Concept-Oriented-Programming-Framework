@@ -95,7 +95,10 @@ action register() {
 
 ## Invariants
 
-Six invariant constructs are supported (see docs/plans/clef-fv.md Section 1):
+Seven invariant constructs are supported (see docs/plans/clef-fv.md Section 1
+and `docs/concept-grammar.md`). The same grammar applies to `.concept`, `.widget`,
+`.view`, `.sync`, and `.derived` specs — parsed by the universal
+`InvariantBodyParser` in `handlers/ts/framework/invariant-body-parser.ts`:
 
 ### `example` — Named conformance test (Tier 1)
 ```
@@ -149,6 +152,31 @@ invariant {
   }
 }
 ```
+
+### `scenario` — Multi-block behavioral test (Tier 2-3)
+```
+invariant {
+  scenario "registering an origin makes it retrievable": {
+    fixture o1 { origin: "scenario-origin", kind: "space", qualifier: "vs-1" }
+    when {
+      register(origin: "scenario-origin", kind: "space", qualifier: "vs-1") -> ok
+    }
+    then {
+      get(origin: "scenario-origin") -> ok(kind: k, qualifier: q, status: s)
+      and s = "connected"
+    }
+    settlement: sync
+  }
+}
+```
+Scenarios take zero or more `fixture` declarations, an optional
+`given` block (preconditions), an optional `when` block (action
+steps), a required `then` block (assertions), and an optional
+`settlement` modality: `sync` (default), `"async-eventually" { timeoutMs: N }`,
+or `"async-with-anchor" { anchor: "..." }`. Steps may be separated
+by `;` or chained with `and`. The same grammar applies in
+`.widget`, `.view`, `.sync`, and `.derived` specs — identifiers
+resolve against the matching AssertionContext plugin.
 
 ### Property assertions in then-chains
 ```
