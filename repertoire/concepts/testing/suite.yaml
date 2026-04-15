@@ -67,6 +67,18 @@ concepts:
     params:
       A: { as: test-artifact-ref, description: "Reference to a tracked generated test file artifact" }
 
+derived:
+  required:
+    # Added in v0.5.0 (MAG-909 / INV-5)
+    - path: ./test-generation.derived
+      name: TestGeneration
+      description: >
+        Orchestrates the invariant-grammar unification pipeline as a single entry
+        point. Composes InvariantParser, TestPlan, TestArtifact, PluginRegistry,
+        SpecParser, WidgetParser, and SyncParser with 13 syncs covering extraction,
+        pipeline body, lifecycle hygiene, assertion-context registration, and
+        renderer registration.
+
 syncs:
   required:
     # Generation layer syncs

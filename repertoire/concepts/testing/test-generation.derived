@@ -1,0 +1,87 @@
+derived TestGeneration [T] {
+
+  purpose {
+    Orchestrate the invariant-grammar unification pipeline as a single
+    entry point. Callers invoke TestGeneration/run and the declared
+    sync chain (extract -> build -> render -> write) produces fresh test
+    artifacts across every registered platform. Selecting which spec
+    kinds get processed is the only per-invocation decision; platforms
+    and assertion contexts come from the PluginRegistry.
+  }
+
+  composes {
+    InvariantParser [T]
+    TestPlan [T]
+    TestArtifact [T]
+    PluginRegistry [T]
+    SpecParser [T]
+    WidgetParser [T]
+    SyncParser [T]
+  }
+
+  syncs {
+    required: [
+      // Invariant extraction per spec kind (MAG-908 split by grammar constraint)
+      extract-invariants-on-concept-parse,
+      extract-invariants-on-widget-parse,
+      extract-invariants-on-sync-parse,
+
+      // Pipeline body: invariant -> plan -> render -> artifact
+      build-test-plan-on-invariant,
+      render-for-each-platform,
+      write-artifact-on-render,
+
+      // AssertionContext plugin registration (MAG-906)
+      register-concept-assertion-context,
+      register-widget-assertion-context,
+      register-view-assertion-context,
+      register-sync-assertion-context,
+      register-derived-assertion-context,
+
+      // Renderer plugin registration (MAG-907)
+      register-react-renderer,
+      register-playwright-renderer
+    ]
+
+    recommended: [
+      // Lifecycle hygiene: remove stale artifacts when a spec is deleted
+      prune-artifacts-on-spec-delete
+    ]
+  }
+
+  surface {
+    // run: orchestrate a full pipeline pass across the selected spec kind(s).
+    // Variants:
+    //   -> ok(generated: Int; changed: Int; failed: Int)
+    //       Walk every registered spec (concept / widget / sync by default,
+    //       or a subset if target matches a spec kind) and fire the matching
+    //       parser's parse action. The sync chain takes over from there:
+    //       ExtractInvariants -> BuildTestPlan -> RenderForEachPlatform ->
+    //       WriteArtifact. Returns aggregate counters summed across all
+    //       artifact writes reachable during this run.
+    //   -> error(message: String)
+    //       Target didn't match any known spec kind, or one of the required
+    //       providers wasn't registered.
+    action run(target: String) {
+      entry: PluginRegistry/discover matches on type: ?target
+      triggers: [
+        PluginRegistry/discover(type: "test-plan-renderer"),
+        SpecParser/parse(source: ?target),
+        WidgetParser/parse(source: ?target),
+        SyncParser/parse(source: ?target)
+      ]
+    }
+  }
+
+  principle {
+    after run(target: "all")
+    then every registered spec kind is parsed
+    and  InvariantParser extracts invariants from each parsed source
+    and  TestPlan compiles every extracted invariant into a platform-agnostic plan
+    and  PluginRegistry dispatches rendering to each registered test-plan-renderer
+    and  TestArtifact persists each rendered file as a content-hashed artifact
+
+    "always: every required sync is listed"
+    "never: run succeeds when no test-plan-renderer is registered"
+  }
+}
