@@ -12,7 +12,7 @@
 | [MAG-909](https://vibekanban.com) ✅ `5a07e1d8` | INV-5 Derived concept TestGeneration composing the pipeline | MAG-913 |
 | [MAG-910](https://vibekanban.com) ✅ `d078787a` | INV-6 Migrate concept-parser + widget-spec-parser to delegate to InvariantParser | MAG-911, MAG-912 |
 | [MAG-911](https://vibekanban.com) ✅ `585fd048` | INV-7 Extend view-parser + sync-parser + derived-parser with invariant support | MAG-914 |
-| [MAG-912](https://vibekanban.com) | INV-8 Add `scenario` kind — multi-block fixtures + given/when/then + settlement modalities | MAG-914, MAG-915 |
+| [MAG-912](https://vibekanban.com) ✅ `b21671e4` | INV-8 Add `scenario` kind — multi-block fixtures + given/when/then + settlement modalities | MAG-914, MAG-915, MAG-918 |
 | [MAG-913](https://vibekanban.com) ✅ `ff34c8d9` | INV-9 Replace `scripts/generate-*.ts` with thin `TestGeneration/run` dispatchers | MAG-914 |
 | [MAG-914](https://vibekanban.com) | INV-10 Retrofit existing invariants + proof-of-life cross-kind invariants | MAG-915, MAG-916 |
 | [MAG-915](https://vibekanban.com) | INV-11 Propagate grammar update through every reference surface | MAG-916 |
