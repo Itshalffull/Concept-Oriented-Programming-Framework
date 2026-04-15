@@ -9,7 +9,7 @@ entries:
 
   # /admin/workspaces  →  workspaces-list
   - view: workspaces-list
-    dataSource: '{"concept":"Workspace","action":"list"}'
+    dataSource: '{"concept":"Workspace","action":"list","params":{"owner":"system"}}'
     layout: table
     visibleFields: '[{"key":"workspace","label":"ID","formatter":"code"},{"key":"name","label":"Name"},{"key":"owner","label":"Owner"},{"key":"description","label":"Description","formatter":"truncate"},{"key":"isDefault","label":"Default","formatter":"boolean-badge"},{"key":"updatedAt","label":"Updated","formatter":"date"}]'
     controls: '{}'
