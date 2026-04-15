@@ -24,6 +24,11 @@ entries:
     hints: '{}'
     displayModePolicy: bypass
 
+  - name: card-grid-bypass
+    displayType: card-grid
+    hints: '{}'
+    displayModePolicy: bypass
+
   # --- Unique presentation specs ---
 
   - name: detail-default

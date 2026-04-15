@@ -243,7 +243,7 @@ entries:
     sort: natural-order
     group: ''
     projection: version-spaces-list-fields
-    presentation: card-grid-default
+    presentation: card-grid-bypass
     interaction: version-spaces-list-controls
 
   - name: backlinks
