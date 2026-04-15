@@ -634,13 +634,28 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
       resolvedSchemaFilter, hasQueryExpression, queryExecResult,
       useListBySchema, schemaData]);
 
+  // Flatten `content` JSON field into top-level keys so columns can reference nested data.
+  const flatData = useMemo(() => {
+    return allData.map((row: Record<string, unknown>) => {
+      const content = row.content;
+      if (typeof content !== 'string' || !content.startsWith('{')) return row;
+      try {
+        const parsed = JSON.parse(content);
+        if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+          return { ...parsed, ...row, _contentParsed: true };
+        }
+      } catch { /* not JSON — skip */ }
+      return row;
+    });
+  }, [allData]);
+
   // Initialize filter state from data + config once data arrives (interactive filters only)
-  if (allData.length > 0 && interactiveFilters.length > 0 && !filtersInitialized) {
+  if (flatData.length > 0 && interactiveFilters.length > 0 && !filtersInitialized) {
     const initial: Record<string, Set<string>> = {};
     for (const filter of interactiveFilters) {
       // Special handling for schemas (array field)
       if (filter.field === 'schemas') {
-        const allValues = extractSchemaValues(allData);
+        const allValues = extractSchemaValues(flatData);
         if (filter.defaultOn) {
           initial[filter.field] = new Set(filter.defaultOn);
         } else if (filter.defaultOff) {
@@ -650,7 +665,7 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
           initial[filter.field] = new Set(allValues);
         }
       } else {
-        const allValues = [...new Set(allData.map((row) => String(row[filter.field] ?? '')))];
+        const allValues = [...new Set(flatData.map((row) => String(row[filter.field] ?? '')))];
         if (filter.defaultOn) {
           initial[filter.field] = new Set(filter.defaultOn);
         } else if (filter.defaultOff) {
@@ -678,7 +693,7 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
 
   // Apply interactive filters then sort, then toolbar conditions
   const displayData_base = useMemo(() => {
-    let filtered = allData;
+    let filtered = flatData;
 
     // Apply interactive toggle-group filters via FilterNode tree evaluation
     if (interactiveFilters.length > 0 && Object.keys(activeFilters).length > 0) {
@@ -722,7 +737,7 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
     }
 
     return filtered;
-  }, [allData, activeFilters, interactiveFilters, toolbarFilterConditions, toolbarSortKeys, sortKeys]);
+  }, [flatData, activeFilters, interactiveFilters, toolbarFilterConditions, toolbarSortKeys, sortKeys]);
 
   // Apply optimistic board moves on top of the filtered+sorted data so that
   // dragged cards appear in their target column immediately while the action
@@ -764,11 +779,11 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
       return baseFields.map((f) => ({ key: f.key, label: f.label ?? f.key }));
     }
     // Fallback: derive from data keys if no field config
-    if (allData.length > 0) {
-      return Object.keys(allData[0]).map((k) => ({ key: k, label: k }));
+    if (flatData.length > 0) {
+      return Object.keys(flatData[0]).map((k) => ({ key: k, label: k }));
     }
     return [];
-  }, [baseFields, allData]);
+  }, [baseFields, flatData]);
 
   useEffect(() => {
     const interactor = getDisplayInteractor(layout);
@@ -781,7 +796,7 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
     const context = buildDisplayWidgetContext({
       viewId: viewId ?? '',
       layout,
-      rowCount: allData.length,
+      rowCount: flatData.length,
       fieldCount: effectiveFields.length,
       density: theme.density,
       motif: theme.motif,
@@ -813,7 +828,7 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
       cancelled = true;
     };
   }, [
-    allData.length,
+    flatData.length,
     fields.length,
     invoke,
     layout,
@@ -982,13 +997,13 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
 
   // Render filter controls (interactive filters only, not contextual)
   const renderFilters = () => {
-    if (interactiveFilters.length === 0 || allData.length === 0) return null;
+    if (interactiveFilters.length === 0 || flatData.length === 0) return null;
 
     return interactiveFilters.map((filter) => {
       // For schemas, extract unique values from array fields
       const allValues = filter.field === 'schemas'
-        ? extractSchemaValues(allData)
-        : [...new Set(allData.map((row) => String(row[filter.field] ?? '')))].sort();
+        ? extractSchemaValues(flatData)
+        : [...new Set(flatData.map((row) => String(row[filter.field] ?? '')))].sort();
       const active = activeFilters[filter.field] ?? new Set(allValues);
 
       return (
@@ -1015,8 +1030,8 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
             const dotColor = getLabelVisualizationColorToken(value);
             // Count: for schemas, count nodes that have this schema
             const count = filter.field === 'schemas'
-              ? allData.filter((row) => Array.isArray(row.schemas) && (row.schemas as string[]).includes(value)).length
-              : allData.filter((row) => String(row[filter.field] ?? '') === value).length;
+              ? flatData.filter((row) => Array.isArray(row.schemas) && (row.schemas as string[]).includes(value)).length
+              : flatData.filter((row) => String(row[filter.field] ?? '') === value).length;
             return (
               <button
                 key={value}
@@ -1340,7 +1355,7 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
           <div className="page-header">
             <h1>{viewTitle}</h1>
             <div style={{ display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'center' }}>
-              <Badge variant="info">{displayData.length}{allData.length !== displayData.length ? `/${allData.length}` : ''}</Badge>
+              <Badge variant="info">{displayData.length}{flatData.length !== displayData.length ? `/${flatData.length}` : ''}</Badge>
               <Badge variant="secondary">{effectiveLayout}</Badge>
               {resolvedWidget && (
                 <Badge variant="info">{resolvedWidget}</Badge>
