@@ -24,3 +24,38 @@ entries:
   - workflow: schema-evolution
     name: deprecated
     flags: ''
+
+---
+concept: Workflow
+action: defineTransition
+entries:
+  - workflow: content-lifecycle
+    from: draft
+    to: review
+    label: submit
+    guard: always
+  - workflow: content-lifecycle
+    from: review
+    to: published
+    label: approve
+    guard: approved
+  - workflow: content-lifecycle
+    from: review
+    to: draft
+    label: reject
+    guard: always
+  - workflow: content-lifecycle
+    from: published
+    to: archived
+    label: archive
+    guard: always
+  - workflow: schema-evolution
+    from: draft
+    to: active
+    label: activate
+    guard: always
+  - workflow: schema-evolution
+    from: active
+    to: deprecated
+    label: deprecate
+    guard: always
