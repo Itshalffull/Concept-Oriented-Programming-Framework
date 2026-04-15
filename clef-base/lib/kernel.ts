@@ -44,6 +44,8 @@ import { checkVerificationHandler } from '../../handlers/ts/app/check-verificati
 import { versionSpaceHandler } from '../../handlers/ts/version-space.handler';
 // Canvas
 import { canvasHandler } from '../../handlers/ts/app/canvas.handler';
+// Content extras
+import { snippetHandler } from '../../handlers/ts/app/snippet.handler';
 // Research / Evidence Platform
 import { claimHandler } from '../../handlers/ts/app/claim.handler';
 import { researchProjectHandler } from '../../handlers/ts/app/research-project.handler';
@@ -280,6 +282,13 @@ const SUPPLEMENTAL_REGISTRY_ENTRIES = [
     storageName: 'canvas',
     storageType: 'standard' as const,
   },
+  // Content extras
+  {
+    uri: 'urn:clef/Snippet',
+    handler: snippetHandler,
+    storageName: 'snippet',
+    storageType: 'standard' as const,
+  },
   // Research / Evidence Platform
   {
     uri: 'urn:clef/Claim',
@@ -346,6 +355,10 @@ const SUPPLEMENTAL_REGISTRY_ENTRIES = [
 // the Builder/test sync chain stays dormant until those helpers land.
 const SUPPLEMENTAL_SYNC_FILES = [
   'repertoire/concepts/testing/syncs/unit-tests-publish-quality-signal.sync',
+  // Unified schema-membership syncs: keep ContentNode/get.schemas in agreement
+  // with Schema/applyTo and Schema/removeFrom (fix for three-source inconsistency).
+  'clef-base/suites/entity-lifecycle/syncs/schema-apply-records-membership.sync',
+  'clef-base/suites/entity-lifecycle/syncs/schema-remove-forgets-membership.sync',
 ];
 
 // process.cwd() is the clef-base/ dir when Next.js runs; __filename
