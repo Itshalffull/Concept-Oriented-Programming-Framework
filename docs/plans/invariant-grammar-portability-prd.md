@@ -691,6 +691,61 @@ category with fixtures/steps/observations populated. React renderer
 emits a real vitest test. Playwright renderer emits an equivalent
 `.spec.ts`. Same invariant, same IR, different platform targets.
 
+## File layout — repertoire testing suite, NOT clef-base
+
+Everything framework-level lives in the existing repertoire testing
+suite, where `test-gen.concept` and `widget-component-test-plan.concept`
+already live. Not `clef-base/seeds/` — that's an app-level directory
+for clef-base specifically.
+
+```
+repertoire/concepts/testing/
+├── suite.yaml                                 (extend with new entries)
+├── invariant-parser.concept                   (INV-1)
+├── test-plan.concept                          (INV-1 — evolved form of
+│                                               widget-component-test-plan
+│                                               unified with test-gen IR)
+├── test-artifact.concept                      (INV-1)
+├── test-generation.derived                    (INV-5)
+├── seeds/
+│   ├── AssertionContext.plugins.seeds.yaml    (INV-2 — PluginRegistry/register
+│   │                                           rows for each spec kind)
+│   └── TestPlanRenderer.plugins.seeds.yaml    (INV-3 — one row per platform)
+├── syncs/
+│   ├── extract-invariants-on-parse.sync       (INV-4)
+│   ├── build-test-plan-on-invariant.sync      (INV-4)
+│   ├── render-for-each-platform.sync          (INV-4)
+│   ├── write-artifact-on-render.sync          (INV-4)
+│   └── prune-artifacts-on-spec-delete.sync    (INV-4)
+└── tests/                                     (conformance tests)
+
+repertoire/concepts/assertion-contexts/        (INV-2 — NEW suite, mirrors
+│                                                test-gen-providers pattern)
+├── suite.yaml
+├── concept-assertion-context.concept
+├── widget-assertion-context.concept
+├── view-assertion-context.concept
+├── sync-assertion-context.concept
+└── derived-assertion-context.concept
+
+repertoire/concepts/test-plan-renderers/       (INV-3 — NEW suite)
+├── suite.yaml
+├── react-renderer.concept
+├── playwright-renderer.concept
+├── vue-renderer.concept                       (INV-12)
+├── svelte-renderer.concept                    (INV-12)
+├── swiftui-renderer.concept                   (INV-12)
+└── jetpack-renderer.concept                   (INV-12)
+
+handlers/ts/repertoire/testing/                (handlers for the suite)
+handlers/ts/repertoire/assertion-contexts/
+handlers/ts/repertoire/test-plan-renderers/
+```
+
+Apps (clef-base, future Clef apps) get the pipeline by including
+the testing suite in their suite manifest. No app-level seeding
+required.
+
 ## Execution plan (follow-up, not in this session)
 
 Every step is itself a Clef concept spec + handler + sync wiring.
