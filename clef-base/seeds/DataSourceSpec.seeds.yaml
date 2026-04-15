@@ -97,3 +97,7 @@ entries:
   - name: form-spec-get-source
     kind: concept-action
     config: '{"concept":"FormSpec","action":"get","params":{"form":"{{formId}}"}}'
+
+  - name: content-node-list-by-source
+    kind: concept-action
+    config: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Source"}}'

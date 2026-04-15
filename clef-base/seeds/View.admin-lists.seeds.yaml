@@ -226,3 +226,13 @@ entries:
     title: Layout Builder
     description: Named layout definitions — stack, grid, split, and sidebar arrangements. Each layout composes multiple views into a spatial arrangement.
     defaultDisplayMode: table-row
+
+  # /admin/themes  ->  themes-list (legacy View fallback)
+  - view: themes-list
+    dataSource: '{"concept":"Theme","action":"list"}'
+    layout: card-grid
+    visibleFields: '[{"key":"id","label":"ID","formatter":"code"},{"key":"name","label":"Name"},{"key":"active","label":"Active","formatter":"boolean-badge"}]'
+    controls: '{"create":{"concept":"Theme","action":"create","fields":[{"name":"theme","label":"Theme ID","required":true},{"name":"name","label":"Display Name","required":true}]},"rowClick":{"navigateTo":"/admin/themes/{id}"}}'
+    title: Themes
+    description: Design system themes with token inheritance.
+    defaultDisplayMode: card

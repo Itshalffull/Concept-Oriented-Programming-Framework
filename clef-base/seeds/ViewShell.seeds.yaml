@@ -366,3 +366,14 @@ entries:
     projection: form-editor-fields
     presentation: form-editor-presentation
     interaction: form-editor-controls
+
+  - name: source-library
+    title: Source Library
+    description: Knowledge sources connected to the workspace.
+    dataSource: content-node-list-by-source
+    filter: identity-filter
+    sort: natural-order
+    group: ''
+    projection: content-list-fields
+    presentation: table-default
+    interaction: content-list-controls

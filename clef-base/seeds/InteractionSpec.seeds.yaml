@@ -15,7 +15,7 @@ action: create
 entries:
   # content-list
   - name: content-list-controls
-    createForm: '{"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Node ID","required":true},{"name":"content","label":"Content","type":"textarea"},{"name":"createdBy","label":"Created By"}]}'
+    createForm: '{"concept":"ContentNode","action":"createWithSchema","schemaId":"","fields":[{"name":"title","label":"Title","required":true,"placeholder":"Enter a title..."}]}'
     rowClick: '{"navigateTo":"/content/{node}"}'
     rowActions: '[]'
     pickerMode: false
@@ -54,7 +54,7 @@ entries:
     pickerMode: false
   # themes-list
   - name: themes-list-controls
-    createForm: '{"concept":"Theme","action":"create","fields":[{"name":"theme","label":"Theme ID","required":true},{"name":"name","label":"Display Name","required":true},{"name":"overrides","label":"Token Overrides (JSON)","type":"textarea"}]}'
+    createForm: '{"concept":"Theme","action":"create","fields":[{"name":"theme","label":"Theme ID","required":true},{"name":"name","label":"Display Name","required":true},{"name":"overrides","label":"Token Overrides","type":"key-value-list","placeholder":"token path (e.g. color.primary)"}]}'
     rowClick: '{"navigateTo":"/admin/themes/{id}"}'
     rowActions: '[{"key":"activate","concept":"Theme","action":"activate","params":{"theme":"id"},"label":"Activate","variant":"filled","condition":{"field":"active","equals":false}},{"key":"deactivate","concept":"Theme","action":"deactivate","params":{"theme":"id"},"label":"Deactivate","variant":"outlined","condition":{"field":"active","equals":true}}]'
     pickerMode: false
@@ -112,7 +112,7 @@ entries:
   # automations-rules-list: uses automation-rule-create (deduplicated)
   # version-spaces-list
   - name: version-spaces-list-controls
-    createForm: '{"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Space ID","required":true},{"name":"content","label":"Payload (JSON)","required":true,"type":"textarea"},{"name":"createdBy","label":"Owner","required":true}]}'
+    createForm: '{"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Space ID","required":true},{"name":"content","label":"Space Properties","required":true,"type":"key-value-list","placeholder":"e.g. name, status, owner"},{"name":"createdBy","label":"Owner","required":true}]}'
     rowClick: '{}'
     rowActions: '[]'
     pickerMode: false
@@ -122,7 +122,7 @@ entries:
   # graph-neighbors: uses navigate-content-node (deduplicated)
   # deployment-overview
   - name: deployment-overview-controls
-    createForm: '{"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Space ID","required":true,"placeholder":"version-space:editorial-pass"},{"name":"content","label":"Space Payload (JSON)","required":true,"type":"textarea","placeholder":"{\"name\":\"Editorial Pass\",\"status\":\"active\",\"owner\":\"alice\",\"overrideCount\":0,\"lastActivity\":\"2026-03-10T12:00:00.000Z\",\"visibility\":\"shared\",\"description\":\"Reviewing site copy\"}"},{"name":"createdBy","label":"Owner","required":true,"placeholder":"alice"}]}'
+    createForm: '{"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Space ID","required":true,"placeholder":"version-space:editorial-pass"},{"name":"content","label":"Space Properties","required":true,"type":"key-value-list","placeholder":"e.g. name, status, owner"},{"name":"createdBy","label":"Owner","required":true,"placeholder":"alice"}]}'
     rowClick: '{}'
     rowActions: '[]'
     pickerMode: false
