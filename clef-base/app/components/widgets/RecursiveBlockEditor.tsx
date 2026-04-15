@@ -372,14 +372,51 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
   // Load block children from Outline
   // =========================================================================
 
+  // Optimistic depth overrides — Tab / Shift+Tab record their intent
+  // here so ANY setChildren (including an intermediate loadChildren
+  // that fires between optimistic update and server commit) can apply
+  // the override and not flash the block back to its old depth. The
+  // ref persists across renders; an entry clears when a fresh walk
+  // confirms the expected depth (see applyDepthOverrides below).
+  const optimisticDepthRef = useRef<Map<string, number>>(new Map());
+
+  // Wrap setChildren so every update merges pending depth overrides.
+  // Callers that WANT to reset depth (e.g., loadChildren after server
+  // confirmation) just set the fresh depth — if it matches the
+  // override, the override clears. Otherwise it keeps winning until
+  // the server catches up.
+  const setChildrenWithOverrides = useCallback<React.Dispatch<React.SetStateAction<BlockChild[]>>>((update) => {
+    setChildren((prev) => {
+      const next = typeof update === 'function' ? (update as (p: BlockChild[]) => BlockChild[])(prev) : update;
+      const overrides = optimisticDepthRef.current;
+      if (overrides.size === 0) return next;
+      return next.map((c) => {
+        const ov = overrides.get(c.id);
+        if (ov === undefined) return c;
+        if (c.depth === ov) {
+          // Server caught up — drop the override.
+          overrides.delete(c.id);
+          return c;
+        }
+        return { ...c, depth: ov };
+      });
+    });
+  }, []);
+
   // Optimistic depth adjustment — Tab / Shift+Tab call this BEFORE the
   // server reparent round-trip so the visual indent updates instantly.
   // Clamps to [0, Infinity); loadChildren reconciles against the server
   // truth afterwards.
   const handleOptimisticDepthChange = useCallback((nodeId: string, delta: number) => {
-    setChildren((prev) => prev.map((c) =>
-      c.id === nodeId ? { ...c, depth: Math.max(0, c.depth + delta) } : c
-    ));
+    setChildren((prev) => {
+      const next = prev.map((c) => {
+        if (c.id !== nodeId) return c;
+        const newDepth = Math.max(0, c.depth + delta);
+        optimisticDepthRef.current.set(nodeId, newDepth);
+        return { ...c, depth: newDepth };
+      });
+      return next;
+    });
   }, []);
 
   // Optimistic block insert — Enter creates a BlockChild entry locally
@@ -482,7 +519,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
       {
         // For the downstream code that expects `ids` (e.g. widget resolver)
         const ids = childRecords.map((c) => c.id);
-        setChildren(childRecords);
+        setChildrenWithOverrides(childRecords);
 
         // Resolve ComponentMapping for each child
         const widgetMap = new Map<string, ResolvedWidget>();
