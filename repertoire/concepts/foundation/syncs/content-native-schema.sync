@@ -131,3 +131,24 @@ when {
 then {
   ContentCompiler/markStale: [ compilation: ?original ]
 }
+
+# === Bidirectional: Concept → Content Pool ===
+# When ANY concept's create action completes ok, and that concept has a
+# defined schema, auto-materialize a ContentNode so the entity participates
+# in the unified content pool. This is the reverse of SchemaTypedNodeAppliesSchema.
+# Together they make content-native syncs truly bidirectional: Bind/API/CLI
+# calls to concept-specific creates reflect in the content pool, and
+# content-pool creates apply schemas.
+
+sync ConceptCreateMaterializesContentNode [eventual] [idempotent]
+  purpose { Auto-materialize a ContentNode when any schema-backed concept create completes ok. }
+when {
+  ?Concept/create: [] => [ id: ?id ]
+}
+where {
+  Schema: { nameOf(?Concept) fields: ?fields }
+}
+then {
+  ContentNode/create: [ node: ?id; type: nameOf(?Concept); content: "{}"; createdBy: "system" ]
+  ContentNode/recordSchema: [ node: ?id; schema: nameOf(?Concept) ]
+}

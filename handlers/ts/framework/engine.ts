@@ -546,6 +546,13 @@ function resolveTemplateValue(value: unknown, binding: Binding): unknown {
         return strMatch ? strMatch[1] : arg;
       }).join('');
     }
+    // Handle nameOf(...) — extract last segment of a URI: "urn:clef/Canvas" → "Canvas"
+    const nameOfMatch = value.match(/^nameOf\((.+)\)$/);
+    if (nameOfMatch) {
+      const arg = nameOfMatch[1].trim();
+      const resolved = arg.startsWith('?') ? String(binding[arg.slice(1)] ?? '') : arg;
+      return resolved.includes('/') ? resolved.split('/').pop()! : resolved;
+    }
     // Handle cond(...) function calls: cond(?flag, trueVal, falseVal)
     const condMatch = value.match(/^cond\((.+)\)$/);
     if (condMatch) {
