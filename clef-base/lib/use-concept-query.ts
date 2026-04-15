@@ -38,11 +38,17 @@ export function useConceptQuery<T = unknown>(
     try {
       const result = await invoke(concept, action, input ?? {});
       if (result.variant === 'ok') {
-        // Unwrap the data array from the result generically:
-        // 1. If result.items is a JSON-encoded string array, parse and use it.
-        // 2. Else find the first key (excluding metadata keys) whose value is an
-        //    Array or a JSON-encoded string that decodes to an Array.
-        // 3. Else fall back to using result itself.
+        // Unwrap the data array from the result only for list-shaped actions.
+        // For get/read/resolve actions the caller expects the whole result
+        // object back — scanning for an array-valued field would wrongly
+        // pick up embedded JSON-encoded arrays (e.g. Layout.children).
+        const actionLower = action.toLowerCase();
+        const isListAction =
+          actionLower.startsWith('list') ||
+          actionLower.startsWith('find') ||
+          actionLower.startsWith('query') ||
+          actionLower.startsWith('search') ||
+          actionLower === 'all';
         const SKIP_KEYS = new Set(['variant', 'flowId', 'message']);
         let resolved: unknown = null;
 
@@ -50,7 +56,7 @@ export function useConceptQuery<T = unknown>(
           resolved = JSON.parse(result.items);
         } else if (Array.isArray(result.items)) {
           resolved = result.items;
-        } else {
+        } else if (isListAction) {
           for (const key of Object.keys(result)) {
             if (SKIP_KEYS.has(key)) continue;
             const val = result[key];
