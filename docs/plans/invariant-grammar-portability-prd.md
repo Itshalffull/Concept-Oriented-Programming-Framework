@@ -18,7 +18,7 @@
 | [MAG-915](https://vibekanban.com) | INV-11 Propagate grammar update through every reference surface | MAG-916 |
 | [MAG-916](https://vibekanban.com) | INV-12 Additional platform renderers (Vue / Svelte / Vanilla / SwiftUI / Jetpack) — low priority | — |
 | [MAG-917](https://vibekanban.com) ✅ `83e0a06a` | INV-13 Wire test execution through `Builder/test` so dormant quality-signal syncs fire | — |
-| [MAG-918](https://vibekanban.com) | INV-14 Integrate ExternalHandlerGen + IntegrationTestGen with universal grammar — `scenario` invariants feed IntegrationTestGen alongside fixtures; ExternalHandlerGen-generated handlers participate in TestGeneration pipeline | — |
+| [MAG-918](https://vibekanban.com) ✅ `7a07bdc2` | INV-14 Integrate ExternalHandlerGen + IntegrationTestGen with universal grammar — `scenario` invariants feed IntegrationTestGen alongside fixtures; ExternalHandlerGen-generated handlers participate in TestGeneration pipeline | — |
 | [MAG-919](https://vibekanban.com) | INV-15 Add `/create-external-handler` + `/generate-integration-test` skills — extend `examples/devtools/devtools.interface.yaml`, regen via `scripts/regen-interface.ts` | — |
 | [MAG-920](https://vibekanban.com) | INV-16 Handlers-as-values test generation — TestPlan consumes StorageProgram descriptions + ExternalHandler manifests; emit mock/replay handler variants, effect-contract tests, FieldTransform-fuzzed inputs | — |
 
