@@ -591,8 +591,13 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
     };
   }, []);
 
-  const handleDescriptionBlur = () => {
-    debouncedUpdate({ description });
+  const handleDescriptionBlur = (e: React.FocusEvent<HTMLTextAreaElement>) => {
+    // Use the input's current value directly to avoid stale closure
+    // when blur fires before React flushes a pending setDescription.
+    const value = e.target.value;
+    if (value !== field.description) {
+      callUpdate({ description: value });
+    }
   };
 
   const handleRequiredChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -607,8 +612,11 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
     callUpdate({ unique: val });
   };
 
-  const handleDefaultValueBlur = () => {
-    debouncedUpdate({ defaultValue });
+  const handleDefaultValueBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value !== field.defaultValue) {
+      callUpdate({ defaultValue: value });
+    }
   };
 
   const handleSelectOptionsChange = (opts: SelectOption[]) => {
