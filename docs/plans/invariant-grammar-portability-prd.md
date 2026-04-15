@@ -17,7 +17,7 @@
 | [MAG-914](https://vibekanban.com) | INV-10 Retrofit existing invariants + proof-of-life cross-kind invariants | MAG-915, MAG-916 |
 | [MAG-915](https://vibekanban.com) | INV-11 Propagate grammar update through every reference surface | MAG-916 |
 | [MAG-916](https://vibekanban.com) | INV-12 Additional platform renderers (Vue / Svelte / Vanilla / SwiftUI / Jetpack) — low priority | — |
-| [MAG-917](https://vibekanban.com) | INV-13 Wire test execution through `Builder/test` so dormant quality-signal syncs fire | — |
+| [MAG-917](https://vibekanban.com) ✅ `83e0a06a` | INV-13 Wire test execution through `Builder/test` so dormant quality-signal syncs fire | — |
 | [MAG-918](https://vibekanban.com) | INV-14 Integrate ExternalHandlerGen + IntegrationTestGen with universal grammar — `scenario` invariants feed IntegrationTestGen alongside fixtures; ExternalHandlerGen-generated handlers participate in TestGeneration pipeline | — |
 
 Execution order comes from the blocking graph:
