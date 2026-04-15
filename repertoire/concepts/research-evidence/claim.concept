@@ -94,6 +94,16 @@ concept Claim [C] {
 
       fixture list_unsupported_ok { report_entity_id: "report-1" } after basic_claim
     }
+
+    action evidenceGraph(report_entity_id: String) {
+      -> ok(graph: String) {
+        Return a JSON object with nodes (claims) and edges (verification
+        relationships) for the given report entity, suitable for graph
+        visualisation on the evidence admin page.
+      }
+      fixture graph_ok { report_entity_id: "report-1" } after basic_claim
+      fixture graph_empty { report_entity_id: "nonexistent-report" }
+    }
   }
 
   example "extract then verify": {

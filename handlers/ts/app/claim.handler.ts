@@ -159,6 +159,34 @@ const _claimHandler: FunctionalConceptHandler = {
       return { claims: JSON.stringify(unsupported) };
     }) as StorageProgram<Result>;
   },
+
+  /**
+   * Build a graph of claim nodes and verification edges for the report entity.
+   * Nodes are the claims; edges connect each claim to its verifier (verified_by).
+   */
+  evidenceGraph(input: Record<string, unknown>) {
+    const report_entity_id = toStr(input.report_entity_id);
+
+    let p = createProgram();
+    p = find(p, 'claim', { report_entity_id }, 'results');
+    return completeFrom(p, 'ok', (bindings) => {
+      const claims = (bindings.results as Array<Record<string, unknown>>) || [];
+      const nodes = claims.map((c) => ({
+        id: toStr(c.claim),
+        label: toStr(c.claim_text).slice(0, 80),
+        status: toStr(c.status),
+        support_score: (c.support_score as number) ?? null,
+      }));
+      const edges = claims
+        .filter((c) => c.verified_by)
+        .map((c) => ({
+          source: toStr(c.claim),
+          target: toStr(c.verified_by),
+          label: toStr(c.status),
+        }));
+      return { graph: JSON.stringify({ nodes, edges }) };
+    }) as StorageProgram<Result>;
+  },
 };
 
 export const claimHandler = autoInterpret(_claimHandler);
