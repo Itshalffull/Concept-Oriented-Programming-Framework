@@ -17,6 +17,7 @@
 | [MAG-914](https://vibekanban.com) | INV-10 Retrofit existing invariants + proof-of-life cross-kind invariants | MAG-915, MAG-916 |
 | [MAG-915](https://vibekanban.com) | INV-11 Propagate grammar update through every reference surface | MAG-916 |
 | [MAG-916](https://vibekanban.com) | INV-12 Additional platform renderers (Vue / Svelte / Vanilla / SwiftUI / Jetpack) — low priority | — |
+| [MAG-917](https://vibekanban.com) | INV-13 Wire test execution through `Builder/test` so dormant quality-signal syncs fire | — |
 
 Execution order comes from the blocking graph:
 
@@ -293,31 +294,48 @@ concept InvariantParser [S]
     get(invariant: Id) : (ast: Json) or (notfound)
 ```
 
-**AssertionContext is a plugin kind, not a new concept.** The
-repertoire already has `PluginRegistry [P]` (see
-`repertoire/concepts/infrastructure/plugin-registry.concept`) with
-`register(type, name, metadata)` / `discover(type)` /
-`createInstance(plugin, config)`. The cleffy move is to register each
-host spec's context as a plugin:
+**Each AssertionContext is its own concept with a `register` action,
+wired to `PluginRegistry` via a sync.** Pattern matches what
+`syncs/execution/register-instance-providers.sync` and
+`syncs/framework/register-framework-generators.sync` already do for
+every other plugin kind in Clef: concept → `register` action → sync
+watches the completion → `PluginRegistry/register`. Seed files are
+for CONTENT (user data, entities); plugin registration is a
+`register → PluginRegistry/register` sync path.
 
 ```
-# Seeds, not new concepts.
-PluginRegistry/register type: "assertion-context", name: "concept",
-  metadata: '{ "resolverHandler": "ConceptAssertionContext.resolve",
-               "declaredSymbols": ["action-names", "state-fields", …] }'
-
-PluginRegistry/register type: "assertion-context", name: "widget",
-  metadata: '{ "resolverHandler": "WidgetAssertionContext.resolve",
-               "declaredSymbols": ["anatomy-parts", "fsm-fields", …] }'
-
-PluginRegistry/register type: "assertion-context", name: "view",   …
-PluginRegistry/register type: "assertion-context", name: "sync",   …
-PluginRegistry/register type: "assertion-context", name: "derived", …
+concept ConceptAssertionContext [C]
+  purpose "Resolve concept-spec identifiers for the InvariantParser."
+  actions
+    register() : ok(name: "concept"; declaredSymbols: list of …)
+    resolve(name: String) : ok(kind: String; info: Json) | notfound
 ```
+
+Sync wires it:
+
+```
+sync RegisterConceptAssertionContext [eager]
+when {
+  ConceptAssertionContext/register: []
+    => ok(name: ?name; declaredSymbols: ?syms)
+}
+then {
+  PluginRegistry/register: [
+    type: "assertion-context";
+    name: ?name;
+    metadata: { declaredSymbols: ?syms; kind: "concept" }
+  ]
+}
+```
+
+Five contexts total (concept, widget, view, sync, derived), each its
+own concept + handler + one sync. Adding a sixth spec kind = one
+new concept + one new sync.
 
 The `InvariantParser` consults `PluginRegistry/discover(type:
-"assertion-context")` at parse time and routes identifier resolution
-to the matching resolver. Adding a sixth spec kind is one seed row.
+"assertion-context")` at parse time and routes identifier
+resolution by dispatching `ConceptAssertionContext/resolve` (or
+whichever matches the spec kind).
 
 ```
 concept TestPlan [T]
@@ -334,20 +352,42 @@ concept TestPlan [T]
     listFor(invariantId: Id) : (plans: Json)
 ```
 
-**TestPlanRenderer is also a plugin kind, not a new concept.**
-Same pattern. Each platform registers itself via PluginRegistry:
+**Each TestPlanRenderer is its own concept, same pattern:**
 
 ```
-PluginRegistry/register type: "test-plan-renderer", name: "react",
-  metadata: '{ "probeTable": "reactProbes", "entryHandler": "renderReactTestFile" }'
-
-PluginRegistry/register type: "test-plan-renderer", name: "playwright", …
-PluginRegistry/register type: "test-plan-renderer", name: "vue",        …
-PluginRegistry/register type: "test-plan-renderer", name: "swiftui",    …
+concept ReactRenderer
+  actions
+    register() : ok(name: "react"; capabilities: list of …)
+    render(plan: Json) : ok(code: String) | unsupportedProbe
 ```
 
-Render-for-each-platform just calls `PluginRegistry/discover(type:
-"test-plan-renderer")` and iterates. Adding a platform is one seed.
+```
+sync RegisterReactRenderer [eager]
+when {
+  ReactRenderer/register: []
+    => ok(name: ?name; capabilities: ?caps)
+}
+then {
+  PluginRegistry/register: [
+    type: "test-plan-renderer";
+    name: ?name;
+    metadata: { capabilities: ?caps; kind: "renderer" }
+  ]
+}
+```
+
+Render-for-each-platform calls `PluginRegistry/discover(type:
+"test-plan-renderer")` and dispatches the matching renderer's
+`render` action per hit. Adding a platform = one new concept + one
+new sync.
+
+**CLI path is different.** The CLI bootstraps the kernel imperatively
+(see `handlers/ts/framework/kernel-boot.handler.ts` —
+`bootKernel({ concepts: [{uri, handler, …}, …], syncFiles: […] })`).
+For CLI plugin loading, concepts + syncs are registered directly
+through the boot config rather than discovered via runtime
+`PluginRegistry/discover`. The runtime registry is still authoritative
+for discovery at invoke time; the boot path just imports and wires.
 
 ### Syncs wire the pipeline
 
@@ -691,6 +731,41 @@ category with fixtures/steps/observations populated. React renderer
 emits a real vitest test. Playwright renderer emits an equivalent
 `.spec.ts`. Same invariant, same IR, different platform targets.
 
+## Current state — the testing suite is mostly dormant
+
+Audit finding: the `repertoire/concepts/testing/` suite has
+`Conformance`, `TestGen`, `QualitySignal`, `FlakyTest`,
+`RegressionSuite`, `TestSelection`, `Snapshot`, `ContractTest`,
+and `widget-component-test-plan` concepts — but nothing today
+actually wires up to them. The existing conformance tests are
+plain Vitest files that import handlers directly; `scripts/generate-*.ts`
+calls `buildTestPlan()` + renderer functions as local TS imports,
+never `TestGen/generate`. Three syncs in the suite
+(`unit-tests-publish-quality-signal.sync`, `record-test-result.sync`,
+`generated-tests-run-by-builder.sync`) are declared but dormant —
+they watch for `Builder/test` / `TestGen/generate` completions that
+nothing ever fires.
+
+Implication: the pipeline work in this PRD isn't just enriching an
+existing concept flow — it's the **first actual wiring** for these
+concepts. The scope grows:
+
+- `TestGeneration/run` dispatches `TestGen/generate` (currently a
+  standalone handler invocation).
+- Test execution flows through `Builder/test` so the three dormant
+  syncs light up — QualitySignal, FlakyTest, and generated-tests-
+  run-by-builder start receiving real completions.
+- `Conformance` rows populate with generated-test-file references so
+  a concept's test coverage is queryable via Score / Pilot.
+- `RegressionSuite` starts tracking which tests belong to each
+  release / milestone.
+
+The PRD's step 9 ("replace scripts/generate-*.ts with thin
+dispatchers") now has a corresponding sibling: a step that runs
+the generated tests through `Builder/test` so the quality signal
+chain actually fires. Track as a separate follow-up card below if
+not folded into INV-9 directly.
+
 ## File layout — repertoire testing suite, NOT clef-base
 
 Everything framework-level lives in the existing repertoire testing
@@ -847,6 +922,25 @@ No new TS orchestration; even the CLI is a dispatcher.
     - `docs/plans/clef-fv.md` Section 1 (referenced by the
       devtools manifest; currently lists the six invariant
       constructs — add `scenario`, note the shared-parser pattern)
+
+    **Documentation gap to close** — the concept-with-`register`
+    action + sync-to-`PluginRegistry` idiom is the canonical
+    extensibility pattern (see `syncs/execution/register-instance-providers.sync`,
+    `syncs/framework/register-framework-generators.sync` for
+    existing examples). Today it appears in
+    `.claude/skills/custom-transform-provider/`,
+    `infrastructure-core/`, `interface-scaffold-gen/`,
+    `storage-adapter-scaffold-gen/`, `derived-scaffold-gen/`,
+    `surface-component-scaffold-gen/`, `handler-scaffold-gen/`,
+    `sync-scaffold-gen/`, `suite-scaffold-gen/`,
+    `deploy-scaffold-gen/` — but **NOT** in the foundational
+    `create-concept` or `create-sync` skills where authors would
+    first encounter it. Both should grow a "Plugin pattern:
+    register-action + sync-to-PluginRegistry" reference, with the
+    same text living in `.codex/` and `.gemini/` siblings and the
+    project-instructions section of `examples/devtools/devtools.interface.yaml`.
+    Without this, every new plugin author has to reverse-engineer
+    the idiom from existing syncs.
 
     **New reference docs to author:**
     - `references/sync-grammar.md` (`sync-parser` skill) — gains an
