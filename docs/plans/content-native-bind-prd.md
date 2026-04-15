@@ -68,5 +68,5 @@ For non-content-native concepts (infrastructure like RuntimeRegistry, ScoreApi),
 | CNB-4 | GraphQL target rewrite | done | d68a2515 |
 | CNB-5 | CLI target rewrite | done | 68d25866 |
 | CNB-6 | MCP target rewrite | done | b221e2e9 |
-| CNB-7 | Skills target rewrite | done | PENDING-CNB7 |
+| CNB-7 | Skills target rewrite | done | 18bef61f |
 | CNB-8 | Regenerate + verify | pending | — |
