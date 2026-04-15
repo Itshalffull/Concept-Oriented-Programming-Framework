@@ -1,0 +1,16 @@
+# Wire MockHandlerRenderer/register into PluginRegistry so TestGeneration
+# can dispatch HandlerDescriptors to the mock-handler backend by name.
+
+sync RegisterMockHandlerRenderer [eager]
+  purpose { Wire MockHandlerRenderer/register into PluginRegistry. }
+when {
+  MockHandlerRenderer/register: []
+    => ok(name: ?name; capabilities: ?caps)
+}
+then {
+  PluginRegistry/register: [
+    type: "test-plan-renderer";
+    name: ?name;
+    metadata: { capabilities: ?caps }
+  ]
+}

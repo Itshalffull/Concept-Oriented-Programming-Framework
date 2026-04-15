@@ -1,0 +1,74 @@
+@version(1)
+@category("testing")
+concept FieldTransformFuzzRenderer [R] {
+
+  purpose {
+    Render a HandlerDescriptor that carries a FieldTransform-derived
+    input schema into a vitest property-based test source string.
+    The emitted test generates well-formed inputs matching the
+    schema, then mutates each field (null, wrong type, missing
+    required) to synthesize malformed inputs, and asserts the
+    handler returns a non-ok variant for malformed inputs without
+    crashing. Self-registers via PluginRegistry.
+  }
+
+  state {
+    renderers: set R
+
+    identity {
+      name: R -> String
+    }
+
+    metadata {
+      capabilities: R -> String
+    }
+  }
+
+  actions {
+
+    action register() {
+      -> ok(name: String, capabilities: String) {
+        Return static metadata for PluginRegistry. The renderer
+        identifies itself as "field-transform-fuzz" and declares
+        capabilities: property-based, mutation, field-transform,
+        malformed-input, crash-detection.
+      }
+
+      fixture register_ok {}
+    }
+
+    action render(descriptor: String) {
+      -> ok(code: String) {
+        Translate the JSON-encoded HandlerDescriptor into a vitest
+        property-based fuzz test source string.
+      }
+      -> error(message: String) {
+        The descriptor string is not valid JSON, is missing required
+        fields, or has no FieldTransform input schema to fuzz.
+      }
+
+      fixture render_ok {
+        descriptor: "{\"conceptName\":\"Weather\",\"actionName\":\"fetch\",\"kind\":\"external\",\"reads\":[],\"writes\":[],\"performs\":[\"http:GET\"],\"variants\":[\"ok\",\"error\"],\"requestFields\":[{\"from\":\"lat\",\"to\":\"latitude\"},{\"from\":\"lon\",\"to\":\"longitude\"}]}"
+      }
+      fixture render_bad_json {
+        descriptor: "not valid json"
+      } -> error
+      fixture render_empty {
+        descriptor: ""
+      } -> error
+    }
+  }
+
+  example "register then render": {
+    after register() -> ok(name: n, capabilities: caps)
+    then render(descriptor: "{\"conceptName\":\"X\",\"actionName\":\"a\",\"kind\":\"external\",\"reads\":[],\"writes\":[],\"performs\":[],\"variants\":[\"ok\"],\"requestFields\":[]}") -> ok(code: c)
+  }
+
+  never "register issued without name": {
+    exists r in renderers: r.name = ""
+  }
+
+  always "registered renderers carry capabilities": {
+    forall r in renderers: r.capabilities != ""
+  }
+}

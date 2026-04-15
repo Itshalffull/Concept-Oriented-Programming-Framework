@@ -26,6 +26,26 @@ concepts:
     params:
       R: { as: process-spec-renderer-ref, description: "Reference to a registered ProcessSpec renderer instance" }
 
+  MockHandlerRenderer:
+    spec: ./mock-handler-renderer.concept
+    params:
+      R: { as: mock-handler-renderer-ref, description: "Reference to a registered mock-handler renderer instance" }
+
+  ReplayHandlerRenderer:
+    spec: ./replay-handler-renderer.concept
+    params:
+      R: { as: replay-handler-renderer-ref, description: "Reference to a registered record/replay handler renderer instance" }
+
+  EffectContractRenderer:
+    spec: ./effect-contract-renderer.concept
+    params:
+      R: { as: effect-contract-renderer-ref, description: "Reference to a registered effect-contract renderer instance" }
+
+  FieldTransformFuzzRenderer:
+    spec: ./field-transform-fuzz-renderer.concept
+    params:
+      R: { as: field-transform-fuzz-renderer-ref, description: "Reference to a registered FieldTransform fuzz renderer instance" }
+
 syncs:
   required:
     - path: ./syncs/register-react-renderer.sync
@@ -36,6 +56,18 @@ syncs:
 
     - path: ./syncs/register-process-spec-renderer.sync
       description: "ProcessSpecRenderer/register -> PluginRegistry/register(test-plan-renderer)"
+
+    - path: ./syncs/register-mock-handler-renderer.sync
+      description: "MockHandlerRenderer/register -> PluginRegistry/register(test-plan-renderer)"
+
+    - path: ./syncs/register-replay-handler-renderer.sync
+      description: "ReplayHandlerRenderer/register -> PluginRegistry/register(test-plan-renderer)"
+
+    - path: ./syncs/register-effect-contract-renderer.sync
+      description: "EffectContractRenderer/register -> PluginRegistry/register(test-plan-renderer)"
+
+    - path: ./syncs/register-field-transform-fuzz-renderer.sync
+      description: "FieldTransformFuzzRenderer/register -> PluginRegistry/register(test-plan-renderer)"
 
 uses:
   - suite: infrastructure

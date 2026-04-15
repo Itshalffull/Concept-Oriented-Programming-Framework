@@ -1,0 +1,78 @@
+@version(1)
+@category("testing")
+concept MockHandlerRenderer [R] {
+
+  purpose {
+    Render a HandlerDescriptor (derived from a StorageProgram or an
+    ExternalHandler manifest) into a mock handler TypeScript source
+    string. The emitted handler satisfies the same action interface
+    as the real handler but returns canned responses: for HTTP
+    handlers the mock inspects declared request FieldTransforms and
+    returns a response shaped by response-side FieldTransforms; for
+    storage handlers the mock services reads from a seed map and
+    no-ops writes. Self-registers via the PluginRegistry pattern so
+    TestGeneration/run dispatches HandlerDescriptors here alongside
+    scenario-invariant renderers.
+  }
+
+  state {
+    renderers: set R
+
+    identity {
+      name: R -> String
+    }
+
+    metadata {
+      capabilities: R -> String
+    }
+  }
+
+  actions {
+
+    action register() {
+      -> ok(name: String, capabilities: String) {
+        Return static metadata for PluginRegistry. The renderer
+        identifies itself as "mock-handler" and declares capabilities:
+        storage-program, external-handler, field-transform,
+        seed-map, canned-response.
+      }
+
+      fixture register_ok {}
+    }
+
+    action render(descriptor: String) {
+      -> ok(code: String) {
+        Translate the JSON-encoded HandlerDescriptor into a TypeScript
+        mock handler source string ready to drop under
+        tests/mocks/<concept>.mock.handler.ts.
+      }
+      -> error(message: String) {
+        The descriptor string is not valid JSON or is missing
+        required fields (conceptName, actionName, kind).
+      }
+
+      fixture render_ok {
+        descriptor: "{\"conceptName\":\"User\",\"actionName\":\"create\",\"kind\":\"storage\",\"reads\":[],\"writes\":[\"users\"],\"performs\":[],\"variants\":[\"ok\",\"error\"]}"
+      }
+      fixture render_bad_json {
+        descriptor: "not valid json"
+      } -> error
+      fixture render_empty {
+        descriptor: ""
+      } -> error
+    }
+  }
+
+  example "register then render": {
+    after register() -> ok(name: n, capabilities: caps)
+    then render(descriptor: "{\"conceptName\":\"X\",\"actionName\":\"a\",\"kind\":\"storage\",\"reads\":[],\"writes\":[],\"performs\":[],\"variants\":[\"ok\"]}") -> ok(code: c)
+  }
+
+  never "register issued without name": {
+    exists r in renderers: r.name = ""
+  }
+
+  always "registered renderers carry capabilities": {
+    forall r in renderers: r.capabilities != ""
+  }
+}

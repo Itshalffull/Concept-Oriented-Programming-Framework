@@ -1,0 +1,16 @@
+# Wire EffectContractRenderer/register into PluginRegistry so TestGeneration
+# can dispatch HandlerDescriptors to the effect-contract backend by name.
+
+sync RegisterEffectContractRenderer [eager]
+  purpose { Wire EffectContractRenderer/register into PluginRegistry. }
+when {
+  EffectContractRenderer/register: []
+    => ok(name: ?name; capabilities: ?caps)
+}
+then {
+  PluginRegistry/register: [
+    type: "test-plan-renderer";
+    name: ?name;
+    metadata: { capabilities: ?caps }
+  ]
+}

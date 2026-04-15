@@ -1,0 +1,74 @@
+@version(1)
+@category("testing")
+concept ReplayHandlerRenderer [R] {
+
+  purpose {
+    Render a HandlerDescriptor into a record/replay handler TypeScript
+    source string. On first run (CLEF_REPLAY_MODE=record) the emitted
+    handler calls through to the real handler, captures the response
+    keyed by a FieldTransform-derived request fingerprint, and writes
+    the cassette under tests/cassettes/<concept>/<action>.json. On
+    subsequent runs (default CLEF_REPLAY_MODE=replay) it reads from the
+    cassette. Self-registers via PluginRegistry.
+  }
+
+  state {
+    renderers: set R
+
+    identity {
+      name: R -> String
+    }
+
+    metadata {
+      capabilities: R -> String
+    }
+  }
+
+  actions {
+
+    action register() {
+      -> ok(name: String, capabilities: String) {
+        Return static metadata for PluginRegistry. The renderer
+        identifies itself as "replay-handler" and declares
+        capabilities: record-mode, replay-mode, cassette,
+        fingerprint, external-handler.
+      }
+
+      fixture register_ok {}
+    }
+
+    action render(descriptor: String) {
+      -> ok(code: String) {
+        Translate the JSON-encoded HandlerDescriptor into a TypeScript
+        record/replay handler source string.
+      }
+      -> error(message: String) {
+        The descriptor string is not valid JSON or missing required
+        fields.
+      }
+
+      fixture render_ok {
+        descriptor: "{\"conceptName\":\"Weather\",\"actionName\":\"fetch\",\"kind\":\"external\",\"reads\":[],\"writes\":[],\"performs\":[\"http:GET\"],\"variants\":[\"ok\",\"error\"]}"
+      }
+      fixture render_bad_json {
+        descriptor: "not valid json"
+      } -> error
+      fixture render_empty {
+        descriptor: ""
+      } -> error
+    }
+  }
+
+  example "register then render": {
+    after register() -> ok(name: n, capabilities: caps)
+    then render(descriptor: "{\"conceptName\":\"X\",\"actionName\":\"a\",\"kind\":\"external\",\"reads\":[],\"writes\":[],\"performs\":[],\"variants\":[\"ok\"]}") -> ok(code: c)
+  }
+
+  never "register issued without name": {
+    exists r in renderers: r.name = ""
+  }
+
+  always "registered renderers carry capabilities": {
+    forall r in renderers: r.capabilities != ""
+  }
+}

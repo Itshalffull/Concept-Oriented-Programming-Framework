@@ -1,0 +1,16 @@
+# Wire ReplayHandlerRenderer/register into PluginRegistry so TestGeneration
+# can dispatch HandlerDescriptors to the replay-handler backend by name.
+
+sync RegisterReplayHandlerRenderer [eager]
+  purpose { Wire ReplayHandlerRenderer/register into PluginRegistry. }
+when {
+  ReplayHandlerRenderer/register: []
+    => ok(name: ?name; capabilities: ?caps)
+}
+then {
+  PluginRegistry/register: [
+    type: "test-plan-renderer";
+    name: ?name;
+    metadata: { capabilities: ?caps }
+  ]
+}

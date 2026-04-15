@@ -1,0 +1,16 @@
+# Wire FieldTransformFuzzRenderer/register into PluginRegistry so
+# TestGeneration can dispatch HandlerDescriptors to the fuzz backend.
+
+sync RegisterFieldTransformFuzzRenderer [eager]
+  purpose { Wire FieldTransformFuzzRenderer/register into PluginRegistry. }
+when {
+  FieldTransformFuzzRenderer/register: []
+    => ok(name: ?name; capabilities: ?caps)
+}
+then {
+  PluginRegistry/register: [
+    type: "test-plan-renderer";
+    name: ?name;
+    metadata: { capabilities: ?caps }
+  ]
+}
