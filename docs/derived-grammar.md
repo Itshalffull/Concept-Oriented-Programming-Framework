@@ -105,6 +105,18 @@ derived TrashSystem {
 }
 ```
 
+## Derived invariants in the test generation pipeline
+
+Derived invariants participate in the same pipeline as concept and sync
+invariants — parsed by the universal body parser, resolved by the
+derived `AssertionContext`, routed through TestPlan → renderer plugins
+and `IntegrationTestGen`. Because derived concepts coordinate multiple
+base concepts, their invariants are especially natural candidates for
+the `scenario` kind: a scenario over a derived concept exercises the
+full composition (base concepts + configured syncs) end-to-end, with
+settlement modalities covering the async sync chains that typically
+connect composed concepts.
+
 ## How this becomes tests
 
 The `TestGeneration/run` pipeline treats derived invariants as

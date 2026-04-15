@@ -99,6 +99,18 @@ configured concept kernel. Use `"async-eventually"` settlement when the
 effect action goes through a transport (HTTP, WebSocket) whose
 completion is not synchronous.
 
+## Syncs in the test generation pipeline
+
+A sync can carry its own `invariant { kind: scenario … }` block to
+assert end-to-end behaviour after the sync fires — when-clause match,
+where-clause queries, and then-clause dispatch all exercised together.
+Settlement modalities resolve async sync chains: use
+`"async-eventually" { timeoutMs: … }` when the effect action completes
+over a transport, or `"async-with-anchor" { anchor: … }` to block until
+a specific downstream completion lands. Sync scenario invariants flow
+through the same `IntegrationTestGen` + TestPlan renderer pipeline as
+concept scenarios.
+
 ## How this becomes tests
 
 The same `TestGeneration/run` pipeline used for concepts and widgets

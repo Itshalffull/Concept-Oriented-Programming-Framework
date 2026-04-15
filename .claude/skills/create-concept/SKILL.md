@@ -582,6 +582,19 @@ concept Name [T] {
 }
 ```
 
+## Handler test generation
+
+Once you implement the concept's handler, it automatically participates
+in the test generation pipeline — no additional spec authoring is
+required. Every registered handler gets four generated artifacts
+(mock handler, effect contract, replay handler, FieldTransform fuzz)
+via `TestGeneration/run`, driven by a `HandlerDescriptor` IR normalized
+from the handler's declared StorageProgram effects. The richer and more
+accurate your `reads` / `writes` / `perform` declarations, the stronger
+the generated contract. See the "Handler-side test generation
+(automatic)" section of `docs/concept-grammar.md` for the full pipeline
+and IR cross-links.
+
 ## Example Walkthroughs
 
 For complete examples with design rationale:
