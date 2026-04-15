@@ -11,6 +11,7 @@
     "build": "tsc",
     "test": "vitest run",
     "test:watch": "vitest",
+    "clef:test": "npx tsx --tsconfig tsconfig.json scripts/run-tests.ts",
     "clef": "npx tsx cli/src/main.ts",
     "postinstall": "node scripts/copy-tree-sitter-wasm.mjs && node scripts/copy-agent-references.mjs"
   },

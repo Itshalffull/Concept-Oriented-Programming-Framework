@@ -15,6 +15,10 @@ import { actionBindingHandler } from '../../handlers/ts/app/action-binding.handl
 import { textSpanHandler } from '../../handlers/ts/app/text-span.handler';
 import { inputRuleHandler } from '../../handlers/ts/app/input-rule.handler';
 import { testGenerationHandler } from '../../handlers/ts/repertoire/testing/test-generation.handler';
+import { builderHandler } from '../../handlers/ts/deploy/builder.handler';
+import { qualitySignalHandler } from '../../handlers/ts/framework/test/quality-signal.handler';
+import { flakyTestHandler } from '../../handlers/ts/framework/test/flaky-test.handler';
+import { testSelectionHandler } from '../../handlers/ts/framework/test/test-selection.handler';
 
 import { REGISTRY_ENTRIES, SYNC_FILES } from '../../generated/kernel-registry';
 import { discoverFromFilesystem } from '../../handlers/ts/seed-data.handler';
@@ -62,6 +66,7 @@ const SUPPLEMENTAL_REGISTRY_ENTRIES = [
     storageName: 'clip',
     storageType: 'standard' as const,
   },
+<<<<<<< HEAD
   {
     uri: 'urn:clef/KeyBinding',
     handler: keyBindingHandler,
@@ -92,6 +97,38 @@ const SUPPLEMENTAL_REGISTRY_ENTRIES = [
     storageName: 'test-generation',
     storageType: 'standard' as const,
   },
+  {
+    uri: 'urn:clef/Builder',
+    handler: builderHandler,
+    storageName: 'builder',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/QualitySignal',
+    handler: qualitySignalHandler,
+    storageName: 'quality-signal',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/FlakyTest',
+    handler: flakyTestHandler,
+    storageName: 'flaky-test',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/TestSelection',
+    handler: testSelectionHandler,
+    storageName: 'test-selection',
+    storageType: 'standard' as const,
+  },
+];
+
+// Only syncs whose where/then expressions use helpers the current sync
+// engine implements (engine.ts resolveTemplateValue supports `concat` and
+// `cond`; `equals`, `pluck`, `firstOf`, `sourcesFor` are not). The rest of
+// the Builder/test sync chain stays dormant until those helpers land.
+const SUPPLEMENTAL_SYNC_FILES = [
+  'repertoire/concepts/testing/syncs/unit-tests-publish-quality-signal.sync',
 ];
 
 // process.cwd() is the clef-base/ dir when Next.js runs; __filename
@@ -139,7 +176,8 @@ export function getKernel(): Kernel {
     storageType: entry.storageType,
   }));
 
-  const syncFiles = SYNC_FILES.map(p => resolve(PROJECT_ROOT, p));
+  const syncFiles = [...SYNC_FILES, ...SUPPLEMENTAL_SYNC_FILES]
+    .map(p => resolve(PROJECT_ROOT, p));
 
   const result = bootKernel({
     concepts,
