@@ -1,0 +1,48 @@
+# external_handler_gen — MCP Tool Guide
+
+Generate an external-API handler for **{input}** from an ingest manifest.
+
+
+> **When to use:** Use when onboarding an external REST API into Clef. Generates a handler implementation that calls perform('http', ...) with method, path, auth headers, and FieldTransform request/response shaping derived from the ingest manifest.
+
+
+## Design Principles
+
+- **No Direct I/O:** Generated handlers call `perform('http', ...)` — never `fetch()`, `axios`, or `node-fetch`. All HTTP effects flow through the execution layer for observability (ConnectorCall, RetryPolicy, CircuitBreaker, RateLimiter, PerformanceProfile, ErrorCorrelation, RuntimeCoverage).
+- **Manifest-Driven Shaping:** Request/response shaping is declared in the manifest via FieldTransform entries, not written by hand in the handler. Regenerating the handler after a manifest change is always safe.
+- **One Handler per Concept:** Each invocation generates a handler for exactly one (source, concept) pair. Use generateAll to bulk-emit across the whole manifest.
+**generate:**
+- [ ] Manifest JSON parses without error?
+- [ ] Source entry with matching name exists in manifest?
+- [ ] Concept entry with matching name exists under source?
+- [ ] Every action has method, path, and fieldTransforms?
+- [ ] authConfig produces the correct header set (bearer / apiKey / basic / none)?
+- [ ] Generated handler uses `perform('http', ...)` — never direct fetch()?
+- [ ] Request body shaped via FieldTransform/transformRequest?
+- [ ] Response body mapped via FieldTransform/transformResponse?
+- [ ] HTTP status code → variant mapping covers ok and error?
+## Quick Reference
+
+| Flag         | Type   | Purpose                                        |
+|--------------|--------|------------------------------------------------|
+| --manifest   | path   | Path to ingest manifest JSON                   |
+| --source     | string | Source name (must match a manifest entry)      |
+| --concept    | string | Concept name under the source                  |
+| --all        | bool   | Generate for every (source, concept) pair      |
+
+Output: TypeScript handler text on stdout, or written to
+`handlers/ts/external/<concept>.handler.ts` when `--output` is given.
+
+
+## Validation
+
+*Generate a single handler from an ingest manifest:*
+```bash
+clef generate external-handler --manifest ./ingest.json --source payments --concept Charge
+```
+*Generate all handlers declared in an ingest manifest:*
+```bash
+clef generate external-handler --manifest ./ingest.json --all
+```
+**Related tools:** [object Object], [object Object]
+

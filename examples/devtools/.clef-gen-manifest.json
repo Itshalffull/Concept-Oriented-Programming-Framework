@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-13T18:51:03.803Z",
+  "generatedAt": "2026-04-15T12:17:43.497Z",
   "files": [
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/spec-parser/spec-parser.commands.ts",
@@ -388,7 +388,7 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/concept-scaffold-gen/SKILL.md",
       "relativePath": "claude-skills/concept-scaffold-gen/SKILL.md",
-      "hash": "9b568d1e3ad37b513c2e06fc7b9ea97fe8685d7c84c356632cc17ba5ca375941",
+      "hash": "d9735f3ee404f7c0493c31fb5eeea044bbc5b75275db8a9d51ccac33d1b8fa69",
       "target": "claude-skills"
     },
     {
@@ -400,7 +400,7 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/concept-scaffold-gen/references/concept-spec-guide.md",
       "relativePath": "claude-skills/concept-scaffold-gen/references/concept-spec-guide.md",
-      "hash": "7002c52fc3b3fc97dac68799f5eae542646234bfaf6855d29f99e2608cfddfc9",
+      "hash": "1e72e721eb8457eec38788e191cd5ae553253f711cab50e43944772ce7808022",
       "target": "claude-skills"
     },
     {
@@ -526,7 +526,7 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/surface-component-scaffold-gen/references/widget-grammar.md",
       "relativePath": "claude-skills/surface-component-scaffold-gen/references/widget-grammar.md",
-      "hash": "0afd748d8d4bf3de5ffcb0bcd53f7299fc83f8b90eb619cbe4ebdd427db8aeb5",
+      "hash": "4cf7694a9b62f49d52ab6cc5104c1551fbc04c82684cba9e0aa33e838e3f0e34",
       "target": "claude-skills"
     },
     {
@@ -593,6 +593,30 @@
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/derived-scaffold-gen/references/derived-concept-guide.md",
       "relativePath": "claude-skills/derived-scaffold-gen/references/derived-concept-guide.md",
       "hash": "27e94fd2b307e8f525adeb174a065a4b78425543f869c14092a80946535de546",
+      "target": "claude-skills"
+    },
+    {
+      "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/external-handler-gen/external-handler-gen.commands.ts",
+      "relativePath": "claude-skills/external-handler-gen/external-handler-gen.commands.ts",
+      "hash": "d1f2ab897ade3fc93dd94714a7a6b2b4306350b347fa861670d201513017b495",
+      "target": "claude-skills"
+    },
+    {
+      "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/external-handler-gen/SKILL.md",
+      "relativePath": "claude-skills/external-handler-gen/SKILL.md",
+      "hash": "7df2755a289324bf49854f8528ed6266598c679649b2acd3c84e9d5ddacbad62",
+      "target": "claude-skills"
+    },
+    {
+      "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/integration-test-gen/integration-test-gen.commands.ts",
+      "relativePath": "claude-skills/integration-test-gen/integration-test-gen.commands.ts",
+      "hash": "13808ab54085f6bf1af48a9d3d6127a0f9994c7384375762b92f1c606859d3ea",
+      "target": "claude-skills"
+    },
+    {
+      "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/skills/integration-test-gen/SKILL.md",
+      "relativePath": "claude-skills/integration-test-gen/SKILL.md",
+      "hash": "5677804237820100a2640413da918f71f94fe28491ed2d13f45518d707089c17",
       "target": "claude-skills"
     },
     {
@@ -2044,7 +2068,7 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/cli/src/concept-scaffold-gen/concept-scaffold-gen.help.md",
       "relativePath": "cli/concept-scaffold-gen/concept-scaffold-gen.help.md",
-      "hash": "ddb868fd06686f075d0676a8fb53d42119b5e487aa08f00f594e84f4471985ef",
+      "hash": "aedba5241fc946b3b04bec09a8cd6e70cd8b4d24018603702d28b0b4a44b1a80",
       "target": "cli"
     },
     {
@@ -2141,6 +2165,30 @@
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/cli/src/derived-scaffold-gen/derived-scaffold-gen.help.md",
       "relativePath": "cli/derived-scaffold-gen/derived-scaffold-gen.help.md",
       "hash": "a3aec08391bc321a32ed02ca8fab5bf3e27ce22874adf20fd6213197e9e9bd5e",
+      "target": "cli"
+    },
+    {
+      "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/cli/src/external-handler-gen/external-handler-gen.command.ts",
+      "relativePath": "cli/external-handler-gen/external-handler-gen.command.ts",
+      "hash": "701cfaae65aa0fb59214bdb669e9b77796c337dd0ba15491e7ea2af48675ad0d",
+      "target": "cli"
+    },
+    {
+      "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/cli/src/external-handler-gen/external-handler-gen.help.md",
+      "relativePath": "cli/external-handler-gen/external-handler-gen.help.md",
+      "hash": "a9b3d5246ea9288dbc2412d6d0302124ce896b7d199ae4be0428e5832943c799",
+      "target": "cli"
+    },
+    {
+      "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/cli/src/integration-test-gen/integration-test-gen.command.ts",
+      "relativePath": "cli/integration-test-gen/integration-test-gen.command.ts",
+      "hash": "e00d5295311e4c60f65a3d5e187f76377408bdc13c994786c2e7210fbd43aac0",
+      "target": "cli"
+    },
+    {
+      "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/cli/src/integration-test-gen/integration-test-gen.help.md",
+      "relativePath": "cli/integration-test-gen/integration-test-gen.help.md",
+      "hash": "7ba8f363533d80cccf4e7044ee4e32b2ca73f7ebab5c0eb6af30577dbf3abad1",
       "target": "cli"
     },
     {
@@ -3076,7 +3124,7 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/mcp/concept-scaffold-gen/concept-scaffold-gen.help.md",
       "relativePath": "mcp/concept-scaffold-gen/concept-scaffold-gen.help.md",
-      "hash": "0847cfd99146dc90935e2e1d796395f6d6a957909df71681874963ab30154201",
+      "hash": "67ec3245261d80bf9a7254bbe73c9712dda302a4f675a03a842a55f7e05e95fe",
       "target": "mcp"
     },
     {
@@ -3221,6 +3269,42 @@
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/mcp/derived-scaffold-gen/derived-scaffold-gen.help.md",
       "relativePath": "mcp/derived-scaffold-gen/derived-scaffold-gen.help.md",
       "hash": "50a83b830c2f2e15672707433a8db62d066b27d5823efa6fd75f7160955a2b95",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/mcp/external-handler-gen/external-handler-gen.tools.ts",
+      "relativePath": "mcp/external-handler-gen/external-handler-gen.tools.ts",
+      "hash": "678d17ddf8a7cef0f73b91ee5d4d39f973634a57f29534180b9d328a272711de",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/mcp/external-handler-gen/external-handler-gen.catalog.json",
+      "relativePath": "mcp/external-handler-gen/external-handler-gen.catalog.json",
+      "hash": "5b982402b09ffef9713e420eaa8b940edc19c1b271d4e3a72e015ac8261946ff",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/mcp/external-handler-gen/external-handler-gen.help.md",
+      "relativePath": "mcp/external-handler-gen/external-handler-gen.help.md",
+      "hash": "2dcbd32f50c8346a866064da38c34de4b582f5a8f7ebddb0b6b528ee465ea6d8",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/mcp/integration-test-gen/integration-test-gen.tools.ts",
+      "relativePath": "mcp/integration-test-gen/integration-test-gen.tools.ts",
+      "hash": "bc0380fc4b29c35e16757abfaf884218e2ad50b2710252ed79e9ef19fc6423ac",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/mcp/integration-test-gen/integration-test-gen.catalog.json",
+      "relativePath": "mcp/integration-test-gen/integration-test-gen.catalog.json",
+      "hash": "1171cc5b0ca1957a2b1b27260d94f4c4d6fe350849ad667c34b2bce35f52010a",
+      "target": "mcp"
+    },
+    {
+      "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/.claude/mcp/integration-test-gen/integration-test-gen.help.md",
+      "relativePath": "mcp/integration-test-gen/integration-test-gen.help.md",
+      "hash": "7413becb4a39a2377e7ecc06bbd977296de14a88b3143d51762446b36363f1f2",
       "target": "mcp"
     },
     {
@@ -4522,31 +4606,31 @@
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/generated/specs/openapi.yaml",
       "relativePath": "openapi/openapi.yaml",
-      "hash": "4cb091b2d8047681911ef44d984a56f8675c1c462f0a943a8e116ea0c9362881",
+      "hash": "94f81416f7bd0ae23bd9c1ea669516d1f75b322d3e731ed147bc55f549953438",
       "target": "openapi"
     },
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/generated/specs/asyncapi.yaml",
       "relativePath": "asyncapi/asyncapi.yaml",
-      "hash": "08242f8055eb4380c7ed665d352adb430567a87be4dbe570db9d405f7714b2bd",
+      "hash": "86806a7ab6a1d5f64adb77b40cd1bc7a9a00b5e7436a3e46a4dec5fb4b6b256c",
       "target": "asyncapi"
     },
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/CLAUDE.md",
       "relativePath": "project-instructions/CLAUDE.md",
-      "hash": "826d80ec31ade4dfc3b37536a3d885c0320327f2b4b89d4391a804b6dce25bfc",
+      "hash": "482f8e43c16f074989c8e6371418b952440c6a76800084cb4deb89fa820956a2",
       "target": "project-instructions"
     },
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/AGENTS.md",
       "relativePath": "project-instructions/AGENTS.md",
-      "hash": "e5a5c8f2bc9ab74130bf3ad2613f40039106327720b769623232a547c14daed8",
+      "hash": "8439862dda66a8ecccad1d7292f1e090bd5b9150ec5b208986edddf39b63dbb5",
       "target": "project-instructions"
     },
     {
       "path": "/home/trinley/Documents/Github/Concept-Oriented-Programming-Framework/GEMINI.md",
       "relativePath": "project-instructions/GEMINI.md",
-      "hash": "4c3467ebd9ef355c356180eb51b93e6497b84911f230dac2bc4741f07e75d110",
+      "hash": "a6447361bc490298c42165be350fef3ad0e2eaa5401d1d3e52af59eaf1e3492a",
       "target": "project-instructions"
     }
   ],

@@ -103,6 +103,56 @@ states (FSM with transitions), accessibility (role, keyboard, focus),
 affordance, props, connect (data attributes), compose, and invariant blocks.
 - Parser: `handlers/ts/framework/widget-parser.ts`
 
+**Universal Invariant Grammar** (`handlers/ts/framework/invariant-body-parser.ts`)
+One `invariant { ... }` body grammar is shared across ALL five spec kinds —
+`.concept`, `.widget`, `.view`, `.sync`, and `.derived`. Every kind's parser
+delegates to `InvariantBodyParser`; the only per-kind variation is the
+`AssertionContext` plugin that resolves identifiers (action names vs.
+anatomy parts vs. query columns vs. sync bindings vs. composed concepts).
+- Seven invariant constructs (all spec kinds):
+  - `example` — named 1:1 conformance test (`after … -> variant` / `then …`)
+  - `forall` — universally quantified property with `given … in …`
+  - `always` — state predicate that must hold in every reachable state
+  - `never` — safety property: state the system must never reach
+  - `eventually` — bounded liveness property
+  - `requires/ensures` — pre/postcondition action contracts
+  - `scenario` — multi-block behavioral test with `fixture` declarations,
+    optional `given` / `when` blocks, required `then` block, and a
+    `settlement` modality (`sync`, `"async-eventually" { timeoutMs: N }`,
+    or `"async-with-anchor" { anchor: "..." }`). Steps may be chained
+    with `and` or `;`.
+- **AST**: `InvariantDecl` in `runtime/types.ts` with fields
+  `kind`, `name?`, `afterPatterns`, `thenPatterns`, `whenClause?`,
+  `quantifiers?`, `contracts?`, `targetAction?`, and for `scenario`:
+  `fixtures`, `givenSteps`, `whenSteps`, `thenSteps`, `settlement?`.
+- **Per-kind notes**:
+  - `.concept` — supports both `invariant { … }` blocks and top-level
+    named invariant forms (`example "…": { … }`, `forall "…": { … }`, etc.).
+  - `.widget` — same grammar; identifiers resolve to anatomy parts +
+    FSM states via the widget AssertionContext plugin.
+  - `.view` — singular `invariant { … }` block; identifiers resolve
+    to query result columns / presentation fields.
+  - `.sync` — singular `invariant { … }` block attached to the sync;
+    identifiers resolve to bound variables in the `when`/`where`/`then`
+    clauses (MAG-911 / INV-7).
+  - `.derived` — singular `invariant { … }` block; identifiers resolve
+    to composed concept actions and surface-action/query names (MAG-911 / INV-7).
+
+**TestGeneration Pipeline** (`specs/test/test-generation.derived`)
+The pipeline that turns invariants into executable tests is a derived
+concept composing:
+`InvariantParser` → `AssertionContext` plugins (concept/widget/view/sync/derived)
+→ `TestPlan` IR → `TestPlanRenderer` plugins (React, Playwright, …) →
+`TestArtifact` writer. Each stage is its own concept action, so
+`ScoreApi/getFlow --from TestGeneration/run` traces the full chain.
+Scripts `scripts/generate-*.ts` are thin dispatchers that call
+`TestGeneration/run`.
+- Core concepts: `specs/test/invariant-parser.concept`,
+  `specs/test/test-plan.concept`, `specs/test/test-artifact.concept`
+- Assertion-context plugins: `specs/test/assertion-context-*.concept`
+- Renderer plugins: `repertoire/concepts/test-plan-renderers/`
+- Dispatcher: `TestGeneration/run` in `specs/test/test-generation.derived`
+
 **Themes** (`.theme` files in `surface/`)
 Design system token specs. Define palette (oklch colors), typography
 (modular ratio, fonts, weights), spacing, motion (with reduced-motion),
@@ -277,6 +327,8 @@ manifests from scratch without using the generator.
 | Creating a deployment manifest | `/configure-deployment` | `DeployScaffoldGen/generate` |
 | Creating a storage adapter | `/create-storage-adapter` | `StorageAdapterScaffoldGen/generate` |
 | Creating a transport adapter | `/create-transport-adapter` | `TransportAdapterScaffoldGen/generate` |
+| Generating an external-API handler from an ingest manifest | `/create-external-handler` | `ExternalHandlerGen/generate` |
+| Generating a ProcessSpec integration test from a concept spec | `/generate-integration-test` | `IntegrationTestGen/generate` |
 | Decomposing a feature into concepts | `/decompose-feature` | — |
 | Building a full app hierarchy | `/derive-app` | — |
 | Parsing/validating a spec | `/spec-parser` | `SpecParser/parse` |

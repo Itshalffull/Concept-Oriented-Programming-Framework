@@ -1,0 +1,34 @@
+[
+  {
+    "name": "external_handler_gen_generate",
+    "briefDescription": "Handler source generated ; handlerCode contains the full TypeScript \n text an...",
+    "category": "ExternalHandlerGen",
+    "concept": "ExternalHandlerGen",
+    "action": "generate",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "external_handler_gen_generate_all",
+    "briefDescription": "All concept handlers generated ; handlers contains the full source \n and coun...",
+    "category": "ExternalHandlerGen",
+    "concept": "ExternalHandlerGen",
+    "action": "generateAll",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "external_handler_gen_preview",
+    "briefDescription": "The code snippet for the requested action method , including input \n validati...",
+    "category": "ExternalHandlerGen",
+    "concept": "ExternalHandlerGen",
+    "action": "preview",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "external_handler_gen_register",
+    "briefDescription": "Return static metadata for PluginRegistry .",
+    "category": "ExternalHandlerGen",
+    "concept": "ExternalHandlerGen",
+    "action": "register",
+    "alwaysLoaded": false
+  }
+]

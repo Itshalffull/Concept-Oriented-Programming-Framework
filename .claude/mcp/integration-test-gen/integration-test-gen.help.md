@@ -1,0 +1,47 @@
+# integration_test_gen — MCP Tool Guide
+
+Generate a ProcessSpec integration test for **{input}**.
+
+
+> **When to use:** Use when you need to exercise an external-API concept against the real API. Generates a ProcessSpec integration test from fixture chains AND scenario invariants in the concept spec.
+
+
+## Design Principles
+
+- **Spec-Driven Test Generation:** The concept spec is the single source of truth — fixtures define happy and error paths; scenario invariants define end-to-end behavioral claims. Regeneration is always safe.
+- **Settlement Mode → Step Primitive:** Synchronous scenarios emit a plain external-call step. `async-eventually` scenarios emit `pollUntil` with a CheckVerification predicate. `async-with-anchor` scenarios emit `waitForCompletion` pinned to the completion of the preceding action.
+- **Binding over Hardcoding:** `$fixture.field` references must resolve to step output bindings — never copy values between fixtures. The ProcessSpec runtime substitutes at execution time.
+**generate:**
+- [ ] Concept spec parses without error?
+- [ ] No `after` cycles among fixtures?
+- [ ] Every `$fixture.field` reference resolves to a known prior fixture?
+- [ ] Ingest manifest JSON parses?
+- [ ] Each fixture emits exactly one step?
+- [ ] Scenario invariants emit a step sequence with the correct settlement mode?
+- [ ] `settlement: async-eventually` scenarios become `pollUntil` steps?
+- [ ] `settlement: async-with-anchor` scenarios become `waitForCompletion` steps?
+- [ ] Expected variants emitted as CheckVerification assertions?
+## Quick Reference
+
+| Flag               | Type   | Purpose                                |
+|--------------------|--------|----------------------------------------|
+| --concept-spec     | path   | Path to the .concept file              |
+| --ingest-manifest  | path   | Path to the ingest manifest JSON       |
+| --source           | string | Source name under which to run steps   |
+
+Output: ProcessSpec JSON on stdout (or to `--output` path). Run with
+`clef generate integration-test run --process-spec <file>`.
+
+
+## Validation
+
+*Generate a ProcessSpec from a concept spec + manifest:*
+```bash
+clef generate integration-test --concept-spec ./specs/app/charge.concept --ingest-manifest ./ingest.json --source payments
+```
+*Run the generated ProcessSpec:*
+```bash
+clef generate integration-test run --process-spec ./out/charge.process.json
+```
+**Related tools:** [object Object]
+

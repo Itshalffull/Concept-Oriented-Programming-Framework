@@ -128,6 +128,8 @@ concepts:
   - specs/framework/surface-theme-scaffold-gen.concept
   - specs/framework/surface-widget-handler-gen.concept
   - specs/framework/derived-scaffold-gen.concept
+  - specs/framework/external-handler-gen.concept
+  - specs/framework/integration-test-gen.concept
   # Interface suite orchestration (bind/)
   - repertoire/concepts/interface-generation/concepts/generator.concept
   - bind/interface/concepts/projection.concept
@@ -2772,7 +2774,7 @@ workflows:
           2. Write a purpose block explaining why the concept exists (not how it works).
           3. Design state fields: sets (set T), mappings (T -> Type), option/list wrappers, enum types ({Active | Inactive | Pending}), record types ({key: String, value: String}), state groups for related fields.
           4. Define actions with typed params and variant returns. All primitives: String, Int, Float, Bool, Bytes, DateTime, ID.
-          5. Write invariants comprehensively using all six constructs: example (named conformance tests), forall (quantified properties with given/in), always (state predicates), never (safety properties), eventually (liveness), action requires/ensures (contracts). Use property assertions (d.status = "complete") and when guard clauses. Aim for 2-5 invariants covering: core purpose, error paths, constraint enforcement, state transitions, boundary conditions.
+          5. Write invariants comprehensively using all seven constructs: example (named conformance tests), forall (quantified properties with given/in), always (state predicates), never (safety properties), eventually (liveness), action requires/ensures (contracts), scenario (multi-block fixtures + given/when/then + settlement modality). Use property assertions (d.status = "complete") and when guard clauses. Aim for 2-5 invariants covering: core purpose, error paths, constraint enforcement, state transitions, boundary conditions. The same grammar is shared across .concept, .widget, .view, .sync, and .derived specs via `handlers/ts/framework/invariant-body-parser.ts`.
           6. Add capabilities block if the concept is a generator or plugin.
           7. Add fixtures to every action. CRITICAL: error-case fixtures (names containing empty_, invalid_, duplicate_, missing_, bad_, etc.) MUST include an explicit `-> error` or `-> <specific_variant>` annotation. Omitting the arrow defaults to `-> ok`, generating wrong conformance tests. ok fixtures for non-creator actions need `after` chains to seed prerequisite data.
       - action: test-gen
@@ -2781,13 +2783,15 @@ workflows:
           After writing invariants, generate comprehensive tests using TestGen.
           Invoke `/create-implementation --concept <Name>` first to create the handler,
           then generate tests from invariants:
-          1. Run `TestGen/generate` (MCP: `test_gen_generate`) with concept_ref and language to compile all six invariant construct types into tests:
+          1. Run `TestGen/generate` (MCP: `test_gen_generate`) with concept_ref and language to compile all seven invariant construct types into tests:
              - example blocks → conformance test vectors (1:1 after/then mapping)
              - forall blocks → property-based tests with generated domains
              - always blocks → stateful sequence tests checking state predicates
              - never blocks → violation-attempt tests trying to reach bad states
              - eventually blocks → bounded liveness tests
              - requires/ensures → contract-constrained PBT with pre/postconditions
+             - scenario blocks → multi-block behavioral tests (fixtures + given/when/then + settlement)
+          The pipeline flows `InvariantParser → AssertionContext plugins → TestPlanRenderer plugins` — the same universal grammar that applies to .concept, .widget, .view, .sync, and .derived specs.
           2. Review generated test files — they should NOT need manual editing for example/forall/always/never constructs. Contract tests (requires/ensures) may need manual generator tuning for complex domain types.
           3. Run `TestGen/coverage` (MCP: `test_gen_coverage`) to verify all invariant constructs have generated tests. Check the construct_coverage breakdown — each kind should show covered > 0.
           4. Run `npx vitest run generated/tests/<concept>.*` to verify generated tests pass.
@@ -2817,7 +2821,7 @@ workflows:
       - title: "Sufficiency & Necessity"
         rule: "Every state field is needed by at least one action. Every action serves the concept's purpose. No dead state."
       - title: "Invariant Completeness"
-        rule: "Use all six invariant constructs comprehensively: example (named tests), forall (quantified properties), always (state predicates), never (safety), eventually (liveness), action requires/ensures (contracts). Cover core purpose, error paths, constraints, state transitions, and boundary conditions. Aim for 2-5 invariants per concept."
+        rule: "Use all seven invariant constructs comprehensively: example (named tests), forall (quantified properties), always (state predicates), never (safety), eventually (liveness), action requires/ensures (contracts), scenario (multi-block fixtures + given/when/then + settlement). Cover core purpose, error paths, constraints, state transitions, and boundary conditions. Aim for 2-5 invariants per concept. The same grammar is shared across .concept, .widget, .view, .sync, and .derived specs via the universal InvariantParser."
       - title: "Success is ok"
         rule: "The happy-path variant must always be named `ok`. Do not use domain-specific success names like `created`, `configured`, `registered`, `updated`. Domain context belongs in the output fields. Exception: actions with multiple distinct success outcomes that syncs need to distinguish (e.g., `ok`/`miss` for cache lookup, `clean`/`conflicts` for merge)."
       - title: "Description Quality"
@@ -2921,7 +2925,10 @@ workflows:
 
           ## Invariants
 
-          Six invariant constructs are supported (see docs/plans/clef-fv.md Section 1):
+          Seven invariant constructs are supported (see docs/plans/clef-fv.md Section 1
+          and `docs/concept-grammar.md`). The same grammar applies to `.concept`, `.widget`,
+          `.view`, `.sync`, and `.derived` specs — parsed by the universal
+          `InvariantBodyParser` in `handlers/ts/framework/invariant-body-parser.ts`:
 
           ### `example` — Named conformance test (Tier 1)
           ```
@@ -2975,6 +2982,31 @@ workflows:
             }
           }
           ```
+
+          ### `scenario` — Multi-block behavioral test (Tier 2-3)
+          ```
+          invariant {
+            scenario "registering an origin makes it retrievable": {
+              fixture o1 { origin: "scenario-origin", kind: "space", qualifier: "vs-1" }
+              when {
+                register(origin: "scenario-origin", kind: "space", qualifier: "vs-1") -> ok
+              }
+              then {
+                get(origin: "scenario-origin") -> ok(kind: k, qualifier: q, status: s)
+                and s = "connected"
+              }
+              settlement: sync
+            }
+          }
+          ```
+          Scenarios take zero or more `fixture` declarations, an optional
+          `given` block (preconditions), an optional `when` block (action
+          steps), a required `then` block (assertions), and an optional
+          `settlement` modality: `sync` (default), `"async-eventually" { timeoutMs: N }`,
+          or `"async-with-anchor" { anchor: "..." }`. Steps may be separated
+          by `;` or chained with `and`. The same grammar applies in
+          `.widget`, `.view`, `.sync`, and `.derived` specs — identifiers
+          resolve against the matching AssertionContext plugin.
 
           ### Property assertions in then-chains
           ```
@@ -3610,7 +3642,10 @@ workflows:
           1. Run `TestGen/generate` (MCP: `test_gen_generate`) with the concept_ref and target language.
              TestGen compiles each invariant construct to the appropriate test strategy:
              example → conformance vectors, forall → PBT properties, always → stateful sequences,
-             never → violation attempts, eventually → bounded liveness, requires/ensures → contract PBT.
+             never → violation attempts, eventually → bounded liveness, requires/ensures → contract PBT,
+             scenario → multi-block behavioral tests (fixtures + given/when/then + settlement modality).
+             The pipeline flows through `InvariantParser → AssertionContext plugins → TestPlanRenderer plugins`,
+             the same universal grammar that applies to .concept, .widget, .view, .sync, and .derived specs.
           2. Generated tests import the handler and validate it against the concept's behavioral contract.
              For functional handlers (StorageProgram), tests validate program structure, transport effects
              (perform() declarations), and storage instructions. For imperative handlers, tests validate
@@ -3994,6 +4029,131 @@ workflows:
               }
             }
           }
+
+  # ─── ExternalHandlerGen: create-external-handler ──
+  create-external-handler:
+    concept: ExternalHandlerGen
+    steps:
+      - action: register
+        title: "Register Generator"
+        prose: "Self-register with PluginRegistry so KindSystem can track IngestManifest → ExternalHandler transformations."
+      - action: preview
+        title: "Preview Generated Handler"
+        prose: "Dry-run for a single action of a single concept under a source. Returns the handler code that would be generated without writing to disk."
+      - action: generate
+        title: "Generate External Handler"
+        prose: >
+          Generate a handler implementation for one concept declared in the ingest manifest.
+          The generated handler issues HTTP calls via `perform('http', method, path, body, headers)`
+          with method/path/auth from the manifest's source entry and request shaping via
+          FieldTransform/transformRequest. Response body is mapped back to concept variants via
+          FieldTransform/transformResponse, with the final variant derived from the HTTP status code.
+      - action: generateAll
+        title: "Generate All Handlers in Manifest"
+        prose: "Iterate every (source, concept) pair in the ingest manifest and emit one handler file per concept. Useful for bulk onboarding an existing ingest manifest."
+    checklists:
+      generate:
+        - "Manifest JSON parses without error?"
+        - "Source entry with matching name exists in manifest?"
+        - "Concept entry with matching name exists under source?"
+        - "Every action has method, path, and fieldTransforms?"
+        - "authConfig produces the correct header set (bearer / apiKey / basic / none)?"
+        - "Generated handler uses `perform('http', ...)` — never direct fetch()?"
+        - "Request body shaped via FieldTransform/transformRequest?"
+        - "Response body mapped via FieldTransform/transformResponse?"
+        - "HTTP status code → variant mapping covers ok and error?"
+    design-principles:
+      - title: "No Direct I/O"
+        rule: "Generated handlers call `perform('http', ...)` — never `fetch()`, `axios`, or `node-fetch`. All HTTP effects flow through the execution layer for observability (ConnectorCall, RetryPolicy, CircuitBreaker, RateLimiter, PerformanceProfile, ErrorCorrelation, RuntimeCoverage)."
+      - title: "Manifest-Driven Shaping"
+        rule: "Request/response shaping is declared in the manifest via FieldTransform entries, not written by hand in the handler. Regenerating the handler after a manifest change is always safe."
+      - title: "One Handler per Concept"
+        rule: "Each invocation generates a handler for exactly one (source, concept) pair. Use generateAll to bulk-emit across the whole manifest."
+    validation-commands:
+      - label: "Generate a single handler from an ingest manifest"
+        command: "clef generate external-handler --manifest ./ingest.json --source payments --concept Charge"
+      - label: "Generate all handlers declared in an ingest manifest"
+        command: "clef generate external-handler --manifest ./ingest.json --all"
+    quick-reference:
+      heading: "Quick Reference"
+      body: |
+        | Flag         | Type   | Purpose                                        |
+        |--------------|--------|------------------------------------------------|
+        | --manifest   | path   | Path to ingest manifest JSON                   |
+        | --source     | string | Source name (must match a manifest entry)      |
+        | --concept    | string | Concept name under the source                  |
+        | --all        | bool   | Generate for every (source, concept) pair      |
+
+        Output: TypeScript handler text on stdout, or written to
+        `handlers/ts/external/<concept>.handler.ts` when `--output` is given.
+    related-workflows:
+      - name: generate-integration-test
+        description: "After generating the handler, generate a ProcessSpec integration test that exercises it against the live API."
+      - name: create-handler
+        description: "For internal concepts (not external APIs), use HandlerScaffoldGen instead."
+
+  # ─── IntegrationTestGen: generate-integration-test ─
+  generate-integration-test:
+    concept: IntegrationTestGen
+    steps:
+      - action: register
+        title: "Register Generator"
+        prose: "Self-register with PluginRegistry so KindSystem can track (ConceptSpec + IngestManifest) → ProcessSpec transformations."
+      - action: preview
+        title: "Preview Test Steps"
+        prose: "Parse the concept spec and report the ordered list of steps that would be emitted (one per fixture / scenario), including their expected variants, without emitting a ProcessSpec."
+      - action: generate
+        title: "Generate ProcessSpec Integration Test"
+        prose: >
+          Walk the concept spec's fixture chains AND scenario invariants. Each fixture
+          becomes an external-call step whose inputs are the fixture's field values;
+          each scenario invariant becomes a step sequence exercising the scenario.
+          `$fixture.field` references resolve to step output bindings at run time.
+          The fixture's expected variant (ok, error, notfound, etc.) is emitted as a
+          CheckVerification assertion. Scenario invariants with
+          `settlement: async-eventually` are emitted as `pollUntil` steps; scenarios
+          with `settlement: async-with-anchor` are emitted as `waitForCompletion`
+          steps anchored to the preceding action's completion.
+      - action: run
+        title: "Run the Generated Test"
+        prose: "Execute the generated ProcessSpec JSON against the real external API. Reports pass/fail per step with variant assertions and polling results."
+    checklists:
+      generate:
+        - "Concept spec parses without error?"
+        - "No `after` cycles among fixtures?"
+        - "Every `$fixture.field` reference resolves to a known prior fixture?"
+        - "Ingest manifest JSON parses?"
+        - "Each fixture emits exactly one step?"
+        - "Scenario invariants emit a step sequence with the correct settlement mode?"
+        - "`settlement: async-eventually` scenarios become `pollUntil` steps?"
+        - "`settlement: async-with-anchor` scenarios become `waitForCompletion` steps?"
+        - "Expected variants emitted as CheckVerification assertions?"
+    design-principles:
+      - title: "Spec-Driven Test Generation"
+        rule: "The concept spec is the single source of truth — fixtures define happy and error paths; scenario invariants define end-to-end behavioral claims. Regeneration is always safe."
+      - title: "Settlement Mode → Step Primitive"
+        rule: "Synchronous scenarios emit a plain external-call step. `async-eventually` scenarios emit `pollUntil` with a CheckVerification predicate. `async-with-anchor` scenarios emit `waitForCompletion` pinned to the completion of the preceding action."
+      - title: "Binding over Hardcoding"
+        rule: "`$fixture.field` references must resolve to step output bindings — never copy values between fixtures. The ProcessSpec runtime substitutes at execution time."
+    validation-commands:
+      - label: "Generate a ProcessSpec from a concept spec + manifest"
+        command: "clef generate integration-test --concept-spec ./specs/app/charge.concept --ingest-manifest ./ingest.json --source payments"
+      - label: "Run the generated ProcessSpec"
+        command: "clef generate integration-test run --process-spec ./out/charge.process.json"
+    quick-reference:
+      heading: "Quick Reference"
+      body: |
+        | Flag               | Type   | Purpose                                |
+        |--------------------|--------|----------------------------------------|
+        | --concept-spec     | path   | Path to the .concept file              |
+        | --ingest-manifest  | path   | Path to the ingest manifest JSON       |
+        | --source           | string | Source name under which to run steps   |
+
+        Output: ProcessSpec JSON on stdout (or to `--output` path). Run with
+        `clef generate integration-test run --process-spec <file>`.
+    related-workflows:
+      - name: create-external-handler
+        description: "Generate the handler the integration test exercises."
 
   # ─── InterfaceScaffoldGen: bind-manifest-outbound ──
   bind-manifest-outbound:
@@ -4727,9 +4887,16 @@ workflows:
           }
           ```
 
-          ## Invariant Grammar (from handlers/ts/framework/widget-spec-parser.ts)
+          ## Invariant Grammar (from handlers/ts/framework/invariant-body-parser.ts)
 
-          The `invariant { }` block accepts FIVE structured kinds plus legacy prose strings. Each structured form generates a WidgetComponentTest conformance test. Prose strings do NOT generate tests — they are documentation only.
+          The `invariant { }` block is parsed by the universal InvariantBodyParser
+          shared across .concept, .widget, .view, .sync, and .derived specs. It
+          accepts SEVEN structured kinds plus legacy prose strings:
+          `example`, `forall`, `always`, `never`, `eventually`, `action
+          requires/ensures`, and `scenario` (multi-block fixtures + given/when/then
+          + settlement). Each structured form generates a WidgetComponentTest
+          conformance test. Prose strings do NOT generate tests — they are
+          documentation only.
 
           ### Structured forms
 
@@ -4783,6 +4950,20 @@ workflows:
             action saveButton {
               requires: state.lifecycle = "dirty"
               ensures ok: state.lifecycle = "saving"
+            }
+
+            # scenario: multi-block behavioral test (fixtures + given/when/then + settlement)
+            scenario "typing a character appends it to body" {
+              fixture f1 { readOnly: false, initialText: "" }
+              when {
+                render(readOnly: false) -> ok
+                and body.focus() -> ok
+                and body.type("a") -> ok
+              }
+              then {
+                body.textContent = "a"
+              }
+              settlement: sync
             }
 
             # legacy prose (documentation only, no test generation)
@@ -7991,6 +8172,54 @@ annotations:
         - path: references/derived-grammar.md
           label: "Derived concept grammar and composition patterns"
 
+  ExternalHandlerGen:
+    concept:
+      tool-permissions: [Read, Write, Bash]
+      argument-template: "--manifest <path> --source <name> --concept <name>"
+      trigger-description: >
+        Use when onboarding an external REST API into Clef. Generates a
+        handler implementation that calls perform('http', ...) with
+        method, path, auth headers, and FieldTransform request/response
+        shaping derived from the ingest manifest.
+      intro-template: >
+        Generate an external-API handler for **$ARGUMENTS** from an ingest manifest.
+    register:
+      examples:
+        - label: "Register the external handler generator"
+          language: typescript
+          code: |
+            const result = await externalHandlerGenHandler.register({}, storage);
+    generate:
+      examples:
+        - label: "Generate a single handler"
+          language: bash
+          code: "clef generate external-handler --manifest ./ingest.json --source payments --concept Charge"
+        - label: "Generate all handlers in a manifest"
+          language: bash
+          code: "clef generate external-handler --manifest ./ingest.json --all"
+
+  IntegrationTestGen:
+    concept:
+      tool-permissions: [Read, Write, Bash]
+      argument-template: "--concept-spec <path> --ingest-manifest <path> --source <name>"
+      trigger-description: >
+        Use when you need to exercise an external-API concept against the
+        real API. Generates a ProcessSpec integration test from fixture
+        chains AND scenario invariants in the concept spec.
+      intro-template: >
+        Generate a ProcessSpec integration test for **$ARGUMENTS**.
+    register:
+      examples:
+        - label: "Register the integration test generator"
+          language: typescript
+          code: |
+            const result = await integrationTestGenHandler.register({}, storage);
+    generate:
+      examples:
+        - label: "Generate a ProcessSpec from a concept spec + ingest manifest"
+          language: bash
+          code: "clef generate integration-test --concept-spec ./specs/app/charge.concept --ingest-manifest ./ingest.json --source payments"
+
 # ─── PER-CONCEPT CLI OVERRIDES ──────────────────────
 # CLI-specific: positional args, custom command names.
 
@@ -8705,6 +8934,117 @@ concept-overrides:
             - description: "Generate derived-of-derived"
               command: "clef scaffold derived --name TaskBoard --composes Task,Label,Assignment"
 
+  ExternalHandlerGen:
+    cli:
+      command-group: generate
+      subcommand: external-handler
+      description: "Generate a handler that calls an external REST API from an ingest manifest."
+      actions:
+        preview:
+          command: preview
+          description: "Dry-run: return the handler source that would be generated without writing."
+          flags:
+            manifest:
+              type: string
+              required: true
+              short: m
+              description: "Path to ingest manifest JSON"
+            source:
+              type: string
+              required: true
+              short: s
+              description: "Source name (must match a manifest entry)"
+            concept:
+              type: string
+              required: true
+              short: c
+              description: "Concept name under the source"
+            action:
+              type: string
+              required: false
+              short: a
+              description: "Specific action to preview (defaults to all)"
+        generate:
+          command: external-handler
+          description: "Generate a handler for one concept declared in the ingest manifest."
+          flags:
+            manifest:
+              type: string
+              required: true
+              short: m
+              description: "Path to ingest manifest JSON"
+            source:
+              type: string
+              required: true
+              short: s
+              description: "Source name"
+            concept:
+              type: string
+              required: true
+              short: c
+              description: "Concept name"
+            output:
+              type: string
+              required: false
+              short: o
+              description: "Output file path (default: handlers/ts/external/<concept>.handler.ts)"
+          examples:
+            - description: "Generate a Charge handler from a payments source"
+              command: "clef generate external-handler --manifest ./ingest.json --source payments --concept Charge"
+
+  IntegrationTestGen:
+    cli:
+      command-group: generate
+      subcommand: integration-test
+      description: "Generate a ProcessSpec integration test from fixture chains and scenario invariants."
+      actions:
+        preview:
+          command: preview
+          description: "List the ordered steps that would be emitted, with expected variants."
+          flags:
+            concept-spec:
+              type: string
+              required: true
+              description: "Path to the .concept file"
+            source:
+              type: string
+              required: true
+              short: s
+              description: "Source name under which steps will run"
+        generate:
+          command: integration-test
+          description: "Generate a ProcessSpec from a concept spec and ingest manifest."
+          flags:
+            concept-spec:
+              type: string
+              required: true
+              description: "Path to the .concept file"
+            ingest-manifest:
+              type: string
+              required: true
+              description: "Path to the ingest manifest JSON"
+            source:
+              type: string
+              required: true
+              short: s
+              description: "Source name"
+            output:
+              type: string
+              required: false
+              short: o
+              description: "Output ProcessSpec JSON path"
+          examples:
+            - description: "Generate an integration ProcessSpec for Charge"
+              command: "clef generate integration-test --concept-spec ./specs/app/charge.concept --ingest-manifest ./ingest.json --source payments"
+        run:
+          command: run
+          description: "Run the generated ProcessSpec against the live external API."
+          flags:
+            process-spec:
+              type: string
+              required: true
+              description: "Path to the ProcessSpec JSON to execute"
+
 # ─── PROJECT INSTRUCTIONS CONTENT ───────────────────
 # Generated to CLAUDE.md, AGENTS.md, and GEMINI.md.
 # All three share the same markdown content.
@@ -8811,6 +9151,56 @@ project-instructions:
     states (FSM with transitions), accessibility (role, keyboard, focus),
     affordance, props, connect (data attributes), compose, and invariant blocks.
     - Parser: `handlers/ts/framework/widget-parser.ts`
+
+    **Universal Invariant Grammar** (`handlers/ts/framework/invariant-body-parser.ts`)
+    One `invariant { ... }` body grammar is shared across ALL five spec kinds —
+    `.concept`, `.widget`, `.view`, `.sync`, and `.derived`. Every kind's parser
+    delegates to `InvariantBodyParser`; the only per-kind variation is the
+    `AssertionContext` plugin that resolves identifiers (action names vs.
+    anatomy parts vs. query columns vs. sync bindings vs. composed concepts).
+    - Seven invariant constructs (all spec kinds):
+      - `example` — named 1:1 conformance test (`after … -> variant` / `then …`)
+      - `forall` — universally quantified property with `given … in …`
+      - `always` — state predicate that must hold in every reachable state
+      - `never` — safety property: state the system must never reach
+      - `eventually` — bounded liveness property
+      - `requires/ensures` — pre/postcondition action contracts
+      - `scenario` — multi-block behavioral test with `fixture` declarations,
+        optional `given` / `when` blocks, required `then` block, and a
+        `settlement` modality (`sync`, `"async-eventually" { timeoutMs: N }`,
+        or `"async-with-anchor" { anchor: "..." }`). Steps may be chained
+        with `and` or `;`.
+    - **AST**: `InvariantDecl` in `runtime/types.ts` with fields
+      `kind`, `name?`, `afterPatterns`, `thenPatterns`, `whenClause?`,
+      `quantifiers?`, `contracts?`, `targetAction?`, and for `scenario`:
+      `fixtures`, `givenSteps`, `whenSteps`, `thenSteps`, `settlement?`.
+    - **Per-kind notes**:
+      - `.concept` — supports both `invariant { … }` blocks and top-level
+        named invariant forms (`example "…": { … }`, `forall "…": { … }`, etc.).
+      - `.widget` — same grammar; identifiers resolve to anatomy parts +
+        FSM states via the widget AssertionContext plugin.
+      - `.view` — singular `invariant { … }` block; identifiers resolve
+        to query result columns / presentation fields.
+      - `.sync` — singular `invariant { … }` block attached to the sync;
+        identifiers resolve to bound variables in the `when`/`where`/`then`
+        clauses (MAG-911 / INV-7).
+      - `.derived` — singular `invariant { … }` block; identifiers resolve
+        to composed concept actions and surface-action/query names (MAG-911 / INV-7).
+
+    **TestGeneration Pipeline** (`specs/test/test-generation.derived`)
+    The pipeline that turns invariants into executable tests is a derived
+    concept composing:
+    `InvariantParser` → `AssertionContext` plugins (concept/widget/view/sync/derived)
+    → `TestPlan` IR → `TestPlanRenderer` plugins (React, Playwright, …) →
+    `TestArtifact` writer. Each stage is its own concept action, so
+    `ScoreApi/getFlow --from TestGeneration/run` traces the full chain.
+    Scripts `scripts/generate-*.ts` are thin dispatchers that call
+    `TestGeneration/run`.
+    - Core concepts: `specs/test/invariant-parser.concept`,
+      `specs/test/test-plan.concept`, `specs/test/test-artifact.concept`
+    - Assertion-context plugins: `specs/test/assertion-context-*.concept`
+    - Renderer plugins: `repertoire/concepts/test-plan-renderers/`
+    - Dispatcher: `TestGeneration/run` in `specs/test/test-generation.derived`
 
     **Themes** (`.theme` files in `surface/`)
     Design system token specs. Define palette (oklch colors), typography
@@ -8986,6 +9376,8 @@ project-instructions:
     | Creating a deployment manifest | `/configure-deployment` | `DeployScaffoldGen/generate` |
     | Creating a storage adapter | `/create-storage-adapter` | `StorageAdapterScaffoldGen/generate` |
     | Creating a transport adapter | `/create-transport-adapter` | `TransportAdapterScaffoldGen/generate` |
+    | Generating an external-API handler from an ingest manifest | `/create-external-handler` | `ExternalHandlerGen/generate` |
+    | Generating a ProcessSpec integration test from a concept spec | `/generate-integration-test` | `IntegrationTestGen/generate` |
     | Decomposing a feature into concepts | `/decompose-feature` | — |
     | Building a full app hierarchy | `/derive-app` | — |
     | Parsing/validating a spec | `/spec-parser` | `SpecParser/parse` |
