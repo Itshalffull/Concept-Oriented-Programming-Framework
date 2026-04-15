@@ -86,6 +86,14 @@ export default async function AdminPage({
     );
   }
 
+  if (slug[0] === 'workflows' && slug[1]) {
+    return (
+      <HostedPage>
+        <WorkflowBuilder mode="edit" context={{ workflow: decodeURIComponent(slug[1]) }} />
+      </HostedPage>
+    );
+  }
+
   if (path === 'automations') {
     return (
       <HostedPage>
@@ -259,6 +267,14 @@ export default async function AdminPage({
     );
   }
 
+  if (slug[0] === 'automation-rule-builder' && slug[1] && slug[1] !== 'new') {
+    return (
+      <HostedPage>
+        <AutomationRuleBuilder mode="edit" context={{ rule: decodeURIComponent(slug[1]) }} />
+      </HostedPage>
+    );
+  }
+
   if (slug[0] === 'workflow-builder' && slug[1] === 'new') {
     return (
       <HostedPage>
@@ -365,6 +381,14 @@ export default async function AdminPage({
     return (
       <HostedPage>
         <MultiverseView />
+      </HostedPage>
+    );
+  }
+
+  if (slug[0] === 'branches' && slug[1]) {
+    return (
+      <HostedPage>
+        <EntityDetailView id={decodeURIComponent(slug[1])} />
       </HostedPage>
     );
   }

@@ -30,7 +30,7 @@ entries:
   # workflows-list
   - name: workflows-list-controls
     createForm: '{"concept":"Workflow","action":"defineState","fields":[{"name":"workflow","label":"Workflow Name","required":true},{"name":"name","label":"Initial State Name","required":true},{"name":"flags","label":"Flags","placeholder":"initial"}]}'
-    rowClick: '{}'
+    rowClick: '{"navigateTo":"/admin/workflows/{workflow}"}'
     rowActions: '[]'
     pickerMode: false
     create_surface: workflow-builder
@@ -41,7 +41,7 @@ entries:
   # did not model the rule structure accurately.
   - name: automation-rule-create
     createForm: '{"concept":"AutomationRule","action":"define","fields":[{"name":"rule","label":"Rule ID","required":true},{"name":"trigger","label":"Trigger Event","required":true},{"name":"conditions","label":"Conditions"},{"name":"actions","label":"Actions","required":true}]}'
-    rowClick: '{}'
+    rowClick: '{"navigateTo":"/admin/automation-rule-builder/{rule}"}'
     rowActions: '[]'
     pickerMode: false
     create_surface: automation-rule-builder
@@ -113,7 +113,7 @@ entries:
   # version-spaces-list
   - name: version-spaces-list-controls
     createForm: '{"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Space ID","required":true},{"name":"content","label":"Space Properties","required":true,"type":"key-value-list","placeholder":"e.g. name, status, owner"},{"name":"createdBy","label":"Owner","required":true}]}'
-    rowClick: '{}'
+    rowClick: '{"navigateTo":"/admin/branches/{node}"}'
     rowActions: '[]'
     pickerMode: false
   # backlinks: uses navigate-content-node (deduplicated)
@@ -123,7 +123,7 @@ entries:
   # deployment-overview
   - name: deployment-overview-controls
     createForm: '{"concept":"ContentNode","action":"create","fields":[{"name":"node","label":"Space ID","required":true,"placeholder":"version-space:editorial-pass"},{"name":"content","label":"Space Properties","required":true,"type":"key-value-list","placeholder":"e.g. name, status, owner"},{"name":"createdBy","label":"Owner","required":true,"placeholder":"alice"}]}'
-    rowClick: '{}'
+    rowClick: '{"navigateTo":"/admin/branches/{node}"}'
     rowActions: '[]'
     pickerMode: false
   # Shared by: step-checks, check-overview
