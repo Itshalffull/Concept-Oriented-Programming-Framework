@@ -1,0 +1,495 @@
+@version(1)
+widget automation-rule-builder {
+
+  purpose {
+    Event-condition-action (Zapier-style) rule builder for creating and editing
+    AutomationRule records. The editor walks the user through three sequential
+    phases: picking a trigger (a concept/action pair), building a typed
+    predicate-row condition list, and defining one or more output actions (each
+    consisting of a concept, action, and key-value input mapping). Progressive
+    disclosure keeps each phase collapsed until the preceding phase has a valid
+    selection, preventing orphaned rules. Save is enabled only once at least
+    one output action is present and the trigger is resolved to a valid
+    concept/action pair. Accepts mode "create" | "edit" and context as props,
+    per the Tier 1a bespoke-editor contract.
+  }
+
+  requires @1 {
+    fields {
+      ruleId:     String;
+      trigger:    String;
+      conditions: list;
+      actions:    list;
+      status:     String;
+    }
+    actions {
+      create();
+      update();
+      enable();
+      disable();
+    }
+  }
+
+  anatomy {
+    root:                  container    { Top-level wrapper; carries data-state reflecting FSM and data-mode for create/edit }
+    triggerSection:        container    { Phase 1 panel: picking the concept/action pair that triggers this rule }
+    triggerSectionHeading: text         { "1. Trigger" heading with validity badge }
+    conceptPicker:         interactive  { Searchable dropdown for selecting the trigger concept name }
+    actionPicker:          interactive  { Searchable dropdown scoped to actions on the selected concept }
+    triggerSummary:        text         { Read-only summary of the chosen trigger, shown after trigger is resolved }
+    triggerClearButton:    action       { Clears the selected trigger and returns Phase 1 to picking state }
+    conditionsSection:     container    { Phase 2 panel: typed predicate rows; disabled until trigger is resolved }
+    conditionsSectionHeading: text      { "2. Conditions" heading with row count badge }
+    conditionRow:          container    { One typed condition row: field picker, operator dropdown, value input }
+    conditionFieldPicker:  interactive  { Dropdown to select which field of the trigger output to test }
+    conditionOperator:     interactive  { Dropdown for the predicate operator (equals, contains, gt, lt, etc.) }
+    conditionValueInput:   interactive  { Type-appropriate value input driven by the selected field type }
+    addConditionButton:    action       { Appends a new blank condition row }
+    removeConditionButton: action       { Removes the condition row it belongs to }
+    emptyConditionsState:  container    { Placeholder shown when conditions list is empty }
+    actionsSection:        container    { Phase 3 panel: output action list; disabled until trigger is resolved }
+    actionsSectionHeading: text         { "3. Actions" heading with row count badge }
+    actionRow:             container    { One output-action row: concept picker, action picker, input-mapping editor }
+    actionConceptPicker:   interactive  { Dropdown for picking the output concept }
+    actionActionPicker:    interactive  { Dropdown for picking the action on the output concept }
+    actionMappingEditor:   container    { Key-value mapping editor linking trigger output fields to action inputs }
+    mappingRow:            container    { One mapping pair: source field selector on the left, target param on the right }
+    addActionButton:       action       { Appends a new blank action row }
+    removeActionButton:    action       { Removes the action row it belongs to }
+    emptyActionsState:     container    { Placeholder shown when actions list is empty }
+    saveBar:               container    { Sticky bottom bar with Save and Cancel/Discard buttons }
+    saveButton:            action       { Persists the rule via AutomationRule/create or AutomationRule/update }
+    discardButton:         action       { Discards unsaved edits; navigates away in create mode }
+    statusBadge:           text         { Shows current rule status (draft, active, disabled) in edit mode }
+    errorBanner:           container    { Inline error panel surfaced when save returns an error variant }
+    errorMessage:          text         { Human-readable save error text }
+  }
+
+  states {
+    // Main editor phase machine
+    editor {
+      pickingTrigger [initial] {
+        on TRIGGER_SELECTED    -> triggerResolved;
+      }
+
+      triggerResolved {
+        on CLEAR_TRIGGER       -> pickingTrigger;
+        on ADD_CONDITION       -> triggerResolved;
+        on REMOVE_CONDITION    -> triggerResolved;
+        on UPDATE_CONDITION    -> triggerResolved;
+        on ADD_ACTION          -> triggerResolved;
+        on REMOVE_ACTION       -> triggerResolved;
+        on UPDATE_ACTION       -> triggerResolved;
+        on SAVE_START          -> saving;
+      }
+
+      saving {
+        on SAVE_OK             -> saved;
+        on SAVE_ERROR          -> saveErrored;
+        entry [disableSaveBar];
+        exit [enableSaveBar];
+      }
+
+      saved {
+        on EDIT                -> triggerResolved;
+      }
+
+      saveErrored {
+        on DISMISS_ERROR       -> triggerResolved;
+        on SAVE_START          -> saving;
+        entry [showErrorBanner];
+        exit [hideErrorBanner];
+      }
+    }
+
+    // Independent actions-valid gate (save guard)
+    actionsGate [parallel] {
+      noActions [initial] {
+        on ACTION_ROW_ADDED    -> hasActions;
+      }
+      hasActions {
+        on ALL_ACTIONS_REMOVED -> noActions;
+      }
+    }
+  }
+
+  accessibility {
+    role: form;
+    keyboard {
+      Ctrl+Enter  -> SAVE_START;
+      Escape      -> CLEAR_TRIGGER;
+      ArrowDown   -> FOCUS_NEXT_ROW;
+      ArrowUp     -> FOCUS_PREV_ROW;
+      Delete      -> REMOVE_CONDITION;
+    }
+    focus {
+      trap: false;
+      initial: conceptPicker;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "form";
+        aria-label: "Automation rule builder";
+        aria-busy: if state.editor == "saving" then "true" else "false";
+      };
+      triggerSection -> {
+        role: "region";
+        aria-label: "Step 1: Trigger";
+      };
+      conceptPicker -> {
+        role: "combobox";
+        aria-label: "Select trigger concept";
+        aria-required: "true";
+        aria-expanded: "false";
+      };
+      actionPicker -> {
+        role: "combobox";
+        aria-label: "Select trigger action";
+        aria-required: "true";
+        aria-disabled: if state.editor == "pickingTrigger" then "true" else "false";
+      };
+      conditionsSection -> {
+        role: "region";
+        aria-label: "Step 2: Conditions";
+        aria-disabled: if state.editor == "pickingTrigger" then "true" else "false";
+      };
+      conditionRow -> {
+        role: "group";
+        aria-label: "Condition row";
+      };
+      addConditionButton -> {
+        role: "button";
+        aria-label: "Add condition";
+        aria-disabled: if state.editor == "pickingTrigger" then "true" else "false";
+      };
+      removeConditionButton -> {
+        role: "button";
+        aria-label: "Remove condition";
+      };
+      actionsSection -> {
+        role: "region";
+        aria-label: "Step 3: Actions";
+        aria-disabled: if state.editor == "pickingTrigger" then "true" else "false";
+      };
+      actionRow -> {
+        role: "group";
+        aria-label: "Output action row";
+      };
+      addActionButton -> {
+        role: "button";
+        aria-label: "Add action";
+        aria-disabled: if state.editor == "pickingTrigger" then "true" else "false";
+      };
+      removeActionButton -> {
+        role: "button";
+        aria-label: "Remove action";
+      };
+      saveButton -> {
+        role: "button";
+        aria-label: "Save automation rule";
+        aria-disabled: if state.editor == "saving" or state.actionsGate == "noActions" then "true" else "false";
+      };
+      discardButton -> {
+        role: "button";
+        aria-label: "Discard changes";
+      };
+      errorBanner -> {
+        role: "alert";
+        aria-live: "assertive";
+        aria-hidden: if state.editor != "saveErrored" then "true" else "false";
+      };
+      statusBadge -> {
+        role: "status";
+        aria-live: "polite";
+      };
+    }
+  }
+
+  props {
+    mode:           union "create" | "edit" = "edit"
+    context:        option AutomationRule
+    ruleId:         option String
+    ruleName:       String = ""
+    triggerConcept: String = ""
+    triggerAction:  String = ""
+    conditions:     list ConditionRow = []
+    outputActions:  list ActionRow = []
+    status:         String = "draft"
+    readOnly:       Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part:  "root";
+      data-state: state.editor;
+      data-mode:  ?mode;
+      data-actions-gate: state.actionsGate;
+    }
+
+    triggerSection -> {
+      data-part:    "trigger-section";
+      data-valid:   if state.editor != "pickingTrigger" then "true" else "false";
+    }
+
+    triggerSectionHeading -> {
+      data-part: "trigger-section-heading";
+    }
+
+    conceptPicker -> {
+      data-part:   "concept-picker";
+      value:       ?triggerConcept;
+      disabled:    if state.editor == "saving" or ?readOnly then true else false;
+      onChange:    send(TRIGGER_SELECTED);
+    }
+
+    actionPicker -> {
+      data-part:   "action-picker";
+      value:       ?triggerAction;
+      disabled:    if state.editor == "pickingTrigger" or state.editor == "saving" or ?readOnly then true else false;
+      onChange:    send(TRIGGER_SELECTED);
+    }
+
+    triggerSummary -> {
+      data-part:   "trigger-summary";
+      hidden:      if state.editor == "pickingTrigger" then true else false;
+    }
+
+    triggerClearButton -> {
+      data-part: "trigger-clear-button";
+      onClick:   send(CLEAR_TRIGGER);
+      hidden:    if state.editor == "pickingTrigger" or ?readOnly then true else false;
+    }
+
+    conditionsSection -> {
+      data-part:     "conditions-section";
+      data-disabled: if state.editor == "pickingTrigger" then "true" else "false";
+    }
+
+    conditionsSectionHeading -> {
+      data-part: "conditions-section-heading";
+    }
+
+    conditionRow -> {
+      data-part: "condition-row";
+    }
+
+    conditionFieldPicker -> {
+      data-part: "condition-field-picker";
+      disabled:  if state.editor == "pickingTrigger" or state.editor == "saving" or ?readOnly then true else false;
+      onChange:  send(UPDATE_CONDITION);
+    }
+
+    conditionOperator -> {
+      data-part: "condition-operator";
+      disabled:  if state.editor == "pickingTrigger" or state.editor == "saving" or ?readOnly then true else false;
+      onChange:  send(UPDATE_CONDITION);
+    }
+
+    conditionValueInput -> {
+      data-part: "condition-value-input";
+      disabled:  if state.editor == "pickingTrigger" or state.editor == "saving" or ?readOnly then true else false;
+      onInput:   send(UPDATE_CONDITION);
+    }
+
+    addConditionButton -> {
+      data-part: "add-condition-button";
+      onClick:   send(ADD_CONDITION);
+      disabled:  if state.editor == "pickingTrigger" or state.editor == "saving" or ?readOnly then true else false;
+    }
+
+    removeConditionButton -> {
+      data-part: "remove-condition-button";
+      onClick:   send(REMOVE_CONDITION);
+      disabled:  if ?readOnly then true else false;
+    }
+
+    emptyConditionsState -> {
+      data-part:    "empty-conditions-state";
+      data-visible: if ?conditions.length == 0 then "true" else "false";
+    }
+
+    actionsSection -> {
+      data-part:     "actions-section";
+      data-disabled: if state.editor == "pickingTrigger" then "true" else "false";
+    }
+
+    actionsSectionHeading -> {
+      data-part: "actions-section-heading";
+    }
+
+    actionRow -> {
+      data-part: "action-row";
+    }
+
+    actionConceptPicker -> {
+      data-part: "action-concept-picker";
+      disabled:  if state.editor == "pickingTrigger" or state.editor == "saving" or ?readOnly then true else false;
+      onChange:  send(UPDATE_ACTION);
+    }
+
+    actionActionPicker -> {
+      data-part: "action-action-picker";
+      disabled:  if state.editor == "pickingTrigger" or state.editor == "saving" or ?readOnly then true else false;
+      onChange:  send(UPDATE_ACTION);
+    }
+
+    actionMappingEditor -> {
+      data-part: "action-mapping-editor";
+    }
+
+    mappingRow -> {
+      data-part: "mapping-row";
+    }
+
+    addActionButton -> {
+      data-part: "add-action-button";
+      onClick:   send(ADD_ACTION);
+      disabled:  if state.editor == "pickingTrigger" or state.editor == "saving" or ?readOnly then true else false;
+    }
+
+    removeActionButton -> {
+      data-part: "remove-action-button";
+      onClick:   send(REMOVE_ACTION);
+      disabled:  if ?readOnly then true else false;
+    }
+
+    emptyActionsState -> {
+      data-part:    "empty-actions-state";
+      data-visible: if ?outputActions.length == 0 then "true" else "false";
+    }
+
+    saveBar -> {
+      data-part:   "save-bar";
+      data-saving: if state.editor == "saving" then "true" else "false";
+    }
+
+    saveButton -> {
+      data-part: "save-button";
+      onClick:   send(SAVE_START);
+      disabled:  if state.editor == "saving" or state.editor == "pickingTrigger" or state.actionsGate == "noActions" or ?readOnly then true else false;
+    }
+
+    discardButton -> {
+      data-part: "discard-button";
+      onClick:   send(CLEAR_TRIGGER);
+      disabled:  if state.editor == "saving" then true else false;
+    }
+
+    statusBadge -> {
+      data-part:   "status-badge";
+      data-status: ?status;
+      hidden:      if ?mode == "create" then true else false;
+    }
+
+    errorBanner -> {
+      data-part:    "error-banner";
+      data-visible: if state.editor == "saveErrored" then "true" else "false";
+    }
+
+    errorMessage -> {
+      data-part: "error-message";
+    }
+  }
+
+  affordance {
+    serves: group-section;
+    specificity: 9;
+    when: concept = "AutomationRule";
+    bind {
+      conditions: conditions;
+      outputActions: actions;
+    }
+  }
+
+  invariant {
+    example "concept-picked enables action picker": {
+      after conceptPicker() -> ok
+      then actionPicker.disabled = false
+    }
+
+    example "trigger-selected unlocks conditions and actions phases": {
+      after actionPicker() -> ok
+      then root.data-state = "triggerResolved"
+      and conditionsSection.data-disabled = "false"
+      and actionsSection.data-disabled = "false"
+    }
+
+    example "add condition appended and visible": {
+      after addConditionButton() -> ok
+      then emptyConditionsState.data-visible = "false"
+    }
+
+    example "add action enables save button": {
+      after addActionButton() -> ok
+      then root.data-actions-gate = "hasActions"
+      and saveButton.disabled = false
+    }
+
+    example "save flow completes from triggerResolved with actions": {
+      after saveButton() -> ok
+      then root.data-state = "saving"
+      then saveSuccess() -> ok
+      then root.data-state = "saved"
+    }
+
+    example "save error surfaces error banner": {
+      after saveButton() -> ok
+      then root.data-state = "saving"
+      then saveError() -> ok
+      then root.data-state = "saveErrored"
+      and errorBanner.data-visible = "true"
+    }
+
+    example "clear trigger resets to pickingTrigger": {
+      after triggerClearButton() -> ok
+      then root.data-state = "pickingTrigger"
+      and conditionsSection.data-disabled = "true"
+      and actionsSection.data-disabled = "true"
+    }
+
+    always "data-state on root reflects editor FSM": {
+      root.data-state = state.editor
+    }
+
+    always "save button disabled in pickingTrigger state": {
+      saveButton.disabled = true
+    }
+
+    always "save button disabled when no actions present": {
+      saveButton.disabled = true
+    }
+
+    always "conditions and actions sections disabled in pickingTrigger": {
+      conditionsSection.data-disabled = "true"
+      and actionsSection.data-disabled = "true"
+    }
+
+    never "save proceeds without a resolved trigger": {
+      state.editor = "saving" and state.editor = "pickingTrigger"
+    }
+
+    never "save proceeds with zero output actions": {
+      state.editor = "saving" and state.actionsGate = "noActions"
+    }
+
+    never "conditions use a raw JSON textbox": {
+      conditionValueInput.data-part = "json-raw"
+    }
+
+    action saveButton {
+      requires: state.editor = "triggerResolved"
+      ensures ok: state.editor = "saving"
+    }
+
+    action triggerClearButton {
+      requires: state.editor = "triggerResolved"
+      ensures ok: state.editor = "pickingTrigger"
+    }
+
+    action addActionButton {
+      requires: state.editor = "triggerResolved"
+      ensures ok: state.actionsGate = "hasActions"
+    }
+  }
+}
