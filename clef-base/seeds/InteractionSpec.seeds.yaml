@@ -33,20 +33,18 @@ entries:
     rowClick: '{}'
     rowActions: '[]'
     pickerMode: false
-    create_surface: flow-builder
+    create_surface: workflow-builder
     create_mode_hint: page
   # Shared by: automations-list, automations-rules-list
-  # NOTE: user-sync-editor is reused here because automation rules and user-authored syncs share
-  # substantially overlapping authoring surfaces (trigger/condition/action triple structure).
-  # If the user-sync-editor shape doesn't fit all AutomationRule cases — e.g., rules with complex
-  # multi-action bodies or conditional branching that the sync editor doesn't express — a dedicated
-  # automation-rule-editor widget should be created and this create_surface updated to point at it.
+  # automation-rule-builder is the dedicated bespoke editor for AutomationRule (ECA rule
+  # authoring: trigger, conditions, actions). Replaces the generic user-sync-editor which
+  # did not model the rule structure accurately.
   - name: automation-rule-create
     createForm: '{"concept":"AutomationRule","action":"define","fields":[{"name":"rule","label":"Rule ID","required":true},{"name":"trigger","label":"Trigger Event","required":true},{"name":"conditions","label":"Conditions"},{"name":"actions","label":"Actions","required":true}]}'
     rowClick: '{}'
     rowActions: '[]'
     pickerMode: false
-    create_surface: user-sync-editor
+    create_surface: automation-rule-builder
     create_mode_hint: page
   # taxonomy-list
   - name: taxonomy-list-controls

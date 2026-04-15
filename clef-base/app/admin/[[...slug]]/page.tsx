@@ -13,6 +13,8 @@ import { DynamicPage } from '../../components/DynamicPage';
 import { getAccessSnapshot } from '../../../lib/auth';
 import { FormBuilder } from '../../components/widgets/FormBuilder';
 import { FlowBuilder } from '../../components/widgets/FlowBuilder';
+import { AutomationRuleBuilder } from '../../components/widgets/AutomationRuleBuilder';
+import { WorkflowBuilder } from '../../components/widgets/WorkflowBuilder';
 import { SchemaFieldsEditor } from '../../components/widgets/SchemaFieldsEditor';
 import { UserSyncEditor } from '../../components/widgets/UserSyncEditor';
 import { KeybindingEditor } from '../../components/widgets/KeybindingEditor';
@@ -245,6 +247,22 @@ export default async function AdminPage({
     return (
       <HostedPage>
         <UserSyncEditor mode="create" context={null} />
+      </HostedPage>
+    );
+  }
+
+  if (slug[0] === 'automation-rule-builder' && slug[1] === 'new') {
+    return (
+      <HostedPage>
+        <AutomationRuleBuilder mode="create" context={null} />
+      </HostedPage>
+    );
+  }
+
+  if (slug[0] === 'workflow-builder' && slug[1] === 'new') {
+    return (
+      <HostedPage>
+        <WorkflowBuilder mode="create" context={null} />
       </HostedPage>
     );
   }
