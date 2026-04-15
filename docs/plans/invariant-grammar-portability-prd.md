@@ -1,9 +1,10 @@
-# Widget Invariant Grammar — Universal Contracts, Universal Test Plan
+# Widget Invariant Grammar — Universal Contracts, Using The Existing IR
 
 ## Problem statement
 
 Widget invariants parse cleanly but produce stub tests. Every platform
-renderer (React, Vue, Svelte, Vanilla) emits the same placeholder body:
+renderer (React, Vue, Svelte, Vanilla) emits the same placeholder body
+for invariant blocks:
 
 ```js
 render(<Component />);
@@ -11,185 +12,216 @@ render(<Component />);
 expect(screen.getByTestId('root')).toBeDefined();
 ```
 
-Playwright skips invariants entirely. So when an author writes
+Playwright skips invariants entirely. ~70 of paragraph-block's 81
+invariants are symbolic documentation, not enforced contracts.
 
-```
-example "typing preserves key order": {
-  after body.focus() -> ok
-  and body.type("h") -> ok
-  then body.textContent = "hi"
-}
-```
+## What's already in place (corrected)
 
-— the generated test neither types "h" nor asserts `textContent ===
-"hi"`. ~70 of paragraph-block's 81 invariants are symbolic
-documentation, not enforced contracts.
+The earlier draft of this PRD proposed a new Test Plan IR. I was wrong
+to invent one — **the IR already exists and is active**:
 
-## The right layering
-
-```
-┌──────────────────────────────┐
-│ Widget Invariants (universal)│   body.type("h"), state.edit = "x",
-│ *.widget files               │   block("A").depth, etc.
-└────────────┬─────────────────┘
-             │ parser
-             ▼
-┌──────────────────────────────┐
-│ Test Plan IR  (universal)    │   { mount, actions, observations }
-│ JSON-ish, platform-agnostic  │   — no React, Playwright, … leakage
-└──────────────┬───────────────┘
-               │ one renderer per platform
-               ▼
-  ┌────────┐ ┌──────────┐ ┌───────────┐ ┌──────────┐
-  │ React  │ │Playwright│ │ SwiftUI   │ │ Jetpack  │ …
-  │vitest  │ │ tests    │ │ XCUITest  │ │ Compose  │
-  └────────┘ └──────────┘ └───────────┘ └──────────┘
-```
-
-Per-widget `probes` blocks (the earlier proposal) were wrong: they
-pushed platform concerns into every widget spec. The right split is:
-
-- **Invariants stay universal.** Authors write `body.type("h")`,
-  `state.edit = "focused"`, `block("A").depth = 1`. One namespace.
-- **The test plan is universal.** An intermediate JSON representation
-  says "mount these fixtures, run these actions, assert these
-  observations". Nothing platform-specific.
-- **Renderers translate the universal namespace once, not per widget.**
-  React's renderer knows `body.type("h")` → `userEvent.type(body, 'h')`
-  for EVERY widget. Playwright's renderer knows it →
-  `await page.locator('[data-part="body"]').pressSequentially('h')`.
-
-That's the whole shape.
-
-## The universal namespace
-
-Identifiers an invariant can use:
-
-### Targets
-- `root` — the widget's outer element (carries `data-part="root"`).
-- `body`, `trigger`, `icon`, ... — any anatomy part declared in the widget.
-- `block("id")` — fixture-mounted block with given `data-block-id`.
-- `document` — top-level (`document.activeElement`, `document.body`).
-
-### Observations (readable)
-- `<target>.textContent`
-- `<target>.innerHTML`
-- `<target>.contentEditable` / `.readOnly` / `.disabled`
-- `<target>.dataX` — any `data-x` attribute (camelCase → dash)
-- `<target>.ariaX` — any `aria-x` attribute
-- `<target>.hasClass("name")`, `.visible`, `.focused`, `.selected`
-- `<target>.childCount`, `.depth` (derived from `data-depth`)
-- `state.<field>` — FSM state slot, persisted as `data-state-<field>` on root
-- `document.activeElement = <target>` — which element has focus
-
-### Actions (writable / dispatchable)
-- `<target>.focus()`, `<target>.blur()`, `<target>.click()`
-- `<target>.type("text")` — sequential keystrokes that fire native events
-- `<target>.press("Tab" | "Enter" | "ArrowUp" | …)`
-- `<target>.dragTo(<target>)`
-- `<target>.paste("text")` / `<target>.paste(clipboard: "image")`
-- `simulate.intermediateReload()` / `simulate.wait(Xms)` — timing knobs
-- Custom renderer-extensible ones via `ext.<name>(args)`
-
-Everything is grounded in stable `data-part`, `data-block-id`, and
-ARIA roles that widgets already emit — no per-widget mapping.
-
-## Test Plan IR
-
-Each invariant compiles to one test plan:
-
-```json
-{
-  "name": "Shift+Tab places block after former parent",
-  "kind": "scenario",
-  "fixtures": [
-    { "id": "blockA", "component": "paragraph-block",
-      "props": { "blockId": "A", "depth": 0 } },
-    { "id": "blockB", "component": "paragraph-block",
-      "props": { "blockId": "B", "depth": 1, "parent": "A" } },
-    { "id": "blockD", "component": "paragraph-block",
-      "props": { "blockId": "D", "depth": 2, "parent": "B" } }
-  ],
-  "steps": [
-    { "on": "blockD", "action": "focus" },
-    { "on": "blockD", "action": "press", "key": "Shift+Tab" }
-  ],
-  "observations": [
-    { "modality": "immediately",
-      "probe": "block.depth", "on": "blockD", "expected": 1 },
-    { "modality": "eventually",
-      "probe": "block.orderAfter", "on": "blockD", "other": "blockB",
-      "expected": true },
-    { "modality": "never-within",
-      "ms": 300,
-      "probe": "block.depth", "on": "blockD", "disallowed": 2 }
-  ]
-}
-```
-
-This IR is what every platform renderer consumes. Adding a new
-platform is "write one renderer that walks this structure", not "touch
-every widget spec".
-
-## The scenario kind
-
-```
-scenario "Tab: optimistic depth must not flash back": {
-  given {
-    blockA: paragraph-block { blockId: "A", depth: 0 }
-    blockB: paragraph-block { blockId: "B", depth: 0 }
+- **`WidgetTestPlan`** (`handlers/ts/framework/test/widget-component-test-plan.handler.ts:55–68`)
+  is the universal plan consumed by every platform renderer:
+  ```ts
+  interface WidgetTestPlan {
+    widgetName: string; widgetRef: string; generatedAt: string;
+    fsm_transitions:   WidgetTestAssertion[];
+    connect_bindings:  WidgetTestAssertion[];
+    keyboard_bindings: WidgetTestAssertion[];
+    focus_management:  WidgetTestAssertion[];
+    aria_assertions:   WidgetTestAssertion[];
+    props:             WidgetTestAssertion[];
+    invariants:        WidgetTestAssertion[];
+    compose:           WidgetTestAssertion[];
+    categories:        Category[];
   }
-  when {
-    on blockB: body.focus() -> ok
-    and body.press("Tab") -> ok
-    and simulate.intermediateReload()       # stale server walk
-  }
-  then {
-    block("B").depth = 1 immediately
-    and never block("B").depth = 0 within 300ms
-    and block("B").depth = 1 eventually
-  }
-}
+  ```
+- **`WidgetTestAssertion`** (line 48) is flexible: `{category, type?,
+  description, [k: string]: unknown}`. It's an open bag — anything a
+  renderer needs can ride on it.
+- **`buildWidgetTestPlan(widgetRef, manifest)`** (line 86) walks the
+  parsed widget AST and fills every category.
+- Platform renderers (`react-widget-test-renderer.ts`,
+  `vue-widget-test-renderer.ts`, `svelte-`, `vanilla-`,
+  `playwright-widget-test-renderer.ts`) all accept this plan.
+- **`TestPlan`** (`test-gen.handler.ts:152–171`) is the sibling IR for
+  concept conformance tests. Same shape philosophy, different
+  categories (actions, examples, properties, stateInvariants,
+  liveness, contracts).
+
+So the layering already matches what the reframe called for:
+
+```
+Widget AST (parser)
+    ↓ buildWidgetTestPlan
+WidgetTestPlan (IR, universal)
+    ↓ renderReact / renderVue / renderPlaywright / …
+Per-platform test file
 ```
 
-## Renderer contract
+The gap isn't architectural — it's that the renderers' **treatment
+of the invariants[] category** is a stub body, and the
+`WidgetTestAssertion` shape for invariants doesn't carry enough
+structured data for renderers to emit real code.
 
-Each platform renderer implements:
+## The actual fix: enrich the invariant assertion shape, upgrade renderers
+
+### 1. Extend `WidgetTestAssertion` with structured step + observation fields
+
+Add OPTIONAL fields that renderers can consume when present. Keeps
+backward compat — existing assertions still render as today.
 
 ```ts
-interface PlatformRenderer {
-  name: 'react' | 'playwright' | 'vue' | 'swiftui' | …;
-  renderTestPlan(plan: TestPlanIR): string; // emitted test file
-  probes: {
-    read(on: Target, probe: string): string;   // code that reads a value
-    act(on: Target, action: string, args): string;  // code that fires an action
-    wait(modality: 'immediately' | 'eventually' | { neverWithin: number }, assertion: string): string;
-  };
+interface WidgetTestAssertion {
+  category: Category;
+  type?: string;
+  description: string;
+
+  // ─── new optional fields for invariant assertions ───
+  fixtures?: Array<{                 // multi-block scenarios
+    id: string;                       // "blockA", "blockB"
+    component: string;                // "paragraph-block"
+    props: Record<string, unknown>;
+  }>;
+  steps?: Array<{                    // actions to fire, in order
+    on?: string;                      // fixture id; omit for root
+    action: 'focus' | 'blur' | 'click' | 'type' | 'press' | 'paste' | 'drag' | 'wait' | 'reload';
+    args?: Record<string, unknown>;   // text / key / ms / etc.
+  }>;
+  observations?: Array<{             // assertions
+    on?: string;                      // fixture id
+    probe: string;                    // "body.textContent", "state.edit", "block.depth", …
+    op?: '=' | '!=' | '>' | '<' | 'matches';
+    value?: unknown;
+    modality?: 'immediately' | 'eventually' | { neverWithin: number };
+  }>;
+
+  [key: string]: unknown;
 }
 ```
 
-Renderer code is a TABLE. `body.type("h")` goes into one function per
-platform, once. Widgets reference universal identifiers and stay
-unchanged across platforms.
+`buildWidgetTestPlan` populates these from the invariant AST (the
+parser already produces `afterPatterns` / `thenPatterns` /
+`quantifiers` that map cleanly into `steps[]` / `observations[]`).
 
-## First cut
+### 2. Give the parser a `scenario` kind
 
-1. Parser + AST: add `scenario` kind with `given / when / then`.
-2. Compiler: `AST → TestPlanIR` (pure data).
-3. React renderer: consume TestPlanIR → vitest + React Testing Library.
-4. Playwright renderer: consume TestPlanIR → Playwright test file.
-5. Fix the existing `example` rendering gap by routing it through the
-   same compile-to-IR path — every `example` becomes a 1-fixture,
-   N-step, M-observation plan, so the same renderer handles both kinds.
+Today's grammar: `example`, `forall`, `always`, `never`, `eventually`,
+`requires_ensures`. All single-widget.
 
-Other platforms (Vue, Svelte, SwiftUI, Jetpack) remain stubs until
-someone authors a renderer. No widget spec changes when a new platform
-renderer lands — that's the whole point.
+Add `scenario` with `given / when / then`:
 
-## What this enables
+```
+scenario "Shift+Tab places block after former parent": {
+  given {
+    blockA: paragraph-block { blockId: "A", depth: 0 }
+    blockB: paragraph-block { blockId: "B", depth: 1, parent: "A" }
+    blockD: paragraph-block { blockId: "D", depth: 2, parent: "B" }
+  }
+  when {
+    on blockD: body.focus() -> ok
+    and body.press("Shift+Tab") -> ok
+  }
+  then {
+    block("D").depth = 1 immediately
+    and block("D").orderAfter = "B" eventually
+  }
+}
+```
 
-The invariants I couldn't enforce in this pass become first-class
-generated tests:
+At the AST level this is just another `InvariantDecl` with
+`kind: 'scenario'`, `fixtures: Fixture[]`, `whenSteps: Step[]`,
+`thenAssertions: Assertion[]`. `buildWidgetTestPlan` compiles it into
+a `WidgetTestAssertion` with populated `fixtures`, `steps`,
+`observations`. No new IR.
+
+### 3. Universal probe namespace
+
+The invariant author uses one platform-agnostic namespace. Renderers
+translate it once per platform.
+
+**Targets:**
+- `root` — outer element (`[data-part="root"]`)
+- `<anatomyPart>` — any part declared in the widget (`body`, `trigger`, …)
+- `block("id")` — fixture-mounted block by `data-block-id`
+- `document` — top-level (`document.activeElement`)
+
+**Read probes:**
+- `<target>.textContent`, `.innerHTML`
+- `<target>.contentEditable`, `.readOnly`, `.disabled`
+- `<target>.dataX` / `.ariaX` — auto camelCase→dash
+- `<target>.depth`, `.childCount`, `.focused`, `.visible`
+- `state.<field>` — FSM slot, persisted on root as `data-state-<field>`
+- `document.activeElement = <target>`
+
+**Write probes (steps):**
+- `.focus()`, `.blur()`, `.click()`
+- `.type("text")` — native input events
+- `.press("Tab" | "Enter" | "ArrowUp" | …)`
+- `.dragTo(<target>)`, `.paste("text")`
+- `simulate.reload()`, `simulate.wait(ms)` — timing knobs
+
+Everything is grounded in `data-part`, `data-block-id`, aria-role —
+attributes the widgets already emit. Nothing new per widget.
+
+### 4. Per-platform renderer translation
+
+Each renderer learns ONE translation table. Here's the React table
+sketch (`react-widget-test-renderer.ts`):
+
+```ts
+function readProbe(on: string, probe: string): string {
+  // body.textContent → screen.getByTestId('body').textContent
+  // block("A").depth → screen.getByTestId('block-A').getAttribute('data-depth')
+  // state.edit       → screen.getByTestId('root').getAttribute('data-state-edit')
+  // …
+}
+function emitStep(step): string {
+  // focus   → el.focus()
+  // type    → await userEvent.type(el, args.text)
+  // press   → await userEvent.keyboard('{' + args.key + '}')
+  // reload  → rerender(<Widget {...props} />) or similar
+  // wait    → await new Promise(r => setTimeout(r, args.ms))
+}
+function emitObservation(obs): string {
+  // immediately     → expect(read).toBe(value)
+  // eventually      → await waitFor(() => expect(read).toBe(value))
+  // never-within    → polling loop that fails if disallowed ever observed
+}
+```
+
+Playwright's table maps the same namespace to `page.locator(...)`,
+`await locator.click()`, `await locator.press('Tab')`,
+`await expect(locator).toHaveText(...)`, etc.
+
+Adding Vue / Svelte / SwiftUI / Jetpack is "write one of these tables".
+The WidgetTestPlan doesn't change; widgets don't change.
+
+## Scope of first cut
+
+1. **Parser**: add `scenario` kind, reuse existing parse helpers for
+   `afterPatterns` / `thenPatterns`; introduce `fixtures` parsing.
+2. **`buildWidgetTestPlan`**: map every invariant kind
+   (example / forall / always / never / eventually / requires_ensures /
+   scenario) to enriched `WidgetTestAssertion` with populated
+   `fixtures` / `steps` / `observations`.
+3. **React renderer**: consume the enriched fields. `example` → real
+   vitest; `scenario` → multi-fixture mount + step dispatch + settlement-
+   aware assertions. Falls back to the current stub when fields absent.
+4. **Playwright renderer**: same enrichment consumption; emits
+   `.spec.ts` files targeting the dev server.
+5. **Retrofit existing invariants**: the 81 paragraph-block entries
+   start generating real tests once `buildWidgetTestPlan` fills
+   `steps` / `observations` from the already-parsed `afterPatterns` /
+   `thenPatterns`.
+
+Vue / Svelte / Vanilla / SwiftUI / Jetpack: remain stubs until
+someone writes their translation table. Adding a platform is
+additive.
+
+## What gets enforced
+
+Today's unenforceable invariants become first-class generated tests:
 
 ```
 scenario "ArrowUp traverses across sibling-group boundaries": {
@@ -208,24 +240,24 @@ scenario "ArrowUp traverses across sibling-group boundaries": {
 }
 ```
 
-Compiles to a test plan. React renderer emits a real vitest + RTL
-test that stages three BlockSlot components, focuses B, fires
-`ArrowUp`, asserts `document.activeElement` is the A.1 body.
-Playwright renderer emits an equivalent page-level test. Zero
-platform-specific knowledge in the widget spec.
+`buildWidgetTestPlan` emits a `WidgetTestAssertion` in the `invariants`
+category with fixtures/steps/observations populated. React renderer
+emits a real vitest test. Playwright renderer emits an equivalent
+`.spec.ts`. Same invariant, same IR, different platform targets.
 
 ## Execution plan (follow-up, not in this session)
 
-1. Parser + AST for `scenario` + settlement modifiers. Pure
-   grammar-level PR, lots of small cases, no renderer work.
-2. `AST → TestPlanIR` compiler. Lives in
-   `handlers/ts/framework/test/compile-plan.ts`. Unit tests over the
-   grammar fixtures.
-3. React renderer: `renderReactTestPlan(plan): string`. Ship one
-   worked paragraph-block scenario test proving the whole pipeline.
-4. Playwright renderer: same interface, different emission target.
-5. Retrofit `example` and `always` / `never` to compile-through the
-   IR so the existing 81 paragraph-block invariants start generating
-   real code.
-6. Add renderers for Vue / Svelte / SwiftUI / Jetpack as the
-   platforms need them. The widget grammar is done.
+1. Parser + AST: `scenario` kind, `fixtures / when / then` parsing.
+   Unit tests over a handful of scenario fixtures. No renderer work.
+2. `buildWidgetTestPlan` enrichment: populate new
+   `fixtures / steps / observations` fields on `WidgetTestAssertion`
+   for every kind, driven off the existing invariant AST. No renderer
+   work yet; validate by inspecting emitted JSON plans.
+3. React renderer: consume enriched fields, emit real vitest for one
+   worked paragraph-block scenario. Ship the proof.
+4. Playwright renderer: same for a `.spec.ts`.
+5. Retrofit existing invariants: with the pipeline live, the 81
+   paragraph-block entries start generating real assertions with no
+   spec changes required.
+6. Vue / Svelte / Vanilla / SwiftUI / Jetpack translation tables as
+   platforms need them.
