@@ -24,6 +24,7 @@ export default defineConfig({
       'surface/widgets/**/*.test.tsx',
       'clef-base/**/__tests__/**/*.test.ts',
       'clef-base/**/__tests__/**/*.test.tsx',
+      'handlers/**/__tests__/**/*.test.ts',
     ],
     globals: true,
   },
