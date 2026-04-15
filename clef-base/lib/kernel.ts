@@ -60,6 +60,9 @@ import { notificationHandler } from '../../handlers/ts/app/notification.handler'
 // LLM / Agent — memory and conversation
 import { agentMemoryHandler } from '../../handlers/ts/llm-agent/agent-memory.handler';
 import { conversationHandler } from '../../handlers/ts/llm-conversation/conversation.handler';
+// Taxonomy aliases — Vocabulary and TaxonomyTerm are schema-level concepts
+// backed by the Taxonomy handler which manages the shared taxonomy storage.
+import { taxonomyHandler } from '../../handlers/ts/app/taxonomy.handler';
 
 import { REGISTRY_ENTRIES, SYNC_FILES } from '../../generated/kernel-registry';
 import { discoverFromFilesystem, parseSeedsYaml } from '../../handlers/ts/seed-data.handler';
@@ -352,6 +355,21 @@ const SUPPLEMENTAL_REGISTRY_ENTRIES = [
     uri: 'urn:clef/Conversation',
     handler: conversationHandler,
     storageName: 'conversation',
+    storageType: 'standard' as const,
+  },
+  // Vocabulary and TaxonomyTerm are schema-level aliases backed by the shared
+  // Taxonomy handler. Views and entity-pickers that call Vocabulary/list or
+  // TaxonomyTerm/list need these URIs registered.
+  {
+    uri: 'urn:clef/Vocabulary',
+    handler: taxonomyHandler,
+    storageName: 'taxonomy',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/TaxonomyTerm',
+    handler: taxonomyHandler,
+    storageName: 'taxonomy',
     storageType: 'standard' as const,
   },
 ];
