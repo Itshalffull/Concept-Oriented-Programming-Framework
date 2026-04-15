@@ -705,6 +705,67 @@ describe('ContentNode functional handler', () => {
 
   });
 
+  describe('listByDateRef', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = contentNodeHandler.listByDateRef({ date: "2026-04-15" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = contentNodeHandler.listByDateRef({ date: "2026-04-15" });
+      if (!program?.instructions) return;
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = contentNodeHandler.listByDateRef({ date: "2026-04-15" });
+      if (!program?.instructions) return;
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = contentNodeHandler.listByDateRef({ date: "2026-04-15" });
+      if (!program?.instructions) return;
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = contentNodeHandler.listByDateRef({ date: "2026-04-15" });
+      if (!program?.instructions) return;
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof contentNodeHandler.listByDateRef !== 'function') return;
+      const result = await interpret(contentNodeHandler.listByDateRef({ date: "2026-04-15" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "today_empty" -> ok', async () => {
+      if (typeof contentNodeHandler.listByDateRef !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(contentNodeHandler.listByDateRef({ date: "2026-04-15" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+  });
+
   describe('clone', () => {
     it('builds a valid StorageProgram', () => {
       const program = contentNodeHandler.clone({ source: {"type":"ref","fixture":"create_page_node","field":"node"}, newId: "node-clone-deep", includeChildren: "true" });

@@ -291,6 +291,34 @@ const _contentNodeHandler: FunctionalConceptHandler = {
     return completeFrom(p, 'ok', (bindings) => ({ items: bindings.enrichedItems as string })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
+  listByDateRef(input: Record<string, unknown>) {
+    const date = (input.date as string | undefined) ?? '';
+
+    let p = createProgram();
+    p = find(p, 'node', {}, 'allNodes');
+    p = mapBindings(p, (bindings) => {
+      const nodes = (bindings.allNodes as Array<Record<string, unknown>>) || [];
+      const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+      const ISO_DATETIME_RE = /^(\d{4}-\d{2}-\d{2})T/;
+
+      const matches = nodes.filter((n) => {
+        for (const [, value] of Object.entries(n)) {
+          if (typeof value !== 'string') continue;
+          if (ISO_DATE_RE.test(value)) {
+            if (value === date) return true;
+          } else {
+            const m = ISO_DATETIME_RE.exec(value);
+            if (m && m[1] === date) return true;
+          }
+        }
+        return false;
+      });
+
+      return JSON.stringify(matches);
+    }, '_matchedItems');
+    return completeFrom(p, 'ok', (bindings) => ({ items: bindings._matchedItems as string })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
   setTitle(input: Record<string, unknown>) {
     const node = input.node as string;
     const title = (input.title as string | undefined) ?? '';

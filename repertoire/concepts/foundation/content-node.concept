@@ -181,6 +181,17 @@ concept ContentNode [N] {
       fixture forget_schema_empty_node { node: "", schema: "Page" } -> error
     }
 
+    action listByDateRef(date: String) {
+      -> ok(items: String) {
+        Return all ContentNodes that have at least one field whose value is an ISO date
+        (yyyy-mm-dd) or ISO datetime string matching the given date. Both exact date
+        strings and datetime strings truncated to date are compared. Returns a
+        JSON-stringified array of matching node records.
+      }
+
+      fixture today_empty { date: "2026-04-15" } -> ok
+    }
+
     action clone(source: String, newId: String, includeChildren: Bool) {
       -> ok(node: N) {
         Copy the source node's type, content, metadata, and property annotations to newId.
