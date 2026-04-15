@@ -181,7 +181,9 @@ const _schemaHandler: FunctionalConceptHandler = {
         .map((m: Record<string, unknown>) => m.schema as string);
       return JSON.stringify(schemas);
     }, 'schemasJson');
-    return complete(p, 'ok', { schemas: '' }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => ({
+      schemas: bindings.schemasJson as string,
+    })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   getEntitiesFor(input: Record<string, unknown>) {
