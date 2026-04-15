@@ -852,7 +852,7 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
     setActionError(null);
     setActionPending(true);
     try {
-      const result = await invoke('FieldDefinition', 'remove', { field: fieldId, schema: schemaId });
+      const result = await invoke('FieldDefinition', 'remove', { fieldId, schema: schemaId });
       if (result.variant === 'ok') {
         // Close config panel if this field's panel was open
         if (configPanelFieldId === fieldId) setConfigPanelFieldId(null);
@@ -1064,7 +1064,7 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
                 position: 'relative',
                 background: isDragOver
                   ? 'var(--palette-primary-container)'
-                  : field.id === pendingDeleteId
+                  : ((field as FieldRow & { fieldId?: string }).fieldId ?? field.id) === pendingDeleteId
                     ? 'var(--palette-error-container)'
                     : isConfigOpen
                       ? 'var(--palette-surface-variant)'
@@ -1167,7 +1167,8 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
                 aria-label={`Remove ${field.label}`}
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleRemoveClick(field.id, field.label);
+                  const fid = (field as FieldRow & { fieldId?: string }).fieldId ?? field.id;
+                  handleRemoveClick(fid, field.label);
                 }}
               >
                 ×
