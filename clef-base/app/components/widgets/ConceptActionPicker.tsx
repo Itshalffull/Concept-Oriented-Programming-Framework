@@ -205,17 +205,6 @@ export function ConceptActionPicker({
     if (_conceptCachePromise === null) {
       _conceptCachePromise = invoke('ScoreApi', 'listConcepts', {}).then(
         (result: Record<string, unknown>) => {
-          // eslint-disable-next-line no-console
-          console.log('[ConceptActionPicker] listConcepts result', {
-            variant: result.variant,
-            conceptsType: typeof result.concepts,
-            conceptsLen: Array.isArray(result.concepts)
-              ? result.concepts.length
-              : typeof result.concepts === 'string'
-                ? result.concepts.length
-                : 0,
-            sample: Array.isArray(result.concepts) ? result.concepts.slice(0, 2) : result.concepts,
-          });
           if (result.variant === 'ok') {
             let rawList: Array<Record<string, unknown>> = [];
             if (typeof result.concepts === 'string') {

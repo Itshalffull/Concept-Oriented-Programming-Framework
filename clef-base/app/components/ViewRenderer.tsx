@@ -214,10 +214,17 @@ function extractSchemaValues(data: Record<string, unknown>[]): string[] {
 }
 
 
+const UNCOUNTABLE_NOUNS = new Set(['media', 'data', 'research', 'metadata', 'feedback', 'evidence']);
+
 function toEntityLabel(title: string): { singular: string; plural: string } {
   const base = title.replace(/\s+(Library|Catalog|Browser|Hub|Center|Overview)$/i, '').trim();
   const singular = base.replace(/ies$/, 'y').replace(/(?<![aeiou])s$/i, '');
-  const plural = singular !== base ? base.toLowerCase() : `${singular.toLowerCase()}s`;
+  const lc = singular.toLowerCase();
+  const plural = UNCOUNTABLE_NOUNS.has(lc)
+    ? lc
+    : singular !== base
+      ? base.toLowerCase()
+      : `${lc}s`;
   return { singular, plural };
 }
 

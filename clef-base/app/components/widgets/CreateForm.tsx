@@ -65,13 +65,98 @@ registerCreateSurface('form-builder', FormBuilder as React.ComponentType<Record<
 registerCreateSurface('keybinding-editor', KeybindingEditor as React.ComponentType<Record<string, unknown>>);
 
 // ---------------------------------------------------------------------------
+// KeyValueList — replaces JSON textareas for structured key-value data
+// ---------------------------------------------------------------------------
+
+interface KVPair { key: string; value: string }
+
+function parseKVJson(raw: string): KVPair[] {
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed.filter(
+      (p): p is KVPair => p && typeof p.key === 'string' && typeof p.value === 'string'
+    );
+  } catch { /* ignore */ }
+  return [];
+}
+
+interface KeyValueListProps {
+  id: string;
+  value: string; // JSON-stringified KVPair[]
+  onChange: (json: string) => void;
+  placeholder?: string;
+}
+
+const KeyValueList: React.FC<KeyValueListProps> = ({ id, value, onChange, placeholder }) => {
+  const pairs: KVPair[] = value ? parseKVJson(value) : [];
+
+  const update = (next: KVPair[]) => onChange(JSON.stringify(next));
+
+  const addRow = () => update([...pairs, { key: '', value: '' }]);
+
+  const removeRow = (i: number) => update(pairs.filter((_, idx) => idx !== i));
+
+  const setKey = (i: number, k: string) =>
+    update(pairs.map((p, idx) => idx === i ? { ...p, key: k } : p));
+
+  const setValue = (i: number, v: string) =>
+    update(pairs.map((p, idx) => idx === i ? { ...p, value: v } : p));
+
+  return (
+    <div id={id} data-part="key-value-list" data-contract="field-control">
+      {pairs.map((pair, i) => (
+        <div key={i} data-part="kv-row" style={{ display: 'flex', gap: '8px', marginBottom: '6px', alignItems: 'center' }}>
+          <input
+            type="text"
+            value={pair.key}
+            onChange={(e) => setKey(i, e.target.value)}
+            placeholder={placeholder ? `${placeholder} key` : 'Key'}
+            aria-label={`Key ${i + 1}`}
+            data-part="kv-key"
+            data-surface="mag651-field-control"
+            style={{ flex: 1 }}
+          />
+          <input
+            type="text"
+            value={pair.value}
+            onChange={(e) => setValue(i, e.target.value)}
+            placeholder="Value"
+            aria-label={`Value ${i + 1}`}
+            data-part="kv-value"
+            data-surface="mag651-field-control"
+            style={{ flex: 1 }}
+          />
+          <button
+            type="button"
+            data-part="kv-remove"
+            onClick={() => removeRow(i)}
+            aria-label={`Remove row ${i + 1}`}
+            style={{ flexShrink: 0 }}
+          >
+            &times;
+          </button>
+        </div>
+      ))}
+      <button
+        type="button"
+        data-part="kv-add"
+        onClick={addRow}
+        style={{ marginTop: '4px' }}
+      >
+        + Add row
+      </button>
+    </div>
+  );
+};
+
+// ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
 interface FieldDef {
   name: string;
   label?: string;
-  type?: 'text' | 'textarea' | 'select';
+  type?: 'text' | 'textarea' | 'select' | 'key-value-list';
   options?: string[];
   required?: boolean;
   placeholder?: string;
@@ -217,14 +302,6 @@ export const CreateForm: React.FC<CreateFormProps> = ({
           const specResult = await invoke('InteractionSpec', 'get', {
             name: destinationId,
           });
-          // eslint-disable-next-line no-console
-          console.log('[CreateForm Tier 1a probe]', {
-            destinationId,
-            variant: specResult.variant,
-            create_surface: specResult.create_surface,
-            create_mode_hint: specResult.create_mode_hint,
-            allKeys: Object.keys(specResult),
-          });
           if (specResult.variant === 'ok') {
             const cs = specResult.create_surface as string | undefined;
             const cmh = specResult.create_mode_hint as string | undefined;
@@ -236,13 +313,9 @@ export const CreateForm: React.FC<CreateFormProps> = ({
                 'modal';
             }
           }
-        } catch (err) {
-          // eslint-disable-next-line no-console
-          console.warn('[CreateForm Tier 1a probe] failed', { destinationId, err });
+        } catch {
+          // Tier 1a probe failed — fall through to Tier 1b
         }
-      } else {
-        // eslint-disable-next-line no-console
-        console.log('[CreateForm Tier 1a probe] no destinationId provided');
       }
 
       // ------ Tier 1b: Schema displayWidget Property -----------------------
@@ -518,7 +591,16 @@ export const CreateForm: React.FC<CreateFormProps> = ({
                       <span data-part="field-required"> *</span>
                     )}
                   </label>
-                  {field.type === 'textarea' ? (
+                  {field.type === 'key-value-list' ? (
+                    <KeyValueList
+                      id={`field-${field.name}`}
+                      value={values[field.name] ?? '[]'}
+                      onChange={(json) =>
+                        setValues((v) => ({ ...v, [field.name]: json }))
+                      }
+                      placeholder={field.placeholder}
+                    />
+                  ) : field.type === 'textarea' ? (
                     <textarea
                       id={`field-${field.name}`}
                       value={values[field.name] ?? ''}
