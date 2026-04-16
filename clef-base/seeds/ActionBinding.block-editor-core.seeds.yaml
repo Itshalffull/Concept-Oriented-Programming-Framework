@@ -21,7 +21,7 @@ entries:
   - name: insert-block
     binding: insert-block
     target: "ContentNode/createWithSchema"
-    parameterMap: '{"id":"context.id","schema":"context.schema","body":"context.content"}'
+    parameterMap: '{"node":"context.id","schema":"context.schema","body":"context.body"}'
     executionPolicy: "auto"
     label: "Insert block"
 

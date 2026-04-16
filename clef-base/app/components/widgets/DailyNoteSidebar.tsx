@@ -45,6 +45,17 @@ function extractPreview(content: unknown): string {
   return '';
 }
 
+function coerceRows(raw: unknown): unknown[] {
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw !== 'string') return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 const sidebarStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
@@ -60,6 +71,8 @@ const listStyle: React.CSSProperties = {
   margin: 0,
   padding: 0,
   flex: 1,
+  minHeight: 0,
+  overflowY: 'auto',
 };
 
 const itemStyle = (active: boolean): React.CSSProperties => ({
@@ -135,18 +148,22 @@ export const DailyNoteSidebar: React.FC<DailyNoteSidebarProps> = ({
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-
-    invoke('ContentNode', 'listBySchema', { schema: 'DailyNote', limit: 14, sortDesc: true })
-      .then((result) => {
+    async function loadNotes(): Promise<void> {
+      setLoading(true);
+      try {
+        const result = await invoke('ContentNode', 'listBySchema', {
+          schema: 'DailyNote',
+          limit: 14,
+          sortDesc: true,
+        });
         if (cancelled) return;
         const raw = result['nodes'] ?? result['items'] ?? result;
-        const rows = Array.isArray(raw) ? raw : [];
+        const rows = coerceRows(raw);
         const entries: NoteEntry[] = rows
           .map((row: unknown) => {
             if (typeof row !== 'object' || row === null) return null;
             const r = row as Record<string, unknown>;
-            const id = String(r['id'] ?? '');
+            const id = String(r['id'] ?? r['node'] ?? '');
             const date = parseDailyNoteId(id);
             if (!date) return null;
             return {
@@ -158,14 +175,27 @@ export const DailyNoteSidebar: React.FC<DailyNoteSidebarProps> = ({
           })
           .filter((e): e is NoteEntry => e !== null);
         setNotes(entries);
-        setLoading(false);
-      })
-      .catch(() => {
+      } finally {
         if (!cancelled) setLoading(false);
-      });
+      }
+    }
 
-    return () => { cancelled = true; };
-  }, [invoke]);
+    const handleProvisioned = (_event: Event) => {
+      void loadNotes();
+    };
+
+    void loadNotes();
+    if (typeof window !== 'undefined') {
+      window.addEventListener('daily-note-provisioned', handleProvisioned);
+    }
+
+    return () => {
+      cancelled = true;
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('daily-note-provisioned', handleProvisioned);
+      }
+    };
+  }, [activeDate, invoke, recentLimit]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent, date: string) => {
     if (e.key === 'Enter' || e.key === ' ') {

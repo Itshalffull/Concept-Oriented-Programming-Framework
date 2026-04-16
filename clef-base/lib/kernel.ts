@@ -704,6 +704,85 @@ async function ensureKeyBindings(kernel: Kernel) {
   }
 }
 
+/**
+ * Recovery guard: if declarative seeding metadata says ActionBinding seed files
+ * were applied but one or more expected bindings are absent from storage,
+ * force-re-register all ActionBinding seed files.
+ *
+ * This mirrors ensureKeyBindings but validates against the concrete binding ids
+ * declared in the seed files, since a non-zero binding count is not sufficient
+ * for editor boot if core bindings like "insert-block" are missing.
+ */
+async function ensureActionBindings(kernel: Kernel) {
+  try {
+    const listResult = await kernel.invokeConcept('urn:clef/ActionBinding', 'list', {});
+    if (listResult.variant !== 'ok') return;
+    const existingRows = typeof listResult.bindings === 'string' && listResult.bindings.trim()
+      ? JSON.parse(listResult.bindings as string) as Array<Record<string, unknown>>
+      : Array.isArray(listResult.bindings)
+        ? listResult.bindings as Array<Record<string, unknown>>
+        : [];
+    const existingIds = new Set(existingRows.map((row) => String(row.binding ?? row.id ?? '')));
+
+    const seedsDir = resolve(CLEF_BASE_ROOT, 'seeds');
+    if (!existsSync(seedsDir)) return;
+
+    const expectedRows = new Map<string, Record<string, unknown>>();
+    for (const entry of readdirSync(seedsDir, { withFileTypes: true })) {
+      if (!entry.isDirectory() && entry.name.startsWith('ActionBinding') && entry.name.endsWith('.seeds.yaml')) {
+        const filePath = resolve(seedsDir, entry.name);
+        const content = readFileSync(filePath, 'utf8');
+        const parsed = parseSeedsYaml(content);
+        for (const seed of parsed) {
+          for (const row of seed.entries) {
+            const bindingId = String(row.binding ?? row.name ?? '').trim();
+            if (bindingId) expectedRows.set(bindingId, row);
+          }
+        }
+      }
+    }
+
+    const existingById = new Map(existingRows.map((row) => [String(row.binding ?? row.id ?? ''), row]));
+    const fieldsToCheck = [
+      'target',
+      'parameterMap',
+      'precondition',
+      'confirmWhen',
+      'executionPolicy',
+      'retryPolicy',
+      'reversalAction',
+      'label',
+      'icon',
+      'buttonVariant',
+      'slash_command',
+      'toolbar_command',
+      'context_menu',
+      'keyboard',
+      'section',
+    ];
+
+    const needsRepair = Array.from(expectedRows.entries()).filter(([bindingId, expected]) => {
+      const existing = existingById.get(bindingId);
+      if (!existingIds.has(bindingId) || !existing) return true;
+      return fieldsToCheck.some((field) => {
+        const want = expected[field] ?? null;
+        const have = existing[field] ?? null;
+        return JSON.stringify(want) !== JSON.stringify(have);
+      });
+    });
+    if (needsRepair.length === 0) return;
+
+    for (const [bindingId, row] of needsRepair) {
+      if (existingById.has(bindingId)) {
+        await kernel.invokeConcept('urn:clef/ActionBinding', 'remove', { binding: bindingId }).catch(() => {});
+      }
+      await kernel.invokeConcept('urn:clef/ActionBinding', 'bind', row).catch(() => {});
+    }
+  } catch {
+    // ensureActionBindings is best-effort — don't fail boot
+  }
+}
+
 async function seedData(kernel: Kernel, registrations: RegEntry[], loadedSyncs: string[], concepts: ConceptRegistration[]) {
   if (_seeded) return;
   _seeded = true;
@@ -736,6 +815,10 @@ async function seedData(kernel: Kernel, registrations: RegEntry[], loadedSyncs: 
   // all entries silently failed (chord was a JSON string, handler expected array).
   // If no bindings exist after seeding, force re-registration from seed files.
   await ensureKeyBindings(kernel);
+
+  // Same recovery for ActionBinding seeds. Existing dbs can report seed files
+  // as applied while missing concrete bindings required by the editor.
+  await ensureActionBindings(kernel);
 
   // Earlier broken boots could mark Workspace seeds as applied before the
   // concept existed. Ensure the shell still has a default workspace.

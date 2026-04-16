@@ -9,7 +9,8 @@
  * body wired to the ContentNode keyed "daily-note:{date}".
  */
 
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useKernelInvoke } from '../../../lib/clef-provider';
 import RecursiveBlockEditor from './RecursiveBlockEditor';
 
 export interface DailyNoteEditorProps {
@@ -88,16 +89,90 @@ const editorBodyStyle: React.CSSProperties = {
   flexDirection: 'column',
 };
 
+const loadingStyle: React.CSSProperties = {
+  flex: 1,
+  minHeight: 0,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  color: 'var(--palette-on-surface-variant)',
+  fontSize: 'var(--typography-body-sm-size)',
+};
+
 export const DailyNoteEditor: React.FC<DailyNoteEditorProps> = ({
   date,
   today,
   onNavigate,
 }) => {
+  const invoke = useKernelInvoke();
   const nodeId = `daily-note:${date}`;
   const prevDate = useMemo(() => shiftDate(date, -1), [date]);
   const nextDate = useMemo(() => shiftDate(date, 1), [date]);
   const dayLabel = useMemo(() => formatDayLabel(date), [date]);
   const isToday = date === today;
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function ensureCanonicalDailyNote(): Promise<void> {
+      setIsReady(false);
+
+      try {
+        let didMutate = false;
+        const nodeResult = await invoke('ContentNode', 'get', { node: nodeId });
+        const nodeExists = nodeResult.variant === 'ok';
+        const schemas = nodeExists && Array.isArray(nodeResult.schemas)
+          ? nodeResult.schemas
+          : [];
+        const hasDailyNoteSchema = schemas.includes('DailyNote');
+
+        if (!nodeExists) {
+          const createResult = await invoke('ContentNode', 'createWithSchema', {
+            node: nodeId,
+            schema: 'DailyNote',
+            title: date,
+            body: '',
+          });
+
+          if (createResult.variant !== 'ok' && createResult.variant !== 'duplicate') {
+            throw new Error(`ContentNode/createWithSchema returned ${String(createResult.variant)}`);
+          }
+          didMutate = true;
+        } else if (!hasDailyNoteSchema) {
+          const [recordResult, applyResult] = await Promise.all([
+            invoke('ContentNode', 'recordSchema', { node: nodeId, schema: 'DailyNote' }),
+            invoke('Schema', 'applyTo', { entity_id: nodeId, schema: 'DailyNote' }),
+          ]);
+
+          if (recordResult.variant !== 'ok') {
+            throw new Error(`ContentNode/recordSchema returned ${String(recordResult.variant)}`);
+          }
+          if (applyResult.variant !== 'ok' && applyResult.variant !== 'notfound') {
+            throw new Error(`Schema/applyTo returned ${String(applyResult.variant)}`);
+          }
+          didMutate = true;
+        }
+
+        if (!cancelled) {
+          setIsReady(true);
+          if (didMutate && typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('daily-note-provisioned', {
+              detail: { nodeId, date },
+            }));
+          }
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.warn('[DailyNoteEditor] Failed to provision canonical daily note:', error);
+          setIsReady(true);
+        }
+      }
+    }
+
+    void ensureCanonicalDailyNote();
+    return () => { cancelled = true; };
+  }, [date, invoke, nodeId]);
 
   return (
     <div
@@ -155,11 +230,17 @@ export const DailyNoteEditor: React.FC<DailyNoteEditorProps> = ({
         data-node-id={nodeId}
         style={editorBodyStyle}
       >
-        <RecursiveBlockEditor
-          rootNodeId={nodeId}
-          editorFlavor="markdown"
-          canEdit={true}
-        />
+        {isReady ? (
+          <RecursiveBlockEditor
+            rootNodeId={nodeId}
+            editorFlavor="markdown"
+            canEdit={true}
+          />
+        ) : (
+          <div data-part="editor-loading" style={loadingStyle}>
+            Provisioning daily note...
+          </div>
+        )}
       </div>
     </div>
   );
