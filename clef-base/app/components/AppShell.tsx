@@ -9,7 +9,8 @@
  * not hardcoded.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { usePathname } from 'next/navigation';
 import { Sidebar, type SidebarGroup } from './widgets/Sidebar';
 import { QuickCapture } from './QuickCapture';
 import { useClef, useKernelInvoke } from '../../lib/clef-provider';
@@ -26,6 +27,7 @@ export const AppShell: React.FC<{ children: React.ReactNode; sessionUser?: strin
   const { groupedDestinations, navigator, shell, theme } = useClef();
   const { isInSpace, currentSpace, spaceStack } = useActiveSpace(sessionUser || 'current-user');
   const invoke = useKernelInvoke();
+  const pathname = usePathname();
 
   // Install the global key-binding dispatcher (KB-16).
   // Listens at document level (capture phase) so all keybinding scopes
@@ -66,20 +68,43 @@ export const AppShell: React.FC<{ children: React.ReactNode; sessionUser?: strin
     }
   };
 
+  // Build a flat href → destination lookup from all groups
+  const destinationByHref = useMemo(() => {
+    const map = new Map<string, { name: string; href: string }>();
+    for (const g of groupedDestinations) {
+      for (const d of g.items) {
+        map.set(d.href, d);
+      }
+    }
+    return map;
+  }, [groupedDestinations]);
+
+  // Derive the active destination from the current pathname (longest-prefix match)
+  const currentDestination = useMemo(() => {
+    if (destinationByHref.has(pathname)) return destinationByHref.get(pathname)!;
+    let best: { name: string; href: string } | undefined;
+    for (const [href, dest] of destinationByHref) {
+      if (pathname.startsWith(href + '/') || pathname.startsWith(href)) {
+        if (!best || href.length > best.href.length) best = dest;
+      }
+    }
+    return best;
+  }, [pathname, destinationByHref]);
+
   // Map grouped destinations → Sidebar groups
   const sidebarGroups: SidebarGroup[] = groupedDestinations.map(g => ({
     label: g.label,
     items: g.items.map(d => ({
-      label: d.name.charAt(0).toUpperCase() + d.name.slice(1).replace(/-/g, ' '),
+      label: d.name.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
       href: d.href,
       icon: d.icon,
     })),
   }));
 
-  // Derive page title from current destination
-  const pageTitle = navigator.current
-    ? navigator.current.name.charAt(0).toUpperCase() +
-      navigator.current.name.slice(1).replace(/-/g, ' ')
+  // Derive page title — prefer pathname-matched destination over navigator.current
+  const activeDestName = currentDestination?.name ?? navigator.current?.name;
+  const pageTitle = activeDestName
+    ? activeDestName.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
     : 'Clef Base';
 
   return (

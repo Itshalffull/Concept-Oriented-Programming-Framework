@@ -573,13 +573,17 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
     if (!rootSchema) return;
 
     let cancelled = false;
+    let intervalId: ReturnType<typeof setInterval> | null = null;
 
-    async function pollCompileStatus() {
+    async function pollCompileStatus(): Promise<boolean> {
+      let anyOk = false;
+
       try {
         // Read ContentCompiler state for this page
         const result = await invoke('ContentCompiler', 'getStatus', { page: rootNodeId });
-        if (cancelled) return;
+        if (cancelled) return false;
         if (result.variant === 'ok') {
+          anyOk = true;
           setCompileStatus({
             status: (result.status as CompileStatus['status']) ?? 'never-compiled',
             lastCompiledAt: typeof result.lastCompiledAt === 'string' ? result.lastCompiledAt : null,
@@ -588,6 +592,9 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
       } catch {
         // Compile status is non-fatal — schema may not be compilable
       }
+
+      // If getStatus didn't succeed, ContentCompiler is unavailable — skip getOutput
+      if (!anyOk) return false;
 
       try {
         // Load compiled output preview
@@ -614,18 +621,25 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
       } catch {
         /* non-fatal */
       }
+
+      return anyOk;
     }
 
-    pollCompileStatus();
+    async function startPolling() {
+      const firstRun = await pollCompileStatus();
+      if (cancelled) return;
+      // Only set up the interval if ContentCompiler responded successfully on the
+      // first call — avoids spamming the console with 500 errors when the concept
+      // is not registered in the kernel.
+      if (!firstRun) return;
+      intervalId = setInterval(pollCompileStatus, 5000);
+    }
 
-    // Observe ContentCompiler changes via kernel observation pattern
-    // Using a polling interval as a fallback for Phase 1 (full kernel observation
-    // subscription requires the observe API; this is the same pattern used by
-    // other data-driven widgets).
-    const interval = setInterval(pollCompileStatus, 5000);
+    startPolling();
+
     return () => {
       cancelled = true;
-      clearInterval(interval);
+      if (intervalId !== null) clearInterval(intervalId);
     };
   }, [rootNodeId, rootSchema, invoke]);
 
@@ -1053,6 +1067,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
       if (created.variant === 'ok') {
         await invokeBinding(invoke, 'outline-create', { node: id, parent: rootNodeId });
         await loadChildren();
+        restoreFocusToBlock(id);
       } else {
         console.warn('[RecursiveBlockEditor] createWithSchema non-ok:', created);
       }
@@ -1808,6 +1823,8 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
     );
   }
 
+  const rightRailVisible = editorPanelEntries.length > 0 || versionHistoryOpen || (hasCompileSurface && !!compiledPreview);
+
   return (
     <div
       data-part="root"
@@ -1821,7 +1838,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
       onKeyDown={handleKeyDown}
       style={{
         display: 'grid',
-        gridTemplateColumns: '1fr minmax(0, 3fr) 280px',
+        gridTemplateColumns: rightRailVisible ? '160px minmax(0, 1fr) 280px' : '160px minmax(0, 1fr)',
         gridTemplateRows: 'auto auto 1fr auto auto',
         height: '100%',
         gap: 0,
@@ -2965,7 +2982,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
           gridRow: hasCompileSurface && compileStatus ? 2 : '1 / -1',
           borderLeft: '1px solid var(--palette-outline-variant)',
           overflowY: 'auto',
-          display: 'flex',
+          display: rightRailVisible ? 'flex' : 'none',
           flexDirection: 'column',
           gap: 0,
         }}
@@ -4179,6 +4196,10 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
         return;
       }
     }
+    const target = e.target as HTMLElement;
+    if (target.closest('button, input, select, textarea, [role="button"]')) {
+      return;
+    }
     const now = Date.now();
     if (now - lastClickTimeRef.current > CLICK_RESET_MS) {
       clickCountRef.current = 0;
@@ -4190,6 +4211,24 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
     if (count === 1) {
       // Plain click — propagate to parent for multi-select modifier logic.
       onBlockClick?.(e);
+      const editable = blockContentRef.current;
+      const clickedInsideEditable = editable?.contains(target) ?? false;
+      if (
+        editable &&
+        canEdit &&
+        !clickedInsideEditable &&
+        document.activeElement !== editable
+      ) {
+        editable.focus();
+        const sel = window.getSelection();
+        if (sel) {
+          const range = document.createRange();
+          range.selectNodeContents(editable);
+          range.collapse(false);
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
+      }
       return;
     }
 
@@ -4229,7 +4268,7 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
         }
       }
     }
-  }, [schema, nodeId, onBlockClick, onSectionSelect]);
+  }, [canEdit, schema, nodeId, onBlockClick, onSectionSelect]);
 
   // -------------------------------------------------------------------------
   // Per-block focus + empty state — drives placeholder-decoration overlay
@@ -5400,16 +5439,6 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
                     node: nodeId, newParent: grandparentId,
                   });
                   if (result.variant === 'ok') {
-                    // Outline/reparent preserves the old order value,
-                    // which was assigned under the now-old-parent's
-                    // sibling set. Under grandparent, that number often
-                    // sorts before the old-parent itself, visually
-                    // making the outdented block jump ABOVE its former
-                    // parent. Fix by computing a fractional order
-                    // between old-parent.order and the sibling that
-                    // follows old-parent in grandparent.children, so
-                    // the block lands immediately after its former
-                    // parent — Notion / Roam outdent behavior.
                     try {
                       const gpKidsRes = await invoke('Outline', 'children', { parent: grandparentId });
                       const gpKids: string[] = gpKidsRes.variant === 'ok'
@@ -5421,8 +5450,6 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
                         ? parentRec.order
                         : Date.now();
                       let nextOrder: number | null = null;
-                      // Find the next sibling (skipping the freshly-
-                      // reparented block itself) and take its order.
                       for (let i = parentIdx + 1; i < gpKids.length; i++) {
                         if (gpKids[i] === nodeId) continue;
                         const r = await invoke('Outline', 'getRecord', { node: gpKids[i] });
@@ -5436,7 +5463,11 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
                     } catch (err) {
                       console.warn('[RecursiveBlockEditor] post-outdent order fix failed:', err);
                     }
-                    onStructureChange();
+                    setChildren((prev) => {
+                      const idx = prev.findIndex((c) => c.id === nodeId);
+                      if (idx < 0) return prev;
+                      return prev.map((c) => c.id === nodeId ? { ...c, parent: grandparentId } : c);
+                    });
                     restoreFocusToBlock(nodeId);
                   } else {
                     onOptimisticDepthChange?.(nodeId, +1);  // rollback
@@ -5451,7 +5482,11 @@ const BlockSlot: React.FC<BlockSlotProps> = ({
                   node: nodeId, newParent: prevSibling,
                 });
                 if (result.variant === 'ok') {
-                  onStructureChange();
+                  setChildren((prev) => {
+                    const idx = prev.findIndex((c) => c.id === nodeId);
+                    if (idx < 0) return prev;
+                    return prev.map((c) => c.id === nodeId ? { ...c, parent: prevSibling } : c);
+                  });
                   restoreFocusToBlock(nodeId);
                 }
               } catch (err) {

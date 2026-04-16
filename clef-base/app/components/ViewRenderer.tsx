@@ -214,6 +214,13 @@ function extractSchemaValues(data: Record<string, unknown>[]): string[] {
 }
 
 
+function toEntityLabel(title: string): { singular: string; plural: string } {
+  const base = title.replace(/\s+(Library|Catalog|Browser|Hub|Center|Overview)$/i, '').trim();
+  const singular = base.replace(/ies$/, 'y').replace(/(?<![aeiou])s$/i, '');
+  const plural = singular !== base ? base.toLowerCase() : `${singular.toLowerCase()}s`;
+  return { singular, plural };
+}
+
 export const ViewRenderer: React.FC<ViewRendererProps> = ({
   viewId, title: titleOverride, context, children,
   inlineData, inlineLayout, inlineFields, compact, onSelect, inlineGroupConfig,
@@ -1127,7 +1134,7 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
     if (displayData.length === 0) {
       return (
         <EmptyState
-          title={`No ${viewTitle.toLowerCase()} found`}
+          title={`No ${toEntityLabel(viewTitle).plural} found`}
           description={controls.create ? 'Create one to get started.' : 'No data available.'}
           action={controls.create ? (
             <button data-part="button" data-variant="filled" onClick={() => setShowCreate(true)}>
@@ -1388,10 +1395,7 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
             <h1>{viewTitle}</h1>
             <div style={{ display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'center' }}>
               <Badge variant="info">{displayData.length}{flatData.length !== displayData.length ? `/${flatData.length}` : ''}</Badge>
-              <Badge variant="secondary">{effectiveLayout}</Badge>
-              {resolvedWidget && (
-                <Badge variant="info">{resolvedWidget}</Badge>
-              )}
+
               {/* Save as View — appears when ad-hoc toolbar filters are active */}
               {toolbarFilterConditions.length > 0 && viewId && (
                 <button
@@ -1418,7 +1422,7 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
               )}
               {controls.create && (
                 <button data-part="button" data-variant="filled" onClick={() => setShowCreate(true)}>
-                Create {viewTitle.replace(/s$/, '')}
+                Create {toEntityLabel(viewTitle).singular}
               </button>
             )}
           </div>
@@ -1507,7 +1511,7 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
           onCreated={refetch}
           concept={controls.create.concept}
           action={controls.create.action}
-          title={`Create ${viewTitle.replace(/s$/, '')}`}
+          title={`Create ${toEntityLabel(viewTitle).singular}`}
           fields={controls.create.fields as Array<{ name: string; label?: string; type?: 'text' | 'textarea' | 'select'; options?: string[]; required?: boolean; placeholder?: string }>}
           schemaId={controls.create.schemaId}
           destinationId={interactionSpecName ?? undefined}
