@@ -9,12 +9,15 @@
  * human-readable day-of-week, and a 1-line content preview when available.
  */
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useKernelInvoke } from '../../../lib/clef-provider';
 
 export interface DailyNoteSidebarProps {
   activeDate: string;    // YYYY-MM-DD — currently displayed date
   onNavigate: (date: string) => void;
+  mode?: 'rail' | 'section';
+  title?: string;
+  recentLimit?: number;
 }
 
 interface NoteEntry {
@@ -55,16 +58,6 @@ function coerceRows(raw: unknown): unknown[] {
     return [];
   }
 }
-
-const sidebarStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  width: 240,
-  minHeight: 0,
-  borderRight: '1px solid var(--palette-outline)',
-  background: 'var(--palette-surface-container)',
-  overflowY: 'auto',
-};
 
 const listStyle: React.CSSProperties = {
   listStyle: 'none',
@@ -137,14 +130,44 @@ const loadingStyle: React.CSSProperties = {
   fontSize: 'var(--typography-body-sm-size)',
 };
 
+const sectionHeadingStyle: React.CSSProperties = {
+  margin: 0,
+  padding: 'var(--spacing-md) var(--spacing-md) var(--spacing-sm)',
+  fontSize: 'var(--typography-title-sm-size, 0.95rem)',
+  fontWeight: 'var(--typography-title-sm-weight, 600)' as React.CSSProperties['fontWeight'],
+  color: 'var(--palette-on-surface)',
+  borderBottom: '1px solid color-mix(in srgb, var(--palette-outline) 70%, transparent)',
+};
+
 export const DailyNoteSidebar: React.FC<DailyNoteSidebarProps> = ({
   activeDate,
   onNavigate,
+  mode = 'rail',
+  title,
+  recentLimit = 14,
 }) => {
   const [notes, setNotes] = useState<NoteEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   const invoke = useKernelInvoke();
+  const isSection = mode === 'section';
+
+  const sidebarStyle = useMemo<React.CSSProperties>(
+    () => ({
+      display: 'flex',
+      flexDirection: 'column',
+      width: isSection ? '100%' : 240,
+      minWidth: 0,
+      minHeight: 0,
+      height: '100%',
+      borderRight: isSection ? undefined : '1px solid var(--palette-outline)',
+      border: isSection ? '1px solid var(--palette-outline)' : undefined,
+      borderRadius: isSection ? 'var(--radius-md)' : undefined,
+      background: 'var(--palette-surface-container)',
+      overflow: 'hidden',
+    }),
+    [isSection],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -215,11 +238,14 @@ export const DailyNoteSidebar: React.FC<DailyNoteSidebarProps> = ({
     <nav
       data-part="root"
       data-state={loading ? 'loading' : 'idle'}
+      data-mode={mode}
       style={sidebarStyle}
       role="navigation"
       aria-label="Daily notes history"
       aria-busy={loading ? 'true' : 'false'}
     >
+      {title && <h2 style={sectionHeadingStyle}>{title}</h2>}
+
       {loading ? (
         <div style={loadingStyle}>Loading...</div>
       ) : (
