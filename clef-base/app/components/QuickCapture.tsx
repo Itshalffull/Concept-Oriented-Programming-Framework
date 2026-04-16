@@ -12,6 +12,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useKernelInvoke } from '../../lib/clef-provider';
+import { buildQuickCaptureNodeId } from '../../lib/quick-capture-identity';
 import { KeybindingHint } from './widgets/KeybindingHint';
 
 export const QuickCapture: React.FC = () => {
@@ -81,24 +82,40 @@ export const QuickCapture: React.FC = () => {
     setError(null);
     setErrorVariant(null);
 
-    const nodeId = `qc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-
     try {
-      const result = await invoke('ContentNode', 'create', {
-        node: nodeId,
-        title: title.trim(),
-        content: body.trim() || title.trim(),
-        createdBy: 'quick-capture',
-      });
+      const trimmedTitle = title.trim();
+      const trimmedBody = body.trim();
+      let createdNodeId: string | null = null;
+      let lastResult: Record<string, unknown> | null = null;
 
-      if (result.variant === 'ok') {
+      for (let attempt = 0; attempt < 5; attempt += 1) {
+        const candidateNodeId = buildQuickCaptureNodeId(trimmedTitle, attempt);
+        const result = await invoke('ContentNode', 'create', {
+          node: candidateNodeId,
+          title: trimmedTitle,
+          content: trimmedBody || trimmedTitle,
+          createdBy: 'quick-capture',
+        });
+
+        lastResult = result;
+        if (result.variant === 'ok') {
+          createdNodeId = String(result.node ?? candidateNodeId);
+          break;
+        }
+        if (result.variant !== 'duplicate') {
+          break;
+        }
+      }
+
+      if (createdNodeId) {
         setOpen(false);
         setTitle('');
         setBody('');
-        router.push(`/admin/content/${encodeURIComponent(nodeId)}`);
+        router.push(`/admin/content/${encodeURIComponent(createdNodeId)}`);
       } else {
-        setErrorVariant(result.variant as string);
-        setError((result.message as string) ?? `Action returned: ${result.variant}`);
+        const variant = String(lastResult?.variant ?? 'error');
+        setErrorVariant(variant);
+        setError((lastResult?.message as string | undefined) ?? `Action returned: ${variant}`);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');

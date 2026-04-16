@@ -26,6 +26,7 @@ import { useNavigator } from '../../lib/clef-provider';
 import { useVersionPins, VersionPinInfo } from '../../lib/use-version-pins';
 import { useInvokeWithFeedback } from '../../lib/useInvocation';
 import { InvocationStatusIndicator } from '../components/widgets/InvocationStatusIndicator';
+import { getEntityDisplayName } from '../../lib/quick-capture-identity';
 
 /**
  * Pick the editorFlavor for RecursiveBlockEditor from the schema list.
@@ -159,7 +160,8 @@ export const EntityDetailView: React.FC<EntityDetailViewProps> = ({ id }) => {
   }
 
   const primarySchema = schemas[0] ?? 'default';
-  const displayName = String(data.node ?? id).replace(/^(concept|schema|sync|suite|theme|view|widget|display-mode|workflow|automation-rule|taxonomy):/, '');
+  const entityIdentity = String(data.node ?? id);
+  const displayName = getEntityDisplayName(entityIdentity, data.title);
 
   // TEV-9: choose entity-detail (triple-zone) vs content-body-only (two-zone).
   // Collapse the structured zone when:
@@ -180,7 +182,19 @@ export const EntityDetailView: React.FC<EntityDetailViewProps> = ({ id }) => {
           <button data-part="button" data-variant="outlined" onClick={() => navigateToHref('/content')}>
             Back
           </button>
-          <h1 style={{ margin: 0 }}>{displayName}</h1>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            <h1 style={{ margin: 0 }}>{displayName.title}</h1>
+            {displayName.hasExplicitTitle && (
+              <span
+                style={{
+                  fontSize: 'var(--typography-body-sm-size, 0.875rem)',
+                  color: 'var(--palette-on-surface-variant)',
+                }}
+              >
+                {displayName.rawIdentity}
+              </span>
+            )}
+          </div>
           {schemas.map((s) => (
             <Badge key={s} variant={SCHEMA_COLORS[s] ?? 'secondary'}>
               {s}
