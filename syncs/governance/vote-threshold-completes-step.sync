@@ -1,0 +1,25 @@
+# When a vote reaches its threshold, complete the bound StepRun so the process advances.
+# Governance step completion — Section 6.3.
+
+sync VoteThresholdCompletesStep [eager]
+  purpose {
+    When a vote is recorded and the session has reached its threshold
+    (M-of-N for approval, quorum for contest or election), complete the
+    bound StepRun with ok so the process advances to the next step.
+    The winner or result is serialized as the step output.
+  }
+when {
+  Vote/castVote: [ session: ?session; voter: ?voter; choice: ?choice; weight: ?weight ]
+    => recorded(vote: ?vote)
+}
+where {
+  Property: { ?session key: "stepRef"; value: ?step_ref }
+  Property: { ?session key: "thresholdMet"; value: "true" }
+  Property: { ?session key: "result"; value: ?result }
+}
+then {
+  StepRun/complete: [
+    step: ?step_ref;
+    output: ?result
+  ]
+}

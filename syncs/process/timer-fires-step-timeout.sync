@@ -1,0 +1,19 @@
+# When a StepTimer fires on an expired deadline, complete the corresponding StepRun with timed_out.
+# Governance step timeout — Section 6.3.
+
+sync TimerFiresStepTimeout [eager]
+  purpose {
+    When a StepTimer fires on an expired deadline, complete the
+    corresponding StepRun with the timed_out variant so the process
+    can advance along the timeout edge without requiring webhook_wait.
+  }
+when {
+  StepTimer/fire: [ timer: ?timer ]
+    => ok(timer: ?timer; step_ref: ?step_ref)
+}
+then {
+  StepRun/complete: [
+    step: ?step_ref;
+    output: "{\"reason\":\"timeout\"}"
+  ]
+}
