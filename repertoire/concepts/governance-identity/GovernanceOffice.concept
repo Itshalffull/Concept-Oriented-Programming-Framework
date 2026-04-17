@@ -1,0 +1,115 @@
+@version(1)
+# @fixtures-added
+concept GovernanceOffice [O] {
+
+  purpose {
+    Model governance offices — named organizational capacities with
+    term limits, holder caps, and succession semantics. Office
+    assignments sync into executable role grants without conflating
+    organizational office with executable access (which is owned by
+    Authorization).
+  }
+
+  state {
+    offices: set O
+    name: O -> String
+    purpose: O -> String
+    permissions: O -> set String
+    holders: O -> set String
+    hierarchy: O -> set O
+    termExpiry: O -> option DateTime
+    maxHolders: O -> option Int
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(name: String, permissions: String, polity: String) {
+      -> ok(office: O) {
+        A new governance office is added with the given name and permissions.
+      }
+
+      fixture create_admin { name: "admin", permissions: "manage-users,manage-content", polity: "dao-governance" }
+      fixture create_empty_name { name: "", permissions: "read", polity: "dao-governance" } -> error
+    }
+
+    action assign(office: O, member: String, assignedBy: String) {
+      -> ok(assignment: O) {
+        The member is assigned to the office.
+      }
+
+      fixture assign_alice_admin { office: $create_admin.id, member: "alice", assignedBy: "system" } after create_admin
+      fixture assign_empty_member { office: "office-1", member: "", assignedBy: "system" } -> error
+    }
+
+    action revoke(office: O, member: String) {
+      -> ok(office: O, member: String) {
+        The member is removed from the office.
+      }
+      -> ok(office: O, member: String) {
+        The member does not hold this office.
+      }
+
+      fixture revoke_alice { office: $create_admin.id, member: "alice" } after create_admin
+      fixture revoke_unassigned { office: "office-1", member: "unknown-member" } -> error
+    }
+
+    action check(office: O, member: String) {
+      -> ok(office: O, member: String) {
+        The member holds this office.
+      }
+      -> ok(office: O, member: String) {
+        The member does not hold this office.
+      }
+
+      fixture check_alice_admin { office: $create_admin.id, member: "alice" } after create_admin
+      fixture check_nonmember { office: "office-1", member: "unknown-member" } -> error
+    }
+
+    action dissolve(office: O) {
+      -> ok(office: O) {
+        The office is removed. All holders lose assignment.
+      }
+
+      fixture dissolve_admin { office: $create_admin.id } after create_admin
+      fixture dissolve_nonexistent { office: "nonexistent-office" } -> error
+    }
+  }
+
+  example "create-then-check": {
+
+    after create(office: o, name: _, purpose: _, permissions: _) -> ok(office: o)
+
+        then assign(office: o, holder: h) -> ok(office: o, holder: h)
+
+        and  check(holder: h, permission: p) -> allowed(holder: h, permission: p)
+
+  }
+
+
+  always "valid-name" {
+
+    forall o in offices:
+
+      o.name != none
+
+  }
+
+  never "orphaned-purpose" {
+
+    exists o in offices:
+
+      o.purpose = none
+
+  }
+
+  action create {
+
+    requires: office != ""
+
+    ensures ok: office != none
+
+  }
+}

@@ -1,6 +1,11 @@
 // @clef-handler style=functional
-// Role Concept Implementation
-// Assign named capacities with defined permissions to participants.
+// GovernanceOffice Concept Implementation
+// Named organizational capacities with term limits, holder caps, and succession.
+// Office assignments sync into executable role grants; executable access itself
+// is owned by the Authorization concept (see agents-as-subjects-refactor-plan §5.3).
+//
+// NOTE: The underlying storage relation is still called `role` to preserve data
+// continuity during the rename.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
   createProgram, get, put, putFrom, del, branch, complete,
@@ -12,7 +17,12 @@ type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
-  return `role-${++idCounter}`;
+  return `office-${++idCounter}`;
+}
+
+// Accept the new canonical `office` input key as well as the legacy `role` key.
+function extractOfficeId(input: Record<string, unknown>): string {
+  return (input.office as string) || (input.role as string) || '';
 }
 
 const _handler: FunctionalConceptHandler = {
@@ -40,125 +50,130 @@ const _handler: FunctionalConceptHandler = {
       createdAt: new Date().toISOString(),
     });
 
-    return complete(p, 'ok', { role: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { office: id, role: id }) as StorageProgram<Result>;
   },
 
   assign(input: Record<string, unknown>) {
-    const role = input.role as string;
+    const office = extractOfficeId(input);
     const member = input.member as string;
-    const assignedBy = input.assignedBy as string;
 
     if (!member || member.trim() === '') {
       return complete(createProgram(), 'error', { message: 'member is required' }) as StorageProgram<Result>;
     }
-    if (!role || role.trim() === '') {
-      return complete(createProgram(), 'error', { message: 'role is required' }) as StorageProgram<Result>;
+    if (!office || office.trim() === '') {
+      return complete(createProgram(), 'error', { message: 'office is required' }) as StorageProgram<Result>;
     }
 
     let p = createProgram();
-    p = get(p, 'role', role, 'existing');
+    p = get(p, 'role', office, 'existing');
 
     return branch(p,
       (bindings) => !bindings.existing,
-      complete(createProgram(), 'not_found', { role }),
+      complete(createProgram(), 'not_found', { office, role: office }),
       (() => {
         let b = createProgram();
-        b = get(b, 'role', role, 'rec');
-        b = putFrom(b, 'role', role, (bindings) => {
+        b = get(b, 'role', office, 'rec');
+        b = putFrom(b, 'role', office, (bindings) => {
           const rec = bindings.rec as Record<string, unknown>;
           const holders = (rec.holders as string[]) || [];
           if (holders.includes(member)) return rec;
           return { ...rec, holders: [...holders, member] };
         });
-        return complete(b, 'ok', { assignment: role, role, member });
+        return complete(b, 'ok', { assignment: office, office, role: office, member });
       })(),
     ) as StorageProgram<Result>;
   },
 
   revoke(input: Record<string, unknown>) {
-    const role = input.role as string;
+    const office = extractOfficeId(input);
     const member = input.member as string;
 
-    if (!role || role.trim() === '') {
-      return complete(createProgram(), 'error', { message: 'role is required' }) as StorageProgram<Result>;
+    if (!office || office.trim() === '') {
+      return complete(createProgram(), 'error', { message: 'office is required' }) as StorageProgram<Result>;
     }
 
     let p = createProgram();
-    p = get(p, 'role', role, 'existing');
+    p = get(p, 'role', office, 'existing');
 
     return branch(p,
       (bindings) => !bindings.existing,
-      // Role not found — return ok per spec (member does not hold this role)
-      complete(createProgram(), 'ok', { role, member }),
+      // Office not found — return ok per spec (member does not hold this office)
+      complete(createProgram(), 'ok', { office, role: office, member }),
       (() => {
         let b = createProgram();
-        b = get(b, 'role', role, 'rec');
-        b = putFrom(b, 'role', role, (bindings) => {
+        b = get(b, 'role', office, 'rec');
+        b = putFrom(b, 'role', office, (bindings) => {
           const rec = bindings.rec as Record<string, unknown>;
           const holders = (rec.holders as string[]) || [];
           return { ...rec, holders: holders.filter((h: string) => h !== member) };
         });
-        return complete(b, 'ok', { role, member });
+        return complete(b, 'ok', { office, role: office, member });
       })(),
     ) as StorageProgram<Result>;
   },
 
   check(input: Record<string, unknown>) {
-    const role = input.role as string;
+    const office = extractOfficeId(input);
     const member = input.member as string;
 
-    if (!role || role.trim() === '') {
-      return complete(createProgram(), 'error', { message: 'role is required' }) as StorageProgram<Result>;
+    if (!office || office.trim() === '') {
+      return complete(createProgram(), 'error', { message: 'office is required' }) as StorageProgram<Result>;
     }
 
     let p = createProgram();
-    p = get(p, 'role', role, 'existing');
+    p = get(p, 'role', office, 'existing');
 
     return branch(p,
       (bindings) => !bindings.existing,
-      // Role not found — return ok per spec (member does not hold this role)
-      complete(createProgram(), 'ok', { role, member }),
+      // Office not found — return ok per spec (member does not hold this office)
+      complete(createProgram(), 'ok', { office, role: office, member }),
       (() => {
         let b = createProgram();
-        b = get(b, 'role', role, 'rec');
+        b = get(b, 'role', office, 'rec');
         return branch(b,
           (bindings) => {
             const rec = bindings.rec as Record<string, unknown>;
             const holders = (rec.holders as string[]) || [];
             return holders.includes(member);
           },
-          complete(createProgram(), 'ok', { role, member }),
-          complete(createProgram(), 'ok', { role, member }),
+          complete(createProgram(), 'ok', { office, role: office, member }),
+          complete(createProgram(), 'ok', { office, role: office, member }),
         );
       })(),
     ) as StorageProgram<Result>;
   },
 
   dissolve(input: Record<string, unknown>) {
-    const role = input.role as string;
+    const office = extractOfficeId(input);
 
-    if (!role || role.trim() === '') {
-      return complete(createProgram(), 'error', { message: 'role is required' }) as StorageProgram<Result>;
+    if (!office || office.trim() === '') {
+      return complete(createProgram(), 'error', { message: 'office is required' }) as StorageProgram<Result>;
     }
 
     let p = createProgram();
-    p = get(p, 'role', role, 'existing');
+    p = get(p, 'role', office, 'existing');
 
     return branch(p,
       (bindings) => !bindings.existing,
-      complete(createProgram(), 'not_found', { role }),
+      complete(createProgram(), 'not_found', { office, role: office }),
       (() => {
         let b = createProgram();
-        b = del(b, 'role', role);
-        return complete(b, 'ok', { role });
+        b = del(b, 'role', office);
+        return complete(b, 'ok', { office, role: office });
       })(),
     ) as StorageProgram<Result>;
   },
 };
 
-export const roleHandler = autoInterpret(_handler);
+export const governanceOfficeHandler = autoInterpret(_handler);
+
+// Backward-compat alias for legacy imports (Role concept rename).
+export const roleHandler = governanceOfficeHandler;
 
 /** Reset internal state. Useful for testing. */
-export function resetRole(): void {
+export function resetGovernanceOffice(): void {
   idCounter = 0;
 }
+
+// Backward-compat alias
+export const resetRole = resetGovernanceOffice;

@@ -39,7 +39,7 @@ import { constitutionHandler } from '../../handlers/ts/llm-agent/constitution.ha
 // Governance Platform
 import { proposalHandler } from '../../handlers/ts/app/governance/proposal.handler';
 import { policyHandler } from '../../handlers/ts/app/governance/policy.handler';
-import { roleHandler } from '../../handlers/ts/app/governance/role.handler';
+import { governanceOfficeHandler } from '../../handlers/ts/app/governance/governance-office.handler';
 import { circleHandler } from '../../handlers/ts/app/governance/circle.handler';
 // Verification
 import { checkVerificationHandler } from '../../handlers/ts/app/check-verification.handler';
@@ -279,8 +279,8 @@ const SUPPLEMENTAL_REGISTRY_ENTRIES = [
     storageType: 'standard' as const,
   },
   {
-    uri: 'urn:clef/Role',
-    handler: roleHandler,
+    uri: 'urn:clef/GovernanceOffice',
+    handler: governanceOfficeHandler,
     storageName: 'role',
     storageType: 'standard' as const,
   },

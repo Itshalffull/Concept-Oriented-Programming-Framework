@@ -2,7 +2,7 @@
 // Exports all 67 governance concept handlers.
 
 export { membershipHandler } from './membership.handler.js';
-export { roleHandler } from './role.handler.js';
+export { governanceOfficeHandler, roleHandler } from './governance-office.handler.js';
 export { permissionHandler } from './permission.handler.js';
 export { sybilResistanceHandler } from './sybil-resistance.handler.js';
 export { attestationHandler } from './attestation.handler.js';

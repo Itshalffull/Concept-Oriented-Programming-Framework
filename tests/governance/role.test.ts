@@ -7,7 +7,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createInMemoryStorage } from '../../runtime/adapters/storage.js';
-import { roleHandler } from '../../handlers/ts/app/governance/role.handler.js';
+import { roleHandler } from '../../handlers/ts/app/governance/governance-office.handler.js';
 
 describe('Role Handler', () => {
   let storage: ReturnType<typeof createInMemoryStorage>;

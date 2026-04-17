@@ -8,10 +8,10 @@ concepts:
     spec: ./Membership.concept
     params:
       M: { as: member-id, description: "Unique member identifier" }
-  Role:
-    spec: ./Role.concept
+  GovernanceOffice:
+    spec: ./GovernanceOffice.concept
     params:
-      R: { as: role-id, description: "Unique role identifier" }
+      O: { as: office-id, description: "Unique governance office identifier" }
   Permission:
     spec: ./Permission.concept
     params:
