@@ -1,0 +1,96 @@
+@version(1)
+@category("governance")
+concept PilotMode [M] {
+
+  purpose {
+    Govern what a Pilot session may do by naming bounded restriction
+    profiles. Each mode owns a JSON-encoded set of verbs a Pilot must
+    not emit; Pilot consults this concept before delegating any surface
+    action so the bounded environment is observable, auditable, and
+    distinct from the principal's ambient Authorization grants.
+  }
+
+  state {
+    modes: set M
+    restrictionsFor: M -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action define(mode: M, restrictions: String) {
+      -> ok(mode: M) {
+        Register a new restriction profile (or overwrite an existing
+        one) with a JSON array of restricted verb names.
+      }
+      -> error(message: String) {
+        The mode id is empty, or restrictions is not a valid JSON
+        array of strings.
+      }
+
+      fixture define_read_only { mode: "read-only", restrictions: "[\"submit\",\"fill\",\"interact-mutating\"]" }
+      fixture define_navigate_only { mode: "navigate-only", restrictions: "[\"submit\",\"fill\",\"interact\",\"effect\",\"dismiss\"]" }
+      fixture define_full_access { mode: "full-access", restrictions: "[]" }
+      fixture define_empty_mode { mode: "", restrictions: "[]" } -> error
+      fixture define_bad_json { mode: "broken", restrictions: "not-json" } -> error
+    }
+
+    action check(mode: M, verb: String) {
+      -> ok(allowed: Bool) {
+        Return whether a Pilot action of the given verb is permitted
+        by this mode. `allowed: true` means the verb is not in the
+        mode's restricted set; `allowed: false` means it is blocked.
+      }
+      -> notfound(mode: M) {
+        No restriction profile is registered under this mode id.
+      }
+
+      fixture check_read_only_submit { mode: $define_read_only.mode, verb: "submit" } after define_read_only
+      fixture check_read_only_navigate { mode: $define_read_only.mode, verb: "navigate" } after define_read_only
+      fixture check_full_access_submit { mode: $define_full_access.mode, verb: "submit" } after define_full_access
+      fixture check_navigate_only_forward { mode: $define_navigate_only.mode, verb: "forward" } after define_navigate_only
+      fixture check_missing_mode { mode: "nonexistent", verb: "navigate" } -> notfound
+    }
+
+    action list() {
+      -> ok(modes: String) {
+        Return all registered restriction profiles as a JSON array of
+        `{mode, restrictions}` records.
+      }
+
+      fixture list_all { } after define_read_only
+    }
+  }
+
+  example "define-then-check": {
+    after define(mode: "read-only", restrictions: "[\"submit\"]") -> ok(mode: m)
+    then check(mode: m, verb: "submit") -> ok(allowed: false)
+  }
+
+  example "full-access-allows-everything": {
+    after define(mode: "full-access", restrictions: "[]") -> ok(mode: m)
+    then check(mode: m, verb: "submit") -> ok(allowed: true)
+  }
+
+  example "unknown-mode-is-notfound": {
+    after check(mode: "never-defined", verb: "navigate") -> notfound(mode: "never-defined")
+    then list() -> ok(modes: _)
+  }
+
+  always "restrictions-is-valid-json": {
+    forall m in modes:
+      restrictionsFor(m) != none
+  }
+
+  never "orphan-restrictions": {
+    exists m in modes:
+      restrictionsFor(m) = none
+  }
+
+  action define {
+    requires: mode != ""
+    ensures ok: modes contains mode
+  }
+}

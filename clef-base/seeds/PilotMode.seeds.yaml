@@ -1,0 +1,29 @@
+# PilotMode restriction profiles (agents-as-subjects §9.3).
+#
+# Each mode encodes a JSON array of restricted Pilot verbs. Pilot consults
+# PilotMode/check(mode, verb) before delegating any surface action; an
+# `ok(allowed:false)` completion short-circuits the gate and returns
+# `ok(blocked:true)` to the caller without invoking the downstream concept.
+#
+# PilotMode is governance-owned, not Pilot-owned: bounded environments are
+# governance decisions ("this session may only navigate and read"), while
+# Pilot continues to own the verb vocabulary.
+
+concept: PilotMode
+action: define
+entries:
+  # read-only — agent may inspect and navigate but not mutate state.
+  - mode: read-only
+    restrictions: '["submit","fill","interact-mutating"]'
+
+  # navigate-only — agent may move through the app and consult the map
+  # but may not interact with any widget, invoke any action, or mutate
+  # state. Suitable for audit / crawl / reconnaissance sessions.
+  - mode: navigate-only
+    restrictions: '["submit","fill","interact","effect","dismiss"]'
+
+  # full-access — no restrictions. The principal's Authorization grants
+  # still gate downstream concept actions; PilotMode adds no additional
+  # restriction.
+  - mode: full-access
+    restrictions: '[]'
