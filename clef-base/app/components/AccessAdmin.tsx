@@ -100,16 +100,28 @@ export function AccessAdmin({ initial }: { initial: Snapshot }) {
             event.currentTarget.reset();
           }}
         >
-          <input name="user" placeholder="username" required />
-          <input name="password" type="password" placeholder="password" required />
-          <input name="provider" placeholder="provider" defaultValue="local" />
-          <select name="roles" multiple defaultValue={['viewer']}>
-            {snapshot.roles.map((role) => (
-              <option key={role.role} value={role.role}>
-                {role.role}
-              </option>
-            ))}
-          </select>
+          <label>
+            <span className="access-field-label">Username</span>
+            <input name="user" placeholder="username" required aria-label="Username" />
+          </label>
+          <label>
+            <span className="access-field-label">Password</span>
+            <input name="password" type="password" placeholder="password" required aria-label="Password" />
+          </label>
+          <label>
+            <span className="access-field-label">Provider</span>
+            <input name="provider" placeholder="provider" defaultValue="local" aria-label="Provider" />
+          </label>
+          <label>
+            <span className="access-field-label">Roles</span>
+            <select name="roles" multiple defaultValue={['viewer']} aria-label="Roles">
+              {snapshot.roles.map((role) => (
+                <option key={role.role} value={role.role}>
+                  {role.role}
+                </option>
+              ))}
+            </select>
+          </label>
           <button type="submit">Create or reset user</button>
         </form>
         <div className="access-table">
