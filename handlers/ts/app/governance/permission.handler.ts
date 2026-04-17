@@ -1,7 +1,10 @@
 // @clef-handler style=functional
 // @migrated dsl-constructs 2026-03-18
+// @deprecated Governance Permission is superseded by Authorization.
 // Permission Concept Handler
-// (who, where, what) grant model with optional conditions.
+// Historical (who, where, what) grant records. `grant` now returns a
+// `deprecated` variant for new writes; `check`/`revoke` remain available
+// for pre-existing records. See agents-as-subjects-refactor-plan §5.2.
 import type { FunctionalConceptHandler } from '../../../../runtime/functional-handler.ts';
 import {
   createProgram, get, find, put, del, branch, complete, completeFrom,
@@ -16,20 +19,17 @@ const _permissionHandler: FunctionalConceptHandler = {
     if (!input.who || (typeof input.who === 'string' && (input.who as string).trim() === '')) {
       return complete(createProgram(), 'error', { message: 'who is required' }) as StorageProgram<Result>;
     }
-    const { who, where, what, condition, grantedBy } = input;
-    const key = `${who}:${where}:${what}`;
-    let p = createProgram();
-    p = get(p, 'grant', key, 'existing');
 
-    p = branch(p, 'existing',
-      (b) => complete(b, 'already_granted', { permission: key }),
-      (b) => {
-        let b2 = put(b, 'grant', key, { who, where, what, condition, grantedBy, grantedAt: new Date().toISOString(), granted: true });
-        return complete(b2, 'ok', { permission: key });
+    // Governance Permission is deprecated: new writes are refused. Executable
+    // grants must go through Authorization/grantPermission instead.
+    return complete(
+      createProgram(),
+      'deprecated',
+      {
+        message:
+          'Permission/grant is deprecated; route executable access grants through Authorization/grantPermission.',
       },
-    );
-
-    return p as StorageProgram<Result>;
+    ) as StorageProgram<Result>;
   },
 
   revoke(input: Record<string, unknown>) {

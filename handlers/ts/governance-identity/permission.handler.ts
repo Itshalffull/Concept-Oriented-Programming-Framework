@@ -1,7 +1,10 @@
 // @clef-handler style=functional
+// @deprecated Governance Permission is superseded by Authorization.
 // Permission Concept Implementation
-// Control which identities can perform which actions on which targets,
-// with optional conditions.
+// Historical (who, where, what) grant records. `grant` now returns a
+// `deprecated` variant for new writes; `check`/`revoke` remain available
+// for pre-existing records. New executable grants MUST go through
+// Authorization/grantPermission. See agents-as-subjects-refactor-plan §5.2.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
   createProgram, get, put, del, find, branch, complete, completeFrom,
@@ -16,8 +19,6 @@ const _handler: FunctionalConceptHandler = {
     const who = input.who as string;
     const where = input.where as string;
     const what = input.what as string;
-    const condition = (input.condition as string) || null;
-    const grantedBy = input.grantedBy as string;
 
     if (!who || who.trim() === '') {
       return complete(createProgram(), 'error', { message: 'who is required' }) as StorageProgram<Result>;
@@ -29,30 +30,15 @@ const _handler: FunctionalConceptHandler = {
       return complete(createProgram(), 'error', { message: 'what is required' }) as StorageProgram<Result>;
     }
 
-    // Use composite key: who:where:what
-    const permKey = `${who.trim()}:${where.trim()}:${what.trim()}`;
-
-    let p = createProgram();
-    p = get(p, 'permission', permKey, 'existing');
-
-    return branch(p,
-      (bindings) => !!bindings.existing,
-      // Already granted
-      complete(createProgram(), 'ok', { permission: permKey }),
-      (() => {
-        let b = createProgram();
-        b = put(b, 'permission', permKey, {
-          id: permKey,
-          who: who.trim(),
-          where: where.trim(),
-          what: what.trim(),
-          condition: condition || null,
-          granted: true,
-          grantedAt: new Date().toISOString(),
-          grantedBy: grantedBy || '',
-        });
-        return complete(b, 'ok', { permission: permKey });
-      })(),
+    // Governance Permission is deprecated: new writes are refused. Executable
+    // grants must go through Authorization/grantPermission instead.
+    return complete(
+      createProgram(),
+      'deprecated',
+      {
+        message:
+          'Permission/grant is deprecated; route executable access grants through Authorization/grantPermission.',
+      },
     ) as StorageProgram<Result>;
   },
 

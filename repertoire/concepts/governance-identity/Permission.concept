@@ -1,10 +1,19 @@
 @version(1)
 # @fixtures-added
+# @deprecated Governance Permission duplicates executable access already
+# owned by Authorization (see agents-as-subjects-refactor-plan §5.2).
+# `grant` returns a `deprecated` variant for new writes; `check` and `revoke`
+# remain available as read-only / reversal operations for historical records.
+# New call sites MUST use Authorization/grantPermission instead.
 concept Permission [P] {
 
   purpose {
-    Control which identities can perform which actions on which targets,
-    with optional conditions.
+    [DEPRECATED] Historical record of (who, where, what) grants with
+    optional conditions. This concept duplicates executable access and
+    is superseded by Authorization. New executable access grants must
+    be written through Authorization/grantPermission; this concept's
+    `grant` action now returns `deprecated` to force migration while
+    preserving `check`/`revoke` for pre-existing records.
   }
 
   state {
@@ -24,52 +33,47 @@ concept Permission [P] {
 
   actions {
     action grant(who: String, where: String, what: String, condition: option String, grantedBy: String) {
-      -> ok(permission: P) {
-        A new permission grant is recorded. If an identical grant exists,
-        returns already_granted.
-      }
-      -> ok(permission: P) {
-        This exact permission already exists.
+      -> deprecated(message: String) {
+        [DEPRECATED] Governance Permission/grant is no longer accepted
+        for new writes. Route executable access grants through
+        Authorization/grantPermission instead.
       }
 
-      fixture grant_read_articles { who: "alice", where: "articles", what: "read", condition: "", grantedBy: "admin" }
+      fixture grant_read_articles { who: "alice", where: "articles", what: "read", condition: "", grantedBy: "admin" } -> deprecated
       fixture grant_empty_who { who: "", where: "articles", what: "read", grantedBy: "admin" } -> error
     }
 
     action revoke(permission: P) {
       -> ok(permission: P) {
-        The permission grant is removed.
+        The permission grant is removed (historical records only).
       }
       -> not_found(permission: P) {
         The permission does not exist.
       }
 
-      fixture revoke_existing { permission: "alice:articles:read" } after grant_read_articles
+      fixture revoke_existing { permission: "alice:articles:read" }
       fixture revoke_nonexistent { permission: "nonexistent:perm:key" } -> error
     }
 
     action check(who: String, where: String, what: String) {
       -> allowed(permission: P) {
-        A matching permission exists and any attached condition is satisfied.
+        A matching permission record exists (historical records only).
+        New executable checks must go through Authorization/checkPermission.
       }
       -> denied(who: String, where: String, what: String) {
-        No matching permission exists, or the condition is not satisfied.
+        No matching permission record exists.
       }
 
-      fixture check_allowed { who: "alice", where: "articles", what: "read" } after grant_read_articles
+      fixture check_allowed { who: "alice", where: "articles", what: "read" }
       fixture check_denied { who: "unknown-user", where: "articles", what: "delete" } -> error
     }
   }
 
   example "grant-then-check": {
 
-    after grant(who: w, where: t, what: a, condition: _, grantedBy: _) -> ok(permission: p)
+    after grant(who: w, where: t, what: a, condition: _, grantedBy: _) -> deprecated(message: _)
 
-        then check(who: w, where: t, what: a) -> allowed(permission: p)
-
-        and  revoke(permission: p) -> ok(permission: p)
-
-        and  check(who: w, where: t, what: a) -> denied(who: w, where: t, what: a)
+        then check(who: w, where: t, what: a) -> denied(who: w, where: t, what: a)
 
   }
 
@@ -94,7 +98,7 @@ concept Permission [P] {
 
     requires: who != ""
 
-    ensures granted: who != none
+    ensures deprecated: true
 
   }
 }
