@@ -26,6 +26,12 @@ import { useConceptQuery } from '../../lib/use-concept-query';
 import { useKernelInvoke, useNavigator } from '../../lib/clef-provider';
 import { ViewRenderer } from './ViewRenderer';
 import { ViewEditorToolbar } from './widgets/ViewEditorToolbar';
+import {
+  BindingEditor,
+  emptyBindingValue,
+  migrateBindingValue,
+  type BindingValue,
+} from './widgets/BindingEditor';
 import { ConceptActionPicker } from './widgets/ConceptActionPicker';
 import type { ConceptActionSpec as _ConceptActionSpec } from './widgets/ConceptActionPicker';
 
@@ -96,14 +102,20 @@ interface ControlsConfig {
     }>;
   };
   rowClick?: {
-    navigateTo: string;
+    /** Legacy href template, kept for back-compat; new editor uses `binding`. */
+    navigateTo?: string;
+    /** Action / UI Event / Composite binding fired on row click. */
+    binding?: BindingValue;
   };
   rowActions?: Array<{
     key: string;
     label: string;
-    concept: string;
-    action: string;
+    /** Legacy fields — kept for back-compat; new editor persists `binding`. */
+    concept?: string;
+    action?: string;
     params?: Record<string, string>;
+    /** Action / UI Event / Composite binding for this row action. */
+    binding?: BindingValue;
   }>;
   bulkActions?: Array<{
     key: string;
@@ -199,6 +211,93 @@ function paramTypeToFieldType(typeStr: string): FieldType {
 let _filterIdSeq = 1;
 function newFilterId(): string {
   return `filter-${Date.now()}-${_filterIdSeq++}`;
+}
+
+// ── BindingValue helpers for rowClick / rowActions ────────────────────────────
+
+/**
+ * Hydrate a rowClick config into a BindingValue. Legacy
+ * `{navigateTo: "..."}` becomes a UI-event Navigate binding whose
+ * params JSON carries the href template.
+ */
+function hydrateRowClickBinding(rc: ControlsConfig['rowClick']): BindingValue {
+  if (!rc) return { mode: 'ui-event', uiEvent: { kind: 'navigate', target: '', params: '{}' } };
+  if (rc.binding) return migrateBindingValue(rc.binding);
+  const href = rc.navigateTo ?? '';
+  return {
+    mode: 'ui-event',
+    uiEvent: {
+      kind: 'navigate',
+      target: '',
+      params: JSON.stringify({ href }),
+    },
+  };
+}
+
+/**
+ * Hydrate a rowAction config into a BindingValue. Legacy
+ * `{concept, action, params?}` becomes an Action-mode binding.
+ */
+function hydrateRowActionBinding(ra: {
+  concept?: string; action?: string; params?: Record<string, string>; binding?: BindingValue;
+}): BindingValue {
+  if (ra.binding) return migrateBindingValue(ra.binding);
+  return {
+    mode: 'action',
+    action: {
+      concept: ra.concept ?? '',
+      action: ra.action ?? '',
+      inputs: ra.params ?? {},
+    },
+  };
+}
+
+/**
+ * Project a BindingValue back into the legacy rowClick shape so existing
+ * consumers (ViewRenderer rowClick handler) keep working. Action-mode
+ * bindings project to navigateTo = "<concept>/<action>"; UI-event
+ * Navigate bindings project the href param to navigateTo.
+ */
+function serializeRowClickBinding(binding: BindingValue): NonNullable<ControlsConfig['rowClick']> {
+  if (binding.mode === 'ui-event' && binding.uiEvent?.kind === 'navigate') {
+    let href = '';
+    try {
+      const params = JSON.parse(binding.uiEvent.params || '{}');
+      if (typeof params.href === 'string') href = params.href;
+    } catch { /* ignore */ }
+    return { navigateTo: href, binding };
+  }
+  if (binding.mode === 'action' && binding.action) {
+    const navigateTo = binding.action.concept && binding.action.action
+      ? `${binding.action.concept}/${binding.action.action}`
+      : '';
+    return { navigateTo, binding };
+  }
+  return { navigateTo: '', binding };
+}
+
+type RowAction = NonNullable<ControlsConfig['rowActions']>[number];
+
+/**
+ * Project a BindingValue back into the legacy rowAction shape
+ * (concept/action/params) for existing consumers.
+ */
+function serializeRowActionBinding(
+  key: string,
+  label: string,
+  binding: BindingValue,
+): RowAction {
+  if (binding.mode === 'action' && binding.action) {
+    return {
+      key,
+      label,
+      concept: binding.action.concept,
+      action: binding.action.action,
+      params: binding.action.inputs,
+      binding,
+    };
+  }
+  return { key, label, concept: '', action: '', binding };
 }
 
 // ── Hook: concept state fields from ScoreApi ─────────────────────────────────
@@ -1216,26 +1315,30 @@ const ControlsConfigurator: React.FC<{
               checked={!!controls.rowClick}
               onChange={(e) => {
                 if (e.target.checked) {
-                  onChange({ ...controls, rowClick: { navigateTo: '' } });
+                  onChange({ ...controls, rowClick: serializeRowClickBinding({
+                    mode: 'ui-event',
+                    uiEvent: { kind: 'navigate', target: '', params: '{}' },
+                  }) });
                 } else {
                   const { rowClick: _, ...rest } = controls;
                   onChange(rest);
                 }
               }}
             />
-            <span style={{ fontSize: 'var(--typography-body-sm-size)' }}>Enable row click navigation</span>
+            <span style={{ fontSize: 'var(--typography-body-sm-size)' }}>Enable row click binding</span>
           </div>
           {controls.rowClick && (
             <div>
               <label style={{ ...labelStyle, fontSize: 'var(--typography-label-sm-size)' }}>
-                Navigate to <span style={{ fontWeight: 'normal', color: 'var(--palette-on-surface-variant)' }}>(use {'{field}'} for row values)</span>
+                Binding <span style={{ fontWeight: 'normal', color: 'var(--palette-on-surface-variant)' }}>
+                  (Action, UI Event, or Composite — Navigate params use {'{field}'} for row values)
+                </span>
               </label>
-              <input
-                type="text"
-                value={controls.rowClick.navigateTo}
-                onChange={(e) => onChange({ ...controls, rowClick: { navigateTo: e.target.value } })}
-                placeholder="/content/{node}"
-                style={inputStyle}
+              <BindingEditor
+                value={hydrateRowClickBinding(controls.rowClick)}
+                onChange={(binding) =>
+                  onChange({ ...controls, rowClick: serializeRowClickBinding(binding) })
+                }
               />
             </div>
           )}
@@ -1248,33 +1351,42 @@ const ControlsConfigurator: React.FC<{
           Row Actions
         </h4>
         {(controls.rowActions ?? []).length > 0 && (
-          <div style={{ marginBottom: 'var(--spacing-xs)' }}>
-            <div style={{ ...actionRowStyle, gridTemplateColumns: '1fr 1fr auto', marginBottom: 'var(--spacing-xs)' }}>
-              <label style={{ ...labelStyle, fontSize: 'var(--typography-label-sm-size)', marginBottom: 0 }}>Label</label>
-              <label style={{ ...labelStyle, fontSize: 'var(--typography-label-sm-size)', marginBottom: 0 }}>Concept / Action</label>
-              <span />
-            </div>
+          <div style={{ marginBottom: 'var(--spacing-xs)', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
             {(controls.rowActions ?? []).map((ra, i) => (
-              <div key={ra.key} style={{ ...actionRowStyle, gridTemplateColumns: '1fr 1fr auto' }}>
-                <input
-                  type="text"
-                  value={ra.label}
-                  onChange={(e) => updateRowAction(i, 'label', e.target.value)}
-                  placeholder="e.g. Archive"
-                  style={{ ...inputStyle, fontSize: 'var(--typography-body-sm-size)' }}
-                />
-                <ConceptActionPicker
-                  value={ra.concept && ra.action ? { concept: ra.concept, action: ra.action } : undefined}
-                  onChange={(v) => {
-                    updateRowAction(i, 'concept', v.concept);
-                    updateRowAction(i, 'action', v.action);
+              <div
+                key={ra.key}
+                style={{
+                  border: '1px solid var(--palette-outline-variant)',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: 'var(--spacing-sm)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 'var(--spacing-xs)',
+                }}
+              >
+                <div style={{ display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'center' }}>
+                  <input
+                    type="text"
+                    value={ra.label}
+                    onChange={(e) => updateRowAction(i, 'label', e.target.value)}
+                    placeholder="Label — e.g. Archive"
+                    style={{ ...inputStyle, fontSize: 'var(--typography-body-sm-size)', flex: 1 }}
+                  />
+                  <button onClick={() => removeRowAction(i)} style={removeButtonStyle}>
+                    Remove
+                  </button>
+                </div>
+                <BindingEditor
+                  value={hydrateRowActionBinding(ra)}
+                  onChange={(binding) => {
+                    const next = (controls.rowActions ?? []).map((row, idx) =>
+                      idx === i
+                        ? serializeRowActionBinding(row.key, row.label, binding)
+                        : row,
+                    );
+                    onChange({ ...controls, rowActions: next });
                   }}
-                  filter="all"
-                  placeholder="Search actions…"
                 />
-                <button onClick={() => removeRowAction(i)} style={removeButtonStyle}>
-                  Remove
-                </button>
               </div>
             ))}
           </div>
