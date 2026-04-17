@@ -14,6 +14,8 @@ import { keyBindingHandler } from '../../handlers/ts/app/key-binding.handler';
 import { keybindingPresetHandler } from '../../handlers/ts/app/keybinding-preset.handler';
 import { actionBindingHandler } from '../../handlers/ts/app/action-binding.handler';
 import { uiEventBindingHandler } from '../../handlers/ts/app/ui-event-binding.handler';
+import { pilotHandler } from '../../handlers/ts/surface/pilot.handler';
+import { pageMapHandler } from '../../handlers/ts/surface/page-map.handler';
 import { textSpanHandler } from '../../handlers/ts/app/text-span.handler';
 import { inputRuleHandler } from '../../handlers/ts/app/input-rule.handler';
 import { testGenerationHandler } from '../../handlers/ts/repertoire/testing/test-generation.handler';
@@ -36,6 +38,8 @@ import { agentSessionHandler } from '../../handlers/ts/app/agent-session.handler
 import { agentTriggerHandler } from '../../handlers/ts/app/agent-trigger.handler';
 import { agentRegistrationHandler } from '../../handlers/ts/app/agent-registration.handler';
 import { constitutionHandler } from '../../handlers/ts/llm-agent/constitution.handler';
+// Identity — Subject unification layer
+import { subjectHandler } from '../../handlers/ts/app/identity/subject.handler';
 // Governance Platform
 import { proposalHandler } from '../../handlers/ts/app/governance/proposal.handler';
 import { policyHandler } from '../../handlers/ts/app/governance/policy.handler';
@@ -140,6 +144,22 @@ const SUPPLEMENTAL_REGISTRY_ENTRIES = [
     uri: 'urn:clef/UIEventBinding',
     handler: uiEventBindingHandler,
     storageName: 'ui-event-binding',
+    storageType: 'standard' as const,
+  },
+  // Surface — Pilot shares page-map storage so snapshot() can read the
+  // entries and page_binding relations registered by PageMap/register and
+  // PageMap/registerBinding. Both handlers must agree on the storage
+  // namespace for in-kernel cross-reads.
+  {
+    uri: 'urn:clef/Pilot',
+    handler: pilotHandler,
+    storageName: 'page-map',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/PageMap',
+    handler: pageMapHandler,
+    storageName: 'page-map',
     storageType: 'standard' as const,
   },
   {
@@ -258,6 +278,16 @@ const SUPPLEMENTAL_REGISTRY_ENTRIES = [
     uri: 'urn:clef/AgentRegistration',
     handler: agentRegistrationHandler,
     storageName: 'agent-registration',
+    storageType: 'standard' as const,
+  },
+  // Identity — Subject unification layer (MAG-952)
+  // All acting principals (human users, registered agents, service accounts)
+  // project into Subject via syncs. Cross-cutting consumers (auth, audit,
+  // rate limiting) query Subject rather than each source concept.
+  {
+    uri: 'urn:clef/Subject',
+    handler: subjectHandler,
+    storageName: 'subject',
     storageType: 'standard' as const,
   },
   {
@@ -433,8 +463,10 @@ const SUPPLEMENTAL_SYNC_FILES = [
   // Bridge createWithSchema → Schema storage so Schema/listMemberships reflects
   // nodes created via ContentNode/createWithSchema (fixes schemas: [] in ViewRenderer).
   'clef-base/suites/entity-lifecycle/syncs/content-node-create-applies-schema.sync',
-  // AgentRegistration → Subject projection (dead-fires until MAG-952 registers Subject).
+  // AgentRegistration → Subject projection.
   'syncs/identity/agent-registration-to-subject.sync',
+  // User → Subject projection (human principals from User/register).
+  'syncs/identity/user-to-subject.sync',
 ];
 
 // process.cwd() is the clef-base/ dir when Next.js runs; __filename

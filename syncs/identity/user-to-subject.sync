@@ -1,0 +1,18 @@
+// User -> Subject reverse-projection.
+//
+// When a User registers, project it into Subject as a "human" identity so
+// that cross-cutting consumers (authorization, audit, rate limiting) can
+// query Subject without knowing about the User concept. The backingRef
+// follows the convention "user:{user}" to make the origin transparent.
+
+sync UserRegisterUnifySubject [eager]
+when {
+  User/register: [ user: ?user ]
+    => [ user: ?user ]
+}
+then {
+  Subject/unify: [
+    kind: "human";
+    backingRef: concat("user:", ?user)
+  ]
+}

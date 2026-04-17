@@ -1,0 +1,17 @@
+# View seed for the Subject identity surface.
+# Backs the /admin/identity/subjects destination and reads from
+# Subject/list which returns every registered principal regardless
+# of kind or status.
+
+concept: View
+action: create
+entries:
+  - view: subjects-list
+    dataSource: '{"concept":"Subject","action":"list","params":{}}'
+    layout: table
+    visibleFields: '[{"key":"subject","label":"Subject","formatter":"code"},{"key":"kind","label":"Kind","formatter":"badge"},{"key":"backingRef","label":"Backing Ref","formatter":"code"},{"key":"status","label":"Status","formatter":"badge"},{"key":"ownerRef","label":"Owner","formatter":"code"}]'
+    controls: '{}'
+    title: Identity Subjects
+    description: Unified identity surface — all acting principals (human users, registered agents, service accounts) projected from their source concepts into a single authoritative record. Used by authorization, audit, and rate-limiting consumers.
+    defaultDisplayMode: table-row
+    filters: '[{"field":"kind","label":"Kind","type":"toggle-group"},{"field":"status","label":"Status","type":"toggle-group"}]'

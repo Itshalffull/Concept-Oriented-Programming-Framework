@@ -1,0 +1,42 @@
+# Example Subject entries for admin surfaces and integration tests.
+# Demonstrates the three principal kinds (human, agent, service) and the
+# three lifecycle statuses (active, disabled, revoked).
+#
+# In production these entries are projected automatically by syncs:
+#   User/register         -> Subject/unify (user-to-subject.sync)
+#   AgentRegistration/register -> Subject/unify (agent-registration-to-subject.sync)
+# The seeds below allow the admin identity surface to render without
+# requiring those upstream source concepts to be seeded first.
+
+concept: Subject
+action: unify
+entries:
+  - subject: subject-admin-001
+    kind: human
+    backingRef: "user:admin"
+    ownerRef: ~
+  - subject: subject-admin-002
+    kind: human
+    backingRef: "user:admin-2"
+    ownerRef: ~
+  - subject: subject-agent-research-001
+    kind: agent
+    backingRef: "agent:agent-research-001"
+    ownerRef: subject-admin-001
+  - subject: subject-agent-ops-001
+    kind: agent
+    backingRef: "agent:agent-ops-001"
+    ownerRef: subject-admin-001
+  - subject: subject-svc-api-gateway
+    kind: service
+    backingRef: "service:api-gateway"
+    ownerRef: ~
+
+---
+
+# Disable the ops agent subject — mirrors AgentRegistration disable.
+concept: Subject
+action: updateStatus
+entries:
+  - id: subject-agent-ops-001
+    status: disabled

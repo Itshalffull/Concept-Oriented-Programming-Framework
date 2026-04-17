@@ -1,0 +1,13 @@
+# Identity destination entries for the shell navigation.
+
+concept: DestinationCatalog
+action: register
+entries:
+  # Subjects — unified principal identity surface (MAG-952)
+  - destination: subjects
+    name: subjects
+    targetConcept: Subject
+    targetView: subjects-list
+    href: /admin/identity/subjects
+    icon: "id"
+    group: Identity

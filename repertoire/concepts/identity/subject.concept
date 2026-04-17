@@ -1,0 +1,258 @@
+# @fixtures-added
+@version(1)
+@category("identity")
+concept Subject [S] {
+
+  purpose {
+    Unify all acting principals — human users, registered agents, and
+    service accounts — into a single authoritative identity surface.
+    Cross-cutting consumers such as authorization, rate limiting, and
+    audit query Subject rather than each source concept. Source
+    concepts project their identity facts into Subject through syncs.
+  }
+
+  state {
+    subjects: set S
+    identity {
+      kind: S -> "human" | "agent" | "service"
+      backingRef: S -> String
+      status: S -> "active" | "disabled" | "revoked"
+      ownerRef: S -> option String
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+
+    action register(subject: option S, kind: String, backingRef: String, ownerRef: option String) {
+      -> ok(subject: S) {
+        Mint a new Subject entry for the given principal. The subject
+        identifier is used verbatim when provided, or synthesised from
+        the backingRef. The entry starts in status "active".
+      }
+      -> duplicate(message: String) {
+        A Subject already exists with this identifier.
+      }
+      -> invalid(message: String) {
+        The kind or backingRef is empty or the kind value is not one of
+        "human", "agent", or "service".
+      }
+
+      fixture register_human {
+        subject: "subject-admin-001",
+        kind: "human",
+        backingRef: "user:alice",
+        ownerRef: none
+      }
+      fixture register_agent {
+        subject: "subject-agent-001",
+        kind: "agent",
+        backingRef: "agent:agent-research-001",
+        ownerRef: "subject-admin-001"
+      }
+      fixture register_duplicate {
+        subject: $register_human.subject,
+        kind: "human",
+        backingRef: "user:alice",
+        ownerRef: none
+      } after register_human -> duplicate
+      fixture register_empty_kind {
+        subject: "subject-bad-001",
+        kind: "",
+        backingRef: "user:bob",
+        ownerRef: none
+      } -> invalid
+      fixture register_empty_ref {
+        subject: "subject-bad-002",
+        kind: "human",
+        backingRef: "",
+        ownerRef: none
+      } -> invalid
+      fixture register_bad_kind {
+        subject: "subject-bad-003",
+        kind: "robot",
+        backingRef: "robot:r2d2",
+        ownerRef: none
+      } -> invalid
+    }
+
+    action unify(subject: option S, kind: String, backingRef: String, ownerRef: option String) {
+      -> ok(subject: S) {
+        Idempotent create-or-return. If a Subject already exists whose
+        backingRef matches the given value, return it unchanged. Otherwise
+        mint a new Subject entry exactly as register would.
+      }
+      -> invalid(message: String) {
+        The kind or backingRef is empty or the kind value is not one of
+        "human", "agent", or "service".
+      }
+
+      fixture unify_new {
+        subject: "subject-svc-001",
+        kind: "service",
+        backingRef: "service:api-gateway",
+        ownerRef: none
+      }
+      fixture unify_idempotent {
+        subject: $unify_new.subject,
+        kind: "service",
+        backingRef: "service:api-gateway",
+        ownerRef: none
+      } after unify_new
+      fixture unify_invalid_kind {
+        subject: "subject-bad-004",
+        kind: "",
+        backingRef: "service:x",
+        ownerRef: none
+      } -> invalid
+    }
+
+    action updateStatus(id: S, status: String) {
+      -> ok(subject: S, status: String) {
+        Transition the Subject's lifecycle status to the given value.
+        Accepted values are "active", "disabled", and "revoked".
+      }
+      -> notfound(message: String) {
+        No Subject exists with this identifier.
+      }
+      -> invalid(message: String) {
+        The status value is empty or is not one of the three accepted values.
+      }
+
+      fixture update_status_ok {
+        id: $register_human.subject,
+        status: "disabled"
+      } after register_human
+      fixture update_status_missing {
+        id: "subject-nonexistent",
+        status: "disabled"
+      } -> notfound
+      fixture update_status_empty {
+        id: $register_human.subject,
+        status: ""
+      } after register_human -> invalid
+      fixture update_status_bad {
+        id: $register_human.subject,
+        status: "suspended"
+      } after register_human -> invalid
+    }
+
+    action updateOwner(id: S, ownerRef: String) {
+      -> ok(subject: S, ownerRef: String) {
+        Set or replace the ownerRef on an existing Subject, transferring
+        its logical ownership to the given principal reference.
+      }
+      -> notfound(message: String) {
+        No Subject exists with this identifier.
+      }
+      -> invalid(message: String) {
+        The ownerRef string is empty.
+      }
+
+      fixture update_owner_ok {
+        id: $register_agent.subject,
+        ownerRef: "subject-admin-002"
+      } after register_agent
+      fixture update_owner_missing {
+        id: "subject-nonexistent",
+        ownerRef: "subject-admin-001"
+      } -> notfound
+      fixture update_owner_empty {
+        id: $register_agent.subject,
+        ownerRef: ""
+      } after register_agent -> invalid
+    }
+
+    action get(subject: S) {
+      -> ok(kind: String, backingRef: String, status: String, ownerRef: option String) {
+        Return the current identity record for the Subject — kind, backing
+        reference, lifecycle status, and optional owner.
+      }
+      -> notfound(message: String) {
+        No Subject exists with this identifier.
+      }
+
+      fixture get_ok {
+        subject: $register_human.subject
+      } after register_human
+      fixture get_missing {
+        subject: "subject-nonexistent"
+      } -> notfound
+    }
+
+    action list() {
+      -> ok(subjects: String) {
+        Return every Subject as a JSON array regardless of kind or status.
+        Returns ok with "[]" when no subjects have been registered.
+      }
+
+      fixture list_ok {} after register_human
+      fixture list_empty {}
+    }
+
+    action listByKind(kind: String) {
+      -> ok(subjects: String) {
+        Return all Subjects whose kind matches the given value as a JSON
+        array. Returns ok with "[]" when none match.
+      }
+      -> invalid(message: String) {
+        The kind string is empty.
+      }
+
+      fixture list_by_kind_ok {
+        kind: "human"
+      } after register_human
+      fixture list_by_kind_empty {
+        kind: "service"
+      }
+      fixture list_by_kind_invalid {
+        kind: ""
+      } -> invalid
+    }
+
+  }
+
+  example "register-then-get": {
+    after register(subject: s, kind: "human", backingRef: "user:alice", ownerRef: none) -> ok(subject: s)
+    then get(subject: s) -> ok(kind: "human", backingRef: "user:alice", status: "active", ownerRef: none)
+  }
+
+  example "unify-is-idempotent": {
+    after unify(subject: s, kind: "agent", backingRef: "agent:r1", ownerRef: none) -> ok(subject: s)
+    then unify(subject: s, kind: "agent", backingRef: "agent:r1", ownerRef: none) -> ok(subject: s)
+  }
+
+  example "status-update-visible": {
+    after register(subject: s, kind: "human", backingRef: "user:bob", ownerRef: none) -> ok(subject: s)
+        and updateStatus(id: s, status: "disabled") -> ok(subject: s, status: "disabled")
+    then get(subject: s) -> ok(status: "disabled")
+  }
+
+  always "subjects-have-valid-kind": {
+    forall s in subjects:
+      s.kind in {"human", "agent", "service"}
+  }
+
+  always "subjects-have-valid-status": {
+    forall s in subjects:
+      s.status in {"active", "disabled", "revoked"}
+  }
+
+  never "subjects-have-empty-backing-ref": {
+    exists s in subjects:
+      s.backingRef = ""
+  }
+
+  action register {
+    requires: backingRef != ""
+    ensures ok: subject in subjects
+  }
+
+  action unify {
+    requires: backingRef != ""
+    ensures ok: subject in subjects
+  }
+}
