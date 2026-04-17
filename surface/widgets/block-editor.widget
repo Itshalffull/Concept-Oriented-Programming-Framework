@@ -374,6 +374,25 @@ widget block-editor {
       and root.dataState = "editing-block"
     }
 
+    example "Tab-indenting a parent block carries all descendant blocks": {
+      after keypress(key: "Tab", target: "focused-block") -> ok
+      then "focused-block".depth = "focused-block".initialDepth + 1
+      and forall c in "focused-block".descendantBlocks:
+        c.depth = c.initialDepth + 1
+    }
+
+    example "Shift+Tab-outdenting a parent block carries all descendant blocks": {
+      after keypress(key: "Shift+Tab", target: "focused-block") -> ok
+      then "focused-block".depth = "focused-block".initialDepth - 1
+      and forall c in "focused-block".descendantBlocks:
+        c.depth = c.initialDepth - 1
+    }
+
+    never "a descendant block's depth is inconsistent with its ancestor after indent or outdent": {
+      exists block in contentArea.blocks:
+        block.depth != block.parent.depth + 1
+    }
+
     never "modal-less popover snatches focus on mount": {
       panel.modal = false
       and panel.focused = true
