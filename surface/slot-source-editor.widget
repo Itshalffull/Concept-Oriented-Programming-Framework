@@ -1,0 +1,117 @@
+@version(1)
+widget slot-source-editor {
+
+  purpose {
+    Editor for configuring slot bindings, prop bindings, and action bindings
+    on a ComponentMapping. Action bindings support three modes via progressive
+    disclosure: a simple Action reference (plain ActionBinding id), a UI Event
+    (one of the nine canonical surface effects), and a Composite sequence
+    (ordered list of Action and/or UI Event steps invoked in sequence).
+    The editor starts in simple mode and exposes the binding-kind selector
+    only when the user activates the Advanced toggle.
+  }
+
+  anatomy {
+    root:              container     { Top-level wrapper containing all three binding sections }
+    slotSection:       container     { Section listing and editing slot bindings }
+    slotRow:           container     { A single slot and its ordered source list }
+    slotNameInput:     interactive   { Text input for the slot name }
+    sourceRow:         interactive   { A single source with type selector and value input }
+    addSourceButton:   action        { Button that appends a new source to a slot }
+    addSlotButton:     action        { Button that appends a new slot row }
+    propSection:       container     { Section listing and editing prop bindings }
+    propRow:           interactive   { A single prop binding with name, type, and value }
+    addPropButton:     action        { Button that appends a new prop binding row }
+    actionSection:     container     { Section listing and editing action bindings }
+    actionRow:         container     { A single action-part to binding mapping }
+    actionPartInput:   interactive   { Text input for the widget action-part name }
+    bindingEditor:     container     { Embedding of the binding-kind editor for a single action binding }
+    advancedToggle:    action        { Button that exposes the binding-kind mode selector }
+    simpleToggle:      action        { Button that collapses back to simple action-ref mode }
+    modeSelector:      interactive   { Segmented control selecting Action, UI Event, or Composite }
+    actionRefInput:    interactive   { Text input for the ActionBinding reference id (Action mode) }
+    uiEventKindSelect: interactive   { Dropdown selecting one of the nine canonical UI effect kinds }
+    uiEventTargetInput: interactive  { Text input for the UIEvent target (Action mode or UI Event mode) }
+    uiEventParamsInput: interactive  { Text input for the UIEvent params JSON }
+    compositeList:     container     { Ordered list of composite steps }
+    compositeStepRow:  container     { A single composite step with its mode and fields }
+    addStepButton:     action        { Button that appends a new composite step }
+    addActionBindingButton: action   { Button that opens the new-action-binding form }
+    newBindingForm:    container     { Inline form for creating a new action binding }
+    saveButton:        action        { Saves all bindings to the kernel }
+    cancelButton:      action        { Discards unsaved changes and closes the editor }
+  }
+
+  states {
+    save {
+      idle [initial] {
+        on SAVE -> saving;
+        on CANCEL -> idle;
+      }
+      saving {
+        on SAVE_OK -> saved;
+        on SAVE_ERROR -> error;
+      }
+      saved {
+        on RESET -> idle;
+      }
+      error {
+        on RETRY -> saving;
+        on RESET -> idle;
+      }
+    }
+    addActionBinding {
+      closed [initial] {
+        on OPEN -> open;
+      }
+      open {
+        on COMMIT -> closed;
+        on CANCEL -> closed;
+      }
+    }
+    bindingMode {
+      simple [initial] {
+        on SHOW_ADVANCED -> advanced;
+      }
+      advanced {
+        on SHOW_SIMPLE -> simple;
+      }
+    }
+  }
+
+  accessibility {
+    role: form
+    keyboard {
+      Enter -> saveButton.click
+    }
+  }
+
+  invariant {
+    always "action-binding editor shows both Action and UI-event options": {
+      forall row in actionSection:
+        advancedToggle.visible = true or modeSelector.visible = true
+    }
+
+    always "composite binding stores steps in order": {
+      forall b in compositeList:
+        b.steps.orderedByIndex = true
+    }
+
+    never "composite binding silently drops a step on save": {
+      exists b in compositeList:
+        b.stepCountBefore > b.stepCountAfterSave
+    }
+
+    always "simple mode shows action-ref input and hides mode selector": {
+      bindingMode = "simple" implies
+        actionRefInput.visible = true and
+        modeSelector.visible = false
+    }
+
+    never "save proceeds with no action-part name": {
+      exists ab in actionSection:
+        ab.actionPart = "" and ab.savedToKernel = true
+    }
+  }
+
+}
