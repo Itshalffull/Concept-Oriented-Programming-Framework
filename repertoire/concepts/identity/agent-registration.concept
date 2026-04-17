@@ -1,0 +1,267 @@
+# @fixtures-added
+@version(1)
+concept AgentRegistration [A] {
+
+  purpose {
+    Register and manage agent principals as durable acting identities.
+    An agent registration is the source-of-truth principal record for an
+    agent, separate from authored persona content and separate from live
+    `AgentSession` runtime state.
+  }
+
+  state {
+    registrations: set A
+    displayName: A -> String
+    status: A -> "active" | "disabled" | "revoked"
+    personaRef: A -> option String
+    ownerSubject: A -> String
+    agentClass: A -> String
+    metadata: A -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(agent: option A, displayName: String, ownerSubject: String, agentClass: String, personaRef: option String, metadata: String) {
+      -> ok(agent: A) {
+        Create a durable agent principal owned by the given subject. The
+        registration starts in status "active" and may optionally point at a
+        persona page that shapes later runtime behavior.
+      }
+      -> duplicate(message: String) {
+        A registration already exists with the supplied agent identifier.
+      }
+      -> invalid(message: String) {
+        A required field is empty or malformed, so the registration cannot be created.
+      }
+
+      fixture register_research_agent {
+        agent: "agent-research-001",
+        displayName: "Research Assistant",
+        ownerSubject: "subject-admin-001",
+        agentClass: "knowledge-worker",
+        personaRef: "persona-research-assistant",
+        metadata: "{\"tier\":\"standard\"}"
+      }
+      fixture register_minimal_agent {
+        agent: "agent-minimal-001",
+        displayName: "Minimal Agent",
+        ownerSubject: "subject-admin-001",
+        agentClass: "generic",
+        personaRef: none,
+        metadata: "{}"
+      }
+      fixture register_duplicate_agent {
+        agent: $register_research_agent.agent,
+        displayName: "Research Assistant Clone",
+        ownerSubject: "subject-admin-001",
+        agentClass: "knowledge-worker",
+        personaRef: none,
+        metadata: "{}"
+      } after register_research_agent -> duplicate
+      fixture register_empty_name {
+        agent: "agent-bad-001",
+        displayName: "",
+        ownerSubject: "subject-admin-001",
+        agentClass: "generic",
+        personaRef: none,
+        metadata: "{}"
+      } -> invalid
+    }
+
+    action setPersona(agent: A, personaRef: option String) {
+      -> ok(agent: A, personaRef: option String) {
+        Update which persona page the agent principal points to. Use `none`
+        when the agent should no longer inherit authored persona behavior.
+      }
+      -> notfound(message: String) {
+        No agent registration exists with this identifier.
+      }
+      -> invalid(message: String) {
+        The persona reference is malformed.
+      }
+
+      fixture set_persona {
+        agent: $register_minimal_agent.agent,
+        personaRef: "persona-note-writer"
+      } after register_minimal_agent
+      fixture clear_persona {
+        agent: $register_research_agent.agent,
+        personaRef: none
+      } after register_research_agent
+      fixture set_persona_missing {
+        agent: "agent-missing",
+        personaRef: "persona-note-writer"
+      } -> notfound
+      fixture set_persona_invalid {
+        agent: $register_minimal_agent.agent,
+        personaRef: ""
+      } after register_minimal_agent -> invalid
+    }
+
+    action disable(agent: A) {
+      -> ok(agent: A) {
+        Mark the agent principal as disabled without destroying its registration.
+        Disabled agents remain inspectable but should not be used for new session spawn.
+      }
+      -> notfound(message: String) {
+        No agent registration exists with this identifier.
+      }
+
+      fixture disable_registered {
+        agent: $register_research_agent.agent
+      } after register_research_agent
+      fixture disable_missing {
+        agent: "agent-missing"
+      } -> notfound
+    }
+
+    action revoke(agent: A) {
+      -> ok(agent: A) {
+        Mark the agent principal as revoked. Revoked registrations remain in
+        history but should be treated as no longer valid for delegated execution.
+      }
+      -> notfound(message: String) {
+        No agent registration exists with this identifier.
+      }
+
+      fixture revoke_registered {
+        agent: $register_research_agent.agent
+      } after register_research_agent
+      fixture revoke_missing {
+        agent: "agent-missing"
+      } -> notfound
+    }
+
+    action get(agent: A) {
+      -> ok(displayName: String, status: String, personaRef: option String, ownerSubject: String, agentClass: String, metadata: String) {
+        Return the current principal record for the agent, including ownership,
+        status, persona binding, and opaque metadata.
+      }
+      -> notfound(message: String) {
+        No agent registration exists with this identifier.
+      }
+
+      fixture get_registered {
+        agent: $register_research_agent.agent
+      } after register_research_agent
+      fixture get_missing {
+        agent: "agent-missing"
+      } -> notfound
+    }
+
+    action listByOwner(ownerSubject: String) {
+      -> ok(registrations: String) {
+        Return all agent principal records owned by the given subject as a JSON array.
+      }
+      -> notfound(message: String) {
+        No registered agents are owned by this subject.
+      }
+      -> invalid(message: String) {
+        The owner subject is missing.
+      }
+
+      fixture list_owned_agents {
+        ownerSubject: "subject-admin-001"
+      } after register_research_agent
+      fixture list_unowned {
+        ownerSubject: "subject-nobody"
+      } -> notfound
+      fixture list_empty_owner {
+        ownerSubject: ""
+      } -> invalid
+    }
+
+    action list() {
+      -> ok(registrations: String) {
+        Return every agent principal record as a JSON array, regardless of
+        owner or status. Admin/governance surfaces use this to inventory all
+        agent identities. Empty result still returns ok with "[]".
+      }
+
+      fixture list_all {} after register_research_agent
+      fixture list_all_empty {}
+    }
+
+    action setOwner(agent: A, owner: String) {
+      -> ok(agent: A, owner: String) {
+        Transfer the agent principal to a new owning subject. Useful for
+        org/group re-homing and off-boarding flows.
+      }
+      -> notfound(message: String) {
+        No agent registration exists with this identifier.
+      }
+      -> invalid(message: String) {
+        The owner subject is missing or malformed.
+      }
+
+      fixture transfer_ownership {
+        agent: $register_research_agent.agent,
+        owner: "subject-admin-002"
+      } after register_research_agent
+      fixture set_owner_missing {
+        agent: "agent-missing",
+        owner: "subject-admin-002"
+      } -> notfound
+      fixture set_owner_invalid {
+        agent: $register_research_agent.agent,
+        owner: ""
+      } after register_research_agent -> invalid
+    }
+  }
+
+  example "register-then-get": {
+
+    after register(agent: a, displayName: "Research Assistant", ownerSubject: "subject-admin-001", agentClass: "knowledge-worker", personaRef: "persona-research-assistant", metadata: "{}") -> ok(agent: a)
+
+        then get(agent: a) -> ok(displayName: "Research Assistant", status: "active", personaRef: "persona-research-assistant", ownerSubject: "subject-admin-001", agentClass: "knowledge-worker", metadata: "{}")
+
+  }
+
+  example "register-then-disable": {
+
+    after register(agent: a, displayName: "Ops Agent", ownerSubject: "subject-admin-001", agentClass: "operations", personaRef: none, metadata: "{}") -> ok(agent: a)
+
+        and disable(agent: a) -> ok(agent: a)
+
+        then get(agent: a) -> ok(displayName: "Ops Agent", status: "disabled", personaRef: none, ownerSubject: "subject-admin-001", agentClass: "operations", metadata: "{}")
+
+  }
+
+  example "register-then-revoke": {
+
+    after register(agent: a, displayName: "Ops Agent", ownerSubject: "subject-admin-001", agentClass: "operations", personaRef: none, metadata: "{}") -> ok(agent: a)
+
+        and revoke(agent: a) -> ok(agent: a)
+
+        then get(agent: a) -> ok(displayName: "Ops Agent", status: "revoked", personaRef: none, ownerSubject: "subject-admin-001", agentClass: "operations", metadata: "{}")
+
+  }
+
+  always "registered-agents-have-owner" {
+
+    forall a in registrations:
+
+      a.ownerSubject != none
+
+  }
+
+  never "registered-agents-have-empty-status" {
+
+    exists a in registrations:
+
+      a.status = none
+
+  }
+
+  action register {
+
+    requires: displayName != ""
+    requires: ownerSubject != ""
+    requires: agentClass != ""
+    ensures ok: agent in registrations
+
+  }
+}
