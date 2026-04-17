@@ -148,6 +148,40 @@ const _handler: FunctionalConceptHandler = {
     );
   },
 
+  // Fast-path used by Pilot/effect shorthand. Does NOT read or write any
+  // bindings relation; simply validates the same kind whitelist and params
+  // JSON as bind() and then emits a completion record with the same field
+  // shape as invoke(ok), so the DispatchUIEvent* syncs fire uniformly.
+  invokeInline(input: Record<string, unknown>) {
+    const kind    = (input.kind    as string) ?? '';
+    const target  = (input.target  as string) ?? '';
+    const params  = (input.params  as string) ?? '{}';
+    const context = (input.context as string) ?? '{}';
+
+    if (!kind || !VALID_KINDS.has(kind.trim())) {
+      return complete(createProgram(), 'invalid_kind', {
+        message: `kind must be one of: ${[...VALID_KINDS].join(', ')}`,
+      });
+    }
+
+    try {
+      JSON.parse(params);
+    } catch {
+      return complete(createProgram(), 'invalid_kind', {
+        message: 'params must be valid JSON',
+      });
+    }
+
+    const synthBinding = `inline:${kind.trim()}:${target}`;
+    return complete(createProgram(), 'ok', {
+      binding: synthBinding,
+      kind:    kind.trim(),
+      target,
+      params,
+      context,
+    });
+  },
+
 };
 
 export const uiEventBindingHandler = autoInterpret(_handler);

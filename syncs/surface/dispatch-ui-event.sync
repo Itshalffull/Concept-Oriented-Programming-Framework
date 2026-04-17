@@ -135,3 +135,100 @@ when {
 then {
   Notification/notify: [ notification: ?variant; user: ""; template: ?variant; data: ?p ]
 }
+
+// ───────────────────────────────────────────────────────────────────────────
+// Inline fast-path — UIEventBinding/invokeInline mirrors every DispatchUIEvent*
+// sync above. The two paths share the same routing table so that a Pilot
+// shorthand like "navigate:/admin/forms" produces the same dispatch as an
+// explicitly registered UIEventBinding.
+// ───────────────────────────────────────────────────────────────────────────
+
+sync DispatchUIEventInlineNavigate [eager]
+  purpose: "When an inline navigate UIEventBinding is invoked, forward to Navigator/navigate"
+when {
+  UIEventBinding/invokeInline: [ kind: "navigate"; target: ?dest; context: ?ctx ]
+    => [ ok: true ]
+}
+then {
+  Navigator/navigate: [ destination: ?dest; params: ?ctx ]
+}
+
+sync DispatchUIEventInlineOpenModal [eager]
+  purpose: "When an inline open-modal UIEventBinding is invoked, open the named overlay via Shell"
+when {
+  UIEventBinding/invokeInline: [ kind: "open-modal"; target: ?overlayId; params: ?p ]
+    => [ ok: true ]
+}
+then {
+  Shell/openOverlay: [ overlay: ?overlayId; config: ?p ]
+}
+
+sync DispatchUIEventInlineCloseModal [eager]
+  purpose: "When an inline close-modal UIEventBinding is invoked, close the named overlay via Shell"
+when {
+  UIEventBinding/invokeInline: [ kind: "close-modal"; target: ?overlayId ]
+    => [ ok: true ]
+}
+then {
+  Shell/closeOverlay: [ overlay: ?overlayId ]
+}
+
+sync DispatchUIEventInlineDismiss [eager]
+  purpose: "When an inline dismiss UIEventBinding is invoked, dismiss the topmost overlay via Shell"
+when {
+  UIEventBinding/invokeInline: [ kind: "dismiss" ]
+    => [ ok: true ]
+}
+then {
+  Shell/dismiss: []
+}
+
+sync DispatchUIEventInlineFocus [eager]
+  purpose: "When an inline focus UIEventBinding is invoked, send a FOCUS event to the target element via Pilot"
+when {
+  UIEventBinding/invokeInline: [ kind: "focus"; target: ?label ]
+    => [ ok: true ]
+}
+then {
+  Pilot/interact: [ label: ?label; event: "FOCUS" ]
+}
+
+sync DispatchUIEventInlineScrollTo [eager]
+  purpose: "When an inline scroll-to UIEventBinding is invoked, send a SCROLL_TO event to the target element via Pilot"
+when {
+  UIEventBinding/invokeInline: [ kind: "scroll-to"; target: ?label; params: ?p ]
+    => [ ok: true ]
+}
+then {
+  Pilot/interact: [ label: ?label; event: "SCROLL_TO" ]
+}
+
+sync DispatchUIEventInlineSetLocalState [eager]
+  purpose: "When an inline set-local-state UIEventBinding is invoked, send a SET_LOCAL_STATE event to the Machine identified by target"
+when {
+  UIEventBinding/invokeInline: [ kind: "set-local-state"; target: ?machine; params: ?p ]
+    => [ ok: true ]
+}
+then {
+  Machine/send: [ machine: ?machine; event: "SET_LOCAL_STATE" ]
+}
+
+sync DispatchUIEventInlineEmitEvent [eager]
+  purpose: "When an inline emit-event UIEventBinding is invoked, forward the event name stored in target to Machine/send"
+when {
+  UIEventBinding/invokeInline: [ kind: "emit-event"; target: ?machine; params: ?eventName ]
+    => [ ok: true ]
+}
+then {
+  Machine/send: [ machine: ?machine; event: ?eventName ]
+}
+
+sync DispatchUIEventInlineToast [eager]
+  purpose: "When an inline toast UIEventBinding is invoked, send a transient notification via Notification/notify"
+when {
+  UIEventBinding/invokeInline: [ kind: "toast"; target: ?variant; params: ?p ]
+    => [ ok: true ]
+}
+then {
+  Notification/notify: [ notification: ?variant; user: ""; template: ?variant; data: ?p ]
+}

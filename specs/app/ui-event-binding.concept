@@ -179,6 +179,55 @@ concept UIEventBinding [B] {
       } -> notfound
     }
 
+    action invokeInline(kind: String, target: String, params: String, context: String) {
+      -> ok(binding: B, kind: String, target: String, params: String, context: String) {
+        Fast-path invocation that does NOT require a pre-registered binding.
+        Validates the kind against the same whitelist as bind and emits a
+        completion record shaped identically to invoke(ok), so that every
+        DispatchUIEvent* sync continues to fire uniformly. Returns a
+        synthetic binding id of the form "inline:<kind>:<target>" purely for
+        traceability — no bindings relation is written. Intended for agent
+        shorthands (e.g., Pilot/effect with "navigate:/admin/forms") where
+        forcing a bind/unbind round-trip would add no information.
+      }
+      -> invalid_kind(message: String) {
+        The provided kind is not one of the nine canonical UI effect kinds,
+        or params is not valid JSON. No completion record is emitted and no
+        surface adapter sync fires.
+      }
+
+      fixture invoke_inline_navigate {
+        kind: "navigate"
+        target: "/admin/forms"
+        params: "{}"
+        context: "{\"currentRoute\":\"/admin/content\"}"
+      }
+      fixture invoke_inline_open_modal {
+        kind: "open-modal"
+        target: "create-entity-modal"
+        params: "{}"
+        context: "{}"
+      }
+      fixture invoke_inline_toast {
+        kind: "toast"
+        target: "success"
+        params: "{\"title\":\"Saved\"}"
+        context: "{}"
+      }
+      fixture invoke_inline_bad_kind {
+        kind: "open-drawer"
+        target: "settings"
+        params: "{}"
+        context: "{}"
+      } -> invalid_kind
+      fixture invoke_inline_bad_params {
+        kind: "navigate"
+        target: "home"
+        params: "not-json"
+        context: "{}"
+      } -> invalid_kind
+    }
+
   }
 
   // ---------------------------------------------------------------------------
@@ -205,9 +254,25 @@ concept UIEventBinding [B] {
       b.kind = none
   }
 
+  never "invokeInline bypasses the kind whitelist": {
+    exists k in {"open-drawer", "foo", "bar"}:
+      invokeInline(kind: k, target: "x", params: "{}", context: "{}") -> ok(kind: k)
+  }
+
   always "unbind leaves state empty for that binding": {
     forall b in bindings:
       b.kind != none and b.target != none
+  }
+
+  example "invokeInline emits same shape as invoke without registration": {
+    after invokeInline(kind: "navigate", target: "/admin/forms", params: "{}", context: "{}")
+      -> ok(kind: "navigate", target: "/admin/forms")
+    then list() -> ok(bindings: "[]")
+  }
+
+  example "invokeInline rejects unknown kinds": {
+    after invokeInline(kind: "open-drawer", target: "settings", params: "{}", context: "{}")
+      -> invalid_kind(message: _)
   }
 
   action bind {
@@ -219,6 +284,13 @@ concept UIEventBinding [B] {
 
   action invoke {
     requires: binding in bindings
+  }
+
+  action invokeInline {
+    requires: kind in {"navigate", "open-modal", "close-modal", "dismiss",
+                       "focus", "scroll-to", "set-local-state",
+                       "emit-event", "toast"}
+    ensures ok: bindings' == bindings
   }
 
 }
