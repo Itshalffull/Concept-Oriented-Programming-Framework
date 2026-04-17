@@ -1,0 +1,213 @@
+@version(1)
+widget entity-detail {
+
+  purpose {
+    Full-page detail view for a single content entity. Renders the entity
+    header (resolved display name), schema membership badges, property fields,
+    and a content body zone. The display name is resolved in priority order:
+    data.title, then parsedContent.name, then parsedContent.title, then
+    parsedContent.label, then the raw node ID with its type prefix stripped.
+    When the schemas array is empty the widget derives schemas from data.type
+    as a single-element fallback so the badges zone is never blank for typed
+    entities. Designed as the default landing surface for any entity navigated
+    to via row-click or direct URL.
+  }
+
+  anatomy {
+    root:          container  { Top-level page wrapper }
+    header:        container  { Entity header section containing display name and schema badges }
+    displayName:   text       { h1-level resolved entity name }
+    schemaBadges:  container  { Horizontal strip of schema membership badges }
+    schemaBadge:   presentation { Individual badge for one schema membership }
+    propertyPanel: container  { Sidebar or inline section for typed property fields }
+    contentBody:   container  { Main content zone rendered by block editor or plain viewer }
+    loadingState:  container  { Skeleton shown while entity data is in flight }
+    errorState:    container  { Error message shown when entity load fails }
+  }
+
+  states {
+    loading [initial] {
+      on LOADED -> idle;
+      on LOAD_ERROR -> error;
+    }
+
+    idle {
+      on RELOAD -> loading;
+    }
+
+    error {
+      on RELOAD -> loading;
+    }
+  }
+
+  accessibility {
+    role: main;
+    keyboard {
+      Escape -> RELOAD;
+    }
+    focus {
+      trap: false;
+      initial: displayName;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "main";
+        aria-busy: if state == "loading" then "true" else "false";
+        aria-label: "Entity detail";
+      };
+      displayName -> {
+        role: "heading";
+        aria-level: "1";
+      };
+      schemaBadges -> {
+        role: "list";
+        aria-label: "Schema memberships";
+      };
+      schemaBadge -> {
+        role: "listitem";
+      };
+      loadingState -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: "Loading entity";
+        aria-hidden: if state != "loading" then "true" else "false";
+      };
+      errorState -> {
+        role: "alert";
+        aria-live: "assertive";
+        aria-hidden: if state != "error" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    node: String
+    title: option String
+    type: option String
+    schemas: list String
+    content: option String
+  }
+
+  connect {
+    root -> {
+      data-part: "root";
+      data-state: state;
+      aria-busy: if state == "loading" then "true" else "false";
+    }
+
+    header -> {
+      data-part: "header";
+    }
+
+    displayName -> {
+      data-part: "display-name";
+      text: ?title;
+    }
+
+    schemaBadges -> {
+      data-part: "schema-badges";
+      hidden: if state == "loading" then true else false;
+    }
+
+    schemaBadge -> {
+      data-part: "schema-badge";
+    }
+
+    propertyPanel -> {
+      data-part: "property-panel";
+      hidden: if state != "idle" then true else false;
+    }
+
+    contentBody -> {
+      data-part: "content-body";
+      hidden: if state != "idle" then true else false;
+    }
+
+    loadingState -> {
+      data-part: "loading-state";
+      hidden: if state != "loading" then true else false;
+    }
+
+    errorState -> {
+      data-part: "error-state";
+      hidden: if state != "error" then true else false;
+    }
+  }
+
+  affordance {
+    serves: group-section;
+    specificity: 7;
+    bind {
+      node: node;
+      title: title;
+      type: type;
+    }
+  }
+
+  invariant {
+    // Display-name resolution contract (priority order):
+    // data.title -> parsedContent.name -> parsedContent.title ->
+    // parsedContent.label -> raw node ID with type prefix stripped.
+    "The resolved display name MUST prefer data.title, then parsedContent.name, then parsedContent.title, then parsedContent.label, then raw node ID with the type prefix stripped (in that priority order)."
+
+    // Title-or-node-ID resolution: header shows human title when available,
+    // falls back to the node ID (with type prefix stripped) when title is empty.
+    always "detail header shows human title when available, falls back to node id": {
+      header.title = entity.title ?? entity.node
+    }
+
+    example "created entity surfaces its title on detail page": {
+      after transition.LOADED() -> ok
+      then displayName.text = entity.title
+    }
+
+    example "display name falls back to parsedContent.name": {
+      after transition.LOADED() -> ok
+      then displayName.text = "Continuation Writer"
+    }
+
+    example "display name strips node ID prefix when no title available": {
+      after transition.LOADED() -> ok
+      then displayName.text = "content-lifecycle"
+    }
+
+    // Schema resolution fallback contract: when data.schemas is empty the
+    // widget MUST derive schemas from data.type as a single-element array.
+    "When data.schemas is empty the widget MUST derive schemas from data.type as a single-element array. schemaBadges MUST be visible and non-empty for any entity where type is a non-empty string."
+
+    example "schemas fall back to type when schemas array is empty": {
+      after transition.LOADED() -> ok
+      then schemaBadges.visible = true
+    }
+
+    example "loading skeleton shown while in loading state": {
+      after transition.LOAD_ERROR() -> ok
+      then root.data-state = "error"
+    }
+
+    always "data-state on root reflects FSM": {
+      root.data-state != "none"
+    }
+
+    always "all states reachable": {
+      forall s in states:
+        s.reachable = true
+    }
+
+    never "content body and loading state both visible": {
+      contentBody.hidden = false
+      and loadingState.hidden = false
+    }
+
+    never "content body visible while loading": {
+      contentBody.hidden = false
+    }
+
+    action root {
+      requires: state = "idle"
+      ensures ok: state = "idle"
+    }
+  }
+
+}

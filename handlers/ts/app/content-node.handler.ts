@@ -105,6 +105,7 @@ const _contentNodeHandler: FunctionalConceptHandler = {
           return {
             node: record.node as string,
             type: record.type as string,
+            title: (record.title as string) || '',
             content: record.content as string,
             metadata: (record.metadata as string) || '',
             schemas,

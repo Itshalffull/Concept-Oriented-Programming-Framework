@@ -53,7 +53,7 @@ entries:
     fields: '[{"key":"name","label":"Suite"},{"key":"version","label":"Version"},{"key":"concepts","label":"Concepts"},{"key":"syncs","label":"Syncs"},{"key":"status","label":"Status","formatter":"badge"}]'
 
   - name: entity-properties-fields
-    fields: '[{"key":"node","label":"ID","formatter":"code"},{"key":"schemas","label":"Schemas","formatter":"schema-badges"},{"key":"createdBy","label":"Source"},{"key":"metadata","label":"Metadata"}]'
+    fields: '[{"key":"title","label":"Title"},{"key":"node","label":"ID","formatter":"code"},{"key":"schemas","label":"Schemas","formatter":"schema-badges"},{"key":"createdBy","label":"Source"},{"key":"metadata","label":"Metadata"}]'
 
   - name: entity-content-fields
     fields: '[{"key":"content","label":"Content"}]'
@@ -98,7 +98,7 @@ entries:
     fields: '[{"key":"versionId","label":"Revision"},{"key":"createdAt","label":"Date","formatter":"relative-date"},{"key":"author","label":"Author"},{"key":"summary","label":"Summary","formatter":"truncate"}]'
 
   - name: form-list-fields
-    fields: '[{"key":"name","label":"Form Name"},{"key":"schema","label":"Schema","formatter":"badge"},{"key":"mode","label":"Mode","formatter":"badge"}]'
+    fields: '[{"key":"form","label":"Form ID"},{"key":"schema","label":"Schema","formatter":"badge"},{"key":"mode","label":"Mode","formatter":"badge"}]'
 
   - name: form-editor-fields
     fields: '[]'

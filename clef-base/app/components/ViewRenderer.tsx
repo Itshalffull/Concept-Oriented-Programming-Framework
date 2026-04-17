@@ -1361,6 +1361,8 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
                       result = await invoke('ContentNode', 'update', { node, content: value });
                     } else if (field === 'metadata') {
                       result = await invoke('ContentNode', 'setMetadata', { node, metadata: value });
+                    } else if (field === 'title') {
+                      result = await invoke('ContentNode', 'setTitle', { node, title: value });
                     } else {
                       return;
                     }
