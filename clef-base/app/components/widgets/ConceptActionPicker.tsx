@@ -114,7 +114,13 @@ function isQueryAction(action: ConceptActionSpec): boolean {
   const name = action.name.toLowerCase();
   const queryPrefixes = ['get', 'list', 'query', 'search', 'resolve', 'find', 'fetch'];
   if (queryPrefixes.some((p) => name.startsWith(p))) return true;
-  // No non-ok variants heuristic
+  // No non-ok variants heuristic — only apply when the action spec actually
+  // carries variant metadata. ScoreApi/listConcepts returns action names as
+  // strings without variants, so treating `[]` as "all-ok" would vacuously
+  // classify every action as a query and hide every mutating option in the
+  // picker. Return false when variants is empty and the name prefix didn't
+  // match (i.e. default to "mutating", the looser classification).
+  if (!action.variants || action.variants.length === 0) return false;
   const nonOkVariants = action.variants.filter(
     (v) => v.tag !== 'ok' && v.tag !== 'error',
   );
@@ -191,7 +197,13 @@ export function ConceptActionPicker({
   const [selectedConcept, setSelectedConcept] = useState<ConceptSpec | null>(null);
   const [advancedOpen, setAdvancedOpen] = useState<boolean>(showAdvanced);
   // When value is set and picker is collapsed, isOpen=false hides the panes.
+  // Value can arrive asynchronously (e.g. when a parent editor hydrates from a
+  // ContentNode on mount), so mirror value changes into isOpen: if value
+  // becomes defined externally, auto-collapse to the resultChip view.
   const [isOpen, setIsOpen] = useState<boolean>(value == null);
+  useEffect(() => {
+    if (value && isOpen) setIsOpen(false);
+  }, [value]); // intentionally only react to value changes, not isOpen toggles
 
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -546,7 +558,7 @@ function ConceptRow({ concept, selected, onSelect }: ConceptRowProps) {
       tabIndex={0}
     >
       <span className="cap-concept-name">{concept.name}</span>
-      {concept.category && (
+      {concept.category && concept.category !== 'domain' && (
         <span data-part="categoryBadge" className="cap-category-badge">
           {concept.category}
         </span>
