@@ -17,6 +17,7 @@ derived Pilot {
     Binding
     View
     ViewEntity
+    UIEventBinding
   }
 
   syncs {
@@ -27,7 +28,8 @@ derived Pilot {
       host-unmount-clears-page,
       interact-sends-to-machine,
       fill-writes-field,
-      submit-invokes-action
+      submit-invokes-action,
+      pilot-effect
     ]
     recommended: [
       navigate-waits-for-ready,
@@ -78,6 +80,14 @@ derived Pilot {
       matches: Shell/popOverlay
     }
 
+    action effect(binding: String, params: String) {
+      entry: UIEventBinding/invoke matches on binding: ?binding
+      triggers: [
+        UIEventBinding/invoke(binding: ?binding, context: ?params),
+        UIEventBinding/invokeInline(kind: ?kind, target: ?target, params: ?params, context: ?context)
+      ]
+    }
+
     query where() {
       reads: Navigator/current()
     }
@@ -87,7 +97,12 @@ derived Pilot {
     }
 
     query snapshot() {
-      reads: PageMap/list(hostRef: ?currentHost)
+      reads: [
+        PageMap/list(hostRef: ?currentHost),
+        PageMap/bindingsForHost(hostRef: ?currentHost),
+        -> entries: ?entries,
+        -> bindings: ?bindings
+      ]
     }
 
     query read(label: String) {
@@ -145,5 +160,40 @@ derived Pilot {
     after submit(label: l)
     then PageMap/find resolves the label to a binding ref
     and  Binding/invoke collects current signal values and invokes the bound action
+
+    after effect(binding: b, params: p)
+    then pilot-effect sync classifies b as either a registered UIEventBinding id
+          or a shorthand of the form "<kind>:<target>"
+    and  forwards to UIEventBinding/invoke (for ids) or UIEventBinding/invokeInline
+          (for shorthands) — never executing the UI effect directly
+    and  the DispatchUIEvent* / DispatchUIEventInline* syncs route the
+          completion to the matching surface concept (Navigator, Shell,
+          Machine, Notification, or Pilot/interact)
+  }
+
+  // ---------------------------------------------------------------------------
+  // Invariants
+  // ---------------------------------------------------------------------------
+
+  example "effect of registered binding delegates through UIEventBinding/invoke": {
+    after UIEventBinding/bind(binding: "goto-home", kind: "navigate", target: "/home", params: "{}") -> ok(binding: b)
+    and   effect(binding: "goto-home", params: "{}") -> ok
+    then UIEventBinding/invoke was emitted
+  }
+
+  example "effect with shorthand delegates through UIEventBinding/invokeInline": {
+    after effect(binding: "navigate:/admin/forms", params: "{}") -> ok
+    then UIEventBinding/invokeInline was emitted
+  }
+
+  always "pilot/effect delegates through UIEventBinding/invoke — no direct UI dispatch": {
+    forall e in effect:
+      e -> ok implies (UIEventBinding/invoke was emitted
+                    or UIEventBinding/invokeInline was emitted)
+  }
+
+  always "pilot/snapshot lists all bindings invokable via pilot/effect": {
+    forall b in PageMap/bindingsForHost(hostRef: currentHost):
+      b in snapshot().bindings
   }
 }
