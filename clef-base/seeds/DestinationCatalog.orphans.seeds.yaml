@@ -1,0 +1,64 @@
+# Destinations for Views/ViewShells that previously had no DestinationCatalog entry,
+# causing /admin/<route> to fall through to the Dashboard (silent UX bug).
+#
+# Orphan audit performed 2026-04-17. Each entry below corresponds to a seeded
+# ViewShell or Layout that is a genuine top-level admin page, not an embedded panel.
+
+concept: DestinationCatalog
+action: register
+entries:
+  # My Work Items — personal inbox for process automation tasks.
+  # ViewShell: my-work-items (ViewShell.process.seeds.yaml)
+  # DynamicPage resolves targetView "my-work-items" → ViewRenderer(viewId="my-work-items")
+  - destination: work-items
+    name: work-items
+    targetConcept: WorkItem
+    targetView: my-work-items
+    href: /admin/work-items
+    icon: "☑"
+    group: Automation
+
+  # Check Overview — global quality-gate verification status across all process runs.
+  # ViewShell: check-overview (ViewShell.process.seeds.yaml)
+  # DynamicPage resolves targetView "check-overview" → ViewRenderer(viewId="check-overview")
+  - destination: check-overview
+    name: check-overview
+    targetConcept: CheckVerification
+    targetView: check-overview
+    href: /admin/checks
+    icon: "✓"
+    group: Automation
+
+  # Process Analytics — analytics dashboard composing process-health, step-bottlenecks,
+  # check-failures, process-completion-trend, and process-step-breakdown views.
+  # Layout: process-analytics (Layout.seeds.yaml)
+  # DynamicPage resolves targetView "layout:process-analytics" → LayoutRenderer(layoutId="process-analytics")
+  - destination: process-analytics
+    name: process-analytics
+    targetConcept: ProcessRun
+    targetView: layout:process-analytics
+    href: /admin/process-analytics
+    icon: "📊"
+    group: Automation
+
+  # Deployment Overview — version spaces acting as deployment environments.
+  # ViewShell: deployment-overview (ViewShell.seeds.yaml)
+  # DynamicPage resolves targetView "deployment-overview" → ViewRenderer(viewId="deployment-overview")
+  - destination: deployments
+    name: deployments
+    targetConcept: VersionSpace
+    targetView: deployment-overview
+    href: /admin/deployments
+    icon: "⇡"
+    group: System
+
+  # Installed Suites — concept suite packages installed in this kernel.
+  # ViewShell: installed-suites (ViewShell.seeds.yaml)
+  # DynamicPage resolves targetView "installed-suites" → ViewRenderer(viewId="installed-suites")
+  - destination: packages
+    name: packages
+    targetConcept: AppInstallation
+    targetView: installed-suites
+    href: /admin/packages
+    icon: "⊡"
+    group: Platform

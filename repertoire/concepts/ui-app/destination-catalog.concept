@@ -87,6 +87,18 @@ concept DestinationCatalog [D] {
     d.name = none
   }
 
+  never "top-level view with no destination": {
+    // Every seeded View or ViewShell that declares both a title and a
+    // description represents a navigable top-level admin page.  If no
+    // DestinationCatalog entry binds it to an /admin/<route> href, the
+    // URL falls through to DynamicPage which renders a "Page not found"
+    // EmptyState — a silent UX regression.  Ensure every such view is
+    // reachable: add a DestinationCatalog entry that maps its targetView
+    // to the ViewShell or Layout name, and verify the route with
+    // curl -sI http://localhost:4006/admin/<route> (expect 307 to login,
+    // not 404 or dashboard fallback).
+  }
+
   action register {
     requires: name != ""
     ensures ok: destination != none
