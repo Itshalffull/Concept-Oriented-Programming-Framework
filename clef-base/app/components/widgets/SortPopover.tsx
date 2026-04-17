@@ -8,8 +8,9 @@
  * direction toggle. Supports adding/removing/reordering sort keys.
  */
 
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback } from 'react';
 import { FieldPickerDropdown, type FieldDef } from './FieldPickerDropdown';
+import { Popover } from './Popover';
 
 export interface SortKey {
   field: string;
@@ -26,20 +27,12 @@ interface SortPopoverProps {
 }
 
 const panelStyle: React.CSSProperties = {
-  position: 'absolute',
-  zIndex: 1000,
   background: 'var(--palette-surface)',
   border: '1px solid var(--palette-outline)',
   borderRadius: 'var(--radius-md)',
   boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
   padding: 'var(--spacing-md)',
   minWidth: 300,
-};
-
-const overlayStyle: React.CSSProperties = {
-  position: 'fixed',
-  inset: 0,
-  zIndex: 999,
 };
 
 const headerStyle: React.CSSProperties = {
@@ -87,23 +80,6 @@ export const SortPopover: React.FC<SortPopoverProps> = ({
   availableFields = [],
   anchorRef,
 }) => {
-  const panelRef = useRef<HTMLDivElement>(null);
-
-  const getPosition = (): React.CSSProperties => {
-    if (!anchorRef?.current) return { top: 80, left: 100 };
-    const rect = anchorRef.current.getBoundingClientRect();
-    return { top: rect.bottom + 8, left: rect.left };
-  };
-
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
-  }, [open, onClose]);
-
   const addSortKey = useCallback(() => {
     const firstField = availableFields[0];
     if (!firstField) return;
@@ -124,21 +100,20 @@ export const SortPopover: React.FC<SortPopoverProps> = ({
     onSortKeysChange(sortKeys.filter((_, i) => i !== index));
   }, [sortKeys, onSortKeysChange]);
 
-  if (!open) return null;
-
-  const panelPos = getPosition();
-
   return (
-    <>
-      <div style={overlayStyle} onClick={onClose} aria-hidden="true" />
+    <Popover
+      anchor={anchorRef?.current ?? null}
+      open={open}
+      onClose={onClose}
+      placement="bottom-start"
+      width={320}
+    >
       <div
-        ref={panelRef}
         data-part="root"
         data-state="open"
         role="dialog"
         aria-label="Sort configuration"
-        style={{ ...panelStyle, ...panelPos }}
-        onClick={(e) => e.stopPropagation()}
+        style={panelStyle}
       >
         <div style={headerStyle}>
           <span style={{
@@ -205,7 +180,7 @@ export const SortPopover: React.FC<SortPopoverProps> = ({
           + Add sort
         </button>
       </div>
-    </>
+    </Popover>
   );
 };
 

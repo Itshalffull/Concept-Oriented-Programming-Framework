@@ -8,7 +8,8 @@
  * is active at all times (radiogroup). Opens from the Layout toolbar button.
  */
 
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback } from 'react';
+import { Popover } from './Popover';
 
 export interface DisplayModeOption {
   value: string;
@@ -40,20 +41,12 @@ interface DisplayModeSwitcherProps {
 }
 
 const panelStyle: React.CSSProperties = {
-  position: 'absolute',
-  zIndex: 1000,
   background: 'var(--palette-surface)',
   border: '1px solid var(--palette-outline)',
   borderRadius: 'var(--radius-md)',
   boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
   padding: 'var(--spacing-md)',
   minWidth: 280,
-};
-
-const overlayStyle: React.CSSProperties = {
-  position: 'fixed',
-  inset: 0,
-  zIndex: 999,
 };
 
 const gridStyle: React.CSSProperties = {
@@ -92,43 +85,25 @@ export const DisplayModeSwitcher: React.FC<DisplayModeSwitcherProps> = ({
   modes = DEFAULT_MODES,
   anchorRef,
 }) => {
-  const panelRef = useRef<HTMLDivElement>(null);
-
-  const getPosition = (): React.CSSProperties => {
-    if (!anchorRef?.current) return { top: 80, left: 400 };
-    const rect = anchorRef.current.getBoundingClientRect();
-    return { top: rect.bottom + 8, left: rect.left };
-  };
-
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
-  }, [open, onClose]);
-
   const handleSelect = useCallback((mode: string) => {
     onModeChange(mode);
     onClose();
   }, [onModeChange, onClose]);
 
-  if (!open) return null;
-
-  const panelPos = getPosition();
-
   return (
-    <>
-      <div style={overlayStyle} onClick={onClose} aria-hidden="true" />
+    <Popover
+      anchor={anchorRef?.current ?? null}
+      open={open}
+      onClose={onClose}
+      placement="bottom-start"
+      width={300}
+    >
       <div
-        ref={panelRef}
         data-part="root"
         data-state="open"
         role="dialog"
         aria-label="Display mode"
-        style={{ ...panelStyle, ...panelPos }}
-        onClick={(e) => e.stopPropagation()}
+        style={panelStyle}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--spacing-xs)' }}>
           <span style={{ fontSize: 'var(--typography-label-md-size)', fontWeight: 'var(--typography-label-md-weight)' as React.CSSProperties['fontWeight'] }}>
@@ -169,7 +144,7 @@ export const DisplayModeSwitcher: React.FC<DisplayModeSwitcherProps> = ({
           })}
         </div>
       </div>
-    </>
+    </Popover>
   );
 };
 

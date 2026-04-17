@@ -10,6 +10,7 @@
  */
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { Popover } from './Popover';
 
 export interface ViewTab {
   id: string;
@@ -78,8 +79,6 @@ const addBtnStyle: React.CSSProperties = {
 };
 
 const contextMenuStyle: React.CSSProperties = {
-  position: 'fixed',
-  zIndex: 2000,
   background: 'var(--palette-surface)',
   border: '1px solid var(--palette-outline)',
   borderRadius: 'var(--radius-sm)',
@@ -108,8 +107,7 @@ const menuItemDangerStyle: React.CSSProperties = {
 
 interface ContextMenuState {
   viewId: string;
-  x: number;
-  y: number;
+  anchor: HTMLElement;
 }
 
 export const ViewTabBar: React.FC<ViewTabBarProps> = ({
@@ -126,20 +124,10 @@ export const ViewTabBar: React.FC<ViewTabBarProps> = ({
   const [renameValue, setRenameValue] = useState('');
   const renameRef = useRef<HTMLInputElement>(null);
 
-  // Close context menu on outside click
-  useEffect(() => {
-    if (!contextMenu) return;
-    const handler = (e: MouseEvent) => {
-      setContextMenu(null);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [contextMenu]);
-
-  const openContextMenu = useCallback((viewId: string, x: number, y: number, e: React.MouseEvent) => {
+  const openContextMenu = useCallback((viewId: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setContextMenu({ viewId, x, y });
+    setContextMenu({ viewId, anchor: e.currentTarget as HTMLElement });
   }, []);
 
   const startRename = useCallback((viewId: string) => {
@@ -212,7 +200,7 @@ export const ViewTabBar: React.FC<ViewTabBarProps> = ({
                 role="tab"
                 aria-selected={isActive}
                 onClick={() => onTabClick(tab.id)}
-                onContextMenu={(e) => openContextMenu(tab.id, e.clientX, e.clientY, e)}
+                onContextMenu={(e) => openContextMenu(tab.id, e)}
                 style={tabStyle(isActive)}
               >
                 {tab.label}
@@ -221,7 +209,7 @@ export const ViewTabBar: React.FC<ViewTabBarProps> = ({
                 <button
                   type="button"
                   data-part="tab-more"
-                  onClick={(e) => openContextMenu(tab.id, e.clientX, e.clientY, e)}
+                  onClick={(e) => openContextMenu(tab.id, e)}
                   style={moreStyle}
                   aria-label={`Options for ${tab.label}`}
                   title="Tab options"
@@ -247,19 +235,21 @@ export const ViewTabBar: React.FC<ViewTabBarProps> = ({
         )}
       </div>
 
-      {/* Context menu */}
-      {contextMenu && (
-        <div
-          data-part="context-menu"
-          style={{ ...contextMenuStyle, top: contextMenu.y, left: contextMenu.x }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {onRename && (
+      {/* Context menu — anchored to the trigger button via Popover */}
+      <Popover
+        anchor={contextMenu?.anchor ?? null}
+        open={contextMenu !== null}
+        onClose={() => setContextMenu(null)}
+        placement="bottom-start"
+        width={160}
+      >
+        <div data-part="context-menu" style={contextMenuStyle}>
+          {onRename && contextMenu && (
             <button type="button" style={menuItemStyle} onClick={() => startRename(contextMenu.viewId)}>
               Rename
             </button>
           )}
-          {onDuplicate && (
+          {onDuplicate && contextMenu && (
             <button type="button" style={menuItemStyle} onClick={() => {
               onDuplicate(contextMenu.viewId);
               setContextMenu(null);
@@ -267,7 +257,7 @@ export const ViewTabBar: React.FC<ViewTabBarProps> = ({
               Duplicate
             </button>
           )}
-          {onDelete && tabs.length > 1 && (
+          {onDelete && contextMenu && tabs.length > 1 && (
             <button type="button" style={menuItemDangerStyle} onClick={() => {
               onDelete(contextMenu.viewId);
               setContextMenu(null);
@@ -276,7 +266,7 @@ export const ViewTabBar: React.FC<ViewTabBarProps> = ({
             </button>
           )}
         </div>
-      )}
+      </Popover>
     </div>
   );
 };

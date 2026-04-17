@@ -11,6 +11,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useKernelInvoke } from '../../../lib/clef-provider';
 import { FIELD_TYPE_REGISTRY } from './FieldWidget';
+import { Popover } from './Popover';
 
 // ─── Props ─────────────────────────────────────────────────────────────────────
 
@@ -36,15 +37,7 @@ export interface FieldHeaderPopoverProps {
 
 // ─── Styles ────────────────────────────────────────────────────────────────────
 
-const overlayStyle: React.CSSProperties = {
-  position: 'fixed',
-  inset: 0,
-  zIndex: 999,
-};
-
 const panelStyle: React.CSSProperties = {
-  position: 'fixed',
-  zIndex: 1000,
   background: 'var(--palette-surface)',
   border: '1px solid var(--palette-outline)',
   borderRadius: 'var(--radius-md)',
@@ -127,8 +120,6 @@ const pillDotStyle = (active: boolean): React.CSSProperties => ({
 });
 
 const typePickerStyle: React.CSSProperties = {
-  position: 'absolute',
-  zIndex: 1100,
   background: 'var(--palette-surface)',
   border: '1px solid var(--palette-outline)',
   borderRadius: 'var(--radius-md)',
@@ -219,12 +210,11 @@ export const FieldHeaderPopover: React.FC<FieldHeaderPopoverProps> = ({
   onConfigure,
 }) => {
   const invoke = useKernelInvoke();
-  const panelRef = useRef<HTMLDivElement>(null);
   const renameRef = useRef<HTMLInputElement>(null);
+  const typePickerTriggerRef = useRef<HTMLDivElement>(null);
 
   const [labelDraft, setLabelDraft] = useState(fieldLabel);
   const [showTypePicker, setShowTypePicker] = useState(false);
-  const [typePickerPos, setTypePickerPos] = useState<React.CSSProperties>({});
   const [deleting, setDeleting] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
@@ -232,26 +222,6 @@ export const FieldHeaderPopover: React.FC<FieldHeaderPopoverProps> = ({
   useEffect(() => {
     setLabelDraft(fieldLabel);
   }, [fieldLabel, fieldId]);
-
-  // Close on Escape
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
-  }, [open, onClose]);
-
-  // Position below anchor element
-  const getPosition = (): React.CSSProperties => {
-    if (!anchorEl) return { top: 80, left: 16 };
-    const rect = anchorEl.getBoundingClientRect();
-    return {
-      top: rect.bottom + 4,
-      left: rect.left,
-    };
-  };
 
   const commitRename = () => {
     const trimmed = labelDraft.trim();
@@ -265,12 +235,7 @@ export const FieldHeaderPopover: React.FC<FieldHeaderPopoverProps> = ({
     }
   };
 
-  const typePickerTriggerRef = useRef<HTMLDivElement>(null);
   const handleTypePickerOpen = () => {
-    const el = typePickerTriggerRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    setTypePickerPos({ top: rect.top, left: rect.right + 4 });
     setShowTypePicker(true);
   };
 
@@ -311,31 +276,122 @@ export const FieldHeaderPopover: React.FC<FieldHeaderPopoverProps> = ({
     }
   };
 
-  if (!open) return null;
-
-  const panelPos = getPosition();
   const currentTypeCfg = FIELD_TYPE_REGISTRY[fieldType];
+
+  const mainPanelContent = (
+    <div style={panelStyle}>
+      {/* Action error */}
+      {actionError && (
+        <div
+          data-part="action-error"
+          style={{
+            padding: '4px var(--spacing-sm)',
+            background: 'var(--palette-error-container)',
+            color: 'var(--palette-on-error-container)',
+            fontSize: '11px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <span>{actionError}</span>
+          <button type="button" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: 12, lineHeight: 1, padding: '2px' }} onClick={() => setActionError(null)} aria-label="Dismiss">×</button>
+        </div>
+      )}
+
+      {/* Rename input */}
+      <div data-part="rename-section" style={{ padding: 'var(--spacing-xs) var(--spacing-sm)' }}>
+        <input
+          ref={renameRef}
+          data-part="rename-input"
+          type="text"
+          value={labelDraft}
+          onChange={(e) => setLabelDraft(e.target.value)}
+          onBlur={commitRename}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              commitRename();
+              e.currentTarget.blur();
+            }
+          }}
+          style={rowInputStyle}
+          aria-label="Field label"
+          placeholder="Field name"
+        />
+      </div>
+
+      {/* Type picker trigger */}
+      <div data-part="type-section" ref={typePickerTriggerRef} style={sectionStyle}>
+        <MenuItem
+          icon={currentTypeCfg?.icon ?? '?'}
+          label={`Type: ${currentTypeCfg?.label ?? fieldType}`}
+          onClick={handleTypePickerOpen}
+        />
+      </div>
+
+      {/* Required / Unique toggles */}
+      <div data-part="toggles-section" style={sectionStyle}>
+        <Toggle label="Required" active={required} onToggle={onToggleRequired} />
+        <Toggle label="Unique" active={unique} onToggle={onToggleUnique} />
+      </div>
+
+      {/* Sort actions */}
+      <div data-part="sort-section" style={sectionStyle}>
+        <MenuItem icon="↑" label="Sort ascending" onClick={() => { onSort('asc'); onClose(); }} />
+        <MenuItem icon="↓" label="Sort descending" onClick={() => { onSort('desc'); onClose(); }} />
+      </div>
+
+      {/* Field actions */}
+      <div data-part="actions-section" style={sectionStyle}>
+        <MenuItem icon="⊘" label="Hide field" onClick={() => { onHide(); onClose(); }} />
+        <MenuItem
+          icon="⚙"
+          label="Configure..."
+          onClick={() => { onConfigure(); onClose(); }}
+        />
+      </div>
+
+      {/* Delete — two-step confirm */}
+      <div data-part="delete-section" style={{ padding: 'var(--spacing-xs) 0' }}>
+        <MenuItem
+          icon="🗑"
+          label={deleting ? 'Click again to confirm delete' : 'Delete field'}
+          danger
+          onClick={handleDelete}
+        />
+      </div>
+    </div>
+  );
 
   return (
     <>
-      {/* Backdrop */}
-      <div
-        data-part="overlay"
-        style={overlayStyle}
-        onClick={() => {
-          setShowTypePicker(false);
-          onClose();
-        }}
-        aria-hidden="true"
-      />
-
-      {/* Type picker flyout */}
-      {showTypePicker && (
+      {/* Main popover panel anchored to the column header */}
+      <Popover
+        anchor={anchorEl ?? null}
+        open={open}
+        onClose={onClose}
+        placement="bottom-start"
+        width={280}
+      >
         <div
-          data-part="type-picker"
-          style={{ ...typePickerStyle, ...typePickerPos }}
-          onClick={(e) => e.stopPropagation()}
+          data-part="root"
+          data-state="open"
+          data-contract="floating-panel"
+          aria-label={`Field options for ${fieldLabel}`}
         >
+          {mainPanelContent}
+        </div>
+      </Popover>
+
+      {/* Type picker flyout — anchored to the type row trigger */}
+      <Popover
+        anchor={typePickerTriggerRef.current}
+        open={showTypePicker}
+        onClose={() => setShowTypePicker(false)}
+        placement="right-start"
+        width={200}
+      >
+        <div data-part="type-picker" style={typePickerStyle}>
           {Object.entries(FIELD_TYPE_REGISTRY).map(([key, cfg]) => (
             <button
               key={key}
@@ -353,101 +409,7 @@ export const FieldHeaderPopover: React.FC<FieldHeaderPopoverProps> = ({
             </button>
           ))}
         </div>
-      )}
-
-      {/* Main popover panel */}
-      <div
-        ref={panelRef}
-        data-part="root"
-        data-state="open"
-        data-contract="floating-panel"
-        role="dialog"
-        aria-label={`Field options for ${fieldLabel}`}
-        aria-modal="false"
-        style={{ ...panelStyle, ...panelPos }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Action error */}
-        {actionError && (
-          <div
-            data-part="action-error"
-            style={{
-              padding: '4px var(--spacing-sm)',
-              background: 'var(--palette-error-container)',
-              color: 'var(--palette-on-error-container)',
-              fontSize: '11px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            <span>{actionError}</span>
-            <button type="button" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: 12, lineHeight: 1, padding: '2px' }} onClick={() => setActionError(null)} aria-label="Dismiss">×</button>
-          </div>
-        )}
-
-        {/* Rename input */}
-        <div data-part="rename-section" style={{ padding: 'var(--spacing-xs) var(--spacing-sm)' }}>
-          <input
-            ref={renameRef}
-            data-part="rename-input"
-            type="text"
-            value={labelDraft}
-            onChange={(e) => setLabelDraft(e.target.value)}
-            onBlur={commitRename}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                commitRename();
-                e.currentTarget.blur();
-              }
-            }}
-            style={rowInputStyle}
-            aria-label="Field label"
-            placeholder="Field name"
-          />
-        </div>
-
-        {/* Type picker trigger */}
-        <div data-part="type-section" ref={typePickerTriggerRef} style={sectionStyle}>
-          <MenuItem
-            icon={currentTypeCfg?.icon ?? '?'}
-            label={`Type: ${currentTypeCfg?.label ?? fieldType}`}
-            onClick={handleTypePickerOpen}
-          />
-        </div>
-
-        {/* Required / Unique toggles */}
-        <div data-part="toggles-section" style={sectionStyle}>
-          <Toggle label="Required" active={required} onToggle={onToggleRequired} />
-          <Toggle label="Unique" active={unique} onToggle={onToggleUnique} />
-        </div>
-
-        {/* Sort actions */}
-        <div data-part="sort-section" style={sectionStyle}>
-          <MenuItem icon="↑" label="Sort ascending" onClick={() => { onSort('asc'); onClose(); }} />
-          <MenuItem icon="↓" label="Sort descending" onClick={() => { onSort('desc'); onClose(); }} />
-        </div>
-
-        {/* Field actions */}
-        <div data-part="actions-section" style={sectionStyle}>
-          <MenuItem icon="⊘" label="Hide field" onClick={() => { onHide(); onClose(); }} />
-          <MenuItem
-            icon="⚙"
-            label="Configure..."
-            onClick={() => { onConfigure(); onClose(); }}
-          />
-        </div>
-
-        {/* Delete — two-step confirm */}
-        <div data-part="delete-section" style={{ padding: 'var(--spacing-xs) 0' }}>
-          <MenuItem
-            icon="🗑"
-            label={deleting ? 'Click again to confirm delete' : 'Delete field'}
-            danger
-            onClick={handleDelete}
-          />
-        </div>
-      </div>
+      </Popover>
     </>
   );
 };

@@ -9,9 +9,10 @@
  * toggling AND/OR conjunction. Changes are applied immediately (auto-apply).
  */
 
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback } from 'react';
 import { FilterPill, type FilterCondition } from './FilterPill';
 import { type FieldDef } from './FieldPickerDropdown';
+import { Popover } from './Popover';
 
 interface FilterPopoverProps {
   open: boolean;
@@ -22,15 +23,7 @@ interface FilterPopoverProps {
   anchorRef?: React.RefObject<HTMLElement | null>;
 }
 
-const overlayStyle: React.CSSProperties = {
-  position: 'fixed',
-  inset: 0,
-  zIndex: 999,
-};
-
 const panelStyle: React.CSSProperties = {
-  position: 'absolute',
-  zIndex: 1000,
   background: 'var(--palette-surface)',
   border: '1px solid var(--palette-outline)',
   borderRadius: 'var(--radius-md)',
@@ -80,28 +73,6 @@ export const FilterPopover: React.FC<FilterPopoverProps> = ({
   availableFields = [],
   anchorRef,
 }) => {
-  const panelRef = useRef<HTMLDivElement>(null);
-
-  // Position the panel below the anchor
-  const getPosition = (): React.CSSProperties => {
-    if (!anchorRef?.current) return { top: 80, left: 16 };
-    const rect = anchorRef.current.getBoundingClientRect();
-    return {
-      top: rect.bottom + 8,
-      left: rect.left,
-    };
-  };
-
-  // Close on Escape key
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
-  }, [open, onClose]);
-
   const addCondition = useCallback(() => {
     const firstField = availableFields[0];
     const newCondition: FilterCondition = {
@@ -123,30 +94,20 @@ export const FilterPopover: React.FC<FilterPopoverProps> = ({
     onConditionsChange(conditions.filter((c) => c.id !== id));
   }, [conditions, onConditionsChange]);
 
-  if (!open) return null;
-
-  const panelPos = getPosition();
-
   return (
-    <>
-      {/* Invisible overlay to close on outside click */}
+    <Popover
+      anchor={anchorRef?.current ?? null}
+      open={open}
+      onClose={onClose}
+      placement="bottom-start"
+      width={400}
+    >
       <div
-        data-part="overlay"
-        style={overlayStyle}
-        onClick={onClose}
-        aria-hidden="true"
-      />
-
-      {/* Popover panel */}
-      <div
-        ref={panelRef}
         data-part="root"
         data-state="open"
         role="dialog"
         aria-label="Filter conditions"
-        aria-modal="true"
-        style={{ ...panelStyle, ...panelPos }}
-        onClick={(e) => e.stopPropagation()}
+        style={panelStyle}
       >
         <div style={headerStyle}>
           <span style={{
@@ -208,7 +169,7 @@ export const FilterPopover: React.FC<FilterPopoverProps> = ({
           </button>
         </div>
       </div>
-    </>
+    </Popover>
   );
 };
 

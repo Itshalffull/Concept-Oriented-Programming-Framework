@@ -23,6 +23,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { SpanFragment } from '../../../lib/use-entity-spans';
 import { useKernelInvoke } from '../../../lib/clef-provider';
+import { Popover } from './Popover';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -181,35 +182,20 @@ const ReferenceCountBadge: React.FC<ReferenceCountBadgeProps> = ({
   referencingEntities,
 }) => {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   const toggle = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     setOpen((prev) => !prev);
   }, []);
 
-  // Close when clicking outside
-  useEffect(() => {
-    if (!open) return;
-    function handleOutside(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleOutside);
-    return () => document.removeEventListener('mousedown', handleOutside);
-  }, [open]);
-
   const count = referencingEntities.length;
   if (count === 0) return null;
 
   return (
-    <div
-      ref={ref}
-      data-part="span-reference-count"
-      style={{ position: 'relative' }}
-    >
+    <div data-part="span-reference-count">
       <button
+        ref={triggerRef}
         title={`Referenced ${count} time${count !== 1 ? 's' : ''} — click to see where`}
         aria-label={`Span ${spanId} referenced ${count} time${count !== 1 ? 's' : ''}`}
         aria-expanded={open}
@@ -231,22 +217,24 @@ const ReferenceCountBadge: React.FC<ReferenceCountBadgeProps> = ({
         {count}x
       </button>
 
-      {open && (
+      <Popover
+        anchor={triggerRef.current}
+        open={open}
+        onClose={() => setOpen(false)}
+        placement="right-start"
+        width={200}
+        modal={false}
+      >
         <div
           role="listbox"
           aria-label="Entities referencing this span"
           style={{
-            position: 'absolute',
-            left: '100%',
-            top: 0,
-            marginLeft: '4px',
             background: 'var(--palette-surface, #fff)',
             border: '1px solid var(--palette-outline-variant, rgba(120,120,120,0.3))',
             borderRadius: '6px',
             boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
             minWidth: '180px',
             maxWidth: '280px',
-            zIndex: 200,
             padding: '6px 0',
           }}
         >
@@ -281,7 +269,7 @@ const ReferenceCountBadge: React.FC<ReferenceCountBadgeProps> = ({
             </div>
           ))}
         </div>
-      )}
+      </Popover>
     </div>
   );
 };
