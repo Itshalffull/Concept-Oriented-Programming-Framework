@@ -125,6 +125,17 @@ widget toast {
     example "POINTER_ENTER from visible": { after transition(from: "visible", event: "POINTER_ENTER") -> ok then state = "paused" }
     always "FSM deterministic": { forall s in states: s.transitions_count <= 1 }
     never "unreachable state": { exists s in states: s.inbound_count = 0 }
+    never "toast overlaps topbar": {
+      exists t in toasts: t.visible = true
+        and topbar.rendered = true
+        and boundingBoxes(t.root, topbar).intersect = true
+    }
+    always "toast auto-dismisses after duration": {
+      forall t in toasts:
+        t.duration > 0 implies
+          t.elapsed >= t.duration implies
+            t.state in {"exiting", "removed"}
+    }
     "Dismiss timer must pause while the pointer is over the toast";
     "Screen readers must announce the toast via aria-live region";
     "Removed state must clean up all timers and DOM references";

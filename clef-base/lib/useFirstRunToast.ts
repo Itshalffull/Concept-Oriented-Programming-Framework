@@ -64,6 +64,9 @@ const PROPERTY_ENTITY = 'user';
 const PROPERTY_KEY = 'kb-onboarding-dismissed';
 const LOCAL_STORAGE_KEY = 'clef:kb-onboarding-dismissed';
 
+/** Auto-dismiss delay in milliseconds (Section 16.11 — transient notification policy). */
+const AUTO_DISMISS_MS = 8000;
+
 // ---------------------------------------------------------------------------
 // Hook
 // ---------------------------------------------------------------------------
@@ -148,6 +151,14 @@ export function useFirstRunToast(): React.ReactElement | null {
     });
   }, []);
 
+  // Auto-dismiss after AUTO_DISMISS_MS so transient notifications never permanently
+  // block page content (Section 16.11 — transient notification policy).
+  useEffect(() => {
+    if (dismissed !== false) return;
+    const timer = setTimeout(handleDismiss, AUTO_DISMISS_MS);
+    return () => clearTimeout(timer);
+  }, [dismissed, handleDismiss]);
+
   // Still loading or already dismissed — render nothing.
   if (dismissed !== false) return null;
 
@@ -170,15 +181,13 @@ function FirstRunToastBanner({ onDismiss }: FirstRunToastBannerProps): React.Rea
       role: 'status',
       'aria-live': 'polite',
       'aria-atomic': 'true',
+      // Positioned bottom-right so it never overlaps the app topbar/header.
+      // z-index is below modal overlays (100000+) but above page content.
       style: {
         position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 99997,
-        display: 'flex',
-        justifyContent: 'center',
-        padding: '8px 12px',
+        bottom: 24,
+        right: 24,
+        zIndex: 99990,
         pointerEvents: 'none',
       },
     },
@@ -193,12 +202,12 @@ function FirstRunToastBanner({ onDismiss }: FirstRunToastBannerProps): React.Rea
           justifyContent: 'space-between',
           gap: '12px',
           padding: '10px 16px',
-          width: 'min(720px, 100%)',
+          width: 'min(400px, calc(100vw - 48px))',
           maxWidth: '100%',
           background: 'var(--color-surface-overlay, rgba(255,255,255,0.97))',
-          borderBottom: '1px solid var(--color-border, rgba(0,0,0,0.1))',
+          border: '1px solid var(--color-border, rgba(0,0,0,0.1))',
           borderRadius: '10px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
           fontSize: '0.875em',
           color: 'var(--color-text, inherit)',
           backdropFilter: 'blur(8px)',
