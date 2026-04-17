@@ -246,6 +246,8 @@ widget persona-card {
     "Clicking the card body must emit SELECT to the parent collection; it must not navigate directly";
     "The status badge data-status attribute must always match the status prop value";
     "Strategy badge must be hidden when strategy prop is empty string";
+
+    "persona created with UUID as title: personaPageId must always be a human-readable slug prefixed with a schema namespace and colon (e.g. persona:my-agent-k3f9x2). A raw UUID as personaPageId means useContentNativeCreate.deriveNodeId did not run or title was empty — that is the defect this invariant documents. Fix: ensure the Tier 1b create form requires a non-empty title and deriveNodeId produces {schemaId}:{slug}-{random6}.";
   }
 
 }

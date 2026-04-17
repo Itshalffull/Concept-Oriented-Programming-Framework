@@ -12,7 +12,11 @@
  * When a destination's target Schema has `displayWidget` Property set
  * (the content-native page-as-record pattern), clicking Create should:
  *
- *   1. Generate a new entity id via crypto.randomUUID (with a fallback).
+ *   1. Derive a human-readable node ID from schemaId + title (when provided),
+ *      or fall back to crypto.randomUUID for untitled nodes.
+ *      Slug form: `{schemaId}:{slugifiedTitle}-{random6}` — readable AND
+ *      collision-safe. This prevents raw UUIDs from appearing as card titles
+ *      in list views that display the `node` field.
  *   2. Invoke ContentNode/createWithSchema(id, schemaId, body: "").
  *   3. Let the general sync foundation/syncs/content-native-schema.sync
  *      automatically scaffold default Template blocks for the schema —
@@ -26,17 +30,19 @@
  * const { create, isPending } = useContentNativeCreate();
  *
  * // In a Create button handler:
- * const result = await create('agent-persona');
+ * const result = await create('agent-persona', 'My New Agent');
  * if ('error' in result) {
  *   console.error(result.error);
  * }
  * // On success the hook has already navigated to /content/<entityId>.
+ * // entityId will be e.g. "agent-persona:my-new-agent-k3f9x2"
  * ```
  */
 
 import { useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useKernelInvoke } from './clef-provider';
+import { slugify } from './slug';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -57,6 +63,40 @@ function generateUUID(): string {
     const v = c === 'x' ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
+}
+
+/**
+ * Generate a 6-character random alphanumeric suffix for collision avoidance.
+ * Uses crypto.getRandomValues when available, falls back to Math.random.
+ */
+function randomSuffix(): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let out = '';
+  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+    const bytes = new Uint8Array(6);
+    crypto.getRandomValues(bytes);
+    for (const b of bytes) out += chars[b % chars.length];
+  } else {
+    for (let i = 0; i < 6; i++) out += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return out;
+}
+
+/**
+ * Derive a stable, human-readable node ID from a schema ID and an optional
+ * title. When title is provided, produces `{schemaId}:{slugifiedTitle}-{random6}`.
+ * When title is absent or empty, falls back to a raw UUID so the node is still
+ * unique (consistent with legacy behaviour).
+ *
+ * The random suffix prevents collisions when the same title is used twice
+ * without requiring a round-trip uniqueness check.
+ */
+function deriveNodeId(schemaId: string, title?: string): string {
+  const trimmed = title?.trim() ?? '';
+  if (!trimmed) return generateUUID();
+  const slug = slugify(trimmed);
+  if (!slug) return generateUUID();
+  return `${schemaId}:${slug}-${randomSuffix()}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -89,7 +129,7 @@ export function useContentNativeCreate(): UseContentNativeCreateResult {
 
   const create = useCallback(
     async (schemaId: string, title?: string): Promise<{ entityId: string } | { error: string }> => {
-      const entityId = generateUUID();
+      const entityId = deriveNodeId(schemaId, title);
       setIsPending(true);
 
       let result: Record<string, unknown>;
