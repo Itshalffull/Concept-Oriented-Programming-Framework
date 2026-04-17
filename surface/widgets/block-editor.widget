@@ -367,6 +367,17 @@ widget block-editor {
     "Tab and Shift+Tab move roving focus between blocks in contentArea";
     "Ctrl+B, Ctrl+I, Ctrl+E are deferred to the active EditSurface input-rule dispatch pipeline";
     "Ctrl+S fires SAVE; Ctrl+Z fires UNDO via the active EditSurface action binding";
+
+    example "Tab indents and preserves focus": {
+      after keypress(key: "Tab", target: contentArea) -> ok
+      then contentArea.focused = true
+      and root.dataState = "editing-block"
+    }
+
+    never "modal-less popover snatches focus on mount": {
+      panel.modal = false
+      and panel.focused = true
+    }
   }
 
 }
