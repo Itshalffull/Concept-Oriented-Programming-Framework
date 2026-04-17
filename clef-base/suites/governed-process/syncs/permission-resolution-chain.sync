@@ -1,73 +1,70 @@
-# Authorization resolution chain syncs — when a direct Authorization check
-# returns ok(granted:false) for a person, expand the lookup through the person's
-# governance offices, their circles, active process context, and proposal-type
-# guards so that indirect grants are honoured.
-# Migrated from Permission/check to Authorization/checkPermission
-# (see agents-as-subjects-refactor-plan §5.2).
+# Permission resolution chain syncs — when a direct permission check returns denied,
+# expand the lookup through the person's roles, their teams, active process context,
+# and proposal-type guards so that indirect grants are honoured.
 # See Architecture doc Sections 16.11, 16.12.
 
 sync RolePermissionExpansion [eager]
   purpose {
-    When a direct Authorization check returns granted:false for a person,
-    look up every governance office that person holds and re-check
-    authorization using the office identity so that permissions granted
-    to an office are inherited by all its holders.
+    When a direct permission check is denied for a person, look up every role
+    that person holds and re-check permission using the role identity so that
+    permissions granted to a role are inherited by all its members.
   }
 when {
-  Authorization/checkPermission: [ user: ?person; permission: ?action ]
-    => ok(granted: false)
+  Permission/check: [ who: ?person; where: ?resource; what: ?action ]
+    => denied(who: ?person; where: ?resource; what: ?action)
 }
 where {
-  GovernanceOffice: { ?office holders: ?person }
+  Role: { ?role holders: ?person }
 }
 then {
-  Authorization/checkPermission: [
-    user: concat("office:", ?office);
-    permission: ?action
+  Permission/check: [
+    who: concat("role:", ?role);
+    where: ?resource;
+    what: ?action
   ]
 }
 
-sync CirclePermissionExpansion [eager]
+sync TeamPermissionExpansion [eager]
   purpose {
-    When a direct Authorization check returns granted:false for a person,
-    check each circle the person belongs to so that permissions granted at
-    the circle level are available to all circle members regardless of
-    office assignments.
+    When a direct permission check is denied for a person, check each team
+    the person belongs to so that permissions granted at the team level are
+    available to all team members regardless of role assignments.
   }
 when {
-  Authorization/checkPermission: [ user: ?person; permission: ?action ]
-    => ok(granted: false)
+  Permission/check: [ who: ?person; where: ?resource; what: ?action ]
+    => denied(who: ?person; where: ?resource; what: ?action)
 }
 where {
-  Circle: { ?circle members: ?person }
+  Team: { ?team members: ?person }
 }
 then {
-  Authorization/checkPermission: [
-    user: concat("circle:", ?circle);
-    permission: ?action
+  Permission/check: [
+    who: concat("team:", ?team);
+    where: ?resource;
+    what: ?action
   ]
 }
 
 sync ProcessContextPermission [eager]
   purpose {
-    When an Authorization check returns granted:false for a person acting
-    inside an active process run, look up the process spec bound to that run
-    and check whether the spec itself carries permission for the requested
-    action, so that process-scoped grants are honoured for actions taken
-    within that run.
+    When a permission check is denied for a person acting inside an active
+    process run, look up the process spec bound to that run and check whether
+    the spec itself carries permission for the requested action, so that
+    process-scoped grants are honoured for actions taken within that run.
   }
 when {
-  Authorization/checkPermission: [ user: ?person; permission: ?action ]
-    => ok(granted: false)
+  Permission/check: [ who: ?person; where: ?resource; what: ?action ]
+    => denied(who: ?person; where: ?resource; what: ?action)
 }
 where {
   Property: { ?run key: "initiator"; value: ?person };
   Property: { ?run key: "spec_ref"; value: ?specRef }
 }
 then {
-  Authorization/checkPermission: [
-    user: concat("process:", ?specRef);
-    permission: ?action
+  Permission/check: [
+    who: concat("process:", ?specRef);
+    where: ?resource;
+    what: ?action
   ]
 }
 
@@ -86,8 +83,9 @@ where {
   Property: { ?proposalRef key: "proposalType"; value: ?proposalType }
 }
 then {
-  Authorization/checkPermission: [
-    user: concat("proposal-type:", ?proposalType);
-    permission: "execute"
+  Permission/check: [
+    who: concat("proposal-type:", ?proposalType);
+    where: ?proposalRef;
+    what: "execute"
   ]
 }

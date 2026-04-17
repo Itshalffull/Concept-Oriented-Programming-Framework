@@ -1,38 +1,36 @@
-# Governance-process integration syncs — wire governance concepts (Circle, Proposal, Vote)
+# Governance-process integration syncs — wire governance concepts (Team, Proposal, Vote)
 # to process execution concepts (ProcessSpec, ProcessRun) so that proposals drive
 # process runs and vote outcomes route those runs to their next step.
 
-sync CircleBindsProcess [eager]
+sync TeamBindsProcess [eager]
   purpose {
-    Associate a process spec with a circle via Relation so that the process
-    becomes discoverable and executable within that circle's governance scope.
+    Associate a process spec with a team via Relation so that the process
+    becomes discoverable and executable within that team's governance scope.
   }
 when {
-  Relation/link: [ relation: "circle_process"; source: ?circle; target: ?processSpec ]
+  Relation/link: [ relation: "team_process"; source: ?team; target: ?processSpec ]
     => ok()
 }
 then {
-  Property/set: [ entity: ?processSpec; key: "boundCircle"; value: ?circle ]
+  Property/set: [ entity: ?processSpec; key: "boundTeam"; value: ?team ]
 }
 
 sync RoleGatesProcessStart [eager]
   purpose {
     Before a process run is allowed to start, verify the initiator holds the
-    required executable role within the circle that owns the process spec.
-    Migrated from Permission/check to Authorization/checkPermission
-    (see agents-as-subjects-refactor-plan §5.2).
+    required role within the team that owns the process spec.
   }
 when {
   ProcessRun/start: [ spec_ref: ?spec_ref; spec_version: ?spec_version; input: ?input ]
     => ok(run: ?run; spec_ref: ?spec_ref)
 }
 where {
-  Property: { ?spec_ref key: "boundCircle"; value: ?circle };
+  Property: { ?spec_ref key: "boundTeam"; value: ?team };
   Property: { ?spec_ref key: "requiredRole"; value: ?role };
   Property: { ?run key: "initiator"; value: ?initiator }
 }
 then {
-  Authorization/checkPermission: [ user: ?initiator; permission: ?role ]
+  Permission/check: [ subject: ?initiator; resource: ?spec_ref; permission: ?role ]
 }
 
 sync ProposalLifecycleAsProcess [eager]

@@ -1,5 +1,5 @@
 // @clef-handler style=functional
-// Circle Concept Implementation
+// Team Concept Implementation
 // Organize governance into semi-autonomous nested groups with defined
 // jurisdictions and subsidiarity.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
@@ -13,12 +13,12 @@ type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
-  return `circle-${++idCounter}`;
+  return `team-${++idCounter}`;
 }
 
 const _handler: FunctionalConceptHandler = {
   register() {
-    return complete(createProgram(), 'ok', { name: 'Circle' }) as StorageProgram<Result>;
+    return complete(createProgram(), 'ok', { name: 'Team' }) as StorageProgram<Result>;
   },
 
   create(input: Record<string, unknown>) {
@@ -31,7 +31,7 @@ const _handler: FunctionalConceptHandler = {
     const parent = input.parent as string | null | undefined;
 
     let p = createProgram();
-    p = put(p, 'circle', id, {
+    p = put(p, 'team', id, {
       id,
       name: input.name,
       domain: input.domain,
@@ -44,102 +44,102 @@ const _handler: FunctionalConceptHandler = {
       createdAt: now,
     });
 
-    return complete(p, 'ok', { id, circle: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, team: id }) as StorageProgram<Result>;
   },
 
   assignMember(input: Record<string, unknown>) {
-    const circle = input.circle as string;
+    const team = input.team as string;
     const member = input.member as string;
 
     let p = createProgram();
-    p = get(p, 'circle', circle, 'record');
+    p = get(p, 'team', team, 'record');
 
     return branch(p, 'record',
       (thenP) => {
-        thenP = putFrom(thenP, 'circle', circle, (bindings) => {
+        thenP = putFrom(thenP, 'team', team, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           const members = (record.members as string[]) || [];
           if (!members.includes(member as string)) members.push(member as string);
           return { ...record, members };
         });
-        return complete(thenP, 'ok', { circle, member });
+        return complete(thenP, 'ok', { team, member });
       },
-      (elseP) => complete(elseP, 'not_found', { circle }),
+      (elseP) => complete(elseP, 'not_found', { team }),
     ) as StorageProgram<Result>;
   },
 
   removeMember(input: Record<string, unknown>) {
-    const circle = input.circle as string;
+    const team = input.team as string;
     const member = input.member as string;
 
     let p = createProgram();
-    p = get(p, 'circle', circle, 'record');
+    p = get(p, 'team', team, 'record');
 
     return branch(p, 'record',
       (thenP) => {
-        thenP = putFrom(thenP, 'circle', circle, (bindings) => {
+        thenP = putFrom(thenP, 'team', team, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           const members = ((record.members as string[]) || []).filter(m => m !== member);
           return { ...record, members };
         });
-        return complete(thenP, 'ok', { circle, member });
+        return complete(thenP, 'ok', { team, member });
       },
-      (elseP) => complete(elseP, 'not_found', { circle }),
+      (elseP) => complete(elseP, 'not_found', { team }),
     ) as StorageProgram<Result>;
   },
 
   setLinks(input: Record<string, unknown>) {
-    const circle = input.circle as string;
+    const team = input.team as string;
     const repLink = input.repLink;
     const leadLink = input.leadLink;
 
     let p = createProgram();
-    p = get(p, 'circle', circle, 'record');
+    p = get(p, 'team', team, 'record');
 
     return branch(p, 'record',
       (thenP) => {
-        thenP = putFrom(thenP, 'circle', circle, (bindings) => {
+        thenP = putFrom(thenP, 'team', team, (bindings) => {
           const record = bindings.record as Record<string, unknown>;
           return { ...record, leadLink, repLink };
         });
-        return complete(thenP, 'ok', { circle });
+        return complete(thenP, 'ok', { team });
       },
-      (elseP) => complete(elseP, 'not_found', { circle }),
+      (elseP) => complete(elseP, 'not_found', { team }),
     ) as StorageProgram<Result>;
   },
 
   dissolve(input: Record<string, unknown>) {
-    const circle = input.circle as string;
+    const team = input.team as string;
 
     let p = createProgram();
-    p = get(p, 'circle', circle, 'record');
+    p = get(p, 'team', team, 'record');
 
     return branch(p, 'record',
       (thenP) => {
-        let b2 = del(thenP, 'circle', circle);
-        return complete(b2, 'ok', { circle });
+        let b2 = del(thenP, 'team', team);
+        return complete(b2, 'ok', { team });
       },
-      (elseP) => complete(elseP, 'not_found', { circle }),
+      (elseP) => complete(elseP, 'not_found', { team }),
     ) as StorageProgram<Result>;
   },
 
   checkJurisdiction(input: Record<string, unknown>) {
-    const circle = input.circle as string;
+    const team = input.team as string;
     const action = input.action as string;
 
     let p = createProgram();
-    p = get(p, 'circle', circle, 'record');
+    p = get(p, 'team', team, 'record');
 
     return branch(p, 'record',
-      (thenP) => complete(thenP, 'ok', { circle, action }),
-      (elseP) => complete(elseP, 'not_found', { circle }),
+      (thenP) => complete(thenP, 'ok', { team, action }),
+      (elseP) => complete(elseP, 'not_found', { team }),
     ) as StorageProgram<Result>;
   },
 };
 
-export const circleHandler = autoInterpret(_handler);
+export const teamHandler = autoInterpret(_handler);
 
 /** Reset internal state. Useful for testing. */
-export function resetCircle(): void {
+export function resetTeam(): void {
   idCounter = 0;
 }

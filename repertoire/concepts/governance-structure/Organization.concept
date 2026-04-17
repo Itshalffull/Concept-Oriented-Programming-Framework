@@ -1,0 +1,103 @@
+# @fixtures-added
+@version(1)
+concept Organization [O] {
+
+  purpose {
+    Define a governance domain with its foundational purpose, values,
+    scope of authority, and constitutional layer configuration.
+  }
+
+  state {
+    organizations: set O
+    name: O -> String
+    purpose: O -> String
+    values: O -> list String
+    scope: O -> list String
+    constitutionalRules: O -> list String
+    operationalLayer: O -> String
+    policyLayer: O -> String
+    constitutionalLayer: O -> String
+    createdAt: O -> DateTime
+    amendedAt: O -> option DateTime
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action establish(name: String, purpose: String, values: list String, scope: list String) {
+      -> ok(organization: O) {
+        A new governance domain is created with the given charter attributes.
+        All three governance layers are initialized.
+      }
+
+      fixture valid_establish { name: "Acme Co-op", purpose: "Democratic governance for Acme", values: ["transparency", "equity"], scope: ["budgets", "hiring"] }
+      fixture minimal_establish { name: "Small Org", purpose: "Team coordination", values: [], scope: ["sprint-planning"] }
+      fixture missing_name { name: "", purpose: "No name provided", values: [], scope: [] } -> error
+    }
+
+    action amend(organization: O, field: String, newValue: String) {
+      -> ok(organization: O, field: String) {
+        The specified charter field is updated. AmendedAt timestamp is set.
+        Constitutional-layer changes require constitutional-layer procedures.
+      }
+      -> not_found(organization: O) {
+        The organization does not exist.
+      }
+      -> ok(organization: O, field: String) {
+        The field is protected by constitutional rules and cannot be amended
+        through this action.
+      }
+
+      fixture valid_amend { organization: $valid_establish.id, field: "purpose", newValue: "Updated governance mission" } after valid_establish
+      fixture amend_nonexistent { organization: "org-999", field: "purpose", newValue: "No such organization" } -> error
+    }
+
+    action dissolve(organization: O) {
+      -> ok(organization: O) {
+        The governance domain is dissolved. All downstream concepts should
+        be notified via sync.
+      }
+      -> not_found(organization: O) {
+        The organization does not exist.
+      }
+
+      fixture valid_dissolve { organization: $valid_establish.id, reason: "Merger with partner org" } after valid_establish
+      fixture dissolve_nonexistent { organization: "org-999", reason: "Does not exist" } -> error
+    }
+  }
+
+  example "establish-then-amend": {
+
+    after establish(name: _, purpose: _, values: _, scope: _) -> ok(organization: o)
+
+        then amend(organization: o, field: "purpose", newValue: _) -> ok(organization: o, field: "purpose")
+
+  }
+
+
+  always "valid-name" {
+
+    forall o in organizations:
+
+      o.name != none
+
+  }
+
+  never "orphaned-purpose" {
+
+    exists o in organizations:
+
+      o.purpose = none
+
+  }
+
+  action establish {
+
+    requires: name != ""
+
+    ensures established: name != none
+
+  }
+}

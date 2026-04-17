@@ -1,10 +1,10 @@
-# Circle — Content-Native Schema Definition
-# A circle (team/group) is a page with member blocks. Each member is an
-# Outline child with the "circle-member" child schema overlay.
-# The circle page displays: charter/description as rich content,
+# Team — Content-Native Schema Definition
+# A team (group) is a page with member blocks. Each member is an
+# Outline child with the "team-member" child schema overlay.
+# The team page displays: charter/description as rich content,
 # member list with roles and reputation, bound processes, and policies.
 
-name: circle
+name: team
 version: 1
 
 fields:
@@ -20,7 +20,7 @@ fields:
     type: string
     default: "sociocracy"
     enum: [sociocracy, holacracy, democratic, hierarchical, consensus, custom]
-  - name: parent_circle
+  - name: parent_team
     type: string
   - name: lead_link
     type: string
@@ -32,11 +32,11 @@ fields:
     enum: [forming, active, archived]
 
 contentNative:
-  childSchema: circle-member
-  defaultTemplate: standard-circle
+  childSchema: team-member
+  defaultTemplate: standard-team
 
 childSchemaDefinition:
-  name: circle-member
+  name: team-member
   isChildSchema: true
   fields:
     - name: member_id
@@ -61,8 +61,8 @@ defaultBlocks:
   - sectionType: lead
     role: lead
     member_id: ""
-    description: "Circle lead — accountable for the circle's domain"
-    defaultContent: "Assign a lead link for this circle."
+    description: "Team lead — accountable for the team's domain"
+    defaultContent: "Assign a lead link for this team."
   - sectionType: facilitator
     role: facilitator
     member_id: ""
@@ -71,5 +71,5 @@ defaultBlocks:
   - sectionType: member
     role: member
     member_id: ""
-    description: "Circle member"
-    defaultContent: "Add members to this circle."
+    description: "Team member"
+    defaultContent: "Add members to this team."

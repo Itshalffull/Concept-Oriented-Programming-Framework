@@ -8,8 +8,8 @@ export { sybilResistanceHandler } from './sybil-resistance.handler.js';
 export { attestationHandler } from './attestation.handler.js';
 export { agenticDelegateHandler } from './agentic-delegate.handler.js';
 
-export { polityHandler } from './polity.handler.js';
-export { circleHandler } from './circle.handler.js';
+export { organizationHandler } from './organization.handler.js';
+export { teamHandler } from './team.handler.js';
 export { delegationHandler } from './delegation.handler.js';
 export { weightHandler } from './weight.handler.js';
 

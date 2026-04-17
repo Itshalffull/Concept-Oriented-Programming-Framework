@@ -1,111 +1,112 @@
-# Role and hierarchy scoping syncs — wire roles to circles, enforce hierarchy,
-# and handle inheritance so that circle membership, lead-link designation, and
+# Role and hierarchy scoping syncs — wire roles to teams, enforce hierarchy,
+# and handle inheritance so that team membership, lead-link designation, and
 # role hierarchy produce consistent access-control effects automatically.
 
-sync OfficeScopedToCircle [eager]
+sync RoleScopedToTeam [eager]
   purpose {
-    When a governance office is created, associate it with its owning circle
-    via Relation so the office becomes discoverable within that circle's
-    governance scope.
+    When a role is created, associate it with its owning team via Relation
+    so the role becomes discoverable within that team's governance scope.
   }
 when {
-  GovernanceOffice/create: [ name: ?name; permissions: ?perms; polity: ?polity ]
-    => ok(office: ?office)
+  Role/create: [ name: ?name; permissions: ?perms; polity: ?polity ]
+    => ok(role: ?role)
 }
 then {
-  Relation/link: [ relation: "circle_role"; source: ?polity; target: ?office ]
+  Relation/link: [ relation: "team_role"; source: ?polity; target: ?role ]
 }
 
-sync ParentCircleLeadManagesChild [eager]
+sync ParentTeamLeadManagesChild [eager]
   purpose {
-    When a child circle is created under a parent, grant the parent's
-    lead-link management permission over the child circle so that
-    parent-circle representatives can govern child-circle offices and
-    processes. Migrated from Permission/grant to
-    Authorization/grantPermission (see agents-as-subjects-refactor-plan §5.2).
+    When a child team is created under a parent, grant the parent's
+    lead-link management permission over the child team so that
+    parent-team representatives can govern child-team roles and processes.
   }
 when {
-  Circle/create: [ name: ?name; domain: ?domain; parent: ?parent ]
-    => ok(circle: ?child)
+  Team/create: [ name: ?name; domain: ?domain; parent: ?parent ]
+    => ok(team: ?child)
 }
 where {
-  Circle: { ?parent leadLink: ?leadLink }
+  Team: { ?parent leadLink: ?leadLink }
 }
 then {
-  Authorization/grantPermission: [
-    role: ?leadLink;
-    permission: concat("manage:", ?child)
+  Permission/grant: [
+    who: ?leadLink;
+    where: ?child;
+    what: "manage";
+    condition: none;
+    grantedBy: "system"
   ]
 }
 
 sync RoleInheritance [eager]
   purpose {
-    When a member is assigned to a parent office that declares sub-offices via
-    hierarchy, propagate the assignment to each child office so that holders
-    of the parent automatically inherit the capacities of its sub-offices.
+    When a member is assigned to a parent role that declares sub-roles via
+    hierarchy, propagate the assignment to each child role so that holders
+    of the parent automatically inherit the capacities of its sub-roles.
   }
 when {
-  GovernanceOffice/assign: [ office: ?parentOffice; member: ?member; assignedBy: ?by ]
+  Role/assign: [ role: ?parentRole; member: ?member; assignedBy: ?by ]
     => ok(assignment: ?assignment)
 }
 where {
-  GovernanceOffice: { ?parentOffice hierarchy: ?childOffice }
+  Role: { ?parentRole hierarchy: ?childRole }
 }
 then {
-  GovernanceOffice/assign: [ office: ?childOffice; member: ?member; assignedBy: "inherited" ]
+  Role/assign: [ role: ?childRole; member: ?member; assignedBy: "inherited" ]
 }
 
-sync CircleMembershipEnablesRoleAccess [eager]
+sync TeamMembershipEnablesRoleAccess [eager]
   purpose {
-    When a member is added to a circle, grant them permission to hold
-    governance offices scoped to that circle so that circle membership is a
-    prerequisite for office assignment within that circle's governance
-    boundary. Migrated from Permission/grant to Authorization/grantPermission
-    (see agents-as-subjects-refactor-plan §5.2).
+    When a member is added to a team, grant them permission to hold roles
+    scoped to that team so that team membership is a prerequisite for
+    role assignment within that team's governance boundary.
   }
 when {
-  Circle/assignMember: [ circle: ?circle; member: ?member ]
-    => ok(circle: ?circle; member: ?member)
+  Team/assignMember: [ team: ?team; member: ?member ]
+    => ok(team: ?team; member: ?member)
 }
 then {
-  Authorization/grantPermission: [
-    role: ?member;
-    permission: concat("hold_role:", ?circle)
+  Permission/grant: [
+    who: ?member;
+    where: ?team;
+    what: "hold_role";
+    condition: none;
+    grantedBy: "membership"
   ]
 }
 
 sync LeadLinkAssignsRole [eager]
   purpose {
-    When a circle's lead-link is set, auto-assign the circle-scoped lead-link
-    governance office to that person so that office-based permission checks
+    When a team's lead-link is set, auto-assign the team-scoped lead-link
+    governance role to that person so that role-based permission checks
     immediately reflect the new link designation.
   }
 when {
-  Circle/setLinks: [ circle: ?circle; repLink: ?rep; leadLink: ?lead ]
-    => ok(circle: ?circle)
+  Team/setLinks: [ team: ?team; repLink: ?rep; leadLink: ?lead ]
+    => ok(team: ?team)
 }
 then {
-  GovernanceOffice/assign: [
-    office: concat(?circle, "-lead-link");
+  Role/assign: [
+    role: concat(?team, "-lead-link");
     member: ?lead;
-    assignedBy: "circle-governance"
+    assignedBy: "team-governance"
   ]
 }
 
 sync RepLinkAssignsRole [eager]
   purpose {
-    When a circle's rep-link is set, auto-assign the circle-scoped rep-link
-    governance office to that person so that the representative's capacities
-    within the parent circle are enforced through the office system.
+    When a team's rep-link is set, auto-assign the team-scoped rep-link
+    governance role to that person so that the representative's capacities
+    within the parent team are enforced through the role system.
   }
 when {
-  Circle/setLinks: [ circle: ?circle; repLink: ?rep; leadLink: ?lead ]
-    => ok(circle: ?circle)
+  Team/setLinks: [ team: ?team; repLink: ?rep; leadLink: ?lead ]
+    => ok(team: ?team)
 }
 then {
-  GovernanceOffice/assign: [
-    office: concat(?circle, "-rep-link");
+  Role/assign: [
+    role: concat(?team, "-rep-link");
     member: ?rep;
-    assignedBy: "circle-governance"
+    assignedBy: "team-governance"
   ]
 }

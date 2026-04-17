@@ -1,0 +1,33 @@
+# Initialize the team content-native schema.
+# Sets Properties so general syncs auto-wire page promotion,
+# child schema application, and default member blocks.
+
+sync TeamSchemaInit [eager]
+  purpose { Register the team schema with childSchema Property. }
+when {
+  Schema/defineSchema: [ schema: "team"; fields: "name,domain,description,governance_model,parent_team,lead_link,rep_link,status" ]
+    => ok()
+}
+then {
+  Property/set: [ entity: "team"; key: "childSchema"; value: "team-member" ]
+}
+
+sync TeamDefaultTemplate [eager]
+  purpose { Set default template for team pages. }
+when {
+  Schema/defineSchema: [ schema: "team"; fields: "name,domain,description,governance_model,parent_team,lead_link,rep_link,status" ]
+    => ok()
+}
+then {
+  Property/set: [ entity: "team"; key: "defaultTemplate"; value: "standard-team" ]
+}
+
+sync TeamMemberSchemaInit [eager]
+  purpose { Register the team-member child schema. }
+when {
+  Schema/defineSchema: [ schema: "team-member"; fields: "member_id,role,joined_date,reputation_score,active,delegation_to" ]
+    => ok()
+}
+then {
+  Property/set: [ entity: "team-member"; key: "isChildSchema"; value: "true" ]
+}
