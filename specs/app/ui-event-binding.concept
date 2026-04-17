@@ -1,0 +1,224 @@
+@version(1)
+@category("ui-core")
+@visibility("public")
+concept UIEventBinding [B] {
+
+  purpose {
+    Bind a widget action-part to a surface-level UI effect that does not
+    flow through the kernel — navigation, modal management, focus, scroll,
+    local widget-state mutation, FSM event dispatch, and transient toasts.
+    The concept records and validates binding configuration; actual UI
+    dispatch is performed by platform-specific surface adapters that
+    subscribe to UIEventBinding/invoke completions via syncs.
+  }
+
+  state {
+    bindings: set B
+    definition {
+      kind:   B -> String
+      target: B -> String
+      params: B -> String
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+
+    action bind(binding: B, kind: String, target: String, params: String) {
+      -> ok(binding: B) {
+        Register a surface UI-event binding. Kind must be one of the
+        canonical effect kinds: navigate, open-modal, close-modal, dismiss,
+        focus, scroll-to, set-local-state, emit-event, or toast.
+        Target and params interpret differently per kind — callers should
+        consult per-kind documentation.
+      }
+      -> duplicate(message: String) {
+        A UIEventBinding with this identifier already exists; use unbind
+        first if a replacement is needed.
+      }
+      -> invalid_kind(message: String) {
+        The provided kind is not one of the nine canonical UI effect
+        kinds. No binding is created.
+      }
+
+      fixture bind_navigate {
+        binding: "goto-home"
+        kind: "navigate"
+        target: "home"
+        params: "{}"
+      }
+      fixture bind_open_modal {
+        binding: "open-create-modal"
+        kind: "open-modal"
+        target: "create-entity-modal"
+        params: "{}"
+      }
+      fixture bind_close_modal {
+        binding: "close-top-modal"
+        kind: "close-modal"
+        target: "top"
+        params: "{}"
+      }
+      fixture bind_dismiss {
+        binding: "dismiss-overlay"
+        kind: "dismiss"
+        target: ""
+        params: "{}"
+      }
+      fixture bind_focus {
+        binding: "focus-search"
+        kind: "focus"
+        target: "search-input"
+        params: "{}"
+      }
+      fixture bind_scroll_to {
+        binding: "scroll-to-top"
+        kind: "scroll-to"
+        target: "#content-top"
+        params: "{\"behavior\":\"smooth\"}"
+      }
+      fixture bind_set_local_state {
+        binding: "toggle-sidebar"
+        kind: "set-local-state"
+        target: "sidebar.open"
+        params: "{\"value\":true}"
+      }
+      fixture bind_emit_event {
+        binding: "emit-tab-change"
+        kind: "emit-event"
+        target: "TAB_CHANGED"
+        params: "{\"tabId\":\"overview\"}"
+      }
+      fixture bind_toast {
+        binding: "show-saved-toast"
+        kind: "toast"
+        target: "success"
+        params: "{\"title\":\"Saved\",\"description\":\"Your changes have been saved.\"}"
+      }
+      fixture bind_bad_kind {
+        binding: "bad"
+        kind: "open-drawer"
+        target: "settings"
+        params: "{}"
+      } -> invalid_kind
+      fixture bind_bad_params_json {
+        binding: "bad-params"
+        kind: "navigate"
+        target: "home"
+        params: "not-json"
+      } -> invalid_kind
+      fixture bind_duplicate {
+        binding: "goto-home"
+        kind: "navigate"
+        target: "profile"
+        params: "{}"
+      } after bind_navigate -> duplicate
+    }
+
+    action get(binding: B) {
+      -> ok(binding: B, kind: String, target: String, params: String) {
+        Return the full configuration of a registered UI event binding.
+      }
+      -> notfound(message: String) {
+        No UIEventBinding with this identifier is registered.
+      }
+
+      fixture get_ok { binding: $bind_navigate.binding } after bind_navigate
+      fixture get_missing { binding: "nonexistent-uieb" } -> notfound
+    }
+
+    action unbind(binding: B) {
+      -> ok() {
+        Remove the UI event binding, leaving state empty for that identifier.
+      }
+      -> notfound(message: String) {
+        No UIEventBinding with this identifier exists.
+      }
+
+      fixture unbind_existing { binding: $bind_navigate.binding } after bind_navigate
+      fixture unbind_missing { binding: "nonexistent-uieb" } -> notfound
+    }
+
+    action list() {
+      -> ok(bindings: String) {
+        Return all registered UI event bindings as a JSON array. Each entry
+        includes binding id, kind, target, and params.
+      }
+
+      fixture list_all {} after bind_navigate
+    }
+
+    action invoke(binding: B, context: String) {
+      -> ok(binding: B, kind: String, target: String, params: String, context: String) {
+        Validate that the binding exists and emit a structured completion
+        record for surface adapter syncs to consume. The handler does NOT
+        dispatch the UI effect — platform adapters listening on
+        UIEventBinding/invoke(ok) perform the actual operation.
+        Context is an opaque JSON string provided by the caller (e.g.,
+        the current route, selected entity id).
+      }
+      -> notfound(message: String) {
+        No UIEventBinding with this identifier is registered. The effect
+        is never dispatched and no surface adapter sync fires.
+      }
+
+      fixture invoke_navigate {
+        binding: $bind_navigate.binding
+        context: "{\"currentRoute\":\"/home\"}"
+      } after bind_navigate
+      fixture invoke_open_modal {
+        binding: $bind_open_modal.binding
+        context: "{\"entityId\":\"node-1\"}"
+      } after bind_open_modal
+      fixture invoke_missing {
+        binding: "nonexistent-uieb"
+        context: "{}"
+      } -> notfound
+    }
+
+  }
+
+  // ---------------------------------------------------------------------------
+  // Invariants
+  // ---------------------------------------------------------------------------
+
+  example "bind then invoke emits kind and target": {
+    after bind(binding: b, kind: "navigate", target: "home", params: "{}") -> ok(binding: b)
+    then invoke(binding: b, context: "{}") -> ok(kind: "navigate", target: "home")
+  }
+
+  example "bind then get returns full config": {
+    after bind(binding: b, kind: "toast", target: "success", params: "{\"title\":\"Done\"}") -> ok(binding: b)
+    then get(binding: b) -> ok(kind: "toast", target: "success")
+  }
+
+  example "unknown kind is rejected at bind time": {
+    after bind(binding: b, kind: "open-drawer", target: "settings", params: "{}") -> invalid_kind(message: _)
+    then invoke(binding: b, context: "{}") -> notfound(message: _)
+  }
+
+  never "invoking non-existent binding reaches dispatcher": {
+    exists b in bindings:
+      b.kind = none
+  }
+
+  always "unbind leaves state empty for that binding": {
+    forall b in bindings:
+      b.kind != none and b.target != none
+  }
+
+  action bind {
+    requires: kind in {"navigate", "open-modal", "close-modal", "dismiss",
+                       "focus", "scroll-to", "set-local-state",
+                       "emit-event", "toast"}
+    ensures ok: binding in bindings
+  }
+
+  action invoke {
+    requires: binding in bindings
+  }
+
+}
