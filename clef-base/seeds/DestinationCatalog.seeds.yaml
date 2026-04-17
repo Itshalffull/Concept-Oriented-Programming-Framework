@@ -178,3 +178,10 @@ entries:
     href: /admin/form-builder
     icon: "▥"
     group: Structure
+  - destination: reconcilers
+    name: reconcilers
+    targetConcept: ContentReconciler
+    targetView: reconcilers-list
+    href: /admin/system/reconcilers
+    icon: "↺"
+    group: Platform

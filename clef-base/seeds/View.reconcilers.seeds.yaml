@@ -1,0 +1,16 @@
+# View seed for ContentReconciler admin list.
+# The /admin/system/reconcilers route renders ReconcilersView directly,
+# but this View record makes the DestinationCatalog targetView resolvable
+# and backs ViewRenderer fallback lookups.
+
+concept: View
+action: create
+entries:
+  - view: reconcilers-list
+    dataSource: '{"concept":"ContentReconciler","action":"list","params":{}}'
+    layout: table
+    visibleFields: '[{"key":"sourceId","label":"Source"},{"key":"targetConcept","label":"Target","formatter":"badge"},{"key":"drift","label":"Status","formatter":"badge"},{"key":"lastReconciledAt","label":"Last reconciled","formatter":"date"}]'
+    controls: '{"rowClick":{"navigateTo":"/admin/system/reconcilers/{registration}"}}'
+    title: Content Reconcilers
+    description: Reverse-projection registrations that map authored content pages back to concept state. Register a mapping to reconcile page content (e.g. program.md) into its target concept (Constitution, Proposal).
+    defaultDisplayMode: table-row

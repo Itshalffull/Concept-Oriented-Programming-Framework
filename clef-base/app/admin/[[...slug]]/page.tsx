@@ -27,6 +27,7 @@ import { RecursiveEditorView } from '../../views/RecursiveEditorView';
 import { PersonaEditorView } from '../../views/PersonaEditorView';
 import { MediaLibraryView } from '../../views/MediaLibraryView';
 import { TaxonomyView } from '../../views/TaxonomyView';
+import { ReconcilersView } from '../../views/ReconcilersView';
 
 export default async function AdminPage({
   params,
@@ -348,6 +349,25 @@ export default async function AdminPage({
     return (
       <HostedPage>
         <ViewRenderer viewId="mappings-list" />
+      </HostedPage>
+    );
+  }
+
+  // ContentReconciler admin — reverse-projection registrations list + detail.
+  // /admin/system/reconcilers           → list
+  // /admin/system/reconcilers/:regId    → detail with Reconcile/Plan actions
+  if (slug[0] === 'system' && slug[1] === 'reconcilers' && slug[2]) {
+    return (
+      <HostedPage>
+        <ReconcilersView registrationId={decodeURIComponent(slug[2])} />
+      </HostedPage>
+    );
+  }
+
+  if (slug[0] === 'system' && slug[1] === 'reconcilers') {
+    return (
+      <HostedPage>
+        <ReconcilersView />
       </HostedPage>
     );
   }
