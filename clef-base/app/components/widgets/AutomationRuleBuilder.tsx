@@ -18,6 +18,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useKernelInvoke, useNavigator } from '../../../lib/clef-provider';
 import { slugify } from '../../../lib/slug';
+import {
+  BindingEditor,
+  emptyBindingValue,
+  migrateBindingValue,
+  type BindingValue,
+} from './BindingEditor';
 import { ConceptActionPicker } from './ConceptActionPicker';
 
 interface AutomationRuleBuilderProps {
@@ -26,7 +32,17 @@ interface AutomationRuleBuilderProps {
 }
 
 interface Condition { field: string; op: string; value: string }
-interface ActionRow { concept: string; action: string; input: Record<string, string> }
+/**
+ * An action row stores a BindingValue so it supports all three binding kinds
+ * (Action, UI Event, Composite). Legacy rows of shape
+ * `{concept, action, input}` are migrated on hydrate; on save we serialise
+ * back to the canonical `{concept, action, input}` shape for Action-mode
+ * rows so existing downstream consumers keep working.
+ */
+interface ActionRow { binding: BindingValue }
+
+/** Back-compat shape persisted for Action-mode rows. */
+interface LegacyActionRow { concept: string; action: string; input: Record<string, string> }
 
 const COMPARISON_OPS = ['eq', 'neq', 'gt', 'gte', 'lt', 'lte', 'contains', 'starts_with', 'in', 'exists'];
 
@@ -56,13 +72,60 @@ function parseActions(raw: unknown): ActionRow[] {
   }
   return arr.map((a) => {
     const o = a as Record<string, unknown>;
+    // Modern shape: {binding: BindingValue}
+    if (o && typeof o === 'object' && 'binding' in o && o.binding && typeof o.binding === 'object') {
+      return { binding: migrateBindingValue(o.binding) };
+    }
+    // Modern shape (inlined mode/action/uiEvent/steps): already a BindingValue
+    if (o && typeof o === 'object' && 'mode' in o) {
+      return { binding: migrateBindingValue(o) };
+    }
+    // Legacy: {concept, action, input} — migrate to Action-mode BindingValue
     const input = (o?.input as Record<string, unknown>) ?? {};
     const inputStr: Record<string, string> = {};
     for (const [k, v] of Object.entries(input)) {
       inputStr[k] = typeof v === 'string' ? v : JSON.stringify(v);
     }
-    return { concept: String(o?.concept ?? ''), action: String(o?.action ?? ''), input: inputStr };
+    return {
+      binding: {
+        mode: 'action',
+        action: {
+          concept: String(o?.concept ?? ''),
+          action: String(o?.action ?? ''),
+          inputs: inputStr,
+        },
+      },
+    };
   });
+}
+
+/**
+ * Serialise an ActionRow for persistence. Action-mode rows keep the
+ * legacy `{concept, action, input}` shape so existing rule consumers
+ * continue to work. UI-event and composite rows are stored as the full
+ * BindingValue inside a `binding` field.
+ */
+function serializeActionRow(row: ActionRow): Record<string, unknown> | LegacyActionRow {
+  const { binding } = row;
+  if (binding.mode === 'action' && binding.action) {
+    return {
+      concept: binding.action.concept,
+      action: binding.action.action,
+      input: binding.action.inputs,
+    };
+  }
+  return { binding };
+}
+
+/** True iff the BindingValue has enough to persist. */
+function isBindingValid(binding: BindingValue): boolean {
+  if (binding.mode === 'action') {
+    return !!(binding.action?.concept && binding.action?.action);
+  }
+  if (binding.mode === 'ui-event') {
+    return !!binding.uiEvent?.kind;
+  }
+  return (binding.steps ?? []).length > 0;
 }
 
 export const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({
@@ -145,43 +208,28 @@ export const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({
     setConditions((c) => c.map((row, idx) => (idx === i ? { ...row, ...patch } : row)));
   const removeCondition = (i: number) => setConditions((c) => c.filter((_, idx) => idx !== i));
 
-  const addAction = () => setActions((a) => [...a, { concept: '', action: '', input: {} }]);
-  const updateAction = (i: number, patch: Partial<ActionRow>) =>
-    setActions((a) => a.map((row, idx) => (idx === i ? { ...row, ...patch } : row)));
+  const addAction = () => setActions((a) => [...a, { binding: emptyBindingValue() }]);
+  const updateActionBinding = (i: number, binding: BindingValue) =>
+    setActions((a) => a.map((row, idx) => (idx === i ? { binding } : row)));
   const removeAction = (i: number) => setActions((a) => a.filter((_, idx) => idx !== i));
-
-  const updateActionInput = (i: number, key: string, value: string) =>
-    setActions((a) => a.map((row, idx) => (idx === i ? { ...row, input: { ...row.input, [key]: value } } : row)));
-  const addActionInputKey = (i: number) =>
-    setActions((a) => a.map((row, idx) => {
-      if (idx !== i) return row;
-      const k = `key${Object.keys(row.input).length + 1}`;
-      return { ...row, input: { ...row.input, [k]: '' } };
-    }));
-  const removeActionInputKey = (i: number, key: string) =>
-    setActions((a) => a.map((row, idx) => {
-      if (idx !== i) return row;
-      const next = { ...row.input };
-      delete next[key];
-      return { ...row, input: next };
-    }));
 
   const handleSave = async () => {
     if (!ruleId.trim()) { setError('Rule ID is required.'); return; }
     if (!trigger) { setError('Trigger is required.'); return; }
-    const validActions = actions.filter((a) => a.concept && a.action);
+    const validActions = actions.filter((a) => isBindingValid(a.binding));
     if (validActions.length === 0) { setError('Add at least one action.'); return; }
 
     setSaving(true);
     setError(null);
     try {
       const validConditions = conditions.filter((c) => c.field && c.op);
+      const serializedActions = validActions.map(serializeActionRow);
       if (mode === 'create') {
         const content = JSON.stringify({
           name: displayName.trim() || ruleId.trim(),
           trigger: triggerLabel,
           conditions: validConditions,
-          actions: validActions,
+          actions: serializedActions,
           enabled: false,
         });
         const result = await invoke('ContentNode', 'createWithSchema', {
@@ -199,7 +247,7 @@ export const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({
           rule: ruleId.trim(),
           trigger: triggerLabel,
           conditions: JSON.stringify(validConditions),
-          actions: JSON.stringify(validActions),
+          actions: JSON.stringify(serializedActions),
         });
         if (result.variant !== 'ok' && result.variant !== 'updated') {
           setError(String(result.message ?? `Unexpected variant: ${result.variant}`));
@@ -349,56 +397,10 @@ export const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({
                   }}
                 >×</button>
               </div>
-              <ConceptActionPicker
-                value={a.concept && a.action ? { concept: a.concept, action: a.action } : undefined}
-                onChange={(v) => updateAction(i, { concept: v.concept, action: v.action })}
-                filter="mutating"
-                placeholder="Search output concept/action…"
+              <BindingEditor
+                value={a.binding}
+                onChange={(binding) => updateActionBinding(i, binding)}
               />
-              <div style={{ marginTop: 'var(--spacing-sm)' }}>
-                <span style={{ fontSize: 12, color: 'var(--palette-on-surface-variant, #6b7280)', display: 'block', marginBottom: 4 }}>
-                  Input fields
-                </span>
-                {Object.entries(a.input).map(([key, value]) => (
-                  <div key={key} style={{ display: 'grid', gridTemplateColumns: '1fr 2fr auto', gap: 4, marginBottom: 4 }}>
-                    <input
-                      value={key}
-                      onChange={(e) => {
-                        const newKey = e.target.value;
-                        const next = { ...a.input };
-                        delete next[key];
-                        next[newKey] = value;
-                        updateAction(i, { input: next });
-                      }}
-                      placeholder="key"
-                    />
-                    <input
-                      value={value}
-                      onChange={(e) => updateActionInput(i, key, e.target.value)}
-                      placeholder="value"
-                    />
-                    <button
-                      type="button"
-                      aria-label={`Remove input ${key}`}
-                      onClick={() => removeActionInputKey(i, key)}
-                      style={{
-                        border: 'none', background: 'transparent',
-                        cursor: 'pointer', padding: '0 4px', fontSize: 14,
-                        color: 'var(--palette-on-surface-variant, #6b7280)',
-                      }}
-                    >×</button>
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  data-part="button"
-                  data-variant="outlined"
-                  onClick={() => addActionInputKey(i)}
-                  style={{ fontSize: 12 }}
-                >
-                  + Add input field
-                </button>
-              </div>
             </div>
           ))}
           <button
