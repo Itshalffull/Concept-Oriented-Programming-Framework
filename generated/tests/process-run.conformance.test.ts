@@ -34,7 +34,7 @@ describe('ProcessRun functional handler', () => {
 
   describe('start', () => {
     it('builds a valid StorageProgram', () => {
-      const program = processRunHandler.start({ spec_ref: 'test-spec_ref', spec_version: 1, input: 'test' });
+      const program = processRunHandler.start({ spec_ref: "test-spec", spec_version: "1", input: "test-input" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -42,21 +42,21 @@ describe('ProcessRun functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = processRunHandler.start({ spec_ref: 'test-spec_ref', spec_version: 1, input: 'test' });
+      const program = processRunHandler.start({ spec_ref: "test-spec", spec_version: "1", input: "test-input" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = processRunHandler.start({ spec_ref: 'test-spec_ref', spec_version: 1, input: 'test' });
+      const program = processRunHandler.start({ spec_ref: "test-spec", spec_version: "1", input: "test-input" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = processRunHandler.start({ spec_ref: 'test-spec_ref', spec_version: 1, input: 'test' });
+      const program = processRunHandler.start({ spec_ref: "test-spec", spec_version: "1", input: "test-input" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -69,7 +69,7 @@ describe('ProcessRun functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = processRunHandler.start({ spec_ref: 'test-spec_ref', spec_version: 1, input: 'test' });
+      const program = processRunHandler.start({ spec_ref: "test-spec", spec_version: "1", input: "test-input" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -77,11 +77,18 @@ describe('ProcessRun functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof processRunHandler.start !== 'function') return;
-      const result = await interpret(processRunHandler.start({ spec_ref: 'test-spec_ref', spec_version: 1, input: 'test' }), storage);
+      const result = await interpret(processRunHandler.start({ spec_ref: "test-spec", spec_version: "1", input: "test-input" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
+    });
+
+    it('fixture "start_ok" -> ok', async () => {
+      if (typeof processRunHandler.start !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(processRunHandler.start({ spec_ref: "test-spec", spec_version: "1", input: "test-input" }), storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -142,7 +149,7 @@ describe('ProcessRun functional handler', () => {
 
   describe('complete', () => {
     it('builds a valid StorageProgram', () => {
-      const program = processRunHandler.complete({ run: 'test', output: 'test' });
+      const program = processRunHandler.complete({ run: {"type":"ref","fixture":"start_ok","field":"run"}, output: "test-output" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -150,21 +157,21 @@ describe('ProcessRun functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = processRunHandler.complete({ run: 'test', output: 'test' });
+      const program = processRunHandler.complete({ run: {"type":"ref","fixture":"start_ok","field":"run"}, output: "test-output" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = processRunHandler.complete({ run: 'test', output: 'test' });
+      const program = processRunHandler.complete({ run: {"type":"ref","fixture":"start_ok","field":"run"}, output: "test-output" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = processRunHandler.complete({ run: 'test', output: 'test' });
+      const program = processRunHandler.complete({ run: {"type":"ref","fixture":"start_ok","field":"run"}, output: "test-output" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -177,7 +184,7 @@ describe('ProcessRun functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = processRunHandler.complete({ run: 'test', output: 'test' });
+      const program = processRunHandler.complete({ run: {"type":"ref","fixture":"start_ok","field":"run"}, output: "test-output" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -185,11 +192,19 @@ describe('ProcessRun functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof processRunHandler.complete !== 'function') return;
-      const result = await interpret(processRunHandler.complete({ run: 'test', output: 'test' }), storage);
+      const result = await interpret(processRunHandler.complete({ run: {"type":"ref","fixture":"start_ok","field":"run"}, output: "test-output" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
+    });
+
+    it('fixture "complete_ok" -> ok', async () => {
+      if (typeof processRunHandler.complete !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_start_ok = await interpret(processRunHandler.start({ spec_ref: "test-spec", spec_version: "1", input: "test-input" }), storage);
+      const result = await interpret(processRunHandler.complete({ run: afterResult_start_ok?.output?.["run"], output: "test-output" }), storage);
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -412,7 +427,7 @@ describe('ProcessRun functional handler', () => {
 
   describe('get_status', () => {
     it('builds a valid StorageProgram', () => {
-      const program = processRunHandler.get_status({ run: 'test' });
+      const program = processRunHandler.get_status({ run: {"type":"ref","fixture":"start_ok","field":"run"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -420,21 +435,21 @@ describe('ProcessRun functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = processRunHandler.get_status({ run: 'test' });
+      const program = processRunHandler.get_status({ run: {"type":"ref","fixture":"start_ok","field":"run"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = processRunHandler.get_status({ run: 'test' });
+      const program = processRunHandler.get_status({ run: {"type":"ref","fixture":"start_ok","field":"run"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = processRunHandler.get_status({ run: 'test' });
+      const program = processRunHandler.get_status({ run: {"type":"ref","fixture":"start_ok","field":"run"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -447,7 +462,7 @@ describe('ProcessRun functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = processRunHandler.get_status({ run: 'test' });
+      const program = processRunHandler.get_status({ run: {"type":"ref","fixture":"start_ok","field":"run"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -455,11 +470,177 @@ describe('ProcessRun functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof processRunHandler.get_status !== 'function') return;
-      const result = await interpret(processRunHandler.get_status({ run: 'test' }), storage);
+      const result = await interpret(processRunHandler.get_status({ run: {"type":"ref","fixture":"start_ok","field":"run"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
+    });
+
+    it('fixture "get_status_ok" -> ok', async () => {
+      if (typeof processRunHandler.get_status !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_start_ok = await interpret(processRunHandler.start({ spec_ref: "test-spec", spec_version: "1", input: "test-input" }), storage);
+      const result = await interpret(processRunHandler.get_status({ run: afterResult_start_ok?.output?.["run"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "get_status_missing" -> not_found', async () => {
+      if (typeof processRunHandler.get_status !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(processRunHandler.get_status({ run: "nonexistent-run" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('not_found'));
+    });
+
+  });
+
+  describe('replay', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = processRunHandler.replay({ run: {"type":"ref","fixture":"complete_ok","field":"run"} });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = processRunHandler.replay({ run: {"type":"ref","fixture":"complete_ok","field":"run"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = processRunHandler.replay({ run: {"type":"ref","fixture":"complete_ok","field":"run"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = processRunHandler.replay({ run: {"type":"ref","fixture":"complete_ok","field":"run"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = processRunHandler.replay({ run: {"type":"ref","fixture":"complete_ok","field":"run"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof processRunHandler.replay !== 'function') return;
+      const result = await interpret(processRunHandler.replay({ run: {"type":"ref","fixture":"complete_ok","field":"run"} }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "replay_ok" -> ok', async () => {
+      if (typeof processRunHandler.replay !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_start_ok = await interpret(processRunHandler.start({ spec_ref: "test-spec", spec_version: "1", input: "test-input" }), storage);
+      const afterResult_complete_ok = await interpret(processRunHandler.complete({ run: afterResult_start_ok?.output?.["run"], output: "test-output" }), storage);
+      const result = await interpret(processRunHandler.replay({ run: afterResult_complete_ok?.output?.["run"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "replay_not_found" -> not_found', async () => {
+      if (typeof processRunHandler.replay !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(processRunHandler.replay({ run: "nonexistent-run" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('not_found'));
+    });
+
+    it('fixture "replay_invalid_state" -> invalid_state', async () => {
+      if (typeof processRunHandler.replay !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_start_ok = await interpret(processRunHandler.start({ spec_ref: "test-spec", spec_version: "1", input: "test-input" }), storage);
+      const result = await interpret(processRunHandler.replay({ run: afterResult_start_ok?.output?.["run"] }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('invalid_state'));
+    });
+
+  });
+
+  describe('attachContext', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = processRunHandler.attachContext({ run: {"type":"ref","fixture":"start_ok","field":"run"}, key: "traceId", value: "abc-123" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = processRunHandler.attachContext({ run: {"type":"ref","fixture":"start_ok","field":"run"}, key: "traceId", value: "abc-123" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = processRunHandler.attachContext({ run: {"type":"ref","fixture":"start_ok","field":"run"}, key: "traceId", value: "abc-123" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = processRunHandler.attachContext({ run: {"type":"ref","fixture":"start_ok","field":"run"}, key: "traceId", value: "abc-123" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = processRunHandler.attachContext({ run: {"type":"ref","fixture":"start_ok","field":"run"}, key: "traceId", value: "abc-123" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof processRunHandler.attachContext !== 'function') return;
+      const result = await interpret(processRunHandler.attachContext({ run: {"type":"ref","fixture":"start_ok","field":"run"}, key: "traceId", value: "abc-123" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "attach_ok" -> ok', async () => {
+      if (typeof processRunHandler.attachContext !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_start_ok = await interpret(processRunHandler.start({ spec_ref: "test-spec", spec_version: "1", input: "test-input" }), storage);
+      const result = await interpret(processRunHandler.attachContext({ run: afterResult_start_ok?.output?.["run"], key: "traceId", value: "abc-123" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "attach_not_found" -> not_found', async () => {
+      if (typeof processRunHandler.attachContext !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(processRunHandler.attachContext({ run: "nonexistent-run", key: "traceId", value: "abc" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('not_found'));
     });
 
   });
@@ -512,6 +693,8 @@ describe('ProcessRun functional handler', () => {
               fc.record({ action: fc.constant('suspend'), input: fc.record({ run: fc.string() }) }),
               fc.record({ action: fc.constant('resume'), input: fc.record({ run: fc.string() }) }),
               fc.record({ action: fc.constant('get_status'), input: fc.record({ run: fc.string() }) }),
+              fc.record({ action: fc.constant('replay'), input: fc.record({ run: fc.string(), fromStep: fc.string() }) }),
+              fc.record({ action: fc.constant('attachContext'), input: fc.record({ run: fc.string(), key: fc.string({ minLength: 1, maxLength: 50 }), value: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -549,6 +732,8 @@ describe('ProcessRun functional handler', () => {
               fc.record({ action: fc.constant('suspend'), input: fc.record({ run: fc.string() }) }),
               fc.record({ action: fc.constant('resume'), input: fc.record({ run: fc.string() }) }),
               fc.record({ action: fc.constant('get_status'), input: fc.record({ run: fc.string() }) }),
+              fc.record({ action: fc.constant('replay'), input: fc.record({ run: fc.string(), fromStep: fc.string() }) }),
+              fc.record({ action: fc.constant('attachContext'), input: fc.record({ run: fc.string(), key: fc.string({ minLength: 1, maxLength: 50 }), value: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

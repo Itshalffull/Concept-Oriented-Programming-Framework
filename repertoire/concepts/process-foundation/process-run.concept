@@ -18,6 +18,7 @@ concept ProcessRun [R] {
     input: R -> option Bytes
     output: R -> option Bytes
     error: R -> option String
+    context: R -> option String           // JSON-encoded key-value context map
   }
 
   capabilities {
@@ -33,6 +34,7 @@ concept ProcessRun [R] {
       -> ok(spec_ref: String) {
         Referenced spec does not exist or is not active.
       }
+      fixture start_ok { spec_ref: "test-spec", spec_version: 1, input: "test-input" }
     }
 
     action start_child(spec_ref: String, spec_version: Int, parent_run: String, input: Bytes) {
@@ -51,6 +53,7 @@ concept ProcessRun [R] {
       -> ok(run: R) {
         Run is not in running status.
       }
+      fixture complete_ok { run: $start_ok.run, output: "test-output" } after start_ok
     }
 
     action fail(run: R, error: String) {
@@ -96,6 +99,39 @@ concept ProcessRun [R] {
       -> not_found(run: R) {
         No run with this identifier exists.
       }
+      fixture get_status_ok { run: $start_ok.run } after start_ok
+      fixture get_status_missing { run: "nonexistent-run" } -> not_found
+    }
+
+    action replay(run: R, fromStep: option String) {
+      -> ok(newRun: R) {
+        Clones the inputs from an existing completed or failed run and starts a fresh run.
+        Returns the new run identifier. If fromStep is provided the new run is tagged
+        to begin from that step.
+      }
+      -> not_found() {
+        No run with the given identifier exists.
+      }
+      -> invalid_state() {
+        The original run is still pending or running and cannot be replayed until it reaches
+        a terminal state (completed or failed).
+      }
+      fixture replay_ok { run: $complete_ok.run } after complete_ok
+      fixture replay_not_found { run: "nonexistent-run" } -> not_found
+      fixture replay_invalid_state { run: $start_ok.run } after start_ok -> invalid_state
+      reversal: none
+    }
+
+    action attachContext(run: R, key: String, value: String) {
+      -> ok() {
+        Attaches or updates the given key-value pair in the run's context map.
+        Merges with any previously attached context.
+      }
+      -> not_found() {
+        No run with the given identifier exists.
+      }
+      fixture attach_ok { run: $start_ok.run, key: "traceId", value: "abc-123" } after start_ok
+      fixture attach_not_found { run: "nonexistent-run", key: "traceId", value: "abc" } -> not_found
     }
   }
 

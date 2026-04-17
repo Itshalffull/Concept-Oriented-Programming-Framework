@@ -4,7 +4,7 @@
 // failure, or cancellation, including parent-child relationships for subprocess nesting.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, branch, complete, completeFrom, putFrom,
+  createProgram, get, put, branch, complete, completeFrom, putFrom, mergeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -258,4 +258,76 @@ const handler: FunctionalConceptHandler = {
   },
 };
 
-export const processRunHandler = autoInterpret(handler);
+// Extend handler with replay and attachContext actions
+const fullHandler: FunctionalConceptHandler = {
+  ...handler,
+
+  replay(input: Record<string, unknown>) {
+    const runId = input.run as string;
+    const fromStep = (input.fromStep as string | undefined) ?? null;
+
+    let p = createProgram();
+    p = get(p, 'process-run', runId, 'existing');
+    return branch(p, 'existing',
+      (b) => {
+        const newId = `${runId}:replay:${Date.now()}`;
+        return branch(b,
+          (bindings) => {
+            const rec = bindings.existing as Record<string, unknown>;
+            const status = rec.status as string;
+            return status !== 'completed' && status !== 'failed';
+          },
+          (b2) => complete(b2, 'invalid_state', {}),
+          (b2) => {
+            let b3 = putFrom(b2, 'process-run', newId, (bindings) => {
+              const rec = bindings.existing as Record<string, unknown>;
+              const now = new Date().toISOString();
+              return {
+                id: newId,
+                spec_ref: rec.spec_ref as string,
+                spec_version: rec.spec_version as number,
+                status: 'running',
+                parent_run: null,
+                started_at: now,
+                ended_at: null,
+                input: rec.input ?? null,
+                output: null,
+                error: null,
+                context: fromStep ? JSON.stringify({ fromStep }) : null,
+              };
+            });
+            return complete(b3, 'ok', { newRun: newId });
+          },
+        );
+      },
+      (b) => complete(b, 'not_found', {}),
+    ) as StorageProgram<Result>;
+  },
+
+  attachContext(input: Record<string, unknown>) {
+    const runId = input.run as string;
+    const key = input.key as string;
+    const value = input.value as string;
+
+    let p = createProgram();
+    p = get(p, 'process-run', runId, 'existing');
+    return branch(p, 'existing',
+      (b) => {
+        let b2 = mergeFrom(b, 'process-run', runId, (bindings) => {
+          const rec = bindings.existing as Record<string, unknown>;
+          let ctx: Record<string, string> = {};
+          const existingCtx = rec.context as string | null | undefined;
+          if (existingCtx) {
+            try { ctx = JSON.parse(existingCtx); } catch { ctx = {}; }
+          }
+          ctx[key] = value;
+          return { context: JSON.stringify(ctx) };
+        });
+        return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'not_found', {}),
+    ) as StorageProgram<Result>;
+  },
+};
+
+export const processRunHandler = autoInterpret(fullHandler);
