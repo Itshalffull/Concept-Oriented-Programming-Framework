@@ -467,6 +467,15 @@ widget form-builder {
     never "valid form id shows not-found empty state": {
       state.machine = "idle"
     }
+
+    never "fields pane empty when schema or concept matches": {
+      state.machine = "idle"
+    }
+
+    example "ContentNode form resolves concept-level field list": {
+      after root -> { "data-schema": "ContentNode", "data-state": "idle" }
+      then fieldList -> { "data-empty": "false" }
+    }
   }
 
 }

@@ -87,6 +87,61 @@ const CONDITION_OPERATORS: ConditionOperator[] = [
   'less-than',
 ];
 
+// ─── Concept-field fallbacks ──────────────────────────────────────────────────
+//
+// When a FormSpec references a schema value that matches a Clef concept name
+// (e.g. "ContentNode") rather than a registered Schema record, no FieldDefinition
+// rows exist in storage and FieldDefinition/list returns an empty array.  The
+// fallback map below synthesises FieldDefinition-shaped records from each
+// concept's state model so the Fields pane is never empty for known concepts.
+//
+// Add entries here whenever a new concept-backed FormSpec is seeded.
+
+const CONCEPT_FIELD_FALLBACKS: Record<string, FieldDefinition[]> = {
+  // ContentNode state fields: node, title, type, content, createdBy, createdAt, updatedAt
+  ContentNode: [
+    { id: 'ContentNode::node',      schemaId: 'ContentNode', label: 'Node ID',      type: 'text',         required: true,  sortOrder: 0 },
+    { id: 'ContentNode::title',     schemaId: 'ContentNode', label: 'Title',        type: 'text',         required: false, sortOrder: 1 },
+    { id: 'ContentNode::type',      schemaId: 'ContentNode', label: 'Type',         type: 'text',         required: true,  sortOrder: 2 },
+    { id: 'ContentNode::content',   schemaId: 'ContentNode', label: 'Content',      type: 'rich-text',    required: false, sortOrder: 3 },
+    { id: 'ContentNode::createdBy', schemaId: 'ContentNode', label: 'Created By',   type: 'person',       required: false, sortOrder: 4 },
+    { id: 'ContentNode::createdAt', schemaId: 'ContentNode', label: 'Created At',   type: 'created-time', required: false, sortOrder: 5 },
+    { id: 'ContentNode::updatedAt', schemaId: 'ContentNode', label: 'Updated At',   type: 'created-time', required: false, sortOrder: 6 },
+  ],
+};
+
+/**
+ * Parse the raw FieldDefinition/list response into a sorted FieldDefinition[].
+ * If the result is empty and `schemaId` matches a known concept name, returns
+ * the synthesised fallback field list for that concept instead.
+ *
+ * This ensures the Fields pane is never empty for concept-backed FormSpecs
+ * (e.g. "ContentNode / create") even though those concepts have no Schema rows
+ * registered in the content-native Schema registry.
+ */
+function resolveFieldDefs(
+  defsResult: Record<string, unknown>,
+  schemaId: string | undefined,
+): FieldDefinition[] {
+  const parsed: FieldDefinition[] =
+    defsResult.variant === 'ok'
+      ? (typeof defsResult.items === 'string'
+          ? (JSON.parse(defsResult.items) as FieldDefinition[])
+          : ((defsResult.items ?? []) as FieldDefinition[]))
+      : [];
+
+  if (parsed.length > 0) {
+    return parsed.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+  }
+
+  // Empty result — try concept fallback
+  if (schemaId && Object.prototype.hasOwnProperty.call(CONCEPT_FIELD_FALLBACKS, schemaId)) {
+    return CONCEPT_FIELD_FALLBACKS[schemaId];
+  }
+
+  return [];
+}
+
 // ─── Unique ID helpers ────────────────────────────────────────────────────────
 
 let _idCounter = 0;
@@ -1098,13 +1153,7 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({
       let cancelled = false;
       invoke('FieldDefinition', 'list', { schemaId }).then((defsResult) => {
         if (cancelled) return;
-        const defs: FieldDefinition[] =
-          defsResult.variant === 'ok'
-            ? (typeof defsResult.items === 'string'
-                ? (JSON.parse(defsResult.items) as FieldDefinition[])
-                : (defsResult.items as FieldDefinition[]))
-            : [];
-        defs.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+        const defs = resolveFieldDefs(defsResult as Record<string, unknown>, schemaId);
         setFieldDefs(defs);
       }).catch(() => { /* non-fatal */ });
       return () => { cancelled = true; };
@@ -1173,14 +1222,7 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({
         const defsResult = effectiveSchemaId
           ? await invoke('FieldDefinition', 'list', { schemaId: effectiveSchemaId })
           : { variant: 'notfound' as const };
-        const defs: FieldDefinition[] =
-          defsResult.variant === 'ok'
-            ? (typeof defsResult.items === 'string'
-                ? (JSON.parse(defsResult.items) as FieldDefinition[])
-                : (defsResult.items as FieldDefinition[]))
-            : [];
-
-        defs.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+        const defs = resolveFieldDefs(defsResult as Record<string, unknown>, effectiveSchemaId ?? undefined);
 
         if (!cancelled) {
           if (specResult.variant === 'ok') {
