@@ -1,0 +1,85 @@
+# UIEventBinding example seeds — demonstrates each canonical UI effect kind.
+#
+# These bindings are illustrative; apps wire them to real widget action-parts
+# via ComponentMapping/bindAction or the SlotSourceEditor composite binding UI.
+
+concept: UIEventBinding
+action: bind
+entries:
+  # navigate — route to a named destination
+  - binding: "uieb-navigate-home"
+    kind: "navigate"
+    target: "home"
+    params: "{}"
+
+  # navigate — route to content detail with context (entity id resolved at invoke time)
+  - binding: "uieb-navigate-content-detail"
+    kind: "navigate"
+    target: "content-detail"
+    params: "{\"preserve_scroll\":false}"
+
+  # open-modal — open a named modal overlay
+  - binding: "uieb-open-create-entity-modal"
+    kind: "open-modal"
+    target: "create-entity-modal"
+    params: "{}"
+
+  # open-modal — open a settings panel overlay
+  - binding: "uieb-open-settings"
+    kind: "open-modal"
+    target: "settings-panel"
+    params: "{\"section\":\"general\"}"
+
+  # close-modal — close a specific modal by id
+  - binding: "uieb-close-create-modal"
+    kind: "close-modal"
+    target: "create-entity-modal"
+    params: "{}"
+
+  # close-modal — close whatever is on top of the stack
+  - binding: "uieb-close-top-modal"
+    kind: "close-modal"
+    target: "top"
+    params: "{}"
+
+  # dismiss — close the topmost overlay (no target needed)
+  - binding: "uieb-dismiss-overlay"
+    kind: "dismiss"
+    target: ""
+    params: "{}"
+
+  # focus — move focus to the main search input
+  - binding: "uieb-focus-search"
+    kind: "focus"
+    target: "global-search-input"
+    params: "{}"
+
+  # scroll-to — smooth scroll to the top of the page content
+  - binding: "uieb-scroll-to-top"
+    kind: "scroll-to"
+    target: "content-top"
+    params: "{\"behavior\":\"smooth\"}"
+
+  # set-local-state — toggle the sidebar open/closed
+  - binding: "uieb-toggle-sidebar"
+    kind: "set-local-state"
+    target: "app-sidebar.open"
+    params: "{\"value\":true}"
+
+  # emit-event — fire a custom FSM event on a machine
+  - binding: "uieb-emit-tab-changed"
+    kind: "emit-event"
+    target: "entity-tabs-machine"
+    params: "{\"event\":\"TAB_CHANGED\",\"tabId\":\"overview\"}"
+
+  # toast — show a success notification
+  - binding: "uieb-toast-saved"
+    kind: "toast"
+    target: "success"
+    params: "{\"title\":\"Saved\",\"description\":\"Your changes have been saved successfully.\"}"
+
+  # toast — show an error notification
+  - binding: "uieb-toast-error"
+    kind: "toast"
+    target: "error"
+    params: "{\"title\":\"Error\",\"description\":\"Something went wrong. Please try again.\"}"
