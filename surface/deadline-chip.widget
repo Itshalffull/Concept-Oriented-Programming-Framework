@@ -1,0 +1,138 @@
+@version(1)
+widget deadline-chip {
+
+  purpose {
+    Compact chip showing how much time remains before a governance step closes.
+    Urgency escalates through three time-based states: ample (more than 24 hours
+    remaining), warning (1-24 hours), and critical (under 1 hour). When the
+    deadline has passed or the step is explicitly closed the chip enters an
+    expired state. State transitions are driven by elapsed time or by the
+    closed prop being set to true; the widget does not poll a clock itself.
+    The parent is responsible for updating closes_at or closed in response to
+    real-time events.
+  }
+
+  anatomy {
+    root:          container    { Outer chip wrapper; carries urgency state for styling }
+    icon:          presentation { Clock or alert icon encoding urgency level }
+    timeRemaining: text         { Human-readable countdown string }
+    urgencyRing:   presentation { Colored ring reinforcing urgency through color }
+  }
+
+  states {
+    ample [initial] {
+      on WARN      -> warning;
+      on EXPIRE    -> expired;
+    }
+    warning {
+      on CRITICISE -> critical;
+      on EXPIRE    -> expired;
+    }
+    critical {
+      on EXPIRE    -> expired;
+    }
+    expired {
+      on REOPEN    -> ample;
+    }
+  }
+
+  accessibility {
+    role: status;
+    modal: false;
+    keyboard {
+      Tab -> FOCUS_NEXT;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: if state.urgency == "expired" then "Voting closed"
+                    else if state.urgency == "critical" then concat("Critical: ", self.remaining, " remaining")
+                    else if state.urgency == "warning" then concat("Warning: ", self.remaining, " remaining")
+                    else concat(self.remaining, " remaining");
+        aria-atomic: "true";
+      };
+      icon -> {
+        aria-hidden: "true";
+      };
+      urgencyRing -> {
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    closes_at: option String
+    closed:    Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part:      "root";
+      data-state:     state.urgency;
+      data-closed:    if ?closed then "true" else "false";
+      data-closes-at: ?closes_at;
+      role:           "status";
+      aria-live:      "polite";
+      aria-atomic:    "true";
+    }
+
+    icon -> {
+      data-part:     "icon";
+      data-icon-kind: if state.urgency == "expired" then "expired"
+                      else if state.urgency == "critical" then "alert"
+                      else if state.urgency == "warning" then "clock-warn"
+                      else "clock";
+      aria-hidden:   "true";
+    }
+
+    timeRemaining -> {
+      data-part: "time-remaining";
+      text:      if state.urgency == "expired" then "Closed"
+                 else self.remaining;
+    }
+
+    urgencyRing -> {
+      data-part:    "urgency-ring";
+      data-urgency: state.urgency;
+      aria-hidden:  "true";
+    }
+  }
+
+  invariant {
+    "data-state on root must mirror the FSM urgency state at all times: ample, warning, critical, or expired";
+    "icon aria-hidden must be true in all states because the icon is a purely presentational element";
+    "urgencyRing aria-hidden must be true in all states because the ring is a purely presentational element";
+    "timeRemaining text must read Closed when the urgency state is expired";
+    "icon data-icon-kind must be clock in the ample state";
+    "icon data-icon-kind must be clock-warn in the warning state";
+    "icon data-icon-kind must be alert in the critical state";
+    "icon data-icon-kind must be expired in the expired state";
+    "root aria-atomic must be true so assistive tech announces the full label on change";
+    "root aria-live must be polite so deadline changes are announced without interruption";
+    "All four states must be reachable: ample is initial, warning via WARN, critical via CRITICISE, expired via EXPIRE";
+
+    always "icon is decorative" {
+      icon.aria-hidden = "true"
+    }
+
+    always "urgency ring is decorative" {
+      urgencyRing.aria-hidden = "true"
+    }
+
+    never "expired state without prior ample" {
+      state.urgency = "expired"
+    }
+
+    action root {
+      requires: state.urgency != "expired"
+      ensures ok: state.urgency = "expired"
+    }
+  }
+
+}

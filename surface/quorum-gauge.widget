@@ -1,0 +1,151 @@
+@version(1)
+widget quorum-gauge {
+
+  purpose {
+    Arc gauge visualising voter participation relative to the total eligible
+    electorate. The filled arc segment grows as participants join. A threshold
+    marker on the arc track shows the fraction required for quorum. Three states
+    cover the common conditions: participation is still below the quorum threshold,
+    quorum has been met, and the poll is closed. The widget is read-only display;
+    it does not record participation itself.
+  }
+
+  anatomy {
+    root:              container    { Outer wrapper; reflects participation state }
+    arcTrack:          presentation { Background arc representing the full eligible population }
+    arcFill:           presentation { Foreground arc segment representing participation so far }
+    participatedCount: text         { Number of eligible voters who have participated }
+    eligibleCount:     text         { Total number of eligible voters }
+    thresholdMarker:   presentation { Marker on the arc indicating the quorum threshold angle }
+    label:             text         { Descriptive label beneath the gauge }
+  }
+
+  states {
+    belowQuorum [initial] {
+      on QUORUM_MET  -> quorumMet;
+      on POLL_CLOSED -> closed;
+    }
+    quorumMet {
+      on QUORUM_LOST -> belowQuorum;
+      on POLL_CLOSED -> closed;
+    }
+    closed {
+      on POLL_REOPENED -> belowQuorum;
+    }
+  }
+
+  accessibility {
+    role: img;
+    modal: false;
+    keyboard {
+      Tab -> FOCUS_NEXT;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "img";
+        aria-label: if state.participation == "closed" then concat(?participated, " of ", ?eligible, " participated - closed")
+                    else if state.participation == "quorumMet" then concat(?participated, " of ", ?eligible, " participated - quorum met")
+                    else concat(?participated, " of ", ?eligible, " participated - quorum not yet met");
+        aria-roledescription: "quorum participation gauge";
+      };
+      arcTrack -> {
+        aria-hidden: "true";
+      };
+      arcFill -> {
+        aria-hidden: "true";
+      };
+      thresholdMarker -> {
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    participated:     Int = 0
+    eligible:         Int = 1
+    quorum_threshold: Float = 0.5
+    closed:           Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part:         "root";
+      data-state:        state.participation;
+      data-participated: ?participated;
+      data-eligible:     ?eligible;
+      data-threshold:    ?quorum_threshold;
+      data-closed:       if ?closed then "true" else "false";
+      role:              "img";
+    }
+
+    arcTrack -> {
+      data-part:   "arc-track";
+      aria-hidden: "true";
+    }
+
+    arcFill -> {
+      data-part:   "arc-fill";
+      data-share:  if ?eligible > 0 then ?participated / ?eligible else 0;
+      aria-hidden: "true";
+    }
+
+    participatedCount -> {
+      data-part: "participated-count";
+      text:      ?participated;
+    }
+
+    eligibleCount -> {
+      data-part: "eligible-count";
+      text:      ?eligible;
+    }
+
+    thresholdMarker -> {
+      data-part:      "threshold-marker";
+      data-threshold: ?quorum_threshold;
+      aria-hidden:    "true";
+    }
+
+    label -> {
+      data-part: "label";
+      text:      if state.participation == "closed" then "Voting closed"
+                 else if state.participation == "quorumMet" then "Quorum met"
+                 else "Quorum not yet met";
+    }
+  }
+
+  invariant {
+    "data-state on root must mirror the FSM participation state at all times: belowQuorum, quorumMet, or closed";
+    "arcFill data-share must be the ratio of participated to eligible, or 0 when eligible is 0";
+    "arcFill aria-hidden must be true because the fill arc is a purely presentational element";
+    "arcTrack aria-hidden must be true because the track arc is a purely presentational element";
+    "thresholdMarker aria-hidden must be true because the marker is a purely presentational element";
+    "label text must read Quorum met in the quorumMet state";
+    "label text must read Voting closed in the closed state";
+    "label text must read Quorum not yet met in the belowQuorum state";
+    "root aria-label must summarise participated count, eligible count, and quorum outcome";
+    "All three states must be reachable: belowQuorum is initial, quorumMet on QUORUM_MET, closed on POLL_CLOSED";
+
+    always "arc fill is decorative" {
+      arcFill.aria-hidden = "true"
+    }
+
+    always "threshold marker is decorative" {
+      thresholdMarker.aria-hidden = "true"
+    }
+
+    never "arc track shown to assistive tech" {
+      arcTrack.aria-hidden = "false"
+    }
+
+    action root {
+      requires: state.participation = "belowQuorum"
+      ensures ok: state.participation = "quorumMet"
+    }
+  }
+
+}
