@@ -1,0 +1,210 @@
+# @fixtures-added
+@version(1)
+concept ContentReconciler [R] {
+
+  purpose {
+    Reverse-project live concept state back into authored content pages so
+    editable admin surfaces (the "program.md" authoring flow) stay in
+    contractual sync with the runtime. Given a registered mapping from a
+    content source (schema + sourceId) to a target concept, ContentReconciler
+    computes a diff between the authored page and the live projection and
+    applies or reports the resulting patch. Dispatch is by registration;
+    ContentReconciler has zero awareness of which providers implement the
+    actual projection — routing syncs resolve the registration at call time.
+  }
+
+  state {
+    registrations: set R
+    sourceKind: R -> String
+    sourceId: R -> String
+    targetConcept: R -> String
+    mapping: R -> String
+    status: R -> String
+    drift: R -> String
+    lastReconciledAt: R -> String
+    lastPlan: R -> String
+    metadata: R -> String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(sourceKind: String, sourceId: String, targetConcept: String, mapping: String) {
+      -> ok(registration: R) {
+        Registers a reverse-projection contract from the content source
+        identified by (sourceKind, sourceId) to the target concept, with an
+        opaque mapping string that the routing sync interprets. The new
+        registration is recorded with status "registered" and no prior
+        reconciliation timestamp.
+      }
+      -> duplicate(message: String) {
+        A registration for this (sourceKind, sourceId) pair already exists.
+        Callers should update the existing record or unregister first.
+      }
+      -> error(message: String) {
+        One of sourceKind, sourceId, or targetConcept is empty or the mapping
+        string is malformed.
+      }
+
+      fixture register_program {
+        sourceKind: "page"
+        sourceId: "program.md"
+        targetConcept: "Constitution"
+        mapping: "{\"projection\":\"program-to-constitution\"}"
+      }
+      fixture register_proposal {
+        sourceKind: "page"
+        sourceId: "proposal-001.md"
+        targetConcept: "Proposal"
+        mapping: "{\"projection\":\"page-to-proposal\"}"
+      }
+      fixture register_empty_source {
+        sourceKind: "page"
+        sourceId: ""
+        targetConcept: "Constitution"
+        mapping: "{}"
+      } -> error
+    }
+
+    action reconcile(sourceKind: String, sourceId: String) {
+      -> ok(applied: Int, skipped: Int) {
+        Reads the registration, resolves the live projection via the routing
+        sync, diffs it against the authored page, and applies the resulting
+        patch to the target concept. Returns how many projected changes were
+        applied and how many were skipped (already in sync, or flagged as
+        lossy by the provider). Sets status to "in-sync" and updates
+        lastReconciledAt.
+      }
+      -> notfound(message: String) {
+        No registration exists for this (sourceKind, sourceId) pair.
+      }
+      -> error(message: String) {
+        sourceId is empty or the registration is malformed.
+      }
+
+      fixture reconcile_program {
+        sourceKind: "page"
+        sourceId: "program.md"
+      } after register_program
+      fixture reconcile_missing {
+        sourceKind: "page"
+        sourceId: "nonexistent.md"
+      } -> notfound
+      fixture reconcile_empty {
+        sourceKind: "page"
+        sourceId: ""
+      } -> error
+    }
+
+    action plan(sourceKind: String, sourceId: String) {
+      -> ok(changes: String) {
+        Computes the reverse-projection diff without applying it. Returns the
+        diff as an opaque JSON string describing proposed patches the
+        reconcile action would apply. Useful for review surfaces and
+        requires_review outcomes. Records the plan on the registration so
+        later reconcile calls can reuse the same diff.
+      }
+      -> notfound(message: String) {
+        No registration exists for this (sourceKind, sourceId) pair.
+      }
+      -> error(message: String) {
+        sourceId is empty.
+      }
+
+      fixture plan_program {
+        sourceKind: "page"
+        sourceId: "program.md"
+      } after register_program
+      fixture plan_missing {
+        sourceKind: "page"
+        sourceId: "nonexistent.md"
+      } -> notfound
+    }
+
+    action status(sourceKind: String, sourceId: String) {
+      -> ok(lastReconciledAt: String, drift: String) {
+        Returns the last time this registration was reconciled and the
+        current drift state ("in-sync", "drift", "conflict", "lossy",
+        "requires_review", or "registered" when never reconciled). Empty
+        lastReconciledAt means the registration has never been reconciled.
+      }
+      -> notfound(message: String) {
+        No registration exists for this (sourceKind, sourceId) pair.
+      }
+
+      fixture status_program {
+        sourceKind: "page"
+        sourceId: "program.md"
+      } after register_program
+      fixture status_missing {
+        sourceKind: "page"
+        sourceId: "nonexistent.md"
+      } -> notfound
+    }
+
+    action list() {
+      -> ok(registrations: String) {
+        Returns every reverse-projection registration as a JSON array,
+        including sourceKind, sourceId, targetConcept, status, drift, and
+        lastReconciledAt for each entry. Admin surfaces render this as the
+        top-level reconciler list.
+      }
+
+      fixture list_after_two { } after register_program
+    }
+  }
+
+  example "register-then-reconcile": {
+
+    after register(sourceKind: "page", sourceId: "program.md", targetConcept: "Constitution", mapping: "{}") -> ok(registration: r)
+
+        then reconcile(sourceKind: "page", sourceId: "program.md") -> ok(applied: _, skipped: _)
+
+  }
+
+  example "register-then-status": {
+
+    after register(sourceKind: "page", sourceId: "program.md", targetConcept: "Constitution", mapping: "{}") -> ok(registration: r)
+
+        then status(sourceKind: "page", sourceId: "program.md") -> ok(lastReconciledAt: _, drift: _)
+
+  }
+
+  always "valid-drift" {
+
+    forall x in registrations:
+
+      x.drift != none
+
+  }
+
+  never "orphaned-source" {
+
+    exists x in registrations:
+
+      x.sourceId = none
+
+  }
+
+  action register {
+
+    requires: sourceId != ""
+
+    ensures ok: registrations contains result.registration
+
+  }
+
+  action reconcile {
+
+    requires: sourceId != ""
+
+  }
+
+  action plan {
+
+    requires: sourceId != ""
+
+  }
+}

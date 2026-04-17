@@ -48,6 +48,8 @@ import { versionSpaceHandler } from '../../handlers/ts/version-space.handler';
 import { canvasHandler } from '../../handlers/ts/app/canvas.handler';
 // Content extras
 import { snippetHandler } from '../../handlers/ts/app/snippet.handler';
+// Content reconciliation (reverse projection)
+import { contentReconcilerHandler } from '../../handlers/ts/app/content-reconciler.handler';
 // Research / Evidence Platform
 import { claimHandler } from '../../handlers/ts/app/claim.handler';
 import { researchProjectHandler } from '../../handlers/ts/app/research-project.handler';
@@ -307,6 +309,13 @@ const SUPPLEMENTAL_REGISTRY_ENTRIES = [
     uri: 'urn:clef/Snippet',
     handler: snippetHandler,
     storageName: 'snippet',
+    storageType: 'standard' as const,
+  },
+  // Content reconciliation (reverse projection)
+  {
+    uri: 'urn:clef/ContentReconciler',
+    handler: contentReconcilerHandler,
+    storageName: 'content-reconciler',
     storageType: 'standard' as const,
   },
   // Research / Evidence Platform
