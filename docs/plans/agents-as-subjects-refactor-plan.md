@@ -26,11 +26,13 @@
 | Card | PRD Sections | Blocked By | Blocks | Commit |
 |---|---|---|---|---|
 | **MAG-952** Subject unification layer + registration syncs | §2, §4, §13 | — | MAG-954, MAG-956 | — |
+| **MAG-958** AgentRegistration concept + Subject sync integration | §4, implementation PRD | — | MAG-954 | — |
 | **MAG-953** Executable access unification + GovernanceOffice disposition | §5, §6, §12 | — | MAG-954, MAG-955, MAG-956, MAG-957 | — |
 | **MAG-954** Agent runtime subject binding + attribution chain | §7, §8 | MAG-952, MAG-953 | MAG-957 | — |
 | **MAG-955** Pilot inherited auth + Subject threading + `PilotMode` | §9 | MAG-953 | — | — |
 | **MAG-956** Process dispatch eligibility separation + shadow mode | §10 | MAG-952, MAG-953 | MAG-957 | — |
 | **MAG-957** Governance amendment flow + policy epochs + bootstrap/program flow | §11, §13, §16 | MAG-953, MAG-954, MAG-956 | — | — |
+| **MAG-959** ContentReconciler concept + program/admin reverse projection | §16, implementation PRD | — | — | — |
 
 ---
 
