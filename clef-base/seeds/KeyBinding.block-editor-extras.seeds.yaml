@@ -1,0 +1,104 @@
+# KeyBinding seeds — block-editor supplemental shortcuts (MAG-888 migration buffer).
+#
+# PRD:  docs/plans/keybinding-prd.md Phase H
+# Card: MAG-888
+#
+# KB-17 (KeyBinding.block-editor.seeds.yaml) registered the core inline-
+# formatting and structural shortcuts (Cmd+B/I/U/`, slash, Cmd+Z, Tab/
+# Shift+Tab, Cmd+A).  The following RecursiveBlockEditor shortcuts were
+# left as hardcoded onKeyDown handlers without corresponding KeyBinding
+# seeds, meaning they were invisible to the keyboard-help modal, the
+# command palette, and future user-override flows.  This file closes
+# those gaps.
+#
+# All four bindings use scope "app.editor" so they are active whenever
+# focus is inside the block-editor root container (which carries
+# data-keybinding-scope="app.editor").
+#
+# The actionBinding field references existing ActionBinding IDs that
+# were already seeded in other files; no new ActionBinding records are
+# needed.
+#
+# Companion ActionBinding files:
+#   ActionBinding.block-duplicate.seeds.yaml   → block-duplicate
+#   ActionBinding.find-replace.seeds.yaml      → find-replace-open
+#   ActionBinding.export.seeds.yaml            → export-doc-open
+#   ActionBinding.focus-mode.seeds.yaml        → focus-mode-toggle
+
+concept: KeyBinding
+action: register
+entries:
+
+  # ------------------------------------------------------------------
+  # Cmd+D — duplicate focused block (PP-duplicate-block)
+  # Clones the focused block (or all selected blocks) as siblings
+  # immediately below the original(s).  ActionBinding "block-duplicate"
+  # is declared in ActionBinding.block-duplicate.seeds.yaml.
+  # ------------------------------------------------------------------
+  - binding: kb-block-duplicate
+    label: "Duplicate Block"
+    description: "Duplicate the focused block (or all selected blocks) as siblings below the original"
+    category: "Editing"
+    scope: "app.editor"
+    priority: 10
+    chord: '[{"mod":["meta"],"key":"d","code":"KeyD"},{"mod":["ctrl"],"key":"d","code":"KeyD"}]'
+    phase: "capture"
+    onlyOutsideTextInput: false
+    overridesBrowser: true
+    actionBinding: "block-duplicate"
+    params: ""
+
+  # ------------------------------------------------------------------
+  # Cmd+F — open find / replace overlay (PP-find-replace)
+  # Opens the FindReplaceOverlay inside the block editor.
+  # ActionBinding "find-replace-open" is in ActionBinding.find-replace.seeds.yaml.
+  # ------------------------------------------------------------------
+  - binding: kb-block-find-replace
+    label: "Find / Replace"
+    description: "Open the find-and-replace overlay for the current document"
+    category: "Editing"
+    scope: "app.editor"
+    priority: 10
+    chord: '[{"mod":["meta"],"key":"f","code":"KeyF"},{"mod":["ctrl"],"key":"f","code":"KeyF"}]'
+    phase: "capture"
+    onlyOutsideTextInput: false
+    overridesBrowser: true
+    actionBinding: "find-replace-open"
+    params: ""
+
+  # ------------------------------------------------------------------
+  # Cmd+Shift+E — export document (PP-export-dialog)
+  # Opens the ExportDialog modal via ModalStack.  ActionBinding
+  # "export-doc-open" is in ActionBinding.export.seeds.yaml.
+  # ------------------------------------------------------------------
+  - binding: kb-block-export
+    label: "Export Document"
+    description: "Open the document export dialog (Markdown, HTML, PDF, JSON)"
+    category: "File"
+    scope: "app.editor"
+    priority: 10
+    chord: '[{"mod":["meta","shift"],"key":"e","code":"KeyE"},{"mod":["ctrl","shift"],"key":"e","code":"KeyE"}]'
+    phase: "capture"
+    onlyOutsideTextInput: false
+    overridesBrowser: false
+    actionBinding: "export-doc-open"
+    params: ""
+
+  # ------------------------------------------------------------------
+  # Cmd+. — toggle focus mode (PP-focus-mode)
+  # Hides chrome outside the block list for a distraction-free editing
+  # experience.  ActionBinding "focus-mode-toggle" is in
+  # ActionBinding.focus-mode.seeds.yaml.
+  # ------------------------------------------------------------------
+  - binding: kb-block-focus-mode
+    label: "Toggle Focus Mode"
+    description: "Hide sidebar and chrome for distraction-free editing (Cmd+.)"
+    category: "View"
+    scope: "app.editor"
+    priority: 10
+    chord: '[{"mod":["meta"],"key":".","code":"Period"},{"mod":["ctrl"],"key":".","code":"Period"}]'
+    phase: "capture"
+    onlyOutsideTextInput: false
+    overridesBrowser: false
+    actionBinding: "focus-mode-toggle"
+    params: ""

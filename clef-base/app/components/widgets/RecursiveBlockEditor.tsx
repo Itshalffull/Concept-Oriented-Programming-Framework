@@ -1241,6 +1241,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     // Cmd+Shift+E / Ctrl+Shift+E — open export dialog (PP-export-dialog)
+    // MAG-888: KeyBinding seed "kb-block-export" registered in KeyBinding.block-editor-extras.seeds.yaml.
     if (e.key === 'e' && e.shiftKey && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
       e.stopPropagation();
@@ -1280,6 +1281,9 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
       return;
     }
     // Cmd+D / Ctrl+D — duplicate focused block or all selected blocks (PP-duplicate-block)
+    // MAG-888: KeyBinding seed "kb-block-duplicate" registered in KeyBinding.block-editor-extras.seeds.yaml.
+    // The seed makes this shortcut discoverable; the implementation remains here until
+    // ActionBinding/invoke can drive React state for block duplication.
     if (e.key === 'd' && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
       e.stopPropagation();
@@ -1287,6 +1291,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
       return;
     }
     // Cmd+F / Ctrl+F — open find-replace overlay (PP-find-replace)
+    // MAG-888: KeyBinding seed "kb-block-find-replace" registered in KeyBinding.block-editor-extras.seeds.yaml.
     if (e.key === 'f' && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
       setFindReplaceOpen(true);
@@ -1294,6 +1299,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
     }
 
     // Cmd+. / Ctrl+. — toggle focus mode (hide chrome outside block list)
+    // MAG-888: KeyBinding seed "kb-block-focus-mode" registered in KeyBinding.block-editor-extras.seeds.yaml.
     if (e.key === '.' && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
       setFocusMode((v) => !v);
