@@ -19,13 +19,25 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useKernelInvoke, useNavigator } from '../../../lib/clef-provider';
 import { slugify } from '../../../lib/slug';
+import {
+  BindingEditor,
+  emptyBindingValue,
+  migrateBindingValue,
+  type BindingValue,
+} from './BindingEditor';
 
 interface WorkflowBuilderProps {
   mode?: 'create' | 'edit';
   context?: Record<string, unknown> | null;
 }
 
-interface Transition { from: string; event: string; to: string }
+interface Transition {
+  from: string;
+  event: string;
+  to: string;
+  /** Optional per-transition effects — Action / UI Event / Composite bindings */
+  effects: BindingValue[];
+}
 
 function parseInitialStates(raw: unknown): string[] {
   if (Array.isArray(raw)) return raw.map(String).filter(Boolean);
@@ -50,10 +62,12 @@ function parseInitialTransitions(raw: unknown): Transition[] {
   return arr
     .map((t) => {
       const o = t as Record<string, unknown>;
+      const rawEffects = Array.isArray(o?.effects) ? o.effects : [];
       return {
         from: String(o?.from ?? ''),
         event: String(o?.event ?? ''),
         to: String(o?.to ?? ''),
+        effects: rawEffects.map((e) => migrateBindingValue(e)),
       };
     })
     .filter((t) => t.from || t.event || t.to);
@@ -130,7 +144,10 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
   };
 
   const addTransition = () => {
-    setTransitions((t) => [...t, { from: stateOptions[0] ?? '', event: '', to: stateOptions[0] ?? '' }]);
+    setTransitions((t) => [
+      ...t,
+      { from: stateOptions[0] ?? '', event: '', to: stateOptions[0] ?? '', effects: [] },
+    ]);
   };
 
   const updateTransition = (idx: number, patch: Partial<Transition>) => {
@@ -139,6 +156,27 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
 
   const removeTransition = (idx: number) => {
     setTransitions((t) => t.filter((_, i) => i !== idx));
+  };
+
+  const addTransitionEffect = (idx: number) => {
+    setTransitions((t) => t.map((tr, i) =>
+      i === idx ? { ...tr, effects: [...tr.effects, emptyBindingValue()] } : tr,
+    ));
+  };
+
+  const updateTransitionEffect = (tIdx: number, eIdx: number, effect: BindingValue) => {
+    setTransitions((t) => t.map((tr, i) => {
+      if (i !== tIdx) return tr;
+      const effects = [...tr.effects];
+      effects[eIdx] = effect;
+      return { ...tr, effects };
+    }));
+  };
+
+  const removeTransitionEffect = (tIdx: number, eIdx: number) => {
+    setTransitions((t) => t.map((tr, i) =>
+      i === tIdx ? { ...tr, effects: tr.effects.filter((_, j) => j !== eIdx) } : tr,
+    ));
   };
 
   const handleSave = async () => {
@@ -295,38 +333,115 @@ export const WorkflowBuilder: React.FC<WorkflowBuilderProps> = ({
               key={i}
               data-part="transitionRow"
               style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr auto 1fr auto 1fr auto',
-                gap: 'var(--spacing-xs)',
-                alignItems: 'center',
-                marginBottom: 'var(--spacing-xs)',
+                border: '1px solid var(--palette-outline-variant, #e5e7eb)',
+                borderRadius: 'var(--radius-sm, 6px)',
+                padding: 'var(--spacing-sm, 8px)',
+                marginBottom: 'var(--spacing-sm, 8px)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 'var(--spacing-sm)',
               }}
             >
-              <select value={t.from} onChange={(e) => updateTransition(i, { from: e.target.value })}>
-                <option value="">from…</option>
-                {stateOptions.map((s) => <option key={s} value={s}>{s}</option>)}
-              </select>
-              <span style={{ color: 'var(--palette-on-surface-variant, #6b7280)' }}>—</span>
-              <input
-                value={t.event}
-                onChange={(e) => updateTransition(i, { event: e.target.value })}
-                placeholder="event name"
-              />
-              <span style={{ color: 'var(--palette-on-surface-variant, #6b7280)' }}>→</span>
-              <select value={t.to} onChange={(e) => updateTransition(i, { to: e.target.value })}>
-                <option value="">to…</option>
-                {stateOptions.map((s) => <option key={s} value={s}>{s}</option>)}
-              </select>
-              <button
-                type="button"
-                aria-label="Remove transition"
-                onClick={() => removeTransition(i)}
+              <div
                 style={{
-                  border: 'none', background: 'transparent',
-                  cursor: 'pointer', padding: 4, fontSize: 16, lineHeight: 1,
-                  color: 'var(--palette-on-surface-variant, #6b7280)',
+                  display: 'grid',
+                  gridTemplateColumns: '1fr auto 1fr auto 1fr auto',
+                  gap: 'var(--spacing-xs)',
+                  alignItems: 'center',
                 }}
-              >×</button>
+              >
+                <select value={t.from} onChange={(e) => updateTransition(i, { from: e.target.value })}>
+                  <option value="">from…</option>
+                  {stateOptions.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+                <span style={{ color: 'var(--palette-on-surface-variant, #6b7280)' }}>—</span>
+                <input
+                  value={t.event}
+                  onChange={(e) => updateTransition(i, { event: e.target.value })}
+                  placeholder="event name"
+                />
+                <span style={{ color: 'var(--palette-on-surface-variant, #6b7280)' }}>→</span>
+                <select value={t.to} onChange={(e) => updateTransition(i, { to: e.target.value })}>
+                  <option value="">to…</option>
+                  {stateOptions.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+                <button
+                  type="button"
+                  aria-label="Remove transition"
+                  onClick={() => removeTransition(i)}
+                  style={{
+                    border: 'none', background: 'transparent',
+                    cursor: 'pointer', padding: 4, fontSize: 16, lineHeight: 1,
+                    color: 'var(--palette-on-surface-variant, #6b7280)',
+                  }}
+                >×</button>
+              </div>
+
+              {/* Effects — optional Action/UI Event/Composite bindings fired on transition */}
+              <div
+                data-part="transitionEffects"
+                style={{
+                  paddingLeft: 'var(--spacing-md)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 'var(--spacing-xs)',
+                }}
+              >
+                <div style={{
+                  fontSize: 'var(--typography-label-sm-size, 12px)',
+                  color: 'var(--palette-on-surface-variant, #6b7280)',
+                }}>
+                  Effects {t.effects.length === 0 ? '(none)' : `(${t.effects.length})`}
+                </div>
+                {t.effects.map((effect, eIdx) => (
+                  <div
+                    key={eIdx}
+                    data-part="transitionEffectRow"
+                    style={{
+                      display: 'flex',
+                      gap: 'var(--spacing-xs)',
+                      alignItems: 'flex-start',
+                      padding: 'var(--spacing-xs)',
+                      border: '1px solid var(--palette-outline-variant, #e5e7eb)',
+                      borderRadius: 'var(--radius-sm, 6px)',
+                    }}
+                  >
+                    <span style={{
+                      fontSize: 'var(--typography-label-sm-size, 12px)',
+                      color: 'var(--palette-on-surface-variant, #6b7280)',
+                      minWidth: 20,
+                      paddingTop: 4,
+                    }}>
+                      {eIdx + 1}.
+                    </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <BindingEditor
+                        value={effect}
+                        onChange={(updated) => updateTransitionEffect(i, eIdx, updated)}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      aria-label={`Remove effect ${eIdx + 1}`}
+                      onClick={() => removeTransitionEffect(i, eIdx)}
+                      style={{
+                        border: 'none', background: 'transparent',
+                        cursor: 'pointer', padding: 4, fontSize: 16, lineHeight: 1,
+                        color: 'var(--palette-on-surface-variant, #6b7280)',
+                      }}
+                    >×</button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  data-part="button"
+                  data-variant="outlined"
+                  onClick={() => addTransitionEffect(i)}
+                  style={{ alignSelf: 'flex-start', fontSize: 12 }}
+                >
+                  + Add effect
+                </button>
+              </div>
             </div>
           ))}
           <button
