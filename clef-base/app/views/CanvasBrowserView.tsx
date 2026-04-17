@@ -7,6 +7,7 @@ import { Badge } from '../components/widgets/Badge';
 import { EmptyState } from '../components/widgets/EmptyState';
 import { useNavigator, useKernelInvoke } from '../../lib/clef-provider';
 import { useConceptQuery } from '../../lib/use-concept-query';
+import { slugify } from '../../lib/slug';
 
 type CanvasRecord = Record<string, unknown>;
 
@@ -42,18 +43,23 @@ export const CanvasBrowserView: React.FC = () => {
     setCreating(true);
     setCreateError(null);
     try {
+      const title = createName || 'Untitled Canvas';
+      const slug = slugify(title) || 'untitled-canvas';
+      // Suffix with a short timestamp so repeat names don't collide.
+      const node = `canvas:${slug}-${Date.now().toString(36).slice(-5)}`;
       const result = await invoke('ContentNode', 'createWithSchema', {
         schema: 'Canvas',
-        title: createName || 'Untitled Canvas',
+        title,
+        node,
       });
       if (result.variant !== 'ok') {
         setCreateError(String(result.message ?? `Unexpected result: ${result.variant}`));
         return;
       }
-      const newId = result.node as string;
+      const newId = (result.node as string) ?? node;
       setShowCreate(false);
       refetch?.();
-      navigateToHref(`/admin/canvas/${encodeURIComponent(newId)}`);
+      navigateToHref(`/admin/content/${encodeURIComponent(newId)}`);
     } catch (err) {
       setCreateError(err instanceof Error ? err.message : 'An unexpected error occurred.');
     } finally {
@@ -124,7 +130,7 @@ export const CanvasBrowserView: React.FC = () => {
             data={canvases}
             sortable
             ariaLabel="Canvas list"
-            onRowClick={(row) => navigateToHref(`/admin/canvas/${encodeURIComponent(String(row.canvas ?? row.node ?? row.name ?? ''))}`)}
+            onRowClick={(row) => navigateToHref(`/admin/content/${encodeURIComponent(String(row.node ?? row.canvas ?? row.name ?? ''))}`)}
           />
         )}
       </Card>
