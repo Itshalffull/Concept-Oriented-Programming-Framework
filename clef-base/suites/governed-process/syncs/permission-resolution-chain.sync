@@ -5,20 +5,21 @@
 
 sync RolePermissionExpansion [eager]
   purpose {
-    When a direct permission check is denied for a person, look up every role
-    that person holds and re-check permission using the role identity so that
-    permissions granted to a role are inherited by all its members.
+    When a direct permission check is denied for a person, look up every
+    governance office that person holds and re-check permission using the
+    office identity so that permissions granted to an office are inherited
+    by all its holders.
   }
 when {
   Permission/check: [ who: ?person; where: ?resource; what: ?action ]
     => denied(who: ?person; where: ?resource; what: ?action)
 }
 where {
-  Role: { ?role holders: ?person }
+  GovernanceOffice: { ?office holders: ?person }
 }
 then {
   Permission/check: [
-    who: concat("role:", ?role);
+    who: concat("office:", ?office);
     where: ?resource;
     what: ?action
   ]

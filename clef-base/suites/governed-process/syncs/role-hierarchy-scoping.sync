@@ -2,17 +2,18 @@
 # and handle inheritance so that circle membership, lead-link designation, and
 # role hierarchy produce consistent access-control effects automatically.
 
-sync RoleScopedToCircle [eager]
+sync OfficeScopedToCircle [eager]
   purpose {
-    When a role is created, associate it with its owning circle via Relation
-    so the role becomes discoverable within that circle's governance scope.
+    When a governance office is created, associate it with its owning circle
+    via Relation so the office becomes discoverable within that circle's
+    governance scope.
   }
 when {
-  Role/create: [ name: ?name; permissions: ?perms; polity: ?polity ]
-    => ok(role: ?role)
+  GovernanceOffice/create: [ name: ?name; permissions: ?perms; polity: ?polity ]
+    => ok(office: ?office)
 }
 then {
-  Relation/link: [ relation: "circle_role"; source: ?polity; target: ?role ]
+  Relation/link: [ relation: "circle_role"; source: ?polity; target: ?office ]
 }
 
 sync ParentCircleLeadManagesChild [eager]
@@ -40,19 +41,19 @@ then {
 
 sync RoleInheritance [eager]
   purpose {
-    When a member is assigned to a parent role that declares sub-roles via
-    hierarchy, propagate the assignment to each child role so that holders
-    of the parent automatically inherit the capacities of its sub-roles.
+    When a member is assigned to a parent office that declares sub-offices via
+    hierarchy, propagate the assignment to each child office so that holders
+    of the parent automatically inherit the capacities of its sub-offices.
   }
 when {
-  Role/assign: [ role: ?parentRole; member: ?member; assignedBy: ?by ]
+  GovernanceOffice/assign: [ office: ?parentOffice; member: ?member; assignedBy: ?by ]
     => ok(assignment: ?assignment)
 }
 where {
-  Role: { ?parentRole hierarchy: ?childRole }
+  GovernanceOffice: { ?parentOffice hierarchy: ?childOffice }
 }
 then {
-  Role/assign: [ role: ?childRole; member: ?member; assignedBy: "inherited" ]
+  GovernanceOffice/assign: [ office: ?childOffice; member: ?member; assignedBy: "inherited" ]
 }
 
 sync CircleMembershipEnablesRoleAccess [eager]
@@ -78,7 +79,7 @@ then {
 sync LeadLinkAssignsRole [eager]
   purpose {
     When a circle's lead-link is set, auto-assign the circle-scoped lead-link
-    governance role to that person so that role-based permission checks
+    governance office to that person so that office-based permission checks
     immediately reflect the new link designation.
   }
 when {
@@ -86,8 +87,8 @@ when {
     => ok(circle: ?circle)
 }
 then {
-  Role/assign: [
-    role: concat(?circle, "-lead-link");
+  GovernanceOffice/assign: [
+    office: concat(?circle, "-lead-link");
     member: ?lead;
     assignedBy: "circle-governance"
   ]
@@ -96,16 +97,16 @@ then {
 sync RepLinkAssignsRole [eager]
   purpose {
     When a circle's rep-link is set, auto-assign the circle-scoped rep-link
-    governance role to that person so that the representative's capacities
-    within the parent circle are enforced through the role system.
+    governance office to that person so that the representative's capacities
+    within the parent circle are enforced through the office system.
   }
 when {
   Circle/setLinks: [ circle: ?circle; repLink: ?rep; leadLink: ?lead ]
     => ok(circle: ?circle)
 }
 then {
-  Role/assign: [
-    role: concat(?circle, "-rep-link");
+  GovernanceOffice/assign: [
+    office: concat(?circle, "-rep-link");
     member: ?rep;
     assignedBy: "circle-governance"
   ]

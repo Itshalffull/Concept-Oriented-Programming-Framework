@@ -24,12 +24,12 @@ then {
   Circle/create: [ name: ?name; domain: ?domain; parent: none ]
 }
 
-# When a role node is added to a governance org canvas, create the Role.
+# When a role node is added to a governance org canvas, create the GovernanceOffice.
 
-sync CanvasRoleNodeCreatesRole [eager]
+sync CanvasRoleNodeCreatesOffice [eager]
   purpose {
-    Create a Role entity when a role-typed node is placed on a
-    governance-org canvas, so every drawn role immediately has a
+    Create a GovernanceOffice entity when a role-typed node is placed on a
+    governance-org canvas, so every drawn office immediately has a
     governed identity in the system.
   }
 when {
@@ -43,7 +43,7 @@ where {
   Property: { ?node key: "polity"; value: ?polity }
 }
 then {
-  Role/create: [ name: ?name; permissions: ""; polity: ?polity ]
+  GovernanceOffice/create: [ name: ?name; permissions: ""; polity: ?polity ]
 }
 
 # When circles are connected with a parent_of connector, establish hierarchy.
