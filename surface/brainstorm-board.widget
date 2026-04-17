@@ -1,0 +1,316 @@
+@version(1)
+widget brainstorm-board {
+
+  purpose {
+    Idea collection and curation surface embedded inside a work-item-card
+    action-slot when the step type is "brainstorm". Displays the current
+    phase (submit, shortlist, or closed), the full list of ideas with
+    endorsement counts and fork relationships, and phase-appropriate
+    actions. Participants submit and endorse ideas during the submit phase;
+    the facilitator curates a shortlist and then closes the board. Once
+    closed the board becomes read-only and all author attribution is
+    revealed regardless of the anonymous setting.
+  }
+
+  anatomy {
+    root:                  container    { Top-level board wrapper; carries data-state reflecting the FSM phase }
+    phaseIndicator:        container    { Banner showing the current phase label and phase-transition controls }
+    phaseLabel:            text         { Human-readable name of the current phase: Submit, Shortlist, or Closed }
+    ideaList:              container    { Scrollable feed of idea cards; aria-live region for new arrivals }
+    ideaCard:              container    { Single idea entry; wraps author, content preview, endorsement count, and actions }
+    ideaAuthor:            text         { Display name of the idea author; hidden when anonymous and phase is not closed }
+    ideaContentPreview:    text         { Truncated preview of the idea body }
+    ideaEndorsementCount:  text         { Number of endorsements the idea has received }
+    endorseButton:         action       { Button to add the current user endorsement to the focused idea }
+    forkButton:            action       { Button to create a derivative idea branching from the focused idea }
+    forkTree:              container    { Indented sub-list of forked ideas that share a common parent }
+    forkItem:              container    { Single entry inside a fork tree; structurally identical to ideaCard }
+    addIdeaZone:           container    { Input area for composing and submitting a new idea; hidden when not in submit phase }
+    ideaInput:             interactive  { Text field for drafting the new idea body }
+    submitIdeaButton:      action       { Button that dispatches SUBMIT_IDEA and triggers idea creation }
+    shortlistControls:     container    { Facilitator control bar for toggling shortlist membership; visible only in shortlisting phase }
+    shortlistToggle:       action       { Toggle button that adds or removes an idea from the shortlist }
+    closeSubmissionButton: action       { Facilitator button that closes idea submission and moves to shortlisting }
+    closeBoardButton:      action       { Facilitator button that finalises the board and transitions to closed }
+    emptyState:            container    { Placeholder shown when the idea list is empty }
+  }
+
+  states {
+    submit-open [initial] {
+      on SUBMIT_IDEA         -> submitting-idea;
+      on CLOSE_SUBMISSION    -> shortlisting;
+      on BOARD_CLOSED_REMOTE -> closed;
+    }
+
+    submitting-idea {
+      on IDEA_OK             -> submit-open;
+      on IDEA_ERROR          -> submit-open;
+      on BOARD_CLOSED_REMOTE -> closed;
+    }
+
+    shortlisting {
+      on CLOSE_BOARD         -> closed;
+      on BOARD_CLOSED_REMOTE -> closed;
+    }
+
+    closed {
+    }
+  }
+
+  accessibility {
+    role: feed;
+    keyboard {
+      Tab       -> FOCUS_NEXT;
+      Shift+Tab -> FOCUS_PREV;
+      Enter     -> ACTIVATE_FOCUSED;
+      E         -> ENDORSE_FOCUSED;
+      F         -> FORK_FOCUSED;
+    }
+    focus {
+      trap: false;
+      initial: ideaInput;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Brainstorm board";
+      };
+      phaseLabel -> {
+        aria-live: "polite";
+        aria-atomic: "true";
+      };
+      ideaList -> {
+        role: "feed";
+        aria-live: "polite";
+        aria-label: "Ideas";
+      };
+      ideaCard -> {
+        role: "article";
+      };
+      forkItem -> {
+        role: "article";
+      };
+      endorseButton -> {
+        role: "button";
+        aria-pressed: if ?user_submitted_refs then "true" else "false";
+        aria-label: "Endorse idea";
+      };
+      forkButton -> {
+        role: "button";
+        aria-label: "Fork idea";
+      };
+      ideaInput -> {
+        role: "textbox";
+        aria-label: "New idea";
+        aria-multiline: "true";
+      };
+      submitIdeaButton -> {
+        role: "button";
+        aria-label: "Submit idea";
+        aria-disabled: if state == "submitting-idea" then "true" else "false";
+      };
+      shortlistToggle -> {
+        role: "button";
+        aria-pressed: "false";
+        aria-label: "Toggle shortlist";
+      };
+      closeSubmissionButton -> {
+        role: "button";
+        aria-label: "Close idea submission";
+      };
+      closeBoardButton -> {
+        role: "button";
+        aria-label: "Finalise and close board";
+      };
+    }
+  }
+
+  props {
+    board_id:            String
+    phase:               String = "submit"
+    anonymous:           Bool = false
+    shortlist_size:      Int = 5
+    ideas:               list BrainstormIdeaItem
+    can_facilitate:      Bool = false
+    can_submit:          Bool = true
+    user_submitted_refs: list String
+  }
+
+  connect {
+    root -> {
+      data-part:  "root";
+      data-state: state;
+      data-phase: ?phase;
+    }
+
+    phaseIndicator -> {
+      data-part: "phase-indicator";
+    }
+
+    phaseLabel -> {
+      data-part: "phase-label";
+      text: if state == "closed" then "Closed" else if state == "shortlisting" then "Shortlist" else "Submit";
+    }
+
+    ideaList -> {
+      data-part:  "idea-list";
+      role:       "feed";
+      aria-live:  "polite";
+      aria-label: "Ideas";
+    }
+
+    ideaCard -> {
+      data-part: "idea-card";
+      role:      "article";
+    }
+
+    ideaAuthor -> {
+      data-part: "idea-author";
+      hidden:    if ?anonymous and state != "closed" then true else false;
+    }
+
+    ideaContentPreview -> {
+      data-part: "idea-content-preview";
+    }
+
+    ideaEndorsementCount -> {
+      data-part: "idea-endorsement-count";
+    }
+
+    endorseButton -> {
+      data-part:    "endorse-button";
+      aria-pressed: if ?user_submitted_refs then "true" else "false";
+      onClick:      send(ENDORSE);
+    }
+
+    forkButton -> {
+      data-part: "fork-button";
+      onClick:   send(FORK);
+    }
+
+    forkTree -> {
+      data-part: "fork-tree";
+    }
+
+    forkItem -> {
+      data-part: "fork-item";
+      role:      "article";
+    }
+
+    addIdeaZone -> {
+      data-part: "add-idea-zone";
+      hidden:    if state != "submit-open" and state != "submitting-idea" then true else false;
+    }
+
+    ideaInput -> {
+      data-part:  "idea-input";
+      aria-label: "New idea";
+      disabled:   if state == "submitting-idea" then true else false;
+    }
+
+    submitIdeaButton -> {
+      data-part:    "submit-idea-button";
+      disabled:     if state == "submitting-idea" then true else false;
+      aria-disabled: if state == "submitting-idea" then "true" else "false";
+      onClick:      send(SUBMIT_IDEA);
+    }
+
+    shortlistControls -> {
+      data-part: "shortlist-controls";
+      hidden:    if state != "shortlisting" then true else false;
+    }
+
+    shortlistToggle -> {
+      data-part: "shortlist-toggle";
+      onClick:   send(SHORTLIST_TOGGLE);
+    }
+
+    closeSubmissionButton -> {
+      data-part: "close-submission-button";
+      hidden:    if not ?can_facilitate or state != "submit-open" then true else false;
+      onClick:   send(CLOSE_SUBMISSION);
+    }
+
+    closeBoardButton -> {
+      data-part: "close-board-button";
+      hidden:    if not ?can_facilitate or state != "shortlisting" then true else false;
+      onClick:   send(CLOSE_BOARD);
+    }
+
+    emptyState -> {
+      data-part: "empty-state";
+    }
+  }
+
+  invariant {
+    example "SUBMIT_IDEA transitions to submitting-idea": {
+      after SUBMIT_IDEA() -> ok
+      then state = "submitting-idea"
+    }
+
+    example "IDEA_OK returns to submit-open": {
+      after IDEA_OK() -> ok
+      then state = "submit-open"
+    }
+
+    example "CLOSE_SUBMISSION moves to shortlisting": {
+      after CLOSE_SUBMISSION() -> ok
+      then state = "shortlisting"
+    }
+
+    example "CLOSE_BOARD finalises to closed": {
+      after CLOSE_BOARD() -> ok
+      then state = "closed"
+    }
+
+    example "BOARD_CLOSED_REMOTE closes from submit-open": {
+      after BOARD_CLOSED_REMOTE() -> ok
+      then state = "closed"
+    }
+
+    always "all states are reachable": {
+      forall s in states:
+      s.reachable = true
+    }
+
+    always "add-idea-zone hidden in closed state": {
+      forall s in {"closed", "shortlisting"}:
+      addIdeaZone.hidden = true
+    }
+
+    always "shortlist-controls hidden outside shortlisting": {
+      forall s in {"submit-open", "submitting-idea", "closed"}:
+      shortlistControls.hidden = true
+    }
+
+    always "close-board-button hidden in submit-open phase": {
+      forall s in {"submit-open", "submitting-idea"}:
+      closeBoardButton.hidden = true
+    }
+
+    never "submit-idea-button enabled while submitting": {
+      exists e in renderEvents:
+        state = "submitting-idea"
+    }
+
+    action SUBMIT_IDEA {
+      requires: state = "submit-open"
+      ensures ok: state = "submitting-idea"
+    }
+
+    action CLOSE_SUBMISSION {
+      requires: state = "submit-open"
+      ensures ok: state = "shortlisting"
+    }
+
+    action CLOSE_BOARD {
+      requires: state = "shortlisting"
+      ensures ok: state = "closed"
+    }
+
+    "anonymous=true hides idea-author until phase is closed";
+    "fork-tree only renders for ideas that have is_fork=true children";
+  }
+
+}
