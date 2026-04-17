@@ -323,6 +323,18 @@ entries:
     presentation: backlinks-presentation
     interaction: navigate-content-node
 
+  # DailyNote related zone — nodes whose date fields match the viewed date (MAG-942)
+  - name: date-refs-list
+    title: Referenced on this day
+    description: ContentNodes with a date field matching the current DailyNote's date — meetings, tasks, journal entries, and any other record that was scheduled or dated on this day.
+    dataSource: date-refs-list-source
+    filter: date-ref-context-filter
+    sort: natural-order
+    group: ''
+    projection: date-refs-list-fields
+    presentation: backlinks-presentation
+    interaction: navigate-content-node
+
   - name: branch-compare
     title: Branch Compare
     description: Side-by-side comparison of two branches showing entity-level additions, modifications, and deletions.

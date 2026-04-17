@@ -1,0 +1,22 @@
+# View seeds for the DailyNote page related zone (MAG-942).
+# The date-refs-list view surfaces all ContentNodes whose date fields match
+# the DailyNote being viewed — meetings, tasks, journal entries, and any
+# record dated on that day.
+#
+# DataSource: ContentNode/listByDateRef with date bound from context.date.
+# The ViewShell (date-refs-list) is the canonical query; this View entry
+# provides a fallback for ViewRenderer paths that call View/get directly.
+
+concept: View
+action: create
+entries:
+
+  # DailyNote right-rail — referenced-on-this-day query registered as a View
+  - view: date-refs-list
+    dataSource: '{"concept":"ContentNode","action":"listByDateRef","params":{"date":"{{date}}"}}'
+    layout: table
+    visibleFields: '[{"key":"node","label":"Title"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"updatedAt","label":"Modified","formatter":"relative-date"}]'
+    controls: '{"rowClick":{"navigateTo":"/admin/content/{node}"}}'
+    title: Referenced on this day
+    description: ContentNodes with a date field matching the current DailyNote — meetings, tasks, and any record dated on this day.
+    defaultDisplayMode: compact

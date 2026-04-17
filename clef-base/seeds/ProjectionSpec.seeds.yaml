@@ -102,3 +102,7 @@ entries:
 
   - name: form-editor-fields
     fields: '[]'
+
+  # DailyNote related zone — compact card fields: title, schema type, last modified (MAG-942)
+  - name: date-refs-list-fields
+    fields: '[{"key":"node","label":"Title"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"updatedAt","label":"Modified","formatter":"relative-date"}]'

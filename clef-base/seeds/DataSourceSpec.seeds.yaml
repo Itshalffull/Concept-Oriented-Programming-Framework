@@ -101,3 +101,8 @@ entries:
   - name: content-node-list-by-source
     kind: concept-action
     config: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Source"}}'
+
+  # DailyNote related zone — nodes with a date field matching the page date (MAG-942)
+  - name: date-refs-list-source
+    kind: concept-action
+    config: '{"concept":"ContentNode","action":"listByDateRef","params":{"date":"{{date}}"}}'
