@@ -32,3 +32,15 @@ entries:
     schema: ProcessSpec
   - entity_id: process-spec:data-sync
     schema: ProcessSpec
+
+  # --- Process run nodes get Schema "process-run" ---
+  - entity_id: process-run:run-001
+    schema: process-run
+  - entity_id: process-run:run-002
+    schema: process-run
+  - entity_id: process-run:run-003
+    schema: process-run
+  - entity_id: process-run:run-004
+    schema: process-run
+  - entity_id: process-run:run-005
+    schema: process-run

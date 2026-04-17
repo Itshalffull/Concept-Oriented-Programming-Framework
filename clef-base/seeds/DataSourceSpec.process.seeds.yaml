@@ -10,7 +10,7 @@ entries:
 
   - name: process-run-list-source
     kind: concept-action
-    config: '{"concept":"ProcessRun","action":"list"}'
+    config: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"process-run"}}'
 
   - name: step-run-list-contextual-source
     kind: concept-action

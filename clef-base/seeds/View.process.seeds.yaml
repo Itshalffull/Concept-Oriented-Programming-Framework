@@ -6,10 +6,10 @@ action: create
 entries:
   # --- Process Spec list ---
   - view: process-specs-list
-    dataSource: '{"concept":"ProcessSpec","action":"list"}'
+    dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"ProcessSpec"}}'
     layout: table
     visibleFields: '[{"key":"spec_name","label":"Name"},{"key":"spec_status","label":"Status","formatter":"badge"},{"key":"spec_version","label":"Version","formatter":"badge"},{"key":"spec_steps","label":"Steps","formatter":"json-count"},{"key":"spec_description","label":"Description"}]'
-    controls: '{"create":{"concept":"ProcessSpec","action":"create","fields":[{"name":"name","label":"Process Name","required":true},{"name":"steps","label":"Steps (JSON)","required":true,"type":"textarea"},{"name":"edges","label":"Edges (JSON)","required":true,"type":"textarea"}]},"rowClick":{"navigateTo":"/admin/processes/{spec}"}}'
+    controls: '{"create":{"concept":"ProcessSpec","action":"create","fields":[{"name":"name","label":"Process Name","required":true},{"name":"steps","label":"Steps (JSON)","required":true,"type":"textarea"},{"name":"edges","label":"Edges (JSON)","required":true,"type":"textarea"}]},"rowClick":{"navigateTo":"/admin/processes/{node}"}}' # Updated 2026-04-17: canonical identity is {node}
     title: Process Specs
     description: Versioned process template definitions with step graphs and routing edges.
     filters: '[{"field":"spec_status","label":"Status","type":"toggle-group"}]'
@@ -17,10 +17,10 @@ entries:
 
   # --- Process Runs list ---
   - view: process-runs-list
-    dataSource: '{"concept":"ProcessRun","action":"list"}'
+    dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"process-run"}}'
     layout: table
     visibleFields: '[{"key":"run_spec_ref","label":"Spec","formatter":"badge"},{"key":"run_status","label":"Status","formatter":"badge"},{"key":"run_started_at","label":"Started","formatter":"date"},{"key":"run_ended_at","label":"Ended","formatter":"date"}]'
-    controls: '{"rowClick":{"navigateTo":"/admin/process-runs/{run}"}}'
+    controls: '{"rowClick":{"navigateTo":"/admin/process-runs/{node}"}}' # Updated 2026-04-17: canonical identity is {node}
     title: Process Runs
     description: Live and historical process execution instances.
     filters: '[{"field":"run_status","label":"Status","type":"toggle-group"},{"field":"run_spec_ref","label":"Spec","type":"toggle-group"}]'
@@ -103,7 +103,7 @@ entries:
     dataSource: '{"concept":"CheckVerification","action":"list"}'
     layout: table
     visibleFields: '[{"key":"check_ref","label":"Check","formatter":"entity-reference"},{"key":"step_ref","label":"Step","formatter":"entity-reference"},{"key":"status","label":"Status","formatter":"badge"},{"key":"result_score","label":"Score"},{"key":"mode","label":"Mode","formatter":"badge"},{"key":"evaluated_at","label":"Evaluated","formatter":"date"}]'
-    controls: '{"rowClick":{"navigateTo":"/content/{cv}"}}'
+    controls: '{"rowClick":{"navigateTo":"/admin/content/{cv}"}}'
     title: Check Overview
     description: Global view of all check verifications across all process runs.
     filters: '[{"field":"status","label":"Status","type":"toggle-group","options":["passing","failing","pending","waived","error"]},{"field":"mode","label":"Mode","type":"toggle-group","options":["automated","human","llm"]}]'
@@ -169,7 +169,7 @@ entries:
     dataSource: '{"concept":"ProcessSpec","action":"list"}'
     layout: card-grid
     visibleFields: '[{"key":"spec_name","label":"Name"},{"key":"spec_status","label":"Status","formatter":"badge"},{"key":"spec_version","label":"Version","formatter":"badge"},{"key":"spec_description","label":"Description"},{"key":"spec_steps","label":"Steps","formatter":"json-count"}]'
-    controls: '{"create":{"concept":"ProcessSpec","action":"create","fields":[{"name":"name","label":"Process Name","required":true},{"name":"steps","label":"Steps (JSON)","required":true,"type":"textarea"},{"name":"edges","label":"Edges (JSON)","required":true,"type":"textarea"}]},"rowClick":{"navigateTo":"/admin/processes/{spec}"}}'
+    controls: '{"create":{"concept":"ProcessSpec","action":"create","fields":[{"name":"name","label":"Process Name","required":true},{"name":"steps","label":"Steps (JSON)","required":true,"type":"textarea"},{"name":"edges","label":"Edges (JSON)","required":true,"type":"textarea"}]},"rowClick":{"navigateTo":"/admin/processes/{node}"}}' # Updated 2026-04-17: canonical identity is {node}
     title: Process Specs
     description: Browse process templates as cards.
     filters: '[{"field":"spec_status","label":"Status","type":"toggle-group"}]'

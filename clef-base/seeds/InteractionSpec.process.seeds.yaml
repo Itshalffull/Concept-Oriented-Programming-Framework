@@ -8,7 +8,7 @@ entries:
   # Shared by: process-specs-list, process-specs-cards
   - name: process-spec-create-navigate
     createForm: '{"concept":"ProcessSpec","action":"create","fields":[{"name":"name","label":"Process Name","required":true},{"name":"steps","label":"Steps (JSON)","required":true,"type":"textarea"},{"name":"edges","label":"Edges (JSON)","required":true,"type":"textarea"}]}'
-    rowClick: '{"navigateTo":"/admin/processes/{spec}"}'
+    rowClick: '{"navigateTo":"/admin/content/{node}"}'
     rowActions: '[]'
     pickerMode: false
     create_surface: flow-builder
@@ -16,7 +16,7 @@ entries:
   # process-runs-list
   - name: process-runs-list-controls
     createForm: '{}'
-    rowClick: '{"navigateTo":"/admin/process-runs/{run}"}'
+    rowClick: '{"navigateTo":"/admin/process-runs/{node}"}' # Updated 2026-04-17: canonical identity is {node}
     rowActions: '[]'
     pickerMode: false
   # step-runs-list: uses no-controls (deduplicated)
