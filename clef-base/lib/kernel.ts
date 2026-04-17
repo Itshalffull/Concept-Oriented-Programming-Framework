@@ -34,6 +34,7 @@ import { processConversationHandler } from '../../handlers/ts/process-conversati
 // Agent / LLM Platform
 import { agentSessionHandler } from '../../handlers/ts/app/agent-session.handler';
 import { agentTriggerHandler } from '../../handlers/ts/app/agent-trigger.handler';
+import { agentRegistrationHandler } from '../../handlers/ts/app/agent-registration.handler';
 import { constitutionHandler } from '../../handlers/ts/llm-agent/constitution.handler';
 // Governance Platform
 import { proposalHandler } from '../../handlers/ts/app/governance/proposal.handler';
@@ -253,6 +254,12 @@ const SUPPLEMENTAL_REGISTRY_ENTRIES = [
     storageType: 'standard' as const,
   },
   {
+    uri: 'urn:clef/AgentRegistration',
+    handler: agentRegistrationHandler,
+    storageName: 'agent-registration',
+    storageType: 'standard' as const,
+  },
+  {
     uri: 'urn:clef/Constitution',
     handler: constitutionHandler,
     storageName: 'constitution',
@@ -419,6 +426,8 @@ const SUPPLEMENTAL_SYNC_FILES = [
   // Bridge createWithSchema → Schema storage so Schema/listMemberships reflects
   // nodes created via ContentNode/createWithSchema (fixes schemas: [] in ViewRenderer).
   'clef-base/suites/entity-lifecycle/syncs/content-node-create-applies-schema.sync',
+  // AgentRegistration → Subject projection (dead-fires until MAG-952 registers Subject).
+  'syncs/identity/agent-registration-to-subject.sync',
 ];
 
 // process.cwd() is the clef-base/ dir when Next.js runs; __filename
