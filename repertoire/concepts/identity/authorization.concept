@@ -3,10 +3,18 @@
 concept Authorization [U] {
 
   purpose {
-    Manage roles, permissions, and permission-checking for users.
-    Roles group permissions into reusable bundles. Users are assigned
-    roles, and permission checks resolve transitively through the
-    role-permission mapping.
+    Own the canonical executable-access model for the system:
+    grants, roles, role assignments, and Subject-facing permission
+    queries. Roles group permissions into reusable bundles; Subjects
+    (users, agents, service accounts) are assigned roles, and
+    permission checks resolve transitively through the role-permission
+    mapping. Authorization answers whether a Subject holds a
+    permission in principle; the final runtime allow/deny decision
+    over (resource, action, context) is owned by AccessControl.
+    Higher-order policy — office assignments, delegation, constitutions,
+    protection policies — feed decisions here through syncs, but the
+    executable grants themselves live here and nowhere else
+    (see agents-as-subjects-refactor-plan §5.1, §5.2).
   }
 
   state {

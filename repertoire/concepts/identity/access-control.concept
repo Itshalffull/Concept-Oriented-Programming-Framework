@@ -3,10 +3,17 @@
 concept AccessControl [A] {
 
   purpose {
-    Evaluate three-valued access decisions (allowed/forbidden/neutral)
-    with cacheable results. Forbidden overrides all allowed. Policies
-    are composable via logical OR and AND combinators, enabling
-    layered access evaluation across multiple policy sources.
+    Serve as the canonical final runtime decision surface over
+    (resource, action, context). Evaluate three-valued access decisions
+    (allowed/forbidden/neutral) with cacheable results. Forbidden
+    overrides all allowed. Policies are composable via logical OR and
+    AND combinators, enabling layered access evaluation across multiple
+    policy sources including Authorization grants, governance office
+    memberships, delegation constraints, constitutions, PilotMode
+    restrictions, and protection policies. AccessControl consumes
+    grant facts from Authorization and higher-order constraints from
+    governance; it never silently permits — every decision is explicit
+    and traceable (see agents-as-subjects-refactor-plan §5.1, §10.3).
   }
 
   state {
