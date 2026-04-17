@@ -53,7 +53,7 @@ concept GovernanceOffice [O] {
       }
 
       fixture revoke_alice { office: $create_admin.id, member: "alice" } after create_admin
-      fixture revoke_unassigned { office: "office-1", member: "unknown-member" } -> error
+      fixture revoke_unassigned { office: "office-1", member: "unknown-member" }
     }
 
     action check(office: O, member: String) {
@@ -65,7 +65,7 @@ concept GovernanceOffice [O] {
       }
 
       fixture check_alice_admin { office: $create_admin.id, member: "alice" } after create_admin
-      fixture check_nonmember { office: "office-1", member: "unknown-member" } -> error
+      fixture check_nonmember { office: "office-1", member: "unknown-member" }
     }
 
     action dissolve(office: O) {

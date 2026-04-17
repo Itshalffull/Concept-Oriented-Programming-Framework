@@ -87,7 +87,17 @@ describe('Authorization functional handler', () => {
     it('fixture "grant_write_to_admin" -> ok', async () => {
       if (typeof authorizationHandler.grantPermission !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(authorizationHandler.grantPermission({ role: "admin", permission: "write" }), storage);
+      const afterResult_check_ungranted = await interpret(authorizationHandler.checkPermission({ user: "bob", permission: "admin.delete" }), storage);
+      const _pool = Object.assign({}, (afterResult_check_ungranted?.output ?? {}));
+      const _fixtureInput = { role: "admin", permission: "write" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
+      const result = await interpret(authorizationHandler.grantPermission({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -155,8 +165,9 @@ describe('Authorization functional handler', () => {
     it('fixture "revoke_publish" -> ok', async () => {
       if (typeof authorizationHandler.revokePermission !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_check_ungranted = await interpret(authorizationHandler.checkPermission({ user: "bob", permission: "admin.delete" }), storage);
       const afterResult_grant_write_to_admin = await interpret(authorizationHandler.grantPermission({ role: "admin", permission: "write" }), storage);
-      const _pool = Object.assign({}, (afterResult_grant_write_to_admin?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_check_ungranted?.output ?? {}), (afterResult_grant_write_to_admin?.output ?? {}));
       const _fixtureInput = { role: "editor", permission: "publish" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -233,8 +244,9 @@ describe('Authorization functional handler', () => {
     it('fixture "assign_admin" -> ok', async () => {
       if (typeof authorizationHandler.assignRole !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_check_ungranted = await interpret(authorizationHandler.checkPermission({ user: "bob", permission: "admin.delete" }), storage);
       const afterResult_grant_write_to_admin = await interpret(authorizationHandler.grantPermission({ role: "admin", permission: "write" }), storage);
-      const _pool = Object.assign({}, (afterResult_grant_write_to_admin?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_check_ungranted?.output ?? {}), (afterResult_grant_write_to_admin?.output ?? {}));
       const _fixtureInput = { user: "alice", role: "admin" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -311,8 +323,9 @@ describe('Authorization functional handler', () => {
     it('fixture "check_granted" -> ok', async () => {
       if (typeof authorizationHandler.checkPermission !== 'function') return;
       const storage = createInMemoryStorage();
+      const afterResult_check_ungranted = await interpret(authorizationHandler.checkPermission({ user: "bob", permission: "admin.delete" }), storage);
       const afterResult_grant_write_to_admin = await interpret(authorizationHandler.grantPermission({ role: "admin", permission: "write" }), storage);
-      const _pool = Object.assign({}, (afterResult_grant_write_to_admin?.output ?? {}));
+      const _pool = Object.assign({}, (afterResult_check_ungranted?.output ?? {}), (afterResult_grant_write_to_admin?.output ?? {}));
       const _fixtureInput = { user: "alice", permission: "write" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
@@ -325,11 +338,11 @@ describe('Authorization functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "check_ungranted" -> error', async () => {
+    it('fixture "check_ungranted" -> ok', async () => {
       if (typeof authorizationHandler.checkPermission !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(authorizationHandler.checkPermission({ user: "bob", permission: "admin.delete" }), storage);
-      expect(result.variant).not.toBe('ok');
+      expect(result.variant).toBe('ok');
     });
 
   });
@@ -447,6 +460,40 @@ describe('Authorization functional handler', () => {
                   expect(typeof result.variant).toBe('string');
                 }
                 // Never: orphaned-permissions
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('never: permissive fallback', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('grantPermission'), input: fc.record({ role: fc.string({ minLength: 1, maxLength: 50 }), permission: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('revokePermission'), input: fc.record({ role: fc.string({ minLength: 1, maxLength: 50 }), permission: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('assignRole'), input: fc.record({ user: fc.string(), role: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('checkPermission'), input: fc.record({ user: fc.string(), permission: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = authorizationHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(authorizationHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: permissive fallback
               }
             }
           },

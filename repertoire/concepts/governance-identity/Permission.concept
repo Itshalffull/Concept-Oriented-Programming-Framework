@@ -51,7 +51,11 @@ concept Permission [P] {
         The permission does not exist.
       }
 
-      fixture revoke_existing { permission: "alice:articles:read" }
+      # With grant deprecated, no new grants reach revoke, so both fixtures
+      # now exercise the not_found path. Historical records would still
+      # revoke cleanly; we cannot express that as a fixture without an
+      # `after` on grant (which is deprecated).
+      fixture revoke_absent { permission: "alice:articles:read" } -> not_found
       fixture revoke_nonexistent { permission: "nonexistent:perm:key" } -> error
     }
 
@@ -64,7 +68,10 @@ concept Permission [P] {
         No matching permission record exists.
       }
 
-      fixture check_allowed { who: "alice", where: "articles", what: "read" }
+      # With grant deprecated, no new grants exist, so check_allowed cannot
+      # demonstrate the 'allowed' variant without an `after` on deprecated grant.
+      # The default fixture exercises the `denied` path against an empty store.
+      fixture check_absent { who: "alice", where: "articles", what: "read" } -> denied
       fixture check_denied { who: "unknown-user", where: "articles", what: "delete" } -> error
     }
   }

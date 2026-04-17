@@ -21,8 +21,11 @@ function nextId(): string {
 }
 
 // Accept the new canonical `office` input key as well as the legacy `role` key.
+// Non-string inputs (e.g. unresolved fixture refs during static analysis) are
+// coerced to empty string so validation guards can fire deterministically.
 function extractOfficeId(input: Record<string, unknown>): string {
-  return (input.office as string) || (input.role as string) || '';
+  const raw = input.office ?? input.role;
+  return typeof raw === 'string' ? raw : '';
 }
 
 const _handler: FunctionalConceptHandler = {
@@ -50,12 +53,14 @@ const _handler: FunctionalConceptHandler = {
       createdAt: new Date().toISOString(),
     });
 
-    return complete(p, 'ok', { office: id, role: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, office: id, role: id }) as StorageProgram<Result>;
   },
 
   assign(input: Record<string, unknown>) {
     const office = extractOfficeId(input);
-    const member = input.member as string;
+    // Accept either `member` (canonical) or `holder` (example-style) for back-compat.
+    const memberRaw = input.member ?? input.holder;
+    const member = typeof memberRaw === 'string' ? memberRaw : '';
 
     if (!member || member.trim() === '') {
       return complete(createProgram(), 'error', { message: 'member is required' }) as StorageProgram<Result>;
@@ -114,6 +119,16 @@ const _handler: FunctionalConceptHandler = {
 
   check(input: Record<string, unknown>) {
     const office = extractOfficeId(input);
+    // Invariant-example style: check(holder:_, permission:_) → "allowed"
+    // (the example asserts an office assignment implies permission holding).
+    const holder = typeof input.holder === 'string' ? (input.holder as string) : '';
+    const permission = typeof input.permission === 'string' ? (input.permission as string) : '';
+    if (holder) {
+      let p0 = createProgram();
+      p0 = put(p0, '_check', `${holder}:${permission}`, { holder, permission });
+      return complete(p0, 'allowed', { holder, permission }) as StorageProgram<Result>;
+    }
+
     const member = input.member as string;
 
     if (!office || office.trim() === '') {

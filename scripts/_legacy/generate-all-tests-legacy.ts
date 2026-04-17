@@ -53,7 +53,7 @@ const fileStorage: ConceptStorage = createFileStorage({
 let _contentHashHandler: ConceptHandler | null = null;
 async function getContentHashHandler(): Promise<ConceptHandler> {
   if (!_contentHashHandler) {
-    const mod = await import('../handlers/ts/content-hash.handler.js');
+    const mod = await import('../../handlers/ts/content-hash.handler.js');
     _contentHashHandler = mod.default ?? mod.contentHashHandler ?? Object.values(mod).find(
       (v: unknown) => v && typeof v === 'object' && 'store' in (v as Record<string, unknown>),
     ) as ConceptHandler;
