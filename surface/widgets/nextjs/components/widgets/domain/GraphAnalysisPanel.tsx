@@ -263,15 +263,6 @@ const GraphAnalysisPanel = forwardRef<HTMLDivElement, GraphAnalysisPanelProps>(
     const showCompare = state.workflow === 'comparing';
     const overlaysOn = state.overlays === 'overlaysOn';
 
-    /* --- Build category tabs --- */
-    const categoryTabs = useMemo(
-      () => CATEGORIES.map((cat) => ({
-        id: cat,
-        label: CATEGORY_LABELS[cat],
-      })),
-      [],
-    );
-
     return (
       <CanvasPanel
         ref={ref}
@@ -279,8 +270,6 @@ const GraphAnalysisPanel = forwardRef<HTMLDivElement, GraphAnalysisPanelProps>(
         ariaLabel="Graph analysis panel"
         title="Graph Analysis"
         dock="right"
-        tabs={categoryTabs}
-        activeTab={selectedCategory}
       >
         <div
           data-surface-widget=""
