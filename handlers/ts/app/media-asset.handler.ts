@@ -113,9 +113,41 @@ const _mediaAssetHandler: FunctionalConceptHandler = {
   list(_input: Record<string, unknown>) {
     let p = createProgram();
     p = find(p, 'mediaAsset', {}, 'allAssets');
-    return completeFrom(p, 'ok', (bindings) => ({
-      items: JSON.stringify((bindings.allAssets as unknown[]) ?? []),
-    })) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+    return completeFrom(p, 'ok', (bindings) => {
+      const raw = (bindings.allAssets as unknown[]) ?? [];
+      // Denormalize the context JSON blob into flat projection-friendly fields.
+      // The createMedia call stores { name, mimeType, capturedAt } as a JSON
+      // string in `context`. The ProjectionSpec (media-asset-fields) expects
+      // top-level keys: thumbnail, name, mimeType, fileSize, duration,
+      // capturedAt, tags, album. We parse context and spread it so those keys
+      // are available on each returned record.
+      const items = raw.map((rec) => {
+        const r = rec as Record<string, unknown>;
+        let ctx: Record<string, unknown> = {};
+        if (typeof r.context === 'string' && r.context.trim().startsWith('{')) {
+          try { ctx = JSON.parse(r.context); } catch { /* ignore malformed context */ }
+        }
+        return {
+          // identity
+          asset: r.asset,
+          // projection-spec keys (flat)
+          thumbnail: r.thumbnail || '',
+          name: ctx.name ?? r.originalFile ?? r.asset ?? '',
+          mimeType: ctx.mimeType ?? '',
+          fileSize: ctx.fileSize ?? r.fileSize ?? '',
+          duration: ctx.duration ?? r.duration ?? '',
+          capturedAt: ctx.capturedAt ?? r.createdAt ?? '',
+          tags: ctx.tags ?? r.tags ?? [],
+          album: ctx.album ?? r.album ?? '',
+          // passthrough originals for detail views / non-projection consumers
+          sourcePlugin: r.sourcePlugin,
+          originalFile: r.originalFile,
+          createdAt: r.createdAt,
+          updatedAt: r.updatedAt,
+        };
+      });
+      return { items: JSON.stringify(items) };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 
   getMedia(input: Record<string, unknown>) {

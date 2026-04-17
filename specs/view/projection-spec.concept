@@ -132,4 +132,8 @@ concept ProjectionSpec [J] {
     then create(name: "proj-a", fields: "[]") -> ok
   }
 
+  always "every projection key must exist on evaluated rows": {
+    "every visibleFields.key must be a real field on every returned record; mismatched keys cause silent empty-cell rendering"
+  }
+
 }

@@ -41,5 +41,10 @@ view "media-library" {
     always "purity is read-write": {
       purity = "read-write"
     }
+
+    always "every projection key exists on every returned record": {
+      forall row in data, field in projectedFields:
+      field.key in row.keys
+    }
   }
 }
