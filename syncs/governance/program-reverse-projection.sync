@@ -1,0 +1,23 @@
+# When a ContentReconciler/reconcile completes on a governance page, stamp
+# the target concept (Constitution/Proposal) with the reconciled content.
+# Concrete instance of the reverse-projection pattern: map page-authored
+# governance content back to structured governance concept state.
+#
+# See docs/plans/agent-registration-content-reconciler-implementation-prd.md §7.
+
+sync ProgramReverseProjection [eager]
+when {
+  ContentReconciler/reconcile: [ sourceKind: "page"; sourceId: ?sourceId ]
+    => [ applied: ?applied; skipped: ?skipped ]
+}
+where {
+  bind(uuid() as ?projectionId)
+}
+then {
+  Constitution/recordReverseProjection: [
+    projection: ?projectionId;
+    sourceId: ?sourceId;
+    applied: ?applied;
+    skipped: ?skipped
+  ]
+}
