@@ -1,0 +1,200 @@
+@version(1)
+widget popover {
+
+  purpose {
+    Viewport-aware anchored popover for floating UI panels: type pickers,
+    config panels, context menus, and menu dropdowns. Renders its content
+    in a portal at the document body to escape ancestor overflow:hidden
+    clipping. Computes a fixed pixel position from a DOMRect anchor using a
+    preferred placement hint, then flips to the opposite side when the
+    preferred side overflows the viewport, and clamps both axes so the panel
+    is always fully visible. An optional backdrop covers the viewport behind
+    the panel and closes it on outside click when modal is true. Focus is
+    trapped while the panel is open and modal, and returns to the anchor
+    element on close.
+  }
+
+  anatomy {
+    root:     container     { Portal host; rendered at document body to escape ancestor overflow clipping }
+    backdrop: overlay       { Full-viewport invisible overlay; closes popover on click when modal is true }
+    panel:    container     { Positioned panel surface holding the popover content; fixed to computed coordinates }
+    arrow:    presentation  { Optional visual pointer from panel toward the anchor element }
+  }
+
+  states {
+    closed [initial] {
+      on OPEN -> opening;
+    }
+
+    opening {
+      on POSITIONED -> open;
+      entry [computePosition; attachScrollResizeListeners];
+    }
+
+    open {
+      on CLOSE         -> closing;
+      on OUTSIDE_CLICK -> closing;
+      on ESCAPE        -> closing;
+      on REPOSITION    -> open;
+      entry [trapFocusIfModal; focusPanel];
+      exit  [releaseFocus];
+    }
+
+    closing {
+      on ANIMATION_END -> closed;
+      entry [detachScrollResizeListeners; returnFocusToAnchor];
+    }
+  }
+
+  accessibility {
+    role: dialog;
+    modal: true;
+    keyboard {
+      Escape -> ESCAPE;
+      Tab    -> FOCUS_NEXT;
+    }
+    focus {
+      trap: true;
+      initial: panel;
+      returnOnClose: true;
+    }
+    aria {
+      root -> {
+        role: "presentation";
+      };
+      backdrop -> {
+        role: "presentation";
+        aria-hidden: "true";
+      };
+      panel -> {
+        role: "dialog";
+        aria-modal: if ?modal then "true" else "false";
+        aria-label: ?label;
+      };
+    }
+  }
+
+  props {
+    open:      Bool   = false
+    anchor:    option String
+    placement: String = "auto"
+    gap:       Int    = 8
+    width:     option String
+    height:    option String
+    modal:     Bool   = true
+    label:     String = "Popover"
+  }
+
+  connect {
+    root -> {
+      data-part:  "root";
+      data-state: state;
+    }
+
+    backdrop -> {
+      data-part:   "backdrop";
+      aria-hidden: "true";
+      hidden:      if state != "open" then true else false;
+      onClick:     if ?modal then send(OUTSIDE_CLICK) else noop;
+    }
+
+    panel -> {
+      data-part:      "panel";
+      data-state:     state;
+      data-placement: self.computedPlacement;
+      role:           "dialog";
+      aria-modal:     if ?modal then "true" else "false";
+      aria-label:     ?label;
+      hidden:         if state == "closed" then true else false;
+    }
+
+    arrow -> {
+      data-part:      "arrow";
+      data-placement: self.computedPlacement;
+      hidden:         if state == "closed" then true else false;
+    }
+  }
+
+  affordance {
+    serves: overlay;
+    specificity: 9;
+  }
+
+  compose {
+    _portal: widget("portal", { target: "body" })
+  }
+
+  invariant {
+    example "OPEN event starts opening sequence" {
+      after OPEN() -> ok
+      then root.dataState = "opening"
+    }
+
+    example "POSITIONED event completes opening" {
+      after POSITIONED() -> ok
+      then root.dataState = "open"
+    }
+
+    example "ESCAPE closes the popover" {
+      after ESCAPE() -> ok
+      then root.dataState = "closing"
+    }
+
+    example "OUTSIDE_CLICK closes when modal" {
+      after OUTSIDE_CLICK() -> ok
+      then root.dataState = "closing"
+    }
+
+    example "CLOSE event starts closing sequence" {
+      after CLOSE() -> ok
+      then root.dataState = "closing"
+    }
+
+    always "root data-state reflects FSM state" {
+      root.dataState != ""
+    }
+
+    always "panel hidden outside open state" {
+      panel.hidden != "false"
+    }
+
+    always "backdrop present only when open" {
+      backdrop.hidden != "false"
+    }
+
+    never "panel visible while closed" {
+      root.dataState = "closed"
+      and panel.hidden = "false"
+    }
+
+    never "both open and closed simultaneously" {
+      root.dataState = "open"
+      and root.dataState = "closed"
+    }
+
+    always "aria-modal matches modal prop" {
+      panel.ariaModal != ""
+    }
+
+    always "portal escapes ancestor overflow" {
+      root.portalTarget = "body"
+    }
+
+    never "modal-less popover snatches focus on mount": {
+      modal = false
+      and panel.focused = true
+    }
+
+    never "modal popover steals focus from active contentEditable": {
+      modal = true
+      and panel.focused = true
+      and panel.priorActiveContentEditable = true
+    }
+
+    never "popover cleanup returns focus to contentEditable region": {
+      root.dataState = "closing"
+      and root.focusReturnTarget.isContentEditable = true
+    }
+  }
+
+}
