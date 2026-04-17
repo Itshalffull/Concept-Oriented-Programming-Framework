@@ -1,0 +1,79 @@
+// PilotMode gate — governance-owned bounded-environment check (§9.3 of
+// agents-as-subjects-refactor-plan).
+//
+// Every mutating Pilot surface action is observed by one of the syncs
+// below. On each observation the sync consults PilotMode/check against
+// the session's currentPilotMode and the verb being invoked. A reply of
+// ok(allowed:false) records the block in PilotMode.
+//
+// The hard stop (returning ok(blocked:true) to the caller instead of
+// the real completion) lives in the clef-base Pilot invocation wrapper
+// because the current sync engine does not support cancelling the
+// originating action's downstream syncs from a where-clause. The wrapper
+// calls PilotMode/check synchronously before dispatching Pilot/<verb>;
+// if check returns ok(allowed:false) it short-circuits and returns
+// ok(blocked:true, reason:"<verb> is restricted by PilotMode <mode>").
+//
+// These syncs provide the auditable, observable record of every check —
+// so FlowTrace shows WHICH Pilot action, WHICH mode, and WHICH verdict
+// gated it, whether or not the check ultimately blocked.
+
+sync PilotModeGateSubmit [eager]
+  purpose: "Observe Pilot/submit through the PilotMode gate so every submit is checked against the session's current mode"
+when {
+  Pilot/submit: [ label: ?l; mode: ?mode ]
+    => [ ok: true ]
+}
+then {
+  PilotMode/check: [ mode: ?mode; verb: "submit" ]
+}
+
+sync PilotModeGateFill [eager]
+  purpose: "Observe Pilot/fill through the PilotMode gate"
+when {
+  Pilot/fill: [ label: ?l; field: ?f; value: ?v; mode: ?mode ]
+    => [ ok: true ]
+}
+then {
+  PilotMode/check: [ mode: ?mode; verb: "fill" ]
+}
+
+sync PilotModeGateInteract [eager]
+  purpose: "Observe Pilot/interact through the PilotMode gate"
+when {
+  Pilot/interact: [ label: ?l; event: ?e; mode: ?mode ]
+    => [ ok: true ]
+}
+then {
+  PilotMode/check: [ mode: ?mode; verb: "interact" ]
+}
+
+sync PilotModeGateEffect [eager]
+  purpose: "Observe Pilot/effect through the PilotMode gate"
+when {
+  Pilot/effect: [ binding: ?b; params: ?p; mode: ?mode ]
+    => [ ok: true ]
+}
+then {
+  PilotMode/check: [ mode: ?mode; verb: "effect" ]
+}
+
+sync PilotModeGateDismiss [eager]
+  purpose: "Observe Pilot/dismiss through the PilotMode gate"
+when {
+  Pilot/dismiss: [ mode: ?mode ]
+    => [ ok: true ]
+}
+then {
+  PilotMode/check: [ mode: ?mode; verb: "dismiss" ]
+}
+
+sync PilotModeGateNavigate [eager]
+  purpose: "Observe Pilot/navigate through the PilotMode gate"
+when {
+  Pilot/navigate: [ destination: ?d; mode: ?mode ]
+    => [ ok: true ]
+}
+then {
+  PilotMode/check: [ mode: ?mode; verb: "navigate" ]
+}

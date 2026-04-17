@@ -18,6 +18,7 @@ derived Pilot {
     View
     ViewEntity
     UIEventBinding
+    PilotMode
   }
 
   syncs {
@@ -30,7 +31,8 @@ derived Pilot {
       interact-sends-to-machine,
       fill-writes-field,
       submit-invokes-action,
-      pilot-effect
+      pilot-effect,
+      pilot-mode-gate
     ]
     recommended: [
       navigate-waits-for-ready,
@@ -41,47 +43,53 @@ derived Pilot {
   }
 
   surface {
-    action navigate(destination: String, params: option String, namespace: option String) {
+    // Every mutating Pilot action accepts an optional `mode` parameter
+    // that names the session's current PilotMode. The pilot-mode-gate sync
+    // consults PilotMode/check(mode, verb) for each action; the clef-base
+    // Pilot invocation wrapper short-circuits with ok(blocked:true) when
+    // the check returns ok(allowed:false). See agents-as-subjects-refactor-
+    // plan §9.3.
+    action navigate(destination: String, params: option String, namespace: option String, mode: option String) {
       entry: Navigator/go matches on destination: ?destination
       triggers: [
         Navigator/go(destination: ?destination, params: ?params)
       ]
     }
 
-    action back() {
+    action back(mode: option String) {
       matches: Navigator/back
     }
 
-    action forward() {
+    action forward(mode: option String) {
       matches: Navigator/forward
     }
 
-    action interact(label: String, event: String) {
+    action interact(label: String, event: String, mode: option String) {
       entry: PageMap/find matches on label: ?label
       triggers: [
         Machine/send(machineRef: ?machineRef, event: ?event)
       ]
     }
 
-    action fill(label: String, field: String, value: String) {
+    action fill(label: String, field: String, value: String, mode: option String) {
       entry: PageMap/find matches on label: ?label
       triggers: [
         Binding/writeField(binding: ?binding, field: ?field, value: ?value)
       ]
     }
 
-    action submit(label: String) {
+    action submit(label: String, mode: option String) {
       entry: PageMap/find matches on label: ?label
       triggers: [
         Binding/invoke(binding: ?binding)
       ]
     }
 
-    action dismiss() {
+    action dismiss(mode: option String) {
       matches: Shell/popOverlay
     }
 
-    action effect(binding: String, params: String) {
+    action effect(binding: String, params: String, mode: option String) {
       entry: UIEventBinding/invoke matches on binding: ?binding
       triggers: [
         UIEventBinding/invoke(binding: ?binding, context: ?params),
