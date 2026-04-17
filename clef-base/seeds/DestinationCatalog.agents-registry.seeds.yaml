@@ -1,0 +1,14 @@
+# Admin destination for the agent principal registry. Uses AgentRegistration
+# as the target concept so shell navigation routes to the list view backed
+# by AgentRegistration/list.
+
+concept: DestinationCatalog
+action: register
+entries:
+  - destination: agent-registry
+    name: agent-registry
+    targetConcept: AgentRegistration
+    targetView: agent-registry-list
+    href: /admin/agents/registry
+    icon: "👤"
+    group: Agents

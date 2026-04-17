@@ -1,0 +1,15 @@
+# View seed for the agent principal registry. Backs the /admin/agents/registry
+# destination and reads from AgentRegistration/list which returns every
+# registered principal regardless of owner or status.
+
+concept: View
+action: create
+entries:
+  - view: agent-registry-list
+    dataSource: '{"concept":"AgentRegistration","action":"list","params":{}}'
+    layout: table
+    visibleFields: '[{"key":"displayName","label":"Name"},{"key":"status","label":"Status","formatter":"badge"},{"key":"ownerSubject","label":"Owner","formatter":"code"},{"key":"personaRef","label":"Persona","formatter":"code"},{"key":"agentClass","label":"Class","formatter":"badge"},{"key":"createdAt","label":"Registered","formatter":"date"}]'
+    controls: '{"rowClick":{"navigateTo":"/admin/agents/registry/{agent}"}}'
+    title: Agent Registry
+    description: Durable agent principals — the source-of-truth identity record for every registered agent, separate from live AgentSession runtime state. Each row captures the agent's display name, lifecycle status (active, disabled, or revoked), owning subject, optional persona binding, and agent class.
+    defaultDisplayMode: table-row
