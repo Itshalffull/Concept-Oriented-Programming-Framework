@@ -378,6 +378,13 @@ widget block-editor {
       panel.modal = false
       and panel.focused = true
     }
+
+    never "nested alt-view drops children when parent has non-blocks view mode": {
+      exists block in contentArea.blocks:
+        block.childViewMode != "block-children-blocks"
+        and block.hasChildren = true
+        and block.renderedChildCount = 0
+    }
   }
 
 }

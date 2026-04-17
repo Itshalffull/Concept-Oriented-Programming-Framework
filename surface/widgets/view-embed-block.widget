@@ -313,6 +313,14 @@ widget view-embed-block {
       requires: state.edit = "configuring"
       ensures ok: state.edit = "resolving"
     }
+
+    always "view embed passes block's node id as context": {
+      blockId != none
+    }
+
+    never "nested view embed shares query cache with ancestor": {
+      blockId = none
+    }
   }
 
 }

@@ -56,6 +56,10 @@ export interface BlockSubtreeViewProps {
   /** If a nested parent's view is non-blocks, stop recursing so the
    * outer view pipeline can render that subtree in its chosen shell. */
   subtreeRenderMode: Map<string, string>;
+  /** Render alt-view children for a parent whose childViewMode is not
+   * block-children-blocks. Called when shouldRecurse is false and the
+   * node has children, so they are never silently dropped. */
+  renderAltChildren?: (nodeId: string) => React.ReactNode;
 }
 
 export const BlockSubtreeView: React.FC<BlockSubtreeViewProps> = (props) => {
@@ -63,6 +67,7 @@ export const BlockSubtreeView: React.FC<BlockSubtreeViewProps> = (props) => {
     rootId, depth = 0, keyNamespace = 'block-subtree',
     byParent, byId, renderBlockSlot,
     settingsFor, openSettingsMenu, subtreeRenderMode,
+    renderAltChildren,
   } = props;
 
   const rec = byId.get(rootId);
@@ -70,7 +75,8 @@ export const BlockSubtreeView: React.FC<BlockSubtreeViewProps> = (props) => {
 
   const nodeKey = `${keyNamespace}:${rec.id}:${depth}`;
   const showGear = rec.hasChildren;
-  const shouldRecurse = (subtreeRenderMode.get(rec.id) ?? 'block-children-blocks') === 'block-children-blocks';
+  const childViewMode = subtreeRenderMode.get(rec.id) ?? 'block-children-blocks';
+  const shouldRecurse = childViewMode === 'block-children-blocks';
 
   return (
     <>
@@ -122,6 +128,9 @@ export const BlockSubtreeView: React.FC<BlockSubtreeViewProps> = (props) => {
       {shouldRecurse && (byParent.get(rec.id) ?? []).map((c) => (
         <BlockSubtreeView key={`${keyNamespace}:${c.id}`} {...props} rootId={c.id} depth={depth + 1} />
       ))}
+      {!shouldRecurse && rec.hasChildren && renderAltChildren
+        ? renderAltChildren(rec.id)
+        : null}
     </>
   );
 };

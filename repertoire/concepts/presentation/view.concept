@@ -205,6 +205,13 @@ concept View [V] {
     }
   }
 
+  example "nested view embed renders with its own context": {
+    after create(view: outer, dataSource: "blocks", layout: "board") -> ok(view: outer)
+    and create(view: inner, dataSource: "blocks", layout: "board") -> ok(view: inner)
+    then get(view: inner) -> ok(view: inner)
+    and get(view: outer) -> ok(view: outer)
+  }
+
   example "create then setFilter": {
     after create(view: v, dataSource: "tasks", layout: "table") -> ok(view: v)
     then setFilter(view: v, filter: "status=active") -> ok(view: v)

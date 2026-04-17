@@ -2591,13 +2591,176 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
                         />
                       );
                     };
-                    // Memoized subtreeViewProps slice that every
-                    // BlockSubtreeView mount in this alt-view needs.
-                    const subtreeProps = {
+                    // Shared base props for every BlockSubtreeView in
+                    // this alt-view. renderAltChildren is defined after
+                    // this and added separately so it can reference
+                    // subtreePropsBase without a circular initializer.
+                    const subtreePropsBase = {
                       byParent, byId, renderBlockSlot: renderBlockSlotForSubtree,
                       settingsFor, subtreeRenderMode,
                       openSettingsMenu: (x: number, y: number, parentId: string) => setBlockChildrenMenu({ x, y, parentId }),
                     };
+                    // renderAltChildren handles the case where a nested
+                    // block's children have a non-blocks view mode.
+                    // Without this, BlockSubtreeView silently drops all
+                    // children when shouldRecurse is false — the root
+                    // cause of the nested-view-embed content disappearing.
+                    const renderAltChildren = (nodeId: string): React.ReactNode => {
+                      const nestedMode = subtreeRenderMode.get(nodeId) ?? 'block-children-blocks';
+                      if (nestedMode === 'block-children-blocks') return null;
+                      const nestedDirectKids = byParent.get(nodeId) ?? [];
+                      const nestedWrap: React.CSSProperties = {
+                        borderLeft: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.08))',
+                        paddingLeft: 10, marginTop: 4,
+                      };
+                      // sp spreads subtreePropsBase plus this very function
+                      // so nesting is unbounded: board inside board inside board.
+                      const sp = { ...subtreePropsBase, renderAltChildren };
+                      if (nestedMode === 'block-children-outline' || nestedMode === 'block-children-list') {
+                        return (
+                          <div data-part="nested-alt-view" data-view={nestedMode} data-parent-id={nodeId} style={nestedWrap}>
+                            {nestedDirectKids.map((k) => (
+                              <div key={k.id} data-block-id={k.id} style={{ marginBottom: 4 }}>
+                                <BlockSubtreeView {...sp} rootId={k.id} keyNamespace={nestedMode} />
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      }
+                      if (nestedMode === 'block-children-gallery') {
+                        return (
+                          <div data-part="nested-alt-view" data-view={nestedMode} data-parent-id={nodeId} style={{ ...nestedWrap, display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(180px,1fr))', gap: 8 }}>
+                            {nestedDirectKids.map((k) => (
+                              <div key={k.id} data-block-id={k.id} style={{ border: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.1))', borderRadius: 6, padding: 8, minHeight: 50, fontSize: 13 }}>
+                                <BlockSubtreeView {...sp} rootId={k.id} keyNamespace={nestedMode} />
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      }
+                      if (nestedMode === 'block-children-board') {
+                        // Nested kanban: columns = direct children of nodeId,
+                        // cards = grandchildren of nodeId.
+                        const nestedParentLabel: Record<string, string> = {};
+                        const nestedLabelToId: Record<string, string> = {};
+                        for (const c of nestedDirectKids) {
+                          const lbl = (contentBodyCache.get(c.id) ?? '').replace(/<[^>]+>/g, '').trim() || c.id;
+                          nestedParentLabel[c.id] = lbl;
+                        }
+                        for (const [id, lbl] of Object.entries(nestedParentLabel)) {
+                          if (nestedLabelToId[lbl] === undefined) nestedLabelToId[lbl] = id;
+                        }
+                        const nestedGrandchildren: BlockChild[] = [];
+                        for (const col of nestedDirectKids) {
+                          for (const card of byParent.get(col.id) ?? []) {
+                            nestedGrandchildren.push(card);
+                          }
+                        }
+                        const nestedBoardRows = nestedGrandchildren.map((g) => ({
+                          id: g.id,
+                          parent: nestedParentLabel[g.parent] ?? g.parent,
+                          schema: g.schema,
+                          content: titleLine(contentBodyCache.get(g.id) ?? ''),
+                        }));
+                        for (const col of nestedDirectKids) {
+                          if (!(byParent.get(col.id) ?? []).length) {
+                            nestedBoardRows.push({
+                              id: `__empty__:${col.id}`,
+                              parent: nestedParentLabel[col.id],
+                              schema: '',
+                              content: '',
+                            });
+                          }
+                        }
+                        const renderNestedCard = (row: Record<string, unknown>) => {
+                          const id = String(row.id);
+                          if (id.startsWith('__empty__:')) {
+                            return <div style={{ fontSize: 11, color: 'var(--palette-outline, #888)', fontStyle: 'italic', padding: 4 }}>(no items)</div>;
+                          }
+                          const cardRec = byId.get(id);
+                          if (!cardRec) return <span style={{ fontSize: 12 }}>{String(row.content)}</span>;
+                          return (
+                            <div data-part="kanban-card-tree" data-root-id={id}>
+                              <BlockSubtreeView {...sp} rootId={id} keyNamespace="nested-kanban-card" />
+                            </div>
+                          );
+                        };
+                        return (
+                          <div data-part="nested-alt-view" data-view={nestedMode} data-parent-id={nodeId} style={nestedWrap}>
+                            <BoardDisplay
+                              data={nestedBoardRows}
+                              fields={[...fields, { key: 'parent', label: 'Parent' }]}
+                              groupBy="parent"
+                              renderItem={renderNestedCard}
+                              onCardMove={async (rowId, newColumnLabel) => {
+                                const newParentId = nestedLabelToId[newColumnLabel];
+                                if (!newParentId || newParentId === rowId) return;
+                                try {
+                                  await invokeBinding(invoke, 'outline-reparent', { node: rowId, newParent: newParentId });
+                                  const siblings = byParent.get(newParentId) ?? [];
+                                  const recs = await Promise.all(siblings
+                                    .filter((s) => s.id !== rowId)
+                                    .map((s) => invoke('Outline', 'getRecord', { node: s.id })));
+                                  const maxOrder = recs.reduce((m, r) => {
+                                    if (r.variant === 'ok' && typeof r.order === 'number') return Math.max(m, r.order as number);
+                                    return m;
+                                  }, 0);
+                                  await invokeBinding(invoke, 'outline-set-order', { node: rowId, order: maxOrder + 1 });
+                                } catch (err) {
+                                  console.warn('[nested-block-children-board] reparent failed:', err);
+                                } finally {
+                                  void loadChildren();
+                                }
+                              }}
+                            />
+                          </div>
+                        );
+                      }
+                      if (nestedMode === 'block-children-table') {
+                        const nestedRows = nestedDirectKids;
+                        const nestedColCount = nestedRows.reduce((m, r) => Math.max(m, (byParent.get(r.id) ?? []).length), 0);
+                        return (
+                          <div data-part="nested-alt-view" data-view={nestedMode} data-parent-id={nodeId} style={{ ...nestedWrap, overflowX: 'auto' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, tableLayout: 'fixed' }}>
+                              <thead>
+                                <tr style={{ textAlign: 'left', color: 'var(--palette-outline, #888)', fontSize: 11, textTransform: 'uppercase' }}>
+                                  <th style={{ padding: 6, borderBottom: '1px solid var(--palette-outline-variant)', minWidth: 180 }}>Row</th>
+                                  {Array.from({ length: nestedColCount }).map((_, i) => (
+                                    <th key={i} style={{ padding: 6, borderBottom: '1px solid var(--palette-outline-variant)', minWidth: 140 }}>Col {i + 1}</th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {nestedRows.map((row) => {
+                                  const cells = byParent.get(row.id) ?? [];
+                                  return (
+                                    <tr key={row.id} data-block-id={row.id} style={{ verticalAlign: 'top' }}>
+                                      <td style={{ padding: 6, borderBottom: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.04))' }}>
+                                        <BlockSubtreeView {...sp} rootId={row.id} keyNamespace="nested-roam-row" />
+                                      </td>
+                                      {Array.from({ length: nestedColCount }).map((_, i) => {
+                                        const cell = cells[i];
+                                        return (
+                                          <td key={i} style={{ padding: 6, borderBottom: '1px solid var(--palette-outline-variant, rgba(0,0,0,0.04))' }}>
+                                            {cell
+                                              ? <BlockSubtreeView {...sp} rootId={cell.id} keyNamespace={`nested-roam-cell-${i}`} />
+                                              : <span style={{ color: 'var(--palette-outline, #ccc)', fontStyle: 'italic', fontSize: 11 }}>—</span>}
+                                          </td>
+                                        );
+                                      })}
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        );
+                      }
+                      return null;
+                    };
+                    // Full props including renderAltChildren for propagation
+                    // through the entire subtree.
+                    const subtreeProps = { ...subtreePropsBase, renderAltChildren };
                     const directKids = byParent.get(child.id) ?? [];
                     if (mode === 'block-children-outline' || mode === 'block-children-list') {
                       // Outline / list: vertical stack of the direct
