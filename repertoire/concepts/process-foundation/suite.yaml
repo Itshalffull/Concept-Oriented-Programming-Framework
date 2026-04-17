@@ -25,6 +25,9 @@ concepts:
   ExecutionDispatch:
     spec: ./execution-dispatch.concept
     params: { ED: { as: execution-dispatch-id } }
+  BrainstormBoard:
+    spec: ./BrainstormBoard.concept
+    params: { B: { as: brainstorm-board-id } }
 
 syncs:
   required:

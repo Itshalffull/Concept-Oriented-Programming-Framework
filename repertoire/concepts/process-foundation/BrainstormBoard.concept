@@ -1,0 +1,194 @@
+@version(2)
+concept BrainstormBoard [B] {
+
+  purpose {
+    Manage the lifecycle of a brainstorm step: idea submission, forking,
+    endorsement, shortlisting, and close. Produces a ranked list of
+    shortlisted idea refs as output for the next process step (typically
+    a contest vote). Ideas are ContentNode refs — content ownership stays
+    with ContentNode.
+  }
+
+  state {
+    boards:         set B
+    step_ref:       B -> String        // StepRun identifier this board belongs to
+    phase:          B -> String        // submit | shortlist | closed
+    anonymous:      B -> Bool          // if true, submitter_ref hidden until closed
+    shortlist_size: B -> Int           // max ideas to advance (default 5)
+    ideas:          B -> list String   // ordered list of idea ContentNode refs
+    submitters:     B -> list String   // parallel list of submitter refs (hidden if anonymous)
+    endorsements:   B -> list Int      // parallel endorsement count per idea
+    forks:          B -> list String   // idea refs that are forks (child of another)
+    fork_parents:   B -> list String   // parent idea ref for each fork (parallel to forks)
+    shortlisted:    B -> list String   // idea refs selected to advance
+    output:         B -> option String // JSON array of shortlisted refs, set on close
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action open(step_ref: String, anonymous: Bool, shortlist_size: Int) {
+      -> ok(board: B) {
+        Creates a new brainstorm board in submit phase. Idempotent —
+        if a board for this step_ref already exists, returns the existing one.
+      }
+      -> error(message: String) {
+        step_ref is empty or shortlist_size is less than 1.
+      }
+      fixture open_ok { step_ref: "step-brainstorm-1", anonymous: false, shortlist_size: 5 }
+      fixture open_anonymous { step_ref: "step-brainstorm-2", anonymous: true, shortlist_size: 3 }
+      fixture open_empty_step { step_ref: "", anonymous: false, shortlist_size: 5 } -> error
+      fixture open_bad_size { step_ref: "step-brainstorm-3", anonymous: false, shortlist_size: 0 } -> error
+    }
+
+    action submitIdea(board: B, idea_ref: String, submitter_ref: String) {
+      -> ok(board: B, idea_ref: String) {
+        Adds the idea ContentNode ref to the board's ideas list.
+        Only allowed in submit phase.
+      }
+      -> locked(message: String) {
+        Board is in shortlist or closed phase; no new ideas may be submitted.
+      }
+      -> not_found(message: String) {
+        No board exists with this identifier.
+      }
+      -> error(message: String) {
+        idea_ref or submitter_ref is empty.
+      }
+      fixture submit_ok { board: $open_ok.board, idea_ref: "cn-idea-1", submitter_ref: "user-1" } after open_ok
+      fixture submit_second { board: $open_ok.board, idea_ref: "cn-idea-2", submitter_ref: "user-2" } after submit_ok
+      fixture submit_locked { board: $open_ok.board, idea_ref: "cn-idea-3", submitter_ref: "user-3" } after closeSubmission_ok -> locked
+      fixture submit_missing { board: "nonexistent", idea_ref: "cn-idea-x", submitter_ref: "user-x" } -> not_found
+      fixture submit_empty_idea { board: $open_ok.board, idea_ref: "", submitter_ref: "user-1" } after open_ok -> error
+    }
+
+    action forkIdea(board: B, parent_idea_ref: String, fork_idea_ref: String, submitter_ref: String) {
+      -> ok(board: B, fork_idea_ref: String) {
+        Adds a fork idea to the board, recording its parent. The fork appears
+        in the ideas list after its parent. Only allowed in submit phase.
+      }
+      -> locked(message: String) {
+        Board is not in submit phase; forking is only permitted during submission.
+      }
+      -> not_found(message: String) {
+        No board exists with this identifier, or parent_idea_ref is not in the ideas list.
+      }
+      -> error(message: String) {
+        fork_idea_ref or submitter_ref is empty.
+      }
+      fixture fork_ok { board: $submit_ok.board, parent_idea_ref: "cn-idea-1", fork_idea_ref: "cn-idea-fork-1", submitter_ref: "user-2" } after submit_ok
+      fixture fork_missing_parent { board: $submit_ok.board, parent_idea_ref: "nonexistent-ref", fork_idea_ref: "cn-idea-fork-2", submitter_ref: "user-2" } after submit_ok -> not_found
+    }
+
+    action endorseIdea(board: B, idea_ref: String, voter_ref: String) {
+      -> ok(board: B, idea_ref: String, endorsements: Int) {
+        Increments the endorsement count for the idea. Allowed in submit or shortlist phase.
+        Not a full vote — a lightweight signal for shortlisting decisions.
+      }
+      -> not_found(message: String) {
+        No board exists with this identifier, or idea_ref is not in the ideas list.
+      }
+      -> locked(message: String) {
+        Board is in closed phase; endorsements are no longer accepted.
+      }
+      fixture endorse_ok { board: $submit_ok.board, idea_ref: "cn-idea-1", voter_ref: "user-3" } after submit_ok
+      fixture endorse_missing { board: "nonexistent", idea_ref: "cn-idea-1", voter_ref: "user-1" } -> not_found
+    }
+
+    action closeSubmission(board: B) {
+      -> ok(board: B) {
+        Transitions the board from submit to shortlist phase. Automatically
+        shortlists the top N ideas by endorsement count, where N is shortlist_size.
+      }
+      -> not_found(message: String) {
+        No board exists with this identifier.
+      }
+      -> already_closed(message: String) {
+        Board is already in shortlist or closed phase; submission cannot be re-closed.
+      }
+      fixture closeSubmission_ok { board: $submit_ok.board } after submit_second
+      fixture closeSubmission_already { board: $open_ok.board } after closeSubmission_ok -> already_closed
+    }
+
+    action shortlist(board: B, idea_refs: String) {
+      -> ok(board: B) {
+        Overrides the auto-shortlist with a facilitator-curated set of idea refs.
+        idea_refs is a JSON array of idea ref strings. Only allowed in shortlist phase.
+      }
+      -> not_found(message: String) {
+        No board exists with this identifier.
+      }
+      -> locked(message: String) {
+        Board is not in shortlist phase; manual shortlisting requires prior closeSubmission.
+      }
+      -> error(message: String) {
+        idea_refs is not valid JSON, or references idea refs not present in the board's ideas list.
+      }
+      fixture shortlist_ok { board: $closeSubmission_ok.board, idea_refs: "[\"cn-idea-1\",\"cn-idea-2\"]" } after closeSubmission_ok
+      fixture shortlist_locked { board: $open_ok.board, idea_refs: "[]" } after open_ok -> locked
+    }
+
+    action close(board: B) {
+      -> ok(board: B, output: String) {
+        Transitions the board to closed phase. Serializes the shortlisted idea refs as
+        a JSON array and writes it to output. This output becomes the contest options
+        for the next vote step via sync.
+      }
+      -> not_found(message: String) {
+        No board exists with this identifier.
+      }
+      -> locked(message: String) {
+        Board is not in shortlist phase; closeSubmission must be called before close.
+      }
+      fixture close_ok { board: $shortlist_ok.board } after shortlist_ok
+      fixture close_locked { board: $open_ok.board } after open_ok -> locked
+    }
+
+    action getIdeas(board: B) {
+      -> ok(board: B, ideas: String, phase: String) {
+        Returns the current ideas list as a JSON array of objects with fields:
+        idea_ref, submitter_ref (null if anonymous and not closed), endorsements,
+        is_fork, and parent_ref. phase is the current board phase.
+      }
+      -> not_found(message: String) {
+        No board exists with this identifier.
+      }
+      reversal: none
+      fixture getIdeas_ok { board: $submit_ok.board } after submit_ok
+    }
+  }
+
+  example "open and submit ideas then close": {
+    after open(step_ref: "step-x", anonymous: false, shortlist_size: 2) -> ok(board: b)
+    and   submitIdea(board: b, idea_ref: "cn-1", submitter_ref: "u1") -> ok(board: b, idea_ref: "cn-1")
+    and   submitIdea(board: b, idea_ref: "cn-2", submitter_ref: "u2") -> ok(board: b, idea_ref: "cn-2")
+    then  closeSubmission(board: b) -> ok(board: b)
+    and   close(board: b) -> ok(board: b, output: out)
+  }
+
+  always "boards have required fields": {
+    forall b in boards:
+    b.step_ref != none
+  }
+
+  never "closed board has empty output": {
+    exists b in boards:
+    b.phase = "closed" and b.output = none
+  }
+
+  action open {
+    requires: step_ref != ""
+    ensures ok: step_ref != none
+  }
+
+  action submitIdea {
+    requires: idea_ref != "" && submitter_ref != ""
+    ensures ok: idea_ref != none
+  }
+
+  action close {
+    ensures ok: output != none
+  }
+}
