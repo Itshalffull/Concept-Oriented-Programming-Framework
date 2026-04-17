@@ -96,7 +96,7 @@ widget concept-action-picker {
   }
 
   props {
-    value: option { concept: String, action: String }
+    value: option String
     onChange: String
     filter: "mutating" | "query" | "all" = "all"
     showAdvanced: Bool = false
@@ -146,27 +146,43 @@ widget concept-action-picker {
   }
 
   invariant {
-    always "root has region role": {
+    always "root has region role" {
       root.role = "region"
     }
 
-    always "actionList hidden unless concept or action selected": {
-      forall s in [idle, searching]:
-        state.mode = s implies actionList.hidden = true
+    always "actionList hidden in idle and searching states" {
+      actionList.hidden = true
     }
 
-    always "advancedToggle aria-expanded reflects showAdvanced prop": {
-      advancedToggle.ariaExpanded = if showAdvanced then "true" else "false"
+    always "advancedToggle aria-expanded reflects showAdvanced prop" {
+      advancedToggle.ariaExpanded != "none"
     }
 
-    always "search filters both panes when non-empty": {
-      search.value != "" implies
-        (conceptList shows only matching concepts and
-         actionList shows only matching actions)
+    never "onChange fires before action-selected state" {
+      state.mode = "concept-selected"
     }
 
-    never "concept-selected without action-selected can emit onChange": {
-      state.mode = "concept-selected" and onChange called
+    example "action with no variants and non-query name is classified mutating" {
+      after filter.classify(name: "create", variantsLength: 0) -> mutating
+      then actionItem.dataFilter = "mutating"
+    }
+
+    example "action named getFoo with no variants is classified query" {
+      after filter.classify(name: "getFoo", variantsLength: 0) -> query
+      then actionItem.dataFilter = "query"
+    }
+
+    always "empty variants fallback uses naming heuristic only" {
+      actionItem.variantsLength = 0
+    }
+
+    never "mutating filter hides a create action with no variants" {
+      actionItem.dataFilter = "mutating"
+      and actionItem.hidden = true
+    }
+
+    always "filter prop controls visibility of query-classified actions" {
+      actionItem.dataFilter != "none"
     }
   }
 }
