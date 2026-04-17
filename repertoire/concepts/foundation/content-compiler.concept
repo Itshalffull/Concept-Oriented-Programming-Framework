@@ -127,6 +127,23 @@ concept ContentCompiler [X] {
 
       fixture list_by_schema { schema: "agent-persona" } after compile_page
     }
+
+    action getStatus(page: String) {
+      -> ok(status: String, lastCompiledAt: option String) {
+        Returns the most recent compilation status for the given page —
+        one of "compiled", "stale", or "never-compiled". When no
+        compilation record exists for the page yet, returns status
+        "never-compiled" with lastCompiledAt as null. Accepts empty
+        input gracefully without throwing.
+      }
+      -> notfound(message: String) {
+        The page identifier is missing or empty.
+      }
+
+      fixture get_status_existing { page: "persona-research-bot" } after compile_page
+      fixture get_status_never_compiled { page: "uncompiled-page" }
+      fixture get_status_missing { page: "" } -> notfound
+    }
   }
 
   example "compile-then-get": {
@@ -169,6 +186,12 @@ concept ContentCompiler [X] {
     requires: pageId != ""
 
     ensures ok: compilations contains result.compilation
+
+  }
+
+  action getStatus {
+
+    requires: "accepts empty input gracefully — when input is {} or page is empty, returns notfound variant, not undefined"
 
   }
 }

@@ -2,6 +2,7 @@
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
   createProgram, get as spGet, find, put, putFrom, branch, complete, completeFrom,
+  mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -200,6 +201,48 @@ const _contentCompilerHandler: FunctionalConceptHandler = {
     return completeFrom(p, 'ok', (bindings) => ({
       compilations: JSON.stringify((bindings.results as Array<Record<string, unknown>>) || []),
     })) as StorageProgram<Result>;
+  },
+
+  /**
+   * Returns the most recent compilation status for the given page.
+   * Returns ok with status "never-compiled" when no compilation record exists
+   * yet — this is the normal state for pages that have never been compiled.
+   * Returns notfound only when the page identifier is missing or empty.
+   */
+  getStatus(input: Record<string, unknown>) {
+    const pageId = toStr(input.page);
+
+    if (!pageId || pageId.trim() === '') {
+      return complete(createProgram(), 'notfound', { message: 'page is required' }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = find(p, 'compilation', { pageId } as Record<string, unknown>, 'results');
+
+    // Pick the most recent compilation by lastCompiledAt (or first if none have timestamps)
+    p = mapBindings(p, (bindings) => {
+      const results = (bindings.results as Array<Record<string, unknown>>) || [];
+      if (results.length === 0) return null;
+      // Sort by lastCompiledAt descending and take the first
+      const sorted = [...results].sort((a, b) => {
+        const aTime = typeof a.lastCompiledAt === 'string' ? a.lastCompiledAt : '';
+        const bTime = typeof b.lastCompiledAt === 'string' ? b.lastCompiledAt : '';
+        return bTime.localeCompare(aTime);
+      });
+      return sorted[0];
+    }, '_mostRecent');
+
+    return branch(p,
+      (bindings) => bindings._mostRecent != null,
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const rec = bindings._mostRecent as Record<string, unknown>;
+        return {
+          status: (rec.status as string) || 'compiled',
+          lastCompiledAt: typeof rec.lastCompiledAt === 'string' ? rec.lastCompiledAt : null,
+        };
+      }),
+      (b) => complete(b, 'ok', { status: 'never-compiled', lastCompiledAt: null }),
+    ) as StorageProgram<Result>;
   },
 };
 
