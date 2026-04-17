@@ -12,9 +12,18 @@ export function destinationByHref(
   destinations: Destination[],
   href: string,
 ): Destination | undefined {
-  return destinations.find((destination) => (
-    destination.href === href || href.startsWith(`${destination.href}/`)
-  ));
+  // Use longest-prefix match so that /admin/daily/2026-04-17 resolves to the
+  // "daily" destination (/admin/daily) rather than "dashboard" (/admin), which
+  // would otherwise win by virtue of being registered first.
+  let best: Destination | undefined;
+  for (const destination of destinations) {
+    if (destination.href === href || href.startsWith(`${destination.href}/`)) {
+      if (!best || destination.href.length > best.href.length) {
+        best = destination;
+      }
+    }
+  }
+  return best;
 }
 
 export function destinationByName(

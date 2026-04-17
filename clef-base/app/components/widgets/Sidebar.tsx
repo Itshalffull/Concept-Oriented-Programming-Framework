@@ -3,11 +3,17 @@
 /**
  * Sidebar — Collapsible navigation panel
  * Implements repertoire/widgets/navigation/sidebar.widget
+ *
+ * Active-link invariant: exactly one nav link carries data-active="true" at a
+ * time, and it is the destination whose href is the longest prefix of the
+ * current pathname (or an exact match). The root destination (/admin) is
+ * treated as a non-prefix: it is active only when the pathname IS /admin or
+ * /admin/ — never just because every /admin/* path starts with it.
  */
 
 import React, { useState, useCallback } from 'react';
 import Link from 'next/link';
-import { useNavigator } from '../../../lib/clef-provider';
+import { usePathname } from 'next/navigation';
 
 export interface SidebarItem {
   label: string;
@@ -32,6 +38,36 @@ export interface SidebarProps {
   label?: string;
 }
 
+/**
+ * Determine whether a sidebar item href is active for the given pathname.
+ *
+ * Rules (Section 16.12 — active-link semantics):
+ *   1. Exact match: pathname === href  →  active
+ *   2. Prefix match: pathname starts with href + '/'  →  active
+ *      Exception: if the item href is '/' or equals a bare root path that is a
+ *      true prefix of every other route (e.g. '/admin'), we only allow exact
+ *      match so that the root destination does not shadow all child destinations.
+ *
+ * "Bare root path" is defined as: any registered href for which there exists
+ * another registered href that starts with it. We detect this at call-site by
+ * checking whether any sibling href is a strict prefix extension of this href.
+ */
+function isItemActive(itemHref: string, pathname: string, allHrefs: string[]): boolean {
+  if (pathname === itemHref) return true;
+  // Prefix match — but only if no other registered destination is a strict
+  // prefix-extension of this href (i.e. this href is not itself a landing
+  // redirect whose children are their own destinations).
+  const hasMoreSpecificSibling = allHrefs.some(
+    (other) => other !== itemHref && other.startsWith(itemHref + '/'),
+  );
+  if (hasMoreSpecificSibling) {
+    // This href is a root/parent of other registered destinations.
+    // Only consider it active on an exact pathname match (already handled above).
+    return false;
+  }
+  return pathname.startsWith(itemHref + '/');
+}
+
 export const Sidebar: React.FC<SidebarProps> = ({
   groups,
   header,
@@ -42,8 +78,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const [internalCollapsed, setCollapsed] = useState(false);
   const collapsed = controlledCollapsed ?? internalCollapsed;
-  const { current } = useNavigator();
-  const currentHref = current?.href ?? '/';
+  const pathname = usePathname();
+
+  // Collect all registered hrefs so isItemActive can detect parent destinations.
+  const allHrefs = groups.flatMap((g) => g.items.map((item) => item.href));
 
   const handleToggle = useCallback(() => {
     setCollapsed((prev) => !prev);
@@ -90,7 +128,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
             )}
             {group.items.map((item) => {
-              const isActive = currentHref === item.href;
+              const isActive = isItemActive(item.href, pathname, allHrefs);
               return (
                 <Link
                   key={item.href}
