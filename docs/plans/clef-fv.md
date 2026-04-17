@@ -12,7 +12,7 @@
 This plan makes Clef a self-verifying framework. Every `.concept` file is a formal specification. Every handler is tested or proved against that specification. Every sync is a composable contract. Every `.widget` file is a checkable behavioral spec. Verification workflows are modeled as ProcessSpecs using the existing process kit, with multi-AI validation and human approval gates.
 
 Five layers:
-1. **Invariant language** — six new constructs extending `.concept` invariant sections
+1. **Invariant language** — seven invariant constructs extending `.concept`, `.widget`, `.sync`, and `.derived` invariant sections via a shared universal grammar
 2. **Test generation** — mechanical compilation from invariants to PBT, boundary vectors, and fuzz harnesses
 3. **Formal verification** — dual-path solver-backed verification (Path A: spec consistency + conformance; Path B: direct translation)
 4. **Surface verification** — automatic widget FSM, accessibility, theme contrast, affordance catalog checks
@@ -42,6 +42,9 @@ Bare invariant blocks default to `example`. Zero change for existing authors.
 | `never` | `never "name": { exists p in state: bad_predicate }` | Z3 (negated existential) | Violation-attempt sequence tests | 2-3 |
 | `eventually` | `eventually "name": { forall r where cond: outcome }` | TLC (TLA+) | Bounded sequence tests | 3-4 |
 | `action requires/ensures` | `action X { requires: P  ensures ok: Q }` | Z3 / Dafny | PBT generators constrained by requires, assertions from ensures | 2-3 |
+| `scenario` | `scenario "name" { fixture … when { … } then { … } settlement … }` | None (Integration test) | Multi-step end-to-end test via IntegrationTestGen | 1-2 |
+
+All seven constructs are parsed by the universal `handlers/ts/framework/invariant-body-parser.ts` and shared across `.concept`, `.widget`, `.view`, `.sync`, and `.derived` specs. Per-kind variation is limited to the `AssertionContext` plugin that resolves identifiers.
 
 ### 1.3 Full Example
 

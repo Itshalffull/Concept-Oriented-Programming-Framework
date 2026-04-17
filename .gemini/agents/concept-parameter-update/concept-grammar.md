@@ -458,7 +458,7 @@ invariant {
 }
 ```
 
-The parser detects named sub-invariants when the first token inside `invariant {` is one of: `example`, `forall`, `always`, `never`, `eventually`, or `action`.
+The parser detects named sub-invariants when the first token inside `invariant {` is one of: `example`, `forall`, `always`, `never`, `eventually`, `action`, or `scenario`.
 
 ### Named Bare Invariants with Labels
 
@@ -587,7 +587,7 @@ Free variables (like `x`, `y`) are bound on first use and reused across steps. T
 
 ## Named Invariant Constructs
 
-Beyond the standard `invariant {}` block, the parser supports five named invariant construct keywords. These can appear either at the **concept body level** (alongside `purpose`, `state`, `actions`) or **inside** an `invariant {}` block as named sub-invariants.
+Beyond the standard `invariant {}` block, the parser supports six named invariant construct keywords. These can appear either at the **concept body level** (alongside `purpose`, `state`, `actions`) or **inside** an `invariant {}` block as named sub-invariants.
 
 ### `example` — Named Scenario
 
@@ -662,6 +662,42 @@ eventually "all pending requests resolve" {
 ```
 
 **Syntax**: `eventually "name" { forall <var> in <domain> [where <condition>]: <predicate> }`
+
+### `scenario` — Multi-block Behavioral Test
+
+Expresses a multi-step behavioral test with named fixtures, optional `given`/`when` setup blocks, a required `then` assertion block, and a settlement modality:
+
+```
+scenario "registering an origin makes it retrievable" {
+  fixture o1 { origin: "test-origin", kind: "space", qualifier: "vs-1" }
+  when {
+    register(origin: "test-origin", kind: "space", qualifier: "vs-1") -> ok
+  }
+  then {
+    get(origin: "test-origin") -> ok(kind: k, qualifier: q)
+    k = "space"
+  }
+  settlement sync
+}
+```
+
+**Settlement modalities**:
+- `settlement sync` — synchronous test; all steps execute in order
+- `settlement "async-eventually" { timeoutMs: N }` — poll until the `then` block passes within the timeout
+- `settlement "async-with-anchor" { anchor: "..." }` — wait for the named completion before asserting `then`
+
+**Syntax**:
+```
+scenario "name" {
+  fixture <name> { key: value, ... }*
+  [given { <step>* }]
+  [when  { <step>* }]
+  then   { <step>* }
+  settlement sync | "async-eventually" { timeoutMs: N } | "async-with-anchor" { anchor: "..." }
+}
+```
+
+Steps may be chained with `and` or `;`. Scenarios flow to `IntegrationTestGen` (not the conformance test generator) and are the primary construct for end-to-end behavioral assertions.
 
 ### Quantifier Syntax
 

@@ -291,6 +291,18 @@ action create(name: String) {
   -> ok(id: T) { ... }
   -> error(message: String) { ... }
 }
+
+// Multi-block behavioral test — fixture + given/when/then + settlement
+scenario "creating and retrieving an item" {
+  fixture item1 { name: "Alice" }
+  when {
+    create(name: "Alice") -> ok(id: x)
+  }
+  then {
+    get(id: x) -> ok(name: "Alice")
+  }
+  settlement sync
+}
 ```
 
 The old bare `invariant { ... }` form still works but named constructs are preferred — they generate better test names and enable targeted coverage analysis.

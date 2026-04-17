@@ -939,8 +939,8 @@ No new TS orchestration; even the CLI is a dispatcher.
     **Generated from `examples/devtools/devtools.interface.yaml`
     → regenerate via `scripts/regen-interface.ts`:**
     - `CLAUDE.md`, `AGENTS.md`, `GEMINI.md` (project instructions;
-      currently describe "six invariant constructs" — becomes seven
-      with `scenario`, plus the note that the same grammar lands on
+      now describe all seven invariant constructs including `scenario`,
+      plus the note that the same grammar lands on
       widget/view/sync/derived)
     - `.claude/agents/*.md`, `.codex/agents/*.md`,
       `.gemini/agents/*.md` — concept-scaffold-gen,
@@ -959,7 +959,7 @@ No new TS orchestration; even the CLI is a dispatcher.
 
     **Manifest text inside `examples/devtools/devtools.interface.yaml`:**
     - `project-instructions` section (lines ~2766 ff.) describing
-      the six invariant constructs — update to seven + the
+      all seven invariant constructs including `scenario` + the
       AssertionContext-plugin pattern
     - `agents` section prompts (concept-scaffold-gen and
       sync-scaffold-gen get the new authoring story)
@@ -975,8 +975,8 @@ No new TS orchestration; even the CLI is a dispatcher.
     - Sibling copies in `.codex/skills/…` and `.gemini/skills/…`
       if those exist under the same path
     - `docs/plans/clef-fv.md` Section 1 (referenced by the
-      devtools manifest; currently lists the six invariant
-      constructs — add `scenario`, note the shared-parser pattern)
+      devtools manifest; now lists all seven invariant
+      constructs including `scenario` with the shared-parser pattern)
 
     **Documentation gap to close** — the concept-with-`register`
     action + sync-to-`PluginRegistry` idiom is the canonical
@@ -1013,7 +1013,7 @@ No new TS orchestration; even the CLI is a dispatcher.
     Ship the parser + concept-pipeline changes first; then the
     regen + hand edits can land in a single "update all grammar
     references" commit. Verify by searching for "six invariant
-    constructs" — every hit is either updated or deleted.
+    constructs" — every hit must be updated or deleted (MAG-915 done).
 
 ## Handlers-as-values test generation (MAG-920, INV-16)
 

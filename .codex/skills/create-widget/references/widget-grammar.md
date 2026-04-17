@@ -342,6 +342,63 @@ invariant {
 
 Invariant strings describe behavioral contracts that must hold regardless of rendering framework. They reference anatomy parts, state machine states, and prop values.
 
+### Universal Invariant Constructs in Widgets
+
+Widgets share the same seven-kind invariant grammar as `.concept`, `.view`, `.sync`, and `.derived` specs via `handlers/ts/framework/invariant-body-parser.ts`. The `AssertionContext` plugin resolves identifiers to anatomy parts and FSM states.
+
+All seven constructs are supported:
+
+```
+invariant {
+  // 1. example — concrete before/after test
+  example "open state shows content" {
+    after OPEN -> open
+    then content.visible = true
+  }
+
+  // 2. forall — quantified property
+  forall "all triggers have aria role" {
+    forall t in triggers:
+    t.role = "button"
+  }
+
+  // 3. always — state predicate
+  always "root is always mounted" {
+    forall r in root: r.visible = true
+  }
+
+  // 4. never — prohibited state
+  never "content visible when closed" {
+    exists c in content: c.visible = true and state = "closed"
+  }
+
+  // 5. eventually — liveness property
+  eventually "open eventually closes on escape" {
+    forall s in states: s != "open"
+  }
+
+  // 6. action contracts
+  action OPEN {
+    requires: state = "closed"
+    ensures ok: state = "open"
+  }
+
+  // 7. scenario — multi-block behavioral test
+  scenario "typing a character appends it to body" {
+    fixture char1 { key: "a" }
+    when {
+      PRESS_KEY(key: "a") -> ok
+    }
+    then {
+      body.value = "a"
+    }
+    settlement sync
+  }
+}
+```
+
+The `scenario` construct supports `settlement sync`, `"async-eventually" { timeoutMs: N }`, and `"async-with-anchor" { anchor: "..." }` modalities. Steps may be chained with `and` or `;`.
+
 ## Identifier Conventions
 
 | Context | Convention | Examples |

@@ -185,27 +185,7 @@ invariants {
 }
 ```
 
-Contains one or more named invariant blocks. Supports the same invariant vocabulary as `.concept` and `.widget` files.
-
-### `always` — Universal property
-
-```
-always "<name>": {
-  <assertion>
-}
-```
-
-Asserts that a property holds for every compiled QueryProgram from this view.
-
-### `never` — Negated property
-
-```
-never "<name>": {
-  <assertion>
-}
-```
-
-Asserts that a condition must never hold.
+Contains one or more named invariant blocks. Supports the same seven-kind invariant vocabulary as `.concept`, `.widget`, `.sync`, and `.derived` files, via `handlers/ts/framework/invariant-body-parser.ts`. The `AssertionContext` plugin for views resolves identifiers to `ViewAnalysis` record fields.
 
 ### `example` — Concrete test case
 
@@ -227,6 +207,76 @@ forall <var> in <collection>:
 ```
 
 Can appear as a top-level invariant or inline within `always`/`never` bodies.
+
+### `always` — Universal property
+
+```
+always "<name>": {
+  <assertion>
+}
+```
+
+Asserts that a property holds for every compiled QueryProgram from this view.
+
+### `never` — Negated property
+
+```
+never "<name>": {
+  <assertion>
+}
+```
+
+Asserts that a condition must never hold.
+
+### `eventually` — Liveness property
+
+```
+eventually "<name>": {
+  forall <var> in <collection>: <predicate>
+}
+```
+
+Asserts that a liveness condition will eventually become true. Typically used with view refresh or streaming data sources.
+
+### Action contracts (`requires`/`ensures`)
+
+View invariants can include Hoare-logic contracts on view-specific actions (e.g., `compile`, `refresh`):
+
+```
+action compile {
+  requires: shell != none
+  ensures ok: purity in ["read-only", "read-write"]
+}
+```
+
+### `scenario` — Multi-block behavioral test
+
+```
+scenario "<name>": {
+  fixture <name> { <specType>: { <key>: "<value>" } }
+  [given { <step>* }]
+  [when  { <step>* }]
+  then   { <step>* }
+  settlement sync | "async-eventually" { timeoutMs: N } | "async-with-anchor" { anchor: "..." }
+}
+```
+
+A `scenario` fixtures a complete ViewShell + child spec data state, compiles the QueryProgram, and asserts properties of the result. Steps may be chained with `and` or `;`. Most view scenarios use `settlement sync`; `"async-eventually"` applies for streaming or remote-backed views.
+
+Example:
+```
+scenario "newly-created active task appears in the view" {
+  fixture tasks { dataSource: { type: "inline", items: [{ id: "t1", status: "active" }] } }
+  when {
+    compile -> ok
+  }
+  then {
+    purity = "read-only"
+    "t1" in sourceFields
+  }
+  settlement sync
+}
+```
 
 ## Assertion Targets
 
