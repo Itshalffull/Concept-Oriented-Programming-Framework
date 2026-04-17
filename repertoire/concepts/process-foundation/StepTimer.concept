@@ -1,0 +1,106 @@
+@version(2)
+concept StepTimer [T] {
+  purpose {
+    Watch active StepRuns that have a timeout set and complete them
+    with timed_out when their deadline has passed. Decouples timeout
+    enforcement from the step execution concepts so StepRun stays
+    focused on lifecycle and ProcessSpec stays focused on definitions.
+  }
+
+  state {
+    timers: set T
+    step_ref:    T -> String       // StepRun identifier being watched
+    deadline:    T -> String       // ISO datetime when the step expires
+    fired:       T -> Bool         // whether timed_out has been emitted
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action arm(step_ref: String, deadline: String) {
+      -> ok(timer: T) {
+        Registers a new timer for the given StepRun. If a timer for
+        this step_ref already exists and has not fired, returns ok
+        with the existing timer (idempotent).
+      }
+      -> error(message: String) {
+        step_ref is empty or deadline is not a valid ISO datetime.
+      }
+      fixture arm_ok { step_ref: "step-001", deadline: "2026-05-01T00:00:00Z" }
+      fixture arm_duplicate { step_ref: "step-001", deadline: "2026-05-01T00:00:00Z" } after arm_ok
+      fixture arm_empty_step { step_ref: "", deadline: "2026-05-01T00:00:00Z" } -> error
+    }
+
+    action fire(timer: T) {
+      -> ok(timer: T, step_ref: String) {
+        Marks the timer as fired. The TimerFiresStepTimeout sync listens
+        to this and calls StepRun/complete with timed_out. Idempotent —
+        if already fired, returns ok with no side effects.
+      }
+      -> not_found(message: String) {
+        No timer with this identifier exists.
+      }
+      fixture fire_ok { timer: $arm_ok.timer } after arm_ok
+      fixture fire_already_fired { timer: $fire_ok.timer } after fire_ok
+      fixture fire_missing { timer: "nonexistent-timer" } -> not_found
+    }
+
+    action tick() {
+      -> ok(fired_count: Int) {
+        Scans all unfired timers whose deadline has passed (compared to
+        current UTC time) and calls fire on each. Returns the number of
+        timers fired in this tick. Safe to call repeatedly.
+      }
+      fixture tick_none {}
+    }
+
+    action disarm(step_ref: String) {
+      -> ok() {
+        Removes the timer for the given step_ref (e.g. because the step
+        completed normally before the deadline). Idempotent — if no
+        timer exists for this step_ref, returns ok silently.
+      }
+      -> error(message: String) {
+        step_ref is empty.
+      }
+      fixture disarm_ok { step_ref: $arm_ok.step_ref } after arm_ok
+      fixture disarm_missing { step_ref: "no-such-step" }
+      fixture disarm_empty { step_ref: "" } -> error
+    }
+  }
+
+  example "arm then fire": {
+    after arm(step_ref: "step-A", deadline: "2026-05-01T00:00:00Z") -> ok(timer: t)
+    then fire(timer: t) -> ok(timer: t, step_ref: "step-A")
+  }
+
+  example "disarm before fire": {
+    after arm(step_ref: "step-B", deadline: "2026-06-01T00:00:00Z") -> ok(timer: t)
+    then disarm(step_ref: "step-B") -> ok()
+  }
+
+  always "timers have required fields": {
+    forall t in timers:
+    t.step_ref != none
+  }
+
+  never "fired timer has no step_ref": {
+    exists t in timers:
+    t.fired = true and t.step_ref = none
+  }
+
+  action arm {
+    requires: step_ref != ""
+    ensures ok: step_ref != none
+  }
+
+  action fire {
+    ensures ok: step_ref != none
+  }
+
+  action disarm {
+    requires: step_ref != ""
+  }
+}
