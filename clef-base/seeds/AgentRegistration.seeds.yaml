@@ -1,0 +1,43 @@
+# Example AgentRegistration principals for admin surfaces.
+# Demonstrates the three terminal statuses (active | disabled | revoked)
+# by seeding three registrations and then flipping two via follow-up
+# actions. The registry list view shows the final post-transition state.
+
+concept: AgentRegistration
+action: register
+entries:
+  - agent: agent-research-001
+    displayName: Research Assistant
+    ownerSubject: subject-admin-001
+    agentClass: knowledge-worker
+    personaRef: persona-research-assistant
+    metadata: '{"tier":"standard","description":"Long-running literature review agent."}'
+  - agent: agent-ops-001
+    displayName: Ops Runbook Agent
+    ownerSubject: subject-admin-001
+    agentClass: operations
+    personaRef: persona-ops-runbook
+    metadata: '{"tier":"standard","description":"Executes codified incident runbooks."}'
+  - agent: agent-sandbox-001
+    displayName: Sandbox Scratch Agent
+    ownerSubject: subject-admin-002
+    agentClass: sandbox
+    metadata: '{"tier":"experimental","description":"Disposable scratch-space agent no longer in use."}'
+
+---
+
+# Disable the ops agent — simulates an operator temporarily pausing
+# the runbook agent without tearing down its registration or persona.
+concept: AgentRegistration
+action: disable
+entries:
+  - agent: agent-ops-001
+
+---
+
+# Revoke the sandbox agent — simulates off-boarding an experiment.
+# The registration stays inspectable but the status is terminal.
+concept: AgentRegistration
+action: revoke
+entries:
+  - agent: agent-sandbox-001
