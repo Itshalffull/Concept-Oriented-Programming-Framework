@@ -626,11 +626,28 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
     }
 
     async function startPolling() {
+      // Guard: only poll ContentCompiler for schemas that declare a compilationProvider.
+      // Probing ContentCompiler for non-compilable schemas causes a 500 because the
+      // concept may not be registered in the kernel. Check Property first — it returns
+      // a clean no_value variant (not an error) when the property is absent.
+      try {
+        const propResult = await invoke('Property', 'get', {
+          entity: rootSchema,
+          key: 'compilationProvider',
+        });
+        if (cancelled) return;
+        // Property/get returns 'no_value' (or anything other than 'ok') when the
+        // schema has no compilationProvider registered. Skip polling in that case.
+        if (propResult.variant !== 'ok') return;
+        const provider = propResult.value;
+        if (!provider || (typeof provider === 'string' && provider.trim() === '')) return;
+      } catch {
+        // Property/get failure — treat as no compilationProvider, skip polling.
+        return;
+      }
+
       const firstRun = await pollCompileStatus();
       if (cancelled) return;
-      // Only set up the interval if ContentCompiler responded successfully on the
-      // first call — avoids spamming the console with 500 errors when the concept
-      // is not registered in the kernel.
       if (!firstRun) return;
       intervalId = setInterval(pollCompileStatus, 5000);
     }
@@ -658,7 +675,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
     if (rootSchema) {
       try {
         const pageLevelResult = await invoke('EditSurface', 'resolve', {
-          schema: rootSchema,
+          schema_ref: rootSchema,
           context: 'page-level',
         });
         if (pageLevelResult.variant === 'ok' && pageLevelResult.bundle) {
@@ -672,7 +689,7 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
     // 2. Block-level surface for focused block (innermost-wins for toolbar/context-menu)
     try {
       const blockLevelResult = await invoke('EditSurface', 'resolve', {
-        schema,
+        schema_ref: schema,
         context: 'block-editor',
       });
       if (blockLevelResult.variant === 'ok' && blockLevelResult.bundle) {
