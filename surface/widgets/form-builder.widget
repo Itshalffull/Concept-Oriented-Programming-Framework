@@ -457,6 +457,16 @@ widget form-builder {
     never "picker navigates to schema=undefined": {
       state.machine = "adding-field"
     }
+
+    example "valid FormSpec ID resolves to form editor": {
+      after root -> { "data-state": "idle" }
+      then canvas -> { "data-state": "idle" }
+      and emptyState -> { "data-visible": "false" }
+    }
+
+    never "valid form id shows not-found empty state": {
+      state.machine = "idle"
+    }
   }
 
 }

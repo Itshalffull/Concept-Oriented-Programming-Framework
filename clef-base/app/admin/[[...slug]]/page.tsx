@@ -305,17 +305,14 @@ export default async function AdminPage({
     );
   }
 
-  // Bug #85: /admin/form-builder/:name — edit an existing FormSpec by name.
-  // FormSpec names use "schema:mode" convention (e.g. "Article:default").
-  // FormBuilder resolves the schema from the name via FormSpec/resolve.
+  // /admin/form-builder/:formId — edit an existing FormSpec by its primary key.
+  // The URL slug is the form's primary key (e.g. "form-contentnode-create").
+  // FormBuilder loads it via FormSpec/get({ form: formId }) — not FormSpec/resolve.
   if (slug[0] === 'form-builder' && slug[1] && slug[1] !== 'new') {
-    const formName = decodeURIComponent(slug.slice(1).join('/'));
-    // Extract schemaId from the form name (convention: "schema:mode" or just the form name).
-    const colonIdx = formName.indexOf(':');
-    const schemaId = colonIdx !== -1 ? formName.slice(0, colonIdx) : formName;
+    const formId = decodeURIComponent(slug.slice(1).join('/'));
     return (
       <HostedPage>
-        <FormBuilder schemaId={schemaId} formName={formName} mode="edit" />
+        <FormBuilder formId={formId} mode="edit" />
       </HostedPage>
     );
   }

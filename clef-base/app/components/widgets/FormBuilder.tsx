@@ -41,6 +41,10 @@ export interface FormBuilderProps {
   schemaId?: string;
   /** If editing an existing FormSpec by name, or "default" for new. */
   formName?: string;
+  /** The FormSpec primary key (e.g. "form-contentnode-create"). When provided,
+   *  the builder loads via FormSpec/get({ form: formId }) and the schemaId/formName
+   *  props are populated from the loaded record. Takes priority over schemaId+formName. */
+  formId?: string;
   mode?: 'create' | 'edit';
   context?: { schemaId?: string; formName?: string; spec?: FormSpec } | null;
 }
@@ -1038,13 +1042,21 @@ const SchemaPickerScreen: React.FC = () => {
 // ─── FormBuilder ──────────────────────────────────────────────────────────────
 
 export const FormBuilder: React.FC<FormBuilderProps> = ({
-  schemaId,
-  formName = 'default',
+  schemaId: schemaIdProp,
+  formName: formNameProp = 'default',
+  formId,
   mode = 'edit',
   context,
 }) => {
   const invoke = useKernelInvoke();
   const isCreate = mode === 'create';
+
+  // When a formId is given, we load the record first and derive schemaId/formName from it.
+  // schemaId and formName are set from state once the record loads.
+  const [resolvedSchemaId, setResolvedSchemaId] = React.useState<string | undefined>(schemaIdProp);
+  const [resolvedFormName, setResolvedFormName] = React.useState<string>(formNameProp);
+  const schemaId = resolvedSchemaId;
+  const formName = resolvedFormName;
 
   // ── Loading ──
   const [formSpec, setFormSpec] = useState<FormSpec | null>(
@@ -1104,13 +1116,63 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({
       setLoading(true);
       setLoadError(null);
       try {
-        const specResult = await invoke('FormSpec', 'resolve', {
-          schemaId,
-          mode: 'create',
-          name: formName,
-        });
+        let specResult: Record<string, unknown>;
 
-        const defsResult = await invoke('FieldDefinition', 'list', { schemaId });
+        if (formId) {
+          // Load by primary key — used when navigating from /admin/forms row click.
+          // FormSpec/get takes { form: formId } and returns the raw record.
+          const raw = await invoke('FormSpec', 'get', { form: formId });
+          if (raw.variant === 'ok') {
+            // Derive schemaId and formName from the loaded record so the rest of
+            // the builder (field palette, save calls) works correctly.
+            const loadedSchema = raw.schema as string | undefined;
+            const loadedName   = raw.name   as string | undefined;
+            if (loadedSchema) setResolvedSchemaId(loadedSchema);
+            if (loadedName)   setResolvedFormName(loadedName);
+
+            // Reconstruct the FormSpec shape expected by the canvas.
+            // The handler stores groups/steps/conditions as JSON strings in layout/steps/conditions.
+            let groups: FormSpec['groups'] = [];
+            let steps: FormSpec['steps']   = [];
+            let conditions: string | undefined;
+            try {
+              const layoutObj = JSON.parse((raw.layout as string) || '{}') as { groups?: FormSpec['groups'] };
+              groups = layoutObj.groups ?? [];
+            } catch { /* leave empty */ }
+            try {
+              steps = JSON.parse((raw.steps as string) || '[]') as FormSpec['steps'];
+            } catch { /* leave empty */ }
+            conditions = (raw.conditions as string) || undefined;
+
+            const reconstructed: FormSpec = {
+              name:       loadedName   ?? formId,
+              schemaId:   loadedSchema ?? '',
+              mode:       (raw.mode as FormSpec['mode']) ?? 'create',
+              groups:     groups ?? [],
+              steps:      steps  ?? [],
+              conditions,
+            };
+            specResult = { variant: 'ok', spec: reconstructed };
+          } else {
+            specResult = raw;
+          }
+        } else {
+          // Load by schema + mode + name — used when navigating from /admin/forms
+          // via the old schema:name convention or the resolve path.
+          specResult = await invoke('FormSpec', 'resolve', {
+            schemaId,
+            mode: 'create',
+            name: formName,
+          });
+        }
+
+        const effectiveSchemaId = formId
+          ? ((specResult.variant === 'ok' ? (specResult.spec as FormSpec | undefined)?.schemaId : undefined) ?? schemaId)
+          : schemaId;
+
+        const defsResult = effectiveSchemaId
+          ? await invoke('FieldDefinition', 'list', { schemaId: effectiveSchemaId })
+          : { variant: 'notfound' as const };
         const defs: FieldDefinition[] =
           defsResult.variant === 'ok'
             ? (typeof defsResult.items === 'string'
@@ -1141,7 +1203,10 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({
 
     load();
     return () => { cancelled = true; };
-  }, [schemaId, formName, invoke, isCreate]);
+  // formId takes priority; when it's present schemaId/formName are derived from the loaded record,
+  // so they must NOT be in the dependency array (they'd cause a re-render loop).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formId, schemaIdProp, formNameProp, invoke, isCreate]);
 
   // ── Derived ──
   const fieldDefMap = useMemo(
@@ -1440,7 +1505,7 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({
         data-part="form-builder"
         data-state="empty"
       >
-        <div style={{ fontSize: 'var(--typography-body-lg-size)' }}>No form spec found for "{formName}"</div>
+        <div style={{ fontSize: 'var(--typography-body-lg-size)' }}>No form spec found for "{formId ?? formName}"</div>
         <button
           type="button"
           style={{
