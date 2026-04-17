@@ -71,11 +71,11 @@ entries:
     description: Governance policies — documented rules and procedures that guide organizational behavior.
     defaultDisplayMode: table-row
 
-  # /admin/governance/roles  →  roles-list  (surfaces GovernanceOffice)
+  # /admin/governance/roles  →  governance-offices-list  (surfaces GovernanceOffice)
   # The URL path /admin/governance/roles remains as an alias to minimize URL
   # churn; the underlying concept is GovernanceOffice (see §5.3). The Schema
   # id stays "role" (kebab-case) to match the content-native schema seed.
-  - view: roles-list
+  - view: governance-offices-list
     dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Role"}}'
     layout: table
     visibleFields: '[{"key":"node","label":"Office"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Created By"},{"key":"createdAt","label":"Created","formatter":"date"}]'
@@ -152,6 +152,20 @@ entries:
     controls: '{"rowClick":{"navigateTo":"/admin/content/{node}"}}'
     title: Org Designer
     description: Organizational structure view — circles and their relationships. Use the Canvas section for visual org chart editing.
+    defaultDisplayMode: table-row
+
+  # /admin/governance/pilot-modes  →  pilot-modes-list
+  # Surfaces PilotMode — governance-owned restriction profiles for Pilot
+  # sessions. Data comes directly from the PilotMode concept, not via
+  # ContentNode/listBySchema, because PilotMode is a governance-level
+  # registry rather than a content type.
+  - view: pilot-modes-list
+    dataSource: '{"concept":"PilotMode","action":"list","params":{}}'
+    layout: table
+    visibleFields: '[{"key":"mode","label":"Mode","formatter":"code"},{"key":"restrictions","label":"Restricted Verbs","formatter":"json-array"}]'
+    controls: '{}'
+    title: Pilot Modes
+    description: Governance-owned restriction profiles for Pilot sessions. Each mode blocks a JSON-encoded set of Pilot verbs — Pilot consults PilotMode/check before delegating any surface action (agents-as-subjects-refactor-plan §9.3).
     defaultDisplayMode: table-row
 
   # /admin/governance/permissions  →  permissions-by-subject
