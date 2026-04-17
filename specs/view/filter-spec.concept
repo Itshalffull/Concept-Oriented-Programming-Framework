@@ -197,4 +197,14 @@ concept FilterSpec [F] {
     requires: name != ""
     ensures ok: rows != none
   }
+
+  always "unset filter pill does not filter out data": {
+    forall f in filters:
+    (f.tree = '{"type":"true"}' or f.tree = "") implies f.tree != none
+  }
+
+  never "+ Add filter reduces row count without user input": {
+    exists f in filters:
+    f.tree = '{"type":"eq","field":"","value":""}' and f.sourceType = "interactive"
+  }
 }

@@ -893,10 +893,18 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
       filtered = filtered.filter((row) => evaluateFilterNode(filterTree, row));
     }
 
-    // Apply toolbar advanced filter conditions (AND all conditions together)
-    if (toolbarFilterConditions.length > 0) {
+    // Apply toolbar advanced filter conditions (AND all conditions together).
+    // A condition is "inactive" (skipped) when its field is unset OR when it
+    // uses a non-unary operator but has no value yet — matching the invariant
+    // "unset filter pill does not filter out data". Only pills where BOTH field
+    // and value (or a unary predicate like isEmpty/isNotEmpty) are set apply.
+    const UNARY_OPERATORS = new Set(['isEmpty', 'isNotEmpty']);
+    const activeToolbarConditions = toolbarFilterConditions.filter(
+      (cond) => cond.field !== '' && (UNARY_OPERATORS.has(cond.operator) || cond.value !== '')
+    );
+    if (activeToolbarConditions.length > 0) {
       filtered = filtered.filter((row) => {
-        return toolbarFilterConditions.every((cond) => {
+        return activeToolbarConditions.every((cond) => {
           const rawVal = row[cond.field];
           const cellStr = rawVal != null ? String(rawVal) : '';
           const condVal = cond.value;

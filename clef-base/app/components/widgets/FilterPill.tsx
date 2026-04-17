@@ -117,7 +117,12 @@ export const FilterPill: React.FC<FilterPillProps> = ({
   onChange,
   onRemove,
 }) => {
-  const [editing, setEditing] = useState<EditingSegment>(null);
+  // Auto-open the field picker when the pill is new (no field selected yet).
+  // This matches the invariant "unset filter pill does not filter out data" —
+  // the user immediately sees a picker rather than a confusing empty pill.
+  const [editing, setEditing] = useState<EditingSegment>(
+    condition.field === '' ? 'field' : null
+  );
   const pillRef = useRef<HTMLDivElement>(null);
 
   const operatorLabel = (() => {
@@ -163,8 +168,14 @@ export const FilterPill: React.FC<FilterPillProps> = ({
         </button>
       )}
 
-      {/* The pill itself */}
-      <div ref={pillRef} data-part="root" data-state={editing ? 'editing' : 'idle'} style={pillStyle}>
+      {/* The pill itself — data-incomplete signals the pill has no effect yet */}
+      <div
+        ref={pillRef}
+        data-part="root"
+        data-state={editing ? 'editing' : 'idle'}
+        data-incomplete={(!condition.field || (!isUnary && !condition.value)) ? 'true' : undefined}
+        style={pillStyle}
+      >
         {/* Field segment */}
         <div style={{ position: 'relative' }}>
           <button
@@ -173,7 +184,7 @@ export const FilterPill: React.FC<FilterPillProps> = ({
             onClick={() => setEditing(editing === 'field' ? null : 'field')}
             style={segmentStyle(editing === 'field')}
           >
-            {(availableFields.find((f) => f.key === condition.field)?.label ?? condition.field) || 'Field'}
+            {(availableFields.find((f) => f.key === condition.field)?.label ?? condition.field) || 'Select field…'}
           </button>
           {editing === 'field' && (
             <div style={{ ...popoverStyle, minWidth: 200 }}>
@@ -217,7 +228,7 @@ export const FilterPill: React.FC<FilterPillProps> = ({
               onClick={() => setEditing(editing === 'value' ? null : 'value')}
               style={segmentStyle(editing === 'value')}
             >
-              {condition.value || 'Value'}
+              {condition.value || 'Enter value…'}
             </button>
             {editing === 'value' && (
               <div style={{ ...popoverStyle, minWidth: 200 }}>

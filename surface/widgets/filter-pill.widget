@@ -182,6 +182,17 @@ widget filter-pill {
     "VALUE_COMMITTED event payload must carry { value: String } so the parent can update the FilterSpec value without reading DOM";
     "REMOVE event carries no payload — the parent identifies which FilterSpec condition to remove by the pill's position or key prop";
     "when fieldType changes (because field changed) the parent is responsible for resetting operator to the first valid operator for the new type and clearing value — the pill faithfully displays whatever field/operator/value props it receives";
+
+    always "unset filter pill does not filter out data": {
+      forall p in filterPills:
+      (p.field = "" or (not isUnaryOperator(p.operator) and p.value = ""))
+        implies p.isActive = false
+    }
+
+    never "+ Add filter reduces row count without user input": {
+      exists pill in filterPills:
+      pill.field = "" and pill.appliedToResultSet = true
+    }
   }
 
 }
