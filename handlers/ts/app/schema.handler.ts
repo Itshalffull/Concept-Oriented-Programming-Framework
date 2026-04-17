@@ -30,7 +30,18 @@ const _schemaHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = spGet(p, 'schema', schema, 'existing');
     p = branch(p, 'existing',
-      (b) => complete(b, 'ok', {}),
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const record = bindings.existing as Record<string, unknown>;
+        return {
+          schema: (record.schema as string) ?? schema,
+          label: (record.label as string) ?? schema,
+          category: (record.category as string) ?? '',
+          icon: (record.icon as string) ?? '',
+          fields: (record.fields as string) ?? '[]',
+          extends: (record.extends as string) ?? '',
+          createdAt: (record.createdAt as string) ?? '',
+        };
+      }),
       (b) => complete(b, 'notfound', { message: 'Schema does not exist' }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
