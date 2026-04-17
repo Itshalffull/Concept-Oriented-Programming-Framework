@@ -13,6 +13,7 @@ import { clipHandler } from '../../handlers/ts/media/clip.handler';
 import { keyBindingHandler } from '../../handlers/ts/app/key-binding.handler';
 import { keybindingPresetHandler } from '../../handlers/ts/app/keybinding-preset.handler';
 import { actionBindingHandler } from '../../handlers/ts/app/action-binding.handler';
+import { uiEventBindingHandler } from '../../handlers/ts/app/ui-event-binding.handler';
 import { textSpanHandler } from '../../handlers/ts/app/text-span.handler';
 import { inputRuleHandler } from '../../handlers/ts/app/input-rule.handler';
 import { testGenerationHandler } from '../../handlers/ts/repertoire/testing/test-generation.handler';
@@ -64,6 +65,8 @@ import { conversationHandler } from '../../handlers/ts/llm-conversation/conversa
 // backed by the Taxonomy handler which manages the shared taxonomy storage.
 import { taxonomyHandler } from '../../handlers/ts/app/taxonomy.handler';
 import { dailyNoteHandler } from '../../handlers/ts/app/daily-note.handler';
+// Utility
+import { slugHandler } from '../../handlers/ts/repertoire/utility/slug.handler';
 
 import { REGISTRY_ENTRIES, SYNC_FILES } from '../../generated/kernel-registry';
 import { discoverFromFilesystem, parseSeedsYaml } from '../../handlers/ts/seed-data.handler';
@@ -127,6 +130,12 @@ const SUPPLEMENTAL_REGISTRY_ENTRIES = [
     uri: 'urn:clef/ActionBinding',
     handler: actionBindingHandler,
     storageName: 'action-binding',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/UIEventBinding',
+    handler: uiEventBindingHandler,
+    storageName: 'ui-event-binding',
     storageType: 'standard' as const,
   },
   {
@@ -377,6 +386,13 @@ const SUPPLEMENTAL_REGISTRY_ENTRIES = [
     uri: 'urn:clef/DailyNote',
     handler: dailyNoteHandler,
     storageName: 'daily-note',
+    storageType: 'standard' as const,
+  },
+  // Utility — slug derivation with per-namespace rules
+  {
+    uri: 'urn:clef/Slug',
+    handler: slugHandler,
+    storageName: 'slug',
     storageType: 'standard' as const,
   },
 ];
@@ -783,6 +799,55 @@ async function ensureActionBindings(kernel: Kernel) {
   }
 }
 
+/**
+ * Backfill schema memberships for ContentNodes created via ContentNode/create.
+ *
+ * ContentNode/create records the `type` field on the node row but does NOT
+ * write a membership entry — that only happens via ContentNode/createWithSchema
+ * (and its companion content-node-create-applies-schema.sync → Schema/applyTo
+ * → schema-apply-records-membership.sync → ContentNode/recordSchema chain).
+ *
+ * Seeds that use ContentNode/create with a non-empty `type` (e.g. the 7
+ * built-in agent-persona nodes) therefore have no membership entries, which
+ * means ContentNode/listBySchema returns 0 rows for them even though the
+ * nodes are present in storage.
+ *
+ * This function walks every ContentNode, and for each row where `type` is set
+ * but no membership exists, calls ContentNode/recordSchema to write the entry.
+ * The call is idempotent — recordSchema returns ok if the membership already
+ * exists, so re-running at boot is safe.
+ */
+async function ensureSchemaMemberships(kernel: Kernel) {
+  try {
+    const listResult = await kernel.invokeConcept('urn:clef/ContentNode', 'list', {});
+    if (listResult.variant !== 'ok') return;
+
+    const nodes: Array<Record<string, unknown>> = typeof listResult.items === 'string' && listResult.items.trim()
+      ? JSON.parse(listResult.items as string) as Array<Record<string, unknown>>
+      : Array.isArray(listResult.items)
+        ? listResult.items as Array<Record<string, unknown>>
+        : [];
+
+    for (const node of nodes) {
+      const nodeId = String(node.node ?? '').trim();
+      const type = String(node.type ?? '').trim();
+      if (!nodeId || !type) continue;
+
+      // Check whether a membership entry already exists for this (node, type) pair.
+      // ContentNode/listBySchema reads from the 'membership' relation, so we use it
+      // as a proxy: if the node appears in the schema's membership list, skip it.
+      // We do this cheaply by calling ContentNode/recordSchema directly — it is
+      // idempotent and only writes when the entry is missing.
+      await kernel.invokeConcept('urn:clef/ContentNode', 'recordSchema', {
+        node: nodeId,
+        schema: type,
+      }).catch(() => {});
+    }
+  } catch {
+    // ensureSchemaMemberships is best-effort — don't fail boot
+  }
+}
+
 async function seedData(kernel: Kernel, registrations: RegEntry[], loadedSyncs: string[], concepts: ConceptRegistration[]) {
   if (_seeded) return;
   _seeded = true;
@@ -810,6 +875,13 @@ async function seedData(kernel: Kernel, registrations: RegEntry[], loadedSyncs: 
 
   // Apply declarative seeds (Schema, View, ContentNode, etc.)
   await applyDeclarativeSeeds(kernel);
+
+  // Backfill schema memberships for ContentNodes seeded via ContentNode/create.
+  // ContentNode/create stores `type` on the row but does not write a membership
+  // entry — so listBySchema returns 0 rows for those nodes. This idempotent
+  // pass calls ContentNode/recordSchema for every node whose type has no
+  // corresponding membership entry, fixing listBySchema for all seeded personas.
+  await ensureSchemaMemberships(kernel);
 
   // Recovery: earlier boots could mark KeyBinding seeds as applied even when
   // all entries silently failed (chord was a JSON string, handler expected array).
