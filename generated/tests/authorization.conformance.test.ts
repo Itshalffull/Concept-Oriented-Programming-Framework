@@ -516,6 +516,17 @@ describe('Authorization functional handler', () => {
       }
     });
 
+    it('grantPermission handles empty input: ', async () => {
+      if (typeof authorizationHandler.grantPermission !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await safeInvoke(async () => await interpret(authorizationHandler.grantPermission({  }), storage));
+      // Empty input should produce a defined result with a variant
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
     it('grantPermission ensures on ok: ', async () => {
       if (typeof authorizationHandler.grantPermission !== 'function') return;
       let seen = false;
@@ -526,6 +537,116 @@ describe('Authorization functional handler', () => {
             const storage = createInMemoryStorage();
             const result = await safeInvoke(async () => {
               const program = authorizationHandler.grantPermission(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
+              seen = true;
+              expect(result.output).toBeDefined();
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('revokePermission handles empty input: ', async () => {
+      if (typeof authorizationHandler.revokePermission !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await safeInvoke(async () => await interpret(authorizationHandler.revokePermission({  }), storage));
+      // Empty input should produce a defined result with a variant
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('revokePermission handles empty input: ', async () => {
+      if (typeof authorizationHandler.revokePermission !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await safeInvoke(async () => await interpret(authorizationHandler.revokePermission({  }), storage));
+      // Empty input should produce a defined result with a variant
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('revokePermission ensures on ok: ', async () => {
+      if (typeof authorizationHandler.revokePermission !== 'function') return;
+      let seen = false;
+      await fc.assert(
+        fc.asyncProperty(
+          fc.record({ role: fc.string({ minLength: 1, maxLength: 50 }), permission: fc.string({ minLength: 1, maxLength: 50 }) }),
+          async (input) => {
+            const storage = createInMemoryStorage();
+            const result = await safeInvoke(async () => {
+              const program = authorizationHandler.revokePermission(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
+              seen = true;
+              expect(result.output).toBeDefined();
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('assignRole handles empty input: ', async () => {
+      if (typeof authorizationHandler.assignRole !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await safeInvoke(async () => await interpret(authorizationHandler.assignRole({  }), storage));
+      // Empty input should produce a defined result with a variant
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('assignRole ensures on ok: ', async () => {
+      if (typeof authorizationHandler.assignRole !== 'function') return;
+      let seen = false;
+      await fc.assert(
+        fc.asyncProperty(
+          fc.record({ user: fc.string(), role: fc.string({ minLength: 1, maxLength: 50 }) }),
+          async (input) => {
+            const storage = createInMemoryStorage();
+            const result = await safeInvoke(async () => {
+              const program = authorizationHandler.assignRole(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
+              seen = true;
+              expect(result.output).toBeDefined();
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('checkPermission handles empty input: ', async () => {
+      if (typeof authorizationHandler.checkPermission !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await safeInvoke(async () => await interpret(authorizationHandler.checkPermission({  }), storage));
+      // Empty input should produce a defined result with a variant
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('checkPermission ensures on ok: ', async () => {
+      if (typeof authorizationHandler.checkPermission !== 'function') return;
+      let seen = false;
+      await fc.assert(
+        fc.asyncProperty(
+          fc.record({ user: fc.string(), permission: fc.string({ minLength: 1, maxLength: 50 }) }),
+          async (input) => {
+            const storage = createInMemoryStorage();
+            const result = await safeInvoke(async () => {
+              const program = authorizationHandler.checkPermission(input as Record<string, unknown>);
               return interpret(program, storage);
             });
             if (result?.variant === "ok") {

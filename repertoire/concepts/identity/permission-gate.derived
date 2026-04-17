@@ -32,4 +32,22 @@ derived PermissionGate [T] {
     and  revokeAccess(role: r, permission: p)
     then checkAccess(resource: x, action: p, context: r) returns denied
   }
+
+  invariant {
+    example "grant-then-check-returns-access": {
+      after Authorization/grantPermission(role: "admin", permission: "delete") -> ok(role: "admin", permission: "delete")
+          and Authorization/assignRole(user: "alice", role: "admin") -> ok(user: "alice", role: "admin")
+      then AccessControl/check(resource: "resource-1", action: "delete", context: "alice") -> ok(result: r)
+    }
+
+    always "access-check result is always an explicit decision": {
+      forall check in firings:
+        check.result != none
+    }
+
+    never "permission-gate returns no decision on valid check": {
+      exists check in firings:
+        check.result = none
+    }
+  }
 }

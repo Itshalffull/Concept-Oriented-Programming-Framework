@@ -136,9 +136,67 @@ concept Authentication [U] {
 
   }
 
+  scenario "register-login-authenticate-flow": {
+    fixture f1 { user: "carol", provider: "local", credentials: "mypassword" }
+    when {
+      register(user: "carol", provider: "local", credentials: "mypassword") -> ok(user: u)
+      and login(user: "carol", credentials: "mypassword") -> ok(token: t)
+    }
+    then {
+      authenticate(token: t) -> ok(user: "carol")
+    }
+    settlement: sync
+  }
+
+  scenario "reset-password-invalidates-old-login": {
+    fixture f2 { user: "dave", provider: "local", credentials: "oldpass" }
+    when {
+      register(user: "dave", provider: "local", credentials: "oldpass") -> ok(user: u)
+      and resetPassword(user: "dave", newCredentials: "newpass") -> ok(user: u)
+    }
+    then {
+      login(user: "dave", credentials: "oldpass") -> invalid(message: m)
+    }
+    settlement: sync
+  }
+
   action register {
 
     requires: user != ""
+    requires: provider != ""
+    requires: credentials != ""
+
+    ensures ok: user != none
+
+  }
+
+  action login {
+
+    requires: user != ""
+    requires: credentials != ""
+
+    ensures ok: token != none
+
+  }
+
+  action logout {
+
+    requires: user != ""
+
+  }
+
+  action authenticate {
+
+    requires: token != ""
+
+    ensures ok: user != none
+
+  }
+
+  action resetPassword {
+
+    requires: user != ""
+    requires: newCredentials != ""
 
     ensures ok: user != none
 

@@ -282,8 +282,19 @@ concept UIEventBinding [B] {
     ensures ok: binding in bindings
   }
 
+  action get {
+    requires: binding != none
+    ensures ok: kind != none and target != none
+  }
+
+  action unbind {
+    requires: binding != none
+    ensures ok: binding not in bindings
+  }
+
   action invoke {
     requires: binding in bindings
+    ensures ok: kind != none and target != none
   }
 
   action invokeInline {

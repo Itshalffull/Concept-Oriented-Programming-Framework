@@ -511,6 +511,28 @@ describe('GovernanceOffice functional handler', () => {
       }
     });
 
+    it('create handles empty input: ', async () => {
+      if (typeof governanceOfficeHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await safeInvoke(async () => await interpret(governanceOfficeHandler.create({  }), storage));
+      // Empty input should produce a defined result with a variant
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('create handles empty input: ', async () => {
+      if (typeof governanceOfficeHandler.create !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await safeInvoke(async () => await interpret(governanceOfficeHandler.create({  }), storage));
+      // Empty input should produce a defined result with a variant
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
     it('create ensures on ok: ', async () => {
       if (typeof governanceOfficeHandler.create !== 'function') return;
       let seen = false;
@@ -521,6 +543,94 @@ describe('GovernanceOffice functional handler', () => {
             const storage = createInMemoryStorage();
             const result = await safeInvoke(async () => {
               const program = governanceOfficeHandler.create(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
+              seen = true;
+              expect(result.output).toBeDefined();
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('assign handles empty input: ', async () => {
+      if (typeof governanceOfficeHandler.assign !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await safeInvoke(async () => await interpret(governanceOfficeHandler.assign({  }), storage));
+      // Empty input should produce a defined result with a variant
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('assign handles empty input: ', async () => {
+      if (typeof governanceOfficeHandler.assign !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await safeInvoke(async () => await interpret(governanceOfficeHandler.assign({  }), storage));
+      // Empty input should produce a defined result with a variant
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('assign ensures on ok: ', async () => {
+      if (typeof governanceOfficeHandler.assign !== 'function') return;
+      let seen = false;
+      await fc.assert(
+        fc.asyncProperty(
+          fc.record({ office: fc.string(), member: fc.string({ minLength: 1, maxLength: 50 }), assignedBy: fc.string({ minLength: 1, maxLength: 50 }) }),
+          async (input) => {
+            const storage = createInMemoryStorage();
+            const result = await safeInvoke(async () => {
+              const program = governanceOfficeHandler.assign(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
+              seen = true;
+              expect(result.output).toBeDefined();
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('revoke handles empty input: ', async () => {
+      if (typeof governanceOfficeHandler.revoke !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await safeInvoke(async () => await interpret(governanceOfficeHandler.revoke({  }), storage));
+      // Empty input should produce a defined result with a variant
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('check handles empty input: ', async () => {
+      if (typeof governanceOfficeHandler.check !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await safeInvoke(async () => await interpret(governanceOfficeHandler.check({  }), storage));
+      // Empty input should produce a defined result with a variant
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('dissolve ensures on ok: ', async () => {
+      if (typeof governanceOfficeHandler.dissolve !== 'function') return;
+      let seen = false;
+      await fc.assert(
+        fc.asyncProperty(
+          fc.record({ office: fc.string() }),
+          async (input) => {
+            const storage = createInMemoryStorage();
+            const result = await safeInvoke(async () => {
+              const program = governanceOfficeHandler.dissolve(input as Record<string, unknown>);
               return interpret(program, storage);
             });
             if (result?.variant === "ok") {

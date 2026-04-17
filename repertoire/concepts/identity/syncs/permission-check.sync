@@ -9,3 +9,21 @@ when {
 then {
   Authorization/checkPermission: [ user: ?context; permission: ?action ]
 }
+
+invariant {
+  always "access-checks always delegate to role-based authorization": {
+    forall trigger in firings:
+      trigger.then.user = trigger.when.context
+      and trigger.then.permission = trigger.when.action
+  }
+
+  never "access-check fires without valid action parameter": {
+    exists trigger in firings:
+      trigger.when.action = none or trigger.when.action = ""
+  }
+
+  example "access-check delegates context and action correctly": {
+    after AccessControl/check(resource: "doc-1", action: "write", context: "alice") -> ok(result: r)
+    then Authorization/checkPermission(user: "alice", permission: "write") -> ok(granted: g)
+  }
+}

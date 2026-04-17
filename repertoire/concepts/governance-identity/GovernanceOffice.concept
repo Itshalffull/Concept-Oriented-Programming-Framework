@@ -105,9 +105,50 @@ concept GovernanceOffice [O] {
 
   }
 
+  scenario "create-then-assign-then-check": {
+    fixture f1 { name: "treasurer", permissions: "manage-funds", polity: "dao" }
+    when {
+      create(name: "treasurer", permissions: "manage-funds", polity: "dao") -> ok(office: o)
+      and assign(office: o, member: "alice", assignedBy: "system") -> ok(assignment: o)
+    }
+    then {
+      check(office: o, member: "alice") -> ok(office: o, member: "alice")
+    }
+    settlement: sync
+  }
+
   action create {
 
-    requires: office != ""
+    requires: name != ""
+    requires: permissions != ""
+    requires: polity != ""
+
+    ensures ok: office != none
+
+  }
+
+  action assign {
+
+    requires: member != ""
+    requires: assignedBy != ""
+
+    ensures ok: assignment != none
+
+  }
+
+  action revoke {
+
+    requires: member != ""
+
+  }
+
+  action check {
+
+    requires: member != ""
+
+  }
+
+  action dissolve {
 
     ensures ok: office != none
 

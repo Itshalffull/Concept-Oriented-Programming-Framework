@@ -256,12 +256,61 @@ concept AgentRegistration [A] {
 
   }
 
+  scenario "register-then-disable-then-revoke": {
+    fixture f1 {
+      agent: "agent-scenario-001",
+      displayName: "Scenario Agent",
+      ownerSubject: "subject-test-001",
+      agentClass: "generic",
+      personaRef: none,
+      metadata: "{}"
+    }
+    when {
+      register(agent: "agent-scenario-001", displayName: "Scenario Agent", ownerSubject: "subject-test-001", agentClass: "generic", personaRef: none, metadata: "{}") -> ok(agent: a)
+      and disable(agent: a) -> ok(agent: a)
+    }
+    then {
+      get(agent: a) -> ok(status: "disabled", displayName: "Scenario Agent")
+    }
+    settlement: sync
+  }
+
   action register {
 
     requires: displayName != ""
     requires: ownerSubject != ""
     requires: agentClass != ""
     ensures ok: agent in registrations
+
+  }
+
+  action setPersona {
+
+    requires: agent != none
+
+  }
+
+  action disable {
+
+    requires: agent != none
+
+    ensures ok: agent in registrations
+
+  }
+
+  action revoke {
+
+    requires: agent != none
+
+    ensures ok: agent in registrations
+
+  }
+
+  action setOwner {
+
+    requires: owner != ""
+
+    ensures ok: owner != none
 
   }
 }

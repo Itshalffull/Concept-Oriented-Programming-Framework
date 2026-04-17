@@ -126,11 +126,62 @@ concept Authorization [U] {
 
   }
 
+  scenario "grant-then-check-permission": {
+    fixture f1 { role: "editor", permission: "publish" }
+    when {
+      grantPermission(role: "editor", permission: "publish") -> ok(role: r, permission: p)
+      and assignRole(user: "alice", role: "editor") -> ok(user: u, role: r)
+    }
+    then {
+      checkPermission(user: "alice", permission: "publish") -> ok(granted: true)
+    }
+    settlement: sync
+  }
+
+  scenario "revoke-then-check-loses-permission": {
+    fixture f2 { role: "writer", permission: "edit" }
+    when {
+      grantPermission(role: "writer", permission: "edit") -> ok(role: r, permission: p)
+      and assignRole(user: "bob", role: "writer") -> ok(user: u, role: r)
+      and revokePermission(role: "writer", permission: "edit") -> ok(role: r, permission: p)
+    }
+    then {
+      checkPermission(user: "bob", permission: "edit") -> ok(granted: false)
+    }
+    settlement: sync
+  }
+
   action grantPermission {
 
     requires: role != ""
+    requires: permission != ""
 
     ensures ok: role != none
+
+  }
+
+  action revokePermission {
+
+    requires: role != ""
+    requires: permission != ""
+
+    ensures ok: role != none
+
+  }
+
+  action assignRole {
+
+    requires: role != ""
+
+    ensures ok: user != none
+
+  }
+
+  action checkPermission {
+
+    requires: permission != ""
+
+    ensures ok: granted != none
 
   }
 }

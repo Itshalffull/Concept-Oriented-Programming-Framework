@@ -33,4 +33,26 @@ derived LoginSession [U] {
     and  logout(user: u)
     then activeSession(session: u) returns invalid
   }
+
+  invariant {
+    example "login-creates-valid-session": {
+      after Authentication/login(user: "alice", credentials: "secret123") -> ok(token: t)
+      then Session/validate(session: "alice") -> ok
+    }
+
+    example "logout-destroys-session": {
+      after Authentication/logout(user: "alice") -> ok(user: "alice")
+      then Session/validate(session: "alice") -> invalid(message: m)
+    }
+
+    always "every active session has an associated user": {
+      forall s in firings:
+        s.user != none
+    }
+
+    never "login produces a session without a token": {
+      exists s in firings:
+        s.token = none
+    }
+  }
 }

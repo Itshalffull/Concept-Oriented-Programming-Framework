@@ -29,3 +29,26 @@ when {
 then {
   Session/validate: [ session: ?user ]
 }
+
+invariant {
+  example "login triggers session creation": {
+    after Authentication/login(user: "alice", credentials: "secret123") -> ok(token: t)
+    then Session/create(session: "alice", userId: "alice", device: "default") -> ok
+  }
+
+  example "logout triggers session destruction": {
+    after Authentication/logout(user: "alice") -> ok(user: "alice")
+    then Session/destroyAll(userId: "alice") -> ok
+  }
+
+  always "session creation always binds to the authenticated user": {
+    forall trigger in firings:
+      trigger.when.user != none
+      and trigger.then.session = trigger.when.user
+  }
+
+  never "session created for anonymous user": {
+    exists trigger in firings:
+      trigger.when.user = none or trigger.when.user = ""
+  }
+}
