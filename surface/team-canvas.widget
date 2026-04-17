@@ -1,0 +1,205 @@
+@version(1)
+widget team-canvas {
+
+  purpose {
+    Sidebar tree item representing a team in the GovernanceOrgEditor Structure
+    mode. Displays the team name, a list of role chips summarising the roles
+    the team holds, a member count badge, and an expand/collapse chevron when
+    the team has child sub-teams. Depth-based indent guides communicate
+    nesting level. An active-indicator signals that the team has at least one
+    open governance proposal. Selection and expansion are independent axes of
+    state so a team can be selected while collapsed or expanded while not
+    selected.
+  }
+
+  anatomy {
+    root:               container    { Top-level list item wrapper for the team row }
+    indent-guide:       presentation { Vertical line(s) rendering the nesting depth of the team }
+    expand-chevron:     action       { Clickable chevron that toggles child-team visibility }
+    team-name:          text         { Display name of the team }
+    role-chip-list:     container    { Horizontal strip holding all role chips for this team }
+    role-chip:          presentation { Individual chip showing one role name associated with the team }
+    member-count-badge: presentation { Compact badge showing the total member count for the team }
+    active-indicator:   presentation { Dot or marker shown when the team has active governance proposals }
+    children-slot:      container    { Slot that renders nested child team-canvas items }
+  }
+
+  states {
+    collapsed [initial] {
+      on EXPAND -> expanded;
+      on SELECT -> selected-collapsed;
+    }
+
+    expanded {
+      on COLLAPSE -> collapsed;
+      on SELECT   -> selected-expanded;
+    }
+
+    selected-collapsed {
+      on EXPAND   -> selected-expanded;
+      on DESELECT -> collapsed;
+    }
+
+    selected-expanded {
+      on COLLAPSE -> selected-collapsed;
+      on DESELECT -> expanded;
+    }
+  }
+
+  accessibility {
+    role: treeitem;
+    modal: false;
+    keyboard {
+      Enter       -> EXPAND;
+      Space       -> EXPAND;
+      ArrowRight  -> EXPAND;
+      ArrowLeft   -> COLLAPSE;
+      ArrowDown   -> FOCUS_NEXT;
+      ArrowUp     -> FOCUS_PREV;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role:          "treeitem";
+        aria-expanded: if state.machine == "expanded" or state.machine == "selected-expanded" then "true" else "false";
+        aria-selected: if state.machine == "selected-collapsed" or state.machine == "selected-expanded" then "true" else "false";
+        aria-level:    ?depth;
+        aria-label:    ?team_name;
+      };
+      expand-chevron -> {
+        role:       "button";
+        aria-label: if state.machine == "expanded" or state.machine == "selected-expanded" then "Collapse team" else "Expand team";
+        tabindex:   if ?has_children then "0" else "-1";
+        aria-hidden: if not ?has_children then "true" else "false";
+      };
+      children-slot -> {
+        role: "group";
+        aria-label: concat("Sub-teams of ", ?team_name);
+      };
+      member-count-badge -> {
+        aria-label: concat(?member_count, " members");
+      };
+      active-indicator -> {
+        aria-label: "Has active proposals";
+        aria-hidden: if not ?has_active_proposals then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    team_id:              String
+    team_name:            String
+    role_count:           Int = 0
+    member_count:         Int = 0
+    has_children:         Bool = false
+    depth:                Int = 0
+    selected:             Bool = false
+    has_active_proposals: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part:     "root";
+      data-state:    if state.machine == "collapsed"          then "collapsed"
+                     else if state.machine == "expanded"           then "expanded"
+                     else if state.machine == "selected-collapsed" then "selected-collapsed"
+                     else "selected-expanded";
+      data-selected: if state.machine == "selected-collapsed" or state.machine == "selected-expanded" then "true" else "false";
+      data-depth:    toString(?depth);
+      role:          "treeitem";
+      aria-expanded: if state.machine == "expanded" or state.machine == "selected-expanded" then "true" else "false";
+      aria-selected: if state.machine == "selected-collapsed" or state.machine == "selected-expanded" then "true" else "false";
+      aria-level:    ?depth;
+      tabindex:      "0";
+      onClick:       send(SELECT);
+    }
+
+    indent-guide -> {
+      data-part:  "indent-guide";
+      data-depth: toString(?depth);
+      aria-hidden: "true";
+    }
+
+    expand-chevron -> {
+      data-part:    "expand-chevron";
+      data-open:    if state.machine == "expanded" or state.machine == "selected-expanded" then "true" else "false";
+      aria-label:   if state.machine == "expanded" or state.machine == "selected-expanded" then "Collapse team" else "Expand team";
+      aria-hidden:  if not ?has_children then "true" else "false";
+      tabindex:     if ?has_children then "0" else "-1";
+      hidden:       if not ?has_children then true else false;
+      onClick:      if state.machine == "expanded" or state.machine == "selected-expanded" then send(COLLAPSE) else send(EXPAND);
+    }
+
+    team-name -> {
+      data-part: "team-name";
+      text:      ?team_name;
+    }
+
+    role-chip-list -> {
+      data-part:  "role-chip-list";
+      aria-label: concat("Roles for ", ?team_name);
+    }
+
+    role-chip -> {
+      data-part: "role-chip";
+      aria-hidden: "true";
+    }
+
+    member-count-badge -> {
+      data-part:  "member-count-badge";
+      aria-label: concat(?member_count, " members");
+      text:       toString(?member_count);
+    }
+
+    active-indicator -> {
+      data-part:   "active-indicator";
+      aria-label:  "Has active proposals";
+      aria-hidden: if not ?has_active_proposals then "true" else "false";
+      hidden:      if not ?has_active_proposals then true else false;
+    }
+
+    children-slot -> {
+      data-part: "children-slot";
+      role:      "group";
+      aria-label: concat("Sub-teams of ", ?team_name);
+      hidden:    if state.machine == "collapsed" or state.machine == "selected-collapsed" then true else false;
+    }
+  }
+
+  invariant {
+    "children-slot must be hidden in collapsed and selected-collapsed states";
+    "active-indicator must be hidden when has_active_proposals is false";
+    "aria-expanded on root must reflect the expanded states";
+    "aria-selected on root must reflect the selected states";
+    "expand-chevron must be hidden and non-interactive when has_children is false";
+    "indent-guide data-depth must match the depth prop";
+    "data-state on root must mirror the current FSM state at all times";
+
+    always "children-slot hidden in collapsed states": {
+      state.machine = "collapsed"
+    }
+
+    always "selected-collapsed has aria-selected true": {
+      state.machine = "selected-collapsed"
+    }
+
+    never "invalid state": {
+      state.machine = "unknown"
+    }
+
+    action expand-chevron {
+      requires: state.machine = "collapsed"
+      ensures ok: state.machine = "expanded"
+    }
+
+    action root {
+      requires: state.machine = "collapsed"
+      ensures ok: state.machine = "selected-collapsed"
+    }
+  }
+
+}

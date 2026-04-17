@@ -1,0 +1,212 @@
+@version(1)
+widget delegation-chain {
+
+  purpose {
+    Read-only visualization of a capability delegation tree in the
+    GovernanceOrgEditor Permissions mode. Renders a linear chain of nodes
+    representing principals (teams, roles, routes, or workflows) that hold
+    capabilities and have delegated them onward. Each node shows the
+    principal label, its entity-type badge, the capabilities it holds, and a
+    meta-permission indicator when the node has the right to further delegate.
+    Directed arrows between consecutive nodes reflect the actual delegation
+    edges in the graph. A specific node can be highlighted to show the current
+    context. The widget is purely presentational and fires no mutation events;
+    parent editors use it for read-only audit and drill-down.
+  }
+
+  anatomy {
+    root:                   container    { Top-level wrapper for the entire delegation chain visualization }
+    chain-list:             container    { Ordered list of delegation nodes }
+    chain-node:             container    { Individual node representing one principal in the chain }
+    node-label:             text         { Human-readable name of the principal }
+    node-type-badge:        presentation { Badge indicating the entity type: team, role, route, or workflow }
+    capability-badge-list:  container    { Horizontal row of capability badges for this node }
+    capability-badge:       presentation { Individual chip showing one capability held by the node }
+    delegator-arrow:        presentation { Visual arrow rendered between two nodes that share a delegation edge }
+    meta-permission-indicator: presentation { Marker on a node that holds the meta-permission to delegate further }
+    empty-state:            container    { Placeholder content shown when there are no nodes to display }
+  }
+
+  states {
+    empty [initial] {
+      on NODES_LOADED -> populated;
+    }
+
+    populated {
+      on HIGHLIGHT     -> highlighted;
+      on NODES_CLEARED -> empty;
+    }
+
+    highlighted {
+      on CLEAR         -> populated;
+      on NODES_CLEARED -> empty;
+    }
+  }
+
+  accessibility {
+    role: img;
+    modal: false;
+    keyboard {
+      Tab       -> FOCUS_NEXT_NODE;
+      Shift+Tab -> FOCUS_PREV_NODE;
+      Escape    -> CLEAR;
+    }
+    focus {
+      trap: false;
+      initial: chain-list;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role:       "img";
+        aria-label: "Capability delegation chain";
+        aria-live:  "polite";
+      };
+      chain-list -> {
+        role:       "list";
+        aria-label: "Delegation nodes";
+      };
+      chain-node -> {
+        role:       "listitem";
+        aria-label: concat(self.label, ", ", self.node_type);
+        aria-current: if self.id == ?highlight_node then "true" else "false";
+      };
+      delegator-arrow -> {
+        aria-hidden: "true";
+      };
+      meta-permission-indicator -> {
+        aria-label:  concat(self.label, " can delegate further");
+        aria-hidden: if not self.is_meta then "true" else "false";
+      };
+      empty-state -> {
+        aria-label: "No delegation chain to display";
+        aria-live:  "polite";
+      };
+      capability-badge-list -> {
+        role:       "list";
+        aria-label: concat("Capabilities held by ", self.label);
+      };
+      capability-badge -> {
+        role:       "listitem";
+        aria-label: self.name;
+      };
+    }
+  }
+
+  props {
+    nodes:          list ChainNode = []
+    edges:          list ChainEdge = []
+    highlight_node: option String
+  }
+
+  connect {
+    root -> {
+      data-part:  "root";
+      data-state: if state.machine == "empty"       then "empty"
+                  else if state.machine == "highlighted" then "highlighted"
+                  else "populated";
+      role:       "img";
+      aria-label: "Capability delegation chain";
+      aria-live:  "polite";
+    }
+
+    chain-list -> {
+      data-part:  "chain-list";
+      role:       "list";
+      aria-label: "Delegation nodes";
+      hidden:     if state.machine == "empty" then true else false;
+    }
+
+    chain-node -> {
+      data-part:        "chain-node";
+      role:             "listitem";
+      data-node-id:     self.id;
+      data-node-type:   self.node_type;
+      data-highlighted: if self.id == ?highlight_node then "true" else "false";
+      aria-label:       concat(self.label, ", ", self.node_type);
+      aria-current:     if self.id == ?highlight_node then "true" else "false";
+      tabindex:         "0";
+      onClick:          send(HIGHLIGHT, { nodeId: self.id });
+    }
+
+    node-label -> {
+      data-part: "node-label";
+      text:      self.label;
+    }
+
+    node-type-badge -> {
+      data-part:      "node-type-badge";
+      data-node-type: self.node_type;
+      text:           self.node_type;
+      aria-hidden:    "true";
+    }
+
+    capability-badge-list -> {
+      data-part:  "capability-badge-list";
+      role:       "list";
+      aria-label: concat("Capabilities held by ", self.label);
+    }
+
+    capability-badge -> {
+      data-part:  "capability-badge";
+      role:       "listitem";
+      text:       self.name;
+      aria-label: self.name;
+    }
+
+    delegator-arrow -> {
+      data-part:    "delegator-arrow";
+      data-from-id: self.from_id;
+      data-to-id:   self.to_id;
+      aria-hidden:  "true";
+    }
+
+    meta-permission-indicator -> {
+      data-part:   "meta-permission-indicator";
+      aria-label:  concat(self.label, " can delegate further");
+      aria-hidden: if not self.is_meta then "true" else "false";
+      hidden:      if not self.is_meta then true else false;
+    }
+
+    empty-state -> {
+      data-part:   "empty-state";
+      aria-label:  "No delegation chain to display";
+      aria-live:   "polite";
+      hidden:      if state.machine != "empty" then true else false;
+      aria-hidden: if state.machine != "empty" then "true" else "false";
+    }
+  }
+
+  invariant {
+    "empty-state must be visible only in the empty state";
+    "chain-list must be hidden in the empty state";
+    "meta-permission-indicator must be hidden for nodes where is_meta is false";
+    "delegator-arrow must only be rendered between nodes that share a matching edge";
+    "highlighted node must carry aria-current true when in highlighted state";
+    "data-state on root must mirror the current FSM state at all times";
+    "chain-node data-highlighted must be true only for the node matching highlight_node";
+
+    always "chain-list hidden when empty": {
+      state.machine = "empty"
+    }
+
+    always "highlighted state requires highlight_node": {
+      state.machine = "highlighted"
+    }
+
+    never "empty-state visible outside empty state": {
+      state.machine = "populated"
+    }
+
+    action chain-node {
+      requires: state.machine = "populated"
+      ensures ok: state.machine = "highlighted"
+    }
+
+    action empty-state {
+      requires: state.machine = "empty"
+      ensures ok: state.machine = "populated"
+    }
+  }
+
+}

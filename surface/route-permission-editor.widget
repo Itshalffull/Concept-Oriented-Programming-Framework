@@ -1,0 +1,264 @@
+@version(1)
+widget route-permission-editor {
+
+  purpose {
+    Right panel widget in the GovernanceOrgEditor Permissions mode that shows
+    all permissions currently assigned to a selected route and lets facilitators
+    add new permissions, remove existing ones, and toggle delegation rights for
+    each permission row as well as the route-level meta-delegation right. The
+    widget uses ActionBinding: the parent is responsible for wiring add-button
+    to Authorization/grantPermission and remove-button to
+    Authorization/revokePermission. The panel enforces a read-only view when
+    can_edit is false, hiding all mutation controls.
+  }
+
+  anatomy {
+    root:                   container    { Top-level panel wrapper for the route permission editor }
+    route-label:            text         { Display name of the route currently being edited }
+    permission-list:        container    { Scrollable list of permission rows for this route }
+    permission-row:         container    { Single row representing one assigned permission }
+    permission-name:        text         { Name of the permission within the row }
+    permission-scope:       text         { Optional scope qualifier displayed alongside the permission name }
+    delegation-toggle:      action       { Toggle switch that enables or disables delegation for this permission }
+    remove-button:          action       { Button that removes this permission from the route }
+    add-permission-zone:    container    { Inline form area for entering a new permission }
+    permission-input:       interactive  { Text input for the new permission name }
+    scope-input:            interactive  { Optional text input for the permission scope }
+    add-button:             action       { Button that submits the new permission via ActionBinding }
+    delegate-rights-zone:   container    { Section controlling the route-level meta-delegation right }
+    delegate-toggle:        action       { Toggle switch for the route-level delegation meta-permission }
+    meta-permission-indicator: presentation { Badge or marker shown when the route holds the meta-delegation right }
+  }
+
+  states {
+    viewing [initial] {
+      on ADD    -> adding;
+      on SAVE   -> saving;
+    }
+
+    adding {
+      on CANCEL -> viewing;
+      on SAVED  -> viewing;
+    }
+
+    saving {
+      on SAVE_OK    -> viewing;
+      on SAVE_ERROR -> viewing;
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Tab       -> FOCUS_NEXT;
+      Shift+Tab -> FOCUS_PREV;
+      Escape    -> CANCEL;
+      Delete    -> REMOVE_PERMISSION;
+      Enter     -> ADD_PERMISSION;
+    }
+    focus {
+      trap: false;
+      initial: permission-list;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role:       "region";
+        aria-label: concat("Route permissions for ", ?route_name);
+        aria-busy:  if state.machine == "saving" then "true" else "false";
+      };
+      permission-list -> {
+        role:       "list";
+        aria-label: "Assigned permissions";
+      };
+      permission-row -> {
+        role: "listitem";
+      };
+      delegation-toggle -> {
+        role:        "switch";
+        aria-label:  concat("Allow delegation for ", self.name);
+        aria-checked: if self.can_delegate then "true" else "false";
+        aria-disabled: if not ?can_edit then "true" else "false";
+      };
+      remove-button -> {
+        role:       "button";
+        aria-label: concat("Remove permission ", self.name);
+        aria-disabled: if not ?can_edit then "true" else "false";
+      };
+      add-button -> {
+        role:       "button";
+        aria-label: "Add permission";
+        aria-disabled: if state.machine == "saving" then "true" else "false";
+      };
+      permission-input -> {
+        role:         "textbox";
+        aria-label:   "Permission name";
+        aria-required: "true";
+      };
+      scope-input -> {
+        role:       "textbox";
+        aria-label: "Permission scope (optional)";
+      };
+      delegate-toggle -> {
+        role:         "switch";
+        aria-label:   "Allow this route to delegate permissions";
+        aria-checked: if ?route_can_delegate then "true" else "false";
+        aria-disabled: if not ?can_edit then "true" else "false";
+      };
+      meta-permission-indicator -> {
+        aria-label:  "Route holds meta-delegation right";
+        aria-hidden: if not ?route_can_delegate then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    route_id:           String
+    route_name:         String
+    permissions:        list RoutePermission = []
+    can_edit:           Bool = false
+    route_can_delegate: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part:  "root";
+      data-state: if state.machine == "viewing" then "viewing"
+                  else if state.machine == "adding" then "adding"
+                  else "saving";
+      role:       "region";
+      aria-label: concat("Route permissions for ", ?route_name);
+      aria-busy:  if state.machine == "saving" then "true" else "false";
+    }
+
+    route-label -> {
+      data-part: "route-label";
+      text:      ?route_name;
+    }
+
+    permission-list -> {
+      data-part:  "permission-list";
+      role:       "list";
+      aria-label: "Assigned permissions";
+    }
+
+    permission-row -> {
+      data-part:          "permission-row";
+      role:               "listitem";
+      data-permission-id: self.id;
+    }
+
+    permission-name -> {
+      data-part: "permission-name";
+      text:      self.name;
+    }
+
+    permission-scope -> {
+      data-part: "permission-scope";
+      text:      self.scope;
+      hidden:    if self.scope == null then true else false;
+    }
+
+    delegation-toggle -> {
+      data-part:     "delegation-toggle";
+      role:          "switch";
+      aria-label:    concat("Allow delegation for ", self.name);
+      aria-checked:  if self.can_delegate then "true" else "false";
+      aria-disabled: if not ?can_edit then "true" else "false";
+      disabled:      if not ?can_edit then true else false;
+      hidden:        if not ?can_edit then true else false;
+      onClick:       send(TOGGLE_DELEGATE, { permissionId: self.id });
+    }
+
+    remove-button -> {
+      data-part:     "remove-button";
+      aria-label:    concat("Remove permission ", self.name);
+      aria-disabled: if not ?can_edit then "true" else "false";
+      disabled:      if not ?can_edit then true else false;
+      hidden:        if not ?can_edit then true else false;
+      onClick:       send(REMOVE_PERMISSION, { permissionId: self.id });
+    }
+
+    add-permission-zone -> {
+      data-part:   "add-permission-zone";
+      hidden:      if state.machine != "adding" then true else false;
+      aria-hidden: if state.machine != "adding" then "true" else "false";
+    }
+
+    permission-input -> {
+      data-part:     "permission-input";
+      role:          "textbox";
+      aria-label:    "Permission name";
+      aria-required: "true";
+    }
+
+    scope-input -> {
+      data-part:  "scope-input";
+      role:       "textbox";
+      aria-label: "Permission scope (optional)";
+    }
+
+    add-button -> {
+      data-part:     "add-button";
+      aria-label:    "Add permission";
+      aria-disabled: if state.machine == "saving" then "true" else "false";
+      disabled:      if state.machine == "saving" then true else false;
+      onClick:       send(ADD_PERMISSION);
+    }
+
+    delegate-rights-zone -> {
+      data-part: "delegate-rights-zone";
+    }
+
+    delegate-toggle -> {
+      data-part:     "delegate-toggle";
+      role:          "switch";
+      aria-label:    "Allow this route to delegate permissions";
+      aria-checked:  if ?route_can_delegate then "true" else "false";
+      aria-disabled: if not ?can_edit then "true" else "false";
+      disabled:      if not ?can_edit then true else false;
+      onClick:       send(TOGGLE_ROUTE_DELEGATE);
+    }
+
+    meta-permission-indicator -> {
+      data-part:   "meta-permission-indicator";
+      aria-label:  "Route holds meta-delegation right";
+      aria-hidden: if not ?route_can_delegate then "true" else "false";
+      hidden:      if not ?route_can_delegate then true else false;
+    }
+  }
+
+  invariant {
+    "add-permission-zone must be hidden in viewing and saving states";
+    "remove-button must be hidden when can_edit is false";
+    "meta-permission-indicator must be visible only when route_can_delegate is true";
+    "add-button must be disabled while in the saving state";
+    "delegation-toggle must be hidden when can_edit is false";
+    "aria-busy on root must be true only in the saving state";
+    "data-state on root must mirror the current FSM state at all times";
+
+    always "panel in known state": {
+      state.machine = "viewing"
+    }
+
+    always "saving shows busy": {
+      state.machine = "saving"
+    }
+
+    never "adding and saving simultaneously": {
+      state.machine = "unknown"
+    }
+
+    action add-button {
+      requires: state.machine = "adding"
+      ensures ok: state.machine = "viewing"
+    }
+
+    action delegate-toggle {
+      requires: state.machine = "viewing"
+      ensures ok: state.machine = "viewing"
+    }
+  }
+
+}
