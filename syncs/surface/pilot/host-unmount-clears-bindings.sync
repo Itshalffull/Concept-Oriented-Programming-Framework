@@ -1,0 +1,12 @@
+// Remove all PageMap page-bindings belonging to a Host when it unmounts,
+// so Pilot/snapshot's bindings array reflects only the current page.
+
+sync HostUnmountClearsBindings [eager]
+  purpose: "When a Host unmounts on navigation away, clear all its PageMap page-bindings so the snapshot's bindings array reflects only the current page"
+when {
+  Host/unmount: [ host: ?h ]
+    => [ host: ?h ]
+}
+then {
+  PageMap/clearBindings: [ hostRef: ?h ]
+}

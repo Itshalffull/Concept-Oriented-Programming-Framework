@@ -26,6 +26,7 @@ derived Pilot {
       machine-spawn-registers-element,
       machine-send-updates-element,
       host-unmount-clears-page,
+      host-unmount-clears-bindings,
       interact-sends-to-machine,
       fill-writes-field,
       submit-invokes-action,

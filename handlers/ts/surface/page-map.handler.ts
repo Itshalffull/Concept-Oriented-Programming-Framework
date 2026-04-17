@@ -240,6 +240,91 @@ const _handler: FunctionalConceptHandler = {
     p = delMany(p, 'page_map_entry', { hostRef }, '_deletedCount');
     return complete(p, 'ok', { hostRef }) as StorageProgram<Result>;
   },
+
+  /**
+   * registerBinding -- Record a UIEventBinding reachable from the given host.
+   *
+   * Stores one row in the page_binding relation so that Pilot/snapshot can
+   * surface the binding to agents. Called by widget handlers on mount.
+   */
+  registerBinding(input: Record<string, unknown>) {
+    const entry   = input.entry   as string;
+    const hostRef = input.hostRef as string;
+    const binding = input.binding as string;
+    const kind    = input.kind    as string;
+    const target  = input.target  as string;
+    const hint    = (input.hint != null && input.hint !== 'none')
+      ? input.hint as string
+      : null;
+
+    if (!entry || entry.trim() === '') {
+      return complete(createProgram(), 'error', { message: 'entry is required' }) as StorageProgram<Result>;
+    }
+    if (!hostRef || hostRef.trim() === '') {
+      return complete(createProgram(), 'error', { message: 'hostRef is required' }) as StorageProgram<Result>;
+    }
+    if (!binding || binding.trim() === '') {
+      return complete(createProgram(), 'error', { message: 'binding is required' }) as StorageProgram<Result>;
+    }
+    if (!kind || kind.trim() === '') {
+      return complete(createProgram(), 'error', { message: 'kind is required' }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = get(p, 'page_binding', entry, '_existing');
+    return branch(p,
+      (b) => b._existing != null,
+      (b) => complete(b, 'duplicate', {
+        message: `A page binding with entry id "${entry}" already exists`,
+      }),
+      (b) => {
+        const b2 = put(b, 'page_binding', entry, {
+          entry,
+          hostRef,
+          binding,
+          kind,
+          target,
+          hint,
+        });
+        return complete(b2, 'ok', { entry });
+      },
+    ) as StorageProgram<Result>;
+  },
+
+  /**
+   * bindingsForHost -- Return a JSON array of every UIEventBinding registered
+   * against the given host.
+   */
+  bindingsForHost(input: Record<string, unknown>) {
+    const hostRef = input.hostRef as string;
+
+    let p = createProgram();
+    p = find(p, 'page_binding', {}, '_allBindings');
+
+    return completeFrom(p, 'ok', (bindings) => {
+      const all = (bindings._allBindings || []) as Array<Record<string, unknown>>;
+      const matches = all
+        .filter((e) => (e.hostRef as string) === hostRef)
+        .map((e) => ({
+          binding: e.binding,
+          kind:    e.kind,
+          target:  e.target,
+          hint:    e.hint,
+        }));
+      return { bindings: JSON.stringify(matches) };
+    }) as StorageProgram<Result>;
+  },
+
+  /**
+   * clearBindings -- Remove all page bindings belonging to the given host.
+   */
+  clearBindings(input: Record<string, unknown>) {
+    const hostRef = input.hostRef as string;
+
+    let p = createProgram();
+    p = delMany(p, 'page_binding', { hostRef }, '_deletedCount');
+    return complete(p, 'ok', { hostRef }) as StorageProgram<Result>;
+  },
 };
 
 export const pageMapHandler = autoInterpret(_handler);

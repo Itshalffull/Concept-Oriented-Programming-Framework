@@ -34,6 +34,20 @@ concept PageMap [P] {
     }
   }
 
+  // page_bindings is a separate relation that widget registrations write to
+  // on mount. Each entry records a UIEventBinding reachable from the current
+  // page — either a registered binding id or a shorthand of the form
+  // "<kind>:<target>". Used by Pilot/snapshot (via bindingsForHost) to tell
+  // agents which UIEventBindings they can trigger with Pilot/effect.
+  pageBindings: set B
+  pageBinding {
+    hostRef: B -> String
+    binding: B -> String
+    kind: B -> String
+    target: B -> String
+    hint: B -> option String
+  }
+
   actions {
     action register(entry: P, label: String, role: String, machineRef: String, widgetName: String, currentState: String, validEvents: String, conceptBinding: option String, affordanceServes: option String, hostRef: String, viewName: option String, viewPurpose: option String, viewPurity: option String, viewInvokedActions: option String) {
       -> ok(entry: P) {
@@ -264,6 +278,66 @@ concept PageMap [P] {
 
       fixture clear_ok { hostRef: "host-main" } after register_ok
       fixture clear_empty { hostRef: "host-other" }
+    }
+
+    action registerBinding(entry: B, hostRef: String, binding: String, kind: String, target: String, hint: option String) {
+      -> ok(entry: B) {
+        Record a UIEventBinding reachable from the given host so that
+        Pilot/snapshot can surface it to agents. Both registered binding
+        ids and shorthand strings ("<kind>:<target>") are valid; the
+        registering widget chooses. Called by widget handlers on mount
+        (see host-ready-captures-page / page-bindings scaffolding).
+      }
+      -> duplicate(message: String) {
+        A page binding with this entry id already exists.
+      }
+
+      fixture register_binding_id {
+        entry: "pb-goto-home"
+        hostRef: "host-main"
+        binding: "goto-home"
+        kind: "navigate"
+        target: "/home"
+        hint: "Go home"
+      }
+      fixture register_binding_inline {
+        entry: "pb-inline-forms"
+        hostRef: "host-main"
+        binding: "navigate:/admin/forms"
+        kind: "navigate"
+        target: "/admin/forms"
+        hint: "Open forms admin"
+      }
+      fixture register_binding_duplicate {
+        entry: "pb-goto-home"
+        hostRef: "host-main"
+        binding: "goto-home"
+        kind: "navigate"
+        target: "/home"
+        hint: none
+      } after register_binding_id -> duplicate
+    }
+
+    action bindingsForHost(hostRef: String) {
+      -> ok(bindings: String) {
+        Return a JSON array of {binding, kind, target, hint} records for
+        every UIEventBinding registered against the given host. Returns
+        an empty array if the host has no registered page bindings.
+      }
+
+      fixture bindings_for_host_ok { hostRef: "host-main" } after register_binding_id
+      fixture bindings_for_host_empty { hostRef: "host-other" }
+    }
+
+    action clearBindings(hostRef: String) {
+      -> ok(hostRef: String) {
+        Remove all page bindings belonging to the given host. Called by
+        host-unmount syncs to prevent stale UIEventBindings from leaking
+        across page transitions.
+      }
+
+      fixture clear_bindings_ok { hostRef: "host-main" } after register_binding_id
+      fixture clear_bindings_empty { hostRef: "host-other" }
     }
   }
 
