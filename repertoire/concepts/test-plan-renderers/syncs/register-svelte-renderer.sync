@@ -1,0 +1,16 @@
+# Wire SvelteRenderer/register into PluginRegistry so the rendering
+# dispatch layer can discover and invoke the Svelte backend by name.
+
+sync RegisterSvelteRenderer [eager]
+  purpose { Wire SvelteRenderer/register into PluginRegistry. }
+when {
+  SvelteRenderer/register: []
+    => ok(name: ?name; capabilities: ?caps)
+}
+then {
+  PluginRegistry/register: [
+    type: "test-plan-renderer";
+    name: ?name;
+    metadata: { capabilities: ?caps }
+  ]
+}

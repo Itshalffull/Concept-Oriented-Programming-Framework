@@ -1,0 +1,87 @@
+# PluginRegistry seeds — TestPlanRenderer plugins (INV-12: Vue / Svelte / Vanilla / SwiftUI / Jetpack).
+#
+# Registers five stub platform renderers into the PluginRegistry so that
+# TestGeneration/run can discover and invoke them via `--platform <name>`.
+# Each renderer implements the register()/render() contract defined by the
+# test-plan-renderers suite. The stub output is a valid placeholder test file
+# that emits "// <Platform> renderer not yet implemented" until the full
+# probe translation table is shipped.
+#
+# Registration wiring: each renderer's concept ships a corresponding
+# register-<platform>-renderer.sync in repertoire/concepts/test-plan-renderers/syncs/
+# that fires VueRenderer/register (etc.) → PluginRegistry/register automatically
+# on boot. These seed entries provide the boot-time PluginRegistry state for apps
+# that use direct seed injection rather than eager sync firing.
+
+concept: PluginRegistry
+action: register
+entries:
+  # ─── Vue (Vitest + Vue Test Utils) ─────────────────────────────────────────
+  - type: test-plan-renderer
+    name: vue
+    metadata: >
+      {
+        "capabilities": "vitest,vue-test-utils,mount,wrapper,trigger,flushPromises,immediately,eventually",
+        "kind": "renderer",
+        "platform": "vue",
+        "frameworkVersion": "3.x",
+        "testRunner": "vitest",
+        "outputExtension": ".test.ts",
+        "status": "stub"
+      }
+
+  # ─── Svelte (Vitest + Svelte Testing Library) ───────────────────────────────
+  - type: test-plan-renderer
+    name: svelte
+    metadata: >
+      {
+        "capabilities": "vitest,svelte-testing-library,render,screen,fireEvent,waitFor,immediately,eventually",
+        "kind": "renderer",
+        "platform": "svelte",
+        "frameworkVersion": "5.x",
+        "testRunner": "vitest",
+        "outputExtension": ".test.ts",
+        "status": "stub"
+      }
+
+  # ─── Vanilla JS (Vitest + jsdom, no framework) ─────────────────────────────
+  - type: test-plan-renderer
+    name: vanilla
+    metadata: >
+      {
+        "capabilities": "vitest,jsdom,querySelector,dispatchEvent,MutationObserver,immediately,eventually",
+        "kind": "renderer",
+        "platform": "vanilla",
+        "frameworkVersion": "es2022",
+        "testRunner": "vitest",
+        "outputExtension": ".test.ts",
+        "status": "stub"
+      }
+
+  # ─── SwiftUI (XCTest + ViewInspector) ──────────────────────────────────────
+  - type: test-plan-renderer
+    name: swiftui
+    metadata: >
+      {
+        "capabilities": "xctest,view-inspector,XCTAssertEqual,async-await,immediately,eventually",
+        "kind": "renderer",
+        "platform": "swiftui",
+        "frameworkVersion": "5.x",
+        "testRunner": "xcodebuild",
+        "outputExtension": "Tests.swift",
+        "status": "stub"
+      }
+
+  # ─── Jetpack Compose (JUnit 4 + Compose UI Test) ───────────────────────────
+  - type: test-plan-renderer
+    name: jetpack
+    metadata: >
+      {
+        "capabilities": "junit4,compose-ui-test,onNodeWithTag,assertTextEquals,performClick,performKeyInput,immediately,eventually",
+        "kind": "renderer",
+        "platform": "jetpack",
+        "frameworkVersion": "1.6+",
+        "testRunner": "gradle",
+        "outputExtension": "Test.kt",
+        "status": "stub"
+      }

@@ -6,9 +6,10 @@ suite:
     TestPlanRenderer plugins that translate platform-agnostic TestPlans into
     runnable test files for specific frameworks. Each renderer implements the
     universal register()/render() contract and self-describes its supported
-    probe namespace and settlement modalities. v0.1.0 ships React (vitest +
-    React Testing Library) and Playwright backends; Vue, Svelte, Vanilla,
-    SwiftUI, and Jetpack Compose will be added in future releases.
+    probe namespace and settlement modalities. Ships React (vitest +
+    React Testing Library), Playwright, ProcessSpec, MockHandler,
+    ReplayHandler, EffectContract, and FieldTransformFuzz backends,
+    plus Vue, Svelte, Vanilla JS, SwiftUI, and Jetpack Compose stubs (INV-12).
 
 concepts:
   ReactRenderer:
@@ -46,6 +47,31 @@ concepts:
     params:
       R: { as: field-transform-fuzz-renderer-ref, description: "Reference to a registered FieldTransform fuzz renderer instance" }
 
+  VueRenderer:
+    spec: ./vue-renderer.concept
+    params:
+      R: { as: vue-renderer-ref, description: "Reference to a registered Vue renderer instance" }
+
+  SvelteRenderer:
+    spec: ./svelte-renderer.concept
+    params:
+      R: { as: svelte-renderer-ref, description: "Reference to a registered Svelte renderer instance" }
+
+  VanillaRenderer:
+    spec: ./vanilla-renderer.concept
+    params:
+      R: { as: vanilla-renderer-ref, description: "Reference to a registered Vanilla JS renderer instance" }
+
+  SwiftUIRenderer:
+    spec: ./swiftui-renderer.concept
+    params:
+      R: { as: swiftui-renderer-ref, description: "Reference to a registered SwiftUI renderer instance" }
+
+  JetpackRenderer:
+    spec: ./jetpack-renderer.concept
+    params:
+      R: { as: jetpack-renderer-ref, description: "Reference to a registered Jetpack Compose renderer instance" }
+
 syncs:
   required:
     - path: ./syncs/register-react-renderer.sync
@@ -68,6 +94,21 @@ syncs:
 
     - path: ./syncs/register-field-transform-fuzz-renderer.sync
       description: "FieldTransformFuzzRenderer/register -> PluginRegistry/register(test-plan-renderer)"
+
+    - path: ./syncs/register-vue-renderer.sync
+      description: "VueRenderer/register -> PluginRegistry/register(test-plan-renderer)"
+
+    - path: ./syncs/register-svelte-renderer.sync
+      description: "SvelteRenderer/register -> PluginRegistry/register(test-plan-renderer)"
+
+    - path: ./syncs/register-vanilla-renderer.sync
+      description: "VanillaRenderer/register -> PluginRegistry/register(test-plan-renderer)"
+
+    - path: ./syncs/register-swiftui-renderer.sync
+      description: "SwiftUIRenderer/register -> PluginRegistry/register(test-plan-renderer)"
+
+    - path: ./syncs/register-jetpack-renderer.sync
+      description: "JetpackRenderer/register -> PluginRegistry/register(test-plan-renderer)"
 
 uses:
   - suite: infrastructure
