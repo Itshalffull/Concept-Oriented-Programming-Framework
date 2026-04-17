@@ -197,4 +197,20 @@ derived Pilot {
     forall b in PageMap/bindingsForHost(hostRef: currentHost):
       b in snapshot().bindings
   }
+
+  // Safety: Pilot/effect must never call Navigator/Shell/Machine/Notification
+  // directly — the only permissible outbound edges are UIEventBinding/invoke
+  // and UIEventBinding/invokeInline. The pilot-effect sync is the sole writer;
+  // any new sync that forwards Pilot/effect to anything other than those two
+  // UIEventBinding actions is a bypass and violates this safety property.
+  never "pilot/effect bypasses UIEventBinding and dispatches directly": {
+    exists e in effect:
+      e -> ok and
+      (Navigator/navigate was emitted directly from e
+       or Shell/openOverlay  was emitted directly from e
+       or Shell/closeOverlay was emitted directly from e
+       or Shell/dismiss      was emitted directly from e
+       or Machine/send       was emitted directly from e
+       or Notification/notify was emitted directly from e)
+  }
 }
