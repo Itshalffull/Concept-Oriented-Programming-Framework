@@ -1,0 +1,16 @@
+# Example ContentReconciler registrations for admin surfaces.
+# Demonstrates reverse-projection from authored governance content pages
+# back to concept state (Constitution, Proposal).
+
+concept: ContentReconciler
+action: register
+entries:
+  - sourceKind: page
+    sourceId: program.md
+    targetConcept: Constitution
+    mapping: '{"projection":"program-to-constitution","fields":["name","version","preamble","articles"]}'
+
+  - sourceKind: page
+    sourceId: proposal-001.md
+    targetConcept: Proposal
+    mapping: '{"projection":"page-to-proposal","fields":["title","summary","actions","deadline"]}'
