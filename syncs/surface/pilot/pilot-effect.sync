@@ -1,0 +1,33 @@
+// Route Pilot/effect through UIEventBinding so every UI effect emitted by an
+// agent flows through the same concept-level choke point as programmatic
+// dispatch. Two syncs — one per resolution mode — read the parsed output
+// written by Pilot/effect(ok) and forward to the corresponding UIEventBinding
+// action:
+//
+//   mode = "id"     -> UIEventBinding/invoke(binding, context)        (registered binding id)
+//   mode = "inline" -> UIEventBinding/invokeInline(kind, target, ...) (shorthand "<kind>:<target>")
+//
+// Classification happens inside the Pilot handler itself so the sync language
+// does not need string-split helpers. Both branches flow through
+// UIEventBinding so the DispatchUIEvent* / DispatchUIEventInline* sync network
+// picks up every effect uniformly.
+
+sync PilotEffectRegistered [eager]
+  purpose: "When Pilot/effect completes in id mode, forward the binding id to UIEventBinding/invoke"
+when {
+  Pilot/effect: [ binding: ?binding; params: ?params ]
+    => [ ok: true; mode: "id"; context: ?context ]
+}
+then {
+  UIEventBinding/invoke: [ binding: ?binding; context: ?context ]
+}
+
+sync PilotEffectInline [eager]
+  purpose: "When Pilot/effect completes in inline mode, forward the shorthand (kind, target) to UIEventBinding/invokeInline"
+when {
+  Pilot/effect: [ binding: ?binding; params: ?params ]
+    => [ ok: true; mode: "inline"; kind: ?kind; target: ?target; context: ?context ]
+}
+then {
+  UIEventBinding/invokeInline: [ kind: ?kind; target: ?target; params: ?params; context: ?context ]
+}
