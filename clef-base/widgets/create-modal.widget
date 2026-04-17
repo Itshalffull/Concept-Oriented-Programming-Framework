@@ -1,0 +1,150 @@
+@version(1)
+widget create-modal {
+
+  purpose {
+    Single-field creation modal used by the Tier 1b content-native create flow
+    (useContentNativeCreate). Prompts the user for a title before creating a
+    ContentNode, then navigates to the entity detail page on success. The modal
+    heading already names what is being created (e.g. "Create Circle") so no
+    separate field label is rendered — the heading and the input together form
+    one unambiguous prompt.
+  }
+
+  anatomy {
+    root:          container  { Modal overlay backdrop }
+    panel:         container  { Centered card containing the form }
+    heading:       text       { Modal title — names the entity being created (e.g. "Create Circle") }
+    errorMessage:  text       { Inline error displayed when creation fails }
+    form:          container  { Single-field form body }
+    titleInput:    interactive { Text input for the entity title }
+    actions:       container  { Row of Cancel / Create buttons }
+    cancelButton:  action     { Dismiss without creating }
+    submitButton:  action     { Submit the title and create the entity }
+  }
+
+  states {
+    idle [initial] {
+      on SUBMIT -> submitting;
+      on CANCEL -> dismissed;
+    }
+    submitting {
+      on SUCCESS -> dismissed;
+      on FAILURE -> idle;
+    }
+    dismissed [final] {}
+  }
+
+  accessibility {
+    role: dialog;
+    modal: true;
+    keyboard {
+      Escape -> CANCEL;
+      Enter  -> SUBMIT;
+      Tab    -> FOCUS_NEXT;
+    }
+    focus {
+      trap: true;
+      initial: titleInput;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "dialog";
+        aria-modal: "true";
+        aria-labelledby: "create-modal-heading";
+      };
+      heading -> {
+        id: "create-modal-heading";
+      };
+      titleInput -> {
+        aria-label: "Title (required)";
+        aria-required: "true";
+      };
+      submitButton -> {
+        aria-label: "Create";
+      };
+      cancelButton -> {
+        aria-label: "Cancel";
+      };
+    }
+  }
+
+  props {
+    open: Bool = false
+    entityLabel: String = "Item"
+    titleValue: String = ""
+    isPending: Bool = false
+    errorMessage: option String
+  }
+
+  connect {
+    root -> {
+      data-state: if state.idle == "idle" then "idle" else if state.submitting then "submitting" else "dismissed";
+      hidden: if ?open then false else true;
+    }
+    heading -> {
+      text: "Create {{entityLabel}}";
+    }
+    titleInput -> {
+      value: ?titleValue;
+      placeholder: "Enter a title...";
+      disabled: ?isPending;
+      onChange: send(SET_TITLE, value);
+    }
+    cancelButton -> {
+      onClick: send(CANCEL);
+      disabled: ?isPending;
+    }
+    submitButton -> {
+      onClick: send(SUBMIT);
+      disabled: if ?isPending then true else if ?titleValue = "" then true else false;
+      text: if ?isPending then "Creating..." else "Create";
+    }
+  }
+
+  invariant {
+    never "modal displays duplicate field labels": {
+      exists label in visibleLabels:
+        label.text = heading.text
+    }
+
+    never "field label repeats heading text": {
+      exists fieldLabel in formLabels:
+        fieldLabel.visible = true and fieldLabel.text = heading.text
+    }
+
+    always "single input modal needs no separate label": {
+      formFields.count = 1 implies
+        visibleFieldLabels.count = 0
+    }
+
+    always "heading identifies the entity being created": {
+      heading.text starts-with "Create "
+    }
+
+    always "input is accessible via aria-label when label is absent": {
+      forall input in formFields:
+        input.aria-label != none or input.aria-labelledby != none
+    }
+
+    example "open modal shows heading not field label": {
+      after open(entityLabel: "Circle") -> ok
+      then heading -> { text: "Create Circle" }
+      and titleInput -> { aria-label: "Title (required)" }
+    }
+
+    example "submit creates entity": {
+      after open(entityLabel: "Agent") -> ok
+      and titleInput.change(value: "My Agent") -> ok
+      then submit() -> ok
+      and state = "dismissed"
+    }
+
+    example "cancel dismisses without creating": {
+      after open(entityLabel: "Circle") -> ok
+      then cancel() -> ok
+      and state = "dismissed"
+    }
+  }
+
+}

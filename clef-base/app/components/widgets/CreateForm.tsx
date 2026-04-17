@@ -30,7 +30,7 @@
  *     (Existing path, unchanged.)
  */
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useKernelInvoke } from '../../../lib/clef-provider';
 import { useContentNativeCreate } from '../../../lib/useContentNativeCreate';
@@ -38,6 +38,7 @@ import {
   registerCreateSurface,
   resolveCreateSurface,
 } from '../../../lib/create-surfaces';
+import { slugify } from '../../../lib/slug';
 import FormRenderer from './FormRenderer';
 
 // ---------------------------------------------------------------------------
@@ -251,6 +252,56 @@ export const CreateForm: React.FC<CreateFormProps> = ({
 
   // Tier probe state — all tiers resolved together in a single useEffect.
   const [tierState, setTierState] = useState<TierState>(INITIAL_TIER_STATE);
+
+  // Auto-derive ID from a Display Name / Title sibling field (Drupal pattern).
+  // Slug logic comes from the Slug concept's pure transformer (lib/slug.ts).
+  // Once the user manually edits the ID we stop syncing so they keep control.
+  const { idFieldName, titleFieldName } = useMemo(() => {
+    let idField: string | null = null;
+    let titleField: string | null = null;
+    for (const f of fields ?? []) {
+      const label = (f.label ?? f.name).toLowerCase().trim();
+      if (!idField && (label.endsWith(' id') || label === 'id')) idField = f.name;
+      else if (
+        !titleField &&
+        (label === 'display name' || label === 'title' || label === 'name')
+      ) titleField = f.name;
+    }
+    return { idFieldName: idField, titleFieldName: titleField };
+  }, [fields]);
+
+  const [manuallyEditedFields, setManuallyEditedFields] = useState<Set<string>>(
+    new Set(),
+  );
+  useEffect(() => {
+    if (!open) setManuallyEditedFields(new Set());
+  }, [open]);
+
+  const setFieldValue = useCallback(
+    (name: string, value: string) => {
+      setValues((v) => {
+        const next = { ...v, [name]: value };
+        if (
+          idFieldName &&
+          titleFieldName &&
+          name === titleFieldName &&
+          !manuallyEditedFields.has(idFieldName)
+        ) {
+          next[idFieldName] = slugify(value);
+        }
+        return next;
+      });
+      if (name === idFieldName) {
+        setManuallyEditedFields((prev) => {
+          if (prev.has(name)) return prev;
+          const next = new Set(prev);
+          next.add(name);
+          return next;
+        });
+      }
+    },
+    [idFieldName, titleFieldName, manuallyEditedFields],
+  );
 
   // -------------------------------------------------------------------------
   // Sync initialValues into form state on open/change
@@ -514,20 +565,29 @@ export const CreateForm: React.FC<CreateFormProps> = ({
           // Tier 1b — content-native create.
           // Prompt for a title before creating the node so the page shows a
           // human-readable name instead of its raw UUID.
+          //
+          // The <h2> heading above already names what is being created (e.g.
+          // "Create Circle"). Rendering a separate "Title *" label beneath it
+          // produced a duplicate-label appearance — two prominent text elements
+          // both pointing at the same single input. Fixed by removing the
+          // visible label text; the input carries aria-label="Title (required)"
+          // so screen readers retain the full description.
           <form onSubmit={handleTier1bSubmit}>
             {error && (
               <div data-part="field-error">{error}</div>
             )}
             <div data-part="field-panel-row">
-              <label htmlFor="tier1b-title" data-part="field-label">
-                Title <span data-part="field-required">*</span>
-              </label>
+              {/* No visible label: the h2 heading above ("Create Circle" etc.)
+                  already names the single field. aria-label on the input
+                  gives screen readers the full "Title (required)" description. */}
               <input
                 id="tier1b-title"
                 type="text"
                 value={tier1bTitle}
                 onChange={(e) => setTier1bTitle(e.target.value)}
                 placeholder="Enter a title..."
+                aria-label="Title (required)"
+                aria-required="true"
                 required
                 autoFocus
                 data-surface="mag651-field-control"
@@ -580,7 +640,20 @@ export const CreateForm: React.FC<CreateFormProps> = ({
             )}
 
             <form onSubmit={handleSubmit}>
-              {(fields ?? []).map((field) => (
+              {(() => {
+                // When auto-derive is active, render the Title field first so
+                // the user sees the ID populate beneath it as they type (Drupal UX).
+                const list = fields ?? [];
+                if (!idFieldName || !titleFieldName) return list;
+                const titleIdx = list.findIndex((f) => f.name === titleFieldName);
+                const idIdx = list.findIndex((f) => f.name === idFieldName);
+                if (titleIdx === -1 || idIdx === -1 || titleIdx < idIdx) return list;
+                const next = [...list];
+                const [titleField] = next.splice(titleIdx, 1);
+                const newIdIdx = next.findIndex((f) => f.name === idFieldName);
+                next.splice(newIdIdx, 0, titleField);
+                return next;
+              })().map((field) => (
                 <div key={field.name} data-part="field-panel-row">
                   <label
                     htmlFor={`field-${field.name}`}
@@ -595,18 +668,14 @@ export const CreateForm: React.FC<CreateFormProps> = ({
                     <KeyValueList
                       id={`field-${field.name}`}
                       value={values[field.name] ?? '[]'}
-                      onChange={(json) =>
-                        setValues((v) => ({ ...v, [field.name]: json }))
-                      }
+                      onChange={(json) => setFieldValue(field.name, json)}
                       placeholder={field.placeholder}
                     />
                   ) : field.type === 'textarea' ? (
                     <textarea
                       id={`field-${field.name}`}
                       value={values[field.name] ?? ''}
-                      onChange={(e) =>
-                        setValues((v) => ({ ...v, [field.name]: e.target.value }))
-                      }
+                      onChange={(e) => setFieldValue(field.name, e.target.value)}
                       placeholder={field.placeholder}
                       required={field.required}
                       rows={3}
@@ -617,9 +686,7 @@ export const CreateForm: React.FC<CreateFormProps> = ({
                     <select
                       id={`field-${field.name}`}
                       value={values[field.name] ?? ''}
-                      onChange={(e) =>
-                        setValues((v) => ({ ...v, [field.name]: e.target.value }))
-                      }
+                      onChange={(e) => setFieldValue(field.name, e.target.value)}
                       required={field.required}
                       data-surface="mag651-field-control"
                       data-contract="field-control"
@@ -636,13 +703,24 @@ export const CreateForm: React.FC<CreateFormProps> = ({
                       id={`field-${field.name}`}
                       type="text"
                       value={values[field.name] ?? ''}
-                      onChange={(e) =>
-                        setValues((v) => ({ ...v, [field.name]: e.target.value }))
+                      onChange={(e) => setFieldValue(field.name, e.target.value)}
+                      placeholder={
+                        field.name === idFieldName &&
+                        titleFieldName &&
+                        !manuallyEditedFields.has(field.name)
+                          ? 'auto-derived from name (editable)'
+                          : field.placeholder
                       }
-                      placeholder={field.placeholder}
                       required={field.required}
                       data-surface="mag651-field-control"
                       data-contract="field-control"
+                      data-auto-derived={
+                        field.name === idFieldName &&
+                        titleFieldName &&
+                        !manuallyEditedFields.has(field.name)
+                          ? 'true'
+                          : undefined
+                      }
                     />
                   )}
                 </div>
