@@ -4,6 +4,7 @@
 sync DisplayModeUsesMapping [eager]
 when {
   Renderer/render: [ schema: ?schema; display_mode: ?mode; entity: ?entity ]
+    => [ ok ]
 }
 where {
   DisplayMode: { ?dm schema: ?schema; mode_id: ?mode;

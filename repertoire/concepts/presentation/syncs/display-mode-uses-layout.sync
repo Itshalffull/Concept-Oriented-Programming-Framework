@@ -8,12 +8,10 @@ when {
 }
 where {
   filter(?layout != null)
-  Renderer/render: [ schema: ?schema; display_mode: ?mode; entity: ?entity ]
   DisplayMode: { ?dm schema: ?schema; mode_id: ?mode }
 }
 then {
   Component/renderLayout: [ layout: ?layout;
-                            context: { entity: ?entity,
-                                       schema: ?schema,
+                            context: { schema: ?schema,
                                        mode_id: ?mode } ]
 }

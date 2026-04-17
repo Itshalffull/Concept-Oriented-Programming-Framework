@@ -4,6 +4,7 @@
 sync ViewResolvesContextualFilters [eager]
 when {
   View/execute: [ view: ?view; context: ?ctx ]
+    => [ ok ]
 }
 where {
   View: { ?view filters: ?filters }

@@ -54,6 +54,9 @@ import { versionSpaceHandler } from '../../handlers/ts/version-space.handler';
 import { canvasHandler } from '../../handlers/ts/app/canvas.handler';
 // Content extras
 import { snippetHandler } from '../../handlers/ts/app/snippet.handler';
+// Editor surface integrations
+import { editSurfaceHandler } from '../../handlers/ts/app/edit-surface.handler';
+import { contentCompilerHandler } from '../../handlers/ts/app/content-compiler.handler';
 // Content reconciliation (reverse projection)
 import { contentReconcilerHandler } from '../../handlers/ts/app/content-reconciler.handler';
 // Research / Evidence Platform
@@ -346,6 +349,20 @@ const SUPPLEMENTAL_REGISTRY_ENTRIES = [
     uri: 'urn:clef/Canvas',
     handler: canvasHandler,
     storageName: 'canvas',
+    storageType: 'standard' as const,
+  },
+  // Editor surface integrations — must be registered so block editor resolve
+  // and compile-status calls don't return "Concept not found" 500s.
+  {
+    uri: 'urn:clef/EditSurface',
+    handler: editSurfaceHandler,
+    storageName: 'edit-surface',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/ContentCompiler',
+    handler: contentCompilerHandler,
+    storageName: 'content-compiler',
     storageType: 'standard' as const,
   },
   // Content extras
