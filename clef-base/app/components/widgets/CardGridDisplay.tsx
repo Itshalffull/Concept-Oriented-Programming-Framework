@@ -145,6 +145,28 @@ function formatCardValue(value: unknown, formatter?: string): React.ReactNode {
       return value ? <Badge variant="secondary">{String(value)}</Badge> : null;
     case 'boolean-badge':
       return <Badge variant={value ? 'success' : 'secondary'}>{value ? 'yes' : 'no'}</Badge>;
+    case 'date': {
+      if (!value) return null;
+      const d = new Date(String(value));
+      return <span>{isNaN(d.getTime()) ? String(value) : d.toLocaleDateString()}</span>;
+    }
+    case 'code':
+      return <code data-part="code">{String(value)}</code>;
+    case 'truncate': {
+      const s = String(value);
+      return <span title={s}>{s.length > 60 ? s.slice(0, 60) + '...' : s}</span>;
+    }
+    case 'schema-badges': {
+      const schemas = Array.isArray(value) ? value : [];
+      if (schemas.length === 0) return null;
+      return (
+        <span data-part="schema-list">
+          {schemas.map((s: unknown) => (
+            <Badge key={String(s)} variant="info">{String(s)}</Badge>
+          ))}
+        </span>
+      );
+    }
     case 'json-count': {
       try {
         const parsed = JSON.parse(String(value));
@@ -153,6 +175,18 @@ function formatCardValue(value: unknown, formatter?: string): React.ReactNode {
           return <span>{Object.keys(parsed).length} entries</span>;
       } catch { /* fall through */ }
       return <span>{String(value)}</span>;
+    }
+    case 'condition-summary': {
+      try {
+        const parsed = JSON.parse(String(value));
+        if (Array.isArray(parsed)) {
+          if (parsed.length === 0) return <Badge variant="secondary">no conditions</Badge>;
+          return <span>{parsed.length} condition{parsed.length !== 1 ? 's' : ''}</span>;
+        }
+      } catch { /* fall through */ }
+      const str = String(value);
+      if (str === '[]' || str === '') return <Badge variant="secondary">no conditions</Badge>;
+      return <span>{str}</span>;
     }
     default:
       return <span>{String(value)}</span>;

@@ -107,6 +107,7 @@ widget card-grid {
     "Grid must maintain minimum card width even at narrow viewports";
     "Loading state must set aria-busy on root";
     "Each item must have role listitem for assistive technology";
+    "Formatters declared in visibleFields are applied in all layouts (table, card-grid, timeline, gallery)";
   }
 
 }

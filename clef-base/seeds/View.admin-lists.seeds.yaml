@@ -22,8 +22,8 @@ entries:
   - view: forms-list
     dataSource: '{"concept":"FormSpec","action":"list"}'
     layout: table
-    visibleFields: '[{"key":"name","label":"Form Name"},{"key":"schema","label":"Schema","formatter":"badge"},{"key":"mode","label":"Mode","formatter":"badge"}]'
-    controls: '{"create":{"concept":"FormSpec","action":"create","fields":[{"name":"name","label":"Form Name","required":true},{"name":"schema","label":"Schema","required":true}]},"rowClick":{"navigateTo":"/admin/form-builder/{name}"}}'
+    visibleFields: '[{"key":"form","label":"Form ID"},{"key":"schema","label":"Schema","formatter":"badge"},{"key":"mode","label":"Mode","formatter":"badge"}]'
+    controls: '{"create":{"concept":"FormSpec","action":"create","fields":[{"name":"name","label":"Form Name","required":true},{"name":"schema","label":"Schema","required":true}]},"rowClick":{"navigateTo":"/admin/form-builder/{form}"}}'
     title: Forms
     description: Form specifications — each FormSpec targets a schema and defines field arrangement, groups, and steps.
     defaultDisplayMode: table-row
@@ -36,7 +36,7 @@ entries:
     dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"AgentTrigger"}}'
     layout: table
     visibleFields: '[{"key":"node","label":"Trigger"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Agent"},{"key":"createdAt","label":"Created","formatter":"date"}]'
-    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    controls: '{"rowClick":{"navigateTo":"/admin/content/{node}"}}'
     title: Agent Triggers
     description: Event-driven trigger rules that activate agent personas when specified events occur.
     defaultDisplayMode: table-row
@@ -46,7 +46,7 @@ entries:
     dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Circle"}}'
     layout: table
     visibleFields: '[{"key":"node","label":"Circle"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Created By"},{"key":"createdAt","label":"Created","formatter":"date"}]'
-    controls: '{"create":{"concept":"ContentNode","action":"createWithSchema","schemaId":"circle","fields":[]},"rowClick":{"navigateTo":"/content/{node}"}}'
+    controls: '{"create":{"concept":"ContentNode","action":"createWithSchema","schemaId":"circle","fields":[]},"rowClick":{"navigateTo":"/admin/content/{node}"}}'
     title: Circles
     description: Organizational governance circles — teams, working groups, and accountability units.
     defaultDisplayMode: table-row
@@ -56,7 +56,7 @@ entries:
     dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Constitution"}}'
     layout: table
     visibleFields: '[{"key":"node","label":"Constitution"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Created By"},{"key":"createdAt","label":"Created","formatter":"date"}]'
-    controls: '{"create":{"concept":"ContentNode","action":"createWithSchema","schemaId":"constitution","fields":[]},"rowClick":{"navigateTo":"/content/{node}"}}'
+    controls: '{"create":{"concept":"ContentNode","action":"createWithSchema","schemaId":"constitution","fields":[]},"rowClick":{"navigateTo":"/admin/content/{node}"}}'
     title: Constitutions
     description: Governance constitutions — foundational documents defining organizational rules and values.
     defaultDisplayMode: table-row
@@ -66,7 +66,7 @@ entries:
     dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Policy"}}'
     layout: table
     visibleFields: '[{"key":"node","label":"Policy"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Created By"},{"key":"createdAt","label":"Created","formatter":"date"}]'
-    controls: '{"create":{"concept":"ContentNode","action":"createWithSchema","schemaId":"policy","fields":[]},"rowClick":{"navigateTo":"/content/{node}"}}'
+    controls: '{"create":{"concept":"ContentNode","action":"createWithSchema","schemaId":"policy","fields":[]},"rowClick":{"navigateTo":"/admin/content/{node}"}}'
     title: Policies
     description: Governance policies — documented rules and procedures that guide organizational behavior.
     defaultDisplayMode: table-row
@@ -76,7 +76,7 @@ entries:
     dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Role"}}'
     layout: table
     visibleFields: '[{"key":"node","label":"Role"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Created By"},{"key":"createdAt","label":"Created","formatter":"date"}]'
-    controls: '{"create":{"concept":"ContentNode","action":"createWithSchema","schemaId":"role","fields":[]},"rowClick":{"navigateTo":"/content/{node}"}}'
+    controls: '{"create":{"concept":"ContentNode","action":"createWithSchema","schemaId":"role","fields":[]},"rowClick":{"navigateTo":"/admin/content/{node}"}}'
     title: Roles
     description: Governance roles — named responsibilities and accountabilities assigned to circle members.
     defaultDisplayMode: table-row
@@ -87,10 +87,10 @@ entries:
   # schemaId="agent-persona" picks up the displayWidget Property (block-editor) and fires
   # ContentNode/createWithSchema → navigates to /content/[id] (block editor).
   - view: agent-library
-    dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"AgentPersona"}}'
+    dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"agent-persona"}}'
     layout: card-grid
-    visibleFields: '[{"key":"node","label":"Agent"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Author"},{"key":"createdAt","label":"Created","formatter":"date"}]'
-    controls: '{"create":{"concept":"ContentNode","action":"createWithSchema","schemaId":"agent-persona","fields":[]},"rowClick":{"navigateTo":"/content/{node}"}}'
+    visibleFields: '[{"key":"node","label":"Agent","formatter":"code"},{"key":"createdBy","label":"Author"},{"key":"createdAt","label":"Created","formatter":"date"}]'
+    controls: '{"create":{"concept":"ContentNode","action":"createWithSchema","schemaId":"agent-persona","fields":[]},"rowClick":{"navigateTo":"/admin/content/{node}"}}'
     title: Agent Library
     description: Content-native agent persona pages. Each page is an agent definition — prompt blocks, memory bindings, tool configurations, and triggers.
     defaultDisplayMode: card
@@ -102,7 +102,7 @@ entries:
     dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"AgentSession"}}'
     layout: table
     visibleFields: '[{"key":"node","label":"Session ID","formatter":"code"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Agent"},{"key":"createdAt","label":"Started","formatter":"date"}]'
-    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    controls: '{"rowClick":{"navigateTo":"/admin/content/{node}"}}'
     title: Active Sessions
     description: Running agent session records. Each session tracks an agent execution thread — conversation history, tool calls, and completion status.
     defaultDisplayMode: table-row
@@ -113,7 +113,7 @@ entries:
     dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Proposal"}}'
     layout: table
     visibleFields: '[{"key":"node","label":"Proposal"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Proposer"},{"key":"createdAt","label":"Submitted","formatter":"date"}]'
-    controls: '{"create":{"concept":"ContentNode","action":"createWithSchema","schemaId":"proposal","fields":[]},"rowClick":{"navigateTo":"/content/{node}"}}'
+    controls: '{"create":{"concept":"ContentNode","action":"createWithSchema","schemaId":"proposal","fields":[]},"rowClick":{"navigateTo":"/admin/content/{node}"}}'
     title: Proposals
     description: Governance proposals awaiting review or vote — policy changes, role assignments, and constitutional amendments.
     defaultDisplayMode: table-row
@@ -124,7 +124,7 @@ entries:
     dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Reputation"}}'
     layout: table
     visibleFields: '[{"key":"node","label":"Member"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Source"},{"key":"createdAt","label":"Updated","formatter":"date"}]'
-    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    controls: '{"rowClick":{"navigateTo":"/admin/content/{node}"}}'
     title: Reputation Leaderboard
     description: Member reputation scores — contributions, endorsements, and participation metrics.
     defaultDisplayMode: table-row
@@ -135,7 +135,7 @@ entries:
     dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"AuditTrail"}}'
     layout: table
     visibleFields: '[{"key":"node","label":"Event"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Actor"},{"key":"createdAt","label":"Time","formatter":"date"}]'
-    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    controls: '{"rowClick":{"navigateTo":"/admin/content/{node}"}}'
     title: Governance Activity
     description: Audit trail of governance events — decisions, votes, transitions, and role changes.
     defaultDisplayMode: table-row
@@ -146,7 +146,7 @@ entries:
     dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Circle"}}'
     layout: table
     visibleFields: '[{"key":"node","label":"Circle"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Lead Link"},{"key":"createdAt","label":"Created","formatter":"date"}]'
-    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    controls: '{"rowClick":{"navigateTo":"/admin/content/{node}"}}'
     title: Org Designer
     description: Organizational structure view — circles and their relationships. Use the Canvas section for visual org chart editing.
     defaultDisplayMode: table-row
@@ -156,7 +156,7 @@ entries:
     dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Permission"}}'
     layout: table
     visibleFields: '[{"key":"node","label":"Permission"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Granted By"},{"key":"createdAt","label":"Granted","formatter":"date"}]'
-    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    controls: '{"rowClick":{"navigateTo":"/admin/content/{node}"}}'
     title: Permissions by Subject
     description: Access permissions grouped by subject — users and roles and what they can do.
     defaultDisplayMode: table-row
@@ -166,7 +166,7 @@ entries:
     dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Permission"}}'
     layout: table
     visibleFields: '[{"key":"node","label":"Resource"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Granted By"},{"key":"createdAt","label":"Granted","formatter":"date"}]'
-    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    controls: '{"rowClick":{"navigateTo":"/admin/content/{node}"}}'
     title: Permissions by Resource
     description: Access permissions grouped by resource — what subjects can access each entity or concept.
     defaultDisplayMode: table-row
@@ -176,7 +176,7 @@ entries:
     dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Permission"}}'
     layout: table
     visibleFields: '[{"key":"node","label":"Permission"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Source"},{"key":"createdAt","label":"Applied","formatter":"date"}]'
-    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    controls: '{"rowClick":{"navigateTo":"/admin/content/{node}"}}'
     title: Effective Permissions
     description: Resolved effective permission set — inherited and direct grants merged and evaluated for the current principal.
     defaultDisplayMode: table-row
@@ -186,7 +186,7 @@ entries:
     dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Transcript"}}'
     layout: table
     visibleFields: '[{"key":"node","label":"Transcript"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Source"},{"key":"createdAt","label":"Created","formatter":"date"}]'
-    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    controls: '{"rowClick":{"navigateTo":"/admin/content/{node}"}}'
     title: Transcripts
     description: Conversation and session transcripts — recorded exchanges between users, agents, and the system.
     defaultDisplayMode: table-row
@@ -196,7 +196,7 @@ entries:
     dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Source"}}'
     layout: table
     visibleFields: '[{"key":"node","label":"Source"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Added By"},{"key":"createdAt","label":"Added","formatter":"date"}]'
-    controls: '{"rowClick":{"navigateTo":"/content/{node}"}}'
+    controls: '{"rowClick":{"navigateTo":"/admin/content/{node}"}}'
     title: Source Library
     description: Knowledge sources connected to the workspace — documents, URLs, databases, and external feeds used by agents and search.
     defaultDisplayMode: table-row
