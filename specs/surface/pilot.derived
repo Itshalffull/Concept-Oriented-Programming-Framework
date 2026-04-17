@@ -93,23 +93,41 @@ derived Pilot {
       reads: Navigator/current()
     }
 
-    query destinations() {
-      reads: DestinationCatalog/list()
+    // destinations() / snapshot() / read() explicitly thread the acting
+    // Subject from the Pilot session down to the underlying read. Downstream
+    // concepts (DestinationCatalog, PageMap, View) consult Authorization
+    // against that Subject — never a default / service identity. See
+    // agents-as-subjects-refactor-plan §9.2 for the plumbing contract.
+    query destinations(subject: option String) {
+      reads: DestinationCatalog/list(subject: ?subject)
     }
 
-    query snapshot() {
-      reads: [
-        PageMap/list(hostRef: ?currentHost),
-        PageMap/bindingsForHost(hostRef: ?currentHost),
-        -> entries: ?entries,
-        -> bindings: ?bindings
-      ]
+    // snapshot() returns a merged view of the current page: the list of
+    // interactive entries from PageMap plus the list of UIEventBindings
+    // reachable via pilot/effect. The derived spec names the primary read
+    // (PageMap/list); the Pilot handler merges in PageMap/bindingsForHost
+    // under a `bindings` field so agents see "what's interactable" and
+    // "what effects are available" in one call. The `subject` param is
+    // threaded through to both sub-reads so Authorization can gate what
+    // the acting Subject is allowed to see.
+    //
+    // Response shape:
+    //   { variant: "ok", entries: string, bindings: string }
+    //   - entries:  JSON array of PageMap entries (labels/roles/FSM state)
+    //   - bindings: JSON array of {binding, kind, target, hint} records,
+    //               each invocable via pilot/effect
+    query snapshot(subject: option String) {
+      reads: PageMap/list(hostRef: ?currentHost, subject: ?subject)
     }
 
-    query read(label: String) {
+    query snapshotBindings(subject: option String) {
+      reads: PageMap/bindingsForHost(hostRef: ?currentHost, subject: ?subject)
+    }
+
+    query read(label: String, subject: option String) {
       entry: PageMap/find matches on label: ?label
       reads: [
-        View/resolve(view: ?view),
+        View/resolve(view: ?view, subject: ?subject),
         -> viewName: ?entry.viewName,
         -> viewPurpose: ?entry.viewPurpose,
         -> viewPurity: ?entry.viewPurity,
@@ -176,41 +194,43 @@ derived Pilot {
   // Invariants
   // ---------------------------------------------------------------------------
 
-  example "effect of registered binding delegates through UIEventBinding/invoke": {
-    after UIEventBinding/bind(binding: "goto-home", kind: "navigate", target: "/home", params: "{}") -> ok(binding: b)
-    and   effect(binding: "goto-home", params: "{}") -> ok
-    then UIEventBinding/invoke was emitted
-  }
+  invariant {
+    example "effect of registered binding delegates through UIEventBinding/invoke": {
+      after UIEventBinding/bind(binding: "goto-home", kind: "navigate", target: "/home", params: "{}") -> ok(binding: b)
+      and   effect(binding: "goto-home", params: "{}") -> ok
+      then UIEventBinding/invoke was emitted
+    }
 
-  example "effect with shorthand delegates through UIEventBinding/invokeInline": {
-    after effect(binding: "navigate:/admin/forms", params: "{}") -> ok
-    then UIEventBinding/invokeInline was emitted
-  }
+    example "effect with shorthand delegates through UIEventBinding/invokeInline": {
+      after effect(binding: "navigate:/admin/forms", params: "{}") -> ok
+      then UIEventBinding/invokeInline was emitted
+    }
 
-  always "pilot/effect delegates through UIEventBinding/invoke — no direct UI dispatch": {
-    forall e in effect:
-      e -> ok implies (UIEventBinding/invoke was emitted
-                    or UIEventBinding/invokeInline was emitted)
-  }
+    always "pilot/effect delegates through UIEventBinding/invoke — no direct UI dispatch": {
+      forall e in effect:
+        e -> ok implies (UIEventBinding/invoke was emitted
+                      or UIEventBinding/invokeInline was emitted)
+    }
 
-  always "pilot/snapshot lists all bindings invokable via pilot/effect": {
-    forall b in PageMap/bindingsForHost(hostRef: currentHost):
-      b in snapshot().bindings
-  }
+    always "pilot/snapshot lists all bindings invokable via pilot/effect": {
+      forall b in PageMap/bindingsForHost(hostRef: currentHost):
+        b in snapshot().bindings
+    }
 
-  // Safety: Pilot/effect must never call Navigator/Shell/Machine/Notification
-  // directly — the only permissible outbound edges are UIEventBinding/invoke
-  // and UIEventBinding/invokeInline. The pilot-effect sync is the sole writer;
-  // any new sync that forwards Pilot/effect to anything other than those two
-  // UIEventBinding actions is a bypass and violates this safety property.
-  never "pilot/effect bypasses UIEventBinding and dispatches directly": {
-    exists e in effect:
-      e -> ok and
-      (Navigator/navigate was emitted directly from e
-       or Shell/openOverlay  was emitted directly from e
-       or Shell/closeOverlay was emitted directly from e
-       or Shell/dismiss      was emitted directly from e
-       or Machine/send       was emitted directly from e
-       or Notification/notify was emitted directly from e)
+    // Safety: Pilot/effect must never call Navigator/Shell/Machine/Notification
+    // directly — the only permissible outbound edges are UIEventBinding/invoke
+    // and UIEventBinding/invokeInline. The pilot-effect sync is the sole writer;
+    // any new sync that forwards Pilot/effect to anything other than those two
+    // UIEventBinding actions is a bypass and violates this safety property.
+    never "pilot/effect bypasses UIEventBinding and dispatches directly": {
+      exists e in effect:
+        e -> ok and
+        (Navigator/navigate was emitted directly from e
+         or Shell/openOverlay  was emitted directly from e
+         or Shell/closeOverlay was emitted directly from e
+         or Shell/dismiss      was emitted directly from e
+         or Machine/send       was emitted directly from e
+         or Notification/notify was emitted directly from e)
+    }
   }
 }

@@ -9,10 +9,21 @@ export const pilotTools = [
     "description": "Navigate pilot — Execute navigate",
     "inputSchema": {
       "type": "object",
-      "properties": {},
+      "properties": {
+        "destination": {
+          "type": "string"
+        },
+        "params": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        }
+      },
       "required": [
         "destination",
-        "params"
+        "params",
+        "namespace"
       ]
     }
   },
@@ -42,7 +53,14 @@ export const pilotTools = [
     "description": "Interact pilot — Execute interact",
     "inputSchema": {
       "type": "object",
-      "properties": {},
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "event": {
+          "type": "string"
+        }
+      },
       "required": [
         "label",
         "event"
@@ -55,7 +73,17 @@ export const pilotTools = [
     "description": "Fill pilot — Execute fill",
     "inputSchema": {
       "type": "object",
-      "properties": {},
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "field": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
       "required": [
         "label",
         "field",
@@ -69,7 +97,11 @@ export const pilotTools = [
     "description": "Submit pilot — Execute submit",
     "inputSchema": {
       "type": "object",
-      "properties": {},
+      "properties": {
+        "label": {
+          "type": "string"
+        }
+      },
       "required": [
         "label"
       ]
@@ -83,6 +115,26 @@ export const pilotTools = [
       "type": "object",
       "properties": {},
       "required": []
+    }
+  },
+  {
+    "type": "tool",
+    "name": "pilot_effect",
+    "description": "Effect pilot — Execute effect",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "binding": {
+          "type": "string"
+        },
+        "params": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "binding",
+        "params"
+      ]
     }
   },
   {
@@ -116,10 +168,46 @@ export const pilotTools = [
     }
   },
   {
+    "type": "tool",
+    "name": "pilot_snapshot_bindings",
+    "description": "Snapshot bindings pilot — Execute snapshotBindings",
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    }
+  },
+  {
     "type": "resource",
     "name": "pilot_read",
-    "uri": "pilot://pilots/{label}",
+    "uri": "derived:://pilots/{label}",
     "description": "Read pilot — Execute read"
+  },
+  {
+    "type": "tool",
+    "name": "pilot_view_info",
+    "description": "View info pilot — Execute viewInfo",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "viewName": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "viewName"
+      ]
+    }
+  },
+  {
+    "type": "tool",
+    "name": "pilot_views",
+    "description": "Views pilot — Execute views",
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    }
   },
   {
     "type": "tool",

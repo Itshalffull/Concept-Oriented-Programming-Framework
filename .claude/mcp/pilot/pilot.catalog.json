@@ -56,6 +56,14 @@
     "alwaysLoaded": false
   },
   {
+    "name": "pilot_effect",
+    "briefDescription": "Execute effect.",
+    "category": "Pilot",
+    "concept": "Pilot",
+    "action": "effect",
+    "alwaysLoaded": false
+  },
+  {
     "name": "pilot_where",
     "briefDescription": "Execute where.",
     "category": "Pilot",
@@ -77,6 +85,30 @@
     "category": "Pilot",
     "concept": "Pilot",
     "action": "snapshot",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "pilot_snapshot_bindings",
+    "briefDescription": "Execute snapshotBindings.",
+    "category": "Pilot",
+    "concept": "Pilot",
+    "action": "snapshotBindings",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "pilot_view_info",
+    "briefDescription": "Execute viewInfo.",
+    "category": "Pilot",
+    "concept": "Pilot",
+    "action": "viewInfo",
+    "alwaysLoaded": false
+  },
+  {
+    "name": "pilot_views",
+    "briefDescription": "Execute views.",
+    "category": "Pilot",
+    "concept": "Pilot",
+    "action": "views",
     "alwaysLoaded": false
   },
   {

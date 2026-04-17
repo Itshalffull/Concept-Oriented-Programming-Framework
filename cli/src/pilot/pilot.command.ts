@@ -9,9 +9,10 @@ export const pilotCommand = new Command('pilot')
 
 pilotCommand
   .command('navigate')
-  .description('Surface action: navigate')
+  .description('Execute navigate')
   .requiredOption('--destination <destination>', 'Destination')
   .requiredOption('--params <params>', 'Params')
+  .requiredOption('--namespace <namespace>', 'Namespace')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     try {
@@ -30,7 +31,7 @@ pilotCommand
 
 pilotCommand
   .command('back')
-  .description('Surface action: back')
+  .description('Execute back')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     try {
@@ -49,7 +50,7 @@ pilotCommand
 
 pilotCommand
   .command('forward')
-  .description('Surface action: forward')
+  .description('Execute forward')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     try {
@@ -68,7 +69,7 @@ pilotCommand
 
 pilotCommand
   .command('interact')
-  .description('Surface action: interact')
+  .description('Execute interact')
   .requiredOption('--label <label>', 'Label')
   .requiredOption('--event <event>', 'Event')
   .option('--json', 'Output as JSON')
@@ -89,7 +90,7 @@ pilotCommand
 
 pilotCommand
   .command('fill')
-  .description('Surface action: fill')
+  .description('Execute fill')
   .requiredOption('--label <label>', 'Label')
   .requiredOption('--field <field>', 'Field')
   .requiredOption('--value <value>', 'Value')
@@ -111,7 +112,7 @@ pilotCommand
 
 pilotCommand
   .command('submit')
-  .description('Surface action: submit')
+  .description('Execute submit')
   .requiredOption('--label <label>', 'Label')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
@@ -131,7 +132,7 @@ pilotCommand
 
 pilotCommand
   .command('dismiss')
-  .description('Surface action: dismiss')
+  .description('Execute dismiss')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     try {
@@ -149,8 +150,29 @@ pilotCommand
   });
 
 pilotCommand
+  .command('effect')
+  .description('Execute effect')
+  .requiredOption('--binding <binding>', 'Binding')
+  .requiredOption('--params <params>', 'Params')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Pilot', 'effect', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
+  });
+
+pilotCommand
   .command('where')
-  .description('Surface query: where')
+  .description('Execute where')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     try {
@@ -169,7 +191,7 @@ pilotCommand
 
 pilotCommand
   .command('destinations')
-  .description('Surface query: destinations')
+  .description('Execute destinations')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     try {
@@ -188,7 +210,7 @@ pilotCommand
 
 pilotCommand
   .command('snapshot')
-  .description('Surface query: snapshot')
+  .description('Execute snapshot')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     try {
@@ -206,8 +228,27 @@ pilotCommand
   });
 
 pilotCommand
+  .command('snapshot-bindings')
+  .description('Execute snapshotBindings')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Pilot', 'snapshotBindings', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
+  });
+
+pilotCommand
   .command('read')
-  .description('Surface query: read')
+  .description('Execute read')
   .requiredOption('--label <label>', 'Label')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
@@ -226,8 +267,47 @@ pilotCommand
   });
 
 pilotCommand
+  .command('view-info')
+  .description('Execute viewInfo')
+  .requiredOption('--view-name <viewName>', 'View Name')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Pilot', 'viewInfo', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
+  });
+
+pilotCommand
+  .command('views')
+  .description('Execute views')
+  .option('--json', 'Output as JSON')
+  .action(async (opts) => {
+    try {
+      const result = await globalThis.kernel.invokeConcept('urn:clef/Pilot', 'views', opts);
+      if (result.variant !== 'ok') {
+        console.error(opts.json ? JSON.stringify(result) : `Error [${result.variant}]: ${JSON.stringify(result)}`);
+        process.exitCode = 1;
+      } else {
+        console.log(opts.json ? JSON.stringify(result) : result);
+      }
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err);
+      process.exitCode = 1;
+    }
+  });
+
+pilotCommand
   .command('overlays')
-  .description('Surface query: overlays')
+  .description('Execute overlays')
   .option('--json', 'Output as JSON')
   .action(async (opts) => {
     try {
@@ -247,5 +327,5 @@ pilotCommand
 export const pilotCommandTree = {
   group: 'pilot',
   description: 'Provide a unified agent interface over a running Surface application , composing navigation , page inspection , widget interaction , and data operations into a coherent session . Bind generates MCP tools and CLI commands from Pilot like any other concept .',
-  commands: [{ action: 'navigate', command: 'navigate' }, { action: 'back', command: 'back' }, { action: 'forward', command: 'forward' }, { action: 'interact', command: 'interact' }, { action: 'fill', command: 'fill' }, { action: 'submit', command: 'submit' }, { action: 'dismiss', command: 'dismiss' }, { action: 'where', command: 'where' }, { action: 'destinations', command: 'destinations' }, { action: 'snapshot', command: 'snapshot' }, { action: 'read', command: 'read' }, { action: 'overlays', command: 'overlays' }],
+  commands: [{ action: 'navigate', command: 'navigate' }, { action: 'back', command: 'back' }, { action: 'forward', command: 'forward' }, { action: 'interact', command: 'interact' }, { action: 'fill', command: 'fill' }, { action: 'submit', command: 'submit' }, { action: 'dismiss', command: 'dismiss' }, { action: 'effect', command: 'effect' }, { action: 'where', command: 'where' }, { action: 'destinations', command: 'destinations' }, { action: 'snapshot', command: 'snapshot' }, { action: 'snapshotBindings', command: 'snapshot-bindings' }, { action: 'read', command: 'read' }, { action: 'viewInfo', command: 'view-info' }, { action: 'views', command: 'views' }, { action: 'overlays', command: 'overlays' }],
 };

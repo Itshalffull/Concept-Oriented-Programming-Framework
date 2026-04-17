@@ -4,7 +4,7 @@
 
 export async function handlePilotSkill(
   command: string,
-  args: Record<string, string>,
+  args: Record<string, any>,
   kernel: { handleRequest: (input: Record<string, unknown>) => Promise<any> },
 ): Promise<string> {
   const result = await kernel.handleRequest({ method: command, ...args });
@@ -12,4 +12,4 @@ export async function handlePilotSkill(
   return JSON.stringify(result.body, null, 2);
 }
 
-export const pilotSkillCommands = ['navigate', 'back', 'forward', 'interact', 'fill', 'submit', 'dismiss', 'where', 'destinations', 'snapshot', 'read', 'overlays'];
+export const pilotSkillCommands = [];

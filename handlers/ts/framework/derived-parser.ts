@@ -659,15 +659,105 @@ class DerivedParser {
     const params = this.parseParamList(typeParams);
     this.expect('RPAREN');
 
-    // Two formats:
+    // Three formats:
     // 1. -> Concept/action(arg: paramRef, ...)
     // 2. { reads: Concept/action(arg: ?binding, ...) }
+    // 3. {
+    //      entry: Concept/action matches on field: ?binding     // optional
+    //      reads: Concept/action(arg: ?binding, ...)            // single
+    //        or
+    //      reads: [ Concept/action(arg: ?binding, ...),
+    //               -> outField: ?expr, ... ]                  // list
+    //    }
     if (this.match('LBRACE')) {
       this.skipSeps();
+
+      // Optional entry: Concept/action [matches on field: ?binding, ...]
+      if (this.peek().type === 'KEYWORD' && this.peek().value === 'entry') {
+        this.advance();
+        this.expect('COLON');
+
+        // Concept/action
+        this.expectIdent(); // concept
+        this.expect('SLASH');
+        this.expectIdent(); // action
+
+        // Optional "matches on field: ?binding, ..."
+        if (this.peek().type === 'KEYWORD' && this.peek().value === 'matches') {
+          this.advance();
+          this.expect('KEYWORD', 'on');
+          while (this.peek().type !== 'SEP' && this.peek().type !== 'RBRACE' &&
+                 this.peek().type !== 'EOF' && !(this.peek().type === 'KEYWORD' && this.peek().value === 'reads')) {
+            this.expectIdent(); // fieldName
+            this.expect('COLON');
+            this.expectIdent(); // ?binding
+            this.match('COMMA');
+            this.skipSeps();
+          }
+        }
+
+        this.skipSeps();
+      }
+
       this.expect('KEYWORD', 'reads');
       this.expect('COLON');
 
-      const target = this.parseQueryTarget();
+      let target: { concept: string; action: string; args: Record<string, string> };
+
+      if (this.match('LBRACKET')) {
+        // List form: [ Concept/action(...), -> name: ?expr, ... ]
+        // OR [ -> name: ?expr, ... ] (pure projection, entry-driven)
+        // Keep the first Concept/action (if any) as the primary target and
+        // silently accept any trailing `-> outField: ?expr` projection hints
+        // so the outer handler can surface them; the parser currently
+        // collapses the list to one target for downstream codegen.
+        this.skipSeps();
+
+        if (this.peek().type === 'ARROW') {
+          // No leading Concept/action — use an empty sentinel target. Downstream
+          // codegen treats this as a projection-only query driven entirely by
+          // the entry-match binding.
+          target = { concept: '_entry', action: '_project', args: {} };
+        } else {
+          target = this.parseQueryTarget();
+        }
+
+        this.skipSeps();
+        while (this.peek().type === 'COMMA' || this.peek().type === 'ARROW') {
+          // Consume the comma separator between list entries (newlines are
+          // already skipped by skipSeps above).
+          if (this.peek().type === 'COMMA') {
+            this.advance();
+            this.skipSeps();
+            if (this.peek().type === 'RBRACKET') break;
+          }
+
+          // Optional "-> outField: ?expr" projection hint — consumed and discarded
+          if (this.peek().type === 'ARROW') {
+            this.advance();
+            // outField
+            this.expectIdent();
+            this.expect('COLON');
+            // ?expr.path.parts — consume any idents/keywords/dots/slashes that
+            // make up the projection expression; stop at a comma, separator,
+            // or the closing bracket.
+            while (this.peek().type === 'IDENT' || this.peek().type === 'DOT' ||
+                   this.peek().type === 'SLASH' || this.peek().type === 'KEYWORD') {
+              this.advance();
+            }
+          } else {
+            // Another Concept/action(...) target — consumed and discarded; only
+            // the first read is retained on the AST (see note above).
+            this.parseQueryTarget();
+          }
+          this.skipSeps();
+        }
+
+        this.expect('RBRACKET');
+      } else {
+        target = this.parseQueryTarget();
+      }
+
       this.skipSeps();
       this.expect('RBRACE');
 
@@ -938,8 +1028,16 @@ class DerivedParser {
  * queries become read-only actions.
  */
 export function derivedToManifest(derived: DerivedAST): any {
+  // Historical bug: this function referenced `derived.surfaceActions` and
+  // `derived.surfaceQueries`, which never existed on the AST — the real
+  // fields live under `derived.surface.actions` and `derived.surface.queries`.
+  // Keep the old names as fallbacks so any out-of-tree callers that hand-built
+  // AST-shaped objects continue to work.
+  const surfaceActions = (derived as any).surface?.actions ?? (derived as any).surfaceActions ?? [];
+  const surfaceQueries = (derived as any).surface?.queries ?? (derived as any).surfaceQueries ?? [];
+
   const actions = [
-    ...(derived.surfaceActions || []).map((a: any) => ({
+    ...surfaceActions.map((a: any) => ({
       name: a.name || a.action || 'unknown',
       params: (a.params || []).map((p: any) => ({
         name: typeof p === 'string' ? p : (p.name || 'param'),
@@ -952,9 +1050,13 @@ export function derivedToManifest(derived: DerivedAST): any {
       ],
       fixtures: [],
     })),
-    ...(derived.surfaceQueries || []).map((q: any) => ({
+    ...surfaceQueries.map((q: any) => ({
       name: q.name || q.query || 'unknown',
-      params: [],
+      params: (q.params || []).map((p: any) => ({
+        name: typeof p === 'string' ? p : (p.name || 'param'),
+        type: { kind: 'primitive', name: 'String' },
+        required: false,
+      })),
       variants: [{ name: 'ok', fields: [] }],
       fixtures: [],
     })),
