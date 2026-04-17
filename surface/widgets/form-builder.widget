@@ -476,6 +476,16 @@ widget form-builder {
       after root -> { "data-schema": "ContentNode", "data-state": "idle" }
       then fieldList -> { "data-empty": "false" }
     }
+
+    always "Fields pane is non-empty when the schema has a non-empty fields CSV": {
+      forall s in schemas:
+        s.fields != "" implies fieldList.count > 0
+    }
+
+    example "Canvas form derives fields from Schema.fields CSV": {
+      after root -> { "data-schema": "Canvas", "data-state": "idle" }
+      then fieldList -> { "data-empty": "false" }
+    }
   }
 
 }

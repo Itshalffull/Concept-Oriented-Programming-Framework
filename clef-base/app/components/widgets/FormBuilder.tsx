@@ -111,6 +111,50 @@ const CONCEPT_FIELD_FALLBACKS: Record<string, FieldDefinition[]> = {
 };
 
 /**
+ * Derive FieldDefinition records from a Schema record's fields value.
+ *
+ * Schema/get returns `fields` as a JSON-stringified string array
+ * (e.g. '["canvas","name","items","connectors","notation","layout"]').
+ * It may also arrive as a bare comma-separated string for older seeds.
+ *
+ * Each field name is mapped to a `text` FieldDefinition because the Schema
+ * CSV carries no type information — the FormSpec overrides.widget entries
+ * provide the actual widget selection at render time.
+ */
+function deriveFieldDefsFromSchemaCsv(
+  schemaId: string,
+  rawFields: string,
+): FieldDefinition[] {
+  let fieldNames: string[] = [];
+  const trimmed = rawFields.trim();
+  if (!trimmed || trimmed === '[]') return [];
+
+  // Try JSON array first (the format Schema/get returns).
+  if (trimmed.startsWith('[')) {
+    try {
+      const parsed = JSON.parse(trimmed) as string[];
+      fieldNames = Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+    } catch {
+      fieldNames = [];
+    }
+  }
+
+  // Fall back to CSV (the format Schema/defineSchema seeds use).
+  if (fieldNames.length === 0 && trimmed.length > 0 && !trimmed.startsWith('[')) {
+    fieldNames = trimmed.split(',').map((f) => f.trim()).filter(Boolean);
+  }
+
+  return fieldNames.map((name, idx) => ({
+    id: `${schemaId}::${name}`,
+    schemaId,
+    label: name.replace(/_/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2'),
+    type: 'text' as const,
+    required: false,
+    sortOrder: idx,
+  }));
+}
+
+/**
  * Parse the raw FieldDefinition/list response into a sorted FieldDefinition[].
  * If the result is empty and `schemaId` matches a known concept name, returns
  * the synthesised fallback field list for that concept instead.
@@ -137,6 +181,43 @@ function resolveFieldDefs(
   // Empty result — try concept fallback
   if (schemaId && Object.prototype.hasOwnProperty.call(CONCEPT_FIELD_FALLBACKS, schemaId)) {
     return CONCEPT_FIELD_FALLBACKS[schemaId];
+  }
+
+  return [];
+}
+
+/**
+ * Async extension of resolveFieldDefs.
+ *
+ * After concept fallbacks are exhausted, queries Schema/get and derives
+ * FieldDefinition records from the schema's fields CSV.  This handles any
+ * Schema defined via Schema/defineSchema (e.g. Canvas, AgentPersona, Circle)
+ * for which no explicit FieldDefinition/create calls were ever issued.
+ *
+ * Invariant: "FormBuilder Fields pane is non-empty when the schema has a
+ * non-empty fields CSV" — if Schema/get returns a non-empty fields value,
+ * the returned array is guaranteed to be non-empty.
+ */
+async function resolveFieldDefsAsync(
+  defsResult: Record<string, unknown>,
+  schemaId: string | undefined,
+  invoke: (concept: string, action: string, input: Record<string, unknown>) => Promise<Record<string, unknown>>,
+): Promise<FieldDefinition[]> {
+  // First: standard resolution (storage + concept fallbacks).
+  const fromStorage = resolveFieldDefs(defsResult, schemaId);
+  if (fromStorage.length > 0) return fromStorage;
+
+  // Second: query Schema/get and derive fields from the CSV.
+  if (!schemaId) return [];
+  try {
+    const schemaResult = await invoke('Schema', 'get', { schema: schemaId });
+    if (schemaResult.variant === 'ok') {
+      const rawFields = (schemaResult.fields as string | undefined) ?? '';
+      const derived = deriveFieldDefsFromSchemaCsv(schemaId, rawFields);
+      if (derived.length > 0) return derived;
+    }
+  } catch {
+    // Non-fatal — fall through to empty.
   }
 
   return [];
@@ -1151,10 +1232,10 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({
       // is shown instead, so there is nothing to load yet.
       if (!schemaId) return;
       let cancelled = false;
-      invoke('FieldDefinition', 'list', { schemaId }).then((defsResult) => {
+      invoke('FieldDefinition', 'list', { schemaId }).then(async (defsResult) => {
         if (cancelled) return;
-        const defs = resolveFieldDefs(defsResult as Record<string, unknown>, schemaId);
-        setFieldDefs(defs);
+        const defs = await resolveFieldDefsAsync(defsResult as Record<string, unknown>, schemaId, invoke);
+        if (!cancelled) setFieldDefs(defs);
       }).catch(() => { /* non-fatal */ });
       return () => { cancelled = true; };
     }
@@ -1222,7 +1303,7 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({
         const defsResult = effectiveSchemaId
           ? await invoke('FieldDefinition', 'list', { schemaId: effectiveSchemaId })
           : { variant: 'notfound' as const };
-        const defs = resolveFieldDefs(defsResult as Record<string, unknown>, effectiveSchemaId ?? undefined);
+        const defs = await resolveFieldDefsAsync(defsResult as Record<string, unknown>, effectiveSchemaId ?? undefined, invoke);
 
         if (!cancelled) {
           if (specResult.variant === 'ok') {
