@@ -1,0 +1,16 @@
+# Wire VanillaRenderer/register into PluginRegistry so the rendering
+# dispatch layer can discover and invoke the Vanilla JS backend by name.
+
+sync RegisterVanillaRenderer [eager]
+  purpose { Wire VanillaRenderer/register into PluginRegistry. }
+when {
+  VanillaRenderer/register: []
+    => ok(name: ?name; capabilities: ?caps)
+}
+then {
+  PluginRegistry/register: [
+    type: "test-plan-renderer";
+    name: ?name;
+    metadata: { capabilities: ?caps }
+  ]
+}

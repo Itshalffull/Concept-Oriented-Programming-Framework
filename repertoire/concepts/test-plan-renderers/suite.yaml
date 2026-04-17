@@ -1,0 +1,62 @@
+# repertoire/concepts/test-plan-renderers/suite.yaml
+suite:
+  name: test-plan-renderers
+  version: 0.1.0
+  description: >
+    TestPlanRenderer plugins that translate platform-agnostic TestPlans into
+    runnable test files for specific frameworks. Each renderer implements the
+    universal register()/render() contract and self-describes its supported
+    probe namespace and settlement modalities. This worktree branch adds
+    Vue, Svelte, Vanilla JS, SwiftUI, and Jetpack Compose stub renderers (INV-12).
+
+concepts:
+  VueRenderer:
+    spec: ./vue-renderer.concept
+    params:
+      R: { as: vue-renderer-ref, description: "Reference to a registered Vue renderer instance" }
+
+  SvelteRenderer:
+    spec: ./svelte-renderer.concept
+    params:
+      R: { as: svelte-renderer-ref, description: "Reference to a registered Svelte renderer instance" }
+
+  VanillaRenderer:
+    spec: ./vanilla-renderer.concept
+    params:
+      R: { as: vanilla-renderer-ref, description: "Reference to a registered Vanilla JS renderer instance" }
+
+  SwiftUIRenderer:
+    spec: ./swiftui-renderer.concept
+    params:
+      R: { as: swiftui-renderer-ref, description: "Reference to a registered SwiftUI renderer instance" }
+
+  JetpackRenderer:
+    spec: ./jetpack-renderer.concept
+    params:
+      R: { as: jetpack-renderer-ref, description: "Reference to a registered Jetpack Compose renderer instance" }
+
+syncs:
+  required:
+    - path: ./syncs/register-vue-renderer.sync
+      description: "VueRenderer/register -> PluginRegistry/register(test-plan-renderer)"
+
+    - path: ./syncs/register-svelte-renderer.sync
+      description: "SvelteRenderer/register -> PluginRegistry/register(test-plan-renderer)"
+
+    - path: ./syncs/register-vanilla-renderer.sync
+      description: "VanillaRenderer/register -> PluginRegistry/register(test-plan-renderer)"
+
+    - path: ./syncs/register-swiftui-renderer.sync
+      description: "SwiftUIRenderer/register -> PluginRegistry/register(test-plan-renderer)"
+
+    - path: ./syncs/register-jetpack-renderer.sync
+      description: "JetpackRenderer/register -> PluginRegistry/register(test-plan-renderer)"
+
+uses:
+  - suite: infrastructure
+    concepts:
+      - name: PluginRegistry
+
+  - suite: testing
+    concepts:
+      - name: TestPlan

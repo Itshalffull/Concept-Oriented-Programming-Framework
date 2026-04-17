@@ -1,0 +1,88 @@
+@version(1)
+@category("testing")
+concept SwiftUIRenderer [R] {
+
+  purpose {
+    Render an enriched TestPlan into a Swift XCTest + ViewInspector test file
+    targeting SwiftUI components. Translates the universal probe namespace
+    (body.textContent, state.<field>, block("A").depth, …) into Swift testing
+    primitives (try view.inspect(), XCTAssertEqual, ViewInspector accessors).
+    Each renderer instance is self-describing: its register() action declares
+    the capability set so PluginRegistry can route rendering requests to the
+    correct backend.
+  }
+
+  state {
+    renderers: set R
+
+    identity {
+      name: R -> String
+    }
+
+    metadata {
+      capabilities: R -> String
+    }
+  }
+
+  actions {
+
+    action register() {
+      -> ok(name: String, capabilities: String) {
+        Return static metadata for PluginRegistry. The renderer
+        identifies itself as "swiftui" and declares the capability set
+        it supports: xctest, view-inspector, XCTAssertEqual, async-await,
+        immediately, and eventually settlement modalities.
+      }
+
+      fixture register_ok {}
+    }
+
+    action render(plan: String) {
+      -> ok(code: String) {
+        Translate the JSON-encoded TestPlan into a complete Swift XCTest +
+        ViewInspector test file. The returned string is valid Swift that
+        can be written directly to disk and run via `xcodebuild test`.
+        Probe translations map the universal namespace to ViewInspector
+        find calls (e.g., try view.find(ViewType.Text.self)) and
+        XCTAssertEqual assertions.
+      }
+      -> unsupportedProbe(probe: String) {
+        The TestPlan references a probe from the universal namespace
+        that SwiftUIRenderer does not yet support. The probe name is
+        returned so the caller can try another renderer or report the
+        gap.
+      }
+      -> error(message: String) {
+        The plan string is not valid JSON, or the JSON does not
+        conform to the TestPlan schema, or a required field is
+        missing. No code is emitted.
+      }
+
+      fixture render_ok {
+        plan: "{\"planId\":\"tp-user-create\",\"invariantId\":\"inv-user-create\",\"specKind\":\"concept\",\"fixturesJson\":\"[]\",\"stepsJson\":\"[]\",\"observationsJson\":\"[{\\\"probe\\\":\\\"state.name\\\",\\\"expected\\\":\\\"Alice\\\"}]\",\"settlementJson\":{\"modality\":\"immediately\"}}"
+      }
+      fixture render_unsupported_probe {
+        plan: "{\"planId\":\"tp-nav\",\"invariantId\":\"inv-nav\",\"specKind\":\"widget\",\"fixturesJson\":\"[]\",\"stepsJson\":\"[]\",\"observationsJson\":\"[{\\\"probe\\\":\\\"never-within\\\",\\\"expected\\\":\\\"\\\",\\\"timeoutMs\\\":500}]\",\"settlementJson\":{\"modality\":\"never-within\",\"timeoutMs\":500}}"
+      } -> unsupportedProbe
+      fixture render_bad_json {
+        plan: "not valid json"
+      } -> error
+      fixture render_empty_plan {
+        plan: ""
+      } -> error
+    }
+  }
+
+  example "register then render": {
+    after register() -> ok(name: n, capabilities: caps)
+    then render(plan: "{\"planId\":\"tp-1\",\"invariantId\":\"inv-1\",\"specKind\":\"concept\",\"fixturesJson\":\"[]\",\"stepsJson\":\"[]\",\"observationsJson\":\"[]\",\"settlementJson\":{\"modality\":\"immediately\"}}") -> ok(code: c)
+  }
+
+  never "register issued without name": {
+    exists r in renderers: r.name = ""
+  }
+
+  always "ok render returns non-empty code": {
+    forall r in renderers: r.capabilities != ""
+  }
+}

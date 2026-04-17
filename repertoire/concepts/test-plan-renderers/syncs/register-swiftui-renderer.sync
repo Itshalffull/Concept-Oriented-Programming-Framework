@@ -1,0 +1,16 @@
+# Wire SwiftUIRenderer/register into PluginRegistry so the rendering
+# dispatch layer can discover and invoke the SwiftUI backend by name.
+
+sync RegisterSwiftUIRenderer [eager]
+  purpose { Wire SwiftUIRenderer/register into PluginRegistry. }
+when {
+  SwiftUIRenderer/register: []
+    => ok(name: ?name; capabilities: ?caps)
+}
+then {
+  PluginRegistry/register: [
+    type: "test-plan-renderer";
+    name: ?name;
+    metadata: { capabilities: ?caps }
+  ]
+}

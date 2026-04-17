@@ -1,0 +1,16 @@
+# Wire JetpackRenderer/register into PluginRegistry so the rendering
+# dispatch layer can discover and invoke the Jetpack Compose backend by name.
+
+sync RegisterJetpackRenderer [eager]
+  purpose { Wire JetpackRenderer/register into PluginRegistry. }
+when {
+  JetpackRenderer/register: []
+    => ok(name: ?name; capabilities: ?caps)
+}
+then {
+  PluginRegistry/register: [
+    type: "test-plan-renderer";
+    name: ?name;
+    metadata: { capabilities: ?caps }
+  ]
+}
