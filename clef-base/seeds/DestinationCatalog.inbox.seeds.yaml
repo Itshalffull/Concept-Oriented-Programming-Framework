@@ -1,0 +1,16 @@
+# Governance inbox — /admin/inbox
+# Surfaces all WorkItems assigned to the current user across all governance steps.
+
+concept: DestinationCatalog
+action: register
+entries:
+  - destination: inbox
+    name: inbox
+    targetConcept: WorkItem
+    targetView: my-work-items
+    href: /admin/inbox
+    icon: "inbox"
+    group: Main
+    badge_concept: WorkItem
+    badge_action: countPending
+    badge_params: '{"assignee":"{{currentUser}}"}'

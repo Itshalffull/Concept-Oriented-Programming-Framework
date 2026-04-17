@@ -1,0 +1,88 @@
+derived GovernanceOrgEditor {
+
+  purpose {
+    Unified governance editor replacing 12 disconnected admin pages.
+    Layout/windowing: sidebar tree on left, content panel on right, mode
+    tabs at top. Composes Team, Organization, Role, Charter, Vote,
+    Proposal, Permission, Authorization, ViewShell, Binding, and Canvas
+    (scoped to Routes mode route-DAG sub-panel only).
+  }
+
+  composes {
+    Team
+    Organization
+    Role
+    Charter
+    Vote
+    Proposal
+    Permission
+    Authorization
+    ViewShell
+    Binding
+    Canvas
+  }
+
+  surface {
+    action selectTeam(team: String) {
+      matches: Team/get(team: team)
+    }
+
+    action selectRoute(route: String) {
+      matches: ProcessSpec/get(spec: route)
+    }
+
+    action switchMode(mode: String) {
+      matches: ViewShell/setMode(mode: mode)
+    }
+
+    query teamTree -> Team/listHierarchy()
+
+    query routeList(team: String) -> ProcessSpec/listByTeam(team: team)
+
+    query availableRoutes(team: String) -> ProcessSpec/listActive(team: team)
+
+    query routePermissions(route: String) -> Permission/listByRoute(route: route)
+  }
+
+  principle {
+    after selectTeam(team: t)
+    then teamTree returns the sidebar hierarchy with t highlighted
+    and  availableRoutes(team: t) lists routes for the Structure panel
+    and  switchMode(mode: "routes") loads the route list for team t
+    then selectRoute(route: r) renders the Canvas DAG scoped to r
+    and  routePermissions(route: r) is available in Permissions mode
+  }
+
+  principle {
+    after switchMode(mode: "structure")
+    then canvas is not visible
+    and  teamTree and availableRoutes drive the content panel
+    and  all creates/assigns use ActionBinding — no custom form code
+
+    and  switchMode(mode: "routes")
+    then Canvas is embedded scoped to the selected route DAG only
+    and  step nodes bind to ProcessSpec/addStep via BindingEditor
+    and  edge connectors bind to ProcessSpec/addEdge via BindingEditor
+
+    and  switchMode(mode: "permissions")
+    then route-permission-editor renders Authorization/grantPermission binding
+    and  delegation-chain shows read-only capability visualization
+  }
+
+  invariant {
+    always "mode is valid": {
+      forall m in modes:
+      m = "structure" or m = "routes" or m = "permissions"
+    }
+
+    never "canvas outside routes mode": {
+      exists m in modes:
+      m != "routes" and canvas.visible = true
+    }
+
+    example "switch to routes mode": {
+      after switchMode(mode: "routes") -> ok(mode: "routes")
+      then selectRoute(route: r) -> ok(route: r)
+    }
+  }
+}
