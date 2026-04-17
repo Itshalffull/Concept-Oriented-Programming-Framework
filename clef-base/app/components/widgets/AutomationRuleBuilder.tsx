@@ -22,9 +22,9 @@ import {
   BindingEditor,
   emptyBindingValue,
   migrateBindingValue,
+  parseLegacyActionRef,
   type BindingValue,
 } from './BindingEditor';
-import { ConceptActionPicker } from './ConceptActionPicker';
 
 interface AutomationRuleBuilderProps {
   mode?: 'create' | 'edit';
@@ -142,13 +142,13 @@ export const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({
     Boolean((initial.rule as string)?.length),
   );
 
-  // Trigger — a Concept/action pair. Stored as "Concept/action" string for save.
-  const initialTriggerParts = (() => {
+  // Trigger — a BindingValue (action-mode). Stored as "Concept/action" string for save.
+  const initialTriggerBinding = (() => {
     const t = (initial.trigger as string) ?? '';
-    const parts = t.split('/');
-    return parts.length === 2 ? { concept: parts[0], action: parts[1] } : undefined;
+    if (!t) return emptyBindingValue();
+    return { mode: 'action' as const, action: parseLegacyActionRef(t) };
   })();
-  const [trigger, setTrigger] = useState<{ concept: string; action: string } | undefined>(initialTriggerParts);
+  const [trigger, setTrigger] = useState<BindingValue>(initialTriggerBinding);
 
   const [conditions, setConditions] = useState<Condition[]>(() => parseConditions(initial.conditions));
   const [actions, setActions] = useState<ActionRow[]>(() => parseActions(initial.actions));
@@ -158,7 +158,8 @@ export const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({
   // In edit mode, hydrate state from the existing ContentNode record. The page
   // passes only `{rule: <id>}` as context, so we fetch + parse the content
   // JSON to populate Display Name, Trigger pair, Conditions, and Actions rows.
-  const needsHydrate = mode === 'edit' && ruleId && !trigger && actions.length === 0;
+  const triggerIsEmpty = !trigger.action?.concept && !trigger.action?.action;
+  const needsHydrate = mode === 'edit' && ruleId && triggerIsEmpty && actions.length === 0;
   useEffect(() => {
     if (!needsHydrate) return;
     let cancelled = false;
@@ -170,8 +171,7 @@ export const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({
         const parsed = JSON.parse((r.content as string) ?? '{}');
         if (typeof parsed?.name === 'string' && parsed.name) setDisplayName(parsed.name);
         if (typeof parsed?.trigger === 'string' && parsed.trigger.includes('/')) {
-          const [concept, action] = parsed.trigger.split('/');
-          setTrigger({ concept, action });
+          setTrigger({ mode: 'action', action: parseLegacyActionRef(parsed.trigger) });
         }
         const parsedConditions = parseConditions(parsed?.conditions);
         if (parsedConditions.length > 0) setConditions(parsedConditions);
@@ -184,10 +184,12 @@ export const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({
 
   // When trigger is selected and ID hasn't been manually edited, derive Rule ID
   // from "<concept>-<action>". When user types Display Name, derive from that.
-  const handleTriggerChange = (value: { concept: string; action: string }) => {
-    setTrigger(value);
-    if (!ruleIdManuallyEdited && !displayName.trim()) {
-      setRuleId(slugify(`${value.concept}-${value.action}`));
+  const handleTriggerChange = (binding: BindingValue) => {
+    setTrigger(binding);
+    const concept = binding.action?.concept ?? '';
+    const action = binding.action?.action ?? '';
+    if (!ruleIdManuallyEdited && !displayName.trim() && concept && action) {
+      setRuleId(slugify(`${concept}-${action}`));
     }
   };
 
@@ -198,10 +200,12 @@ export const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({
     }
   };
 
-  const triggerLabel = useMemo(
-    () => (trigger ? `${trigger.concept}/${trigger.action}` : ''),
-    [trigger],
-  );
+  const triggerLabel = useMemo(() => {
+    if (trigger.mode === 'action' && trigger.action?.concept && trigger.action?.action) {
+      return `${trigger.action.concept}/${trigger.action.action}`;
+    }
+    return '';
+  }, [trigger]);
 
   const addCondition = () => setConditions((c) => [...c, { field: '', op: 'eq', value: '' }]);
   const updateCondition = (i: number, patch: Partial<Condition>) =>
@@ -215,7 +219,7 @@ export const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({
 
   const handleSave = async () => {
     if (!ruleId.trim()) { setError('Rule ID is required.'); return; }
-    if (!trigger) { setError('Trigger is required.'); return; }
+    if (!isBindingValid(trigger) || !triggerLabel) { setError('Trigger is required.'); return; }
     const validActions = actions.filter((a) => isBindingValid(a.binding));
     if (validActions.length === 0) { setError('Add at least one action.'); return; }
 
@@ -304,11 +308,9 @@ export const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({
 
         <div>
           <span style={fieldLabel}>Trigger Event *</span>
-          <ConceptActionPicker
+          <BindingEditor
             value={trigger}
             onChange={handleTriggerChange}
-            filter="mutating"
-            placeholder="Search trigger concept/action…"
           />
         </div>
 
