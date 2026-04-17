@@ -193,4 +193,27 @@ concept ViewShell [V] {
     ensures ok: config != none
   }
 
+  // Architectural invariant: unified storage model consistency.
+  //
+  // Every ViewShell that counts or lists N entities of a given kind MUST use the
+  // same storage model as any Dashboard stat card that reports a count for that
+  // kind. If the Dashboard counts version spaces (or process runs, deployments,
+  // etc.) by scanning ContentNode rows whose `node` key has a known prefix, then
+  // the corresponding list ViewShell MUST source its data from
+  // ContentNode/listBySchema — not from the concept-native list action on a
+  // separate concept handler (e.g. VersionSpace/list, ProcessRun/list). Mixing
+  // the two models produces a systematic inconsistency: the stat card reports N
+  // while the list view shows 0, because the entities were seeded as ContentNodes
+  // and never written into the concept-native storage relation.
+  //
+  // Rule: pick ContentNode as the single storage model for all user-visible
+  // entities. Use ContentNode/listBySchema("<SchemaName>") as the DataSourceSpec
+  // for every list ViewShell. Never reference a concept's own list action unless
+  // that concept exclusively manages its own storage and is never mirrored into
+  // ContentNode (e.g. Schema/list, View/list, AutomationRule/list).
+  never "storage model split between stat card and list view": {
+    exists v in views:
+    v.dataSource = none
+  }
+
 }

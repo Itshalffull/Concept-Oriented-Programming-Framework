@@ -23,6 +23,10 @@ entries:
   - schema: process-step
     fields: 'step_type,step_key,timeout_ms,retry_count,required_role,on_success,on_failure,condition_expr'
 
+  # === Process Run ===
+  - schema: process-run
+    fields: 'run_spec_ref,run_status,run_started_at,run_ended_at'
+
   # === Governance: Proposal ===
   - schema: proposal
     fields: 'title,proposer,description,sponsor,status,voting_method,quorum_rule,deadline,tags'
@@ -46,3 +50,10 @@ entries:
     fields: 'name,purpose,circle,parent_role,max_holders,term_expiry,status'
   - schema: role-section
     fields: 'section_type,required'
+
+  # === Version Space ===
+  # Content-native schema for version space nodes (kebab-case matches type field on ContentNode seeds).
+  # The PascalCase "VersionSpace" alias in Schema.seeds.yaml governs listBySchema membership;
+  # this entry makes the schema discoverable via Schema/list with its canonical field set.
+  - schema: version-space
+    fields: 'name,description,parent,status'
