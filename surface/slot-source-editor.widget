@@ -112,6 +112,11 @@ widget slot-source-editor {
       exists ab in actionSection:
         ab.actionPart = "" and ab.savedToKernel = true
     }
+
+    always "BindingEditor is imported, not duplicated": {
+      bindingEditor.importedFrom = "BindingEditor" and
+      bindingEditor.defined_inline_in_slot_source_editor = false
+    }
   }
 
 }

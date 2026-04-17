@@ -491,5 +491,12 @@ widget automation-rule-builder {
       requires: state.editor = "triggerResolved"
       ensures ok: state.actionsGate = "hasActions"
     }
+
+    always "action row editor supports UI events": {
+      forall row in actionsSection:
+        row.editor = "BindingEditor" and
+        row.supportsUIEvent = true and
+        row.supportsComposite = true
+    }
   }
 }

@@ -174,6 +174,19 @@ widget view-editor {
     "saving the view persists filters as structured FilterConfig objects with id/field/fieldType/operator/value rather than the legacy toggle-group shape";
     "all three FSM states are reachable: idle is initial; SAVE reaches saving from idle; SAVE_SUCCESS reaches saved from saving; FLASH_DONE reaches idle from saved";
     "saveButton is disabled when state is saving; data-state on root reflects the current FSM state at all times";
+    always "rowClick editor supports Action, UI Event, and Composite": {
+      controls.rowClick.editor = "BindingEditor" and
+      controls.rowClick.supportsAction = true and
+      controls.rowClick.supportsUIEvent = true and
+      controls.rowClick.supportsComposite = true
+    }
+    always "rowActions editor supports Action, UI Event, and Composite": {
+      forall ra in controls.rowActions:
+        ra.editor = "BindingEditor" and
+        ra.supportsAction = true and
+        ra.supportsUIEvent = true and
+        ra.supportsComposite = true
+    }
   }
 
 }

@@ -507,5 +507,13 @@ widget workflow-builder {
       requires: state.editor = "editing"
       ensures ok: state.readiness = "ready"
     }
+
+    always "transition effects editor supports all three binding kinds": {
+      forall t in transitions:
+        t.effectsEditor = "BindingEditor" and
+        t.supportsAction = true and
+        t.supportsUIEvent = true and
+        t.supportsComposite = true
+    }
   }
 }
