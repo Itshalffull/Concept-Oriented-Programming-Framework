@@ -1,0 +1,19 @@
+# Schema membership: theme nodes get Schema "Theme".
+# This enables ContentNode/listBySchema with schema "Theme" to return
+# theme records so the themes-list view is content-native.
+
+concept: Schema
+action: applyTo
+entries:
+  - entity_id: theme:light
+    schema: Theme
+  - entity_id: theme:dark
+    schema: Theme
+  - entity_id: theme:high-contrast
+    schema: Theme
+  - entity_id: theme:editorial
+    schema: Theme
+  - entity_id: theme:signal
+    schema: Theme
+  - entity_id: theme:test-sunset
+    schema: Theme

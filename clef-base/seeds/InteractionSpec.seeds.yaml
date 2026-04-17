@@ -16,7 +16,7 @@ entries:
   # content-list
   - name: content-list-controls
     createForm: '{"concept":"ContentNode","action":"createWithSchema","schemaId":"","fields":[{"name":"title","label":"Title","required":true,"placeholder":"Enter a title..."}]}'
-    rowClick: '{"navigateTo":"/content/{node}"}'
+    rowClick: '{"navigateTo":"/admin/content/{node}"}'
     rowActions: '[]'
     pickerMode: false
   # schemas-list
@@ -30,7 +30,7 @@ entries:
   # workflows-list
   - name: workflows-list-controls
     createForm: '{"concept":"Workflow","action":"defineState","fields":[{"name":"workflow","label":"Workflow Name","required":true},{"name":"name","label":"Initial State Name","required":true},{"name":"flags","label":"Flags","placeholder":"initial"}]}'
-    rowClick: '{"navigateTo":"/admin/workflows/{workflow}"}'
+    rowClick: '{"navigateTo":"/admin/workflows/{node}"}' # Updated 2026-04-17: canonical identity is {node}
     rowActions: '[]'
     pickerMode: false
     create_surface: workflow-builder
@@ -55,8 +55,8 @@ entries:
   # themes-list
   - name: themes-list-controls
     createForm: '{"concept":"Theme","action":"create","fields":[{"name":"theme","label":"Theme ID","required":true},{"name":"name","label":"Display Name","required":true},{"name":"overrides","label":"Token Overrides","type":"key-value-list","placeholder":"token path (e.g. color.primary)"}]}'
-    rowClick: '{"navigateTo":"/admin/themes/{id}"}'
-    rowActions: '[{"key":"activate","concept":"Theme","action":"activate","params":{"theme":"id"},"label":"Activate","variant":"filled","condition":{"field":"active","equals":false}},{"key":"deactivate","concept":"Theme","action":"deactivate","params":{"theme":"id"},"label":"Deactivate","variant":"outlined","condition":{"field":"active","equals":true}}]'
+    rowClick: '{"navigateTo":"/admin/content/{node}"}'
+    rowActions: '[{"key":"activate","concept":"Theme","action":"activate","params":{"theme":"node"},"label":"Activate","variant":"filled","condition":{"field":"active","equals":false}},{"key":"deactivate","concept":"Theme","action":"deactivate","params":{"theme":"node"},"label":"Deactivate","variant":"outlined","condition":{"field":"active","equals":true}}]'
     pickerMode: false
   # display-modes-list
   - name: display-modes-list-controls
@@ -87,14 +87,14 @@ entries:
   # Shared by: dashboard-concepts, concept-graph, entity-same-schema, entity-all-content, backlinks, similar-entities, unlinked-references, graph-neighbors
   - name: navigate-content-node
     createForm: '{}'
-    rowClick: '{"navigateTo":"/content/{node}"}'
+    rowClick: '{"navigateTo":"/admin/content/{node}"}'
     rowActions: '[]'
     pickerMode: false
   # concept-graph: uses navigate-content-node (deduplicated)
   # score-schemas
   - name: score-schemas-controls
     createForm: '{}'
-    rowClick: '{"navigateTo":"/content/schema:{schema}"}'
+    rowClick: '{"navigateTo":"/admin/content/schema:{schema}"}'
     rowActions: '[]'
     pickerMode: false
   # syncs-list: uses no-controls (deduplicated)
@@ -129,7 +129,7 @@ entries:
   # Shared by: step-checks, check-overview
   - name: navigate-check-cv
     createForm: '{}'
-    rowClick: '{"navigateTo":"/content/{cv}"}'
+    rowClick: '{"navigateTo":"/admin/content/{cv}"}'
     rowActions: '[]'
     pickerMode: false
   # branch-compare
@@ -141,7 +141,7 @@ entries:
   # form-list
   - name: form-list-controls
     createForm: '{}'
-    rowClick: '{"navigateTo":"/admin/form-builder/{name}"}'
+    rowClick: '{"navigateTo":"/admin/form-builder/{form}"}'
     rowActions: '[]'
     pickerMode: false
     create_surface: form-builder

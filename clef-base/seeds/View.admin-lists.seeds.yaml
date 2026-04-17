@@ -228,11 +228,12 @@ entries:
     defaultDisplayMode: table-row
 
   # /admin/themes  ->  themes-list (legacy View fallback)
+  # Uses ContentNode/listBySchema so rowClick can use the universal content detail route.
   - view: themes-list
-    dataSource: '{"concept":"Theme","action":"list"}'
+    dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Theme"}}'
     layout: card-grid
-    visibleFields: '[{"key":"id","label":"ID","formatter":"code"},{"key":"name","label":"Name"},{"key":"active","label":"Active","formatter":"boolean-badge"}]'
-    controls: '{"create":{"concept":"Theme","action":"create","fields":[{"name":"theme","label":"Theme ID","required":true},{"name":"name","label":"Display Name","required":true}]},"rowClick":{"navigateTo":"/admin/themes/{id}"}}'
+    visibleFields: '[{"key":"node","label":"ID","formatter":"code"},{"key":"name","label":"Name"},{"key":"active","label":"Active","formatter":"boolean-badge"}]'
+    controls: '{"create":{"concept":"Theme","action":"create","fields":[{"name":"theme","label":"Theme ID","required":true},{"name":"name","label":"Display Name","required":true}]},"rowClick":{"navigateTo":"/admin/content/{node}"}}'
     title: Themes
     description: Design system themes with token inheritance.
     defaultDisplayMode: card

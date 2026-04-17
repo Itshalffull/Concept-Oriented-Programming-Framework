@@ -22,7 +22,7 @@ entries:
     fields: '[{"key":"vocab","label":"Vocabulary ID"},{"key":"name","label":"Name"},{"key":"terms","label":"Terms","formatter":"json-count"}]'
 
   - name: themes-list-fields
-    fields: '[{"key":"name","label":"Name"},{"key":"base","label":"Extends","formatter":"badge"},{"key":"active","label":"Active","formatter":"boolean-badge"},{"key":"overrides","label":"Overrides","formatter":"json-count"}]'
+    fields: '[{"key":"node","label":"ID","formatter":"code"},{"key":"name","label":"Name"},{"key":"active","label":"Active","formatter":"boolean-badge"},{"key":"overrides","label":"Overrides","formatter":"json-count"}]'
 
   - name: display-modes-list-fields
     fields: '[{"key":"schema","label":"Schema","formatter":"badge"},{"key":"mode_id","label":"Mode ID"},{"key":"name","label":"Name"},{"key":"layout","label":"Layout","formatter":"badge"},{"key":"component_mapping","label":"Mapping","formatter":"badge"}]'

@@ -26,7 +26,7 @@ entries:
 
   - name: theme-list-source
     kind: concept-action
-    config: '{"concept":"Theme","action":"list"}'
+    config: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Theme"}}'
 
   - name: display-mode-list-source
     kind: concept-action

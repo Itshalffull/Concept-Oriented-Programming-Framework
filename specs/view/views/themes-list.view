@@ -10,7 +10,7 @@ view "themes-list" {
   fixture default {
     dataSource: {
       kind: "concept-action",
-      config: "{\"concept\":\"Theme\",\"action\":\"list\"}"
+      config: "{\"concept\":\"ContentNode\",\"action\":\"listBySchema\",\"params\":{\"schema\":\"Theme\"}}"
     }
     filter: {
       node: "{\"type\":\"true\"}"
@@ -28,11 +28,19 @@ view "themes-list" {
   }
 
   purpose {
-    Browse design system themes with token inheritance.
+    Browse design system themes. Each theme is a ContentNode with schema "Theme"
+    so the universal content detail route (/admin/content/theme:<id>) resolves
+    it correctly. Clicking a theme card navigates to the content detail page,
+    not the legacy /admin/themes/:id route which required a non-content-native lookup.
+    DataSource is ContentNode/listBySchema(Theme) — server-side schema join.
   }
 
   invariants {
     always "purity is read-only": { purity = "read-only" }
     always "no invoke instructions": { invokeCount = 0 }
+    example "clicking a theme card resolves to its detail page": {
+      after rowClick(row: { node: "theme:light", name: "Light", active: true }) -> ok
+      then navigate(path: "/admin/content/theme:light") -> ok
+    }
   }
 }

@@ -1,0 +1,31 @@
+# ContentNode seeds: theme records.
+# Each theme is mirrored as a ContentNode so that ContentNode/listBySchema
+# with schema "Theme" returns them and the universal content detail route
+# (/admin/content/theme:<id>) resolves them correctly.
+
+concept: ContentNode
+action: create
+entries:
+  - node: theme:light
+    content: '{"name":"Light","base":null,"overrides":"{\"mode\":\"light\",\"sourceType\":\"core-theme\",\"density\":\"comfortable\",\"motif\":\"sidebar\",\"styleProfile\":\"foundation\"}","active":true,"priority":100}'
+    createdBy: system
+
+  - node: theme:dark
+    content: '{"name":"Dark","base":null,"overrides":"{\"mode\":\"dark\",\"sourceType\":\"core-theme\",\"density\":\"comfortable\",\"motif\":\"topbar\",\"styleProfile\":\"nocturne\"}","active":false,"priority":0}'
+    createdBy: system
+
+  - node: theme:high-contrast
+    content: '{"name":"High Contrast","base":null,"overrides":"{\"mode\":\"high-contrast\",\"sourceType\":\"core-theme\",\"density\":\"comfortable\",\"motif\":\"sidebar\",\"styleProfile\":\"accessibility\"}","active":false,"priority":0}'
+    createdBy: system
+
+  - node: theme:editorial
+    content: '{"name":"Editorial","base":null,"overrides":"{\"mode\":\"light\",\"sourceType\":\"expressive-theme\",\"density\":\"comfortable\",\"motif\":\"sidebar\",\"styleProfile\":\"editorial\"}","active":false,"priority":0}'
+    createdBy: system
+
+  - node: theme:signal
+    content: '{"name":"Signal","base":null,"overrides":"{\"mode\":\"dark\",\"sourceType\":\"expressive-theme\",\"density\":\"compact\",\"motif\":\"topbar\",\"styleProfile\":\"signal\"}","active":false,"priority":0}'
+    createdBy: system
+
+  - node: theme:test-sunset
+    content: '{"name":"Test Sunset","base":null,"overrides":"{\"mode\":\"light\",\"sourceType\":\"expressive-theme\",\"density\":\"comfortable\",\"motif\":\"sidebar\",\"styleProfile\":\"sunset\"}","active":false,"priority":0}'
+    createdBy: system

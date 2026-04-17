@@ -1,0 +1,162 @@
+# Backfill: mirror all Schema/applyTo memberships into ContentNode's storage namespace.
+# This ensures ContentNode/get.schemas reflects every schema that was applied via
+# Schema/applyTo, regardless of whether the SchemaApplyRecordsMembership sync
+# was active at the time the original seeds ran.
+# Idempotent: ContentNode/recordSchema is a no-op for already-present memberships.
+# Fixes three-source inconsistency (bugs #101, #105, #107).
+
+concept: ContentNode
+action: recordSchema
+entries:
+  # --- Concept nodes ---
+  - node: concept:ContentNode
+    schema: Concept
+  - node: concept:Schema
+    schema: Concept
+  - node: concept:View
+    schema: Concept
+  - node: concept:Workflow
+    schema: Concept
+  - node: concept:AutomationRule
+    schema: Concept
+  - node: concept:Taxonomy
+    schema: Concept
+  - node: concept:DisplayMode
+    schema: Concept
+  - node: concept:Theme
+    schema: Concept
+  - node: concept:Query
+    schema: Concept
+  - node: concept:ContentStorage
+    schema: Concept
+  - node: concept:Property
+    schema: Concept
+  - node: concept:Outline
+    schema: Concept
+  - node: concept:ComponentMapping
+    schema: Concept
+  - node: concept:ConceptBrowser
+    schema: Concept
+  - node: concept:Navigator
+    schema: Concept
+  - node: concept:DestinationCatalog
+    schema: Concept
+  - node: concept:RuntimeProfile
+    schema: Concept
+  - node: concept:PlatformBindingCatalog
+    schema: Concept
+  - node: concept:Host
+    schema: Concept
+  - node: concept:Shell
+    schema: Concept
+  - node: concept:Transport
+    schema: Concept
+  - node: concept:Layout
+    schema: Concept
+  - node: concept:SeedData
+    schema: Concept
+  - node: concept:AppInstallation
+    schema: Concept
+  - node: concept:ResourceGrantPolicy
+    schema: Concept
+  - node: concept:AccessCatalog
+    schema: Concept
+  # --- Sync nodes ---
+  - node: sync:save-invalidates-cache
+    schema: Sync
+  - node: sync:save-indexes-search
+    schema: Sync
+  - node: sync:save-generates-alias
+    schema: Sync
+  - node: sync:save-tracks-provenance
+    schema: Sync
+  - node: sync:save-reindexes-backlinks
+    schema: Sync
+  - node: sync:delete-cascades
+    schema: Sync
+  - node: sync:slot-source-dispatches
+    schema: Sync
+  - node: sync:resolver-uses-mapping
+    schema: Sync
+  - node: sync:entity-page-triple-zone
+    schema: Sync
+  - node: sync:block-zone-renders-canvas
+    schema: Sync
+  - node: sync:version-aware-load
+    schema: Sync
+  - node: sync:version-aware-save
+    schema: Sync
+  - node: sync:view-creates-content-node
+    schema: Sync
+  - node: sync:schema-creates-content-node
+    schema: Sync
+  - node: sync:theme-creates-content-node
+    schema: Sync
+  # --- Widget nodes ---
+  - node: widget:Card
+    schema: Widget
+  - node: widget:Badge
+    schema: Widget
+  - node: widget:Sidebar
+    schema: Widget
+  - node: widget:DataTable
+    schema: Widget
+  - node: widget:EmptyState
+    schema: Widget
+  - node: widget:CreateForm
+    schema: Widget
+  - node: widget:TableDisplay
+    schema: Widget
+  - node: widget:CardGridDisplay
+    schema: Widget
+  - node: widget:GraphDisplay
+    schema: Widget
+  - node: widget:StatCardsDisplay
+    schema: Widget
+  - node: widget:ViewRenderer
+    schema: Widget
+  - node: widget:LayoutRenderer
+    schema: Widget
+  - node: widget:HostedPage
+    schema: Widget
+  - node: widget:AppShell
+    schema: Widget
+  # --- Lifecycle nodes ---
+  - node: workflow:content-lifecycle
+    schema: Workflow
+  - node: workflow:schema-evolution
+    schema: Workflow
+  - node: automation-rule:auto-tag-on-create
+    schema: AutomationRule
+  - node: automation-rule:notify-on-publish
+    schema: AutomationRule
+  - node: automation-rule:cache-invalidate-on-save
+    schema: AutomationRule
+  - node: taxonomy:concept-suites
+    schema: Taxonomy
+  - node: taxonomy:schema-categories
+    schema: Taxonomy
+  # --- Theme nodes ---
+  - node: theme:light
+    schema: Theme
+  - node: theme:dark
+    schema: Theme
+  - node: theme:high-contrast
+    schema: Theme
+  - node: theme:editorial
+    schema: Theme
+  - node: theme:signal
+    schema: Theme
+  - node: theme:test-sunset
+    schema: Theme
+  # --- Versioning nodes ---
+  - node: version-space:editorial-pass
+    schema: VersionSpace
+  - node: version-space:taxonomy-refactor
+    schema: VersionSpace
+  - node: version-override:editorial-pass:content:Article
+    schema: VersionOverride
+  - node: version-override:editorial-pass:view:content-list
+    schema: VersionOverride
+  - node: version-override:taxonomy-refactor:schema:TaxonomyTerm
+    schema: VersionOverride
