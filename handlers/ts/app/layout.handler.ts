@@ -5,7 +5,7 @@
 // Supports four-zone kind for the four-layer page pattern (header, sidebar, main, footer).
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, branch, complete, completeFrom,
+  createProgram, get as spGet, find, put, putFrom, merge, branch, complete, completeFrom,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -130,30 +130,42 @@ const _layoutHandler: FunctionalConceptHandler = {
       parsedConfig = {};
     }
 
+    // Build the merge fields from the parsed config. We accept any whitelisted
+    // field — including title and description — so configure can patch a single
+    // attribute without nuking siblings (the previous put-based implementation
+    // wiped name, kind, title, description, children, etc.).
+    const ALLOWED = ['direction', 'gap', 'columns', 'rows', 'areas', 'title', 'description', 'children', 'responsive'] as const;
+    const mergeFields: Record<string, unknown> = {};
+    for (const key of ALLOWED) {
+      if (key in parsedConfig) {
+        const v = parsedConfig[key];
+        // Stringify object/array values so storage stays as { [field]: string }
+        mergeFields[key] = (key === 'areas' || key === 'children' || key === 'responsive') && typeof v !== 'string'
+          ? JSON.stringify(v)
+          : v;
+      }
+    }
+
     let p = createProgram();
     p = spGet(p, 'layout', layout, 'existing');
     p = branch(p, 'existing',
       (b) => {
-        let b2 = put(b, 'layout', layout, {
-          direction: parsedConfig.direction ?? '',
-          gap: parsedConfig.gap ?? '0',
-          columns: parsedConfig.columns ?? '',
-          rows: parsedConfig.rows ?? '',
-          areas: parsedConfig.areas ? JSON.stringify(parsedConfig.areas) : JSON.stringify([]),
-        });
+        const b2 = merge(b, 'layout', layout, mergeFields);
         return complete(b2, 'ok', { layout });
       },
       (b) => {
         if (isObviouslyInvalid) {
           return complete(b, 'notfound', { message: 'Layout not found' });
         }
-        // Upsert: create layout with config on configure (fixture compatibility)
-        let b2 = put(b, 'layout', layout, {
-          direction: parsedConfig.direction ?? '',
-          gap: parsedConfig.gap ?? '0',
-          columns: parsedConfig.columns ?? '',
-          rows: parsedConfig.rows ?? '',
-          areas: parsedConfig.areas ? JSON.stringify(parsedConfig.areas) : JSON.stringify([]),
+        // Upsert: create layout with config on configure (fixture compatibility).
+        // For new records, fall back to the historical defaults for any unset field.
+        const b2 = put(b, 'layout', layout, {
+          direction: mergeFields.direction ?? '',
+          gap: mergeFields.gap ?? '0',
+          columns: mergeFields.columns ?? '',
+          rows: mergeFields.rows ?? '',
+          areas: mergeFields.areas ?? JSON.stringify([]),
+          ...mergeFields,
         });
         return complete(b2, 'ok', { layout });
       },
@@ -215,6 +227,38 @@ const _layoutHandler: FunctionalConceptHandler = {
       (b) => {
         let b2 = put(b, 'layout', layout, { __deleted: true });
         return complete(b2, 'ok', {});
+      },
+      (b) => complete(b, 'notfound', { message: 'Layout not found' }),
+    );
+
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
+  update(input: Record<string, unknown>) {
+    // "Empty string for any field means leave unchanged" per spec.
+    // children, when provided as non-empty, is stored verbatim (JSON array string).
+    const layout = input.layout as string;
+
+    let p = createProgram();
+    p = spGet(p, 'layout', layout, 'existing');
+    p = branch(p, 'existing',
+      (b) => {
+        let b2 = putFrom(b, 'layout', layout, (bindings) => {
+          const updated: Record<string, unknown> = { ...(bindings.existing as Record<string, unknown>) };
+          const name = input.name as string | undefined;
+          if (name !== undefined && name !== '') updated.name = name;
+          const kind = input.kind as string | undefined;
+          if (kind !== undefined && kind !== '') updated.kind = kind;
+          const title = input.title as string | undefined;
+          if (title !== undefined && title !== '') updated.title = title;
+          const description = input.description as string | undefined;
+          if (description !== undefined && description !== '') updated.description = description;
+          const children = input.children as string | undefined;
+          if (children !== undefined && children !== '') updated.children = children;
+          updated.updatedAt = new Date().toISOString();
+          return updated;
+        });
+        return complete(b2, 'ok', { layout });
       },
       (b) => complete(b, 'notfound', { message: 'Layout not found' }),
     );

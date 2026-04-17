@@ -103,6 +103,20 @@ concept Layout [Y] {
       fixture configure_missing { layout: "layout-nonexistent", zones: "{}" } -> notfound
       fixture configure_bad_json { layout: "layout-4", zones: "not-json" } after four_zone_layout -> invalid
     }
+
+    action update(layout: Y, name: String, kind: String, title: String, description: String, children: String) {
+      -> ok(layout: Y) {
+        Merge non-empty fields into the existing layout record. Empty string for a
+        field means "leave unchanged". Useful for seed re-application: callers may
+        call update on duplicate to propagate config changes without a DB wipe.
+      }
+      -> notfound(message: String) {
+        No layout exists with this identifier.
+      }
+
+      fixture update_existing { layout: $sidebar_layout.layout, name: "main-sidebar-v2", kind: "sidebar", title: "Main Sidebar", description: "Updated layout", children: "" } after sidebar_layout
+      fixture update_notfound { layout: "layout-missing", name: "anything", kind: "stack", title: "", description: "", children: "" } -> notfound
+    }
   }
 
   example "create then configure": {
@@ -121,6 +135,12 @@ concept Layout [Y] {
       -> ok(layout: z)
   }
 
+  example "create then update": {
+    after create(layout: y, name: "sidebar-layout", kind: "sidebar")
+      -> ok(layout: y)
+    then update(layout: y, name: "sidebar-layout-v2", kind: "sidebar", title: "Sidebar", description: "Updated", children: "")
+      -> ok(layout: y)
+  }
 
   action create {
     requires: name != ""
@@ -139,5 +159,11 @@ concept Layout [Y] {
   action configureZones {
     requires: zones != ""
     ensures ok: layout != none
+  }
+
+  action update {
+    requires: layout in layouts
+    ensures ok: layout != none
+    ensures notfound: layout not in layouts
   }
 }
