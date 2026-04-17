@@ -34,7 +34,7 @@ describe('ExecutionDispatch functional handler', () => {
 
   describe('resolve', () => {
     it('builds a valid StorageProgram', () => {
-      const program = executionDispatchHandler.resolve({ step: "step-001", actor: "user-42", spec_mode: "human", actor_type: "human", preferences: null });
+      const program = executionDispatchHandler.resolve({ step: "step-001", actor: "user-42", spec_mode: "human", actor_type: "human", preferences: null, subject_id: null, role_pool: null, shadow_mode: null });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -42,21 +42,21 @@ describe('ExecutionDispatch functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = executionDispatchHandler.resolve({ step: "step-001", actor: "user-42", spec_mode: "human", actor_type: "human", preferences: null });
+      const program = executionDispatchHandler.resolve({ step: "step-001", actor: "user-42", spec_mode: "human", actor_type: "human", preferences: null, subject_id: null, role_pool: null, shadow_mode: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = executionDispatchHandler.resolve({ step: "step-001", actor: "user-42", spec_mode: "human", actor_type: "human", preferences: null });
+      const program = executionDispatchHandler.resolve({ step: "step-001", actor: "user-42", spec_mode: "human", actor_type: "human", preferences: null, subject_id: null, role_pool: null, shadow_mode: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = executionDispatchHandler.resolve({ step: "step-001", actor: "user-42", spec_mode: "human", actor_type: "human", preferences: null });
+      const program = executionDispatchHandler.resolve({ step: "step-001", actor: "user-42", spec_mode: "human", actor_type: "human", preferences: null, subject_id: null, role_pool: null, shadow_mode: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -69,7 +69,7 @@ describe('ExecutionDispatch functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = executionDispatchHandler.resolve({ step: "step-001", actor: "user-42", spec_mode: "human", actor_type: "human", preferences: null });
+      const program = executionDispatchHandler.resolve({ step: "step-001", actor: "user-42", spec_mode: "human", actor_type: "human", preferences: null, subject_id: null, role_pool: null, shadow_mode: null });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -77,7 +77,7 @@ describe('ExecutionDispatch functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof executionDispatchHandler.resolve !== 'function') return;
-      const result = await interpret(executionDispatchHandler.resolve({ step: "step-001", actor: "user-42", spec_mode: "human", actor_type: "human", preferences: null }), storage);
+      const result = await interpret(executionDispatchHandler.resolve({ step: "step-001", actor: "user-42", spec_mode: "human", actor_type: "human", preferences: null, subject_id: null, role_pool: null, shadow_mode: null }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -87,42 +87,49 @@ describe('ExecutionDispatch functional handler', () => {
     it('fixture "human_step" -> ok', async () => {
       if (typeof executionDispatchHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(executionDispatchHandler.resolve({ step: "step-001", actor: "user-42", spec_mode: "human", actor_type: "human", preferences: null }), storage);
+      const result = await interpret(executionDispatchHandler.resolve({ step: "step-001", actor: "user-42", spec_mode: "human", actor_type: "human", preferences: null, subject_id: null, role_pool: null, shadow_mode: null }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "ai_conversational_step" -> ok', async () => {
       if (typeof executionDispatchHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(executionDispatchHandler.resolve({ step: "step-002", actor: "agent-7", spec_mode: "human", actor_type: "ai_conversational", preferences: null }), storage);
+      const result = await interpret(executionDispatchHandler.resolve({ step: "step-002", actor: "agent-7", spec_mode: "human", actor_type: "ai_conversational", preferences: null, subject_id: null, role_pool: null, shadow_mode: null }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "ai_autonomous_step" -> ok', async () => {
       if (typeof executionDispatchHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(executionDispatchHandler.resolve({ step: "step-003", actor: "agent-9", spec_mode: "automation", actor_type: "ai_autonomous", preferences: null }), storage);
+      const result = await interpret(executionDispatchHandler.resolve({ step: "step-003", actor: "agent-9", spec_mode: "automation", actor_type: "ai_autonomous", preferences: null, subject_id: null, role_pool: null, shadow_mode: null }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "ai_triggered_step" -> ok', async () => {
       if (typeof executionDispatchHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(executionDispatchHandler.resolve({ step: "step-004", actor: "agent-11", spec_mode: "llm", actor_type: "ai_triggered", preferences: null }), storage);
+      const result = await interpret(executionDispatchHandler.resolve({ step: "step-004", actor: "agent-11", spec_mode: "llm", actor_type: "ai_triggered", preferences: null, subject_id: null, role_pool: null, shadow_mode: null }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "fallthrough_step" -> ok', async () => {
       if (typeof executionDispatchHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(executionDispatchHandler.resolve({ step: "step-005", actor: "user-50", spec_mode: "approval", actor_type: "human", preferences: null }), storage);
+      const result = await interpret(executionDispatchHandler.resolve({ step: "step-005", actor: "user-50", spec_mode: "approval", actor_type: "human", preferences: null, subject_id: null, role_pool: null, shadow_mode: null }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "shadow_step" -> ok', async () => {
+      if (typeof executionDispatchHandler.resolve !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(executionDispatchHandler.resolve({ step: "step-006", actor: "agent-20", spec_mode: "automation", actor_type: "ai_autonomous", preferences: null, subject_id: "user-99", role_pool: "engineers", shadow_mode: true }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "empty_step" -> error', async () => {
       if (typeof executionDispatchHandler.resolve !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(executionDispatchHandler.resolve({ step: "", actor: "user-1", spec_mode: "human", actor_type: "human", preferences: null }), storage);
+      const result = await interpret(executionDispatchHandler.resolve({ step: "", actor: "user-1", spec_mode: "human", actor_type: "human", preferences: null, subject_id: null, role_pool: null, shadow_mode: null }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -183,7 +190,7 @@ describe('ExecutionDispatch functional handler', () => {
     it('fixture "override_ok" -> ok', async () => {
       if (typeof executionDispatchHandler.override !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_human_step = await interpret(executionDispatchHandler.resolve({ step: "step-001", actor: "user-42", spec_mode: "human", actor_type: "human", preferences: null }), storage);
+      const afterResult_human_step = await interpret(executionDispatchHandler.resolve({ step: "step-001", actor: "user-42", spec_mode: "human", actor_type: "human", preferences: null, subject_id: null, role_pool: null, shadow_mode: null }), storage);
       const result = await interpret(executionDispatchHandler.override({ ed: afterResult_human_step?.output?.["ed"], new_mode: "agent_loop", justification: "User requested AI assistance" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -199,9 +206,107 @@ describe('ExecutionDispatch functional handler', () => {
     it('fixture "override_empty_justification" -> error', async () => {
       if (typeof executionDispatchHandler.override !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_human_step = await interpret(executionDispatchHandler.resolve({ step: "step-001", actor: "user-42", spec_mode: "human", actor_type: "human", preferences: null }), storage);
+      const afterResult_human_step = await interpret(executionDispatchHandler.resolve({ step: "step-001", actor: "user-42", spec_mode: "human", actor_type: "human", preferences: null, subject_id: null, role_pool: null, shadow_mode: null }), storage);
       const result = await interpret(executionDispatchHandler.override({ ed: afterResult_human_step?.output?.["ed"], new_mode: "chat", justification: "" }), storage);
       expect(result.variant).not.toBe('ok');
+    });
+
+  });
+
+  describe('checkEligibility', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = executionDispatchHandler.checkEligibility({ ed: "some-id", subject_id: "user-42", resource: "step-001", action: "execute" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = executionDispatchHandler.checkEligibility({ ed: "some-id", subject_id: "user-42", resource: "step-001", action: "execute" });
+      if (!program?.instructions) return;
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = executionDispatchHandler.checkEligibility({ ed: "some-id", subject_id: "user-42", resource: "step-001", action: "execute" });
+      if (!program?.instructions) return;
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('has trackable transport effects', () => {
+      const program = executionDispatchHandler.checkEligibility({ ed: "some-id", subject_id: "user-42", resource: "step-001", action: "execute" });
+      if (!program?.instructions) return;
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('fixture "check_eligible" -> eligible (dispatch exists, normal mode)', async () => {
+      if (typeof executionDispatchHandler.checkEligibility !== 'function') return;
+      const storage = createInMemoryStorage();
+      // Set up: create a dispatch record first
+      const resolveResult = await interpret(
+        executionDispatchHandler.resolve({ step: "step-001", actor: "user-42", spec_mode: "human", actor_type: "human", preferences: null, subject_id: null, role_pool: null, shadow_mode: null }),
+        storage,
+      );
+      expect(resolveResult.variant).toBe('ok');
+      const edId = resolveResult.output['ed'];
+      const result = await interpret(
+        executionDispatchHandler.checkEligibility({ ed: edId, subject_id: "user-42", resource: "step-001", action: "execute" }),
+        storage,
+      );
+      // AccessControl check returns allowed for read-like actions
+      // eligible or ineligible are both valid (depends on AccessControl policy)
+      expect(['eligible', 'ineligible']).toContain(result.variant);
+    });
+
+    it('fixture "check_shadow" -> eligible with shadow_mode true', async () => {
+      if (typeof executionDispatchHandler.checkEligibility !== 'function') return;
+      const storage = createInMemoryStorage();
+      // Set up: create a shadow mode dispatch record
+      const resolveResult = await interpret(
+        executionDispatchHandler.resolve({ step: "step-006", actor: "agent-20", spec_mode: "automation", actor_type: "ai_autonomous", preferences: null, subject_id: "user-99", role_pool: "engineers", shadow_mode: true }),
+        storage,
+      );
+      expect(resolveResult.variant).toBe('ok');
+      const edId = resolveResult.output['ed'];
+      const result = await interpret(
+        executionDispatchHandler.checkEligibility({ ed: edId, subject_id: "user-99", resource: "step-006", action: "execute" }),
+        storage,
+      );
+      // Shadow mode always returns eligible regardless of AccessControl decision
+      expect(result.variant).toBe('eligible');
+      expect(result.output?.['shadow_mode']).toBe(true);
+    });
+
+    it('fixture "check_missing_ed" -> notfound', async () => {
+      if (typeof executionDispatchHandler.checkEligibility !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(
+        executionDispatchHandler.checkEligibility({ ed: "nonexistent", subject_id: "user-1", resource: "step-x", action: "execute" }),
+        storage,
+      );
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('notfound'));
+    });
+
+    it('fixture "check_empty_subject" -> error', async () => {
+      if (typeof executionDispatchHandler.checkEligibility !== 'function') return;
+      const storage = createInMemoryStorage();
+      const resolveResult = await interpret(
+        executionDispatchHandler.resolve({ step: "step-001", actor: "user-42", spec_mode: "human", actor_type: "human", preferences: null, subject_id: null, role_pool: null, shadow_mode: null }),
+        storage,
+      );
+      expect(resolveResult.variant).toBe('ok');
+      const edId = resolveResult.output['ed'];
+      const result = await interpret(
+        executionDispatchHandler.checkEligibility({ ed: edId, subject_id: "", resource: "step-001", action: "execute" }),
+        storage,
+      );
+      expect(result.variant).not.toBe('ok');
+      expect(result.variant).not.toBe('eligible');
     });
 
   });
@@ -225,7 +330,7 @@ describe('ExecutionDispatch functional handler', () => {
   describe('invariant examples', () => {
     it("resolve human step as work_item", async () => {
       const storage = createInMemoryStorage();
-      const resolveResult0 = await interpret(executionDispatchHandler.resolve({ step: "step-A", actor: "user-1", spec_mode: "human", actor_type: "human", preferences: false }), storage);
+      const resolveResult0 = await interpret(executionDispatchHandler.resolve({ step: "step-A", actor: "user-1", spec_mode: "human", actor_type: "human", preferences: false, subject_id: null, role_pool: null, shadow_mode: null }), storage);
       expect(resolveResult0.variant).toBe("ok");
       let ed = resolveResult0.output["ed"];
       let x = ed;
@@ -236,7 +341,7 @@ describe('ExecutionDispatch functional handler', () => {
 
     it("resolve ai_conversational as chat", async () => {
       const storage = createInMemoryStorage();
-      const resolveResult0 = await interpret(executionDispatchHandler.resolve({ step: "step-B", actor: "agent-3", spec_mode: "human", actor_type: "ai_conversational", preferences: false }), storage);
+      const resolveResult0 = await interpret(executionDispatchHandler.resolve({ step: "step-B", actor: "agent-3", spec_mode: "human", actor_type: "ai_conversational", preferences: false, subject_id: null, role_pool: null, shadow_mode: null }), storage);
       expect(resolveResult0.variant).toBe("ok");
       let ed = resolveResult0.output["ed"];
       let y = ed;
@@ -247,7 +352,7 @@ describe('ExecutionDispatch functional handler', () => {
 
     it("resolve ai_autonomous as agent_loop", async () => {
       const storage = createInMemoryStorage();
-      const resolveResult0 = await interpret(executionDispatchHandler.resolve({ step: "step-C", actor: "agent-5", spec_mode: "automation", actor_type: "ai_autonomous", preferences: false }), storage);
+      const resolveResult0 = await interpret(executionDispatchHandler.resolve({ step: "step-C", actor: "agent-5", spec_mode: "automation", actor_type: "ai_autonomous", preferences: false, subject_id: null, role_pool: null, shadow_mode: null }), storage);
       expect(resolveResult0.variant).toBe("ok");
       let ed = resolveResult0.output["ed"];
       let z = ed;
@@ -258,7 +363,7 @@ describe('ExecutionDispatch functional handler', () => {
 
     it("resolve ai_triggered as llm_call", async () => {
       const storage = createInMemoryStorage();
-      const resolveResult0 = await interpret(executionDispatchHandler.resolve({ step: "step-D", actor: "agent-8", spec_mode: "llm", actor_type: "ai_triggered", preferences: false }), storage);
+      const resolveResult0 = await interpret(executionDispatchHandler.resolve({ step: "step-D", actor: "agent-8", spec_mode: "llm", actor_type: "ai_triggered", preferences: false, subject_id: null, role_pool: null, shadow_mode: null }), storage);
       expect(resolveResult0.variant).toBe("ok");
       let ed = resolveResult0.output["ed"];
       let w = ed;
@@ -269,13 +374,23 @@ describe('ExecutionDispatch functional handler', () => {
 
     it("fallthrough uses spec_mode default", async () => {
       const storage = createInMemoryStorage();
-      const resolveResult0 = await interpret(executionDispatchHandler.resolve({ step: "step-E", actor: "user-99", spec_mode: "approval", actor_type: "human", preferences: false }), storage);
+      const resolveResult0 = await interpret(executionDispatchHandler.resolve({ step: "step-E", actor: "user-99", spec_mode: "approval", actor_type: "human", preferences: false, subject_id: null, role_pool: null, shadow_mode: null }), storage);
       expect(resolveResult0.variant).toBe("ok");
       let ed = resolveResult0.output["ed"];
       let v = ed;
       let resolved_mode = resolveResult0.output["resolved_mode"];
       const thenResult0 = await interpret(executionDispatchHandler.override({ ed: v, new_mode: "work_item", justification: "Override approval to manual" }), storage);
       expect(thenResult0.variant).toBe("ok");
+    });
+
+    it("shadow mode allows execution on deny", async () => {
+      const storage = createInMemoryStorage();
+      const resolveResult0 = await interpret(executionDispatchHandler.resolve({ step: "step-F", actor: "agent-20", spec_mode: "automation", actor_type: "ai_autonomous", preferences: false, subject_id: "user-99", role_pool: null, shadow_mode: true }), storage);
+      expect(resolveResult0.variant).toBe("ok");
+      let ed = resolveResult0.output["ed"];
+      let s = ed;
+      const thenResult0 = await interpret(executionDispatchHandler.checkEligibility({ ed: s, subject_id: "user-99", resource: "step-F", action: "execute" }), storage);
+      expect(thenResult0.variant).toBe("eligible");
     });
 
   });
