@@ -1,0 +1,17 @@
+# When a brainstorm board closes, complete the bound StepRun with the shortlisted idea refs as output.
+# Brainstorm step pipeline — Section 6.x.
+
+sync BrainstormCloseProducesOptions [eager]
+when {
+  BrainstormBoard/close: [ board: ?board ]
+    => [ board: ?board; output: ?output ]
+}
+where {
+  Property: { ?board key: "stepRef"; value: ?step_ref }
+}
+then {
+  StepRun/complete: [
+    step: ?step_ref;
+    output: ?output
+  ]
+}
