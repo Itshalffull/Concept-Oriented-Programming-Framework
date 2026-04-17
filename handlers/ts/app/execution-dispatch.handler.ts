@@ -7,11 +7,18 @@
 // Resolution logic: human+human -> work_item,
 // ai_conversational -> chat, ai_autonomous -> agent_loop,
 // ai_triggered -> llm_call, else fall through to spec_mode.
+//
+// Eligibility is delegated to AccessControl via a perform()
+// transport effect so dispatch stays focused on mode routing
+// rather than reimplementing authorization logic inline.
+// Validation is performed before enforcement — inputs are
+// checked first, then AccessControl is consulted.
 // ============================================================
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, mergeFrom, branch, complete,
+  createProgram, get, put, mergeFrom, branch, complete, completeFrom,
+  perform, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -35,7 +42,7 @@ function nextId(): string {
 /**
  * Resolve the execution mode for a step given the actor type and spec mode.
  *
- * Resolution logic (per PRD Section 3.4):
+ * Resolution logic (per Architecture doc Section 3.4):
  * 1. human + human spec_mode -> work_item
  * 2. ai_conversational -> chat
  * 3. ai_autonomous -> agent_loop
@@ -68,7 +75,11 @@ const _handler: FunctionalConceptHandler = {
     const actor = input.actor as string;
     const specMode = input.spec_mode as string;
     const actorType = input.actor_type as string;
+    const subjectId = (input.subject_id as string | null | undefined) ?? null;
+    const rolePool = (input.role_pool as string | null | undefined) ?? null;
+    const shadowMode = !!(input.shadow_mode as boolean | null | undefined);
 
+    // Validate inputs before any storage operations
     if (!step || step.trim() === '') {
       return complete(createProgram(), 'error', {
         message: 'step reference is required',
@@ -101,6 +112,9 @@ const _handler: FunctionalConceptHandler = {
       actor_type: actorType,
       resolved_mode: resolvedMode,
       actor_ref: actor,
+      subject_id: subjectId,
+      role_pool: rolePool,
+      shadow_mode: shadowMode,
     });
     return complete(p, 'ok', {
       ed: edId,
@@ -113,6 +127,7 @@ const _handler: FunctionalConceptHandler = {
     const newMode = input.new_mode as string;
     const justification = input.justification as string;
 
+    // Validate inputs before storage operations
     if (!newMode || !VALID_RESOLVED_MODES.has(newMode)) {
       return complete(createProgram(), 'error', {
         message: `invalid resolved mode: ${newMode}`,
@@ -135,6 +150,77 @@ const _handler: FunctionalConceptHandler = {
           override_justification: justification,
         }));
         return complete(b2, 'ok', { ed }) as StorageProgram<Result>;
+      },
+      (b) => complete(b, 'notfound', {
+        message: `no dispatch record found for: ${ed}`,
+      }),
+    ) as StorageProgram<Result>;
+  },
+
+  checkEligibility(input: Record<string, unknown>) {
+    const ed = input.ed as string;
+    const subjectId = input.subject_id as string;
+    const resource = input.resource as string;
+    const action = input.action as string;
+
+    // Validate inputs before any storage or transport operations
+    if (!subjectId || subjectId.trim() === '') {
+      return complete(createProgram(), 'error', {
+        message: 'subject_id is required',
+      }) as StorageProgram<Result>;
+    }
+    if (!resource || resource.trim() === '') {
+      return complete(createProgram(), 'error', {
+        message: 'resource is required',
+      }) as StorageProgram<Result>;
+    }
+    if (!action || action.trim() === '') {
+      return complete(createProgram(), 'error', {
+        message: 'action is required',
+      }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = get(p, 'dispatch', ed, 'dispatchRecord');
+
+    return branch(p, 'dispatchRecord',
+      (b) => {
+        // Dispatch record found — extract shadow_mode and call AccessControl/check
+        // via perform() transport effect. This crosses concept boundaries through
+        // the effect handler layer, preserving concept independence.
+        let b2 = perform(b, 'concept', 'AccessControl/check', {
+          resource,
+          action,
+          context: subjectId,
+        }, 'accessResult');
+
+        // Derive the final eligibility decision from shadow_mode + access result
+        b2 = mapBindings(b2, (bindings) => {
+          const dispatch = bindings.dispatchRecord as Record<string, unknown>;
+          const isShadow = !!(dispatch?.shadow_mode);
+          return isShadow;
+        }, '_isShadow');
+
+        b2 = mapBindings(b2, (bindings) => {
+          const accessResult = bindings.accessResult as Record<string, unknown> | null;
+          const result = accessResult?.result as string | undefined;
+          return result === 'allowed' || result === 'neutral';
+        }, '_allowed');
+
+        return branch(b2,
+          (bindings) => !!(bindings._isShadow),
+          // Shadow mode: always allow, shadow_mode: true on response
+          (bb) => complete(bb, 'eligible', { shadow_mode: true }) as StorageProgram<Result>,
+          // Normal mode: return actual AccessControl decision
+          (bb) => branch(bb,
+            (bindings) => !!(bindings._allowed),
+            (bbb) => complete(bbb, 'eligible', { shadow_mode: false }) as StorageProgram<Result>,
+            (bbb) => complete(bbb, 'ineligible', {
+              message: 'AccessControl denied the request',
+              shadow_mode: false,
+            }) as StorageProgram<Result>,
+          ),
+        ) as StorageProgram<Result>;
       },
       (b) => complete(b, 'notfound', {
         message: `no dispatch record found for: ${ed}`,

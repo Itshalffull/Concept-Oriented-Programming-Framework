@@ -6,6 +6,8 @@ concept ExecutionDispatch [ED] {
     permissions, process configuration, and user preference. Sits before
     step-type dispatch syncs to determine the concrete execution mode
     (work item, LLM call, agent loop, chat, etc.) for each step-actor pair.
+    Delegates eligibility enforcement to AccessControl so dispatch stays
+    focused on mode routing rather than reimplementing authorization logic.
   }
 
   state {
@@ -15,6 +17,9 @@ concept ExecutionDispatch [ED] {
     actor_type:     ED -> String          // human | ai_autonomous | ai_triggered | ai_conversational
     resolved_mode:  ED -> String          // work_item | llm_call | agent_loop | chat | approval | subprocess | automation | webhook_wait
     actor_ref:      ED -> String
+    subject_id:     ED -> String          // dispatching subject (person or agent)
+    role_pool:      ED -> option String   // optional pool or role constraint
+    shadow_mode:    ED -> Bool            // when true, log deny decisions but allow execution anyway
   }
 
   capabilities {
@@ -22,22 +27,24 @@ concept ExecutionDispatch [ED] {
   }
 
   actions {
-    action resolve(step: String, actor: String, spec_mode: String, actor_type: String, preferences: option String) {
+    action resolve(step: String, actor: String, spec_mode: String, actor_type: String, preferences: option String, subject_id: option String, role_pool: option String, shadow_mode: option Bool) {
       -> ok(ed: ED, resolved_mode: String) {
         Determine the execution mode for this step given the actor.
         Resolution logic: human+human -> work_item, ai_conversational -> chat,
         ai_autonomous -> agent_loop, ai_triggered -> llm_call, otherwise
-        falls through to the spec_mode default.
+        falls through to the spec_mode default. Records subject_id, role_pool,
+        and shadow_mode on the dispatch record for downstream eligibility checks.
       }
       -> error(message: String) {
         The step reference or actor reference is missing or invalid.
       }
-      fixture human_step { step: "step-001", actor: "user-42", spec_mode: "human", actor_type: "human", preferences: none }
-      fixture ai_conversational_step { step: "step-002", actor: "agent-7", spec_mode: "human", actor_type: "ai_conversational", preferences: none }
-      fixture ai_autonomous_step { step: "step-003", actor: "agent-9", spec_mode: "automation", actor_type: "ai_autonomous", preferences: none }
-      fixture ai_triggered_step { step: "step-004", actor: "agent-11", spec_mode: "llm", actor_type: "ai_triggered", preferences: none }
-      fixture fallthrough_step { step: "step-005", actor: "user-50", spec_mode: "approval", actor_type: "human", preferences: none }
-      fixture empty_step { step: "", actor: "user-1", spec_mode: "human", actor_type: "human", preferences: none } -> error
+      fixture human_step { step: "step-001", actor: "user-42", spec_mode: "human", actor_type: "human", preferences: none, subject_id: none, role_pool: none, shadow_mode: none }
+      fixture ai_conversational_step { step: "step-002", actor: "agent-7", spec_mode: "human", actor_type: "ai_conversational", preferences: none, subject_id: none, role_pool: none, shadow_mode: none }
+      fixture ai_autonomous_step { step: "step-003", actor: "agent-9", spec_mode: "automation", actor_type: "ai_autonomous", preferences: none, subject_id: none, role_pool: none, shadow_mode: none }
+      fixture ai_triggered_step { step: "step-004", actor: "agent-11", spec_mode: "llm", actor_type: "ai_triggered", preferences: none, subject_id: none, role_pool: none, shadow_mode: none }
+      fixture fallthrough_step { step: "step-005", actor: "user-50", spec_mode: "approval", actor_type: "human", preferences: none, subject_id: none, role_pool: none, shadow_mode: none }
+      fixture shadow_step { step: "step-006", actor: "agent-20", spec_mode: "automation", actor_type: "ai_autonomous", preferences: none, subject_id: "user-99", role_pool: "engineers", shadow_mode: true }
+      fixture empty_step { step: "", actor: "user-1", spec_mode: "human", actor_type: "human", preferences: none, subject_id: none, role_pool: none, shadow_mode: none } -> error
     }
 
     action override(ed: ED, new_mode: String, justification: String) {
@@ -55,31 +62,58 @@ concept ExecutionDispatch [ED] {
       fixture override_missing { ed: "nonexistent", new_mode: "chat", justification: "test" } -> notfound
       fixture override_empty_justification { ed: $human_step.ed, new_mode: "chat", justification: "" } after human_step -> error
     }
+
+    action checkEligibility(ed: ED, subject_id: String, resource: String, action: String) {
+      -> eligible(shadow_mode: Bool) {
+        The subject is eligible to perform the action on the resource.
+        In shadow mode the AccessControl decision is logged but execution
+        is always permitted, returning eligible regardless of the deny decision.
+      }
+      -> ineligible(message: String, shadow_mode: Bool) {
+        AccessControl denied the request and shadow mode is not active on
+        this dispatch record. The caller should block execution.
+      }
+      -> notfound(message: String) {
+        No dispatch record exists with this identifier.
+      }
+      -> error(message: String) {
+        subject_id, resource, or action is missing or empty.
+      }
+      fixture check_eligible { ed: $human_step.ed, subject_id: "user-42", resource: "step-001", action: "execute" } after human_step
+      fixture check_shadow { ed: $shadow_step.ed, subject_id: "user-99", resource: "step-006", action: "execute" } after shadow_step
+      fixture check_missing_ed { ed: "nonexistent", subject_id: "user-1", resource: "step-x", action: "execute" } -> notfound
+      fixture check_empty_subject { ed: $human_step.ed, subject_id: "", resource: "step-001", action: "execute" } after human_step -> error
+    }
   }
 
   example "resolve human step as work_item": {
-    after resolve(step: "step-A", actor: "user-1", spec_mode: "human", actor_type: "human", preferences: none) -> ok(ed: x, resolved_mode: "work_item")
+    after resolve(step: "step-A", actor: "user-1", spec_mode: "human", actor_type: "human", preferences: none, subject_id: none, role_pool: none, shadow_mode: none) -> ok(ed: x, resolved_mode: "work_item")
     then override(ed: x, new_mode: "chat", justification: "Switching to AI chat") -> ok(ed: x)
   }
 
   example "resolve ai_conversational as chat": {
-    after resolve(step: "step-B", actor: "agent-3", spec_mode: "human", actor_type: "ai_conversational", preferences: none) -> ok(ed: y, resolved_mode: "chat")
+    after resolve(step: "step-B", actor: "agent-3", spec_mode: "human", actor_type: "ai_conversational", preferences: none, subject_id: none, role_pool: none, shadow_mode: none) -> ok(ed: y, resolved_mode: "chat")
     then override(ed: y, new_mode: "work_item", justification: "Reverting to manual") -> ok(ed: y)
   }
 
   example "resolve ai_autonomous as agent_loop": {
-    after resolve(step: "step-C", actor: "agent-5", spec_mode: "automation", actor_type: "ai_autonomous", preferences: none) -> ok(ed: z, resolved_mode: "agent_loop")
+    after resolve(step: "step-C", actor: "agent-5", spec_mode: "automation", actor_type: "ai_autonomous", preferences: none, subject_id: none, role_pool: none, shadow_mode: none) -> ok(ed: z, resolved_mode: "agent_loop")
     then override(ed: z, new_mode: "llm_call", justification: "Downgrade to single call") -> ok(ed: z)
   }
 
   example "resolve ai_triggered as llm_call": {
-    after resolve(step: "step-D", actor: "agent-8", spec_mode: "llm", actor_type: "ai_triggered", preferences: none) -> ok(ed: w, resolved_mode: "llm_call")
+    after resolve(step: "step-D", actor: "agent-8", spec_mode: "llm", actor_type: "ai_triggered", preferences: none, subject_id: none, role_pool: none, shadow_mode: none) -> ok(ed: w, resolved_mode: "llm_call")
     then override(ed: w, new_mode: "agent_loop", justification: "Upgrade to agent loop") -> ok(ed: w)
   }
 
   example "fallthrough uses spec_mode default": {
-    after resolve(step: "step-E", actor: "user-99", spec_mode: "approval", actor_type: "human", preferences: none) -> ok(ed: v, resolved_mode: "approval")
+    after resolve(step: "step-E", actor: "user-99", spec_mode: "approval", actor_type: "human", preferences: none, subject_id: none, role_pool: none, shadow_mode: none) -> ok(ed: v, resolved_mode: "approval")
     then override(ed: v, new_mode: "work_item", justification: "Override approval to manual") -> ok(ed: v)
+  }
+
+  example "shadow mode allows execution on deny": {
+    after resolve(step: "step-F", actor: "agent-20", spec_mode: "automation", actor_type: "ai_autonomous", preferences: none, subject_id: "user-99", role_pool: none, shadow_mode: true) -> ok(ed: s)
+    then checkEligibility(ed: s, subject_id: "user-99", resource: "step-F", action: "execute") -> eligible(shadow_mode: true)
   }
 
   never "dispatch without resolved mode": {
