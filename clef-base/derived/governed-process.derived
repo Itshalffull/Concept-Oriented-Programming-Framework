@@ -2,7 +2,7 @@ derived GovernedProcess [G] {
 
   purpose {
     Unified governance and process execution — governance workflows ARE processes
-    and processes operate within governance structures. Composes Circle-based
+    and processes operate within governance structures. Composes Team-based
     organizational structure, proposal lifecycle, voting with pluggable counting
     methods, execution with timelock and guard gates, ADICO-style policy
     evaluation, reputation-weighted participation, and process orchestration with
@@ -14,8 +14,8 @@ derived GovernedProcess [G] {
 
   composes {
     ProcessPlatform [G]
-    Circle [G]
-    Polity [G]
+    Team [G]
+    Organization [G]
     Delegation [G]
     Weight [G]
     Proposal [G]
@@ -62,8 +62,8 @@ derived GovernedProcess [G] {
   }
 
   surface {
-    action createCircle(name: String, domain: String) {
-      matches: Circle/create(name: name, domain: domain)
+    action createTeam(name: String, domain: String) {
+      matches: Team/create(name: name, domain: domain)
     }
 
     action createProposal(proposer: String, title: String, description: String,
@@ -96,7 +96,7 @@ derived GovernedProcess [G] {
 
     query getProposalStatus(proposal: G) -> Proposal/getStatus(proposal: proposal)
 
-    query getCircleMembers(circle: G) -> Circle/getMembers(circle: circle)
+    query getTeamMembers(team: G) -> Team/getMembers(team: team)
 
     query getReputation(member: String) -> Reputation/get(member: member)
 
@@ -110,5 +110,10 @@ derived GovernedProcess [G] {
     and  castVote resolves via CountingMethod and Quorum
     and  passed proposals execute through Timelock and Guard
     and  Reputation adjusts for all participants
+  }
+
+  principle {
+    after createTeam(name: n, domain: d)
+    then Team is created within the Organization governance scope
   }
 }

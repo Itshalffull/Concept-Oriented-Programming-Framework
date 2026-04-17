@@ -520,9 +520,9 @@ describe('SearchIndex functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('createIndex'), input: fc.record({ index: fc.string(), config: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('indexItem'), input: fc.record({ index: fc.string(), item: fc.string({ minLength: 1, maxLength: 50 }), data: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('indexItem'), input: fc.record({ index: fc.string(), item: fc.string({ minLength: 1, maxLength: 50 }), data: fc.string({ minLength: 1, maxLength: 50 }), namespace: fc.string() }) }),
               fc.record({ action: fc.constant('removeItem'), input: fc.record({ index: fc.string(), item: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('search'), input: fc.record({ index: fc.string(), query: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('search'), input: fc.record({ index: fc.string(), query: fc.string({ minLength: 1, maxLength: 50 }), namespace: fc.string() }) }),
               fc.record({ action: fc.constant('addProcessor'), input: fc.record({ index: fc.string(), processor: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('reindex'), input: fc.record({ index: fc.string() }) }),
             ),
@@ -555,9 +555,9 @@ describe('SearchIndex functional handler', () => {
           fc.array(
             fc.oneof(
               fc.record({ action: fc.constant('createIndex'), input: fc.record({ index: fc.string(), config: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('indexItem'), input: fc.record({ index: fc.string(), item: fc.string({ minLength: 1, maxLength: 50 }), data: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('indexItem'), input: fc.record({ index: fc.string(), item: fc.string({ minLength: 1, maxLength: 50 }), data: fc.string({ minLength: 1, maxLength: 50 }), namespace: fc.string() }) }),
               fc.record({ action: fc.constant('removeItem'), input: fc.record({ index: fc.string(), item: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('search'), input: fc.record({ index: fc.string(), query: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('search'), input: fc.record({ index: fc.string(), query: fc.string({ minLength: 1, maxLength: 50 }), namespace: fc.string() }) }),
               fc.record({ action: fc.constant('addProcessor'), input: fc.record({ index: fc.string(), processor: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('reindex'), input: fc.record({ index: fc.string() }) }),
             ),
@@ -637,7 +637,7 @@ describe('SearchIndex functional handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ index: fc.string(), item: fc.string({ minLength: 1, maxLength: 50 }), data: fc.string({ minLength: 1, maxLength: 50 }) }),
+          fc.record({ index: fc.string(), item: fc.string({ minLength: 1, maxLength: 50 }), data: fc.string({ minLength: 1, maxLength: 50 }), namespace: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
             const result = await safeInvoke(async () => {

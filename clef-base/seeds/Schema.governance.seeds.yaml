@@ -11,8 +11,8 @@ entries:
   - schema: instruction-block
     fields: 'section_type,role,priority,required,max_tokens'
 
-  # === Constitution ===
-  - schema: constitution
+  # === Charter ===
+  - schema: charter
     fields: 'name,description,max_revisions,critique_model,status'
   - schema: principle
     fields: 'category,priority,severity,enabled'
@@ -29,10 +29,10 @@ entries:
   - schema: proposal-section
     fields: 'section_type,required,word_limit,reviewable'
 
-  # === Governance: Circle ===
-  - schema: circle
-    fields: 'name,domain,description,governance_model,parent_circle,lead_link,rep_link,status'
-  - schema: circle-member
+  # === Governance: Team ===
+  - schema: team
+    fields: 'name,domain,description,governance_model,parent_team,lead_link,rep_link,status'
+  - schema: team-member
     fields: 'member_id,role,joined_date,reputation_score,active,delegation_to'
 
   # === Governance: Policy ===

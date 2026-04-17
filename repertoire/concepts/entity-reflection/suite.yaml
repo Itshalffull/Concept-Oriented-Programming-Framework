@@ -704,11 +704,11 @@ syncs:
     tier: recommended
 
   # Wave 22: Governance Structure
-  - name: polity-as-config-entity
-    file: syncs/governance-structure/polity-as-config-entity.sync
+  - name: organization-as-config-entity
+    file: syncs/governance-structure/organization-as-config-entity.sync
     tier: recommended
-  - name: circle-as-config-entity
-    file: syncs/governance-structure/circle-as-config-entity.sync
+  - name: team-as-config-entity
+    file: syncs/governance-structure/team-as-config-entity.sync
     tier: recommended
   - name: delegation-as-content-entity
     file: syncs/governance-structure/delegation-as-content-entity.sync

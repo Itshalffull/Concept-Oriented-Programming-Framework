@@ -1,12 +1,12 @@
 # Canvas-to-governance bridge syncs.
 # When nodes are added or connected on a canvas carrying the governance-org
-# notation, create and link actual governance concepts (Circle, Role).
+# notation, create and link actual governance concepts (Team, Role).
 
-# When a circle node is added to a governance org canvas, create the Circle.
+# When a team node is added to a governance org canvas, create the Team.
 
-sync CanvasCircleNodeCreatesCircle [eager]
+sync CanvasTeamNodeCreatesTeam [eager]
   purpose {
-    Create a Circle entity when a circle-typed node is placed on a
+    Create a Team entity when a team-typed node is placed on a
     governance-org canvas, so the visual canvas element has a live
     governance object backing it.
   }
@@ -16,12 +16,12 @@ when {
 }
 where {
   Property: { ?canvas key: "notation"; value: "governance-org" }
-  Property: { ?node key: "nodeType"; value: "circle" }
+  Property: { ?node key: "nodeType"; value: "team" }
   Property: { ?node key: "name"; value: ?name }
   Property: { ?node key: "domain"; value: ?domain }
 }
 then {
-  Circle/create: [ name: ?name; domain: ?domain; parent: none ]
+  Team/create: [ name: ?name; domain: ?domain; parent: none ]
 }
 
 # When a role node is added to a governance org canvas, create the Role.
@@ -46,11 +46,11 @@ then {
   Role/create: [ name: ?name; permissions: ""; polity: ?polity ]
 }
 
-# When circles are connected with a parent_of connector, establish hierarchy.
+# When teams are connected with a parent_of connector, establish hierarchy.
 
 sync CanvasParentConnectorCreatesHierarchy [eager]
   purpose {
-    Establish a parent-circle relation when a parent_of connector is drawn
+    Establish a parent-team relation when a parent_of connector is drawn
     between two nodes on a governance-org canvas, wiring the canvas visual
     to the governed hierarchy.
   }
@@ -62,45 +62,45 @@ where {
   Property: { ?canvas key: "notation"; value: "governance-org" }
 }
 then {
-  Relation/link: [ relation: "parent_circle"; source: ?parent; target: ?child ]
+  Relation/link: [ relation: "parent_team"; source: ?parent; target: ?child ]
 }
 
-# When a role node is connected to a circle with a contains_role connector, scope the role.
+# When a role node is connected to a team with a contains_role connector, scope the role.
 
-sync CanvasRoleConnectorScopesToCircle [eager]
+sync CanvasRoleConnectorScopesToTeam [eager]
   purpose {
-    Scope a role to a circle when a contains_role connector is drawn from
-    the circle node to the role node, establishing circle membership in the
+    Scope a role to a team when a contains_role connector is drawn from
+    the team node to the role node, establishing team membership in the
     governance model.
   }
 when {
-  SpatialConnector/draw: [ canvas: ?canvas; source: ?circle; target: ?role; type: "contains_role" ]
+  SpatialConnector/draw: [ canvas: ?canvas; source: ?team; target: ?role; type: "contains_role" ]
     => ok(connector: ?conn)
 }
 where {
   Property: { ?canvas key: "notation"; value: "governance-org" }
 }
 then {
-  Relation/link: [ relation: "circle_role"; source: ?circle; target: ?role ]
+  Relation/link: [ relation: "team_role"; source: ?team; target: ?role ]
 }
 
-# When a process node is connected to a circle with a bound_process connector, bind it.
+# When a process node is connected to a team with a bound_process connector, bind it.
 
-sync CanvasProcessConnectorBindsToCircle [eager]
+sync CanvasProcessConnectorBindsToTeam [eager]
   purpose {
-    Bind a process spec to a circle when a bound_process connector is drawn
-    from the circle node to the process node, making the process executable
-    within that circle's governance scope.
+    Bind a process spec to a team when a bound_process connector is drawn
+    from the team node to the process node, making the process executable
+    within that team's governance scope.
   }
 when {
-  SpatialConnector/draw: [ canvas: ?canvas; source: ?circle; target: ?process; type: "bound_process" ]
+  SpatialConnector/draw: [ canvas: ?canvas; source: ?team; target: ?process; type: "bound_process" ]
     => ok(connector: ?conn)
 }
 where {
   Property: { ?canvas key: "notation"; value: "governance-org" }
 }
 then {
-  Relation/link: [ relation: "circle_process"; source: ?circle; target: ?process ]
+  Relation/link: [ relation: "team_process"; source: ?team; target: ?process ]
 }
 
 # When a delegation connector is drawn between role nodes, create the delegation.

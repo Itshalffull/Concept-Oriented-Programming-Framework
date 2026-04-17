@@ -1,66 +1,66 @@
 # Governance view registrations.
 # Four views for the governed-process integration.
 
-# === 5.1 Circle Processes View ===
-# Table of processes available to a circle, filterable by status.
+# === 5.1 Team Processes View ===
+# Table of processes available to a team, filterable by status.
 
-sync RegisterCircleProcessesDataSource [eager]
-  purpose { Register data source for processes bound to a circle. }
+sync RegisterTeamProcessesDataSource [eager]
+  purpose { Register data source for processes bound to a team. }
 when {
-  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+  Schema/defineSchema: [schema: "team"; fields: ?fields]
     => ok()
 }
 then {
-  DataSourceSpec/create: [name: "circle-processes-source"; config: "{\"concept\":\"ProcessSpec\",\"filter\":{\"boundCircle\":\"${circleId}\"},\"joinSchema\":true}"]
+  DataSourceSpec/create: [name: "team-processes-source"; config: "{\"concept\":\"ProcessSpec\",\"filter\":{\"boundTeam\":\"${teamId}\"},\"joinSchema\":true}"]
 }
 
-sync RegisterCircleProcessesFilter [eager]
-  purpose { Register filter spec for the circle processes view so members can narrow by status. }
+sync RegisterTeamProcessesFilter [eager]
+  purpose { Register filter spec for the team processes view so members can narrow by status. }
 when {
-  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+  Schema/defineSchema: [schema: "team"; fields: ?fields]
     => ok()
 }
 then {
-  FilterSpec/create: [name: "circle-processes-filter"; filter: "{\"fields\":[{\"key\":\"status\",\"type\":\"select\",\"options\":[\"draft\",\"active\",\"suspended\",\"archived\"]}]}"]
+  FilterSpec/create: [name: "team-processes-filter"; filter: "{\"fields\":[{\"key\":\"status\",\"type\":\"select\",\"options\":[\"draft\",\"active\",\"suspended\",\"archived\"]}]}"]
 }
 
-sync RegisterCircleProcessesSort [eager]
-  purpose { Register sort spec for the circle processes view ordering by name ascending. }
+sync RegisterTeamProcessesSort [eager]
+  purpose { Register sort spec for the team processes view ordering by name ascending. }
 when {
-  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+  Schema/defineSchema: [schema: "team"; fields: ?fields]
     => ok()
 }
 then {
-  SortSpec/create: [name: "circle-processes-sort"; keys: "[{\"field\":\"name\",\"direction\":\"asc\"}]"]
+  SortSpec/create: [name: "team-processes-sort"; keys: "[{\"field\":\"name\",\"direction\":\"asc\"}]"]
 }
 
-sync RegisterCircleProcessesPresentation [eager]
-  purpose { Register table presentation spec for the circle processes view. }
+sync RegisterTeamProcessesPresentation [eager]
+  purpose { Register table presentation spec for the team processes view. }
 when {
-  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+  Schema/defineSchema: [schema: "team"; fields: ?fields]
     => ok()
 }
 then {
-  PresentationSpec/create: [name: "circle-processes-presentation"; displayType: "table"; hints: "{\"refreshInterval\":10000}"]
+  PresentationSpec/create: [name: "team-processes-presentation"; displayType: "table"; hints: "{\"refreshInterval\":10000}"]
 }
 
-sync RegisterCircleProcessesView [eager]
-  purpose { Register the Circle Processes ViewShell assembling all component specs. }
+sync RegisterTeamProcessesView [eager]
+  purpose { Register the Team Processes ViewShell assembling all component specs. }
 when {
-  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+  Schema/defineSchema: [schema: "team"; fields: ?fields]
     => ok()
 }
 then {
-  ViewShell/create: [name: "circle-processes"; dataSource: "circle-processes-source"; filter: "circle-processes-filter"; sort: "circle-processes-sort"; group: ""; projection: ""; presentation: "circle-processes-presentation"; interaction: ""]
+  ViewShell/create: [name: "team-processes"; dataSource: "team-processes-source"; filter: "team-processes-filter"; sort: "team-processes-sort"; group: ""; projection: ""; presentation: "team-processes-presentation"; interaction: ""]
 }
 
 # === 5.2 Active Proposals View ===
-# Card grid of proposals across circles, filterable by status, circle, and proposer.
+# Card grid of proposals across teams, filterable by status, team, and proposer.
 
 sync RegisterActiveProposalsDataSource [eager]
-  purpose { Register data source for active proposals across all circles. }
+  purpose { Register data source for active proposals across all teams. }
 when {
-  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+  Schema/defineSchema: [schema: "team"; fields: ?fields]
     => ok()
 }
 then {
@@ -68,19 +68,19 @@ then {
 }
 
 sync RegisterActiveProposalsFilter [eager]
-  purpose { Register filter spec for the proposals view with status, circle, and proposer axes. }
+  purpose { Register filter spec for the proposals view with status, team, and proposer axes. }
 when {
-  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+  Schema/defineSchema: [schema: "team"; fields: ?fields]
     => ok()
 }
 then {
-  FilterSpec/create: [name: "active-proposals-filter"; filter: "{\"fields\":[{\"key\":\"status\",\"type\":\"select\",\"options\":[\"Draft\",\"Pending\",\"Sponsored\",\"Active\",\"Passed\",\"Failed\"]},{\"key\":\"proposer\",\"type\":\"text\"},{\"key\":\"circle\",\"type\":\"select\"}]}"]
+  FilterSpec/create: [name: "active-proposals-filter"; filter: "{\"fields\":[{\"key\":\"status\",\"type\":\"select\",\"options\":[\"Draft\",\"Pending\",\"Sponsored\",\"Active\",\"Passed\",\"Failed\"]},{\"key\":\"proposer\",\"type\":\"text\"},{\"key\":\"team\",\"type\":\"select\"}]}"]
 }
 
 sync RegisterActiveProposalsSort [eager]
   purpose { Register sort spec for the proposals view ordering newest first. }
 when {
-  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+  Schema/defineSchema: [schema: "team"; fields: ?fields]
     => ok()
 }
 then {
@@ -90,7 +90,7 @@ then {
 sync RegisterActiveProposalsProjection [eager]
   purpose { Register projection spec for the proposal cards showing key governance fields. }
 when {
-  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+  Schema/defineSchema: [schema: "team"; fields: ?fields]
     => ok()
 }
 then {
@@ -100,7 +100,7 @@ then {
 sync RegisterActiveProposalsPresentation [eager]
   purpose { Register card-grid presentation spec for the proposals view. }
 when {
-  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+  Schema/defineSchema: [schema: "team"; fields: ?fields]
     => ok()
 }
 then {
@@ -110,7 +110,7 @@ then {
 sync RegisterActiveProposalsView [eager]
   purpose { Register the Active Proposals ViewShell assembling all component specs. }
 when {
-  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+  Schema/defineSchema: [schema: "team"; fields: ?fields]
     => ok()
 }
 then {
@@ -118,12 +118,12 @@ then {
 }
 
 # === 5.3 Reputation Leaderboard View ===
-# Table of members ranked by reputation score, with circle filter.
+# Table of members ranked by reputation score, with team filter.
 
 sync RegisterReputationLeaderboardDataSource [eager]
   purpose { Register data source for the reputation leaderboard across members. }
 when {
-  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+  Schema/defineSchema: [schema: "team"; fields: ?fields]
     => ok()
 }
 then {
@@ -131,19 +131,19 @@ then {
 }
 
 sync RegisterReputationLeaderboardFilter [eager]
-  purpose { Register filter spec for the reputation leaderboard enabling circle-scoped views. }
+  purpose { Register filter spec for the reputation leaderboard enabling team-scoped views. }
 when {
-  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+  Schema/defineSchema: [schema: "team"; fields: ?fields]
     => ok()
 }
 then {
-  FilterSpec/create: [name: "reputation-leaderboard-filter"; filter: "{\"fields\":[{\"key\":\"circle\",\"type\":\"select\"}]}"]
+  FilterSpec/create: [name: "reputation-leaderboard-filter"; filter: "{\"fields\":[{\"key\":\"team\",\"type\":\"select\"}]}"]
 }
 
 sync RegisterReputationLeaderboardSort [eager]
   purpose { Register sort spec for the reputation leaderboard ordering by score descending. }
 when {
-  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+  Schema/defineSchema: [schema: "team"; fields: ?fields]
     => ok()
 }
 then {
@@ -153,7 +153,7 @@ then {
 sync RegisterReputationLeaderboardPresentation [eager]
   purpose { Register table presentation spec for the reputation leaderboard with rank display. }
 when {
-  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+  Schema/defineSchema: [schema: "team"; fields: ?fields]
     => ok()
 }
 then {
@@ -163,7 +163,7 @@ then {
 sync RegisterReputationLeaderboardView [eager]
   purpose { Register the Reputation Leaderboard ViewShell assembling all component specs. }
 when {
-  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+  Schema/defineSchema: [schema: "team"; fields: ?fields]
     => ok()
 }
 then {
@@ -176,7 +176,7 @@ then {
 sync RegisterGovernanceActivityDataSource [eager]
   purpose { Register data source for the governance activity event stream. }
 when {
-  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+  Schema/defineSchema: [schema: "team"; fields: ?fields]
     => ok()
 }
 then {
@@ -186,7 +186,7 @@ then {
 sync RegisterGovernanceActivitySort [eager]
   purpose { Register sort spec for the governance activity view ordering most recent first. }
 when {
-  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+  Schema/defineSchema: [schema: "team"; fields: ?fields]
     => ok()
 }
 then {
@@ -196,7 +196,7 @@ then {
 sync RegisterGovernanceActivityPresentation [eager]
   purpose { Register timeline presentation spec for the governance activity view grouped by event type. }
 when {
-  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+  Schema/defineSchema: [schema: "team"; fields: ?fields]
     => ok()
 }
 then {
@@ -206,7 +206,7 @@ then {
 sync RegisterGovernanceActivityView [eager]
   purpose { Register the Governance Activity ViewShell assembling all component specs. }
 when {
-  Schema/defineSchema: [schema: "circle"; fields: ?fields]
+  Schema/defineSchema: [schema: "team"; fields: ?fields]
     => ok()
 }
 then {

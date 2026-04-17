@@ -20,13 +20,13 @@ entries:
     key: isChildSchema
     value: "true"
 
-  # === Constitution ===
-  - entity: constitution
+  # === Charter ===
+  - entity: charter
     key: childSchema
     value: principle
-  - entity: constitution
+  - entity: charter
     key: defaultTemplate
-    value: standard-constitution
+    value: standard-charter
   - entity: principle
     key: isChildSchema
     value: "true"
@@ -53,14 +53,14 @@ entries:
     key: isChildSchema
     value: "true"
 
-  # === Circle ===
-  - entity: circle
+  # === Team ===
+  - entity: team
     key: childSchema
-    value: circle-member
-  - entity: circle
+    value: team-member
+  - entity: team
     key: defaultTemplate
-    value: standard-circle
-  - entity: circle-member
+    value: standard-team
+  - entity: team-member
     key: isChildSchema
     value: "true"
 

@@ -4,14 +4,14 @@ suite:
   description: "Governance domains, organizational structure, delegation, and participant weighting"
 
 concepts:
-  Polity:
-    spec: ./Polity.concept
+  Organization:
+    spec: ./Organization.concept
     params:
-      G: { as: polity-id, description: "Unique governance domain identifier" }
-  Circle:
-    spec: ./Circle.concept
+      O: { as: org-id, description: "Unique governance domain identifier" }
+  Team:
+    spec: ./Team.concept
     params:
-      C: { as: circle-id, description: "Unique circle identifier" }
+      T: { as: team-id, description: "Unique team identifier" }
   Delegation:
     spec: ./Delegation.concept
     params:
@@ -57,7 +57,7 @@ syncs:
   required:
     - delegation-to-weight
   recommended:
-    - circle-jurisdiction-check
+    - team-jurisdiction-check
   integration:
     - weight-token-balance
     - weight-reputation-based
@@ -70,7 +70,7 @@ widgets:
   - path: ./widgets/delegation-graph.widget
     description: "Interactive delegation relationship and voting power flow visualization"
   - path: ./widgets/circle-org-chart.widget
-    description: "Hierarchical organization chart showing governance circles"
+    description: "Hierarchical organization chart showing governance teams"
   - path: ./widgets/weight-breakdown.widget
     description: "Stacked bar or donut chart showing voting weight by source"
 
@@ -78,7 +78,7 @@ surface:
   entityAffordances:
     - concept: Delegation
       detail: delegation-graph
-    - concept: Polity
+    - concept: Organization
       detail: circle-org-chart
     - concept: Weight
       detail: weight-breakdown

@@ -28,7 +28,7 @@ then {
 
 sync PolicyGuardsProcessStep [eager]
   purpose {
-    Before a process step advances, evaluate the circle's active policies
+    Before a process step advances, evaluate the team's active policies
     against the step context so that non-compliant steps are blocked before
     they produce side effects.
   }
@@ -37,8 +37,8 @@ when {
     => ok(step: ?step; run_ref: ?run_ref; step_key: ?step_key; output: ?output)
 }
 where {
-  Property: { ?run_ref key: "boundCircle"; value: ?circle };
-  Property: { ?circle key: "policyId"; value: ?policy }
+  Property: { ?run_ref key: "boundTeam"; value: ?team };
+  Property: { ?team key: "policyId"; value: ?policy }
 }
 then {
   Policy/evaluate: [
@@ -142,7 +142,7 @@ then {
 sync ProposalChangesMembership [eager]
   purpose {
     When a governance execution completes and its result encodes a membership
-    join action, add the designated participant to the governed circle so
+    join action, add the designated participant to the governed team so
     the membership change from the proposal takes immediate effect.
   }
 when {

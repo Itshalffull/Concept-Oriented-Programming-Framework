@@ -17,7 +17,7 @@ entries:
       ]
     variables: "persona_id"
 
-  - template: standard-constitution
+  - template: standard-charter
     body: |
       [
         {"category":"safety","priority":100,"severity":"critical","enabled":true,"content":"Do not produce content that could cause physical, emotional, or financial harm."},
@@ -48,12 +48,12 @@ entries:
       ]
     variables: "page_id"
 
-  - template: standard-circle
+  - template: standard-team
     body: |
       [
-        {"role":"lead","member_id":"","content":"Assign a lead link for this circle."},
+        {"role":"lead","member_id":"","content":"Assign a lead link for this team."},
         {"role":"facilitator","member_id":"","content":"Assign a facilitator for governance meetings."},
-        {"role":"member","member_id":"","content":"Add members to this circle."}
+        {"role":"member","member_id":"","content":"Add members to this team."}
       ]
     variables: "page_id"
 

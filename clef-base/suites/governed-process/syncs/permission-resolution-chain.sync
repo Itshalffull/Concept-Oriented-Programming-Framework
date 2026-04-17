@@ -1,5 +1,5 @@
 # Permission resolution chain syncs — when a direct permission check returns denied,
-# expand the lookup through the person's roles, their circles, active process context,
+# expand the lookup through the person's roles, their teams, active process context,
 # and proposal-type guards so that indirect grants are honoured.
 # See Architecture doc Sections 16.11, 16.12.
 
@@ -24,22 +24,22 @@ then {
   ]
 }
 
-sync CirclePermissionExpansion [eager]
+sync TeamPermissionExpansion [eager]
   purpose {
-    When a direct permission check is denied for a person, check each circle
-    the person belongs to so that permissions granted at the circle level are
-    available to all circle members regardless of role assignments.
+    When a direct permission check is denied for a person, check each team
+    the person belongs to so that permissions granted at the team level are
+    available to all team members regardless of role assignments.
   }
 when {
   Permission/check: [ who: ?person; where: ?resource; what: ?action ]
     => denied(who: ?person; where: ?resource; what: ?action)
 }
 where {
-  Circle: { ?circle members: ?person }
+  Team: { ?team members: ?person }
 }
 then {
   Permission/check: [
-    who: concat("circle:", ?circle);
+    who: concat("team:", ?team);
     where: ?resource;
     what: ?action
   ]

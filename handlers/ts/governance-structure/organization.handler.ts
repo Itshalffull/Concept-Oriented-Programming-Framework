@@ -1,5 +1,5 @@
 // @clef-handler style=functional
-// Polity Concept Implementation
+// Organization Concept Implementation
 // Define a governance domain with its foundational purpose, values,
 // scope of authority, and constitutional layer configuration.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
@@ -13,12 +13,12 @@ type Result = { variant: string; [key: string]: unknown };
 
 let idCounter = 0;
 function nextId(): string {
-  return `polity-${++idCounter}`;
+  return `org-${++idCounter}`;
 }
 
 const _handler: FunctionalConceptHandler = {
   register() {
-    return complete(createProgram(), 'ok', { name: 'Polity' }) as StorageProgram<Result>;
+    return complete(createProgram(), 'ok', { name: 'Organization' }) as StorageProgram<Result>;
   },
 
   establish(input: Record<string, unknown>) {
@@ -28,47 +28,47 @@ const _handler: FunctionalConceptHandler = {
 
     const id = nextId();
     let p = createProgram();
-    p = put(p, 'polity', id, {
+    p = put(p, 'organization', id, {
       id, name: input.name, purpose: input.purpose, scope: input.scope,
       values: input.values, constitutionalRules: [],
       operationalLayer: 'standard', policyLayer: 'standard', constitutionalLayer: 'standard',
       status: 'Active', createdAt: new Date().toISOString(), amendedAt: null,
     });
-    return complete(p, 'ok', { id, polity: id }) as StorageProgram<Result>;
+    return complete(p, 'ok', { id, organization: id }) as StorageProgram<Result>;
   },
 
   amend(input: Record<string, unknown>) {
-    const { polity, field, newValue } = input;
+    const { organization, field, newValue } = input;
     let p = createProgram();
-    p = get(p, 'polity', polity as string, 'record');
+    p = get(p, 'organization', organization as string, 'record');
 
     return branch(p, 'record',
       (b) => {
-        let b2 = put(b, 'polity', polity as string, { [field as string]: newValue, amendedAt: new Date().toISOString() });
-        return complete(b2, 'ok', { polity, field });
+        let b2 = put(b, 'organization', organization as string, { [field as string]: newValue, amendedAt: new Date().toISOString() });
+        return complete(b2, 'ok', { organization, field });
       },
-      (b) => complete(b, 'not_found', { polity }),
+      (b) => complete(b, 'not_found', { organization }),
     ) as StorageProgram<Result>;
   },
 
   dissolve(input: Record<string, unknown>) {
-    const { polity, reason } = input;
+    const { organization, reason } = input;
     let p = createProgram();
-    p = get(p, 'polity', polity as string, 'record');
+    p = get(p, 'organization', organization as string, 'record');
 
     return branch(p, 'record',
       (b) => {
-        let b2 = put(b, 'polity', polity as string, { status: 'Dissolved', dissolvedAt: new Date().toISOString(), reason });
-        return complete(b2, 'ok', { polity });
+        let b2 = put(b, 'organization', organization as string, { status: 'Dissolved', dissolvedAt: new Date().toISOString(), reason });
+        return complete(b2, 'ok', { organization });
       },
-      (b) => complete(b, 'not_found', { polity }),
+      (b) => complete(b, 'not_found', { organization }),
     ) as StorageProgram<Result>;
   },
 };
 
-export const polityHandler = autoInterpret(_handler);
+export const organizationHandler = autoInterpret(_handler);
 
 /** Reset internal state. Useful for testing. */
-export function resetPolity(): void {
+export function resetOrganization(): void {
   idCounter = 0;
 }

@@ -1,0 +1,130 @@
+# @fixtures-added
+@version(1)
+concept Team [T] {
+
+  purpose {
+    Organize governance into semi-autonomous nested groups with defined
+    jurisdictions and subsidiarity.
+  }
+
+  state {
+    teams: set T
+    name: T -> String
+    parent: T -> option T
+    children: T -> set T
+    members: T -> set String
+    domain: T -> String
+    policies: T -> set String
+    repLink: T -> option String
+    leadLink: T -> option String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action create(name: String, domain: String, parent: option T) {
+      -> ok(team: T) {
+        A new team is created. If parent is specified, this team
+        is added to the parent's children set.
+      }
+
+      fixture valid_create { name: "Engineering", domain: "software-development", purpose: "Build and ship software" }
+      fixture create_with_parent { name: "Backend", domain: "api-services", purpose: "Manage APIs", parent: "team-1" }
+      fixture missing_name { name: "", domain: "unknown", purpose: "" } -> error
+    }
+
+    action assignMember(team: T, member: String) {
+      -> ok(team: T, member: String) {
+        The member is added to the team's member set.
+      }
+      -> not_found(team: T) {
+        The team does not exist.
+      }
+
+      fixture valid_assign { team: $valid_create.id, member: "alice", role: "developer" } after valid_create
+      fixture assign_nonexistent { team: "team-999", member: "bob", role: "lead" } -> error
+    }
+
+    action removeMember(team: T, member: String) {
+      -> ok(team: T, member: String) {
+        The member is removed from the team's member set.
+      }
+
+      fixture valid_remove { team: $valid_create.id, member: "alice" } after valid_create
+      fixture remove_nonexistent_team { team: "team-999", member: "alice" } -> error
+    }
+
+    action setLinks(team: T, repLink: option String, leadLink: option String) {
+      -> ok(team: T) {
+        The representative and lead links are set. RepLink represents
+        the team in its parent; leadLink represents the parent in this team.
+      }
+
+      fixture valid_set_links { team: $valid_create.id, leadLink: "alice", repLink: "bob" } after valid_create
+      fixture set_links_nonexistent { team: "team-999", leadLink: "alice", repLink: "bob" } -> error
+    }
+
+    action dissolve(team: T) {
+      -> ok(team: T) {
+        The team is removed. Children are reparented to this team's parent.
+        Members are unassigned.
+      }
+      -> not_found(team: T) {
+        The team does not exist.
+      }
+
+      fixture valid_dissolve { team: $valid_create.id } after valid_create
+      fixture dissolve_nonexistent { team: "team-999" } -> error
+    }
+
+    action checkJurisdiction(team: T, action: String) {
+      -> ok(team: T) {
+        The action falls within this team's domain.
+      }
+      -> ok(team: T, escalateTo: option T) {
+        The action is outside this team's domain. If a parent exists,
+        escalateTo points to it.
+      }
+
+      fixture valid_jurisdiction { team: $valid_create.id, action: "approve-budget" } after valid_create
+      fixture jurisdiction_nonexistent { team: "team-999", action: "approve-budget" } -> error
+    }
+  }
+
+  example "create-then-checkJurisdiction": {
+
+    after create(name: _, domain: _, parent: _) -> ok(team: t)
+
+        then assignMember(team: t, member: m) -> ok(team: t, member: m)
+
+        and  checkJurisdiction(team: t, action: _) -> ok(team: t)
+
+  }
+
+
+  always "valid-name" {
+
+    forall t in teams:
+
+      t.name != none
+
+  }
+
+  never "orphaned-parent" {
+
+    exists t in teams:
+
+      t.parent = none
+
+  }
+
+  action create {
+
+    requires: name != ""
+
+    ensures ok: name != none
+
+  }
+}

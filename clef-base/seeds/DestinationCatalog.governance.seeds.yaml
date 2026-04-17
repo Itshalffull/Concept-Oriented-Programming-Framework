@@ -27,11 +27,11 @@ entries:
     group: Agents
 
   # === Governance ===
-  - destination: circles
-    name: circles
+  - destination: teams
+    name: teams
     targetConcept: ContentNode
     targetView: list
-    href: /admin/governance/circles
+    href: /admin/governance/teams
     icon: "◉"
     group: Governance
   - destination: org-designer
@@ -48,11 +48,11 @@ entries:
     href: /admin/governance/proposals
     icon: "📋"
     group: Governance
-  - destination: constitutions
-    name: constitutions
+  - destination: charters
+    name: charters
     targetConcept: ContentNode
     targetView: list
-    href: /admin/governance/constitutions
+    href: /admin/governance/charters
     icon: "⚖"
     group: Governance
   - destination: policies

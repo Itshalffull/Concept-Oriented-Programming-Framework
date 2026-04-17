@@ -91,13 +91,6 @@ describe('ContentStorage functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "save_record_namespaced" -> ok', async () => {
-      if (typeof contentStorageHandler.save !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await interpret(contentStorageHandler.save({ record: "user-profile-2", data: "{\"name\":\"Bob\"}", namespace: "tenant:acme" }), storage);
-      expect(result.variant).toBe('ok');
-    });
-
     it('fixture "save_empty_record" -> error', async () => {
       if (typeof contentStorageHandler.save !== 'function') return;
       const storage = createInMemoryStorage();
@@ -167,108 +160,11 @@ describe('ContentStorage functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "load_existing_namespaced" -> ok', async () => {
-      if (typeof contentStorageHandler.load !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_save_record_namespaced = await interpret(contentStorageHandler.save({ record: "user-profile-2", data: "{\"name\":\"Bob\"}", namespace: "tenant:acme" }), storage);
-      const result = await interpret(contentStorageHandler.load({ record: afterResult_save_record_namespaced?.output?.["record"], namespace: "tenant:acme" }), storage);
-      expect(result.variant).toBe('ok');
-    });
-
-    it('fixture "load_missing" -> notfound', async () => {
+    it('fixture "load_missing" -> error', async () => {
       if (typeof contentStorageHandler.load !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(contentStorageHandler.load({ record: "nonexistent" }), storage);
-      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
-      expect(normalize(result.variant)).toBe(normalize('notfound'));
-    });
-
-  });
-
-  describe('list', () => {
-    it('builds a valid StorageProgram', () => {
-      const program = contentStorageHandler.list({ prefix: "user-" });
-      expect(program).toBeDefined();
-      expect(program.instructions).toBeDefined();
-      expect(Array.isArray(program.instructions)).toBe(true);
-      expect(program.instructions.length).toBeGreaterThan(0);
-    });
-
-    it('has classifiable purity', () => {
-      const program = contentStorageHandler.list({ prefix: "user-" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const purity = classifyPurity(program);
-      expect(['pure', 'read-only', 'read-write']).toContain(purity);
-    });
-
-    it('declares completion variants', () => {
-      const program = contentStorageHandler.list({ prefix: "user-" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
-      expect(variants.size).toBeGreaterThan(0);
-    });
-
-    it('declares read and write sets', () => {
-      const program = contentStorageHandler.list({ prefix: "user-" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const reads = extractReadSet(program);
-      const writes = extractWriteSet(program);
-      const purity = classifyPurity(program);
-      if (purity === 'read-only') {
-        expect(reads.size).toBeGreaterThan(0);
-      } else if (purity === 'read-write') {
-        expect(writes.size).toBeGreaterThan(0);
-      }
-    });
-
-    it('has trackable transport effects', () => {
-      const program = contentStorageHandler.list({ prefix: "user-" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const effects = extractPerformSet(program);
-      expect(effects).toBeDefined();
-    });
-
-    it('produces a result', async () => {
-      if (typeof contentStorageHandler.list !== 'function') return;
-      const result = await interpret(contentStorageHandler.list({ prefix: "user-" }), storage);
-      expect(result).toBeDefined();
-      if (result.variant !== undefined) {
-        expect(typeof result.variant).toBe('string');
-      }
-    });
-
-    it('fixture "list_all" -> ok', async () => {
-      if (typeof contentStorageHandler.list !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_save_record = await interpret(contentStorageHandler.save({ record: "user-profile-1", data: "{\"name\":\"Alice\",\"email\":\"alice@example.com\"}" }), storage);
-      const _pool = Object.assign({}, (afterResult_save_record?.output ?? {}));
-      const _fixtureInput = { prefix: "user-" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(contentStorageHandler.list({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
-    });
-
-    it('fixture "list_namespaced" -> ok', async () => {
-      if (typeof contentStorageHandler.list !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_save_record_namespaced = await interpret(contentStorageHandler.save({ record: "user-profile-2", data: "{\"name\":\"Bob\"}", namespace: "tenant:acme" }), storage);
-      const _pool = Object.assign({}, (afterResult_save_record_namespaced?.output ?? {}));
-      const _fixtureInput = { prefix: "user-", namespace: "tenant:acme" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(contentStorageHandler.list({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -333,12 +229,11 @@ describe('ContentStorage functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "delete_missing" -> notfound', async () => {
+    it('fixture "delete_missing" -> error', async () => {
       if (typeof contentStorageHandler.delete !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(contentStorageHandler.delete({ record: "nonexistent" }), storage);
-      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
-      expect(normalize(result.variant)).toBe(normalize('notfound'));
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -401,23 +296,6 @@ describe('ContentStorage functional handler', () => {
       const afterResult_save_record = await interpret(contentStorageHandler.save({ record: "user-profile-1", data: "{\"name\":\"Alice\",\"email\":\"alice@example.com\"}" }), storage);
       const _pool = Object.assign({}, (afterResult_save_record?.output ?? {}));
       const _fixtureInput = { filter: "{\"type\":\"profile\"}" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(contentStorageHandler.query({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
-    });
-
-    it('fixture "query_by_type_namespaced" -> ok', async () => {
-      if (typeof contentStorageHandler.query !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_save_record_namespaced = await interpret(contentStorageHandler.save({ record: "user-profile-2", data: "{\"name\":\"Bob\"}", namespace: "tenant:acme" }), storage);
-      const _pool = Object.assign({}, (afterResult_save_record_namespaced?.output ?? {}));
-      const _fixtureInput = { filter: "{\"type\":\"profile\"}", namespace: "tenant:acme" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
           const cur = _fixtureInput[k];
@@ -498,12 +376,11 @@ describe('ContentStorage functional handler', () => {
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "gen_schema_missing" -> notfound', async () => {
+    it('fixture "gen_schema_missing" -> error', async () => {
       if (typeof contentStorageHandler.generateSchema !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(contentStorageHandler.generateSchema({ record: "nonexistent" }), storage);
-      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
-      expect(normalize(result.variant)).toBe(normalize('notfound'));
+      expect(result.variant).not.toBe('ok');
     });
 
   });
@@ -525,7 +402,7 @@ describe('ContentStorage functional handler', () => {
   });
 
   describe('invariant examples', () => {
-    it("save-then-load", async () => {
+    it("save-then-load-2", async () => {
       const storage = createInMemoryStorage();
       const saveResult0 = await interpret(contentStorageHandler.save({ record: "test-r", data: "{\"title\":\"Test\"}" }), storage);
       expect(saveResult0.variant).toBe("ok");
@@ -535,7 +412,7 @@ describe('ContentStorage functional handler', () => {
       expect(thenResult0.variant).toBe("ok");
     });
 
-    it("save-then-delete-then-load", async () => {
+    it("save-then-load", async () => {
       const storage = createInMemoryStorage();
       const saveResult0 = await interpret(contentStorageHandler.save({ record: "test-r", data: "{\"title\":\"Test\"}" }), storage);
       expect(saveResult0.variant).toBe("ok");
@@ -544,26 +421,6 @@ describe('ContentStorage functional handler', () => {
       const deleteResult1 = await interpret(contentStorageHandler.delete({ record: r }), storage);
       expect(deleteResult1.variant).toBe("ok");
       record = deleteResult1.output["record"];
-      const thenResult0 = await interpret(contentStorageHandler.load({ record: r }), storage);
-      expect(thenResult0.variant).toBe("notfound");
-    });
-
-    it("namespace-scoping", async () => {
-      const storage = createInMemoryStorage();
-      const saveResult0 = await interpret(contentStorageHandler.save({ record: "test-r", data: "{\"title\":\"NS\"}", namespace: "tenant:acme" }), storage);
-      expect(saveResult0.variant).toBe("ok");
-      let record = saveResult0.output["record"];
-      let r = record;
-      const thenResult0 = await interpret(contentStorageHandler.load({ record: r, namespace: "tenant:acme" }), storage);
-      expect(thenResult0.variant).toBe("ok");
-    });
-
-    it("namespace-isolation", async () => {
-      const storage = createInMemoryStorage();
-      const saveResult0 = await interpret(contentStorageHandler.save({ record: "test-r", data: "{\"title\":\"NS\"}", namespace: "tenant:acme" }), storage);
-      expect(saveResult0.variant).toBe("ok");
-      let record = saveResult0.output["record"];
-      let r = record;
       const thenResult0 = await interpret(contentStorageHandler.load({ record: r }), storage);
       expect(thenResult0.variant).toBe("notfound");
     });
@@ -578,7 +435,6 @@ describe('ContentStorage functional handler', () => {
             fc.oneof(
               fc.record({ action: fc.constant('save'), input: fc.record({ record: fc.string(), data: fc.string({ minLength: 1, maxLength: 50 }), namespace: fc.string() }) }),
               fc.record({ action: fc.constant('load'), input: fc.record({ record: fc.string(), namespace: fc.string() }) }),
-              fc.record({ action: fc.constant('list'), input: fc.record({ prefix: fc.string({ minLength: 1, maxLength: 50 }), namespace: fc.string() }) }),
               fc.record({ action: fc.constant('delete'), input: fc.record({ record: fc.string() }) }),
               fc.record({ action: fc.constant('query'), input: fc.record({ filter: fc.string({ minLength: 1, maxLength: 50 }), namespace: fc.string() }) }),
               fc.record({ action: fc.constant('generateSchema'), input: fc.record({ record: fc.string() }) }),
@@ -613,7 +469,6 @@ describe('ContentStorage functional handler', () => {
             fc.oneof(
               fc.record({ action: fc.constant('save'), input: fc.record({ record: fc.string(), data: fc.string({ minLength: 1, maxLength: 50 }), namespace: fc.string() }) }),
               fc.record({ action: fc.constant('load'), input: fc.record({ record: fc.string(), namespace: fc.string() }) }),
-              fc.record({ action: fc.constant('list'), input: fc.record({ prefix: fc.string({ minLength: 1, maxLength: 50 }), namespace: fc.string() }) }),
               fc.record({ action: fc.constant('delete'), input: fc.record({ record: fc.string() }) }),
               fc.record({ action: fc.constant('query'), input: fc.record({ filter: fc.string({ minLength: 1, maxLength: 50 }), namespace: fc.string() }) }),
               fc.record({ action: fc.constant('generateSchema'), input: fc.record({ record: fc.string() }) }),

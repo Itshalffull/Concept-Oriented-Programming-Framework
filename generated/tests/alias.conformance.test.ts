@@ -306,7 +306,7 @@ describe('Alias functional handler', () => {
             fc.oneof(
               fc.record({ action: fc.constant('addAlias'), input: fc.record({ entity: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('removeAlias'), input: fc.record({ entity: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), scope: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -338,7 +338,7 @@ describe('Alias functional handler', () => {
             fc.oneof(
               fc.record({ action: fc.constant('addAlias'), input: fc.record({ entity: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('removeAlias'), input: fc.record({ entity: fc.string(), name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('resolve'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('resolve'), input: fc.record({ name: fc.string({ minLength: 1, maxLength: 50 }), scope: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),

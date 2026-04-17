@@ -1,0 +1,24 @@
+// Organizations as config entities — bridges governance domain
+// definitions into the entity system.
+
+# When an organization is established, save as config entity
+sync OrganizationAsConfigEntity [eager]
+  purpose { Persist organization definitions as queryable config entities. }
+when {
+  Organization/establish: [ name: ?name; purpose: ?purpose; values: ?values; scope: ?scope ]
+    => ok(organization: ?organization)
+}
+then {
+  ContentStorage/save: [ record: ?organization; data: ?values ]
+}
+
+# Tag with bundle type
+sync OrganizationTagBundle [eager]
+  purpose { Tag organizations with their bundle type. }
+when {
+  Organization/establish: [ name: ?name; purpose: ?purpose; values: ?values; scope: ?scope ]
+    => ok(organization: ?organization)
+}
+then {
+  Property/set: [ entity: ?organization; key: "config_bundle"; value: "governance_organization" ]
+}

@@ -1,0 +1,24 @@
+// Teams as config entities — bridges semi-autonomous nested
+// group definitions into the entity system.
+
+# When a team is created, save as config entity
+sync TeamAsConfigEntity [eager]
+  purpose { Persist team definitions as queryable config entities. }
+when {
+  Team/create: [ name: ?name; domain: ?domain; parent: ?parent ]
+    => ok(team: ?team)
+}
+then {
+  ContentStorage/save: [ record: ?team; data: ?domain ]
+}
+
+# Tag with bundle type
+sync TeamTagBundle [eager]
+  purpose { Tag teams with their bundle type. }
+when {
+  Team/create: [ name: ?name; domain: ?domain; parent: ?parent ]
+    => ok(team: ?team)
+}
+then {
+  Property/set: [ entity: ?team; key: "config_bundle"; value: "governance_team" ]
+}
