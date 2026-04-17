@@ -1,0 +1,113 @@
+@version(1)
+widget global-fab {
+
+  purpose {
+    Persistent floating action button (FAB) displayed at the bottom-right of every
+    admin page. When the current surface page declares its own primary create action
+    (controls.create), the FAB suppresses itself to avoid a competing create
+    affordance. In that state only the keyboard shortcut (Ctrl+N / Cmd+N) remains
+    active. On pages with no declared create action, the FAB opens the Quick Capture
+    overlay for rapid content creation.
+  }
+
+  anatomy {
+    root:    container  { Fixed-position wrapper anchoring the FAB to the viewport }
+    trigger: action     { Circular button that opens Quick Capture or is hidden when page has create }
+    overlay: container  { Quick Capture form overlay rendered when the FAB is activated }
+  }
+
+  states {
+    visible [initial] {
+      on OPEN -> open;
+      on PAGE_HAS_CREATE -> suppressed;
+    }
+
+    suppressed {
+      on PAGE_NO_CREATE -> visible;
+    }
+
+    open {
+      on CLOSE -> visible;
+      on SUBMIT -> visible;
+      entry [openOverlay; focusTitleField];
+      exit [closeOverlay];
+    }
+  }
+
+  accessibility {
+    role: button;
+    keyboard {
+      Escape -> CLOSE;
+    }
+    focus {
+      trap: false;
+      initial: trigger;
+      roving: false;
+    }
+    aria {
+      trigger -> {
+        role: "button";
+        aria-label: "Quick capture";
+        aria-hidden: if state == "suppressed" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    pageHasCreate: Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part: "fab";
+      data-state: if state == "suppressed" then "suppressed" else if state == "open" then "open" else "visible";
+    }
+
+    trigger -> {
+      data-part: "trigger";
+      onClick: send(OPEN);
+      display: if ?pageHasCreate then "none" else "flex";
+    }
+
+    overlay -> {
+      data-part: "overlay";
+      data-visible: if state == "open" then "true" else "false";
+    }
+  }
+
+  invariant {
+    always "FAB suppressed when page has create": {
+      pageHasCreate = true implies state.name = "suppressed"
+        and trigger.display = "none"
+    }
+
+    never "FAB opens Quick Capture when page provides its own create": {
+      pageHasCreate = true and state.name = "open"
+    }
+
+    always "FAB visible on pages with no create action": {
+      pageHasCreate = false and state.name != "open" implies state.name = "visible"
+    }
+
+    example "FAB hidden on pages with controls.create": {
+      after transition(from: "visible", event: "PAGE_HAS_CREATE") -> ok
+      then state.name = "suppressed"
+      and trigger.display = "none"
+    }
+
+    example "FAB visible and opens Quick Capture on pages without controls.create": {
+      after transition(from: "suppressed", event: "PAGE_NO_CREATE") -> ok
+      then state.name = "visible"
+      then trigger.click() -> ok
+      and state.name = "open"
+    }
+
+    example "FAB returns to visible after Quick Capture dismiss": {
+      after transition(from: "visible", event: "OPEN") -> ok
+      then state.name = "open"
+      then transition(from: "open", event: "CLOSE") -> ok
+      then state.name = "visible"
+    }
+  }
+
+}

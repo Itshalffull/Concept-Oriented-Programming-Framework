@@ -26,7 +26,8 @@ widget schema-fields-editor {
     uniqueIndicator:   presentation { Lock icon or "Unique" chip shown when field.unique is true }
     configureButton:        action      { Gear button on each field row; toggles the inline FieldConfigPanel }
     removeButton:           action      { Initiates deletion of the row field }
-    addFieldButton:         action      { Opens the type-picker to create a new field }
+    addFieldHeaderButton:   action      { Primary "+ Add Field" button in the Fields card header; always visible in edit mode }
+    addFieldButton:         action      { Opens the type-picker to create a new field (bottom of list, secondary affordance) }
     reuseFieldButton:       action      { Opens a shared-field picker for adding an existing reusable field }
     importJsonButton:       action      { Opens the import panel to paste or upload a JSON field definition }
     exportJsonButton:       action      { Downloads the full field list as a JSON file }
@@ -332,6 +333,12 @@ widget schema-fields-editor {
       disabled: if ?readOnly then true else false;
     }
 
+    addFieldHeaderButton -> {
+      data-part: "add-field-header-button";
+      onClick: send(ADD_FIELD);
+      disabled: if ?readOnly then true else false;
+    }
+
     addFieldButton -> {
       data-part: "add-field-button";
       onClick: send(ADD_FIELD);
@@ -506,6 +513,11 @@ widget schema-fields-editor {
       then state.name = "confirming-remove"
       then transition(from: "confirming-remove", event: "CONFIRM_REMOVE") -> ok
       then state.name = "idle"
+    }
+
+    always "Fields card has Add Field affordance": {
+      mode = "edit" implies addFieldHeaderButton.rendered = true
+        and addFieldHeaderButton.actionTarget = "ADD_FIELD"
     }
 
     never "create mode missing schema-id input": {

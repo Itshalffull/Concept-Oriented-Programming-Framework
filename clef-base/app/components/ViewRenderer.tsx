@@ -19,6 +19,7 @@
  */
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import { PageCreateProvider } from '../../lib/page-create-context';
 import { useInvokeWithFeedback } from '../../lib/useInvocation';
 import { InvocationStatusIndicator } from './widgets/InvocationStatusIndicator';
 import { Card } from './widgets/Card';
@@ -1553,7 +1554,10 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
     }
   };
 
+  // Signal to the global FAB whether this page already provides a create button,
+  // so the FAB hides itself and avoids competing create affordances.
   return (
+    <PageCreateProvider hasCreate={!!controls.create}>
     <div>
       {/* ViewTabBar — tabs for switching between saved views */}
       {!compact && !isInlineMode && savedViews.length > 1 && viewId && (
@@ -1699,6 +1703,7 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
         />
       )}
     </div>
+    </PageCreateProvider>
   );
 };
 

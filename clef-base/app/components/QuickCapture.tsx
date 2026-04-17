@@ -14,10 +14,16 @@ import { useRouter } from 'next/navigation';
 import { useKernelInvoke } from '../../lib/clef-provider';
 import { buildQuickCaptureNodeId } from '../../lib/quick-capture-identity';
 import { KeybindingHint } from './widgets/KeybindingHint';
+import { usePageHasCreate } from '../../lib/page-create-context';
 
 export const QuickCapture: React.FC = () => {
   const invoke = useKernelInvoke();
   const router = useRouter();
+  // Hide the FAB when the current page already declares its own "Create X"
+  // button via PageCreateContext. This prevents two competing create affordances
+  // from appearing on the same page (e.g. ViewRenderer's "Create Canvas" button
+  // and this FAB both visible on /admin/canvas).
+  const pageHasCreate = usePageHasCreate();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
@@ -126,7 +132,10 @@ export const QuickCapture: React.FC = () => {
 
   return (
     <>
-      {/* Floating Action Button */}
+      {/* Floating Action Button — hidden when the page already provides its own
+          "Create X" button, to avoid competing create affordances. The keyboard
+          shortcut (Ctrl+N / Cmd+N) remains active regardless so power users can
+          still open Quick Capture from any context. */}
       {/* KeybindingHint tooltip variant — supplies chord text via onChordText */}
       <KeybindingHint
         actionBindingId="quick-capture-open"
@@ -135,6 +144,8 @@ export const QuickCapture: React.FC = () => {
       />
       <button
         type="button"
+        data-part="fab"
+        data-state={pageHasCreate ? 'suppressed' : 'visible'}
         aria-label={fabChordText ? `Quick capture (${fabChordText})` : 'Quick capture'}
         title={fabChordText ? `Quick capture (${fabChordText})` : 'Quick capture'}
         onClick={openForm}
@@ -152,7 +163,9 @@ export const QuickCapture: React.FC = () => {
           fontSize: 28,
           lineHeight: 1,
           cursor: 'pointer',
-          display: 'flex',
+          // Hide (but keep in DOM) when the page has its own create button.
+          // Keyboard shortcut remains functional even when FAB is hidden.
+          display: pageHasCreate ? 'none' : 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           boxShadow: 'var(--elevation-3, 0 4px 12px rgba(0,0,0,0.25))',

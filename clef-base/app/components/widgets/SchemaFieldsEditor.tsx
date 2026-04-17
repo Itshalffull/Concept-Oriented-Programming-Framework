@@ -22,7 +22,10 @@ import React, {
 import { useRouter } from 'next/navigation';
 import { useKernelInvoke } from '../../../lib/clef-provider';
 import { useConceptQuery } from '../../../lib/use-concept-query';
+import { slugify } from '../../../lib/slug';
 import { FIELD_TYPE_REGISTRY } from './FieldWidget';
+import { Popover } from './Popover';
+import { PageCreateProvider } from '../../../lib/page-create-context';
 
 // ─── Props ─────────────────────────────────────────────────────────────────────
 
@@ -191,15 +194,8 @@ const addBtnStyle: React.CSSProperties = {
   borderTop: '1px solid var(--palette-outline-variant)',
 };
 
-const typePickerOverlayStyle: React.CSSProperties = {
-  position: 'fixed',
-  inset: 0,
-  zIndex: 999,
-};
-
+// typePickerPanelStyle — visual styling only; Popover handles positioning
 const typePickerPanelStyle: React.CSSProperties = {
-  position: 'fixed',
-  zIndex: 1000,
   background: 'var(--palette-surface)',
   border: '1px solid var(--palette-outline)',
   borderRadius: 'var(--radius-md)',
@@ -246,11 +242,8 @@ const warningStyle: React.CSSProperties = {
 
 // ─── Config panel styles ────────────────────────────────────────────────────────
 
+// configPanelStyle — no longer uses position:absolute; Popover handles placement
 const configPanelStyle: React.CSSProperties = {
-  position: 'absolute',
-  right: 0,
-  top: 0,
-  zIndex: 100,
   width: 320,
   background: 'var(--palette-surface)',
   border: '1px solid var(--palette-outline)',
@@ -420,12 +413,10 @@ const GROUP_LABELS: Record<string, string> = {
 };
 
 interface TypePickerProps {
-  anchorPos: { top: number; left: number };
   onSelect: (type: string) => void;
-  onClose: () => void;
 }
 
-const FieldTypePicker: React.FC<TypePickerProps> = ({ anchorPos, onSelect, onClose }) => {
+const FieldTypePickerContent: React.FC<TypePickerProps> = ({ onSelect }) => {
   const byGroup: Record<string, Array<[string, typeof FIELD_TYPE_REGISTRY[string]]>> = {};
   for (const [key, cfg] of Object.entries(FIELD_TYPE_REGISTRY)) {
     if (!byGroup[cfg.group]) byGroup[cfg.group] = [];
@@ -433,47 +424,44 @@ const FieldTypePicker: React.FC<TypePickerProps> = ({ anchorPos, onSelect, onClo
   }
 
   return (
-    <>
-      <div style={typePickerOverlayStyle} onClick={onClose} aria-hidden="true" />
-      <div
-        data-part="type-picker"
-        style={{ ...typePickerPanelStyle, top: anchorPos.top, left: anchorPos.left }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {GROUPS.map(group => {
-          const items = byGroup[group];
-          if (!items?.length) return null;
-          return (
-            <div key={group}>
-              <div style={groupLabelStyle}>{GROUP_LABELS[group]}</div>
-              {items.map(([key, cfg]) => (
-                <button
-                  key={key}
-                  type="button"
-                  data-part="type-option"
-                  style={typePickerItemStyle}
-                  onClick={() => onSelect(key)}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLElement).style.background = 'var(--palette-surface-variant)';
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLElement).style.background = 'none';
-                  }}
-                >
-                  <span style={{
-                    ...typeIconStyle,
-                    width: 18, height: 18, fontSize: '10px',
-                  }}>
-                    {cfg.icon}
-                  </span>
-                  <span>{cfg.label}</span>
-                </button>
-              ))}
-            </div>
-          );
-        })}
-      </div>
-    </>
+    <div
+      data-part="type-picker"
+      style={typePickerPanelStyle}
+      onClick={(e) => e.stopPropagation()}
+    >
+      {GROUPS.map(group => {
+        const items = byGroup[group];
+        if (!items?.length) return null;
+        return (
+          <div key={group}>
+            <div style={groupLabelStyle}>{GROUP_LABELS[group]}</div>
+            {items.map(([key, cfg]) => (
+              <button
+                key={key}
+                type="button"
+                data-part="type-option"
+                style={typePickerItemStyle}
+                onClick={() => onSelect(key)}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.background = 'var(--palette-surface-variant)';
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.background = 'none';
+                }}
+              >
+                <span style={{
+                  ...typeIconStyle,
+                  width: 18, height: 18, fontSize: '10px',
+                }}>
+                  {cfg.icon}
+                </span>
+                <span>{cfg.label}</span>
+              </button>
+            ))}
+          </div>
+        );
+      })}
+    </div>
   );
 };
 
@@ -817,6 +805,9 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
   // ── Create-mode form state ─────────────────────────────────────────────────
   const [schemaIdInput, setSchemaIdInput] = useState('');
   const [displayNameInput, setDisplayNameInput] = useState('');
+  // Tracks whether the user has manually edited the Schema ID — once they have,
+  // we stop syncing it from Display Name (Drupal pattern).
+  const [schemaIdManuallyEdited, setSchemaIdManuallyEdited] = useState(false);
   const [descriptionInput, setDescriptionInput] = useState('');
   const [schemaIdError, setSchemaIdError] = useState<string | null>(null);
   const [createPending, setCreatePending] = useState(false);
@@ -851,17 +842,27 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
     }
   }, [invoke, router, schemaIdInput, displayNameInput]);
 
-  // Load fields from kernel (skipped in create mode — field list starts empty)
+  // Load fields from kernel (skipped in create mode — field list starts empty).
+  // Primary source: FieldDefinition/list — individual field-definition records
+  // per schema. Fallback: Schema.fields (legacy string-array on the Schema row)
+  // for schemas seeded before FieldDefinition was introduced. The Schema row is
+  // the source of truth for field *names*; the FieldDefinition records carry
+  // richer per-field config (type/widget/options/required/help/etc.).
   const { data: rawFields, loading, error, refetch } = useConceptQuery<FieldRow[]>(
     isCreate ? '__none__' : 'FieldDefinition',
     isCreate ? '__none__' : 'list',
+    isCreate ? {} : { schema: schemaId },
+  );
+  const { data: schemaRecord } = useConceptQuery<{ fields?: string }>(
+    isCreate ? '__none__' : 'Schema',
+    isCreate ? '__none__' : 'get',
     isCreate ? {} : { schema: schemaId },
   );
 
   // In create mode, start with an empty field list
   const [fields, setFields] = useState<FieldRow[]>(isCreate ? [] : []);
   const [typePickerOpen, setTypePickerOpen] = useState(false);
-  const [typePickerPos, setTypePickerPos] = useState({ top: 0, left: 0 });
+  const [typePickerAnchorEl, setTypePickerAnchorEl] = useState<HTMLElement | null>(null);
   const [deleteWarning, setDeleteWarning] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -869,8 +870,9 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
   const [editingLabelId, setEditingLabelId] = useState<string | null>(null);
   const [editingLabelValue, setEditingLabelValue] = useState('');
 
-  // Config panel state: which field's gear panel is open
+  // Config panel state: which field's gear panel is open + anchor element for Popover
   const [configPanelFieldId, setConfigPanelFieldId] = useState<string | null>(null);
+  const [configPanelAnchorEl, setConfigPanelAnchorEl] = useState<HTMLElement | null>(null);
 
   const commitLabel = useCallback(async (field: FieldRow) => {
     const newLabel = editingLabelValue.trim();
@@ -893,21 +895,42 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
   const dragIndexRef = useRef<number>(-1);
   const [dragOverIndex, setDragOverIndex] = useState<number>(-1);
 
-  // Sync fields from query result
+  // Sync fields from query result. Prefer FieldDefinition records; if none
+  // exist, materialize synthetic FieldRow entries from the Schema record's
+  // `fields` array so the detail page still shows the schema's declared fields
+  // (matching how the list page's json-count column reads them).
   useEffect(() => {
-    if (rawFields) {
+    if (Array.isArray(rawFields) && rawFields.length > 0) {
       const sorted = [...rawFields].sort(
         (a, b) => (a.order ?? 0) - (b.order ?? 0),
       );
       setFields(sorted);
+      return;
     }
-  }, [rawFields]);
+    if (schemaRecord && typeof schemaRecord.fields === 'string' && schemaRecord.fields.trim().startsWith('[')) {
+      try {
+        const names = JSON.parse(schemaRecord.fields) as unknown[];
+        if (Array.isArray(names) && names.length > 0) {
+          const synthetic = names.map((n, i) => ({
+            id: `legacy:${schemaId}:${String(n)}`,
+            fieldId: String(n),
+            label: String(n),
+            type: 'text' as const,
+            order: i,
+            required: false,
+          })) as unknown as FieldRow[];
+          setFields(synthetic);
+          return;
+        }
+      } catch { /* ignore */ }
+    }
+    if (rawFields) setFields([]);
+  }, [rawFields, schemaRecord, schemaId]);
 
   // ── Add field ──────────────────────────────────────────────────────────────
 
   const handleAddClick = useCallback((e: React.MouseEvent) => {
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    setTypePickerPos({ top: rect.top - 8, left: rect.right + 8 });
+    setTypePickerAnchorEl(e.currentTarget as HTMLElement);
     setTypePickerOpen(true);
   }, []);
 
@@ -962,7 +985,10 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
       const result = await invoke('FieldDefinition', 'remove', { fieldId, schema: schemaId });
       if (result.variant === 'ok') {
         // Close config panel if this field's panel was open
-        if (configPanelFieldId === fieldId) setConfigPanelFieldId(null);
+        if (configPanelFieldId === fieldId) {
+          setConfigPanelFieldId(null);
+          setConfigPanelAnchorEl(null);
+        }
         refetch();
       } else {
         setActionError((result.message as string | undefined) ?? 'Failed to remove field.');
@@ -1026,12 +1052,15 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
 
   const handleGearClick = useCallback((e: React.MouseEvent, fieldId: string) => {
     e.stopPropagation();
-    setConfigPanelFieldId(prev => prev === fieldId ? null : fieldId);
+    const isSame = configPanelFieldId === fieldId;
+    setConfigPanelFieldId(isSame ? null : fieldId);
+    setConfigPanelAnchorEl(isSame ? null : (e.currentTarget as HTMLElement));
     onFieldSelect?.(fieldId);
-  }, [onFieldSelect]);
+  }, [onFieldSelect, configPanelFieldId]);
 
   const handleConfigPanelClose = useCallback(() => {
     setConfigPanelFieldId(null);
+    setConfigPanelAnchorEl(null);
   }, []);
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -1052,7 +1081,11 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
     );
   }
 
+  // Suppress the global FAB on schema detail pages — the Fields header already
+  // provides an explicit "+ Add Field" button, so the FAB would be redundant and
+  // confusing (it would open Quick Capture, not add a field).
   return (
+    <PageCreateProvider hasCreate={!isCreate}>
     <div data-part="root" data-state={configPanelFieldId ? 'config-open' : 'idle'} style={containerStyle}>
       {/* Header */}
       <div data-part="header" style={headerStyle}>
@@ -1064,12 +1097,42 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
           {isCreate ? 'Create Schema' : 'Fields'}
         </span>
         {!isCreate && (
-          <span style={{
-            fontSize: 'var(--typography-body-sm-size)',
-            color: 'var(--palette-on-surface-variant)',
-          }}>
-            {fields.length} {fields.length === 1 ? 'field' : 'fields'}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
+            <span style={{
+              fontSize: 'var(--typography-body-sm-size)',
+              color: 'var(--palette-on-surface-variant)',
+            }}>
+              {fields.length} {fields.length === 1 ? 'field' : 'fields'}
+            </span>
+            {/* Add Field button in header — primary affordance for adding fields */}
+            <button
+              type="button"
+              data-part="add-field-header-button"
+              aria-label="Add field"
+              title="Add field"
+              disabled={actionPending}
+              onClick={handleAddClick}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+                padding: '3px 10px',
+                borderRadius: 'var(--radius-sm)',
+                border: '1px solid var(--palette-primary)',
+                background: 'var(--palette-primary)',
+                color: 'var(--palette-on-primary)',
+                cursor: actionPending ? 'not-allowed' : 'pointer',
+                fontSize: 'var(--typography-body-sm-size)',
+                fontFamily: 'inherit',
+                fontWeight: 500,
+                lineHeight: 1.4,
+                opacity: actionPending ? 0.6 : 1,
+              }}
+            >
+              <span style={{ fontSize: 14, lineHeight: 1 }}>+</span>
+              <span>Add Field</span>
+            </button>
+          </div>
         )}
       </div>
 
@@ -1082,7 +1145,37 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
             </p>
           </div>
 
-          {/* Schema ID */}
+          {/* Display name / title — first so the Schema ID can auto-derive from it */}
+          <div>
+            <label style={formLabelStyle} htmlFor="create-display-name">
+              Display Name
+            </label>
+            <input
+              id="create-display-name"
+              data-part="display-name-input"
+              type="text"
+              style={inputStyle}
+              value={displayNameInput}
+              placeholder="My Schema"
+              aria-label="Display name"
+              onChange={(e) => {
+                const v = e.target.value;
+                setDisplayNameInput(v);
+                if (!schemaIdManuallyEdited) {
+                  setSchemaIdInput(slugify(v));
+                  if (schemaIdError) setSchemaIdError(null);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleCreateSchema();
+                }
+              }}
+            />
+          </div>
+
+          {/* Schema ID — auto-derived from Display Name, editable */}
           <div>
             <label style={formLabelStyle} htmlFor="create-schema-id">
               Schema ID <span style={{ color: 'var(--palette-error)' }}>*</span>
@@ -1094,14 +1187,25 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
               style={{
                 ...inputStyle,
                 borderColor: schemaIdError ? 'var(--palette-error)' : undefined,
+                fontStyle:
+                  !schemaIdManuallyEdited && schemaIdInput ? 'italic' : 'normal',
+                color:
+                  !schemaIdManuallyEdited && schemaIdInput
+                    ? 'var(--palette-on-surface-variant, #6b7280)'
+                    : undefined,
               }}
               value={schemaIdInput}
-              placeholder="my-schema"
+              placeholder={
+                !schemaIdManuallyEdited && displayNameInput
+                  ? 'auto-derived from name (editable)'
+                  : 'my-schema'
+              }
               aria-label="Schema ID"
               aria-required="true"
               aria-describedby={schemaIdError ? 'create-schema-id-error' : undefined}
               onChange={(e) => {
                 setSchemaIdInput(e.target.value);
+                setSchemaIdManuallyEdited(true);
                 if (schemaIdError) setSchemaIdError(null);
               }}
               onKeyDown={(e) => {
@@ -1116,29 +1220,6 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
                 {schemaIdError}
               </p>
             )}
-          </div>
-
-          {/* Display name / title */}
-          <div>
-            <label style={formLabelStyle} htmlFor="create-display-name">
-              Display Name
-            </label>
-            <input
-              id="create-display-name"
-              data-part="display-name-input"
-              type="text"
-              style={inputStyle}
-              value={displayNameInput}
-              placeholder="My Schema"
-              aria-label="Display name"
-              onChange={(e) => setDisplayNameInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleCreateSchema();
-                }
-              }}
-            />
           </div>
 
           {/* Description */}
@@ -1283,7 +1364,6 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
               onDragEnd={handleDragEnd}
               style={{
                 ...fieldRowBaseStyle,
-                position: 'relative',
                 background: isDragOver
                   ? 'var(--palette-primary-container)'
                   : ((field as FieldRow & { fieldId?: string }).fieldId ?? field.id) === pendingDeleteId
@@ -1395,16 +1475,6 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
               >
                 ×
               </button>
-
-              {/* Inline config panel — floats right of row */}
-              {isConfigOpen && (
-                <FieldConfigPanel
-                  field={field}
-                  schemaId={schemaId ?? ''}
-                  onClose={handleConfigPanelClose}
-                  onUpdated={refetch}
-                />
-              )}
             </div>
           );
         })}
@@ -1423,17 +1493,45 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
             <span>Add field</span>
           </button>
 
-          {/* Inline type picker */}
-          {typePickerOpen && (
-            <FieldTypePicker
-              anchorPos={typePickerPos}
-              onSelect={handleTypeSelect}
-              onClose={() => setTypePickerOpen(false)}
-            />
-          )}
+          {/* Type picker popover — Site A migration */}
+          <Popover
+            anchor={typePickerAnchorEl}
+            open={typePickerOpen}
+            onClose={() => setTypePickerOpen(false)}
+            placement="right-start"
+            width={200}
+            gap={8}
+          >
+            <FieldTypePickerContent onSelect={handleTypeSelect} />
+          </Popover>
+
+          {/* Field config panel popover — Site B migration */}
+          {(() => {
+            const openField = configPanelFieldId
+              ? fields.find((f) => f.id === configPanelFieldId) ?? null
+              : null;
+            return openField ? (
+              <Popover
+                anchor={configPanelAnchorEl}
+                open={!!configPanelFieldId}
+                onClose={handleConfigPanelClose}
+                placement="right-start"
+                width={320}
+                gap={8}
+              >
+                <FieldConfigPanel
+                  field={openField}
+                  schemaId={schemaId ?? ''}
+                  onClose={handleConfigPanelClose}
+                  onUpdated={refetch}
+                />
+              </Popover>
+            ) : null;
+          })()}
         </>
       )}
     </div>
+    </PageCreateProvider>
   );
 };
 
