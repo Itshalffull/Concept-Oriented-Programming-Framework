@@ -16,7 +16,13 @@ import React, { useState, useCallback } from 'react';
 import { useKernelInvoke } from '../../../lib/clef-provider';
 import { useConceptQuery } from '../../../lib/use-concept-query';
 import { Badge } from './Badge';
-import { BindingEditor, type BindingValue } from './BindingEditor';
+import {
+  BindingEditor,
+  emptyBindingValue,
+  migrateBindingValue,
+  parseLegacyActionRef,
+  type BindingValue,
+} from './BindingEditor';
 import { Card } from './Card';
 
 // ---------------------------------------------------------------------------
@@ -109,22 +115,25 @@ function formatSource(type: SourceType, value: string): string {
   return `${type}:${value}`;
 }
 
-/** Parse a binding field that may be a BindingValue JSON or a legacy plain string */
+/**
+ * Parse a binding field stored on a ComponentMapping. The value may be:
+ *   1. A modern JSON-serialised BindingValue (new typed Action shape)
+ *   2. A legacy JSON-serialised BindingValue carrying `actionRef: string`
+ *   3. A legacy raw "Concept/action" plain string
+ * All three hydrate through `migrateBindingValue` into the current shape.
+ */
 function parseBindingValue(raw: string): BindingValue {
-  if (!raw) return { mode: 'action', actionRef: '' };
+  if (!raw) return emptyBindingValue();
   try {
-    const parsed = JSON.parse(raw) as BindingValue;
-    if (parsed.mode) return parsed;
-    // JSON but not a BindingValue — treat as plain string
-  } catch { /* not JSON */ }
-  return { mode: 'action', actionRef: raw };
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object' && 'mode' in parsed) {
+      return migrateBindingValue(parsed);
+    }
+  } catch { /* not JSON — fall through to legacy plain-string path */ }
+  return { mode: 'action', action: parseLegacyActionRef(raw) };
 }
 
 function serializeBindingValue(bv: BindingValue): string {
-  if (bv.mode === 'action' && bv.actionRef !== undefined) {
-    // Preserve legacy plain-string format when there's nothing composite
-    return JSON.stringify(bv);
-  }
   return JSON.stringify(bv);
 }
 
@@ -245,7 +254,7 @@ export const SlotSourceEditor: React.FC<SlotSourceEditorProps> = ({
   const [actionBindings, setActionBindings] = useState<ActionBinding[] | null>(null);
   const [showAddActionBinding, setShowAddActionBinding] = useState(false);
   const [newActionPart, setNewActionPart] = useState('');
-  const [newBindingValue, setNewBindingValue] = useState<BindingValue>({ mode: 'action', actionRef: '' });
+  const [newBindingValue, setNewBindingValue] = useState<BindingValue>(emptyBindingValue());
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -411,7 +420,7 @@ export const SlotSourceEditor: React.FC<SlotSourceEditorProps> = ({
       },
     ]);
     setNewActionPart('');
-    setNewBindingValue({ mode: 'action', actionRef: '' });
+    setNewBindingValue(emptyBindingValue());
     setShowAddActionBinding(false);
   }, [newActionPart, newBindingValue]);
 
@@ -751,11 +760,16 @@ export const SlotSourceEditor: React.FC<SlotSourceEditorProps> = ({
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
           {actionBindings?.map((ab, abIdx) => {
             const bv = parseBindingValue(ab.binding);
+            const actionLabel = bv.action?.concept && bv.action?.action
+              ? `${bv.action.concept}/${bv.action.action}`
+              : 'Unbound';
             const badgeLabel = bv.mode === 'action'
-              ? (bv.actionRef || 'Unbound')
+              ? actionLabel
               : bv.mode === 'ui-event'
                 ? `UIEvent:${bv.uiEvent?.kind ?? '?'}`
                 : `Composite(${(bv.steps ?? []).length} steps)`;
+            const isUnbound = bv.mode === 'action'
+              && (!bv.action?.concept || !bv.action?.action);
             return (
               <div key={abIdx} style={{
                 display: 'flex', gap: 'var(--spacing-xs)', alignItems: 'flex-start',
@@ -782,7 +796,7 @@ export const SlotSourceEditor: React.FC<SlotSourceEditorProps> = ({
                   value={bv}
                   onChange={(newBv) => updateActionBindingValue(abIdx, newBv)}
                 />
-                <Badge variant={bv.mode === 'action' && !bv.actionRef ? 'secondary' : 'success'}>
+                <Badge variant={isUnbound ? 'secondary' : 'success'}>
                   {badgeLabel}
                 </Badge>
                 <button
@@ -835,7 +849,7 @@ export const SlotSourceEditor: React.FC<SlotSourceEditorProps> = ({
                   <button data-part="button" data-variant="outlined" onClick={() => {
                     setShowAddActionBinding(false);
                     setNewActionPart('');
-                    setNewBindingValue({ mode: 'action', actionRef: '' });
+                    setNewBindingValue(emptyBindingValue());
                   }}>
                     Cancel
                   </button>
