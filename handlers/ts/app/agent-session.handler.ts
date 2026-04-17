@@ -1,7 +1,7 @@
 // @clef-handler style=functional
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get as spGet, find, put, mergeFrom, branch, complete, completeFrom, mapBindings,
+  createProgram, get as spGet, find, put, putFrom, mergeFrom, branch, complete, completeFrom, mapBindings,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
@@ -22,6 +22,12 @@ const _agentSessionHandler: FunctionalConceptHandler = {
     const strategy = input.strategy as string;
     const tools = input.tools as string;
     const context = input.context as string;
+    // attributionRef traces back to the originating request or user
+    const attributionRefInput = (input.attributionRef as string | null | undefined) ?? null;
+    const attributionRef: string | null =
+      typeof attributionRefInput === 'string' && attributionRefInput.trim() !== ''
+        ? attributionRefInput.trim()
+        : null;
 
     // Validate non-empty personaPageId -> error variant
     if (!personaPageId || personaPageId.trim() === '') {
@@ -35,13 +41,34 @@ const _agentSessionHandler: FunctionalConceptHandler = {
       return complete(createProgram(), 'error', { message: 'tools must be a valid JSON array' }) as StorageProgram<Result>;
     }
 
-    // Create the session — persona page validation via PersonaCompiler is handled by syncs
+    // Look up the AgentRegistration backing record to resolve subjectId.
+    // If no registration exists the session still spawns successfully — persona
+    // page existence is validated by PersonaCompiler via syncs, not here.
+    // effectivePolicySnapshotRef starts as a placeholder referencing the agent
+    // identity; real enforcement snapshots are materialized by the authorization
+    // infrastructure at runtime.
     const sessionId = randomId();
     const agentLoopId = randomId();
     const conversationId = randomId();
     const now = new Date().toISOString();
 
-    const record = {
+    let p = createProgram();
+    p = spGet(p, 'registration', personaPageId, 'agentReg');
+
+    // Derive subjectId from registration: follows the "agent:{agentId}"
+    // convention used by agent-registration-to-subject.sync.
+    // When no registration exists, subjectId is null (spawn still proceeds).
+    p = mapBindings(p, (bindings) => {
+      const reg = bindings.agentReg as Record<string, unknown> | null;
+      return reg ? `agent:${personaPageId}` : null;
+    }, '_subjectId');
+
+    p = mapBindings(p, (bindings) => {
+      const subjectId = bindings._subjectId as string | null;
+      return subjectId ? `snapshot:${subjectId}` : null;
+    }, '_policySnapshotRef');
+
+    p = putFrom(p, 'session', sessionId, (bindings) => ({
       session: sessionId,
       personaPageId,
       compilationId: '',
@@ -57,11 +84,19 @@ const _agentSessionHandler: FunctionalConceptHandler = {
       totalCost: 0,
       metadata: '{}',
       snapshot: '',
-    };
+      subjectId: bindings._subjectId as string | null,
+      attributionRef,
+      effectivePolicySnapshotRef: bindings._policySnapshotRef as string | null,
+    }));
 
-    let p = createProgram();
-    p = put(p, 'session', sessionId, record);
-    return complete(p, 'ok', { session: sessionId, agentLoopId, conversationId }) as StorageProgram<Result>;
+    return completeFrom(p, 'ok', (bindings) => ({
+      session: sessionId,
+      agentLoopId,
+      conversationId,
+      subjectId: bindings._subjectId as string | null,
+      attributionRef,
+      effectivePolicySnapshotRef: bindings._policySnapshotRef as string | null,
+    })) as StorageProgram<Result>;
   },
 
   invoke(input: Record<string, unknown>) {

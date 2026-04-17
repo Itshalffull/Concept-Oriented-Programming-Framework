@@ -24,6 +24,9 @@ concept AgentSession [A] {
     totalTokens: A -> Int
     totalCost: A -> Float
     metadata: A -> String
+    subjectId: A -> option String
+    attributionRef: A -> option String
+    effectivePolicySnapshotRef: A -> option String
   }
 
   capabilities {
@@ -31,12 +34,16 @@ concept AgentSession [A] {
   }
 
   actions {
-    action spawn(personaPageId: String, strategy: String, tools: String, context: String) {
-      -> ok(session: A, agentLoopId: String, conversationId: String) {
+    action spawn(personaPageId: String, strategy: String, tools: String, context: String, attributionRef: option String) {
+      -> ok(session: A, agentLoopId: String, conversationId: String, subjectId: option String, attributionRef: option String, effectivePolicySnapshotRef: option String) {
         Triggers PersonaCompiler/compile for the persona page, creates an
         AgentLoop with the persona's tools and strategy, creates a Conversation,
         and sets status to "active". Tools is a JSON array of tool names.
         Context is an optional initial context string passed to the loop.
+        Resolves the backing AgentRegistration to carry subjectId (the unified
+        Subject identity for runtime authorization), attributionRef (tracing
+        back to the originating request or user), and effectivePolicySnapshotRef
+        (a snapshot reference used for runtime policy enforcement decisions).
       }
       -> notfound(message: String) {
         The persona page does not exist or carries no agent-persona schema.
@@ -45,9 +52,9 @@ concept AgentSession [A] {
         Compilation failed, tools JSON is malformed, or strategy is invalid.
       }
 
-      fixture spawn_research_bot { personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers" }
-      fixture spawn_missing { personaPageId: "nonexistent", strategy: "react", tools: "[]", context: "" } -> notfound
-      fixture spawn_empty_persona { personaPageId: "", strategy: "react", tools: "[]", context: "" } -> error
+      fixture spawn_research_bot { personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers", attributionRef: "user:alice" }
+      fixture spawn_no_registration { personaPageId: "unregistered-persona", strategy: "react", tools: "[]", context: "", attributionRef: none }
+      fixture spawn_empty_persona { personaPageId: "", strategy: "react", tools: "[]", context: "", attributionRef: none } -> error
     }
 
     action invoke(session: A, goal: String) {
@@ -164,9 +171,9 @@ concept AgentSession [A] {
 
   example "spawn-then-invoke": {
 
-    after spawn(personaPageId: "p1", strategy: "react", tools: "[\"search\"]", context: "")
+    after spawn(personaPageId: "p1", strategy: "react", tools: "[\"search\"]", context: "", attributionRef: none)
 
-          -> ok(session: s, agentLoopId: _, conversationId: _)
+          -> ok(session: s, agentLoopId: _, conversationId: _, subjectId: _, attributionRef: _, effectivePolicySnapshotRef: _)
 
         then invoke(session: s, goal: "Find X")
 
@@ -176,9 +183,9 @@ concept AgentSession [A] {
 
   example "spawn-then-suspend-then-resume": {
 
-    after spawn(personaPageId: "p1", strategy: "react", tools: "[]", context: "")
+    after spawn(personaPageId: "p1", strategy: "react", tools: "[]", context: "", attributionRef: none)
 
-          -> ok(session: s, agentLoopId: _, conversationId: _)
+          -> ok(session: s, agentLoopId: _, conversationId: _, subjectId: _, attributionRef: _, effectivePolicySnapshotRef: _)
 
         and suspend(session: s)
 
@@ -212,6 +219,7 @@ concept AgentSession [A] {
     requires: personaPageId != ""
 
     ensures ok: personaPageId != none
+    ensures ok: subjectId != none or personaPageId != none
 
   }
 }

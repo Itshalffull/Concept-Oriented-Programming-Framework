@@ -1,7 +1,8 @@
 // @clef-handler style=functional
 // AgenticDelegate Concept Implementation
-// Represent an LLM or autonomous agent as a governance participant with
-// defined boundaries, capabilities, and accountability.
+// Represent an LLM or autonomous agent as a standing governance participant
+// with defined delegation scope, boundaries, capabilities, and accountability.
+// Supervised per-action approval flows belong in ActionRequest, not here.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
   createProgram, get, put, putFrom, branch, complete, completeFrom,
@@ -17,6 +18,14 @@ function nextId(): string {
 }
 
 const VALID_AUTONOMY_LEVELS = new Set(['Supervised', 'Autonomous', 'Constrained']);
+const VALID_SCOPE_KINDS = new Set(['action_set', 'workspace', 'process_role', 'pilot_mode']);
+
+function toOptStr(v: unknown): string | null {
+  if (v === null || v === undefined) return null;
+  if (typeof v !== 'string') return null;
+  const t = v.trim();
+  return t === '' ? null : t;
+}
 
 const _handler: FunctionalConceptHandler = {
   register(input: Record<string, unknown>) {
@@ -24,9 +33,17 @@ const _handler: FunctionalConceptHandler = {
     const principal = input.principal as string;
     const autonomyLevel = input.autonomyLevel as string;
     const allowedActions = (input.allowedActions || input.boundaries) as string[];
+    const scopeKind = toOptStr(input.scopeKind);
+    const scopePayload = toOptStr(input.scopePayload);
 
     if (!name || (typeof name === 'string' && name.trim() === '')) {
       return complete(createProgram(), 'error', { message: 'name is required' }) as StorageProgram<Result>;
+    }
+
+    if (scopeKind !== null && !VALID_SCOPE_KINDS.has(scopeKind)) {
+      return complete(createProgram(), 'error', {
+        message: `scopeKind must be one of: ${[...VALID_SCOPE_KINDS].join(', ')}`,
+      }) as StorageProgram<Result>;
     }
 
     const id = nextId();
@@ -43,6 +60,8 @@ const _handler: FunctionalConceptHandler = {
       boundaries: input.boundaries || null,
       activeRoles: [],
       actionLog: [],
+      scopeKind,
+      scopePayload,
       createdAt: new Date().toISOString(),
     });
 
@@ -105,16 +124,16 @@ const _handler: FunctionalConceptHandler = {
     ) as StorageProgram<Result>;
   },
 
-  proposeAction(input: Record<string, unknown>) {
+  recordAction(input: Record<string, unknown>) {
     const delegate = input.delegate as string;
     const action = input.action as string;
-    const rationale = (input.rationale || input.justification) as string;
+    const outcome = input.outcome as string;
 
-    if (!delegate || (typeof delegate === 'string' && delegate.trim() === '')) {
-      return complete(createProgram(), 'error', { message: 'delegate is required' }) as StorageProgram<Result>;
-    }
     if (!action || (typeof action === 'string' && action.trim() === '')) {
       return complete(createProgram(), 'error', { message: 'action is required' }) as StorageProgram<Result>;
+    }
+    if (!outcome || (typeof outcome === 'string' && outcome.trim() === '')) {
+      return complete(createProgram(), 'error', { message: 'outcome is required' }) as StorageProgram<Result>;
     }
 
     let p = createProgram();
@@ -134,8 +153,7 @@ const _handler: FunctionalConceptHandler = {
             actionLog: [...log, {
               action,
               timestamp: new Date().toISOString(),
-              outcome: 'proposed',
-              rationale,
+              outcome,
             }],
           };
         });
@@ -181,6 +199,35 @@ const _handler: FunctionalConceptHandler = {
           return { ...rec, autonomyLevel };
         });
         return complete(b, 'ok', { delegate });
+      })(),
+    ) as StorageProgram<Result>;
+  },
+
+  updateScope(input: Record<string, unknown>) {
+    const delegate = input.delegate as string;
+    const scopeKind = toOptStr(input.scopeKind);
+    const scopePayload = toOptStr(input.scopePayload);
+
+    if (scopeKind !== null && !VALID_SCOPE_KINDS.has(scopeKind)) {
+      return complete(createProgram(), 'error', {
+        message: `scopeKind must be one of: ${[...VALID_SCOPE_KINDS].join(', ')}`,
+      }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = get(p, 'agenticDelegate', delegate, 'existing');
+
+    return branch(p,
+      (bindings) => !bindings.existing,
+      complete(createProgram(), 'not_found', { delegate }),
+      (() => {
+        let b = createProgram();
+        b = get(b, 'agenticDelegate', delegate, 'rec');
+        b = putFrom(b, 'agenticDelegate', delegate, (bindings) => {
+          const rec = bindings.rec as Record<string, unknown>;
+          return { ...rec, scopeKind, scopePayload };
+        });
+        return completeFrom(b, 'ok', () => ({ delegate, scopeKind, scopePayload }));
       })(),
     ) as StorageProgram<Result>;
   },

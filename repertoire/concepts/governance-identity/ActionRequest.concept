@@ -1,0 +1,194 @@
+# @fixtures-added
+@version(1)
+@category("governance-identity")
+concept ActionRequest [R] {
+
+  purpose {
+    Capture a subject's request to perform a specific action that requires
+    explicit approval before execution. Decouples the request submission
+    from the approval decision and the actual execution, so supervised-action
+    flows can be independently reviewed, approved, rejected, or executed
+    across any approval latency.
+  }
+
+  state {
+    requests: set R
+    subjectId: R -> String
+    conceptName: R -> String
+    actionName: R -> String
+    actionInput: R -> String
+    status: R -> "pending" | "approved" | "rejected" | "executed"
+    createdAt: R -> String
+    updatedAt: R -> String
+    reviewerId: R -> option String
+    reviewNote: R -> option String
+    executionResult: R -> option String
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action request(subjectId: String, conceptName: String, actionName: String, actionInput: String) {
+      -> ok(request: R) {
+        Submit a new supervised-action request. The request starts in "pending"
+        status and waits for an approver to review it. actionInput is a JSON
+        string carrying the intended action arguments.
+      }
+      -> invalid(message: String) {
+        A required field is empty or actionInput is not valid JSON.
+      }
+
+      fixture request_ok {
+        subjectId: "subject-agent-001",
+        conceptName: "ContentNode",
+        actionName: "delete",
+        actionInput: "{\"node\":\"node-abc\"}"
+      }
+      fixture request_empty_subject {
+        subjectId: "",
+        conceptName: "ContentNode",
+        actionName: "delete",
+        actionInput: "{}"
+      } -> invalid
+      fixture request_empty_concept {
+        subjectId: "subject-agent-001",
+        conceptName: "",
+        actionName: "delete",
+        actionInput: "{}"
+      } -> invalid
+      fixture request_bad_json {
+        subjectId: "subject-agent-001",
+        conceptName: "ContentNode",
+        actionName: "delete",
+        actionInput: "not-json"
+      } -> invalid
+    }
+
+    action approve(request: R, reviewerId: String, reviewNote: option String) {
+      -> ok(request: R) {
+        Mark the request as approved. The action is now eligible for execution.
+        reviewerId identifies the approving principal; reviewNote is optional context.
+      }
+      -> notfound(message: String) {
+        No request exists with this identifier.
+      }
+      -> invalid(message: String) {
+        The request is not in "pending" status and cannot be approved.
+      }
+
+      fixture approve_ok {
+        request: $request_ok.request,
+        reviewerId: "subject-admin-001",
+        reviewNote: "Looks good"
+      } after request_ok
+      fixture approve_missing {
+        request: "nonexistent",
+        reviewerId: "subject-admin-001",
+        reviewNote: none
+      } -> notfound
+    }
+
+    action reject(request: R, reviewerId: String, reviewNote: String) {
+      -> ok(request: R) {
+        Mark the request as rejected. No further execution is allowed.
+        reviewNote carries the rejection rationale.
+      }
+      -> notfound(message: String) {
+        No request exists with this identifier.
+      }
+      -> invalid(message: String) {
+        The request is not in "pending" status and cannot be rejected, or reviewNote is empty.
+      }
+
+      fixture reject_ok {
+        request: $request_ok.request,
+        reviewerId: "subject-admin-001",
+        reviewNote: "Denied — insufficient privilege"
+      } after request_ok
+      fixture reject_missing {
+        request: "nonexistent",
+        reviewerId: "subject-admin-001",
+        reviewNote: "N/A"
+      } -> notfound
+      fixture reject_empty_note {
+        request: $request_ok.request,
+        reviewerId: "subject-admin-001",
+        reviewNote: ""
+      } after request_ok -> invalid
+    }
+
+    action execute(request: R) {
+      -> ok(request: R, executionResult: String) {
+        Execute the previously approved action. Records the execution result
+        and sets status to "executed". The caller is responsible for actually
+        dispatching the underlying action via its concept handler.
+      }
+      -> notfound(message: String) {
+        No request exists with this identifier.
+      }
+      -> invalid(message: String) {
+        The request is not in "approved" status and cannot be executed.
+      }
+
+      fixture execute_ok {
+        request: $approve_ok.request
+      } after approve_ok
+      fixture execute_missing {
+        request: "nonexistent"
+      } -> notfound
+
+      reversal: none
+    }
+
+    action get(request: R) {
+      -> ok(subjectId: String, conceptName: String, actionName: String, actionInput: String, status: String, createdAt: String, updatedAt: String, reviewerId: option String, reviewNote: option String, executionResult: option String) {
+        Return the full state of the request including current status and review details.
+      }
+      -> notfound(message: String) {
+        No request exists with this identifier.
+      }
+
+      fixture get_ok {
+        request: $request_ok.request
+      } after request_ok
+      fixture get_missing {
+        request: "nonexistent"
+      } -> notfound
+    }
+  }
+
+  example "request-approve-execute": {
+    after request(subjectId: "subject-agent-001", conceptName: "ContentNode", actionName: "delete", actionInput: "{\"node\":\"n1\"}") -> ok(request: r)
+        and approve(request: r, reviewerId: "subject-admin-001", reviewNote: none) -> ok(request: r)
+    then execute(request: r) -> ok(request: r, executionResult: _)
+  }
+
+  example "request-then-reject": {
+    after request(subjectId: "subject-agent-001", conceptName: "ContentNode", actionName: "delete", actionInput: "{\"node\":\"n2\"}") -> ok(request: r)
+    then reject(request: r, reviewerId: "subject-admin-001", reviewNote: "Denied") -> ok(request: r)
+  }
+
+  always "valid-status": {
+    forall r in requests:
+      r.status in {"pending", "approved", "rejected", "executed"}
+  }
+
+  never "executed-without-approval": {
+    exists r in requests:
+      r.status = "executed" and r.reviewerId = none
+  }
+
+  action request {
+    requires: subjectId != ""
+    requires: conceptName != ""
+    requires: actionName != ""
+    ensures ok: request in requests
+  }
+
+  action execute {
+    requires: request in requests
+    ensures ok: request in requests
+  }
+}

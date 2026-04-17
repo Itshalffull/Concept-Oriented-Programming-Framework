@@ -1,10 +1,12 @@
-@version(1)
+@version(2)
 # @fixtures-added
 concept AgenticDelegate [D] {
 
   purpose {
-    Represent an LLM or autonomous agent as a governance participant with
-    defined boundaries, capabilities, and accountability.
+    Represent an LLM or autonomous agent as a standing governance participant
+    with defined delegation scope, boundaries, capabilities, and accountability.
+    Delegation scope is expressed directly on the delegate via scopeKind and
+    scopePayload — supervised per-action approval flows belong in ActionRequest.
   }
 
   state {
@@ -19,6 +21,8 @@ concept AgenticDelegate [D] {
       timestamp: DateTime,
       outcome: String
     }
+    scopeKind: D -> option String
+    scopePayload: D -> option String
   }
 
   capabilities {
@@ -26,14 +30,21 @@ concept AgenticDelegate [D] {
   }
 
   actions {
-    action register(name: String, principal: String, autonomyLevel: String, allowedActions: list String) {
+    action register(name: String, principal: String, autonomyLevel: String, allowedActions: list String, scopeKind: option String, scopePayload: option String) {
       -> ok(delegate: D) {
-        A new agentic delegate is created. The principal is the human
-        or entity accountable for this agent.
+        A new agentic delegate is created as a standing delegation. The principal
+        is the human or entity accountable for this agent. scopeKind declares the
+        delegation domain (one of: action_set, workspace, process_role, pilot_mode)
+        and scopePayload carries the domain-specific JSON configuration for that scope.
+      }
+      -> error(message: String) {
+        The name is empty or the scopeKind is not a recognised value.
       }
 
-      fixture register_assistant { name: "governance-bot", principal: "alice", autonomyLevel: "Supervised", allowedActions: ["vote", "propose"] }
-      fixture register_empty_name { name: "", principal: "alice", autonomyLevel: "Supervised", allowedActions: [] } -> error
+      fixture register_assistant { name: "governance-bot", principal: "alice", autonomyLevel: "Supervised", allowedActions: ["vote", "propose"], scopeKind: "action_set", scopePayload: "{\"actions\":[\"vote\",\"propose\"]}" }
+      fixture register_workspace_delegate { name: "workspace-agent", principal: "bob", autonomyLevel: "Autonomous", allowedActions: [], scopeKind: "workspace", scopePayload: "{\"workspaceId\":\"ws-001\"}" }
+      fixture register_no_scope { name: "minimal-agent", principal: "carol", autonomyLevel: "Constrained", allowedActions: ["read"], scopeKind: none, scopePayload: none }
+      fixture register_empty_name { name: "", principal: "alice", autonomyLevel: "Supervised", allowedActions: [], scopeKind: none, scopePayload: none } -> error
     }
 
     action assumeRole(delegate: D, role: String) {
@@ -44,8 +55,8 @@ concept AgenticDelegate [D] {
         The delegate does not exist.
       }
 
-      fixture assume_voter_role { delegate: $register_assistant.id, role: "voter" } after register_assistant
-      fixture assume_role_missing_delegate { delegate: "nonexistent", role: "voter" } -> error
+      fixture assume_voter_role { delegate: $register_assistant.delegate, role: "voter" } after register_assistant
+      fixture assume_role_missing_delegate { delegate: "nonexistent", role: "voter" } -> not_found
     }
 
     action releaseRole(delegate: D) {
@@ -56,32 +67,38 @@ concept AgenticDelegate [D] {
         The delegate does not exist.
       }
 
-      fixture release_current_role { delegate: $register_assistant.id } after register_assistant
-      fixture release_missing_delegate { delegate: "nonexistent" } -> error
+      fixture release_current_role { delegate: $register_assistant.delegate } after register_assistant
+      fixture release_missing_delegate { delegate: "nonexistent" } -> not_found
     }
 
-    action proposeAction(delegate: D, action: String, rationale: String) {
+    action recordAction(delegate: D, action: String, outcome: String) {
       -> ok(delegate: D, action: String) {
-        The action is proposed. If autonomy is Supervised, it awaits
-        principal approval. If Autonomous, it proceeds directly.
-      }
-      -> ok(delegate: D, action: String) {
-        The proposed action is not in the delegate's allowed actions list.
+        Record a completed action execution in the delegate's audit log.
+        This is for standing-delegation accountability tracking, not for
+        per-action supervised approval (that belongs in ActionRequest).
       }
       -> not_found(delegate: D) {
         The delegate does not exist.
       }
+      -> error(message: String) {
+        The action or outcome is empty.
+      }
 
-      fixture propose_vote { delegate: $register_assistant.id, action: "vote", rationale: "Community consensus needed" } after register_assistant
-      fixture propose_unauthorized { delegate: "delegate-1", action: "delete-all", rationale: "Cleanup" } -> error
+      fixture record_vote { delegate: $register_assistant.delegate, action: "vote", outcome: "executed" } after register_assistant
+      fixture record_missing_delegate { delegate: "nonexistent", action: "vote", outcome: "executed" } -> not_found
+      fixture record_empty_action { delegate: $register_assistant.delegate, action: "", outcome: "executed" } after register_assistant -> error
     }
 
     action escalate(delegate: D, action: String, reason: String) {
       -> ok(delegate: D, action: String, reason: String) {
-        The delegate signals it cannot proceed and escalates to its principal.
+        The delegate signals it cannot proceed within its standing delegation
+        scope and escalates to its principal for out-of-band resolution.
+      }
+      -> error(message: String) {
+        The reason is empty.
       }
 
-      fixture escalate_complex_decision { delegate: $register_assistant.id, action: "budget-approval", reason: "Exceeds autonomy threshold" } after register_assistant
+      fixture escalate_complex_decision { delegate: $register_assistant.delegate, action: "budget-approval", reason: "Exceeds autonomy threshold" } after register_assistant
       fixture escalate_empty_reason { delegate: "delegate-1", action: "vote", reason: "" } -> error
     }
 
@@ -92,44 +109,68 @@ concept AgenticDelegate [D] {
       -> not_found(delegate: D) {
         The delegate does not exist.
       }
+      -> error(message: String) {
+        The autonomyLevel is not one of Supervised, Autonomous, or Constrained.
+      }
 
-      fixture upgrade_to_autonomous { delegate: $register_assistant.id, autonomyLevel: "Autonomous" } after register_assistant
-      fixture update_missing_delegate { delegate: "nonexistent", autonomyLevel: "Autonomous" } -> error
+      fixture upgrade_to_autonomous { delegate: $register_assistant.delegate, autonomyLevel: "Autonomous" } after register_assistant
+      fixture update_missing_delegate { delegate: "nonexistent", autonomyLevel: "Autonomous" } -> not_found
+      fixture update_invalid_level { delegate: $register_assistant.delegate, autonomyLevel: "SuperAdmin" } after register_assistant -> error
+    }
+
+    action updateScope(delegate: D, scopeKind: option String, scopePayload: option String) {
+      -> ok(delegate: D, scopeKind: option String, scopePayload: option String) {
+        Replace the delegation scope on an existing delegate. Pass none for
+        scopeKind to clear the scope restriction entirely.
+      }
+      -> not_found(delegate: D) {
+        The delegate does not exist.
+      }
+      -> error(message: String) {
+        The scopeKind is not a recognised value.
+      }
+
+      fixture update_scope_ok { delegate: $register_assistant.delegate, scopeKind: "process_role", scopePayload: "{\"role\":\"reviewer\"}" } after register_assistant
+      fixture update_scope_missing { delegate: "nonexistent", scopeKind: "workspace", scopePayload: "{}" } -> not_found
+      fixture update_scope_invalid { delegate: $register_assistant.delegate, scopeKind: "unknown_kind", scopePayload: "{}" } after register_assistant -> error
     }
   }
 
-  example "register-then-proposeAction": {
+  example "register-then-record-action": {
 
-    after register(agentType: _, principal: p, systemPrompt: _, boundaries: _) -> ok(delegate: d)
+    after register(name: "test-agent", principal: "alice", autonomyLevel: "Supervised", allowedActions: ["vote"], scopeKind: "action_set", scopePayload: "{\"actions\":[\"vote\"]}") -> ok(delegate: d)
 
-        then assumeRole(delegate: d, roleId: r) -> ok(delegate: d, roleId: r)
-
-        and  proposeAction(delegate: d, action: a, justification: _) -> ok(delegate: d, action: a)
+        then recordAction(delegate: d, action: "vote", outcome: "executed") -> ok(delegate: d, action: "vote")
 
   }
-
 
   always "valid-agentType" {
 
     forall d in delegates:
 
-      d.agentType != none
+      d.name != none
 
   }
 
-  never "orphaned-systemPrompt" {
+  always "scope-payload-requires-scope-kind" {
 
-    exists d in delegates:
+    forall d in delegates:
 
-      d.systemPrompt = none
+      d.scopePayload = none or d.scopeKind != none
 
   }
 
   action register {
 
-    requires: agentType != ""
+    requires: name != ""
 
-    ensures ok: agentType != none
+    ensures ok: delegate in delegates
+
+  }
+
+  action updateScope {
+
+    ensures ok: delegate in delegates
 
   }
 }
