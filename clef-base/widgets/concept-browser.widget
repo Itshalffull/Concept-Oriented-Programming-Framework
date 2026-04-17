@@ -1,0 +1,190 @@
+@version(1)
+widget concept-browser {
+
+  purpose {
+    Browse and install concept suite packages from the registry.
+    Provides two tabs: an installed-packages view with local filter, and
+    a registry search view where the user submits a query and sees matching
+    packages as cards. The search view distinguishes between the pre-search
+    idle state (no query submitted yet) and a post-search no-results state
+    so users are never shown a misleading "no results" banner when they
+    have not yet entered a search term.
+  }
+
+  anatomy {
+    root:            container  { Top-level view shell }
+    tabBar:          container  { Tab strip switching between Installed and Browse Registry tabs }
+    installedTab:    action     { Tab button for the Installed tab }
+    browseTab:       action     { Tab button for the Browse Registry tab }
+    searchInput:     input      { Text field for filtering installed packages or querying the registry }
+    searchButton:    action     { Submit button that fires the registry search }
+    statusBanner:    container  { Inline status message shown below the search row for errors and confirmations }
+    emptyPrompt:     container  { Neutral idle prompt rendered when the browse tab is active and no search has been submitted }
+    noResultsBanner: container  { No-results state rendered only after a non-empty query returned zero matches }
+    packageGrid:     container  { Card grid of registry search results }
+    packageCard:     container  { Individual result card with install and preview actions }
+    installedTable:  container  { Data table of installed packages }
+    emptyInstalled:  container  { Empty state when no packages are installed }
+  }
+
+  states {
+    installedTab [initial] {
+      on SWITCH_BROWSE -> browseIdle;
+    }
+    browseIdle {
+      on SWITCH_INSTALLED -> installedTab;
+      on SEARCH_SUBMITTED -> browseSearching;
+    }
+    browseSearching {
+      on RESULTS_RECEIVED -> browseResults;
+      on NO_RESULTS -> browseNoResults;
+      on SEARCH_ERROR -> browseIdle;
+    }
+    browseResults {
+      on SWITCH_INSTALLED -> installedTab;
+      on SEARCH_SUBMITTED -> browseSearching;
+    }
+    browseNoResults {
+      on SWITCH_INSTALLED -> installedTab;
+      on SEARCH_SUBMITTED -> browseSearching;
+    }
+  }
+
+  accessibility {
+    role: region;
+    keyboard {
+      Enter -> SEARCH_SUBMITTED;
+      Tab   -> FOCUS_NEXT;
+    }
+    focus {
+      trap: false;
+      initial: searchInput;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Concept Browser";
+      };
+      tabBar -> {
+        role: "tablist";
+        aria-label: "Browser tabs";
+      };
+      installedTab -> {
+        role: "tab";
+        aria-selected: if state = "installedTab" then "true" else "false";
+      };
+      browseTab -> {
+        role: "tab";
+        aria-selected: if state = "browseIdle" or state = "browseSearching" or state = "browseResults" or state = "browseNoResults" then "true" else "false";
+      };
+      statusBanner -> {
+        role: "status";
+        aria-live: "polite";
+      };
+      noResultsBanner -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: "No packages matched the search query";
+      };
+    }
+  }
+
+  props {
+    searchQuery: String = ""
+    hasSearched: Bool = false
+    browseResults: list { name: String, version: String, status: String } = []
+    statusMessage: option String
+    activeTab: union "installed" | "browse" = "installed"
+  }
+
+  connect {
+    root -> {
+      data-state: ?activeTab;
+      data-part: "root";
+    }
+
+    browseTab -> {
+      onClick: send(SWITCH_BROWSE);
+      data-part: "browse-tab";
+    }
+
+    installedTab -> {
+      onClick: send(SWITCH_INSTALLED);
+      data-part: "installed-tab";
+    }
+
+    searchInput -> {
+      value: ?searchQuery;
+      onKeyDown: send(SEARCH_SUBMITTED);
+      data-part: "search-input";
+    }
+
+    searchButton -> {
+      onClick: send(SEARCH_SUBMITTED);
+      data-part: "search-button";
+    }
+
+    statusBanner -> {
+      hidden: if ?statusMessage = none then true else false;
+      data-part: "status-banner";
+    }
+
+    emptyPrompt -> {
+      hidden: if ?hasSearched then true else false;
+      data-part: "empty-prompt";
+    }
+
+    noResultsBanner -> {
+      hidden: if ?hasSearched and ?browseResults.length = 0 then false else true;
+      data-part: "no-results-banner";
+    }
+
+    packageGrid -> {
+      hidden: if ?browseResults.length = 0 then true else false;
+      data-part: "package-grid";
+    }
+  }
+
+  invariant {
+    example "empty-query search does not show no-results banner": {
+      after transition(event: "SEARCH_SUBMITTED", search_query: "") -> ok
+      then noResultsBanner -> { hidden: true }
+      and emptyPrompt -> { hidden: false }
+    }
+
+    example "non-empty search with results hides both prompts": {
+      after transition(event: "SEARCH_SUBMITTED", search_query: "identity") -> ok
+      and transition(event: "RESULTS_RECEIVED", result_count: 3) -> ok
+      then noResultsBanner -> { hidden: true }
+      and emptyPrompt -> { hidden: true }
+      and packageGrid -> { hidden: false }
+    }
+
+    example "non-empty search with zero results shows no-results banner": {
+      after transition(event: "SEARCH_SUBMITTED", search_query: "xyznotapackage") -> ok
+      and transition(event: "NO_RESULTS") -> ok
+      then noResultsBanner -> { hidden: false }
+      and emptyPrompt -> { hidden: true }
+      and packageGrid -> { hidden: true }
+    }
+
+    never "empty-query search shows 'no results' banner": {
+      exists e in searchEvents:
+      e.search_query = "" and noResultsBanner.hidden = false
+    }
+
+    always "idle state shows neutral prompt": {
+      state = "browseIdle" implies emptyPrompt.hidden = false and noResultsBanner.hidden = true
+    }
+
+    always "no-results banner only visible after a search": {
+      noResultsBanner.hidden = false implies hasSearched = true
+    }
+
+    always "no-results banner and results grid are mutually exclusive": {
+      not (noResultsBanner.hidden = false and packageGrid.hidden = false)
+    }
+  }
+
+}

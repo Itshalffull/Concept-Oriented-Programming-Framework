@@ -52,6 +52,7 @@ export const ConceptBrowserView: React.FC = () => {
   const [packages, setPackages] = useState<InstalledPackage[]>([]);
   const [loading, setLoading] = useState(true);
   const [browseResults, setBrowseResults] = useState<InstalledPackage[]>([]);
+  const [hasSearched, setHasSearched] = useState(false);
   const [previewPackage, setPreviewPackage] = useState<InstalledPackage | null>(null);
   const [previewDetails, setPreviewDetails] = useState<Record<string, unknown> | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -86,6 +87,9 @@ export const ConceptBrowserView: React.FC = () => {
 
   const handleSearch = useCallback(async () => {
     const query = searchQuery.trim();
+    setHasSearched(true);
+    // Clear any prior non-search status messages so only search state shows
+    setStatusMessage(null);
     try {
       const data = await invoke('ConceptBrowser', 'search', {
         query,
@@ -93,10 +97,8 @@ export const ConceptBrowserView: React.FC = () => {
       });
       if (data.variant === 'ok' && Array.isArray(data.results)) {
         setBrowseResults(data.results as InstalledPackage[]);
-        setStatusMessage(data.results.length === 0 ? 'No packages matched this query.' : null);
       } else {
         setBrowseResults([]);
-        setStatusMessage('No packages matched this query.');
       }
     } catch {
       setBrowseResults([]);
@@ -156,12 +158,6 @@ export const ConceptBrowserView: React.FC = () => {
         Preview computes schema, sync, provider, and widget impact before install.
       </p>
 
-      {statusMessage && (
-        <Card variant="filled" className="view-status-banner view-status-banner--filled">
-          <span>{statusMessage}</span>
-        </Card>
-      )}
-
       {/* Tabs */}
       <div className="view-tabs" data-part="tabs">
         <button
@@ -215,20 +211,44 @@ export const ConceptBrowserView: React.FC = () => {
 
       {activeTab === 'browse' && (
         <div>
+          {/* Status banner — below tabs and search, visually connected to the search action */}
+          {statusMessage && (
+            <Card variant="filled" className="view-status-banner view-status-banner--filled">
+              <span>{statusMessage}</span>
+            </Card>
+          )}
           {browseResults.length === 0 ? (
-            <EmptyState
-              title="Search the Registry"
-              description={statusMessage ?? 'Enter a search term to find concept suites from the local registry and Clef Hub mirrors.'}
-              action={
-                <button
-                  data-part="button"
-                  data-variant="filled"
-                  onClick={handleSearch}
-                >
-                  Search
-                </button>
-              }
-            />
+            hasSearched ? (
+              /* A search was submitted but returned zero results */
+              <EmptyState
+                title="No packages matched this query"
+                description="Try a different search term or browse the full registry by clearing the query."
+                action={
+                  <button
+                    data-part="button"
+                    data-variant="filled"
+                    onClick={handleSearch}
+                  >
+                    Search Again
+                  </button>
+                }
+              />
+            ) : (
+              /* User has not searched yet — show a neutral prompt */
+              <EmptyState
+                title="Search the Registry"
+                description="Enter a search term to find concept suites from the local registry and Clef Hub mirrors."
+                action={
+                  <button
+                    data-part="button"
+                    data-variant="filled"
+                    onClick={handleSearch}
+                  >
+                    Search
+                  </button>
+                }
+              />
+            )
           ) : (
             <div className="card-grid">
               {browseResults.map((pkg) => (
