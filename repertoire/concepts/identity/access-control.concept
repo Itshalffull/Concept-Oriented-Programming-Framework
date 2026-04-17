@@ -106,6 +106,18 @@ concept AccessControl [A] {
 
   }
 
+  always "decision non-silent" {
+
+    # Every access decision produces an explicit result in
+    # {"allowed","forbidden","neutral"} with identifying tags. No silent
+    # allow, no empty decision, no implicit permissive fallback
+    # (§10.3 final runtime contract).
+    forall a in policies:
+
+      a.result != none and a.tags != none
+
+  }
+
   action check {
 
     requires: resource != ""

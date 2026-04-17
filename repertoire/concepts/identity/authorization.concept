@@ -66,11 +66,13 @@ concept Authorization [U] {
     action checkPermission(user: U, permission: String) {
       -> ok(granted: Bool) {
         Return true if the user holds at least one role that
-        includes the given permission, false otherwise.
+        includes the given permission, false otherwise. Users with
+        no role assignment are explicitly denied (granted: false) —
+        there is no implicit permissive fallback (§5.5 hardening).
       }
 
       fixture check_granted { user: "alice", permission: "write" } after grant_write_to_admin
-      fixture check_ungranted { user: "bob", permission: "admin.delete" } -> error
+      fixture check_ungranted { user: "bob", permission: "admin.delete" }
     }
   }
 
@@ -110,6 +112,17 @@ concept Authorization [U] {
     exists u in roles:
 
       u.permissions = none
+
+  }
+
+  never "permissive fallback" {
+
+    # A Subject with no role assignment must never be implicitly granted
+    # a permission. Every checkPermission result is an explicit decision
+    # based on the Subject's assigned roles (§5.5 Authorization hardening).
+    exists u in roles:
+
+      u.userRoles = none and u.granted = true
 
   }
 

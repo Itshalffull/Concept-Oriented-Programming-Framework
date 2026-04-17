@@ -109,20 +109,10 @@ const _authorizationHandler: FunctionalConceptHandler = {
           return { granted: false };
         });
       },
-      // User has no role assignment — check if permission exists in any role (implicit access)
-      // This handles the case where the test didn't assign the user to a role
-      (b) => {
-        return branch(b, (bindings) => {
-          const allRoles = (bindings.allRoles as Array<Record<string, unknown>>) || [];
-          return allRoles.some(roleRecord => {
-            const permissions: string[] = JSON.parse((roleRecord.permissions as string) || '[]');
-            return permissions.includes(permission);
-          });
-        },
-          (grantP) => complete(grantP, 'ok', { granted: true }),
-          (denyP) => complete(denyP, 'error', { message: 'Permission not granted', granted: false }),
-        );
-      },
+      // Subject has no role assignment — deny explicitly.
+      // Authorization hardening (§5.5): no implicit permissive fallback.
+      // Every deny is an explicit ok(granted:false), never a silent allow.
+      (b) => complete(b, 'ok', { granted: false }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
