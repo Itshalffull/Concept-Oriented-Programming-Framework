@@ -5,6 +5,11 @@
  * on a ComponentMapping. Lets users wire entity fields, static values,
  * embedded widgets/views/blocks, menus, formulas, and entity reference
  * displays into widget slots and props.
+ *
+ * Action Bindings support three modes (progressive disclosure):
+ *   Action       — wraps an existing ActionBinding id (original behaviour)
+ *   UI Event     — wraps a UIEventBinding id (9 canonical surface effects)
+ *   Composite    — ordered list of Action/UIEvent steps invoked in sequence
  */
 
 import React, { useState, useCallback } from 'react';
@@ -53,6 +58,77 @@ const SOURCE_TYPE_BADGE_VARIANT: Record<SourceType, 'primary' | 'secondary' | 'i
 };
 
 // ---------------------------------------------------------------------------
+// Binding kind types for action bindings
+// ---------------------------------------------------------------------------
+
+/** The three binding modes available in the advanced editor */
+type BindingMode = 'action' | 'ui-event' | 'composite';
+
+/**
+ * The 9 canonical UI effect kinds declared in UIEventBinding.
+ * Kept in sync with specs/app/ui-event-binding.concept.
+ */
+const UI_EVENT_KINDS = [
+  'navigate',
+  'open-modal',
+  'close-modal',
+  'dismiss',
+  'focus',
+  'scroll-to',
+  'set-local-state',
+  'emit-event',
+  'toast',
+] as const;
+type UIEventKind = (typeof UI_EVENT_KINDS)[number];
+
+const UI_EVENT_KIND_LABELS: Record<UIEventKind, string> = {
+  'navigate':        'Navigate',
+  'open-modal':      'Open Modal',
+  'close-modal':     'Close Modal',
+  'dismiss':         'Dismiss Overlay',
+  'focus':           'Focus Element',
+  'scroll-to':       'Scroll To',
+  'set-local-state': 'Set Local State',
+  'emit-event':      'Emit FSM Event',
+  'toast':           'Toast Notification',
+};
+
+const UI_EVENT_KIND_HINTS: Record<UIEventKind, string> = {
+  'navigate':        'Destination id or href template',
+  'open-modal':      'Modal id or widget ref',
+  'close-modal':     'Modal id, or "top" for topmost',
+  'dismiss':         'Leave blank — dismisses the topmost overlay',
+  'focus':           'Element selector or widget-part label',
+  'scroll-to':       'Element selector or widget-part label',
+  'set-local-state': 'State path (e.g. sidebar.open)',
+  'emit-event':      'Machine id or widget-part label',
+  'toast':           'Toast variant: success | error | info | warning',
+};
+
+interface UIEventStep {
+  kind: UIEventKind;
+  target: string;
+  params: string;
+}
+
+interface CompositeStep {
+  mode: 'action' | 'ui-event';
+  actionRef: string;     // used when mode='action'
+  uiEvent: UIEventStep;  // used when mode='ui-event'
+}
+
+/** Serialised form stored in the ComponentMapping binding field */
+interface BindingValue {
+  mode: BindingMode;
+  /** ActionBinding reference id — only for mode='action' */
+  actionRef?: string;
+  /** UIEvent config — only for mode='ui-event' */
+  uiEvent?: UIEventStep;
+  /** Ordered steps — only for mode='composite' */
+  steps?: CompositeStep[];
+}
+
+// ---------------------------------------------------------------------------
 // Local state types
 // ---------------------------------------------------------------------------
 
@@ -68,7 +144,7 @@ interface PropBinding {
 
 interface ActionBinding {
   action_part: string;
-  binding: string;
+  binding: string;   // JSON-serialised BindingValue OR legacy plain string
 }
 
 interface MappingData {
@@ -103,8 +179,27 @@ function formatSource(type: SourceType, value: string): string {
   return `${type}:${value}`;
 }
 
+/** Parse a binding field that may be a BindingValue JSON or a legacy plain string */
+function parseBindingValue(raw: string): BindingValue {
+  if (!raw) return { mode: 'action', actionRef: '' };
+  try {
+    const parsed = JSON.parse(raw) as BindingValue;
+    if (parsed.mode) return parsed;
+    // JSON but not a BindingValue — treat as plain string
+  } catch { /* not JSON */ }
+  return { mode: 'action', actionRef: raw };
+}
+
+function serializeBindingValue(bv: BindingValue): string {
+  if (bv.mode === 'action' && bv.actionRef !== undefined) {
+    // Preserve legacy plain-string format when there's nothing composite
+    return JSON.stringify(bv);
+  }
+  return JSON.stringify(bv);
+}
+
 // ---------------------------------------------------------------------------
-// Sub-components
+// Shared styles
 // ---------------------------------------------------------------------------
 
 const sectionHeadingStyle: React.CSSProperties = {
@@ -144,6 +239,20 @@ const removeButtonStyle: React.CSSProperties = {
   lineHeight: 1,
 };
 
+const advancedToggleStyle: React.CSSProperties = {
+  fontSize: 'var(--typography-body-xs-size)',
+  color: 'var(--palette-on-surface-variant)',
+  background: 'transparent',
+  border: 'none',
+  cursor: 'pointer',
+  textDecoration: 'underline',
+  padding: 0,
+};
+
+// ---------------------------------------------------------------------------
+// Sub-components
+// ---------------------------------------------------------------------------
+
 /** Single source row: [type dropdown] [value input] [remove] */
 const SourceRow: React.FC<{
   source: string;
@@ -171,6 +280,253 @@ const SourceRow: React.FC<{
       />
       <Badge variant={SOURCE_TYPE_BADGE_VARIANT[parsed.type]}>{parsed.type}</Badge>
       <button style={removeButtonStyle} onClick={onRemove} title="Remove source">&times;</button>
+    </div>
+  );
+};
+
+// ---------------------------------------------------------------------------
+// UIEvent sub-editor
+// ---------------------------------------------------------------------------
+
+const UIEventEditor: React.FC<{
+  value: UIEventStep;
+  onChange: (v: UIEventStep) => void;
+}> = ({ value, onChange }) => (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)' }}>
+    <div style={{ display: 'flex', gap: 'var(--spacing-xs)', alignItems: 'center', flexWrap: 'wrap' }}>
+      <select
+        style={selectStyle}
+        value={value.kind}
+        onChange={(e) => onChange({ ...value, kind: e.target.value as UIEventKind })}
+      >
+        {UI_EVENT_KINDS.map((k) => (
+          <option key={k} value={k}>{UI_EVENT_KIND_LABELS[k]}</option>
+        ))}
+      </select>
+      <input
+        style={inputStyle}
+        type="text"
+        value={value.target}
+        placeholder={UI_EVENT_KIND_HINTS[value.kind]}
+        onChange={(e) => onChange({ ...value, target: e.target.value })}
+      />
+    </div>
+    <input
+      style={inputStyle}
+      type="text"
+      value={value.params}
+      placeholder='Params (JSON) — e.g. {"title":"Saved"}'
+      onChange={(e) => onChange({ ...value, params: e.target.value })}
+    />
+  </div>
+);
+
+// ---------------------------------------------------------------------------
+// Composite step editor
+// ---------------------------------------------------------------------------
+
+const CompositeStepRow: React.FC<{
+  step: CompositeStep;
+  index: number;
+  onChange: (updated: CompositeStep) => void;
+  onRemove: () => void;
+}> = ({ step, index, onChange, onRemove }) => (
+  <div style={{
+    border: '1px solid var(--palette-outline-variant)',
+    borderRadius: 'var(--radius-sm)',
+    padding: 'var(--spacing-sm)',
+    display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)',
+  }}>
+    <div style={{ display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'center' }}>
+      <span style={{
+        fontSize: 'var(--typography-label-sm-size)',
+        color: 'var(--palette-on-surface-variant)',
+        minWidth: '24px',
+      }}>
+        {index + 1}.
+      </span>
+      <select
+        style={selectStyle}
+        value={step.mode}
+        onChange={(e) => onChange({ ...step, mode: e.target.value as 'action' | 'ui-event' })}
+      >
+        <option value="action">Action</option>
+        <option value="ui-event">UI Event</option>
+      </select>
+      <button style={removeButtonStyle} onClick={onRemove} title="Remove step">&times;</button>
+    </div>
+
+    {step.mode === 'action' ? (
+      <input
+        style={inputStyle}
+        type="text"
+        value={step.actionRef}
+        placeholder="ActionBinding reference id"
+        onChange={(e) => onChange({ ...step, actionRef: e.target.value })}
+      />
+    ) : (
+      <UIEventEditor
+        value={step.uiEvent}
+        onChange={(uiEvent) => onChange({ ...step, uiEvent })}
+      />
+    )}
+  </div>
+);
+
+// ---------------------------------------------------------------------------
+// Main binding editor for a single action-binding row
+// ---------------------------------------------------------------------------
+
+const BindingEditor: React.FC<{
+  value: BindingValue;
+  onChange: (v: BindingValue) => void;
+}> = ({ value, onChange }) => {
+  const [advanced, setAdvanced] = useState(
+    value.mode === 'ui-event' || value.mode === 'composite',
+  );
+
+  const addCompositeStep = useCallback(() => {
+    const steps = value.steps ?? [];
+    onChange({
+      ...value,
+      mode: 'composite',
+      steps: [
+        ...steps,
+        {
+          mode: 'action',
+          actionRef: '',
+          uiEvent: { kind: 'navigate', target: '', params: '{}' },
+        },
+      ],
+    });
+  }, [value, onChange]);
+
+  const updateCompositeStep = useCallback((idx: number, updated: CompositeStep) => {
+    const steps = [...(value.steps ?? [])];
+    steps[idx] = updated;
+    onChange({ ...value, steps });
+  }, [value, onChange]);
+
+  const removeCompositeStep = useCallback((idx: number) => {
+    const steps = (value.steps ?? []).filter((_, i) => i !== idx);
+    // Downgrade to simpler mode if steps run out
+    if (steps.length === 0) {
+      onChange({ mode: 'action', actionRef: '' });
+    } else {
+      onChange({ ...value, steps });
+    }
+  }, [value, onChange]);
+
+  const switchMode = useCallback((mode: BindingMode) => {
+    if (mode === 'action') {
+      onChange({ mode: 'action', actionRef: value.actionRef ?? '' });
+    } else if (mode === 'ui-event') {
+      onChange({
+        mode: 'ui-event',
+        uiEvent: value.uiEvent ?? { kind: 'navigate', target: '', params: '{}' },
+      });
+    } else {
+      onChange({
+        mode: 'composite',
+        steps: value.steps ?? [],
+      });
+    }
+  }, [value, onChange]);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xs)', flex: 1 }}>
+      {/* Simple mode: just an ActionBinding reference text input */}
+      {!advanced && (
+        <div style={{ display: 'flex', gap: 'var(--spacing-xs)', alignItems: 'center' }}>
+          <input
+            style={inputStyle}
+            type="text"
+            value={value.mode === 'action' ? (value.actionRef ?? '') : ''}
+            placeholder="ActionBinding reference (or leave blank for Unbound)"
+            onChange={(e) => onChange({ mode: 'action', actionRef: e.target.value })}
+          />
+          <button style={advancedToggleStyle} onClick={() => setAdvanced(true)}>
+            Advanced
+          </button>
+        </div>
+      )}
+
+      {/* Advanced mode: binding-kind segmented control + mode-specific fields */}
+      {advanced && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
+          {/* Mode selector */}
+          <div style={{ display: 'flex', gap: 'var(--spacing-xs)', alignItems: 'center' }}>
+            {(['action', 'ui-event', 'composite'] as BindingMode[]).map((m) => (
+              <button
+                key={m}
+                data-part="button"
+                data-variant={value.mode === m ? 'filled' : 'outlined'}
+                onClick={() => switchMode(m)}
+                style={{ fontSize: 'var(--typography-body-sm-size)' }}
+              >
+                {m === 'action' ? 'Action' : m === 'ui-event' ? 'UI Event' : 'Composite'}
+              </button>
+            ))}
+            <button style={{ ...advancedToggleStyle, marginLeft: 'auto' }} onClick={() => {
+              setAdvanced(false);
+              if (value.mode !== 'action') onChange({ mode: 'action', actionRef: '' });
+            }}>
+              Simple
+            </button>
+          </div>
+
+          {/* Action mode */}
+          {value.mode === 'action' && (
+            <input
+              style={inputStyle}
+              type="text"
+              value={value.actionRef ?? ''}
+              placeholder="ActionBinding reference id"
+              onChange={(e) => onChange({ ...value, actionRef: e.target.value })}
+            />
+          )}
+
+          {/* UI Event mode */}
+          {value.mode === 'ui-event' && (
+            <UIEventEditor
+              value={value.uiEvent ?? { kind: 'navigate', target: '', params: '{}' }}
+              onChange={(uiEvent) => onChange({ ...value, uiEvent })}
+            />
+          )}
+
+          {/* Composite mode */}
+          {value.mode === 'composite' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
+              {(value.steps ?? []).length === 0 && (
+                <div style={{
+                  fontSize: 'var(--typography-body-sm-size)',
+                  color: 'var(--palette-on-surface-variant)',
+                  fontStyle: 'italic',
+                }}>
+                  No steps yet. Click &quot;+ Add step&quot; to build a sequence.
+                </div>
+              )}
+              {(value.steps ?? []).map((step, idx) => (
+                <CompositeStepRow
+                  key={idx}
+                  step={step}
+                  index={idx}
+                  onChange={(updated) => updateCompositeStep(idx, updated)}
+                  onRemove={() => removeCompositeStep(idx)}
+                />
+              ))}
+              <button
+                data-part="button"
+                data-variant="outlined"
+                onClick={addCompositeStep}
+                style={{ alignSelf: 'flex-start', fontSize: 'var(--typography-body-sm-size)' }}
+              >
+                + Add step
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
@@ -206,7 +562,7 @@ export const SlotSourceEditor: React.FC<SlotSourceEditorProps> = ({
   const [actionBindings, setActionBindings] = useState<ActionBinding[] | null>(null);
   const [showAddActionBinding, setShowAddActionBinding] = useState(false);
   const [newActionPart, setNewActionPart] = useState('');
-  const [newActionBindingRef, setNewActionBindingRef] = useState('');
+  const [newBindingValue, setNewBindingValue] = useState<BindingValue>({ mode: 'action', actionRef: '' });
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -349,11 +705,11 @@ export const SlotSourceEditor: React.FC<SlotSourceEditorProps> = ({
     });
   }, []);
 
-  const updateActionBindingRef = useCallback((index: number, binding: string) => {
+  const updateActionBindingValue = useCallback((index: number, bv: BindingValue) => {
     setActionBindings((prev) => {
       if (!prev) return prev;
       const next = [...prev];
-      next[index] = { ...next[index], binding };
+      next[index] = { ...next[index], binding: serializeBindingValue(bv) };
       return next;
     });
   }, []);
@@ -366,12 +722,15 @@ export const SlotSourceEditor: React.FC<SlotSourceEditorProps> = ({
     if (!newActionPart.trim()) return;
     setActionBindings((prev) => [
       ...(prev ?? []),
-      { action_part: newActionPart.trim(), binding: newActionBindingRef.trim() },
+      {
+        action_part: newActionPart.trim(),
+        binding: serializeBindingValue(newBindingValue),
+      },
     ]);
     setNewActionPart('');
-    setNewActionBindingRef('');
+    setNewBindingValue({ mode: 'action', actionRef: '' });
     setShowAddActionBinding(false);
-  }, [newActionPart, newActionBindingRef]);
+  }, [newActionPart, newBindingValue]);
 
   // ---------------------------------------------------------------------------
   // Save — calls bindSlot / bindProp / bindAction for each binding
@@ -686,6 +1045,15 @@ export const SlotSourceEditor: React.FC<SlotSourceEditorProps> = ({
           </button>
         </div>
 
+        <div style={{
+          marginBottom: 'var(--spacing-xs)',
+          fontSize: 'var(--typography-body-sm-size)',
+          color: 'var(--palette-on-surface-variant)',
+        }}>
+          Wire a widget action-part to a concept Action, a surface UI Event, or a Composite sequence of both.
+          Click &quot;Advanced&quot; on any row to expose the binding-kind selector.
+        </div>
+
         {actionBindings && actionBindings.length === 0 && !showAddActionBinding && (
           <div style={{
             padding: 'var(--spacing-md)',
@@ -693,44 +1061,57 @@ export const SlotSourceEditor: React.FC<SlotSourceEditorProps> = ({
             fontSize: 'var(--typography-body-sm-size)',
             fontStyle: 'italic',
           }}>
-            No action bindings configured. Click &quot;Add Action Binding&quot; to wire a widget action part to an ActionBinding reference.
+            No action bindings configured. Click &quot;+ Add Action Binding&quot; to wire a widget action-part.
           </div>
         )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
-          {actionBindings?.map((ab, abIdx) => (
-            <div key={abIdx} style={{
-              display: 'flex', gap: 'var(--spacing-xs)', alignItems: 'center',
-              padding: 'var(--spacing-sm)',
-              border: '1px solid var(--palette-outline-variant)',
-              borderRadius: 'var(--radius-sm)',
-            }}>
-              <input
-                style={{ ...inputStyle, maxWidth: '160px' }}
-                type="text"
-                value={ab.action_part}
-                placeholder="Action part (e.g. removeBlock)"
-                onChange={(e) => updateActionPart(abIdx, e.target.value)}
-              />
-              <span style={{ color: 'var(--palette-on-surface-variant)', fontSize: 'var(--typography-body-sm-size)' }}>
-                &rarr;
-              </span>
-              <input
-                style={inputStyle}
-                type="text"
-                value={ab.binding}
-                placeholder="ActionBinding reference (or leave blank for Unbound)"
-                onChange={(e) => updateActionBindingRef(abIdx, e.target.value)}
-              />
-              {ab.binding
-                ? <Badge variant="success">{ab.binding}</Badge>
-                : <Badge variant="secondary">Unbound</Badge>
-              }
-              <button style={removeButtonStyle} onClick={() => removeActionBinding(abIdx)} title="Remove action binding">
-                &times;
-              </button>
-            </div>
-          ))}
+          {actionBindings?.map((ab, abIdx) => {
+            const bv = parseBindingValue(ab.binding);
+            const badgeLabel = bv.mode === 'action'
+              ? (bv.actionRef || 'Unbound')
+              : bv.mode === 'ui-event'
+                ? `UIEvent:${bv.uiEvent?.kind ?? '?'}`
+                : `Composite(${(bv.steps ?? []).length} steps)`;
+            return (
+              <div key={abIdx} style={{
+                display: 'flex', gap: 'var(--spacing-xs)', alignItems: 'flex-start',
+                padding: 'var(--spacing-sm)',
+                border: '1px solid var(--palette-outline-variant)',
+                borderRadius: 'var(--radius-sm)',
+              }}>
+                <input
+                  style={{ ...inputStyle, maxWidth: '160px', flexShrink: 0 }}
+                  type="text"
+                  value={ab.action_part}
+                  placeholder="Action part (e.g. removeBlock)"
+                  onChange={(e) => updateActionPart(abIdx, e.target.value)}
+                />
+                <span style={{
+                  color: 'var(--palette-on-surface-variant)',
+                  fontSize: 'var(--typography-body-sm-size)',
+                  paddingTop: 'calc(var(--spacing-xs) + 2px)',
+                  flexShrink: 0,
+                }}>
+                  &rarr;
+                </span>
+                <BindingEditor
+                  value={bv}
+                  onChange={(newBv) => updateActionBindingValue(abIdx, newBv)}
+                />
+                <Badge variant={bv.mode === 'action' && !bv.actionRef ? 'secondary' : 'success'}>
+                  {badgeLabel}
+                </Badge>
+                <button
+                  style={removeButtonStyle}
+                  onClick={() => removeActionBinding(abIdx)}
+                  title="Remove action binding"
+                >
+                  &times;
+                </button>
+              </div>
+            );
+          })}
 
           {showAddActionBinding && (
             <Card variant="outlined">
@@ -742,24 +1123,26 @@ export const SlotSourceEditor: React.FC<SlotSourceEditorProps> = ({
                 }}>
                   New Action Binding
                 </div>
-                <div style={{ display: 'flex', gap: 'var(--spacing-xs)', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: 'var(--spacing-xs)', alignItems: 'flex-start' }}>
                   <input
-                    style={{ ...inputStyle, maxWidth: '160px' }}
+                    style={{ ...inputStyle, maxWidth: '160px', flexShrink: 0 }}
                     type="text"
                     value={newActionPart}
                     placeholder="Action part name"
                     onChange={(e) => setNewActionPart(e.target.value)}
                     autoFocus
                   />
-                  <span style={{ color: 'var(--palette-on-surface-variant)', fontSize: 'var(--typography-body-sm-size)' }}>
+                  <span style={{
+                    color: 'var(--palette-on-surface-variant)',
+                    fontSize: 'var(--typography-body-sm-size)',
+                    paddingTop: 'calc(var(--spacing-xs) + 2px)',
+                    flexShrink: 0,
+                  }}>
                     &rarr;
                   </span>
-                  <input
-                    style={inputStyle}
-                    type="text"
-                    value={newActionBindingRef}
-                    placeholder="ActionBinding reference"
-                    onChange={(e) => setNewActionBindingRef(e.target.value)}
+                  <BindingEditor
+                    value={newBindingValue}
+                    onChange={setNewBindingValue}
                   />
                 </div>
                 <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
@@ -769,7 +1152,7 @@ export const SlotSourceEditor: React.FC<SlotSourceEditorProps> = ({
                   <button data-part="button" data-variant="outlined" onClick={() => {
                     setShowAddActionBinding(false);
                     setNewActionPart('');
-                    setNewActionBindingRef('');
+                    setNewBindingValue({ mode: 'action', actionRef: '' });
                   }}>
                     Cancel
                   </button>
