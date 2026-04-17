@@ -1952,43 +1952,34 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
         style={{
           gridRow: hasCompileSurface && compileStatus ? 2 : '1 / -1',
           borderRight: '1px solid var(--palette-outline-variant)',
-          padding: 'var(--spacing-sm)',
+          padding: 'var(--spacing-xs)',
           overflowY: 'auto',
           display: 'flex',
           flexDirection: 'column',
+          alignItems: 'center',
           gap: 'var(--spacing-xs)',
         }}
       >
-        {/* Palette is a secondary insertion surface — slash menu is primary */}
-        <span
-          style={{
-            fontSize: '10px',
-            textTransform: 'uppercase',
-            letterSpacing: '0.08em',
-            color: 'var(--palette-on-surface-variant)',
-            padding: '0 4px',
-          }}
-        >
-          Blocks
-        </span>
+        {/* Palette is a secondary insertion surface — slash menu is primary.
+            Both controls are intentionally subdued: one high-emphasis "create"
+            affordance per zone maximum (UX anatomy invariant). */}
         {canEdit && (
           <button
             data-part="open-slash-menu"
-            aria-label="Open block inserter"
+            aria-label="Insert block"
+            title="Insert block"
             onClick={openSlashMenu}
-            style={{ textAlign: 'left', fontSize: '12px', cursor: 'pointer' }}
           >
-            + Insert block
+            +
           </button>
         )}
         <button
           data-part="block-children-gear"
-          title="Root view settings — filter, sort, view type"
-          aria-label="Root block children view settings"
+          title="View settings — filter, sort, view type"
+          aria-label="Block children view settings"
           onClick={(e) => setBlockChildrenMenu({ x: e.clientX, y: e.clientY, parentId: rootNodeId })}
-          style={{ textAlign: 'left', fontSize: '12px', cursor: 'pointer', opacity: 0.75 }}
         >
-          ⚙ View: {blockChildrenSettings.view.replace('block-children-', '')}
+          ⚙
         </button>
       </div>
 

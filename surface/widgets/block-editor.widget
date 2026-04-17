@@ -359,6 +359,11 @@ widget block-editor {
       ensures ok: sidePanelDock.rendered = true
     }
 
+    never "block-editor gutter has more than one high-emphasis button": {
+      exists b in gutterButtons:
+        b.filledCount > 1
+    }
+
     "Tab and Shift+Tab move roving focus between blocks in contentArea";
     "Ctrl+B, Ctrl+I, Ctrl+E are deferred to the active EditSurface input-rule dispatch pipeline";
     "Ctrl+S fires SAVE; Ctrl+Z fires UNDO via the active EditSurface action binding";
