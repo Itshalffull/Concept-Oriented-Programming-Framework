@@ -409,13 +409,24 @@ export const RecursiveBlockEditor: React.FC<RecursiveBlockEditorProps> = ({
   // truth afterwards.
   const handleOptimisticDepthChange = useCallback((nodeId: string, delta: number) => {
     setChildren((prev) => {
-      const next = prev.map((c) => {
-        if (c.id !== nodeId) return c;
+      // Collect nodeId and all its descendants so children indent together.
+      const affected = new Set<string>([nodeId]);
+      let grew = true;
+      while (grew) {
+        grew = false;
+        for (const c of prev) {
+          if (!affected.has(c.id) && c.parent && affected.has(c.parent)) {
+            affected.add(c.id);
+            grew = true;
+          }
+        }
+      }
+      return prev.map((c) => {
+        if (!affected.has(c.id)) return c;
         const newDepth = Math.max(0, c.depth + delta);
-        optimisticDepthRef.current.set(nodeId, newDepth);
+        if (c.id === nodeId) optimisticDepthRef.current.set(nodeId, newDepth);
         return { ...c, depth: newDepth };
       });
-      return next;
     });
   }, []);
 
