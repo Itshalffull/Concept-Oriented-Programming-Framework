@@ -62,6 +62,7 @@ async function kernelInvoke(
 
 const PROPERTY_ENTITY = 'user';
 const PROPERTY_KEY = 'kb-onboarding-dismissed';
+const LOCAL_STORAGE_KEY = 'clef:kb-onboarding-dismissed';
 
 // ---------------------------------------------------------------------------
 // Hook
@@ -78,10 +79,26 @@ export function useFirstRunToast(): React.ReactElement | null {
   const [dismissed, setDismissed] = useState<boolean | null>(null);
 
   // Check whether the user has already dismissed the toast.
+  // Uses localStorage as the primary check (survives server restarts in dev)
+  // and falls back to Property/get for multi-device persistence.
   useEffect(() => {
     let cancelled = false;
 
     async function checkDismissed() {
+      // Fast path: check localStorage first so the banner never flashes on
+      // page load when the user has already dismissed it in this browser.
+      try {
+        if (typeof window !== 'undefined' && window.localStorage) {
+          const localValue = window.localStorage.getItem(LOCAL_STORAGE_KEY);
+          if (localValue === 'true') {
+            if (!cancelled) setDismissed(true);
+            return;
+          }
+        }
+      } catch {
+        // localStorage blocked (private browsing, etc.) — continue to Property check.
+      }
+
       try {
         const result = await kernelInvoke('Property', 'get', {
           entity: PROPERTY_ENTITY,
@@ -111,14 +128,23 @@ export function useFirstRunToast(): React.ReactElement | null {
   const handleDismiss = useCallback(() => {
     setDismissed(true);
 
-    // Persist the dismissal — fire-and-forget.
+    // Persist to localStorage first (survives server restarts in dev).
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.setItem(LOCAL_STORAGE_KEY, 'true');
+      }
+    } catch {
+      // localStorage blocked — fall through to Property persistence only.
+    }
+
+    // Also persist to Property for multi-device/session durability — fire-and-forget.
     kernelInvoke('Property', 'set', {
       entity: PROPERTY_ENTITY,
       key: PROPERTY_KEY,
       value: 'true',
     }).catch(() => {
-      // Non-fatal: the banner will be hidden for this session but may
-      // reappear next session if persistence fails. Acceptable edge case.
+      // Non-fatal: the banner will be hidden for this session via localStorage
+      // even if Property persistence fails.
     });
   }, []);
 

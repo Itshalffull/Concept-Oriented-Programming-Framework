@@ -67,7 +67,7 @@ entries:
     sort: natural-order
     group: ''
     projection: themes-list-fields
-    presentation: card-grid-default
+    presentation: card-grid-bypass
     interaction: themes-list-controls
 
   - name: display-modes-list
@@ -215,14 +215,14 @@ entries:
 
   - name: process-catalog
     title: Process Catalog
-    description: Browse automation processes as cards — event-condition-action rules that drive system behavior.
-    dataSource: automation-rule-list-source
-    filter: enabled-toggle-filter
+    description: Browse process spec templates as cards — versioned multi-step execution blueprints.
+    dataSource: process-spec-list-source
+    filter: spec-status-toggle-filter
     sort: natural-order
     group: ''
-    projection: automations-fields
-    presentation: process-catalog-presentation
-    interaction: process-catalog-controls
+    projection: process-specs-cards-fields
+    presentation: card-grid-default
+    interaction: process-spec-create-navigate
 
   - name: automations-rules-list
     title: Automation Rules
