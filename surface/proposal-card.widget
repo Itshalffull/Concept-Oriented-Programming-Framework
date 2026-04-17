@@ -1,0 +1,213 @@
+@version(1)
+widget proposal-card {
+
+  purpose {
+    Proposal summary card used in GovernanceOrgEditor ViewEmbed panels and
+    governance inbox right-panel layouts. Presents what a proposal intends
+    to change — its title, current status, submitter identity, submission
+    timestamp, a field-level diff of proposed changes, supporting reference
+    links, and which governance route it is travelling through. The card is
+    purely presentational and has no interactive state machine of its own
+    beyond reflecting the lifecycle state of the proposal it describes.
+    It adapts its visual treatment to three broad lifecycle phases: draft,
+    active (in-review), and resolved (passed, failed, executed, or archived).
+  }
+
+  anatomy {
+    root:            container    { Outermost article wrapper for the entire proposal card }
+    header:          container    { Top section containing title, status badge, and route badge }
+    title:           text         { Human-readable title of the proposal }
+    status-badge:    presentation { Pill or chip indicating current lifecycle status of the proposal }
+    submitter:       text         { Name of the person who submitted the proposal }
+    submitted-at:    text         { Formatted timestamp of when the proposal was submitted }
+    diff-zone:       container    { Section listing each proposed field-level change }
+    diff-item:       container    { Single field change row showing field name, from-value, and to-value }
+    supporting-links: container   { Section listing external reference links that support the proposal }
+    link-item:       action       { Individual reference link the viewer can follow }
+    route-badge:     presentation { Badge indicating which governance route this proposal is using }
+  }
+
+  states {
+    draft [initial] {
+      on ACTIVATE -> active;
+      on ARCHIVE  -> resolved;
+    }
+
+    active {
+      on RESOLVE -> resolved;
+    }
+
+    resolved {
+    }
+  }
+
+  accessibility {
+    role: article;
+    modal: false;
+    keyboard {
+      Enter -> ACTIVATE_LINK;
+      Space -> ACTIVATE_LINK;
+    }
+    focus {
+      trap: false;
+      initial: link-item;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role:      "article";
+        aria-label: concat("Proposal: ", ?title);
+      };
+      status-badge -> {
+        role:      "status";
+        aria-label: concat("Status: ", ?status);
+        aria-live:  "polite";
+      };
+      submitter -> {
+        aria-label: concat("Submitted by ", ?submitter_name);
+      };
+      submitted-at -> {
+        aria-label: concat("Submitted ", ?submitted_at);
+      };
+      diff-zone -> {
+        role:      "region";
+        aria-label: "Proposed changes";
+      };
+      diff-item -> {
+        role:      "listitem";
+      };
+      supporting-links -> {
+        role:      "list";
+        aria-label: "Supporting references";
+      };
+      link-item -> {
+        role:      "link";
+        aria-label: self.label;
+      };
+      route-badge -> {
+        aria-label: concat("Route: ", ?route_name);
+      };
+    }
+  }
+
+  props {
+    title:            String
+    status:           String = "draft"
+    submitter_name:   String = ""
+    submitter_avatar: option String
+    submitted_at:     option String
+    route_name:       option String
+    diff_items:       list DiffItem
+    supporting_links: list LinkItem
+  }
+
+  connect {
+    root -> {
+      data-part:   "root";
+      data-state:  state;
+      data-status: ?status;
+      role:        "article";
+      aria-label:  concat("Proposal: ", ?title);
+    }
+
+    header -> {
+      data-part: "header";
+    }
+
+    title -> {
+      data-part: "title";
+      text:      ?title;
+    }
+
+    status-badge -> {
+      data-part:        "status-badge";
+      role:             "status";
+      aria-live:        "polite";
+      data-status:      ?status;
+      text:             ?status;
+    }
+
+    submitter -> {
+      data-part: "submitter";
+      text:      ?submitter_name;
+      aria-label: concat("Submitted by ", ?submitter_name);
+    }
+
+    submitted-at -> {
+      data-part: "submitted-at";
+      text:      if ?submitted_at then ?submitted_at else "";
+      aria-label: if ?submitted_at then concat("Submitted ", ?submitted_at) else "Submission time unknown";
+    }
+
+    diff-zone -> {
+      data-part:  "diff-zone";
+      role:       "region";
+      aria-label: "Proposed changes";
+    }
+
+    diff-item -> {
+      data-part:        "diff-item";
+      role:             "listitem";
+      data-field:       self.field;
+      data-change-type: self.change_type;
+    }
+
+    supporting-links -> {
+      data-part:  "supporting-links";
+      role:       "list";
+      aria-label: "Supporting references";
+    }
+
+    link-item -> {
+      data-part:  "link-item";
+      role:       "link";
+      href:       self.href;
+      aria-label: self.label;
+      text:       self.label;
+    }
+
+    route-badge -> {
+      data-part:   "route-badge";
+      data-route:  ?route_name;
+      text:        if ?route_name then ?route_name else "";
+      hidden:      if ?route_name then false else true;
+      aria-label:  if ?route_name then concat("Route: ", ?route_name) else "";
+    }
+  }
+
+  invariant {
+    "root data-state must reflect the current FSM lifecycle state at all times";
+    "root data-status must mirror the status prop value passed in";
+    "status-badge data-status must match the status prop so the renderer can apply the correct styling";
+    "route-badge must be hidden when route_name prop is absent or empty";
+    "route-badge must be visible and show the route name when route_name prop is set";
+    "title prop must be included in the root aria-label as Proposal: <title>";
+    "submitter text must display the submitter_name prop value";
+    "submitted-at text must show the submitted_at prop value when present";
+    "diff-zone must carry role region and aria-label Proposed changes for screen reader navigation";
+    "supporting-links must carry role list and aria-label Supporting references";
+    "link-item elements must carry role link and aria-label from the LinkItem label field";
+
+    always "status-badge always carries role status": {
+      state = "draft"
+    }
+
+    always "root always carries role article": {
+      state = "draft"
+    }
+
+    never "resolved state re-enters draft": {
+      state = "resolved"
+    }
+
+    never "resolved state re-enters active": {
+      state = "resolved"
+    }
+
+    action root {
+      requires: state = "draft"
+      ensures ok: state = "active"
+    }
+  }
+
+}

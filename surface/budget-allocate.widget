@@ -1,0 +1,208 @@
+@version(1)
+widget budget-allocate {
+
+  purpose {
+    Constrained allocation slider interactor used in governance voting workflows.
+    Each voter distributes a fixed number of points (e.g. 100) across N options
+    by dragging sliders; increasing one slider decreases the others proportionally
+    so the sum always equals the configured budget. Displays each option label,
+    current allocated value, and an aggregate bar showing the running community
+    average across all voters. Locks into a read-only submitted state after the
+    voter confirms their allocation. Dispatches a SUBMIT event that the parent
+    work-item-card wires to Vote/castVote with the full allocation map.
+  }
+
+  anatomy {
+    root:           container    { Top-level group wrapper for the entire allocation widget }
+    option-list:    container    { Ordered list of allocation rows, one per votable option }
+    option-row:     container    { Single option row containing label, slider, and value display }
+    option-label:   text         { Display name of the option being allocated points to }
+    option-slider:  interactive  { Range slider the voter drags to set the point allocation }
+    option-value:   text         { Numeric readout of the current allocation for this option }
+    total-indicator: text        { Running sum indicator showing points allocated vs. total budget }
+    aggregate-zone: container    { Section displaying the community aggregate allocation bars }
+    aggregate-bar:  presentation { Proportional fill bar representing aggregate average for one option }
+    aggregate-label: text        { Label and voter count for an aggregate bar entry }
+    submit-button:  action       { Button that confirms and submits the voter allocation }
+  }
+
+  states {
+    editing [initial] {
+      on SUM_REACHED_TOTAL -> valid;
+      on SUBMIT            -> submitting;
+    }
+
+    valid {
+      on SUM_LEFT_TOTAL -> editing;
+      on SUBMIT         -> submitting;
+    }
+
+    submitting {
+      on SUBMIT_OK    -> submitted;
+      on SUBMIT_ERROR -> valid;
+    }
+
+    submitted {
+    }
+  }
+
+  accessibility {
+    role: group;
+    modal: false;
+    keyboard {
+      ArrowRight     -> INCREMENT_FOCUSED;
+      ArrowUp        -> INCREMENT_FOCUSED;
+      ArrowLeft      -> DECREMENT_FOCUSED;
+      ArrowDown      -> DECREMENT_FOCUSED;
+      Shift+ArrowRight -> INCREMENT_FOCUSED_LARGE;
+      Shift+ArrowUp    -> INCREMENT_FOCUSED_LARGE;
+      Shift+ArrowLeft  -> DECREMENT_FOCUSED_LARGE;
+      Shift+ArrowDown  -> DECREMENT_FOCUSED_LARGE;
+      Enter          -> SUBMIT;
+    }
+    focus {
+      trap: false;
+      initial: option-slider;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role:      "group";
+        aria-label: "Budget allocation";
+      };
+      option-slider -> {
+        role:        "slider";
+        aria-label:  concat(?option_label, ", ", self.value, " points");
+        aria-valuemin: "0";
+        aria-valuemax: ?total_points;
+        aria-valuenow: self.value;
+        aria-disabled: if state == "submitting" or state == "submitted" then "true" else "false";
+      };
+      total-indicator -> {
+        role:      "status";
+        aria-live: "polite";
+        aria-label: "Total points allocated";
+      };
+      submit-button -> {
+        role:        "button";
+        aria-label:  "Submit allocation";
+        aria-disabled: if state == "editing" or state == "submitting" or state == "submitted" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    options:      list BudgetOption
+    total_points: Int = 100
+    aggregate:    list AggregateEntry
+    submitted:    Bool = false
+    can_submit:   Bool = false
+  }
+
+  connect {
+    root -> {
+      data-part:      "root";
+      data-state:     state;
+      role:           "group";
+      aria-label:     "Budget allocation";
+    }
+
+    option-list -> {
+      data-part: "option-list";
+    }
+
+    option-row -> {
+      data-part:        "option-row";
+      data-option-id:   self.id;
+    }
+
+    option-label -> {
+      data-part: "option-label";
+      text:      self.label;
+    }
+
+    option-slider -> {
+      data-part:       "option-slider";
+      role:            "slider";
+      type:            "range";
+      min:             "0";
+      max:             ?total_points;
+      aria-valuemin:   "0";
+      aria-valuemax:   ?total_points;
+      aria-valuenow:   self.value;
+      aria-label:      concat(self.label, ", ", self.value, " points");
+      aria-disabled:   if state == "submitting" or state == "submitted" then "true" else "false";
+      disabled:        if state == "submitting" or state == "submitted" then true else false;
+      onInput:         send(SLIDER_CHANGED, { optionId: self.id, value: self.inputValue });
+    }
+
+    option-value -> {
+      data-part: "option-value";
+      text:      self.value;
+    }
+
+    total-indicator -> {
+      data-part:  "total-indicator";
+      aria-live:  "polite";
+      data-valid: if state == "valid" or state == "submitting" or state == "submitted" then "true" else "false";
+    }
+
+    aggregate-zone -> {
+      data-part: "aggregate-zone";
+    }
+
+    aggregate-bar -> {
+      data-part:       "aggregate-bar";
+      data-option-id:  self.option_id;
+      style-width:     concat(self.average, "%");
+    }
+
+    aggregate-label -> {
+      data-part: "aggregate-label";
+      text:      concat(self.average, " avg (", self.voter_count, " voters)");
+    }
+
+    submit-button -> {
+      data-part:    "submit-button";
+      aria-label:   "Submit allocation";
+      aria-disabled: if state == "editing" or state == "submitting" or state == "submitted" then "true" else "false";
+      disabled:     if state == "editing" or state == "submitting" or state == "submitted" then true else false;
+      onClick:      send(SUBMIT);
+    }
+  }
+
+  invariant {
+    "submit-button must be aria-disabled and disabled when state is editing";
+    "submit-button must be enabled (aria-disabled false) when state is valid";
+    "submit-button must be disabled while state is submitting";
+    "all option-sliders must be disabled when state is submitting or submitted";
+    "root data-state must mirror the current FSM state at all times";
+    "total-indicator data-valid must be true when state is valid, submitting, or submitted";
+    "SUBMIT_OK event from submitting must transition root to submitted state";
+    "SUBMIT_ERROR event from submitting must return to valid state with submit-button re-enabled";
+    "slider onInput must dispatch SLIDER_CHANGED event with optionId and value payload";
+    "aggregate-bar style-width must reflect the average percentage for each option";
+
+    always "sliders disabled while submitting or submitted": {
+      state = "submitting"
+    }
+
+    always "submit button locked while not in valid state": {
+      state = "editing"
+    }
+
+    never "submit-button enabled when state is editing": {
+      state = "editing"
+    }
+
+    never "sliders remain interactive after submitted": {
+      state = "submitted"
+    }
+
+    action submit-button {
+      requires: state = "valid"
+      ensures ok: state = "submitting"
+    }
+  }
+
+}
