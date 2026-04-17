@@ -164,8 +164,10 @@ then {
 sync ProposalGrantsPermission [eager]
   purpose {
     When a governance execution completes and its result encodes a permission
-    grant, record that grant in the Permission concept so the executed
+    grant, record that grant in the Authorization concept so the executed
     proposal's access-control change becomes enforceable immediately.
+    Migrated from Permission/grant to Authorization/grantPermission
+    (see agents-as-subjects-refactor-plan §5.2).
   }
 when {
   Execution/execute: [ execution: ?execution ]
@@ -174,16 +176,11 @@ when {
 where {
   Property: { ?result key: "action"; value: "grantPermission" };
   Property: { ?result key: "who"; value: ?who };
-  Property: { ?result key: "where"; value: ?where };
-  Property: { ?result key: "what"; value: ?what };
-  Property: { ?result key: "grantedBy"; value: ?grantedBy }
+  Property: { ?result key: "what"; value: ?what }
 }
 then {
-  Permission/grant: [
-    who: ?who;
-    where: ?where;
-    what: ?what;
-    condition: none;
-    grantedBy: ?grantedBy
+  Authorization/grantPermission: [
+    role: ?who;
+    permission: ?what
   ]
 }

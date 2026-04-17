@@ -1,24 +1,28 @@
-# Compound permission condition evaluation.
-# When a Permission grant has a condition field (e.g., "circle:finance AND role:treasurer"),
-# parse and evaluate it against the requester's context.
+# @deprecated Compound permission condition evaluation — these syncs were
+# built around governance Permission/grant which is now deprecated
+# (see agents-as-subjects-refactor-plan §5.2).
 #
-# Flow:
-#   1. RegisterPermissionGrammar — register the AND/OR/NOT grammar once at setup time.
-#   2. ParsePermissionCondition  — when a grant is recorded with a non-empty condition,
-#      parse the condition text into an ExpressionLanguage AST keyed by the permission ID.
-#   3. BuildPermissionContext    — when Permission/check fires, collect the requester's
-#      roles, circles, and process state into a Property bag the evaluator can read.
-#   4. EvaluatePermissionCondition — when the context is ready, evaluate the AST for
-#      the matching permission ID so the result can be used by downstream syncs.
+# The advertised optional `condition` field on Permission was stored but never
+# actually evaluated in practice; these syncs wired up the machinery but were
+# not load-bearing. With Permission/grant now returning `deprecated`, no new
+# records reach these triggers.
+#
+# If conditional policy is genuinely required, extend Authorization or
+# AccessControl with a first-class condition model rather than reviving this
+# parallel grant path.
+#
+# The sync bodies remain here as historical documentation of the intended
+# pipeline, but their triggers will no longer fire for new grants.
 
 # Register the permission-condition grammar with ExpressionLanguage so that AND/OR/NOT
 # boolean expressions over subject-type predicates (role:X, circle:Y) can be parsed.
 
 sync RegisterPermissionGrammar [eager]
   purpose {
-    Register the permission-condition grammar for AND/OR/NOT boolean expressions
-    over subject predicates (role:<name>, circle:<name>) so that ExpressionLanguage
-    can parse compound conditions attached to Permission grants.
+    [DEPRECATED] Register the permission-condition grammar for AND/OR/NOT
+    boolean expressions. Retained as a no-op trigger since governance
+    Permission is deprecated; kept to avoid breaking any remaining grammar
+    registrations.
   }
 when {
   ExpressionLanguage/registerLanguage: [ name: "permission-condition"; grammar: ?grammar ]
@@ -29,83 +33,4 @@ then {
 }
 then {
   Property/set: [ entity: "permission-condition-grammar"; key: "predicates"; value: "role,circle,process" ]
-}
-
-# When a Permission grant is recorded with a non-empty condition string, parse that
-# condition text into an ExpressionLanguage AST.  The expression ID is keyed as
-# "perm-cond:<permission>" so evaluation can retrieve it by permission ID later.
-
-sync ParsePermissionCondition [eager]
-  purpose {
-    Parse the compound condition string attached to a Permission grant into an
-    ExpressionLanguage AST so it can be evaluated against a requester's context
-    when Permission/check fires.
-  }
-when {
-  Permission/grant: [ who: ?who; where: ?where; what: ?what; condition: ?condition; grantedBy: ?grantedBy ]
-    => ok(permission: ?permission)
-}
-where {
-  not(?condition = none);
-  not(?condition = "")
-}
-then {
-  ExpressionLanguage/parse: [
-    expression: concat("perm-cond:", ?permission);
-    text: ?condition;
-    language: "permission-condition"
-  ]
-}
-
-# When Permission/check fires, collect the requester's roles, circles, and any
-# process-context properties into a single Property entity keyed as
-# "perm-ctx:<who>".  Downstream evaluation reads this bag to resolve predicates.
-
-sync BuildPermissionContext [eager]
-  purpose {
-    Build the requester's permission context from their roles, circles, and process
-    state into a Property bag so that ExpressionLanguage/evaluate can resolve
-    subject-type predicates (role:<name>, circle:<name>) at check time.
-  }
-when {
-  Permission/check: [ who: ?who; where: ?where; what: ?what ]
-    => []
-}
-where {
-  Property: { ?who key: "roles"; value: ?roles };
-  Property: { ?who key: "circles"; value: ?circles }
-}
-then {
-  Property/set: [ entity: concat("perm-ctx:", ?who); key: "roles"; value: ?roles ]
-}
-then {
-  Property/set: [ entity: concat("perm-ctx:", ?who); key: "circles"; value: ?circles ]
-}
-
-# When a Permission/check completes and the requester's context is ready, evaluate
-# the parsed condition AST for each matching permission grant.  The expression ID
-# "perm-cond:<permission>" and context entity "perm-ctx:<who>" are both keyed by
-# the same <permission>/<who> pair resolved in the where clause.
-
-sync EvaluatePermissionCondition [eager]
-  purpose {
-    Evaluate the parsed compound condition AST for a permission grant against the
-    requester's context so that AND/OR/NOT boolean expressions over role and circle
-    predicates determine whether the grant's condition is satisfied at check time.
-  }
-when {
-  Permission/check: [ who: ?who; where: ?where; what: ?what ]
-    => []
-}
-where {
-  Property: { ?permission key: "who"; value: ?who };
-  Property: { ?permission key: "where"; value: ?where };
-  Property: { ?permission key: "what"; value: ?what };
-  Property: { concat("perm-ctx:", ?who) key: "roles"; value: ?roles };
-  not(?roles = none)
-}
-then {
-  ExpressionLanguage/evaluate: [
-    expression: concat("perm-cond:", ?permission)
-  ]
 }

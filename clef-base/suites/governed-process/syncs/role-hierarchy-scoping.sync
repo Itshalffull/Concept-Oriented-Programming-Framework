@@ -20,7 +20,9 @@ sync ParentCircleLeadManagesChild [eager]
   purpose {
     When a child circle is created under a parent, grant the parent's
     lead-link management permission over the child circle so that
-    parent-circle representatives can govern child-circle roles and processes.
+    parent-circle representatives can govern child-circle offices and
+    processes. Migrated from Permission/grant to
+    Authorization/grantPermission (see agents-as-subjects-refactor-plan §5.2).
   }
 when {
   Circle/create: [ name: ?name; domain: ?domain; parent: ?parent ]
@@ -30,12 +32,9 @@ where {
   Circle: { ?parent leadLink: ?leadLink }
 }
 then {
-  Permission/grant: [
-    who: ?leadLink;
-    where: ?child;
-    what: "manage";
-    condition: none;
-    grantedBy: "system"
+  Authorization/grantPermission: [
+    role: ?leadLink;
+    permission: concat("manage:", ?child)
   ]
 }
 
@@ -58,21 +57,20 @@ then {
 
 sync CircleMembershipEnablesRoleAccess [eager]
   purpose {
-    When a member is added to a circle, grant them permission to hold roles
-    scoped to that circle so that circle membership is a prerequisite for
-    role assignment within that circle's governance boundary.
+    When a member is added to a circle, grant them permission to hold
+    governance offices scoped to that circle so that circle membership is a
+    prerequisite for office assignment within that circle's governance
+    boundary. Migrated from Permission/grant to Authorization/grantPermission
+    (see agents-as-subjects-refactor-plan §5.2).
   }
 when {
   Circle/assignMember: [ circle: ?circle; member: ?member ]
     => ok(circle: ?circle; member: ?member)
 }
 then {
-  Permission/grant: [
-    who: ?member;
-    where: ?circle;
-    what: "hold_role";
-    condition: none;
-    grantedBy: "membership"
+  Authorization/grantPermission: [
+    role: ?member;
+    permission: concat("hold_role:", ?circle)
   ]
 }
 

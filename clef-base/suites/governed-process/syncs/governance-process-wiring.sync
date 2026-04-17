@@ -18,7 +18,9 @@ then {
 sync RoleGatesProcessStart [eager]
   purpose {
     Before a process run is allowed to start, verify the initiator holds the
-    required role within the circle that owns the process spec.
+    required executable role within the circle that owns the process spec.
+    Migrated from Permission/check to Authorization/checkPermission
+    (see agents-as-subjects-refactor-plan §5.2).
   }
 when {
   ProcessRun/start: [ spec_ref: ?spec_ref; spec_version: ?spec_version; input: ?input ]
@@ -30,7 +32,7 @@ where {
   Property: { ?run key: "initiator"; value: ?initiator }
 }
 then {
-  Permission/check: [ subject: ?initiator; resource: ?spec_ref; permission: ?role ]
+  Authorization/checkPermission: [ user: ?initiator; permission: ?role ]
 }
 
 sync ProposalLifecycleAsProcess [eager]
