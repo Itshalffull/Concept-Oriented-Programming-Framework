@@ -311,6 +311,7 @@ export const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({
           <BindingEditor
             value={trigger}
             onChange={handleTriggerChange}
+            restrictToAction
           />
         </div>
 
@@ -402,6 +403,7 @@ export const AutomationRuleBuilder: React.FC<AutomationRuleBuilderProps> = ({
               <BindingEditor
                 value={a.binding}
                 onChange={(binding) => updateActionBinding(i, binding)}
+                restrictToAction
               />
             </div>
           ))}

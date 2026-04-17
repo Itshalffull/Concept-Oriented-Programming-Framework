@@ -468,12 +468,15 @@ export interface BindingEditorProps {
   onChange: (v: BindingValue) => void;
   /** When true, skip the simple-mode collapsed view and always render advanced. */
   alwaysAdvanced?: boolean;
+  /** When true, hide the Advanced toggle and mode selector — only Action mode is available. */
+  restrictToAction?: boolean;
 }
 
 export const BindingEditor: React.FC<BindingEditorProps> = ({
   value,
   onChange,
   alwaysAdvanced = false,
+  restrictToAction = false,
 }) => {
   const [advanced, setAdvanced] = useState(
     alwaysAdvanced || value.mode === 'ui-event' || value.mode === 'composite',
@@ -537,16 +540,19 @@ export const BindingEditor: React.FC<BindingEditorProps> = ({
               onChange={(action) => onChange({ mode: 'action', action })}
             />
           </div>
-          <button style={advancedToggleStyle} onClick={() => setAdvanced(true)} type="button">
-            Advanced
-          </button>
+          {!restrictToAction && (
+            <button style={advancedToggleStyle} onClick={() => setAdvanced(true)} type="button">
+              Advanced
+            </button>
+          )}
         </div>
       )}
 
       {/* Advanced mode: binding-kind segmented control + mode-specific fields */}
       {advanced && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-sm)' }}>
-          {/* Mode selector */}
+          {/* Mode selector — hidden when restrictToAction=true */}
+          {!restrictToAction && (
           <div style={{ display: 'flex', gap: 'var(--spacing-xs)', alignItems: 'center' }}>
             {(['action', 'ui-event', 'composite'] as BindingMode[]).map((m) => (
               <button
@@ -573,6 +579,7 @@ export const BindingEditor: React.FC<BindingEditorProps> = ({
               </button>
             )}
           </div>
+          )}
 
           {/* Action mode */}
           {value.mode === 'action' && (
