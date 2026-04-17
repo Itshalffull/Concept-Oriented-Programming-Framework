@@ -95,6 +95,7 @@ export const AppShell: React.FC<{ children: React.ReactNode; sessionUser?: strin
   const sidebarGroups: SidebarGroup[] = groupedDestinations.map(g => ({
     label: g.label,
     items: g.items.map(d => ({
+      destination: d.destination,
       label: d.name.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
       href: d.href,
       icon: d.icon,

@@ -146,6 +146,7 @@ export const QuickCapture: React.FC = () => {
         type="button"
         data-part="fab"
         data-state={pageHasCreate ? 'suppressed' : 'visible'}
+        suppressHydrationWarning
         aria-label={fabChordText ? `Quick capture (${fabChordText})` : 'Quick capture'}
         title={fabChordText ? `Quick capture (${fabChordText})` : 'Quick capture'}
         onClick={openForm}

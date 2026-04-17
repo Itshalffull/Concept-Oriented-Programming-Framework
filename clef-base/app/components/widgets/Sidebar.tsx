@@ -16,6 +16,10 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 export interface SidebarItem {
+  /** Unique destination id — used as the React key to prevent duplicate-key
+   *  warnings when two destinations share the same href (e.g. a renamed
+   *  destination that retained its old URL path for backward compatibility). */
+  destination?: string;
   label: string;
   href: string;
   icon?: React.ReactNode;
@@ -131,7 +135,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               const isActive = isItemActive(item.href, pathname, allHrefs);
               return (
                 <Link
-                  key={item.href}
+                  key={item.destination ?? item.href}
                   href={item.href}
                   role="link"
                   aria-current={isActive ? 'page' : undefined}
