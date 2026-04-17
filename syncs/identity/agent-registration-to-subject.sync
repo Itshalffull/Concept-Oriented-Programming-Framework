@@ -1,0 +1,71 @@
+// AgentRegistration -> Subject reverse-projection.
+//
+// AgentRegistration is the source-of-truth principal record for an agent
+// identity. Subject is the unified identity record that stitches human users
+// and agent principals into a single identity surface used by authorization,
+// audit, and delegation. These syncs mirror relevant AgentRegistration
+// transitions into Subject so the identity surface stays authoritative.
+//
+// Until the Subject concept (MAG-952) is registered, these syncs will
+// dead-fire at runtime — the when-patterns still match AgentRegistration
+// completions, but the then-actions have no registered target and the sync
+// engine simply records the miss.
+
+// When an agent is registered, unify it into the Subject identity surface
+// as an identity of kind "agent", owned by the registering subject.
+sync AgentRegistrationUnifySubject [eager]
+when {
+  AgentRegistration/register: [ displayName: ?displayName; ownerSubject: ?ownerSubject ]
+    => [ agent: ?agent ]
+}
+then {
+  Subject/unify: [
+    identity_type: "agent";
+    identity_id: ?agent;
+    owner_subject: ?ownerSubject
+  ]
+}
+
+// When an agent registration is disabled, propagate the status onto the
+// Subject record so all downstream checks see the identity as disabled.
+sync AgentRegistrationSubjectDisabled [eager]
+when {
+  AgentRegistration/disable: [ agent: ?agent ]
+    => [ agent: ?agent ]
+}
+then {
+  Subject/updateStatus: [
+    id: ?agent;
+    status: "disabled"
+  ]
+}
+
+// Revocation mirrors disable but with terminal semantics — the Subject
+// record should surface "revoked" so audit trails and delegation gates
+// treat the identity as permanently no longer valid.
+sync AgentRegistrationSubjectRevoked [eager]
+when {
+  AgentRegistration/revoke: [ agent: ?agent ]
+    => [ agent: ?agent ]
+}
+then {
+  Subject/updateStatus: [
+    id: ?agent;
+    status: "revoked"
+  ]
+}
+
+// Ownership transfer on AgentRegistration must be reflected on Subject so
+// identity ownership queries resolve against the new owner rather than the
+// stale one recorded at registration time.
+sync AgentRegistrationSubjectOwnerChanged [eager]
+when {
+  AgentRegistration/setOwner: [ owner: ?owner ]
+    => [ agent: ?agent; owner: ?owner ]
+}
+then {
+  Subject/updateOwner: [
+    id: ?agent;
+    owner: ?owner
+  ]
+}
