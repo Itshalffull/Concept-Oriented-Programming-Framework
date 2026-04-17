@@ -25,7 +25,7 @@ import { useConceptQuery } from '../../../lib/use-concept-query';
 import { slugify } from '../../../lib/slug';
 import { FIELD_TYPE_REGISTRY } from './FieldWidget';
 import { Popover } from './Popover';
-import { PageCreateProvider } from '../../../lib/page-create-context';
+import { usePageHasCreateSignal } from '../../../lib/page-create-context';
 
 // ─── Props ─────────────────────────────────────────────────────────────────────
 
@@ -1065,6 +1065,13 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
+  // Suppress the global FAB on schema detail pages — the Fields header already
+  // provides an explicit "+ Add Field" button, so the FAB would be redundant and
+  // confusing (it would open Quick Capture, not add a field).
+  // Uses a global store (not React context) so the signal crosses the layout
+  // boundary — the FAB lives in the AppShell parent, which is above this tree.
+  usePageHasCreateSignal(!isCreate);
+
   if (!isCreate && loading) {
     return (
       <div style={{ padding: 'var(--spacing-md)', color: 'var(--palette-on-surface-variant)', fontSize: 'var(--typography-body-sm-size)' }}>
@@ -1081,11 +1088,7 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
     );
   }
 
-  // Suppress the global FAB on schema detail pages — the Fields header already
-  // provides an explicit "+ Add Field" button, so the FAB would be redundant and
-  // confusing (it would open Quick Capture, not add a field).
   return (
-    <PageCreateProvider hasCreate={!isCreate}>
     <div data-part="root" data-state={configPanelFieldId ? 'config-open' : 'idle'} style={containerStyle}>
       {/* Header */}
       <div data-part="header" style={headerStyle}>
@@ -1531,7 +1534,6 @@ export const SchemaFieldsEditor: React.FC<SchemaFieldsEditorProps> = ({
         </>
       )}
     </div>
-    </PageCreateProvider>
   );
 };
 

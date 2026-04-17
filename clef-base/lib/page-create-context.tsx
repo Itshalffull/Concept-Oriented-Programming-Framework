@@ -1,31 +1,80 @@
 'use client';
 
 /**
- * PageCreateContext — lets a page surface signal that it already provides
- * a "Create X" affordance so the global FAB can suppress itself.
+ * PageCreateContext — signals whether the current page already provides
+ * its own "Create X" affordance so the global FAB can suppress itself.
+ *
+ * Implementation uses a tiny global external store instead of React context
+ * because the FAB is rendered in the outer AppShell layout (parent), while
+ * the signal is emitted by page content (child). React context only flows
+ * downward, so a Provider inside the page tree cannot be read by a consumer
+ * in the parent layout. A global store solves this by letting any component
+ * at any depth push a value that any other component can subscribe to.
  *
  * Usage:
- *   - Provider: wrap content in <PageCreateProvider hasCreate>
- *   - Consumer: call usePageHasCreate() to know whether to hide the FAB
+ *   - Writer: call usePageHasCreateSignal(true) inside the page component.
+ *     The hook mounts an effect that sets the global flag and resets it to
+ *     false on unmount, so the FAB reappears when the page unmounts.
+ *   - Reader: call usePageHasCreate() anywhere in the tree.
  *
- * ViewRenderer mounts this provider whenever controls.create is active.
- * QuickCapture reads it to hide the FAB, avoiding duplicate create affordances.
+ * ViewRenderer calls usePageHasCreateSignal(!!controls.create).
+ * SchemaFieldsEditor calls usePageHasCreateSignal(!isCreate).
+ * QuickCapture calls usePageHasCreate() to decide whether to show the FAB.
  */
 
-import React, { createContext, useContext } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 
-const PageCreateContext = createContext<boolean>(false);
+// ── Global store (module-level singleton) ──────────────────────────────────────
 
-export const PageCreateProvider: React.FC<{
-  hasCreate: boolean;
-  children: React.ReactNode;
-}> = ({ hasCreate, children }) => (
-  <PageCreateContext.Provider value={hasCreate}>
-    {children}
-  </PageCreateContext.Provider>
-);
+let _hasCreate = false;
+const _listeners = new Set<() => void>();
 
-/** Returns true when the current page already exposes a create action. */
+function _notify() {
+  for (const listener of _listeners) listener();
+}
+
+function _subscribe(listener: () => void) {
+  _listeners.add(listener);
+  return () => { _listeners.delete(listener); };
+}
+
+function _getSnapshot() {
+  return _hasCreate;
+}
+
+// Server snapshot — always false (FAB visible) during SSR.
+function _getServerSnapshot() {
+  return false;
+}
+
+// ── Public API ─────────────────────────────────────────────────────────────────
+
+/**
+ * Read-side hook: returns true when the current page declares its own create button.
+ * Re-renders automatically when the value changes.
+ */
 export function usePageHasCreate(): boolean {
-  return useContext(PageCreateContext);
+  return useSyncExternalStore(_subscribe, _getSnapshot, _getServerSnapshot);
+}
+
+/**
+ * Write-side hook: push `hasCreate` into the global store on mount and reset
+ * to false on unmount. Components call this at the top of their render body
+ * (the effect runs after paint and cleans up when the component leaves the tree).
+ *
+ * @param hasCreate - true when this page already provides its own create affordance.
+ */
+export function usePageHasCreateSignal(hasCreate: boolean): void {
+  useEffect(() => {
+    if (hasCreate) {
+      _hasCreate = true;
+      _notify();
+      return () => {
+        _hasCreate = false;
+        _notify();
+      };
+    }
+    // When hasCreate is false there is nothing to set (default is already false).
+    return undefined;
+  }, [hasCreate]);
 }

@@ -19,7 +19,7 @@
  */
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { PageCreateProvider } from '../../lib/page-create-context';
+import { usePageHasCreateSignal } from '../../lib/page-create-context';
 import { useInvokeWithFeedback } from '../../lib/useInvocation';
 import { InvocationStatusIndicator } from './widgets/InvocationStatusIndicator';
 import { Card } from './widgets/Card';
@@ -1186,6 +1186,13 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
     }
   }, [controls.moveBinding, effectiveGroupConfig, displayData, effectiveFields, moveCardFeedback, refetch]);
 
+  // Signal to the global FAB whether this page already provides a create button.
+  // MUST be called unconditionally before any early return — React requires hooks
+  // to be called in the same order on every render. controls.create is undefined
+  // until viewConfig loads, so the signal starts false and updates reactively.
+  const hasCreateAction = !!(controls?.create);
+  usePageHasCreateSignal(hasCreateAction);
+
   // Hide view if contextual filters can't be resolved
   if (hasUnresolvedContextualHide) {
     return null;
@@ -1554,10 +1561,7 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
     }
   };
 
-  // Signal to the global FAB whether this page already provides a create button,
-  // so the FAB hides itself and avoids competing create affordances.
   return (
-    <PageCreateProvider hasCreate={!!controls.create}>
     <div>
       {/* ViewTabBar — tabs for switching between saved views */}
       {!compact && !isInlineMode && savedViews.length > 1 && viewId && (
@@ -1703,7 +1707,6 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
         />
       )}
     </div>
-    </PageCreateProvider>
   );
 };
 
