@@ -551,20 +551,38 @@ function ConceptRow({ concept, selected, onSelect }: ConceptRowProps) {
       role="option"
       aria-selected={selected}
       className={`cap-concept-item${selected ? ' cap-concept-item--selected' : ''}`}
+      style={{ display: 'flex', flexDirection: 'column', gap: 2 }}
       onClick={() => onSelect(concept)}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') onSelect(concept);
       }}
       tabIndex={0}
     >
-      <span className="cap-concept-name">{concept.name}</span>
+      <span className="cap-concept-name" style={{ fontWeight: 500 }}>{concept.name}</span>
       {concept.category && concept.category !== 'domain' && (
-        <span data-part="categoryBadge" className="cap-category-badge">
+        <span
+          data-part="categoryBadge"
+          className="cap-category-badge"
+          style={{
+            fontSize: '0.65rem',
+            padding: '1px 4px',
+            borderRadius: 4,
+            background: 'var(--palette-surface-variant)',
+            color: 'var(--palette-on-surface-variant)',
+            alignSelf: 'flex-start',
+            textTransform: 'uppercase',
+            letterSpacing: '0.04em',
+          }}
+        >
           {concept.category}
         </span>
       )}
       {concept.description && (
-        <span data-part="descSnippet" className="cap-desc-snippet">
+        <span
+          data-part="descSnippet"
+          className="cap-desc-snippet"
+          style={{ fontSize: '0.7rem', color: 'var(--palette-on-surface-variant)', lineHeight: 1.3 }}
+        >
           {concept.description}
         </span>
       )}
