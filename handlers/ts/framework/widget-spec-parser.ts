@@ -62,7 +62,7 @@ interface Token {
 }
 
 const KEYWORDS = new Set([
-  'widget', 'purpose', 'requires', 'anatomy', 'states', 'accessibility',
+  'widget', 'purpose', 'requires', 'anatomy', 'slots', 'states', 'accessibility',
   'affordance', 'props', 'connect', 'compose', 'invariant',
   'on', 'entry', 'exit', 'role', 'keyboard', 'focus', 'aria', 'modal',
   'serves', 'specificity', 'when', 'bind',
@@ -298,6 +298,9 @@ class WidgetSpecParser {
       } else if (tok.type === 'KEYWORD' && tok.value === 'anatomy') {
         this.advance();
         manifest.anatomy = this.parseAnatomy();
+      } else if (tok.type === 'KEYWORD' && tok.value === 'slots') {
+        this.advance();
+        this.skipBraceBlock();
       } else if (tok.type === 'KEYWORD' && tok.value === 'states') {
         this.advance();
         manifest.states = this.parseStates();
@@ -590,13 +593,24 @@ class WidgetSpecParser {
       } else if (this.match('KEYWORD', 'when')) {
         this.advance();
         if (this.match('COLON')) this.advance();
-        // Read until semicolon
-        const parts: string[] = [];
-        while (!this.match('SEMICOLON') && !this.match('RBRACE') && !this.match('EOF')) {
-          parts.push(this.advance().value);
+        if (this.match('LBRACE')) {
+          // Brace-block form: when { key: value; ... }
+          this.advance();
+          const parts: string[] = [];
+          while (!this.match('RBRACE') && !this.match('EOF')) {
+            parts.push(this.advance().value);
+          }
+          aff.when = parts.join(' ');
+          if (this.match('RBRACE')) this.advance();
+        } else {
+          // Inline form: when: value; (read until semicolon or closing brace)
+          const parts: string[] = [];
+          while (!this.match('SEMICOLON') && !this.match('RBRACE') && !this.match('EOF')) {
+            parts.push(this.advance().value);
+          }
+          aff.when = parts.join(' ');
+          if (this.match('SEMICOLON')) this.advance();
         }
-        aff.when = parts.join(' ');
-        if (this.match('SEMICOLON')) this.advance();
       } else if (this.match('KEYWORD', 'bind')) {
         this.advance();
         this.expect('LBRACE');
