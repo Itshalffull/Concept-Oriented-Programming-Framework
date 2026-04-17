@@ -217,14 +217,57 @@ function extractSchemaValues(data: Record<string, unknown>[]): string[] {
 const UNCOUNTABLE_NOUNS = new Set(['media', 'data', 'research', 'metadata', 'feedback', 'evidence']);
 
 function toEntityLabel(title: string): { singular: string; plural: string } {
-  const base = title.replace(/\s+(Library|Catalog|Browser|Hub|Center|Overview)$/i, '').trim();
-  const singular = base.replace(/ies$/, 'y').replace(/(?<![aeiou])s$/i, '');
+  // Strip noun-suffixes that name a *page kind* not the entity itself
+  // ("Layout Builder" should produce "Create Layout", not "Create Layout Builder").
+  const base = title.replace(/\s+(Library|Catalog|Browser|Hub|Center|Overview|Builder|Editor)$/i, '').trim();
+  // Words ending in -ss (process, address, class) are already singular —
+  // guard before the regex chain so we don't strip them to "proce", "addre".
+  const baseLc = base.toLowerCase();
+  if (/ss$/.test(baseLc)) {
+    const plural = UNCOUNTABLE_NOUNS.has(baseLc) ? baseLc : `${baseLc}es`;
+    return { singular: base, plural };
+  }
+  // Phrases with prepositions ("Permissions by Subject") only inflect the head noun.
+  const prepMatch = base.match(/^(\S+)\s+((?:by|for|of|per|from|with|in|at|on|via)\s.+)$/i);
+  if (prepMatch) {
+    const headWord = prepMatch[1];
+    const qualifier = prepMatch[2];
+    const singularHead = headWord
+      .replace(/ies$/, 'y')
+      .replace(/(?<![aeiou])s$/i, '')
+      .replace(/([bcdfghjklmnpqrtvwxyz])es$/i, '$1e');
+    const headLc = singularHead.toLowerCase();
+    const alreadyPlural = singularHead === headWord && /s$/i.test(headWord);
+    const pluralHead = UNCOUNTABLE_NOUNS.has(headLc)
+      ? headLc
+      : singularHead !== headWord || alreadyPlural
+        ? headWord.toLowerCase()
+        : /[bcdfghjklmnpqrtvwxyz]y$/i.test(headLc)
+          ? `${headLc.slice(0, -1)}ies`
+          : `${headLc}s`;
+    return {
+      singular: `${singularHead} ${qualifier}`,
+      plural: `${pluralHead} ${qualifier.toLowerCase()}`,
+    };
+  }
+  // Singularize: -ies → -y, -mas → -ma (Latin plurals like Schemas), strip
+  // trailing -s after a consonant, then -es after a consonant (Themes → Theme).
+  const singular = base
+    .replace(/ies$/, 'y')
+    .replace(/([^s])mas$/i, '$1ma')
+    .replace(/(?<![aeiou])s$/i, '')
+    .replace(/([bcdfghjklmnpqrtvwxyz])es$/i, '$1e');
   const lc = singular.toLowerCase();
+  // singular === base means nothing changed — if it ends in 's' it's already
+  // plural, so use as-is for plural and avoid stacking "ss" (circless, roless).
+  const alreadyPlural = singular === base && /s$/i.test(base);
   const plural = UNCOUNTABLE_NOUNS.has(lc)
     ? lc
-    : singular !== base
+    : singular !== base || alreadyPlural
       ? base.toLowerCase()
-      : `${lc}s`;
+      : /[bcdfghjklmnpqrtvwxyz]y$/i.test(lc)
+        ? `${lc.slice(0, -1)}ies`
+        : `${lc}s`;
   return { singular, plural };
 }
 
@@ -378,12 +421,17 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
     // Pass it through directly — ViewRenderer will JSON.parse it into DataSourceConfig.
     const dataSourceJson = dataSourceSpec?.config ?? '';
 
-    // Filters: for interactive filters (sourceType=interactive), reconstruct
-    // FilterConfig[] from fieldRefs so the existing toggle UI renders correctly.
-    // fieldRefs is a JSON string like '["schemas"]' listing fields referenced in
-    // the filter tree. Each field becomes a toggle-group FilterConfig entry.
-    // Non-interactive filters (system/contextual) are backend-pushed and are
-    // NOT added to the client filter array — they don't appear in the toggle UI.
+    // Filters: reconstruct FilterConfig[] from the FilterSpec so they are
+    // evaluated at render time.
+    //
+    //  - sourceType=interactive: rebuild from fieldRefs as toggle-group configs
+    //    so the interactive filter UI (Filter toolbar, toggle groups) renders.
+    //  - sourceType=contextual: rebuild the FilterNode from `tree` so views
+    //    like backlinks/similar-entities/unlinked-references/graph-neighbors
+    //    apply their context-bound predicate (e.g. "only rows where `similar_to`
+    //    matches the current entity"). Previously contextual filters were
+    //    silently dropped, so these views showed every ContentNode instead of
+    //    only the related ones.
     let filtersJson = '[]';
     if (filterSpec && filterSpec.sourceType === 'interactive') {
       try {
@@ -394,6 +442,22 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
             type: 'toggle-group' as const,
           }));
           filtersJson = JSON.stringify(filterConfigs);
+        }
+      } catch { /* leave as empty array */ }
+    } else if (filterSpec && filterSpec.sourceType === 'contextual') {
+      try {
+        const tree = JSON.parse(filterSpec.tree ?? '{}');
+        // A contextual FilterNode carries field/operator/context_binding/
+        // fallback_behavior. Wrap it as a single FilterConfig so it flows into
+        // the filters array and gets evaluated downstream.
+        if (tree && typeof tree === 'object' && tree.field) {
+          filtersJson = JSON.stringify([{
+            field: tree.field,
+            source_type: 'contextual',
+            operator: tree.operator,
+            context_binding: tree.context_binding,
+            fallback_behavior: tree.fallback_behavior,
+          }]);
         }
       } catch { /* leave as empty array */ }
     }
@@ -412,7 +476,16 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
     if (interactionSpec) {
       const controlsObj: Record<string, unknown> = {};
       if (interactionSpec.createForm) {
-        try { controlsObj.create = JSON.parse(interactionSpec.createForm); } catch { /* ignore */ }
+        try {
+          const parsed = JSON.parse(interactionSpec.createForm);
+          // Only expose controls.create when the form actually declares a concept
+          // to create — an empty {} or null means the view explicitly opts out
+          // (e.g. no-controls) and the Create button should stay hidden instead
+          // of rendering an empty modal on click.
+          if (parsed && typeof parsed === 'object' && parsed.concept) {
+            controlsObj.create = parsed;
+          }
+        } catch { /* ignore */ }
       }
       if (interactionSpec.rowClick) {
         try { controlsObj.rowClick = JSON.parse(interactionSpec.rowClick); } catch { /* ignore */ }
@@ -615,12 +688,67 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
 
     // Legacy mode: raw concept data + client-side enrichment
     if (!rawData) return [];
-    const items = (Array.isArray(rawData) ? rawData : [rawData]) as Record<string, unknown>[];
+    // If the concept action returned a wrapper object like
+    // `{ variant: "ok", items: "[...]" }` or `{ sources: "[...]" }`, unwrap
+    // the JSON-encoded array field instead of treating the wrapper as one row.
+    // Conventional wrapper keys: items, sources, results, nodes, entries, rows.
+    let items: Record<string, unknown>[];
+    if (Array.isArray(rawData)) {
+      items = rawData as Record<string, unknown>[];
+    } else if (rawData && typeof rawData === 'object') {
+      const obj = rawData as Record<string, unknown>;
+      // Conventional wrapper keys that carry JSON-encoded arrays. Empty string
+      // is treated as an empty array (e.g. Backlink/getBacklinks returns
+      // `{ sources: "" }` when an entity has no backlinks, not a literal JSON "[]").
+      const wrapperKey = ['items', 'sources', 'results', 'nodes', 'entries', 'rows']
+        .find((k) => typeof obj[k] === 'string');
+      if (wrapperKey) {
+        const raw = (obj[wrapperKey] as string).trim();
+        if (raw === '') {
+          items = [];
+        } else if (raw.startsWith('[')) {
+          try {
+            const parsed = JSON.parse(raw);
+            items = Array.isArray(parsed) ? parsed : [obj];
+          } catch { items = [obj]; }
+        } else {
+          items = [obj];
+        }
+      } else {
+        // No array wrapper — treat as a single row UNLESS the response is
+        // metadata-only (e.g. `{variant:"ok", message:"No matching memories"}`
+        // from list-style actions that returned nothing). Meta-only responses
+        // appear as ghost rows in data tables, so filter them out: if every
+        // key is a known response meta field, the caller meant "no data".
+        const metaKeys = new Set(['variant', 'message', 'flowId', 'error']);
+        const hasDataKey = Object.keys(obj).some((k) => !metaKeys.has(k));
+        items = hasDataKey ? [obj] : [];
+      }
+    } else {
+      items = [rawData as Record<string, unknown>];
+    }
 
-    if (!isContentNodeData || !membershipsData) return items;
+    if (!isContentNodeData) return items;
 
-    // Build entity_id → schemas[] lookup
-    const memberships = Array.isArray(membershipsData) ? membershipsData : [];
+    // Build entity_id → schemas[] lookup.
+    //
+    // Schema/listMemberships returns either a raw array (when wrapped by an
+    // outer sync) or a response object `{variant, items: "json-string"}` when
+    // invoked directly. Handle both: unwrap the JSON array field if present,
+    // otherwise accept an array directly.
+    let memberships: Array<Record<string, unknown>> = [];
+    if (Array.isArray(membershipsData)) {
+      memberships = membershipsData;
+    } else if (membershipsData && typeof membershipsData === 'object') {
+      const obj = membershipsData as Record<string, unknown>;
+      const raw = typeof obj.items === 'string' ? obj.items.trim() : '';
+      if (raw.startsWith('[')) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) memberships = parsed;
+        } catch { /* ignore */ }
+      }
+    }
     const schemasByEntity = new Map<string, string[]>();
     for (const m of memberships) {
       const entityId = m.entity_id as string;
@@ -631,11 +759,21 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
       schemasByEntity.set(entityId, existing);
     }
 
-    // Enrich each node with its schemas
-    let enriched: Record<string, unknown>[] = items.map((item) => ({
-      ...item,
-      schemas: schemasByEntity.get(item.node as string) ?? [],
-    }));
+    // Enrich each node with its schemas. When no membership is registered,
+    // fall back to the node's `type` field (the schema baked into the
+    // ContentNode record at create time) so the UI surfaces the schema even
+    // before the memberships relation is populated.
+    let enriched: Record<string, unknown>[] = items.map((item) => {
+      const fromMemberships = schemasByEntity.get(item.node as string);
+      if (fromMemberships && fromMemberships.length > 0) {
+        return { ...item, schemas: fromMemberships };
+      }
+      const typeField = item.type;
+      return {
+        ...item,
+        schemas: typeof typeField === 'string' && typeField ? [typeField] : [],
+      };
+    });
 
     // Apply schemaFilter if present — uses FilterNode evaluation with array intersection
     if (resolvedSchemaFilter) {
@@ -663,36 +801,44 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
     });
   }, [allData]);
 
-  // Initialize filter state from data + config once data arrives (interactive filters only)
-  if (flatData.length > 0 && interactiveFilters.length > 0 && !filtersInitialized) {
-    const initial: Record<string, Set<string>> = {};
-    for (const filter of interactiveFilters) {
-      // Special handling for schemas (array field)
-      if (filter.field === 'schemas') {
-        const allValues = extractSchemaValues(flatData);
-        if (filter.defaultOn) {
-          initial[filter.field] = new Set(filter.defaultOn);
-        } else if (filter.defaultOff) {
-          const offSet = new Set(filter.defaultOff);
-          initial[filter.field] = new Set(allValues.filter((v) => !offSet.has(v)));
+  // Initialize filter state from data + config once data arrives (interactive filters only).
+  // Must run in useEffect (not synchronously during render) to avoid React concurrent-mode
+  // inconsistencies where setState called during render causes displayData_base to be computed
+  // with stale activeFilters on the same render cycle.
+  useEffect(() => {
+    if (flatData.length > 0 && interactiveFilters.length > 0 && !filtersInitialized) {
+      const initial: Record<string, Set<string>> = {};
+      for (const filter of interactiveFilters) {
+        // Special handling for schemas (array field)
+        if (filter.field === 'schemas') {
+          const allValues = extractSchemaValues(flatData);
+          if (filter.defaultOn) {
+            initial[filter.field] = new Set(filter.defaultOn);
+          } else if (filter.defaultOff) {
+            const offSet = new Set(filter.defaultOff);
+            initial[filter.field] = new Set(allValues.filter((v) => !offSet.has(v)));
+          } else {
+            initial[filter.field] = new Set(allValues);
+          }
         } else {
-          initial[filter.field] = new Set(allValues);
-        }
-      } else {
-        const allValues = [...new Set(flatData.map((row) => String(row[filter.field] ?? '')))];
-        if (filter.defaultOn) {
-          initial[filter.field] = new Set(filter.defaultOn);
-        } else if (filter.defaultOff) {
-          const offSet = new Set(filter.defaultOff);
-          initial[filter.field] = new Set(allValues.filter((v) => !offSet.has(v)));
-        } else {
-          initial[filter.field] = new Set(allValues);
+          const allValues = [...new Set(flatData.map((row) => String(row[filter.field] ?? '')))];
+          if (filter.defaultOn) {
+            initial[filter.field] = new Set(filter.defaultOn);
+          } else if (filter.defaultOff) {
+            const offSet = new Set(filter.defaultOff);
+            initial[filter.field] = new Set(allValues.filter((v) => !offSet.has(v)));
+          } else {
+            initial[filter.field] = new Set(allValues);
+          }
         }
       }
+      setActiveFilters(initial);
+      setFiltersInitialized(true);
     }
-    setActiveFilters(initial);
-    setFiltersInitialized(true);
-  }
+  // interactiveFilters is a derived array (new ref each render) — omit from deps;
+  // flatData change and filtersInitialized gate are sufficient.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flatData, filtersInitialized]);
 
   // Parse sort keys from view config
   const sortKeys = useMemo(() => parseSortKeys(viewConfig?.sorts), [viewConfig?.sorts]);
@@ -907,15 +1053,32 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
     });
   }, []);
 
-  // Row click handler — onSelect overrides navigation when in picker mode
+  // Row click handler — onSelect overrides navigation when in picker mode.
+  //
+  // Template interpolation: `{key}` is replaced with `row[key]`. If the named
+  // field is absent (common when a rowClick template uses a legacy field name
+  // like `{spec}` but the row actually carries `node`), fall back to the row's
+  // canonical identity field in this order: `node`, `id`, `_key`. Without this
+  // fallback, `{spec}` → `""` → navigate to `/admin/processes/` which fails.
   const handleRowClick = useCallback((row: Record<string, unknown>) => {
     if (onSelect) {
       onSelect(row);
       return;
     }
     if (!controls.rowClick?.navigateTo) return;
+    const identityFallback = () => {
+      for (const k of ['node', 'id', '_key']) {
+        const v = row[k];
+        if (typeof v === 'string' && v) return v;
+      }
+      return '';
+    };
     let path = controls.rowClick.navigateTo;
-    path = path.replace(/\{(\w+)\}/g, (_, key) => encodeURIComponent(String(row[key] ?? '')));
+    path = path.replace(/\{(\w+)\}/g, (_, key) => {
+      const raw = row[key];
+      const value = (typeof raw === 'string' && raw) ? raw : (raw != null ? String(raw) : '');
+      return encodeURIComponent(value || identityFallback());
+    });
     navigateToHref(path);
   }, [controls.rowClick, navigateToHref, onSelect]);
 

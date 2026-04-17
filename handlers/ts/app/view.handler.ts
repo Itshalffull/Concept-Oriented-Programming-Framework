@@ -119,21 +119,45 @@ const _viewHandler: FunctionalConceptHandler = {
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
   update(input: Record<string, unknown>) {
+    // "Empty string for any field means leave unchanged" per spec.
     const view = input.view as string;
     let p = createProgram(); p = spGet(p, 'view', view, 'existing');
     p = branch(p, 'existing',
       (b) => {
         let b2 = putFrom(b, 'view', view, (bindings) => {
           const updated: Record<string, unknown> = { ...(bindings.existing as Record<string, unknown>) };
-          if (input.dataSource !== undefined) updated.dataSource = input.dataSource; if (input.layout !== undefined) updated.layout = input.layout;
-          if (input.filters !== undefined) updated.filters = input.filters; if (input.sorts !== undefined) updated.sorts = input.sorts;
-          if (input.groups !== undefined) updated.groups = input.groups; if (input.visibleFields !== undefined) updated.visibleFields = input.visibleFields;
-          if (input.formatting !== undefined) updated.formatting = input.formatting; if (input.controls !== undefined) updated.controls = input.controls;
-          if (input.title !== undefined) updated.title = input.title; if (input.description !== undefined) updated.description = input.description;
+          const ds = input.dataSource as string | undefined;
+          if (ds !== undefined && ds !== '') updated.dataSource = ds;
+          const layout = input.layout as string | undefined;
+          if (layout !== undefined && layout !== '') updated.layout = layout;
+          const title = input.title as string | undefined;
+          if (title !== undefined && title !== '') updated.title = title;
+          const description = input.description as string | undefined;
+          if (description !== undefined && description !== '') updated.description = description;
+          const visibleFields = input.visibleFields as string | undefined;
+          if (visibleFields !== undefined && visibleFields !== '') updated.visibleFields = visibleFields;
+          const controls = input.controls as string | undefined;
+          if (controls !== undefined && controls !== '') updated.controls = controls;
+          const filters = input.filters as string | undefined;
+          if (filters !== undefined && filters !== '') updated.filters = filters;
+          const sorts = input.sorts as string | undefined;
+          if (sorts !== undefined && sorts !== '') updated.sorts = sorts;
+          const groups = input.groups as string | undefined;
+          if (groups !== undefined && groups !== '') updated.groups = groups;
+          const defaultDisplayMode = input.defaultDisplayMode as string | undefined;
+          if (defaultDisplayMode !== undefined && defaultDisplayMode !== '') updated.defaultDisplayMode = defaultDisplayMode;
           return updated;
         });
         return complete(b2, 'ok', { view });
       },
+      (b) => complete(b, 'notfound', { message: 'View not found' }));
+    return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+  remove(input: Record<string, unknown>) {
+    const view = input.view as string;
+    let p = createProgram(); p = spGet(p, 'view', view, 'existing');
+    p = branch(p, 'existing',
+      (b) => { let b2 = putFrom(b, 'view', view, (bindings) => ({ ...(bindings.existing as Record<string, unknown>), __deleted: true })); return complete(b2, 'ok', {}); },
       (b) => complete(b, 'notfound', { message: 'View not found' }));
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },

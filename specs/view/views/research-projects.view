@@ -41,5 +41,9 @@ view "research-projects" {
     always "purity is read-write": {
       purity = "read-write"
     }
+
+    always "filter pill count matches rendered row count": {
+      filterPillCount = renderedRowCount
+    }
   }
 }

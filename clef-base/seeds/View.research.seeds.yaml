@@ -9,8 +9,8 @@ entries:
   - view: research-projects
     dataSource: '{"concept":"ResearchProject","action":"list"}'
     layout: card-grid
-    visibleFields: '[{"key":"project_name","label":"Name"},{"key":"project_status","label":"Status","formatter":"badge"},{"key":"deliverable_type","label":"Deliverable","formatter":"badge"},{"key":"progress","label":"Progress","formatter":"progress-bar"},{"key":"quality_score","label":"Quality","formatter":"score"},{"key":"updated_at","label":"Updated","formatter":"date"}]'
-    controls: '{"create":{"concept":"ResearchProject","action":"create","fields":[{"name":"name","label":"Project Name","required":true},{"name":"query","label":"Research Question","required":true,"type":"textarea"},{"name":"deliverable_type","label":"Deliverable Type","required":true,"type":"select","options":["report","briefing","literature_review","competitive_analysis"]}]},"rowClick":{"navigateTo":"/admin/research/{project}"}}'
+    visibleFields: '[{"key":"query","label":"Question"},{"key":"project_status","label":"Status","formatter":"badge"},{"key":"deliverable_type","label":"Deliverable","formatter":"badge"},{"key":"tokens_used","label":"Tokens","formatter":"number"},{"key":"search_calls_used","label":"Searches","formatter":"number"},{"key":"created_at","label":"Created","formatter":"date"}]'
+    controls: '{"create":{"concept":"ResearchProject","action":"create","fields":[{"name":"query","label":"Research Question","required":true,"type":"textarea"},{"name":"deliverable_type","label":"Deliverable Type","required":true,"type":"select","options":["report","literature_review","comparison","fact_check","data_extraction"]}]},"rowClick":{"navigateTo":"/admin/research/{project}"}}'
     title: Research Projects
     description: All deep research projects with status, progress, quality score, and last updated time.
     filters: '[{"field":"project_status","label":"Status","type":"toggle-group"},{"field":"deliverable_type","label":"Deliverable","type":"toggle-group"}]'
@@ -21,7 +21,7 @@ entries:
     dataSource: '{"concept":"ContentNode","action":"list","params":{"schema":"source"}}'
     layout: table
     visibleFields: '[{"key":"title","label":"Title"},{"key":"uri","label":"URI","formatter":"link"},{"key":"source_type","label":"Type","formatter":"badge"},{"key":"credibility_tier","label":"Credibility","formatter":"badge"},{"key":"snippet_count","label":"Snippets"},{"key":"captured_at","label":"Captured","formatter":"date"}]'
-    controls: '{"create":{"concept":"Capture","action":"clip","fields":[{"name":"uri","label":"URL","required":true},{"name":"selection_text","label":"Selection (optional)","type":"textarea"}]},"rowClick":{"navigateTo":"/admin/sources/{id}"}}'
+    controls: '{"create":{"concept":"Capture","action":"clip","fields":[{"name":"uri","label":"URL","required":true},{"name":"selection_text","label":"Selection (optional)","type":"textarea"}]},"rowClick":{"navigateTo":"/admin/sources/{node}"}}' # Updated 2026-04-17: ContentNode rows carry {node} not {id}
     title: Source Library
     description: Filterable table of all captured sources with credibility indicators and snippet counts.
     filters: '[{"field":"source_type","label":"Type","type":"toggle-group"},{"field":"credibility_tier","label":"Credibility","type":"toggle-group"}]'

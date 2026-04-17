@@ -14,7 +14,7 @@ const VALID_DELIVERABLE_TYPES = new Set([
 ]);
 
 const VALID_STATUSES = new Set([
-  'draft', 'planning', 'executing', 'reviewing', 'completed', 'cancelled',
+  'active', 'draft', 'planning', 'executing', 'reviewing', 'completed', 'cancelled',
 ]);
 
 /**
@@ -22,6 +22,7 @@ const VALID_STATUSES = new Set([
  * Any non-terminal status may transition to cancelled.
  */
 const VALID_TRANSITIONS: Record<string, Set<string>> = {
+  active:    new Set(['planning', 'executing', 'cancelled']),
   draft:     new Set(['planning', 'cancelled']),
   planning:  new Set(['executing', 'cancelled']),
   executing: new Set(['reviewing', 'cancelled']),
@@ -292,7 +293,7 @@ const _researchProjectHandler: FunctionalConceptHandler = {
     let p = createProgram();
     p = find(p, 'project', criteria, 'results');
     return completeFrom(p, 'ok', (bindings) => ({
-      projects: JSON.stringify((bindings.results as Array<Record<string, unknown>>) || []),
+      items: JSON.stringify((bindings.results as Array<Record<string, unknown>>) || []),
     })) as StorageProgram<Result>;
   },
 };
