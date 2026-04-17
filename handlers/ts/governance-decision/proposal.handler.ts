@@ -157,7 +157,7 @@ const _handler: FunctionalConceptHandler = {
     return branch(
       p,
       (b) => !b.proposalRecord,
-      complete(createProgram(), 'error', { message: 'Proposal not found' }),
+      complete(createProgram(), 'not_found', { message: 'Proposal not found' }),
       (() => {
         let b2 = createProgram();
         b2 = putFrom(b2, 'proposal', proposalId, (b) => {
@@ -178,6 +178,112 @@ const _handler: FunctionalConceptHandler = {
           complete(createProgram(), 'unauthorized', { canceller }),
           complete(createProgram(), 'ok', { proposal: proposalId }),
         ) as StorageProgram<Result>;
+      })(),
+    ) as StorageProgram<Result>;
+  },
+
+  merge(input: Record<string, unknown>) {
+    const proposalId = input.proposal as string;
+    const resolvedConflictsRaw = input.resolvedConflicts as string;
+
+    if (!proposalId) {
+      return complete(createProgram(), 'error', { message: 'proposal is required' }) as StorageProgram<Result>;
+    }
+
+    let resolvedConflicts: string[] = [];
+    try {
+      resolvedConflicts = JSON.parse(resolvedConflictsRaw || '[]') as string[];
+    } catch {
+      return complete(createProgram(), 'error', { message: 'resolvedConflicts must be a valid JSON array' }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = get(p, 'proposal', proposalId, 'proposalRecord');
+    // Read the epoch counter to stamp on merge
+    p = get(p, 'policyEpoch', '__epoch', 'epochRecord');
+
+    return branch(
+      p,
+      (b) => !b.proposalRecord,
+      complete(createProgram(), 'not_found', { message: 'Proposal not found' }),
+      (() => {
+        let b2 = createProgram();
+        b2 = mapBindings(b2, (b) => {
+          const rec = b.proposalRecord as Record<string, unknown>;
+          return rec.status === 'Merged';
+        }, '_alreadyMerged');
+        b2 = mapBindings(b2, (b) => {
+          const rec = b.proposalRecord as Record<string, unknown>;
+          const conflicts: string[] = (rec.conflictsWith as string[]) || [];
+          const unresolved = conflicts.filter((c: string) => !resolvedConflicts.includes(c));
+          return unresolved;
+        }, '_unresolvedConflicts');
+
+        return branch(
+          b2,
+          (b) => !!b._alreadyMerged,
+          complete(createProgram(), 'already_merged', { message: 'Proposal has already been merged' }),
+          (() => {
+            let b3 = createProgram();
+            return branch(
+              b3,
+              (b) => {
+                const unresolved = b._unresolvedConflicts as string[];
+                return unresolved && unresolved.length > 0;
+              },
+              completeFrom(createProgram(), 'conflict', (b) => ({
+                conflictsWith: JSON.stringify(b._unresolvedConflicts as string[]),
+              })),
+              (() => {
+                // Perform the merge: stamp epoch and mergedAt
+                let b4 = createProgram();
+                b4 = putFrom(b4, 'proposal', proposalId, (b) => {
+                  const rec = b.proposalRecord as Record<string, unknown>;
+                  const epochRec = (b.epochRecord as Record<string, unknown>) || { epoch: 0 };
+                  const currentEpoch = ((epochRec.epoch as number) || 0);
+                  const mergedEpoch = currentEpoch + 1;
+                  return {
+                    ...rec,
+                    status: 'Merged',
+                    mergedAt: new Date().toISOString(),
+                    policyEpoch: mergedEpoch,
+                    updatedAt: new Date().toISOString(),
+                  };
+                });
+                return completeFrom(b4, 'ok', (b) => {
+                  const epochRec = (b.epochRecord as Record<string, unknown>) || { epoch: 0 };
+                  const currentEpoch = ((epochRec.epoch as number) || 0);
+                  return { proposal: proposalId, policyEpoch: currentEpoch + 1 };
+                }) as StorageProgram<Result>;
+              })(),
+            ) as StorageProgram<Result>;
+          })(),
+        ) as StorageProgram<Result>;
+      })(),
+    ) as StorageProgram<Result>;
+  },
+
+  detectConflicts(input: Record<string, unknown>) {
+    const proposalId = input.proposal as string;
+
+    if (!proposalId) {
+      return complete(createProgram(), 'error', { message: 'proposal is required' }) as StorageProgram<Result>;
+    }
+
+    let p = createProgram();
+    p = get(p, 'proposal', proposalId, 'proposalRecord');
+
+    return branch(
+      p,
+      (b) => !b.proposalRecord,
+      complete(createProgram(), 'not_found', { message: 'Proposal not found' }),
+      (() => {
+        let b2 = createProgram();
+        return completeFrom(b2, 'ok', (b) => {
+          const rec = b.proposalRecord as Record<string, unknown>;
+          const conflicts: string[] = (rec.conflictsWith as string[]) || [];
+          return { conflicts: JSON.stringify(conflicts) };
+        }) as StorageProgram<Result>;
       })(),
     ) as StorageProgram<Result>;
   },

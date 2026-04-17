@@ -1,0 +1,13 @@
+# Bootstrap governance content node: program.md Constitution.
+# Seeds the canonical governing constitution page so a fresh clef-base
+# instance has a content-native starting point for the amendment workflow.
+# The AdminSubject auto-created at boot can immediately edit this page
+# to author the instance's governing policies without any setup wizard.
+
+concept: ContentNode
+action: create
+entries:
+  - node: constitution:program-md
+    type: constitution
+    content: '{"name":"Governing Constitution","description":"The bootstrap governance contract for this clef-base instance. Defines the amendment process, GovernanceOffice roles, delegation scope, and reconciliation strategies for live sessions. Edit this document to author instance-level policy. Changes trigger the amendment workflow: Proposal -> review -> merge -> policy epoch increment -> session reconciliation.","status":"active","max_revisions":null,"critique_model":null}'
+    createdBy: system

@@ -1,0 +1,13 @@
+# When a proposal is merged to main governance state, increment the policy epoch.
+# This allows live sessions to detect governance changes and reconcile according
+# to their declared reconciliation strategy (continue, pause, degrade,
+# require_reapproval, or terminate).
+
+sync ProposalMergeIncrementsEpoch [eager]
+when {
+  Proposal/merge: [ proposal: ?p ]
+    => [ ok ]
+}
+then {
+  Authorization/incrementEpoch: []
+}

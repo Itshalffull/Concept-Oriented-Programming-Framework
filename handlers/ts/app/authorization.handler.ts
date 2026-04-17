@@ -110,11 +110,38 @@ const _authorizationHandler: FunctionalConceptHandler = {
         });
       },
       // Subject has no role assignment — deny explicitly.
-      // Authorization hardening (§5.5): no implicit permissive fallback.
+      // Authorization hardening: no implicit permissive fallback.
       // Every deny is an explicit ok(granted:false), never a silent allow.
       (b) => complete(b, 'ok', { granted: false }),
     );
     return p as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
+  incrementEpoch(_input: Record<string, unknown>) {
+    // Policy epoch is a single shared counter keyed by the reserved key '__epoch'.
+    // Each merge of an approved governance proposal increments it by one so
+    // sessions can compare their pinned epoch to detect staleness.
+    let p = createProgram();
+    p = spGet(p, 'policyEpoch', '__epoch', 'epochRecord');
+    p = putFrom(p, 'policyEpoch', '__epoch', (bindings) => {
+      const existing = (bindings.epochRecord as Record<string, unknown>) || { epoch: 0 };
+      const prev = ((existing.epoch as number) || 0);
+      return { epoch: prev + 1 };
+    });
+    return completeFrom(p, 'ok', (bindings) => {
+      const existing = (bindings.epochRecord as Record<string, unknown>) || { epoch: 0 };
+      const prev = ((existing.epoch as number) || 0);
+      return { epoch: prev + 1 };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
+  },
+
+  getEpoch(_input: Record<string, unknown>) {
+    let p = createProgram();
+    p = spGet(p, 'policyEpoch', '__epoch', 'epochRecord');
+    return completeFrom(p, 'ok', (bindings) => {
+      const existing = (bindings.epochRecord as Record<string, unknown>) || { epoch: 0 };
+      return { epoch: (existing.epoch as number) || 0 };
+    }) as StorageProgram<{ variant: string; [key: string]: unknown }>;
   },
 };
 

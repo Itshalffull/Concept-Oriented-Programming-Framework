@@ -34,7 +34,7 @@ describe('AgentSession functional handler', () => {
 
   describe('spawn', () => {
     it('builds a valid StorageProgram', () => {
-      const program = agentSessionHandler.spawn({ personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers", attributionRef: "user:alice" });
+      const program = agentSessionHandler.spawn({ personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers", attributionRef: "user:alice", reconciliationStrategy: "continue" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -42,21 +42,21 @@ describe('AgentSession functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = agentSessionHandler.spawn({ personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers", attributionRef: "user:alice" });
+      const program = agentSessionHandler.spawn({ personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers", attributionRef: "user:alice", reconciliationStrategy: "continue" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = agentSessionHandler.spawn({ personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers", attributionRef: "user:alice" });
+      const program = agentSessionHandler.spawn({ personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers", attributionRef: "user:alice", reconciliationStrategy: "continue" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = agentSessionHandler.spawn({ personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers", attributionRef: "user:alice" });
+      const program = agentSessionHandler.spawn({ personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers", attributionRef: "user:alice", reconciliationStrategy: "continue" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -69,7 +69,7 @@ describe('AgentSession functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = agentSessionHandler.spawn({ personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers", attributionRef: "user:alice" });
+      const program = agentSessionHandler.spawn({ personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers", attributionRef: "user:alice", reconciliationStrategy: "continue" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -77,7 +77,7 @@ describe('AgentSession functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof agentSessionHandler.spawn !== 'function') return;
-      const result = await interpret(agentSessionHandler.spawn({ personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers", attributionRef: "user:alice" }), storage);
+      const result = await interpret(agentSessionHandler.spawn({ personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers", attributionRef: "user:alice", reconciliationStrategy: "continue" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -87,21 +87,21 @@ describe('AgentSession functional handler', () => {
     it('fixture "spawn_research_bot" -> ok', async () => {
       if (typeof agentSessionHandler.spawn !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(agentSessionHandler.spawn({ personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers", attributionRef: "user:alice" }), storage);
+      const result = await interpret(agentSessionHandler.spawn({ personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers", attributionRef: "user:alice", reconciliationStrategy: "continue" }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "spawn_no_registration" -> ok', async () => {
       if (typeof agentSessionHandler.spawn !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(agentSessionHandler.spawn({ personaPageId: "unregistered-persona", strategy: "react", tools: "[]", context: "", attributionRef: null }), storage);
+      const result = await interpret(agentSessionHandler.spawn({ personaPageId: "unregistered-persona", strategy: "react", tools: "[]", context: "", attributionRef: null, reconciliationStrategy: null }), storage);
       expect(result.variant).toBe('ok');
     });
 
     it('fixture "spawn_empty_persona" -> error', async () => {
       if (typeof agentSessionHandler.spawn !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(agentSessionHandler.spawn({ personaPageId: "", strategy: "react", tools: "[]", context: "", attributionRef: null }), storage);
+      const result = await interpret(agentSessionHandler.spawn({ personaPageId: "", strategy: "react", tools: "[]", context: "", attributionRef: null, reconciliationStrategy: null }), storage);
       expect(result.variant).not.toBe('ok');
     });
 
@@ -162,7 +162,7 @@ describe('AgentSession functional handler', () => {
     it('fixture "invoke_research" -> ok', async () => {
       if (typeof agentSessionHandler.invoke !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_spawn_research_bot = await interpret(agentSessionHandler.spawn({ personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers", attributionRef: "user:alice" }), storage);
+      const afterResult_spawn_research_bot = await interpret(agentSessionHandler.spawn({ personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers", attributionRef: "user:alice", reconciliationStrategy: "continue" }), storage);
       const result = await interpret(agentSessionHandler.invoke({ session: afterResult_spawn_research_bot?.output?.["session"], goal: "Find recent papers on transformer architectures" }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -232,7 +232,7 @@ describe('AgentSession functional handler', () => {
     it('fixture "suspend_session" -> ok', async () => {
       if (typeof agentSessionHandler.suspend !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_spawn_research_bot = await interpret(agentSessionHandler.spawn({ personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers", attributionRef: "user:alice" }), storage);
+      const afterResult_spawn_research_bot = await interpret(agentSessionHandler.spawn({ personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers", attributionRef: "user:alice", reconciliationStrategy: "continue" }), storage);
       const result = await interpret(agentSessionHandler.suspend({ session: afterResult_spawn_research_bot?.output?.["session"] }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -302,7 +302,7 @@ describe('AgentSession functional handler', () => {
     it('fixture "resume_session" -> ok', async () => {
       if (typeof agentSessionHandler.resume !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_spawn_research_bot = await interpret(agentSessionHandler.spawn({ personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers", attributionRef: "user:alice" }), storage);
+      const afterResult_spawn_research_bot = await interpret(agentSessionHandler.spawn({ personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers", attributionRef: "user:alice", reconciliationStrategy: "continue" }), storage);
       const afterResult_suspend_session = await interpret(agentSessionHandler.suspend({ session: afterResult_spawn_research_bot?.output?.["session"] }), storage);
       const result = await interpret(agentSessionHandler.resume({ session: afterResult_suspend_session?.output?.["session"] }), storage);
       expect(result.variant).toBe('ok');
@@ -373,7 +373,7 @@ describe('AgentSession functional handler', () => {
     it('fixture "terminate_session" -> ok', async () => {
       if (typeof agentSessionHandler.terminate !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_spawn_research_bot = await interpret(agentSessionHandler.spawn({ personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers", attributionRef: "user:alice" }), storage);
+      const afterResult_spawn_research_bot = await interpret(agentSessionHandler.spawn({ personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers", attributionRef: "user:alice", reconciliationStrategy: "continue" }), storage);
       const result = await interpret(agentSessionHandler.terminate({ session: afterResult_spawn_research_bot?.output?.["session"] }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -443,7 +443,7 @@ describe('AgentSession functional handler', () => {
     it('fixture "get_status" -> ok', async () => {
       if (typeof agentSessionHandler.getStatus !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_spawn_research_bot = await interpret(agentSessionHandler.spawn({ personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers", attributionRef: "user:alice" }), storage);
+      const afterResult_spawn_research_bot = await interpret(agentSessionHandler.spawn({ personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers", attributionRef: "user:alice", reconciliationStrategy: "continue" }), storage);
       const result = await interpret(agentSessionHandler.getStatus({ session: afterResult_spawn_research_bot?.output?.["session"] }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -513,7 +513,7 @@ describe('AgentSession functional handler', () => {
     it('fixture "list_all" -> ok', async () => {
       if (typeof agentSessionHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_spawn_research_bot = await interpret(agentSessionHandler.spawn({ personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers", attributionRef: "user:alice" }), storage);
+      const afterResult_spawn_research_bot = await interpret(agentSessionHandler.spawn({ personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers", attributionRef: "user:alice", reconciliationStrategy: "continue" }), storage);
       const _pool = Object.assign({}, (afterResult_spawn_research_bot?.output ?? {}));
       const _fixtureInput = { personaPageId: "", status: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
@@ -530,7 +530,7 @@ describe('AgentSession functional handler', () => {
     it('fixture "list_by_persona" -> ok', async () => {
       if (typeof agentSessionHandler.list !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_spawn_research_bot = await interpret(agentSessionHandler.spawn({ personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers", attributionRef: "user:alice" }), storage);
+      const afterResult_spawn_research_bot = await interpret(agentSessionHandler.spawn({ personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers", attributionRef: "user:alice", reconciliationStrategy: "continue" }), storage);
       const _pool = Object.assign({}, (afterResult_spawn_research_bot?.output ?? {}));
       const _fixtureInput = { personaPageId: "persona-research-bot", status: "" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
@@ -601,7 +601,7 @@ describe('AgentSession functional handler', () => {
     it('fixture "cancel_running" -> ok', async () => {
       if (typeof agentSessionHandler.cancel !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_spawn_research_bot = await interpret(agentSessionHandler.spawn({ personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers", attributionRef: "user:alice" }), storage);
+      const afterResult_spawn_research_bot = await interpret(agentSessionHandler.spawn({ personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers", attributionRef: "user:alice", reconciliationStrategy: "continue" }), storage);
       const result = await interpret(agentSessionHandler.cancel({ session: afterResult_spawn_research_bot?.output?.["session"] }), storage);
       expect(result.variant).toBe('ok');
     });
@@ -609,7 +609,7 @@ describe('AgentSession functional handler', () => {
     it('fixture "cancel_not_running" -> not_running', async () => {
       if (typeof agentSessionHandler.cancel !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_spawn_research_bot = await interpret(agentSessionHandler.spawn({ personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers", attributionRef: "user:alice" }), storage);
+      const afterResult_spawn_research_bot = await interpret(agentSessionHandler.spawn({ personaPageId: "persona-research-bot", strategy: "plan_and_execute", tools: "[\"web_search\",\"code_exec\"]", context: "Research ML papers", attributionRef: "user:alice", reconciliationStrategy: "continue" }), storage);
       const afterResult_terminate_session = await interpret(agentSessionHandler.terminate({ session: afterResult_spawn_research_bot?.output?.["session"] }), storage);
       const result = await interpret(agentSessionHandler.cancel({ session: afterResult_terminate_session?.output?.["session"] }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
@@ -652,7 +652,7 @@ describe('AgentSession functional handler', () => {
   describe('invariant examples', () => {
     it("spawn-then-invoke", async () => {
       const storage = createInMemoryStorage();
-      const spawnResult0 = await interpret(agentSessionHandler.spawn({ personaPageId: "p1", strategy: "react", tools: "[\"search\"]", context: "", attributionRef: false }), storage);
+      const spawnResult0 = await interpret(agentSessionHandler.spawn({ personaPageId: "p1", strategy: "react", tools: "[\"search\"]", context: "", attributionRef: false, reconciliationStrategy: false }), storage);
       expect(spawnResult0.variant).toBe("ok");
       let session = spawnResult0.output["session"];
       let s = session;
@@ -662,13 +662,15 @@ describe('AgentSession functional handler', () => {
       let subjectId = spawnResult0.output["subjectId"];
       let attributionRef = spawnResult0.output["attributionRef"];
       let effectivePolicySnapshotRef = spawnResult0.output["effectivePolicySnapshotRef"];
+      let pinnedEpoch = spawnResult0.output["pinnedEpoch"];
+      let reconciliationStrategy = spawnResult0.output["reconciliationStrategy"];
       const thenResult0 = await interpret(agentSessionHandler.invoke({ session: s, goal: "Find X" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
     it("spawn-then-suspend-then-resume", async () => {
       const storage = createInMemoryStorage();
-      const spawnResult0 = await interpret(agentSessionHandler.spawn({ personaPageId: "p1", strategy: "react", tools: "[]", context: "", attributionRef: false }), storage);
+      const spawnResult0 = await interpret(agentSessionHandler.spawn({ personaPageId: "p1", strategy: "react", tools: "[]", context: "", attributionRef: false, reconciliationStrategy: false }), storage);
       expect(spawnResult0.variant).toBe("ok");
       let session = spawnResult0.output["session"];
       let s = session;
@@ -678,6 +680,8 @@ describe('AgentSession functional handler', () => {
       let subjectId = spawnResult0.output["subjectId"];
       let attributionRef = spawnResult0.output["attributionRef"];
       let effectivePolicySnapshotRef = spawnResult0.output["effectivePolicySnapshotRef"];
+      let pinnedEpoch = spawnResult0.output["pinnedEpoch"];
+      let reconciliationStrategy = spawnResult0.output["reconciliationStrategy"];
       const suspendResult1 = await interpret(agentSessionHandler.suspend({ session: s }), storage);
       expect(suspendResult1.variant).toBe("ok");
       session = suspendResult1.output["session"];
@@ -694,7 +698,7 @@ describe('AgentSession functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('spawn'), input: fc.record({ personaPageId: fc.string({ minLength: 1, maxLength: 50 }), strategy: fc.string({ minLength: 1, maxLength: 50 }), tools: fc.string({ minLength: 1, maxLength: 50 }), context: fc.string({ minLength: 1, maxLength: 50 }), attributionRef: fc.string() }) }),
+              fc.record({ action: fc.constant('spawn'), input: fc.record({ personaPageId: fc.string({ minLength: 1, maxLength: 50 }), strategy: fc.string({ minLength: 1, maxLength: 50 }), tools: fc.string({ minLength: 1, maxLength: 50 }), context: fc.string({ minLength: 1, maxLength: 50 }), attributionRef: fc.string(), reconciliationStrategy: fc.string() }) }),
               fc.record({ action: fc.constant('invoke'), input: fc.record({ session: fc.string(), goal: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('suspend'), input: fc.record({ session: fc.string() }) }),
               fc.record({ action: fc.constant('resume'), input: fc.record({ session: fc.string() }) }),
@@ -731,7 +735,7 @@ describe('AgentSession functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('spawn'), input: fc.record({ personaPageId: fc.string({ minLength: 1, maxLength: 50 }), strategy: fc.string({ minLength: 1, maxLength: 50 }), tools: fc.string({ minLength: 1, maxLength: 50 }), context: fc.string({ minLength: 1, maxLength: 50 }), attributionRef: fc.string() }) }),
+              fc.record({ action: fc.constant('spawn'), input: fc.record({ personaPageId: fc.string({ minLength: 1, maxLength: 50 }), strategy: fc.string({ minLength: 1, maxLength: 50 }), tools: fc.string({ minLength: 1, maxLength: 50 }), context: fc.string({ minLength: 1, maxLength: 50 }), attributionRef: fc.string(), reconciliationStrategy: fc.string() }) }),
               fc.record({ action: fc.constant('invoke'), input: fc.record({ session: fc.string(), goal: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('suspend'), input: fc.record({ session: fc.string() }) }),
               fc.record({ action: fc.constant('resume'), input: fc.record({ session: fc.string() }) }),
@@ -783,7 +787,7 @@ describe('AgentSession functional handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ personaPageId: fc.string({ minLength: 1, maxLength: 50 }), strategy: fc.string({ minLength: 1, maxLength: 50 }), tools: fc.string({ minLength: 1, maxLength: 50 }), context: fc.string({ minLength: 1, maxLength: 50 }), attributionRef: fc.string() }),
+          fc.record({ personaPageId: fc.string({ minLength: 1, maxLength: 50 }), strategy: fc.string({ minLength: 1, maxLength: 50 }), tools: fc.string({ minLength: 1, maxLength: 50 }), context: fc.string({ minLength: 1, maxLength: 50 }), attributionRef: fc.string(), reconciliationStrategy: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
             const result = await safeInvoke(async () => {
@@ -805,7 +809,29 @@ describe('AgentSession functional handler', () => {
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ personaPageId: fc.string({ minLength: 1, maxLength: 50 }), strategy: fc.string({ minLength: 1, maxLength: 50 }), tools: fc.string({ minLength: 1, maxLength: 50 }), context: fc.string({ minLength: 1, maxLength: 50 }), attributionRef: fc.string() }),
+          fc.record({ personaPageId: fc.string({ minLength: 1, maxLength: 50 }), strategy: fc.string({ minLength: 1, maxLength: 50 }), tools: fc.string({ minLength: 1, maxLength: 50 }), context: fc.string({ minLength: 1, maxLength: 50 }), attributionRef: fc.string(), reconciliationStrategy: fc.string() }),
+          async (input) => {
+            const storage = createInMemoryStorage();
+            const result = await safeInvoke(async () => {
+              const program = agentSessionHandler.spawn(input as Record<string, unknown>);
+              return interpret(program, storage);
+            });
+            if (result?.variant === "ok") {
+              seen = true;
+              expect(result.output).toBeDefined();
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('spawn ensures on ok: ', async () => {
+      if (typeof agentSessionHandler.spawn !== 'function') return;
+      let seen = false;
+      await fc.assert(
+        fc.asyncProperty(
+          fc.record({ personaPageId: fc.string({ minLength: 1, maxLength: 50 }), strategy: fc.string({ minLength: 1, maxLength: 50 }), tools: fc.string({ minLength: 1, maxLength: 50 }), context: fc.string({ minLength: 1, maxLength: 50 }), attributionRef: fc.string(), reconciliationStrategy: fc.string() }),
           async (input) => {
             const storage = createInMemoryStorage();
             const result = await safeInvoke(async () => {

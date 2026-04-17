@@ -102,7 +102,7 @@ describe('Proposal functional handler', () => {
 
   describe('sponsor', () => {
     it('builds a valid StorageProgram', () => {
-      const program = proposalHandler.sponsor({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, sponsorId: "bob" });
+      const program = proposalHandler.sponsor({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"proposal"}, sponsorId: "bob" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -110,21 +110,21 @@ describe('Proposal functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = proposalHandler.sponsor({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, sponsorId: "bob" });
+      const program = proposalHandler.sponsor({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"proposal"}, sponsorId: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = proposalHandler.sponsor({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, sponsorId: "bob" });
+      const program = proposalHandler.sponsor({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"proposal"}, sponsorId: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = proposalHandler.sponsor({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, sponsorId: "bob" });
+      const program = proposalHandler.sponsor({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"proposal"}, sponsorId: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -137,7 +137,7 @@ describe('Proposal functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = proposalHandler.sponsor({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, sponsorId: "bob" });
+      const program = proposalHandler.sponsor({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"proposal"}, sponsorId: "bob" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -145,7 +145,7 @@ describe('Proposal functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof proposalHandler.sponsor !== 'function') return;
-      const result = await interpret(proposalHandler.sponsor({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, sponsorId: "bob" }), storage);
+      const result = await interpret(proposalHandler.sponsor({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"proposal"}, sponsorId: "bob" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -156,7 +156,7 @@ describe('Proposal functional handler', () => {
       if (typeof proposalHandler.sponsor !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_budget_proposal = await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage);
-      const result = await interpret(proposalHandler.sponsor({ proposal: afterResult_create_budget_proposal?.output?.["id"], sponsorId: "bob" }), storage);
+      const result = await interpret(proposalHandler.sponsor({ proposal: afterResult_create_budget_proposal?.output?.["proposal"], sponsorId: "bob" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -171,7 +171,7 @@ describe('Proposal functional handler', () => {
 
   describe('activate', () => {
     it('builds a valid StorageProgram', () => {
-      const program = proposalHandler.activate({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"} });
+      const program = proposalHandler.activate({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"proposal"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -179,21 +179,21 @@ describe('Proposal functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = proposalHandler.activate({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"} });
+      const program = proposalHandler.activate({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"proposal"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = proposalHandler.activate({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"} });
+      const program = proposalHandler.activate({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"proposal"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = proposalHandler.activate({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"} });
+      const program = proposalHandler.activate({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"proposal"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -206,7 +206,7 @@ describe('Proposal functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = proposalHandler.activate({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"} });
+      const program = proposalHandler.activate({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"proposal"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -214,7 +214,7 @@ describe('Proposal functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof proposalHandler.activate !== 'function') return;
-      const result = await interpret(proposalHandler.activate({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"} }), storage);
+      const result = await interpret(proposalHandler.activate({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"proposal"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -225,7 +225,7 @@ describe('Proposal functional handler', () => {
       if (typeof proposalHandler.activate !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_budget_proposal = await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage);
-      const result = await interpret(proposalHandler.activate({ proposal: afterResult_create_budget_proposal?.output?.["id"] }), storage);
+      const result = await interpret(proposalHandler.activate({ proposal: afterResult_create_budget_proposal?.output?.["proposal"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -240,7 +240,7 @@ describe('Proposal functional handler', () => {
 
   describe('advance', () => {
     it('builds a valid StorageProgram', () => {
-      const program = proposalHandler.advance({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, newStatus: "Passed" });
+      const program = proposalHandler.advance({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"proposal"}, newStatus: "Passed" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -248,21 +248,21 @@ describe('Proposal functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = proposalHandler.advance({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, newStatus: "Passed" });
+      const program = proposalHandler.advance({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"proposal"}, newStatus: "Passed" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = proposalHandler.advance({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, newStatus: "Passed" });
+      const program = proposalHandler.advance({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"proposal"}, newStatus: "Passed" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = proposalHandler.advance({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, newStatus: "Passed" });
+      const program = proposalHandler.advance({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"proposal"}, newStatus: "Passed" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -275,7 +275,7 @@ describe('Proposal functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = proposalHandler.advance({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, newStatus: "Passed" });
+      const program = proposalHandler.advance({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"proposal"}, newStatus: "Passed" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -283,7 +283,7 @@ describe('Proposal functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof proposalHandler.advance !== 'function') return;
-      const result = await interpret(proposalHandler.advance({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, newStatus: "Passed" }), storage);
+      const result = await interpret(proposalHandler.advance({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"proposal"}, newStatus: "Passed" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -294,7 +294,7 @@ describe('Proposal functional handler', () => {
       if (typeof proposalHandler.advance !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_budget_proposal = await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage);
-      const result = await interpret(proposalHandler.advance({ proposal: afterResult_create_budget_proposal?.output?.["id"], newStatus: "Passed" }), storage);
+      const result = await interpret(proposalHandler.advance({ proposal: afterResult_create_budget_proposal?.output?.["proposal"], newStatus: "Passed" }), storage);
       expect(result.variant).toBe('ok');
     });
 
@@ -309,7 +309,7 @@ describe('Proposal functional handler', () => {
 
   describe('cancel', () => {
     it('builds a valid StorageProgram', () => {
-      const program = proposalHandler.cancel({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, canceller: "alice" });
+      const program = proposalHandler.cancel({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"proposal"}, canceller: "alice" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -317,21 +317,21 @@ describe('Proposal functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = proposalHandler.cancel({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, canceller: "alice" });
+      const program = proposalHandler.cancel({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"proposal"}, canceller: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = proposalHandler.cancel({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, canceller: "alice" });
+      const program = proposalHandler.cancel({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"proposal"}, canceller: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = proposalHandler.cancel({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, canceller: "alice" });
+      const program = proposalHandler.cancel({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"proposal"}, canceller: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -344,7 +344,7 @@ describe('Proposal functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = proposalHandler.cancel({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, canceller: "alice" });
+      const program = proposalHandler.cancel({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"proposal"}, canceller: "alice" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -352,7 +352,7 @@ describe('Proposal functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof proposalHandler.cancel !== 'function') return;
-      const result = await interpret(proposalHandler.cancel({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"id"}, canceller: "alice" }), storage);
+      const result = await interpret(proposalHandler.cancel({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"proposal"}, canceller: "alice" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -363,15 +363,166 @@ describe('Proposal functional handler', () => {
       if (typeof proposalHandler.cancel !== 'function') return;
       const storage = createInMemoryStorage();
       const afterResult_create_budget_proposal = await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage);
-      const result = await interpret(proposalHandler.cancel({ proposal: afterResult_create_budget_proposal?.output?.["id"], canceller: "alice" }), storage);
+      const result = await interpret(proposalHandler.cancel({ proposal: afterResult_create_budget_proposal?.output?.["proposal"], canceller: "alice" }), storage);
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "cancel_missing" -> error', async () => {
+    it('fixture "cancel_missing" -> not_found', async () => {
       if (typeof proposalHandler.cancel !== 'function') return;
       const storage = createInMemoryStorage();
       const result = await interpret(proposalHandler.cancel({ proposal: "proposal-nonexistent", canceller: "alice" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('not_found'));
+    });
+
+  });
+
+  describe('merge', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = proposalHandler.merge({ proposal: {"type":"ref","fixture":"advance_to_passed","field":"proposal"}, resolvedConflicts: "[]" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = proposalHandler.merge({ proposal: {"type":"ref","fixture":"advance_to_passed","field":"proposal"}, resolvedConflicts: "[]" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = proposalHandler.merge({ proposal: {"type":"ref","fixture":"advance_to_passed","field":"proposal"}, resolvedConflicts: "[]" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = proposalHandler.merge({ proposal: {"type":"ref","fixture":"advance_to_passed","field":"proposal"}, resolvedConflicts: "[]" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = proposalHandler.merge({ proposal: {"type":"ref","fixture":"advance_to_passed","field":"proposal"}, resolvedConflicts: "[]" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof proposalHandler.merge !== 'function') return;
+      const result = await interpret(proposalHandler.merge({ proposal: {"type":"ref","fixture":"advance_to_passed","field":"proposal"}, resolvedConflicts: "[]" }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "merge_passed" -> ok', async () => {
+      if (typeof proposalHandler.merge !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_budget_proposal = await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage);
+      const afterResult_advance_to_passed = await interpret(proposalHandler.advance({ proposal: afterResult_create_budget_proposal?.output?.["proposal"], newStatus: "Passed" }), storage);
+      const result = await interpret(proposalHandler.merge({ proposal: afterResult_advance_to_passed?.output?.["proposal"], resolvedConflicts: "[]" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "merge_missing" -> not_found', async () => {
+      if (typeof proposalHandler.merge !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(proposalHandler.merge({ proposal: "proposal-nonexistent", resolvedConflicts: "[]" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('not_found'));
+    });
+
+    it('fixture "merge_bad_json" -> error', async () => {
+      if (typeof proposalHandler.merge !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_budget_proposal = await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage);
+      const afterResult_advance_to_passed = await interpret(proposalHandler.advance({ proposal: afterResult_create_budget_proposal?.output?.["proposal"], newStatus: "Passed" }), storage);
+      const result = await interpret(proposalHandler.merge({ proposal: afterResult_advance_to_passed?.output?.["proposal"], resolvedConflicts: "not-json" }), storage);
       expect(result.variant).not.toBe('ok');
+    });
+
+  });
+
+  describe('detectConflicts', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = proposalHandler.detectConflicts({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"proposal"} });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = proposalHandler.detectConflicts({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"proposal"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = proposalHandler.detectConflicts({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"proposal"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = proposalHandler.detectConflicts({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"proposal"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = proposalHandler.detectConflicts({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"proposal"} });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof proposalHandler.detectConflicts !== 'function') return;
+      const result = await interpret(proposalHandler.detectConflicts({ proposal: {"type":"ref","fixture":"create_budget_proposal","field":"proposal"} }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+    it('fixture "detect_no_conflicts" -> ok', async () => {
+      if (typeof proposalHandler.detectConflicts !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_budget_proposal = await interpret(proposalHandler.create({ proposer: "alice", title: "Increase Q3 budget", description: "Allocate additional funds for infrastructure", actions: ["transfer(treasury, infra, 50000)"] }), storage);
+      const result = await interpret(proposalHandler.detectConflicts({ proposal: afterResult_create_budget_proposal?.output?.["proposal"] }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "detect_missing" -> not_found', async () => {
+      if (typeof proposalHandler.detectConflicts !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(proposalHandler.detectConflicts({ proposal: "proposal-nonexistent" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('not_found'));
     });
 
   });
@@ -407,6 +558,31 @@ describe('Proposal functional handler', () => {
       expect(thenResult2.variant).toBe("ok");
     });
 
+    it("merge-stamps-epoch", async () => {
+      const storage = createInMemoryStorage();
+      const createResult0 = await interpret(proposalHandler.create({ proposer: "alice", title: "Budget Amendment", description: "Raise limit", actions: ["fund(treasury, 10000)"] }), storage);
+      expect(createResult0.variant).toBe("ok");
+      let proposal = createResult0.output["proposal"];
+      let p = proposal;
+      const advanceResult1 = await interpret(proposalHandler.advance({ proposal: p, newStatus: "Passed" }), storage);
+      expect(advanceResult1.variant).toBe("ok");
+      proposal = advanceResult1.output["proposal"];
+      let status = advanceResult1.output["status"];
+      let _ = status;
+      const thenResult0 = await interpret(proposalHandler.merge({ proposal: p, resolvedConflicts: "[]" }), storage);
+      expect(thenResult0.variant).toBe("ok");
+    });
+
+    it("detect-then-merge-with-resolved", async () => {
+      const storage = createInMemoryStorage();
+      const createResult0 = await interpret(proposalHandler.create({ proposer: "bob", title: "Role Change", description: "Add admin", actions: ["assignRole(admin, carol)"] }), storage);
+      expect(createResult0.variant).toBe("ok");
+      let proposal = createResult0.output["proposal"];
+      let q = proposal;
+      const thenResult0 = await interpret(proposalHandler.detectConflicts({ proposal: q }), storage);
+      expect(thenResult0.variant).toBe("ok");
+    });
+
   });
 
   describe('state invariants (stateful PBT)', () => {
@@ -420,6 +596,8 @@ describe('Proposal functional handler', () => {
               fc.record({ action: fc.constant('activate'), input: fc.record({ proposal: fc.string() }) }),
               fc.record({ action: fc.constant('advance'), input: fc.record({ proposal: fc.string(), newStatus: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('cancel'), input: fc.record({ proposal: fc.string(), canceller: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('merge'), input: fc.record({ proposal: fc.string(), resolvedConflicts: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('detectConflicts'), input: fc.record({ proposal: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -454,6 +632,8 @@ describe('Proposal functional handler', () => {
               fc.record({ action: fc.constant('activate'), input: fc.record({ proposal: fc.string() }) }),
               fc.record({ action: fc.constant('advance'), input: fc.record({ proposal: fc.string(), newStatus: fc.string({ minLength: 1, maxLength: 50 }) }) }),
               fc.record({ action: fc.constant('cancel'), input: fc.record({ proposal: fc.string(), canceller: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('merge'), input: fc.record({ proposal: fc.string(), resolvedConflicts: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('detectConflicts'), input: fc.record({ proposal: fc.string() }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -471,6 +651,43 @@ describe('Proposal functional handler', () => {
                   expect(typeof result.variant).toBe('string');
                 }
                 // Never: orphaned-title
+              }
+            }
+          },
+        ),
+        { numRuns: 50 },
+      );
+    });
+
+    it('never: epoch-without-merge', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.oneof(
+              fc.record({ action: fc.constant('create'), input: fc.record({ proposer: fc.string({ minLength: 1, maxLength: 50 }), title: fc.string({ minLength: 1, maxLength: 50 }), description: fc.string({ minLength: 1, maxLength: 50 }), actions: fc.string() }) }),
+              fc.record({ action: fc.constant('sponsor'), input: fc.record({ proposal: fc.string(), sponsorId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('activate'), input: fc.record({ proposal: fc.string() }) }),
+              fc.record({ action: fc.constant('advance'), input: fc.record({ proposal: fc.string(), newStatus: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('cancel'), input: fc.record({ proposal: fc.string(), canceller: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('merge'), input: fc.record({ proposal: fc.string(), resolvedConflicts: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('detectConflicts'), input: fc.record({ proposal: fc.string() }) }),
+            ),
+            { minLength: 1, maxLength: 5 },
+          ),
+          async (actionSequence) => {
+            const storage = createInMemoryStorage();
+            for (const step of actionSequence) {
+              const actionFn = proposalHandler[step.action];
+              if (typeof actionFn === 'function') {
+                const result = await safeInvoke(async () => {
+                  const program = actionFn.call(proposalHandler, step.input as Record<string, unknown>);
+                  return interpret(program, storage);
+                });
+                // Every action should return a result with a variant
+                if (result?.variant !== undefined) {
+                  expect(typeof result.variant).toBe('string');
+                }
+                // Never: epoch-without-merge
               }
             }
           },

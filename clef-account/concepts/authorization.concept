@@ -1,16 +1,19 @@
-@version(1)
+@version(2)
 concept Authorization [U] {
 
   purpose {
     Manage roles, permissions, and permission-checking with
     transitive resolution. Provides role-based access control
-    with hierarchical role inheritance.
+    with hierarchical role inheritance. Tracks the policy epoch
+    so sessions can detect when governance changes have occurred
+    and reconcile accordingly.
   }
 
   state {
     roles: U -> set String
     permissions: String -> set String
     roleHierarchy: String -> set String
+    policyEpoch: Int
   }
 
   actions {
@@ -50,6 +53,24 @@ concept Authorization [U] {
         transitively inherited roles.
       }
     }
+
+    action incrementEpoch() {
+      -> ok(epoch: Int) {
+        Increments the policy epoch counter by one and returns the new
+        epoch value. Called by the ProposalMergeIncrementsEpoch sync
+        whenever a governance proposal is merged to main. Sessions
+        compare their pinned epoch to the current epoch to detect stale
+        policy snapshots.
+      }
+    }
+
+    action getEpoch() {
+      -> ok(epoch: Int) {
+        Returns the current policy epoch value without mutating state.
+        Sessions call this at spawn time to pin their effective epoch
+        for later boundary checks.
+      }
+    }
   }
 
   invariant {
@@ -61,5 +82,15 @@ concept Authorization [U] {
     after grantRole(user: u, role: "admin") -> ok()
     and revokeRole(user: u, role: "admin") -> ok()
     then checkPermission(user: u, permission: "write") -> denied()
+  }
+
+  example "epoch-increments-on-each-call": {
+    after incrementEpoch() -> ok(epoch: e1)
+    then incrementEpoch() -> ok(epoch: e2)
+  }
+
+  example "getEpoch-reflects-increment": {
+    after incrementEpoch() -> ok(epoch: _)
+    then getEpoch() -> ok(epoch: _)
   }
 }

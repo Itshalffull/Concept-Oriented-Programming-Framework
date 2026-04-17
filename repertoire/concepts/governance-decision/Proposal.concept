@@ -1,10 +1,11 @@
 # @fixtures-added
-@version(1)
+@version(2)
 concept Proposal [P] {
 
   purpose {
     Formalize a request for collective decision and track it through a
-    governance lifecycle.
+    governance lifecycle, including concurrent amendment handling via a
+    DAG branch model and policy epoch stamping on merge.
   }
 
   state {
@@ -13,11 +14,14 @@ concept Proposal [P] {
     title: P -> String
     description: P -> String
     actions: P -> list String
-    status: P -> {Draft | Pending | Sponsored | Active | Passed | Failed | Queued | Executed | Cancelled}
+    status: P -> {Draft | Pending | Sponsored | Active | Passed | Failed | Queued | Executed | Cancelled | Merged}
     sponsor: P -> option String
     createdAt: P -> DateTime
     updatedAt: P -> DateTime
     metadata: P -> option String
+    policyEpoch: P -> option Int
+    mergedAt: P -> option String
+    conflictsWith: P -> set String
   }
 
   capabilities {
@@ -45,7 +49,7 @@ concept Proposal [P] {
         The proposal is not in Pending status.
       }
 
-      fixture sponsor_pending { proposal: $create_budget_proposal.id, sponsorId: "bob" } after create_budget_proposal
+      fixture sponsor_pending { proposal: $create_budget_proposal.proposal, sponsorId: "bob" } after create_budget_proposal
       fixture sponsor_missing { proposal: "proposal-nonexistent", sponsorId: "bob" } -> error
     }
 
@@ -55,7 +59,7 @@ concept Proposal [P] {
         decision-making has begun.
       }
 
-      fixture activate_sponsored { proposal: $create_budget_proposal.id } after create_budget_proposal
+      fixture activate_sponsored { proposal: $create_budget_proposal.proposal } after create_budget_proposal
       fixture activate_missing { proposal: "proposal-nonexistent" } -> error
     }
 
@@ -68,7 +72,7 @@ concept Proposal [P] {
         The requested status transition is not valid.
       }
 
-      fixture advance_to_passed { proposal: $create_budget_proposal.id, newStatus: "Passed" } after create_budget_proposal
+      fixture advance_to_passed { proposal: $create_budget_proposal.proposal, newStatus: "Passed" } after create_budget_proposal
       fixture advance_missing { proposal: "proposal-nonexistent", newStatus: "Passed" } -> error
     }
 
@@ -80,12 +84,52 @@ concept Proposal [P] {
       -> unauthorized(canceller: String) {
         The canceller does not have permission to cancel.
       }
-      -> ok(proposal: P) {
-        The proposal is in a terminal state and cannot be cancelled.
+      -> not_found(message: String) {
+        No proposal exists with this identifier.
       }
 
-      fixture cancel_draft { proposal: $create_budget_proposal.id, canceller: "alice" } after create_budget_proposal
-      fixture cancel_missing { proposal: "proposal-nonexistent", canceller: "alice" } -> error
+      fixture cancel_draft { proposal: $create_budget_proposal.proposal, canceller: "alice" } after create_budget_proposal
+      fixture cancel_missing { proposal: "proposal-nonexistent", canceller: "alice" } -> not_found
+    }
+
+    action merge(proposal: P, resolvedConflicts: String) {
+      -> ok(proposal: P, policyEpoch: Int) {
+        The proposal is merged into canonical governance state. Status
+        transitions to Merged, mergedAt is stamped with the current
+        timestamp, and policyEpoch is set to the epoch at time of merge.
+        A sync triggers Authorization/incrementEpoch so live sessions
+        can detect the governance change.
+      }
+      -> conflict(conflictsWith: String) {
+        Unresolved conflicts remain. The resolvedConflicts argument did
+        not cover all detected conflicts. Provide all conflicting
+        proposal IDs as a JSON array in resolvedConflicts to proceed.
+      }
+      -> not_found(message: String) {
+        No proposal exists with this identifier.
+      }
+      -> already_merged(message: String) {
+        The proposal has already been merged and cannot be merged again.
+      }
+
+      fixture merge_passed { proposal: $advance_to_passed.proposal, resolvedConflicts: "[]" } after advance_to_passed
+      fixture merge_missing { proposal: "proposal-nonexistent", resolvedConflicts: "[]" } -> not_found
+      fixture merge_bad_json { proposal: $advance_to_passed.proposal, resolvedConflicts: "not-json" } after advance_to_passed -> error
+    }
+
+    action detectConflicts(proposal: P) {
+      -> ok(conflicts: String) {
+        Returns a JSON array of proposal IDs that conflict with this
+        proposal. An empty array indicates no conflicts were detected.
+        Cyclic dependency detection is performed; proposals forming a
+        cycle are listed as conflicts.
+      }
+      -> not_found(message: String) {
+        No proposal exists with this identifier.
+      }
+
+      fixture detect_no_conflicts { proposal: $create_budget_proposal.proposal } after create_budget_proposal
+      fixture detect_missing { proposal: "proposal-nonexistent" } -> not_found
     }
   }
 
@@ -101,6 +145,23 @@ concept Proposal [P] {
 
   }
 
+  example "merge-stamps-epoch": {
+
+    after create(proposer: "alice", title: "Budget Amendment", description: "Raise limit", actions: ["fund(treasury, 10000)"]) -> ok(proposal: p)
+
+        and advance(proposal: p, newStatus: "Passed") -> ok(proposal: p, status: _)
+
+        then merge(proposal: p, resolvedConflicts: "[]") -> ok(proposal: p, policyEpoch: _)
+
+  }
+
+  example "detect-then-merge-with-resolved": {
+
+    after create(proposer: "bob", title: "Role Change", description: "Add admin", actions: ["assignRole(admin, carol)"]) -> ok(proposal: q)
+
+        then detectConflicts(proposal: q) -> ok(conflicts: _)
+
+  }
 
   always "valid-proposer" {
 
@@ -115,6 +176,14 @@ concept Proposal [P] {
     exists p in proposals:
 
       p.title = none
+
+  }
+
+  never "epoch-without-merge" {
+
+    exists p in proposals:
+
+      p.policyEpoch != none and p.mergedAt = none
 
   }
 

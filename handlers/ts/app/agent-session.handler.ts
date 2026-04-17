@@ -29,6 +29,15 @@ const _agentSessionHandler: FunctionalConceptHandler = {
         ? attributionRefInput.trim()
         : null;
 
+    // Resolve reconciliation strategy. Default: 'continue' (stale sessions keep running).
+    // Declared strategies: continue, pause, degrade, require_reapproval, terminate.
+    const VALID_STRATEGIES = new Set(['continue', 'pause', 'degrade', 'require_reapproval', 'terminate']);
+    const reconciliationStrategyInput = (input.reconciliationStrategy as string | null | undefined) ?? null;
+    const reconciliationStrategy: string =
+      typeof reconciliationStrategyInput === 'string' && VALID_STRATEGIES.has(reconciliationStrategyInput)
+        ? reconciliationStrategyInput
+        : 'continue';
+
     // Validate non-empty personaPageId -> error variant
     if (!personaPageId || personaPageId.trim() === '') {
       return complete(createProgram(), 'error', { message: 'personaPageId is required' }) as StorageProgram<Result>;
@@ -68,6 +77,17 @@ const _agentSessionHandler: FunctionalConceptHandler = {
       return subjectId ? `snapshot:${subjectId}` : null;
     }, '_policySnapshotRef');
 
+    // Read the current policy epoch to pin at spawn time.
+    // Full integration would invoke Authorization/getEpoch; modeled as a
+    // perform effect here since Authorization is independent. The epoch is
+    // pinned as 0 (baseline) — live integration populates this via a sync.
+    p = spGet(p, 'policyEpoch', '__epoch', '_epochRecord');
+
+    p = mapBindings(p, (bindings) => {
+      const epochRec = bindings._epochRecord as Record<string, unknown> | null;
+      return epochRec ? ((epochRec.epoch as number) || 0) : 0;
+    }, '_pinnedEpoch');
+
     p = putFrom(p, 'session', sessionId, (bindings) => ({
       session: sessionId,
       personaPageId,
@@ -87,6 +107,8 @@ const _agentSessionHandler: FunctionalConceptHandler = {
       subjectId: bindings._subjectId as string | null,
       attributionRef,
       effectivePolicySnapshotRef: bindings._policySnapshotRef as string | null,
+      pinnedEpoch: bindings._pinnedEpoch as number,
+      reconciliationStrategy,
     }));
 
     return completeFrom(p, 'ok', (bindings) => ({
@@ -96,6 +118,8 @@ const _agentSessionHandler: FunctionalConceptHandler = {
       subjectId: bindings._subjectId as string | null,
       attributionRef,
       effectivePolicySnapshotRef: bindings._policySnapshotRef as string | null,
+      pinnedEpoch: bindings._pinnedEpoch as number,
+      reconciliationStrategy,
     })) as StorageProgram<Result>;
   },
 
