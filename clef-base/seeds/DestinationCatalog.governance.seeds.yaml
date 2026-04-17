@@ -62,8 +62,10 @@ entries:
     href: /admin/governance/policies
     icon: "📜"
     group: Governance
-  - destination: roles
-    name: roles
+  # Governance Offices — url path kept as /admin/governance/roles to minimize
+  # URL churn; the surfaced concept is now GovernanceOffice (see §5.3).
+  - destination: governance-offices
+    name: governance-offices
     targetConcept: ContentNode
     targetView: list
     href: /admin/governance/roles

@@ -71,14 +71,17 @@ entries:
     description: Governance policies — documented rules and procedures that guide organizational behavior.
     defaultDisplayMode: table-row
 
-  # /admin/governance/roles  →  roles-list
+  # /admin/governance/roles  →  roles-list  (surfaces GovernanceOffice)
+  # The URL path /admin/governance/roles remains as an alias to minimize URL
+  # churn; the underlying concept is GovernanceOffice (see §5.3). The Schema
+  # id stays "role" (kebab-case) to match the content-native schema seed.
   - view: roles-list
     dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"Role"}}'
     layout: table
-    visibleFields: '[{"key":"node","label":"Role"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Created By"},{"key":"createdAt","label":"Created","formatter":"date"}]'
+    visibleFields: '[{"key":"node","label":"Office"},{"key":"schemas","label":"Type","formatter":"schema-badges"},{"key":"createdBy","label":"Created By"},{"key":"createdAt","label":"Created","formatter":"date"}]'
     controls: '{"create":{"concept":"ContentNode","action":"createWithSchema","schemaId":"role","fields":[]},"rowClick":{"navigateTo":"/admin/content/{node}"}}'
-    title: Roles
-    description: Governance roles — named responsibilities and accountabilities assigned to circle members.
+    title: Governance Offices
+    description: GovernanceOffice entries — named organizational capacities with term limits, holder caps, and succession semantics. Office assignments sync into executable Authorization grants.
     defaultDisplayMode: table-row
 
   # /admin/agents  →  agent-library (targetView: agent-library, not 'list')
