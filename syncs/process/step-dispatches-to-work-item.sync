@@ -1,0 +1,29 @@
+# Process execution → human action inbox wiring.
+# When ExecutionDispatch resolves a step to work_item mode, offer the WorkItem
+# to the step's role pool so participants receive it in their inbox.
+
+sync StepDispatchesToWorkItem [eager]
+  purpose {
+    When a process step is dispatched as a work item, offer the WorkItem
+    to each member of the step's role pool so they receive it in their
+    inbox and can claim, complete, or delegate it.
+  }
+when {
+  ExecutionDispatch/resolve: [ step: ?step; actor: ?actor; spec_mode: ?spec_mode; actor_type: "human" ]
+    => ok(ed: ?ed; resolved_mode: "work_item")
+}
+where {
+  Property: { ?step key: "rolePool"; value: ?role_pool };
+  Property: { ?step key: "stepTitle"; value: ?title };
+  Property: { ?step key: "runRef"; value: ?run_ref }
+}
+then {
+  WorkItem/offer: [
+    item_type: ?spec_mode;
+    title: ?title;
+    process_ref: ?run_ref;
+    step_ref: ?step;
+    role_pool: ?role_pool;
+    assignee: ?actor
+  ]
+}
