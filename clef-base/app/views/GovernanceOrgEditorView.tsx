@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useKernelInvoke } from '../../lib/clef-provider';
 import { Badge } from '../components/widgets/Badge';
 import { EmptyState } from '../components/widgets/EmptyState';
@@ -569,6 +569,236 @@ const RoutesSidebar: React.FC<RoutesSidepanelProps> = ({ specs, selectedId, onSe
 };
 
 // ---------------------------------------------------------------------------
+// RecentRunsList — shows latest ProcessRuns for a given spec
+// ---------------------------------------------------------------------------
+
+interface RunRow {
+  run: string;
+  status: string;
+  started_at: string;
+  ended_at?: string;
+  input?: string;
+}
+
+const STATUS_COLOR: Record<string, string> = {
+  running:   'var(--palette-primary)',
+  completed: 'var(--palette-success, #2e7d32)',
+  failed:    'var(--palette-error)',
+  cancelled: 'var(--palette-on-surface-variant)',
+  suspended: '#c07000',
+};
+
+const RecentRunsList: React.FC<{ specId: string; refreshKey: number }> = ({ specId, refreshKey }) => {
+  const invoke = useKernelInvoke();
+  const [runs, setRuns] = useState<RunRow[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    invoke('ProcessRun', 'listBySpec', { spec_ref: specId })
+      .then(result => {
+        if (!active) return;
+        if (result.variant === 'ok') {
+          let raw: RunRow[] = [];
+          try { raw = JSON.parse(result.runs as string ?? '[]'); } catch { /* empty */ }
+          setRuns(raw.slice().sort((a, b) =>
+            new Date(b.started_at).getTime() - new Date(a.started_at).getTime()
+          ).slice(0, 10));
+        } else {
+          setRuns([]);
+        }
+      })
+      .catch(() => { if (active) setRuns([]); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [specId, refreshKey, invoke]);
+
+  if (loading) return <div style={{ fontSize: '0.8rem', color: 'var(--palette-on-surface-variant)', padding: 'var(--spacing-xs)' }}>Loading runs…</div>;
+  if (runs.length === 0) return (
+    <div style={{ fontSize: '0.8rem', color: 'var(--palette-on-surface-variant)', padding: 'var(--spacing-xs)' }}>
+      No runs yet. Click ▶ Run to start the first one.
+    </div>
+  );
+
+  return (
+    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+      {runs.map(r => {
+        const dur = r.ended_at
+          ? Math.round((new Date(r.ended_at).getTime() - new Date(r.started_at).getTime()) / 1000) + 's'
+          : 'running…';
+        const color = STATUS_COLOR[r.status] ?? 'var(--palette-on-surface-variant)';
+        return (
+          <li key={r.run}>
+            <a
+              href={`/admin/process-runs/${r.run}`}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                padding: '6px 8px', borderRadius: 'var(--radius-sm)',
+                textDecoration: 'none', color: 'var(--palette-on-surface)',
+                fontSize: '0.8rem', background: 'var(--palette-surface-variant)',
+              }}
+            >
+              <span style={{ color, fontWeight: 600, fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.06em', minWidth: 70 }}>
+                {r.status}
+              </span>
+              <span style={{ fontFamily: 'var(--typography-code-family)', fontSize: '0.72rem', color: 'var(--palette-on-surface-variant)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                {r.run}
+              </span>
+              <span style={{ fontSize: '0.72rem', color: 'var(--palette-on-surface-variant)', flexShrink: 0 }}>{dur}</span>
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+  );
+};
+
+// ---------------------------------------------------------------------------
+// RunProcessDialog — modal for starting a process run
+// ---------------------------------------------------------------------------
+
+const RunProcessDialog: React.FC<{
+  spec: ProcessSpecRecord;
+  onClose: () => void;
+  onStarted: (runId: string) => void;
+}> = ({ spec, onClose, onStarted }) => {
+  const invoke = useKernelInvoke();
+  const [inputJson, setInputJson] = useState('{}');
+  const [jsonError, setJsonError] = useState<string | null>(null);
+  const [starting, setStarting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => { textareaRef.current?.focus(); }, []);
+
+  const handleStart = useCallback(async () => {
+    setJsonError(null);
+    setError(null);
+    let parsedInput: unknown = {};
+    try { parsedInput = JSON.parse(inputJson); } catch (e) {
+      setJsonError('Invalid JSON: ' + (e instanceof Error ? e.message : String(e)));
+      return;
+    }
+    setStarting(true);
+    try {
+      const result = await invoke('ProcessRun', 'start', {
+        spec_ref: spec.spec,
+        spec_version: 0,
+        input: JSON.stringify(parsedInput),
+      });
+      if (result.variant === 'ok') {
+        onStarted(result.run as string);
+      } else {
+        setError((result.message as string) ?? 'Failed to start run');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to start run');
+    } finally {
+      setStarting(false);
+    }
+  }, [invoke, spec.spec, inputJson, onStarted]);
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Start process run"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 1000,
+        background: 'rgba(0,0,0,0.4)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}
+    >
+      <div
+        style={{
+          background: 'var(--palette-surface)', borderRadius: 'var(--radius-md)',
+          padding: 'var(--spacing-xl)', width: '480px', maxWidth: '90vw',
+          boxShadow: 'var(--elevation-3, 0 8px 32px rgba(0,0,0,0.2))',
+          display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>
+            ▶ Run: {spec.name ?? spec.spec}
+          </h2>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            style={{ background: 'none', border: 'none', fontSize: '1.1rem', cursor: 'pointer', color: 'var(--palette-on-surface-variant)', lineHeight: 1 }}
+          >
+            ✕
+          </button>
+        </div>
+
+        <div>
+          <label
+            htmlFor="run-input-json"
+            style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--palette-on-surface-variant)', marginBottom: 6 }}
+          >
+            Trigger inputs (JSON)
+          </label>
+          <textarea
+            id="run-input-json"
+            ref={textareaRef}
+            rows={5}
+            value={inputJson}
+            onChange={e => { setInputJson(e.target.value); setJsonError(null); }}
+            spellCheck={false}
+            style={{
+              width: '100%', boxSizing: 'border-box', resize: 'vertical',
+              fontFamily: 'var(--typography-code-family)', fontSize: '0.8rem',
+              padding: '8px 10px', borderRadius: 'var(--radius-sm)',
+              border: jsonError ? '1px solid var(--palette-error)' : '1px solid var(--palette-outline-variant)',
+              background: 'var(--palette-surface-container)',
+              color: 'var(--palette-on-surface)',
+            }}
+          />
+          {jsonError && (
+            <p role="alert" style={{ margin: '4px 0 0', fontSize: '0.75rem', color: 'var(--palette-error)' }}>{jsonError}</p>
+          )}
+          <p style={{ margin: '4px 0 0', fontSize: '0.72rem', color: 'var(--palette-on-surface-variant)' }}>
+            These values are passed to the trigger step as the initial context.
+          </p>
+        </div>
+
+        {error && (
+          <p role="alert" style={{ margin: 0, padding: '8px 10px', borderRadius: 'var(--radius-sm)', background: 'var(--palette-error-container, #fdecea)', color: 'var(--palette-error)', fontSize: '0.8rem' }}>
+            {error}
+          </p>
+        )}
+
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--spacing-sm)' }}>
+          <button
+            onClick={onClose}
+            data-part="button"
+            data-variant="ghost"
+            style={{ padding: '6px 16px', fontSize: '0.875rem' }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleStart}
+            disabled={starting}
+            data-part="button"
+            data-variant="filled"
+            style={{
+              padding: '6px 16px', fontSize: '0.875rem',
+              background: 'var(--palette-primary)', color: 'var(--palette-on-primary)',
+              border: 'none', borderRadius: 'var(--radius-sm)', cursor: starting ? 'not-allowed' : 'pointer',
+              opacity: starting ? 0.7 : 1, fontWeight: 600,
+            }}
+          >
+            {starting ? 'Starting…' : '▶ Start Run'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
 
@@ -585,6 +815,9 @@ export const GovernanceOrgEditorView: React.FC = () => {
   const [showCreateTeam, setShowCreateTeam] = useState(false);
   const [showCreateSpec, setShowCreateSpec] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [showRunDialog, setShowRunDialog] = useState(false);
+  const [runsRefreshKey, setRunsRefreshKey] = useState(0);
+  const [lastRunId, setLastRunId] = useState<string | null>(null);
 
   // Load teams via ContentNode schema filter
   const loadTeams = useCallback(async () => {
@@ -691,6 +924,20 @@ export const GovernanceOrgEditorView: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+      {/* Run process dialog */}
+      {showRunDialog && selectedSpec && (
+        <RunProcessDialog
+          spec={selectedSpec}
+          onClose={() => setShowRunDialog(false)}
+          onStarted={(runId) => {
+            setLastRunId(runId);
+            setRunsRefreshKey(k => k + 1);
+            setShowRunDialog(false);
+            window.location.href = `/admin/process-runs/${runId}`;
+          }}
+        />
+      )}
+
       {/* Mode tabs */}
       <div style={{ display: 'flex', gap: 2, borderBottom: '1px solid var(--palette-outline-variant)', paddingBottom: 0, marginBottom: 0 }}>
         {MODES.map(m => (
@@ -855,9 +1102,10 @@ export const GovernanceOrgEditorView: React.FC = () => {
           {mode === 'routes' && (
             selectedSpec ? (
               <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-md)', flexShrink: 0 }}>
+                {/* Spec header */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-md)', flexShrink: 0, flexWrap: 'wrap' }}>
                   <button
-                    onClick={() => setSelectedSpec(null)}
+                    onClick={() => { setSelectedSpec(null); setLastRunId(null); }}
                     data-part="button"
                     data-variant="ghost"
                     style={{ fontSize: '0.8rem', padding: '4px 8px' }}
@@ -870,9 +1118,41 @@ export const GovernanceOrgEditorView: React.FC = () => {
                   <Badge variant={selectedSpec.status === 'active' ? 'success' : 'secondary'}>
                     {selectedSpec.status ?? 'draft'}
                   </Badge>
+                  <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)' }}>
+                    {lastRunId && (
+                      <a
+                        href={`/admin/process-runs/${lastRunId}`}
+                        style={{ fontSize: '0.75rem', color: 'var(--palette-primary)', textDecoration: 'none', padding: '4px 8px', border: '1px solid var(--palette-primary)', borderRadius: 'var(--radius-sm)' }}
+                      >
+                        View last run →
+                      </a>
+                    )}
+                    <button
+                      onClick={() => setShowRunDialog(true)}
+                      data-part="button"
+                      data-variant="filled"
+                      style={{
+                        padding: '5px 14px', fontSize: '0.8rem', fontWeight: 600,
+                        background: 'var(--palette-primary)', color: 'var(--palette-on-primary)',
+                        border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
+                      }}
+                    >
+                      ▶ Run Process
+                    </button>
+                  </div>
                 </div>
+
+                {/* FlowBuilder — step authoring */}
                 <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
                   <FlowBuilder processSpecId={selectedSpec.spec} initialView="steps" />
+                </div>
+
+                {/* Recent runs panel */}
+                <div style={{ flexShrink: 0, borderTop: '1px solid var(--palette-outline-variant)', paddingTop: 'var(--spacing-sm)', marginTop: 'var(--spacing-sm)' }}>
+                  <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--palette-on-surface-variant)', marginBottom: 6 }}>
+                    Recent Runs
+                  </div>
+                  <RecentRunsList specId={selectedSpec.spec} refreshKey={runsRefreshKey} />
                 </div>
               </div>
             ) : (

@@ -29,6 +29,7 @@ import { MediaLibraryView } from '../../views/MediaLibraryView';
 import { TaxonomyView } from '../../views/TaxonomyView';
 import { ReconcilersView } from '../../views/ReconcilersView';
 import { GovernanceOrgEditorView } from '../../views/GovernanceOrgEditorView';
+import { ProcessRunView } from '../../views/ProcessRunView';
 
 export default async function AdminPage({
   params,
@@ -484,6 +485,15 @@ export default async function AdminPage({
     return (
       <HostedPage>
         <GovernanceOrgEditorView />
+      </HostedPage>
+    );
+  }
+
+  // Process run detail page
+  if (slug[0] === 'process-runs' && slug[1]) {
+    return (
+      <HostedPage>
+        <ProcessRunView runId={decodeURIComponent(slug[1])} />
       </HostedPage>
     );
   }
