@@ -52,7 +52,7 @@ type ViewState = 'steps' | 'graph';
 
 /** Node type entries shown in the left palette */
 interface PaletteEntry {
-  nodeType: 'trigger' | 'action' | 'branch' | 'catch' | 'logic' | 'manual';
+  nodeType: 'trigger' | 'action' | 'branch' | 'catch' | 'logic' | 'manual' | 'vote' | 'brainstorm' | 'contest' | 'consent-agenda';
   label: string;
   description: string;
 }
@@ -101,6 +101,10 @@ const PALETTE_ENTRIES: PaletteEntry[] = [
   { nodeType: 'branch',   label: 'Branch',   description: 'Conditional fork in the flow' },
   { nodeType: 'catch',    label: 'Catch',    description: 'Error handler for upstream steps' },
   { nodeType: 'logic',    label: 'Logic',    description: 'Data transformation or mapping step' },
+  { nodeType: 'vote',           label: 'Vote',           description: 'Structured vote — participants cast Yes/No/Abstain' },
+  { nodeType: 'brainstorm',     label: 'Brainstorm',     description: 'Open idea collection with endorsement and shortlisting' },
+  { nodeType: 'contest',        label: 'Contest',        description: 'Proposal contest — participants submit and sponsor proposals' },
+  { nodeType: 'consent-agenda', label: 'Consent Agenda', description: 'Sociocratic consent round through objection and integration' },
 ];
 
 // ---------------------------------------------------------------------------
@@ -210,7 +214,7 @@ const StepsView: React.FC<StepsViewProps> = ({
             data-index={0}
             onClick={() => onInsertAt(0)}
             aria-label="Insert step before position 0"
-            style={{ width: '100%', height: '8px', background: 'none', border: 'none', cursor: 'pointer', outline: 'none' }}
+            style={{ width: '100%', height: '12px', background: 'none', border: 'none', cursor: 'pointer', outline: 'none', position: 'relative', zIndex: 10 }}
             tabIndex={0}
             onKeyDown={(e) => { if (e.key === '+' || e.key === 'Enter') onInsertAt(0); }}
           />
@@ -389,7 +393,7 @@ const StepsView: React.FC<StepsViewProps> = ({
                   data-index={idx + 1}
                   onClick={() => onInsertAt(idx + 1)}
                   aria-label={`Insert step after position ${idx + 1}`}
-                  style={{ width: '100%', height: '8px', background: 'none', border: 'none', cursor: 'pointer', outline: 'none' }}
+                  style={{ width: '100%', height: '12px', background: 'none', border: 'none', cursor: 'pointer', outline: 'none', position: 'relative', zIndex: 10 }}
                   tabIndex={0}
                   onKeyDown={(e) => { if (e.key === '+' || e.key === 'Enter') onInsertAt(idx + 1); }}
                 />
@@ -422,6 +426,10 @@ const STEP_KIND_COLOR: Record<string, string> = {
   branch:  '#c07000',
   catch:   'var(--palette-error)',
   logic:   '#5c6ac4',
+  vote:              'var(--palette-secondary)',
+  brainstorm:        'var(--palette-tertiary)',
+  contest:           'var(--palette-error)',
+  'consent-agenda':  'var(--palette-primary)',
 };
 
 interface FlowchartEditorHostProps {
@@ -650,7 +658,7 @@ const StepKindInspector: React.FC<StepKindInspectorProps> = ({
 
   const str = (key: string) => String(localConfig[key] ?? '');
 
-  const kindLabel: Record<string, string> = { trigger: 'Trigger', action: 'Action', branch: 'Branch', catch: 'Catch', logic: 'Logic' };
+  const kindLabel: Record<string, string> = { trigger: 'Trigger', action: 'Action', branch: 'Branch', catch: 'Catch', logic: 'Logic', vote: 'Vote', brainstorm: 'Brainstorm', contest: 'Contest', 'consent-agenda': 'Consent Agenda' };
 
   return (
     <div>
@@ -722,6 +730,43 @@ const StepKindInspector: React.FC<StepKindInspectorProps> = ({
         <>
           <SimpleConfigField label="Transform expression" fieldKey="expression" placeholder="e.g. { result: input.items.filter(x => x.active) }" multiline value={str('expression')} onChange={handleFieldChange} />
           <SimpleConfigField label="Output variable name" fieldKey="outputVar" placeholder="e.g. filteredItems" value={str('outputVar')} onChange={handleFieldChange} />
+        </>
+      )}
+
+      {stepKind === 'vote' && (
+        <>
+          <SimpleConfigField label="Vote session ID" fieldKey="voteSessionId" placeholder="e.g. vote-session-xyz" value={str('voteSessionId')} onChange={handleFieldChange} />
+          <SimpleConfigField label="Voting method" fieldKey="votingMethod" placeholder="simple-majority | supermajority | unanimous" value={str('votingMethod')} onChange={handleFieldChange} />
+          <SimpleConfigField label="Quorum (%)" fieldKey="quorum" placeholder="e.g. 50" value={str('quorum')} onChange={handleFieldChange} />
+          <SimpleConfigField label="Deadline (ISO 8601)" fieldKey="deadline" placeholder="e.g. 2026-06-01T17:00:00Z" value={str('deadline')} onChange={handleFieldChange} />
+          <SimpleConfigField label="Allow change vote?" fieldKey="allowChange" placeholder="true | false" value={str('allowChange')} onChange={handleFieldChange} />
+          <SimpleConfigField label="Anonymous?" fieldKey="anonymous" placeholder="true | false" value={str('anonymous')} onChange={handleFieldChange} />
+        </>
+      )}
+
+      {stepKind === 'brainstorm' && (
+        <>
+          <SimpleConfigField label="Board ID" fieldKey="boardId" placeholder="e.g. board-xyz (auto-created if blank)" value={str('boardId')} onChange={handleFieldChange} />
+          <SimpleConfigField label="Shortlist size" fieldKey="shortlistSize" placeholder="e.g. 5" value={str('shortlistSize')} onChange={handleFieldChange} />
+          <SimpleConfigField label="Anonymous submissions?" fieldKey="anonymous" placeholder="true | false" value={str('anonymous')} onChange={handleFieldChange} />
+        </>
+      )}
+
+      {stepKind === 'contest' && (
+        <>
+          <SimpleConfigField label="Brainstorm step key (for preseeded proposals)" fieldKey="brainstormStepKey" placeholder="e.g. brainstorm-1 (leave blank to start fresh)" value={str('brainstormStepKey')} onChange={handleFieldChange} />
+          <p style={{ fontSize: '11px', color: 'var(--palette-on-surface-variant)', margin: '0 0 var(--spacing-sm)' }}>
+            If a brainstorm step key is provided, its shortlisted ideas will be pre-seeded as proposals.
+          </p>
+        </>
+      )}
+
+      {stepKind === 'consent-agenda' && (
+        <>
+          <SimpleConfigField label="Consent process ID" fieldKey="consentProcessId" placeholder="e.g. consent-process-xyz" value={str('consentProcessId')} onChange={handleFieldChange} />
+          <p style={{ fontSize: '11px', color: 'var(--palette-on-surface-variant)', margin: '0 0 var(--spacing-sm)' }}>
+            Guides participants through presenting, clarifying, reacting, objection, and decision phases.
+          </p>
         </>
       )}
 
@@ -814,6 +859,12 @@ const StepInspectorPane: React.FC<StepInspectorPaneProps> = ({
     onLabelChange?.(stepId, trimmed);
   };
 
+  const handleKindChange = (newKind: string) => {
+    if (!stepId || !processSpecId) return;
+    setStepKind(newKind);
+    invoke('ProcessSpec', 'updateStep', { spec: processSpecId, stepId, stepKind: newKind }).catch(() => {});
+  };
+
   if (!isVisible || !stepId) return null;
 
   return (
@@ -833,7 +884,7 @@ const StepInspectorPane: React.FC<StepInspectorPaneProps> = ({
         background: 'var(--palette-surface)',
       }}
     >
-      {/* Step label editor */}
+      {/* Step label + kind editor */}
       <div style={{ padding: 'var(--spacing-xs) var(--spacing-sm)', borderBottom: '1px solid var(--palette-outline-variant)' }}>
         <input
           data-part="step-label-input"
@@ -858,6 +909,38 @@ const StepInspectorPane: React.FC<StepInspectorPaneProps> = ({
           onFocus={(e) => { (e.target as HTMLInputElement).style.borderColor = 'var(--palette-primary)'; (e.target as HTMLInputElement).style.background = 'var(--palette-surface-variant, #f5f5f5)'; }}
           onBlurCapture={(e) => { (e.target as HTMLInputElement).style.borderColor = 'transparent'; (e.target as HTMLInputElement).style.background = 'transparent'; }}
         />
+        <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <label style={{ fontSize: '10px', color: 'var(--palette-on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.08em', whiteSpace: 'nowrap' }}>
+            Kind
+          </label>
+          <select
+            data-part="step-kind-select"
+            aria-label="Step kind"
+            value={stepKind}
+            onChange={(e) => handleKindChange(e.target.value)}
+            style={{
+              flex: 1,
+              fontSize: '12px',
+              padding: '2px 4px',
+              borderRadius: 'var(--radius-xs)',
+              border: '1px solid var(--palette-outline-variant)',
+              background: 'var(--palette-surface-container)',
+              color: STEP_KIND_COLOR[stepKind] ?? 'var(--palette-on-surface)',
+              cursor: 'pointer',
+            }}
+          >
+            <option value="trigger">▶ Trigger</option>
+            <option value="action">⚡ Action</option>
+            <option value="manual">👤 Manual</option>
+            <option value="branch">◇ Branch</option>
+            <option value="catch">⚠ Catch</option>
+            <option value="logic">λ Logic</option>
+            <option value="vote">⬆ Vote</option>
+            <option value="brainstorm">💡 Brainstorm</option>
+            <option value="contest">🏆 Contest</option>
+            <option value="consent-agenda">✅ Consent Agenda</option>
+          </select>
+        </div>
       </div>
 
       {/* Tab strip — flow-step-inspector widget anatomy */}
@@ -1950,6 +2033,7 @@ export const FlowBuilder: React.FC<FlowBuilderProps> = ({
   const [edges, setEdges] = useState<EdgeRecord[]>([]);
   const [collapsedBranches, setCollapsedBranches] = useState<string[]>([]);
   const [dragPayload, setDragPayload] = useState<{ nodeType: string } | null>(null);
+  const [savedToast, setSavedToast] = useState(false);
 
   // ---- Shared helper: refresh steps + edges from kernel ----
   const refreshGraph = useCallback(async () => {
@@ -2327,9 +2411,34 @@ export const FlowBuilder: React.FC<FlowBuilderProps> = ({
           ) : (
             <>
               {onSave && (
-                <button data-part="button" data-variant="outlined" onClick={() => void onSave()}>
+                <button
+                  data-part="button"
+                  data-variant="outlined"
+                  onClick={async () => {
+                    await onSave();
+                    setSavedToast(true);
+                    setTimeout(() => setSavedToast(false), 2000);
+                  }}
+                >
                   Save
                 </button>
+              )}
+              {savedToast && (
+                <span
+                  role="status"
+                  aria-live="polite"
+                  style={{
+                    fontSize: '11px',
+                    color: 'var(--palette-primary)',
+                    fontWeight: 600,
+                    padding: '2px 6px',
+                    borderRadius: 'var(--radius-xs)',
+                    background: 'var(--palette-primary-container)',
+                    animation: 'fadeIn 0.15s ease',
+                  }}
+                >
+                  ✓ Saved
+                </span>
               )}
               {onPublish && (
                 <button data-part="button" data-variant="filled" onClick={() => void onPublish()}>
