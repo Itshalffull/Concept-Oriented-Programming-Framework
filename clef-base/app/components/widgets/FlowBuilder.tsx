@@ -748,6 +748,7 @@ interface StepInspectorPaneProps {
   stepId: string | null;
   interactionState: InteractionState;
   onClose?: () => void;
+  onLabelChange?: (stepId: string, newLabel: string) => void;
 }
 
 type InspectorTab = 'action' | 'io-mapping' | 'error';
@@ -764,11 +765,13 @@ const StepInspectorPane: React.FC<StepInspectorPaneProps> = ({
   stepId,
   interactionState,
   onClose,
+  onLabelChange,
 }) => {
   const invoke = useKernelInvoke();
   const [activeTab, setActiveTab] = useState<InspectorTab>('action');
   const [stepConfig, setStepConfig] = useState<Record<string, unknown>>({});
   const [stepKind, setStepKind] = useState<string>('action');
+  const [stepLabel, setStepLabel] = useState<string>('');
   const [loading, setLoading] = useState(false);
 
   const isVisible = interactionState === 'step-selected' || interactionState === 'graph-selected';
@@ -786,6 +789,7 @@ const StepInspectorPane: React.FC<StepInspectorPaneProps> = ({
         if (result && (result as Record<string, unknown>).variant === 'ok') {
           const r = result as Record<string, unknown>;
           setStepKind(String(r.stepKind ?? 'action'));
+          setStepLabel(String(r.stepLabel ?? ''));
           try {
             const cfg = r.config ? JSON.parse(String(r.config)) : {};
             setStepConfig(cfg as Record<string, unknown>);
@@ -800,6 +804,15 @@ const StepInspectorPane: React.FC<StepInspectorPaneProps> = ({
 
     return () => { cancelled = true; };
   }, [stepId, processSpecId, invoke]);
+
+  const handleLabelBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    if (!stepId || !processSpecId) return;
+    const trimmed = e.target.value.trim();
+    if (!trimmed) return;
+    setStepLabel(trimmed);
+    invoke('ProcessSpec', 'updateStep', { spec: processSpecId, stepId, stepLabel: trimmed }).catch(() => {});
+    onLabelChange?.(stepId, trimmed);
+  };
 
   if (!isVisible || !stepId) return null;
 
@@ -820,6 +833,33 @@ const StepInspectorPane: React.FC<StepInspectorPaneProps> = ({
         background: 'var(--palette-surface)',
       }}
     >
+      {/* Step label editor */}
+      <div style={{ padding: 'var(--spacing-xs) var(--spacing-sm)', borderBottom: '1px solid var(--palette-outline-variant)' }}>
+        <input
+          data-part="step-label-input"
+          aria-label="Step label"
+          value={stepLabel}
+          onChange={(e) => setStepLabel(e.target.value)}
+          onBlur={handleLabelBlur}
+          onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+          placeholder="Step label"
+          style={{
+            width: '100%',
+            fontSize: '13px',
+            fontWeight: 600,
+            padding: '4px 6px',
+            border: '1px solid transparent',
+            borderRadius: '4px',
+            background: 'transparent',
+            color: 'var(--palette-on-surface)',
+            outline: 'none',
+            boxSizing: 'border-box',
+          }}
+          onFocus={(e) => { (e.target as HTMLInputElement).style.borderColor = 'var(--palette-primary)'; (e.target as HTMLInputElement).style.background = 'var(--palette-surface-variant, #f5f5f5)'; }}
+          onBlurCapture={(e) => { (e.target as HTMLInputElement).style.borderColor = 'transparent'; (e.target as HTMLInputElement).style.background = 'transparent'; }}
+        />
+      </div>
+
       {/* Tab strip — flow-step-inspector widget anatomy */}
       <div
         data-part="tab-list"
@@ -2357,6 +2397,9 @@ export const FlowBuilder: React.FC<FlowBuilderProps> = ({
         stepId={selectedStepId}
         interactionState={interactionState}
         onClose={handleEscape}
+        onLabelChange={(sid, newLabel) =>
+          setSteps((prev) => prev.map((s) => s.stepId === sid ? { ...s, stepLabel: newLabel } : s))
+        }
       />
     </div>
   );

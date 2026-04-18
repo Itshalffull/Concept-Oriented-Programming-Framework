@@ -378,10 +378,11 @@ export const processSpecHandler = {
 
       const graph = await fbLoad(storage, specId);
       const stepId = fbNextStepId();
+      const callerLabel = input.stepLabel as string | undefined;
       const newStep: FbStepRecord = {
         stepId,
         stepKind,
-        stepLabel: defaultLabelForKind(stepKind),
+        stepLabel: callerLabel?.trim() ? callerLabel.trim() : defaultLabelForKind(stepKind),
         stepIndex: atIndex === -1 ? graph.steps.length : atIndex,
         isCollapsible: stepKind === 'branch',
         isCollapsed: false,
