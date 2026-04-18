@@ -600,8 +600,7 @@ const RecentRunsList: React.FC<{ specId: string; refreshKey: number }> = ({ spec
       .then(result => {
         if (!active) return;
         if (result.variant === 'ok') {
-          let raw: RunRow[] = [];
-          try { raw = JSON.parse(result.runs as string ?? '[]'); } catch { /* empty */ }
+          const raw: RunRow[] = Array.isArray(result.runs) ? (result.runs as RunRow[]) : [];
           setRuns(raw.slice().sort((a, b) =>
             new Date(b.started_at).getTime() - new Date(a.started_at).getTime()
           ).slice(0, 10));

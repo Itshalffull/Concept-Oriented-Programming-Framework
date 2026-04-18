@@ -253,19 +253,49 @@ const _handler: FunctionalConceptHandler = {
     ) as StorageProgram<Result>;
   },
 
+  get(input: Record<string, unknown>) {
+    const runId = input.run as string;
+    let p = createProgram();
+    p = get(p, 'process-run', runId, 'existing');
+    return branch(p, 'existing',
+      (b) => completeFrom(b, 'ok', (bindings) => {
+        const rec = bindings.existing as Record<string, unknown>;
+        return {
+          run: runId,
+          spec_ref: rec.spec_ref,
+          spec_version: rec.spec_version,
+          status: rec.status,
+          parent_run: rec.parent_run ?? null,
+          started_at: rec.started_at,
+          ended_at: rec.ended_at ?? null,
+          input: rec.input ?? null,
+          output: rec.output ?? null,
+          error: rec.error ?? null,
+          principal: rec.principal ?? null,
+          run_context: rec.run_context ?? null,
+        };
+      }),
+      (b) => complete(b, 'not_found', { run: runId }),
+    ) as StorageProgram<Result>;
+  },
+
   listBySpec(input: Record<string, unknown>) {
     const specRef = input.spec_ref as string;
     let p = createProgram();
     p = find(p, 'process-run', {}, '_allRuns');
-    p = mapBindings(p, (bindings) => {
+    return completeFrom(p, 'ok', (bindings) => {
       const all = (bindings._allRuns as Array<Record<string, unknown>>) ?? [];
-      return all
-        .filter((rec) => rec.spec_ref === specRef)
-        .map((rec) => rec.id as string);
-    }, '_matchedRuns');
-    return completeFrom(p, 'ok', (bindings) => ({
-      runs: bindings._matchedRuns as string[],
-    })) as StorageProgram<Result>;
+      const runs = all
+        .filter((rec) => rec.spec_ref === specRef && rec.id !== '__registered')
+        .map((rec) => ({
+          run: rec.id as string,
+          spec_ref: rec.spec_ref as string,
+          status: rec.status as string,
+          started_at: rec.started_at as string,
+          ended_at: (rec.ended_at ?? null) as string | null,
+        }));
+      return { runs };
+    }) as StorageProgram<Result>;
   },
 
   attachContext(input: Record<string, unknown>) {
