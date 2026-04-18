@@ -20,6 +20,9 @@ import { brainstormBoardHandler } from '../../handlers/ts/process-foundation/bra
 import { stepTypeRegistryHandler } from '../../handlers/ts/process-foundation/step-type-registry.handler';
 import { stepTimerHandler } from '../../handlers/ts/process-foundation/step-timer.handler';
 import { variableProgramHandler } from '../../handlers/ts/variable-program/variable-program.handler';
+import { keyBindingHandler } from '../../handlers/ts/app/key-binding.handler';
+import { textSpanHandler } from '../../handlers/ts/app/text-span.handler';
+import { scoreApiHandler } from '../../handlers/ts/score/score-api.handler';
 
 import { REGISTRY_ENTRIES, SYNC_FILES } from '../../generated/kernel-registry';
 import { discoverFromFilesystem } from '../../handlers/ts/seed-data.handler';
@@ -125,6 +128,24 @@ const SUPPLEMENTAL_REGISTRY_ENTRIES = [
     uri: 'urn:clef/VariableProgram',
     handler: variableProgramHandler,
     storageName: 'variable-program',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/KeyBinding',
+    handler: keyBindingHandler,
+    storageName: 'key-binding',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/TextSpan',
+    handler: textSpanHandler,
+    storageName: 'text-span',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/ScoreApi',
+    handler: scoreApiHandler,
+    storageName: 'score-api',
     storageType: 'standard' as const,
   },
 ];
