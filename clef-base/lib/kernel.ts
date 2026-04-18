@@ -10,6 +10,16 @@ import { workspaceHandler } from '../../handlers/ts/app/workspace.handler';
 import { mediaAssetHandler } from '../../handlers/ts/app/media-asset.handler';
 import { transcriptHandler } from '../../handlers/ts/media/transcript.handler';
 import { clipHandler } from '../../handlers/ts/media/clip.handler';
+import { processSpecHandler } from '../../handlers/ts/process-foundation/process-spec.handler';
+import { processRunHandler } from '../../handlers/ts/process-foundation/process-run.handler';
+import { stepRunHandler } from '../../handlers/ts/process-foundation/step-run.handler';
+import { processEventHandler } from '../../handlers/ts/process-foundation/process-event.handler';
+import { processVariableHandler } from '../../handlers/ts/process-foundation/process-variable.handler';
+import { flowTokenHandler } from '../../handlers/ts/process-foundation/flow-token.handler';
+import { brainstormBoardHandler } from '../../handlers/ts/process-foundation/brainstorm-board.handler';
+import { stepTypeRegistryHandler } from '../../handlers/ts/process-foundation/step-type-registry.handler';
+import { stepTimerHandler } from '../../handlers/ts/process-foundation/step-timer.handler';
+import { variableProgramHandler } from '../../handlers/ts/variable-program/variable-program.handler';
 
 import { REGISTRY_ENTRIES, SYNC_FILES } from '../../generated/kernel-registry';
 import { discoverFromFilesystem } from '../../handlers/ts/seed-data.handler';
@@ -55,6 +65,66 @@ const SUPPLEMENTAL_REGISTRY_ENTRIES = [
     uri: 'urn:clef/Clip',
     handler: clipHandler,
     storageName: 'clip',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/ProcessSpec',
+    handler: processSpecHandler,
+    storageName: 'process-spec',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/ProcessRun',
+    handler: processRunHandler,
+    storageName: 'process-run',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/StepRun',
+    handler: stepRunHandler,
+    storageName: 'step-run',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/ProcessEvent',
+    handler: processEventHandler,
+    storageName: 'process-event',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/ProcessVariable',
+    handler: processVariableHandler,
+    storageName: 'process-variable',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/FlowToken',
+    handler: flowTokenHandler,
+    storageName: 'flow-token',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/BrainstormBoard',
+    handler: brainstormBoardHandler,
+    storageName: 'brainstorm-board',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/StepTypeRegistry',
+    handler: stepTypeRegistryHandler,
+    storageName: 'step-type-registry',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/StepTimer',
+    handler: stepTimerHandler,
+    storageName: 'step-timer',
+    storageType: 'standard' as const,
+  },
+  {
+    uri: 'urn:clef/VariableProgram',
+    handler: variableProgramHandler,
+    storageName: 'variable-program',
     storageType: 'standard' as const,
   },
 ];
