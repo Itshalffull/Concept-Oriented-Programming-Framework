@@ -2,51 +2,44 @@
 widget work-item-card {
 
   purpose {
-    Inbox card shell for a single WorkItem from a governance process step.
-    The card displays summary information (title, step type, team, deadline,
-    and progress) in the list view. Clicking the card opens a right-side
-    panel that embeds the appropriate action widget (vote-panel,
-    brainstorm-board, or approval-tracker) in an action-slot. The inner
-    widget is wired to WorkItem/complete via ActionBinding configured by the
-    parent surface; this widget does not hardcode that binding. The card
-    becomes read-only once the step is completed, regardless of whether
-    completion was triggered locally or by another participant.
+    Inbox card shell for a WorkItem assigned to the current user by a governance
+    or process step. The card shows summary information (title, team badge, step-type
+    badge, deadline, and role) and, once the user claims the item, mounts the
+    appropriate inner action widget (vote-panel, brainstorm-board, or
+    approval-tracker) in a right-side action panel. Claiming is explicit so that
+    pooled work items are not double-acted on. Submitting the action transitions
+    the card to a read-only completed state with a visual completion overlay.
   }
 
   anatomy {
-    root:           container    { Top-level article wrapper for the card and its panel }
-    cardHeader:     container    { Header row containing the step-type badge and team badge }
-    stepTypeBadge:  text         { Badge showing the step type: vote, brainstorm, approval, review, or execution }
-    teamBadge:      text         { Badge showing the owning team name }
-    title:          text         { Human-readable title of the work item }
-    metaRow:        container    { Row of secondary metadata: deadline, role pool, and progress }
-    deadlineZone:   container    { Slot hosting the deadline-chip for the closing timestamp }
-    rolePoolLabel:  text         { Label indicating the role pool required to act on this step }
-    progressHint:   text         { Short hint about progress, e.g. "3 of 5 votes cast" }
-    expandButton:   action       { Button that opens the right-side panel for this card }
-    panel:          container    { Right-side drawer panel, visible only in expanded or acting states }
-    panelHeader:    container    { Header of the panel containing the title echo and close button }
-    panelClose:     action       { Button that closes the panel and returns to the collapsed card }
-    panelBody:      container    { Body region of the panel that hosts the action-slot }
-    actionSlot:     widget       { Slot for the step-specific action widget wired by the parent surface }
+    root:              container    { Top-level article wrapper; reflects the current FSM state via data-state }
+    header:            container    { Row containing the title, team badge, and step-type badge }
+    title:             text         { Human-readable title of the work item }
+    teamBadge:         text         { Badge showing the owning team name }
+    stepTypeBadge:     text         { Badge showing the step type: approval, vote, brainstorm, task, or review }
+    meta:              container    { Secondary row with deadline chip, role label, and pool count }
+    deadlineChip:      widget       { Slot hosting the deadline-chip for the closing timestamp }
+    roleLabel:         text         { Label identifying the role required to act on this step }
+    poolCount:         text         { Count of other users in the same claim pool }
+    actionPanel:       container    { Right-side panel slot hosting the step-type-specific inner widget; shown only in claimed or acting states }
+    claimButton:       action       { Button the user activates to claim and accept this work item; shown only in offered state }
+    submitButton:      action       { Button the user activates to submit their completed action; shown only in acting state }
+    completionOverlay: overlay      { Full-card overlay displayed when the work item has been completed }
   }
 
   states {
-    collapsed [initial] {
-      on EXPAND          -> expanded;
-      on COMPLETE_REMOTE -> completed;
+    offered [initial] {
+      on CLAIM -> claimed;
     }
 
-    expanded {
-      on COLLAPSE        -> collapsed;
-      on BEGIN_ACT       -> acting;
-      entry [scrollPanelIntoView];
-      exit  [releasePanelFocus];
+    claimed {
+      on OPEN    -> acting;
+      on UNCLAIM -> offered;
     }
 
     acting {
-      on ACT_CANCEL      -> expanded;
-      on ACT_DONE        -> completed;
+      on SUBMIT  -> completed;
+      on UNCLAIM -> offered;
     }
 
     completed {
@@ -57,93 +50,72 @@ widget work-item-card {
     role: article;
     modal: false;
     keyboard {
-      Enter     -> EXPAND;
-      Escape    -> COLLAPSE;
+      Enter     -> CLAIM;
+      Escape    -> UNCLAIM;
       Tab       -> FOCUS_NEXT;
       Shift+Tab -> FOCUS_PREV;
     }
     focus {
       trap: false;
-      initial: expandButton;
-      returnOnClose: expandButton;
+      initial: claimButton;
+      returnOnClose: claimButton;
       roving: false;
     }
     aria {
       root -> {
         role: "article";
         aria-label: ?title;
-        aria-current: if state == "completed" then "false" else "true";
       };
-      expandButton -> {
+      claimButton -> {
         role: "button";
-        aria-expanded: if state == "expanded" or state == "acting" then "true" else "false";
-        aria-controls: panel;
-        aria-label: concat("Open panel for ", ?title);
-        aria-disabled: if state == "completed" then "true" else "false";
+        aria-label: "Claim work item";
+        aria-hidden: if state == "offered" then "false" else "true";
       };
-      panel -> {
-        role: "dialog";
+      submitButton -> {
+        role: "button";
+        aria-label: "Submit action";
+        aria-hidden: if state == "acting" then "false" else "true";
+      };
+      actionPanel -> {
+        role: "region";
         aria-label: concat("Action panel for ", ?title);
-        aria-modal: "false";
       };
-      panelClose -> {
-        role: "button";
-        aria-label: "Close panel";
+      completionOverlay -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: "Work item completed";
       };
       stepTypeBadge -> {
-        aria-label: concat("Step type: ", ?step_type);
+        aria-label: concat("Step type: ", ?stepType);
       };
       teamBadge -> {
-        aria-label: concat("Team: ", ?team_name);
-      };
-      progressHint -> {
-        aria-live: "polite";
-        aria-atomic: "true";
+        aria-label: concat("Team: ", ?teamName);
       };
     }
   }
 
   props {
-    work_item_id:  String
-    title:         String
-    step_type:     String
-    team_name:     String
-    role_pool:     option String
-    closes_at:     option String
-    claimed:       Bool = false
-    completed:     Bool = false
-    progress_hint: option String
+    workItemId: String
+    stepType:   String
+    title:      String
+    teamName:   String
+    deadline:   option String
   }
 
   connect {
     root -> {
       data-part:      "root";
-      data-state:     if state == "collapsed"  then "collapsed"
-                      else if state == "expanded"   then "expanded"
-                      else if state == "acting"     then "acting"
+      data-state:     if state == "offered"  then "offered"
+                      else if state == "claimed"  then "claimed"
+                      else if state == "acting"   then "acting"
                       else "completed";
-      data-step-type: ?step_type;
-      data-claimed:   if ?claimed then "true" else "false";
-      data-completed: if ?completed then "true" else "false";
+      data-step-type: ?stepType;
       role:           "article";
       aria-label:     ?title;
     }
 
-    cardHeader -> {
-      data-part: "card-header";
-    }
-
-    stepTypeBadge -> {
-      data-part:       "step-type-badge";
-      text:            ?step_type;
-      data-step-type:  ?step_type;
-      aria-label:      concat("Step type: ", ?step_type);
-    }
-
-    teamBadge -> {
-      data-part: "team-badge";
-      text:      ?team_name;
-      aria-label: concat("Team: ", ?team_name);
+    header -> {
+      data-part: "header";
     }
 
     title -> {
@@ -151,109 +123,117 @@ widget work-item-card {
       text:      ?title;
     }
 
-    metaRow -> {
-      data-part: "meta-row";
+    teamBadge -> {
+      data-part:  "team-badge";
+      text:       ?teamName;
+      aria-label: concat("Team: ", ?teamName);
     }
 
-    deadlineZone -> {
-      data-part: "deadline-zone";
-      hidden:    if ?closes_at == none then true else false;
+    stepTypeBadge -> {
+      data-part:      "step-type-badge";
+      text:           ?stepType;
+      data-step-type: ?stepType;
+      aria-label:     concat("Step type: ", ?stepType);
     }
 
-    rolePoolLabel -> {
-      data-part: "role-pool-label";
-      text:      if ?role_pool != none then ?role_pool else "";
-      hidden:    if ?role_pool == none then true else false;
+    meta -> {
+      data-part: "meta";
     }
 
-    progressHint -> {
-      data-part: "progress-hint";
-      text:      if ?progress_hint != none then ?progress_hint else "";
-      hidden:    if ?progress_hint == none then true else false;
-      aria-live: "polite";
-      aria-atomic: "true";
+    deadlineChip -> {
+      data-part: "deadline-chip";
+      hidden:    if ?deadline == none then true else false;
     }
 
-    expandButton -> {
-      data-part:     "expand-button";
-      aria-expanded: if state == "expanded" or state == "acting" then "true" else "false";
-      aria-controls: "panel";
-      aria-disabled: if state == "completed" then "true" else "false";
-      disabled:      if state == "completed" then true else false;
-      onClick:       send(EXPAND);
+    roleLabel -> {
+      data-part: "role-label";
     }
 
-    panel -> {
-      data-part:  "panel";
-      role:       "dialog";
-      aria-modal: "false";
+    poolCount -> {
+      data-part: "pool-count";
+    }
+
+    actionPanel -> {
+      data-part:  "action-panel";
+      hidden:     if state == "offered" or state == "completed" then true else false;
+      role:       "region";
       aria-label: concat("Action panel for ", ?title);
-      hidden:     if state == "collapsed" or state == "completed" then true else false;
     }
 
-    panelHeader -> {
-      data-part: "panel-header";
+    claimButton -> {
+      data-part:       "claim-button";
+      hidden:          if state == "offered" then false else true;
+      disabled:        if state == "offered" then false else true;
+      onClick:         send(CLAIM);
+      onKeyDown-Enter: send(CLAIM);
     }
 
-    panelClose -> {
-      data-part:  "panel-close";
-      aria-label: "Close panel";
-      onClick:    send(COLLAPSE);
+    submitButton -> {
+      data-part:       "submit-button";
+      hidden:          if state == "acting" then false else true;
+      disabled:        if state == "acting" then false else true;
+      onClick:         send(SUBMIT);
+      onKeyDown-Enter: send(SUBMIT);
     }
 
-    panelBody -> {
-      data-part: "panel-body";
-    }
-
-    actionSlot -> {
-      data-part:      "action-slot";
-      data-step-type: ?step_type;
-      hidden:         if state == "collapsed" or state == "completed" then true else false;
+    completionOverlay -> {
+      data-part:  "completion-overlay";
+      hidden:     if state == "completed" then false else true;
+      role:       "status";
+      aria-live:  "polite";
+      aria-label: "Work item completed";
     }
   }
 
   compose {
-    deadlineZone: widget("deadline-chip", { closes_at: ?closes_at });
-    actionSlot:   widget("vote-panel",       { }) when step_type == "vote";
-    actionSlot:   widget("brainstorm-board", { }) when step_type == "brainstorm";
-    actionSlot:   widget("approval-tracker", { }) when step_type == "approval";
+    deadlineChip: widget("deadline-chip",    { closes_at: ?deadline });
+    actionPanel:  widget("vote-panel",       { }) when stepType == "vote";
+    actionPanel:  widget("brainstorm-board", { }) when stepType == "brainstorm";
+    actionPanel:  widget("approval-tracker", { }) when stepType == "approval";
   }
 
   invariant {
-    "Clicking expandButton transitions root from collapsed to expanded and sets aria-expanded to true on the button";
-    "Pressing Escape while panel is open collapses it and sets aria-expanded to false";
-    "COMPLETE_REMOTE event transitions card directly from collapsed to completed without opening the panel";
-    "step-type-badge text always equals the step_type prop value";
-    "panel-close click dispatches COLLAPSE and hides the panel";
+    "claim-button is visible and enabled only in the offered state";
+    "submit-button is visible and enabled only in the acting state";
+    "action-panel is visible only in claimed or acting states";
+    "completion-overlay is visible only in the completed state";
 
-    always "completed state disables expand button": {
-      state.name = "completed"
+    example "claim transitions offered to claimed" {
+      after CLAIM -> claimed
+      then root -> { data-state: "claimed" }
+      and claimButton -> { hidden: true }
     }
 
-    always "panel hidden in collapsed state": {
-      state.name = "collapsed"
+    example "submit transitions acting to completed" {
+      after SUBMIT -> completed
+      then root -> { data-state: "completed" }
+      and completionOverlay -> { hidden: false }
     }
 
-    always "panel hidden in completed state": {
-      state.name = "completed"
+    always "offered is the starting state" {
+      state.name = "offered"
     }
 
-    never "acting state is the FSM initial state": {
-      state.name = "acting"
+    always "completion-overlay hidden unless completed" {
+      state.name != "completed"
     }
 
-    never "completed state has an expand path": {
-      state.name = "completed"
+    never "claim-button visible in claimed state" {
+      state.name = "claimed"
     }
 
-    action expandButton {
-      requires: state.name = "collapsed"
-      ensures ok: state.name = "expanded"
+    never "submit-button visible in offered state" {
+      state.name = "offered"
     }
 
-    action panelClose {
-      requires: state.name = "expanded"
-      ensures ok: state.name = "collapsed"
+    action claimButton {
+      requires: state.name = "offered"
+      ensures ok: state.name = "claimed"
+    }
+
+    action submitButton {
+      requires: state.name = "acting"
+      ensures ok: state.name = "completed"
     }
   }
 
