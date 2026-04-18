@@ -5,20 +5,23 @@
  * participant-facing interaction widget for a focused step.
  *
  * This is the primary extension point for the Process Street-style layout.
- * Subsequent cards (MAG-996 through MAG-999) will replace the placeholder
- * divs with real widgets.
  *
  * Dispatch table:
  *   'manual'           → advance button ("Mark X Done")
- *   'vote'             → placeholder (MAG-996)
- *   'brainstorm'       → placeholder (MAG-997)
- *   'contest'          → placeholder (MAG-998)
- *   'consent-agenda'   → placeholder (MAG-999)
- *   'content-creation' → placeholder
+ *   'vote'             → VoteWidget
+ *   'brainstorm'       → BrainstormWidget
+ *   'contest'          → ContestWidget
+ *   'consent-agenda'   → ConsentAgendaWidget
+ *   'content-creation' → ContentCreationWidget
  *   'action' | 'branch' | 'catch' | 'logic' | default → null
  */
 
 import React from 'react';
+import { VoteWidget } from './widgets/VoteWidget';
+import { BrainstormWidget } from './widgets/BrainstormWidget';
+import { ContestWidget } from './widgets/ContestWidget';
+import { ConsentAgendaWidget } from './widgets/ConsentAgendaWidget';
+import { ContentCreationWidget } from './widgets/ContentCreationWidget';
 
 interface StepRunRecord {
   id?: string;
@@ -40,13 +43,27 @@ export interface StepInteractionSlotProps {
   stepLabel: string;
   onAdvance: () => void;
   actionBusy?: boolean;
+  currentUserId?: string;
+  isFacilitator?: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Config parsing helper
+// ---------------------------------------------------------------------------
+
+function parseConfig(input: string | null | undefined): Record<string, string> {
+  if (!input) return {};
+  try { return JSON.parse(input) as Record<string, string>; } catch { return {}; }
 }
 
 export const StepInteractionSlot: React.FC<StepInteractionSlotProps> = ({
   stepRun,
+  processRunId,
   stepLabel,
   onAdvance,
   actionBusy = false,
+  currentUserId = '',
+  isFacilitator = false,
 }) => {
   const stepType = stepRun.step_type ?? '';
   const isActive = stepRun.status === 'active';
@@ -112,82 +129,89 @@ export const StepInteractionSlot: React.FC<StepInteractionSlotProps> = ({
     }
 
     case 'vote': {
+      const config = parseConfig(stepRun.input);
       return (
-        <div
-          style={{
-            padding: '12px',
-            border: '1px dashed var(--palette-outline-variant, #e0e0e0)',
-            borderRadius: 'var(--radius-sm)',
-            color: 'var(--palette-on-surface-variant)',
-            fontSize: 'var(--typography-body-sm-size)',
-          }}
-        >
-          VoteWidget coming soon (MAG-996)
-        </div>
+        <VoteWidget
+          voteSessionId={config.voteSessionId ?? ''}
+          processRunId={processRunId}
+          stepRunId={stepRun.id ?? ''}
+          currentUserId={currentUserId}
+          deadline={config.deadline ?? null}
+          quorum={Number(config.quorum ?? 0)}
+          votingMethod={config.votingMethod ?? 'simple-majority'}
+          allowChange={config.allowChange === 'true'}
+          anonymous={config.anonymous === 'true'}
+          initialStatus={stepRun.status ?? 'active'}
+          initialOutcome={null}
+        />
       );
     }
 
     case 'brainstorm': {
+      const config = parseConfig(stepRun.input);
       return (
-        <div
-          style={{
-            padding: '12px',
-            border: '1px dashed var(--palette-outline-variant, #e0e0e0)',
-            borderRadius: 'var(--radius-sm)',
-            color: 'var(--palette-on-surface-variant)',
-            fontSize: 'var(--typography-body-sm-size)',
-          }}
-        >
-          BrainstormWidget coming soon (MAG-997)
-        </div>
+        <BrainstormWidget
+          boardId={config.boardId ?? ''}
+          stepRunId={stepRun.id ?? ''}
+          processRunId={processRunId}
+          currentUserId={currentUserId}
+          isFacilitator={isFacilitator}
+          initialPhase={config.phase ?? 'submit'}
+          anonymous={config.anonymous === 'true'}
+        />
       );
     }
 
     case 'contest': {
+      const config = parseConfig(stepRun.input);
       return (
-        <div
-          style={{
-            padding: '12px',
-            border: '1px dashed var(--palette-outline-variant, #e0e0e0)',
-            borderRadius: 'var(--radius-sm)',
-            color: 'var(--palette-on-surface-variant)',
-            fontSize: 'var(--typography-body-sm-size)',
-          }}
-        >
-          ContestWidget coming soon (MAG-998)
-        </div>
+        <ContestWidget
+          stepRunId={stepRun.id ?? ''}
+          processRunId={processRunId}
+          currentUserId={currentUserId}
+          isFacilitator={isFacilitator}
+          preseededProposalIds={
+            config.preseededProposalIds
+              ? JSON.parse(config.preseededProposalIds) as string[]
+              : undefined
+          }
+        />
       );
     }
 
     case 'consent-agenda': {
+      const config = parseConfig(stepRun.input);
       return (
-        <div
-          style={{
-            padding: '12px',
-            border: '1px dashed var(--palette-outline-variant, #e0e0e0)',
-            borderRadius: 'var(--radius-sm)',
-            color: 'var(--palette-on-surface-variant)',
-            fontSize: 'var(--typography-body-sm-size)',
-          }}
-        >
-          ConsentAgendaWidget coming soon (MAG-999)
-        </div>
+        <ConsentAgendaWidget
+          consentProcessId={config.consentProcessId ?? ''}
+          stepRunId={stepRun.id ?? ''}
+          processRunId={processRunId}
+          currentUserId={currentUserId}
+          isFacilitator={isFacilitator}
+          proposalTitle={config.proposalTitle ?? ''}
+          initialPhase={config.initialPhase ?? 'Presenting'}
+          initialStatus={stepRun.status ?? 'active'}
+        />
       );
     }
 
     case 'content-creation': {
+      const config = parseConfig(stepRun.input);
       return (
-        <div
-          style={{
-            padding: '12px',
-            border: '1px dashed var(--palette-outline-variant, #e0e0e0)',
-            borderRadius: 'var(--radius-sm)',
-            color: 'var(--palette-on-surface-variant)',
-            fontSize: 'var(--typography-body-sm-size)',
-          }}
-        >
-          ContentCreationWidget coming soon
-        </div>
+        <ContentCreationWidget
+          stepRunId={stepRun.id ?? ''}
+          processRunId={processRunId}
+          currentUserId={currentUserId}
+          contentType={config.schemaId ?? ''}
+          contentTypeName={config.contentTypeName ?? config.schemaId ?? ''}
+          requiredFields={
+            config.requiredFields
+              ? JSON.parse(config.requiredFields) as string[]
+              : []
+          }
+          initialStatus={stepRun.status ?? 'active'}
+          initialNodeId={null}
+        />
       );
     }
 

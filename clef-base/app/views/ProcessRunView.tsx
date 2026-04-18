@@ -686,6 +686,8 @@ export const ProcessRunView: React.FC<ProcessRunViewProps> = ({ runId }) => {
               stepLabel={focusedStepLabel}
               onAdvance={() => void handleAdvanceStep()}
               actionBusy={actionBusy}
+              currentUserId={run?.principal ?? ''}
+              isFacilitator={false}
             />
           )}
         </div>
