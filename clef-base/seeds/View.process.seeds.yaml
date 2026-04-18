@@ -16,14 +16,16 @@ entries:
     defaultDisplayMode: table-row
 
   # --- Process Runs list ---
+  # dataSource uses ProcessRun/list so rows use kernel run IDs directly.
+  # Field names match ProcessRun/list output: id, spec_ref, status, started_at, ended_at.
   - view: process-runs-list
-    dataSource: '{"concept":"ContentNode","action":"listBySchema","params":{"schema":"process-run"}}'
+    dataSource: '{"concept":"ProcessRun","action":"list"}'
     layout: table
-    visibleFields: '[{"key":"run_spec_ref","label":"Spec","formatter":"badge"},{"key":"run_status","label":"Status","formatter":"badge"},{"key":"run_started_at","label":"Started","formatter":"date"},{"key":"run_ended_at","label":"Ended","formatter":"date"}]'
-    controls: '{"rowClick":{"navigateTo":"/admin/process-runs/{node}"}}' # Updated 2026-04-17: canonical identity is {node}
+    visibleFields: '[{"key":"id","label":"Run ID","formatter":"code"},{"key":"spec_ref","label":"Spec","formatter":"badge"},{"key":"status","label":"Status","formatter":"badge"},{"key":"started_at","label":"Started","formatter":"date"},{"key":"ended_at","label":"Ended","formatter":"date"}]'
+    controls: '{"rowClick":{"navigateTo":"/admin/process-runs/{id}"}}'
     title: Process Runs
     description: Live and historical process execution instances.
-    filters: '[{"field":"run_status","label":"Status","type":"toggle-group"},{"field":"run_spec_ref","label":"Spec","type":"toggle-group"}]'
+    filters: '[{"field":"status","label":"Status","type":"toggle-group"},{"field":"spec_ref","label":"Spec","type":"toggle-group"}]'
     defaultDisplayMode: table-row
 
   # --- Step Runs for a specific process run (contextual) ---

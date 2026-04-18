@@ -1,0 +1,23 @@
+# ProcessRun → ContentNode pool wiring.
+# Creates a content-native representation of a process run when it starts,
+# so runs are searchable, linkable, and commentable alongside all other content.
+
+sync ProcessRunStartedAsContentNode [eager]
+  purpose {
+    When a process run is started, create a backing ContentNode with a
+    deterministic ID (process-run-content:<runId>) so the run participates
+    in the content-native platform — searchable, linkable via Reference/Backlink,
+    and commentable. The node ID embeds the kernel run ID so the ContentNode
+    can be looked up given the run ID without a secondary index.
+  }
+when {
+  ProcessRun/start: [ principal: ?principal ]
+    => ok(run: ?run; spec_ref: ?spec_ref)
+}
+then {
+  ContentNode/create: [
+    node: concat("process-run-content:", ?run);
+    type: "process-run";
+    content: concat("Run of ", ?spec_ref);
+    createdBy: ?principal ]
+}

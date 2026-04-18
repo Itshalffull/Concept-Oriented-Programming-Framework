@@ -43,11 +43,12 @@ entries:
     sourceType: interactive
     config: '[{"field":"spec_status","label":"Status","type":"toggle-group"}]'
 
-  # --- run_status + run_spec_ref toggle (process-runs-list) ---
+  # --- status + spec_ref toggle (process-runs-list) ---
+  # Fields match ProcessRun/list output: status, spec_ref (not run_status, run_spec_ref).
   - name: run-status-spec-toggle-filter
     tree: '{"type":"true"}'
     sourceType: interactive
-    config: '[{"field":"run_status","label":"Status","type":"toggle-group"},{"field":"run_spec_ref","label":"Spec","type":"toggle-group"}]'
+    config: '[{"field":"status","label":"Status","type":"toggle-group"},{"field":"spec_ref","label":"Spec","type":"toggle-group"}]'
 
   # --- step_status + step_type toggle (step-runs-list, step-bottlenecks, process-step-breakdown) ---
   - name: step-status-type-toggle-filter

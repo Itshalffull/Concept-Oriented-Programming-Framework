@@ -14,9 +14,10 @@ entries:
     create_surface: flow-builder
     create_mode_hint: page
   # process-runs-list
+  # rowClick uses {id} — the kernel run ID from ProcessRun/list (e.g. run-1776532098124-1).
   - name: process-runs-list-controls
     createForm: '{}'
-    rowClick: '{"navigateTo":"/admin/process-runs/{node}"}' # Updated 2026-04-17: canonical identity is {node}
+    rowClick: '{"navigateTo":"/admin/process-runs/{id}"}'
     rowActions: '[]'
     pickerMode: false
   # step-runs-list: uses no-controls (deduplicated)

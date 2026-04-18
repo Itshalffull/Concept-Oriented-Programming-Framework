@@ -10,7 +10,7 @@ entries:
     fields: '[{"key":"spec_name","label":"Name"},{"key":"spec_status","label":"Status","formatter":"badge"},{"key":"spec_version","label":"Version","formatter":"badge"},{"key":"spec_steps","label":"Steps","formatter":"json-count"},{"key":"spec_description","label":"Description"}]'
 
   - name: process-runs-list-fields
-    fields: '[{"key":"run_spec_ref","label":"Spec","formatter":"badge"},{"key":"run_status","label":"Status","formatter":"badge"},{"key":"run_started_at","label":"Started","formatter":"date"},{"key":"run_ended_at","label":"Ended","formatter":"date"}]'
+    fields: '[{"key":"id","label":"Run ID","formatter":"code"},{"key":"spec_ref","label":"Spec","formatter":"badge"},{"key":"status","label":"Status","formatter":"badge"},{"key":"started_at","label":"Started","formatter":"date"},{"key":"ended_at","label":"Ended","formatter":"date"}]'
 
   - name: step-runs-list-fields
     fields: '[{"key":"step_key","label":"Step"},{"key":"step_type","label":"Type","formatter":"badge"},{"key":"step_status","label":"Status","formatter":"badge"},{"key":"step_attempt","label":"Attempt"},{"key":"step_started_at","label":"Started","formatter":"date"},{"key":"step_ended_at","label":"Ended","formatter":"date"}]'
