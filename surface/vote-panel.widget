@@ -2,43 +2,47 @@
 widget vote-panel {
 
   purpose {
-    Mode-aware voting container used inside the governance inbox right panel.
-    Renders the appropriate voting UI based on the vote step mode: approval
-    (yes/no binary choice), contest (pick one of N labeled options), election
-    (pick one candidate from a list), or allocation (budget-allocate sliders).
-    Shows live tallies, quorum progress, and deadline information using composed
-    sub-widgets. Prevents double-voting by entering a voted state after a
-    successful cast, and enters a closed read-only state when the voting period
-    has ended.
+    Mode-aware voting container used inside work-item-card when a process step
+    has step_type=vote. Renders the correct voting UI based on the vote mode:
+    approval (yes/no buttons), contest (N option cards each with a result bar),
+    election (candidate list with tally), or allocation (budget-allocate
+    sliders). The widget progresses through a five-state machine: idle (panel
+    loaded, nothing selected), selected (user has made a selection and can
+    cast), casting (submission in flight), voted (vote recorded, tally updates),
+    and closed (voting period ended, read-only results). Prevents double-voting
+    by disabling and hiding the cast-action after a successful cast, and enters
+    a closed read-only state when the voting period has ended.
   }
 
   anatomy {
-    root:                container    { Top-level wrapper for the voting panel }
-    modeHeader:          container    { Header region showing the step title and current mode label }
-    optionsZone:         container    { Zone containing the selectable vote options or allocation controls }
-    optionCard:          interactive  { Focusable card representing one voteable option }
-    optionLabel:         text         { Short display name for a single option }
-    optionDescription:   text         { Optional longer description for a single option }
-    tallyZone:           container    { Zone containing result bars, quorum gauges, and trackers }
-    castAction:          container    { Wrapper grouping the primary cast button and abstain link }
-    castButton:          action       { Primary button that submits the selected vote choice }
-    abstainLink:         action       { Secondary link that records an abstention }
-    alreadyVotedNotice:  container    { Status notice shown when the current user has already voted }
-    deadlineZone:        container    { Zone displaying the voting deadline chip }
+    root:        container    { Top-level wrapper for the voting panel; carries mode and FSM state }
+    modeZone:    container    { Mode indicator header showing the vote type label and step context }
+    optionsZone: container    { Zone containing the selectable vote options or allocation controls; varies by mode }
+    tallyZone:   container    { Running tally and current count display; updated live after each cast }
+    castAction:  action       { Primary submit-vote button; disabled in idle, hidden in voted and closed }
+    deadlineChip: container   { Countdown and deadline indicator showing time remaining before close }
+    quorumGauge: container    { M-of-N participation indicator; only visible when closeMode is quorum }
   }
 
   states {
     idle [initial] {
-      on CAST_VOTE -> submitting;
-      on CLOSE     -> closed;
+      on SELECT -> selected;
+      on LOAD   -> idle;
+      on CLOSE  -> closed;
     }
 
-    submitting {
-      on VOTE_OK    -> voted;
-      on VOTE_ERROR -> idle;
-      on CLOSE      -> closed;
-      entry [disableCastButton];
-      exit  [enableCastButton];
+    selected {
+      on DESELECT -> idle;
+      on CAST     -> casting;
+      on CLOSE    -> closed;
+    }
+
+    casting {
+      on SUCCESS -> voted;
+      on ERROR   -> selected;
+      on CLOSE   -> closed;
+      entry [disableCastAction];
+      exit  [enableCastAction];
     }
 
     voted {
@@ -50,105 +54,78 @@ widget vote-panel {
   }
 
   accessibility {
-    role: region;
+    role: form;
     modal: false;
     keyboard {
-      Tab   -> FOCUS_NEXT_OPTION;
-      Enter -> CAST_VOTE;
-      Space -> CAST_VOTE;
+      Space  -> SELECT;
+      Enter  -> CAST;
+      Escape -> DESELECT;
     }
     focus {
       trap: false;
-      initial: castButton;
+      initial: optionsZone;
       roving: true;
+      returnOnClose: castAction;
     }
     aria {
       root -> {
-        role: "region";
-        aria-label: ?step_title;
-        aria-busy: if state == "submitting" then "true" else "false";
+        role: "form";
+        aria-label: if ?mode == "approval" then "Approval vote"
+                    else if ?mode == "contest" then "Contest vote"
+                    else if ?mode == "election" then "Election vote"
+                    else "Allocation vote";
+        aria-busy: if state == "casting" then "true" else "false";
       };
-      optionCard -> {
-        role: "radio";
-        aria-checked: if self.id == ?user_choice then "true" else "false";
-        aria-disabled: if state == "voted" or state == "closed" or not ?can_vote then "true" else "false";
-        tabindex: "0";
-      };
-      castButton -> {
-        role: "button";
-        aria-pressed: if state == "voted" then "true" else "false";
-        aria-disabled: if state == "voted" or state == "closed" or not ?can_vote or state == "submitting" then "true" else "false";
-      };
-      alreadyVotedNotice -> {
-        role: "status";
-        aria-live: "polite";
-        aria-label: "You have already voted";
-      };
-      abstainLink -> {
-        role: "button";
+      optionsZone -> {
+        role: "radiogroup";
+        aria-label: "Vote options";
         aria-disabled: if state == "voted" or state == "closed" then "true" else "false";
+      };
+      castAction -> {
+        role: "button";
+        aria-disabled: if state == "idle" or state == "voted" or state == "closed" or state == "casting" then "true" else "false";
+        aria-busy: if state == "casting" then "true" else "false";
+      };
+      quorumGauge -> {
+        aria-hidden: if ?closeMode != "quorum" then "true" else "false";
       };
     }
   }
 
   props {
-    mode:                 String = "approval"
-    step_title:           String = ""
-    options:              list VotePanelOption = []
-    total_votes:          Int = 0
-    threshold:            option Int
-    eligible_count:       Int = 0
-    user_voted:           Bool = false
-    user_choice:          option String
-    can_vote:             Bool = true
-    closed:               Bool = false
-    closes_at:            option String
-    allocation_aggregate: list AggregateEntry = []
+    voteId:    String = ""
+    mode:      String = "approval"
+    options:   list String = []
+    threshold: option String
+    closeMode: String = "manual"
+    deadline:  option String
+    myVote:    option String
   }
 
   connect {
     root -> {
-      data-part:  "root";
-      data-state: if state == "idle"       then "idle"
-                  else if state == "submitting" then "submitting"
-                  else if state == "voted"      then "voted"
-                  else "closed";
-      data-mode:  ?mode;
-      role:       "region";
-      aria-label: ?step_title;
-      aria-busy:  if state == "submitting" then "true" else "false";
+      data-part:       "root";
+      data-state:      if state == "idle"      then "idle"
+                       else if state == "selected" then "selected"
+                       else if state == "casting"  then "casting"
+                       else if state == "voted"    then "voted"
+                       else "closed";
+      data-mode:       ?mode;
+      data-vote-id:    ?voteId;
+      data-close-mode: ?closeMode;
+      role:            "form";
+      aria-busy:       if state == "casting" then "true" else "false";
     }
 
-    modeHeader -> {
-      data-part: "mode-header";
+    modeZone -> {
+      data-part: "mode-zone";
       data-mode: ?mode;
     }
 
     optionsZone -> {
-      data-part: "options-zone";
-      data-mode: ?mode;
-    }
-
-    optionCard -> {
-      data-part:     "option-card";
-      data-id:       self.id;
-      data-selected: if self.id == ?user_choice then "true" else "false";
-      role:          "radio";
-      aria-checked:  if self.id == ?user_choice then "true" else "false";
-      aria-disabled: if state == "voted" or state == "closed" or not ?can_vote then "true" else "false";
-      tabindex:      "0";
-      onClick:       send(CAST_VOTE, { choice: self.id });
-    }
-
-    optionLabel -> {
-      data-part: "option-label";
-      text:      self.label;
-    }
-
-    optionDescription -> {
-      data-part: "option-description";
-      text:      self.description;
-      hidden:    if self.description == null then true else false;
+      data-part:     "options-zone";
+      data-mode:     ?mode;
+      aria-disabled: if state == "voted" or state == "closed" then "true" else "false";
     }
 
     tallyZone -> {
@@ -156,90 +133,111 @@ widget vote-panel {
     }
 
     castAction -> {
-      data-part: "cast-action";
-      hidden:    if state == "voted" or state == "closed" then true else false;
+      data-part:     "cast-action";
+      disabled:      if state == "idle" or state == "voted" or state == "closed" or state == "casting" then true else false;
+      hidden:        if state == "voted" or state == "closed" then true else false;
+      aria-disabled: if state == "idle" or state == "voted" or state == "closed" or state == "casting" then "true" else "false";
+      aria-busy:     if state == "casting" then "true" else "false";
+      onClick:       send(CAST);
     }
 
-    castButton -> {
-      data-part:     "cast-button";
-      disabled:      if state == "voted" or state == "closed" or not ?can_vote or state == "submitting" then true else false;
-      aria-pressed:  if state == "voted" then "true" else "false";
-      aria-disabled: if state == "voted" or state == "closed" or not ?can_vote or state == "submitting" then "true" else "false";
-      onClick:       send(CAST_VOTE, { choice: ?user_choice });
+    deadlineChip -> {
+      data-part:     "deadline-chip";
+      data-deadline: ?deadline;
+      hidden:        if ?closeMode == "deadline" then false else true;
     }
 
-    abstainLink -> {
-      data-part:     "abstain-link";
-      disabled:      if state == "voted" or state == "closed" then true else false;
-      aria-disabled: if state == "voted" or state == "closed" then "true" else "false";
-      onClick:       send(CAST_VOTE, { choice: "abstain" });
+    quorumGauge -> {
+      data-part:   "quorum-gauge";
+      hidden:      if ?closeMode == "quorum" then false else true;
+      aria-hidden: if ?closeMode != "quorum" then "true" else "false";
     }
+  }
 
-    alreadyVotedNotice -> {
-      data-part:  "already-voted-notice";
-      role:       "status";
-      aria-live:  "polite";
-      hidden:     if state != "voted" then true else false;
-      aria-hidden: if state != "voted" then "true" else "false";
-    }
-
-    deadlineZone -> {
-      data-part: "deadline-zone";
+  affordance {
+    serves: single-choice;
+    specificity: 7;
+    when { stepType: "vote" }
+    bind {
+      mode:    voteMode;
+      options: voteOptions;
+      myVote:  currentUserVote;
     }
   }
 
   compose {
-    _resultBar:       widget("vote-result-bar", {
-      options: ?options,
-      totalVotes: ?total_votes
-    });
-    _quorumGauge:     widget("quorum-gauge", {
-      totalVotes: ?total_votes,
-      threshold: ?threshold,
-      eligibleCount: ?eligible_count
-    });
-    _deadlineChip:    widget("deadline-chip", {
-      closesAt: ?closes_at,
-      closed: ?closed
-    });
-    _approvalTracker: widget("approval-tracker", {
-      options: ?options,
-      totalVotes: ?total_votes,
-      threshold: ?threshold
-    });
-    _budgetAllocate:  widget("budget-allocate", {
-      options: ?options,
-      aggregate: ?allocation_aggregate
-    });
+    _deadlineChip:   widget("deadline-chip",   { closes_at: ?deadline, closed: if state == "closed" then true else false });
+    _quorumGauge:    widget("quorum-gauge",    { closed: if state == "closed" then true else false });
+    _resultBar:      widget("vote-result-bar", { options: ?options });
+    _budgetAllocate: widget("budget-allocate", { options: ?options });
   }
 
   invariant {
-    example "cast vote from idle enters submitting": { after transition(from: "idle", event: "CAST_VOTE") -> ok then state = "submitting" }
-    example "VOTE_OK from submitting enters voted": { after transition(from: "submitting", event: "VOTE_OK") -> ok then state = "voted" }
-    example "VOTE_ERROR from submitting returns to idle": { after transition(from: "submitting", event: "VOTE_ERROR") -> ok then state = "idle" }
-    example "close from idle enters closed": { after transition(from: "idle", event: "CLOSE") -> ok then state = "closed" }
-    example "close from voted enters closed": { after transition(from: "voted", event: "CLOSE") -> ok then state = "closed" }
-    example "close from submitting enters closed": { after transition(from: "submitting", event: "CLOSE") -> ok then state = "closed" }
+    "data-state on root must mirror the FSM state at all times: idle, selected, casting, voted, or closed";
+    "castAction must be disabled (aria-disabled true) in the idle state because no selection has been made";
+    "castAction must be disabled in the casting state because a submission is already in flight";
+    "castAction must be hidden (hidden true) in the voted state because the vote has been recorded";
+    "castAction must be hidden in the closed state because the voting period has ended";
+    "optionsZone aria-disabled must be true in the voted state to prevent double-voting";
+    "optionsZone aria-disabled must be true in the closed state to enforce read-only results";
+    "quorumGauge must be hidden whenever closeMode is not quorum";
+    "deadlineChip must be hidden whenever closeMode is not deadline";
+    "All five states must be reachable: idle is initial, selected via SELECT, casting via CAST, voted via SUCCESS, closed via CLOSE";
 
-    always "all states reachable": { forall s in states: s.reachable = true }
-    always "FSM is deterministic": { forall s in states: s.transitions_count <= 4 }
-    never "voted and submitting simultaneously": { exists s in states: s.name = "voted" and s.name = "submitting" }
-    never "unreachable states": { exists s in states: s.inbound_count = 0 }
-
-    "Cast button must be disabled while in the submitting, voted, or closed states";
-    "Cast button must be disabled when can_vote is false regardless of FSM state";
-    "Already-voted notice must be visible only in the voted state";
-    "Option cards must show aria-disabled true in voted and closed states";
-    "Root data-state must always mirror the current FSM state for test selectors";
-
-    action castButton {
-      requires: state = "idle"
-      ensures ok: state = "submitting"
+    example "option select enables cast action": {
+      after optionsZone.select() -> ok
+      then castAction.disabled = false
     }
 
-    action optionCard {
+    example "cast action click initiates submission": {
+      after castAction.click() -> ok
+      then root.data-state = "casting"
+    }
+
+    example "successful submission enters voted state": {
+      after castAction.submit() -> ok
+      then root.data-state = "voted"
+      and castAction.hidden = true
+    }
+
+    example "failed submission returns to selected": {
+      after castAction.submit() -> error
+      then root.data-state = "selected"
+    }
+
+    example "close transitions any state to closed": {
+      after root.close() -> ok
+      then root.data-state = "closed"
+    }
+
+    always "cast-action disabled in idle state" {
+      castAction.disabled = true
+    }
+
+    always "cast-action hidden after voted" {
+      castAction.hidden = true
+    }
+
+    always "options read-only after voting closes" {
+      optionsZone.aria-disabled = "true"
+    }
+
+    never "cast-action enabled while idle" {
+      castAction.disabled = false
+    }
+
+    never "cast-action visible in closed state" {
+      castAction.hidden = false
+    }
+
+    action castAction {
+      requires: state = "selected"
+      ensures ok: state = "casting"
+    }
+
+    action optionsZone {
       requires: state = "idle"
-      ensures ok: state = "submitting"
+      ensures ok: state = "selected"
     }
   }
 
