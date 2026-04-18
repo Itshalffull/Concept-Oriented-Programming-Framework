@@ -1,0 +1,284 @@
+@version(1)
+@category("surface")
+@visibility("public")
+concept VariableProgram [V] {
+
+  purpose {
+    Typed access-path expression that resolves a single value from any data
+    source in the system. An instruction list (the AST) describes where data
+    comes from, how to traverse to the target field, and how to transform the
+    result — separating description from execution. Unifies token substitution,
+    param binding, DataSourceSpec template vars, FilterSpec param nodes, and
+    SlotSource field/relation providers into one grammar and one picker UX.
+
+    Analyzable for: source provenance (auth, caching), staleness detection
+    (step not yet run), type inference (schema compatibility), and dependency
+    graphs (execution ordering). Analysis reads the instruction list directly.
+
+    Source providers are registered via PluginRegistry("variable-source").
+    Transform providers are registered via PluginRegistry("variable-transform").
+    This concept owns only the pipeline data structure and resolution protocol —
+    not the provider registry, not the traversal engine, not the expression
+    evaluator (ExpressionLanguage handles compute-ON; VariableProgram handles
+    resolve-WHERE-FROM).
+  }
+
+  state {
+    programs:     set V
+    instructions: V -> String   // JSON array of instruction objects
+    sourceKind:   V -> String   // the registered PluginRegistry key for the source
+    resolvedType: V -> option String  // inferred type from static analysis
+    expression:   V -> String   // canonical $page.field text form
+  }
+
+  actions {
+
+    // --- Construction ---
+
+    action from(sourceKind: String, args: String) {
+      -> ok(program: V) {
+        New program created with a source instruction for the given kind.
+        The instruction list begins with one source entry; subsequent get,
+        follow, at, first, count, and transform calls append to it.
+      }
+      -> provider_not_found(message: String) {
+        No provider is registered in PluginRegistry("variable-source") for
+        this sourceKind. The program cannot be created without a backing provider.
+      }
+      -> error(message: String) {
+        sourceKind is empty. A program must have a non-empty source kind.
+      }
+      fixture from_page { sourceKind: "page", args: "{}" }
+      fixture from_url { sourceKind: "url", args: "{\"param\":\"id\"}" }
+      fixture from_step { sourceKind: "step", args: "{\"stepKey\":\"brainstorm\"}" }
+      fixture from_session { sourceKind: "session", args: "{}" }
+      fixture from_literal { sourceKind: "literal", args: "{\"value\":\"hello\"}" }
+      fixture from_unknown { sourceKind: "", args: "{}" } -> error
+      fixture from_missing_provider { sourceKind: "nonexistent-provider", args: "{}" } -> provider_not_found
+    }
+
+    // --- Traversal (structural navigation, not pluggable) ---
+
+    action get(program: V, field: String) {
+      -> ok(program: V) {
+        Appends a get-field traversal instruction to the program. The field
+        is resolved against whatever value the preceding instruction produced.
+      }
+      -> not_found(message: String) {
+        No program with this identifier exists in state.
+      }
+      -> error(message: String) {
+        field is empty. A traversal step must name the field to access.
+      }
+      fixture get_title { program: $from_page.program, field: "title" } after from_page
+      fixture get_missing_program { program: "nonexistent", field: "title" } -> not_found
+      fixture get_empty_field { program: $from_page.program, field: "" } after from_page -> error
+    }
+
+    action follow(program: V, relation: String) {
+      -> ok(program: V) {
+        Appends a follow-relation traversal instruction. The relation is
+        traversed from the current value to reach a related entity.
+      }
+      -> not_found(message: String) {
+        No program with this identifier exists in state.
+      }
+      -> error(message: String) {
+        relation is empty. A follow step must name the relation to traverse.
+      }
+      fixture follow_author { program: $from_page.program, relation: "author" } after from_page
+      fixture follow_missing { program: "nonexistent", relation: "author" } -> not_found
+      fixture follow_empty { program: $from_page.program, relation: "" } after from_page -> error
+    }
+
+    action at(program: V, index: Int) {
+      -> ok(program: V) {
+        Appends an at-index traversal instruction. Selects the item at the
+        given zero-based index from the current list value.
+      }
+      -> not_found(message: String) {
+        No program with this identifier exists in state.
+      }
+      -> error(message: String) {
+        index is negative. List index must be zero or greater.
+      }
+      fixture at_zero { program: $from_step.program, index: 0 } after from_step
+      fixture at_negative { program: $from_step.program, index: -1 } after from_step -> error
+    }
+
+    action first(program: V) {
+      -> ok(program: V) {
+        Appends a first-item traversal instruction. Equivalent to at(0) but
+        signals intent to read the leading element of an ordered list.
+      }
+      -> not_found(message: String) {
+        No program with this identifier exists in state.
+      }
+      fixture first_ok { program: $from_step.program } after from_step
+      fixture first_missing { program: "nonexistent" } -> not_found
+    }
+
+    action count(program: V) {
+      -> ok(program: V) {
+        Appends a count traversal instruction. Returns the length of the
+        current list value rather than an element within it.
+      }
+      -> not_found(message: String) {
+        No program with this identifier exists in state.
+      }
+      fixture count_ok { program: $from_step.program } after from_step
+      fixture count_missing { program: "nonexistent" } -> not_found
+    }
+
+    // --- Transform (dispatches to PluginRegistry "variable-transform") ---
+
+    action transform(program: V, kind: String, args: String) {
+      -> ok(program: V) {
+        Appends a transform instruction for the given provider kind. The
+        transform is applied to the value produced by all prior instructions.
+      }
+      -> not_found(message: String) {
+        No program with this identifier exists in state.
+      }
+      -> provider_not_found(message: String) {
+        No provider is registered in PluginRegistry("variable-transform") for
+        this kind. The transform step cannot be appended without a backing provider.
+      }
+      -> error(message: String) {
+        kind is empty. A transform step must name the transform kind to apply.
+      }
+      fixture transform_format { program: $get_title.program, kind: "format", args: "{\"pattern\":\"MMM d, yyyy\"}" } after get_title
+      fixture transform_fallback { program: $get_title.program, kind: "fallback", args: "{\"value\":\"\"}" } after get_title
+      fixture transform_missing_provider { program: $get_title.program, kind: "nonexistent", args: "{}" } after get_title -> provider_not_found
+      fixture transform_empty_kind { program: $get_title.program, kind: "", args: "{}" } after get_title -> error
+    }
+
+    // --- Compilation / Parsing ---
+
+    action compile(program: V) {
+      -> ok(expression: String) {
+        Serializes the instruction list to canonical text form, such as
+        "$page.title" or "$step.brainstorm.shortlisted[0]|format('MMM d, yyyy')".
+        The expression is also stored on the program record for fast lookup.
+      }
+      -> not_found(message: String) {
+        No program with this identifier exists in state.
+      }
+      -> error(message: String) {
+        Program cannot be compiled because it is missing a valid source instruction.
+      }
+      fixture compile_page_title { program: $get_title.program } after get_title
+      fixture compile_missing { program: "nonexistent" } -> not_found
+    }
+
+    action parse(expression: String) {
+      -> ok(program: V) {
+        Parses a canonical expression string into a VariableProgram whose
+        instruction list mirrors what incremental builder calls would produce.
+      }
+      -> parse_error(message: String) {
+        The expression string does not conform to the canonical grammar:
+        it may be empty, lack a valid source prefix, or contain malformed
+        traversal or transform segments.
+      }
+      fixture parse_page { expression: "$page.title" }
+      fixture parse_url { expression: "$url.id" }
+      fixture parse_step { expression: "$step.brainstorm.shortlisted[0]" }
+      fixture parse_with_transform { expression: "$page.dueDate|format('MMM d, yyyy')" }
+      fixture parse_invalid { expression: "not a valid expression" } -> parse_error
+      fixture parse_empty { expression: "" } -> parse_error
+    }
+
+    action typeCheck(program: V) {
+      -> ok(resolvedType: String) {
+        Returns the statically inferred output type of the program. Common
+        inferred types: "string", "number", "boolean", "ContentNode", "any", "unknown".
+      }
+      -> not_found(message: String) {
+        No program with this identifier exists in state.
+      }
+      -> type_error(message: String) {
+        The type cannot be inferred statically — for example because a field
+        name is unknown or a transform produces an opaque output type.
+      }
+      fixture typecheck_ok { program: $get_title.program } after get_title
+      fixture typecheck_missing { program: "nonexistent" } -> not_found
+    }
+
+    // --- Runtime resolution ---
+
+    action resolve(program: V, context: String) {
+      -> ok(value: String) {
+        Resolves the program to a concrete value using the provided runtime
+        context JSON. The value is serialized to a string for transport.
+      }
+      -> not_found(message: String) {
+        No program with this identifier exists, or the source value was not
+        found in the provided context.
+      }
+      -> type_error(message: String) {
+        A traversal step failed because the current value is not of the
+        expected type — for example, applying at(0) to a scalar.
+      }
+      -> provider_not_found(message: String) {
+        A source or transform provider required to execute this program is not
+        registered in PluginRegistry. Resolution cannot proceed without it.
+      }
+      fixture resolve_ok { program: $get_title.program, context: "{\"pageId\":\"page-1\"}" } after get_title
+      fixture resolve_no_program { program: "nonexistent", context: "{}" } -> not_found
+      fixture resolve_missing_provider { program: $from_missing_provider.program, context: "{}" } after from_missing_provider -> provider_not_found
+    }
+
+    // --- PluginRegistry registration ---
+
+    action register() {
+      -> ok(name: String, version: String, capabilities: list String) {
+        Return static metadata for PluginRegistry so that the variable
+        program system can be discovered at startup.
+      }
+      fixture register_ok {}
+    }
+
+  }
+
+  example "build and compile a page field expression": {
+    after from(sourceKind: "page", args: "{}") -> ok(program: p)
+    and   get(program: p, field: "title") -> ok(program: p2)
+    then  compile(program: p2) -> ok(expression: e)
+    and   e != ""
+  }
+
+  example "parse then compile round-trips": {
+    after parse(expression: "$page.assignee.email") -> ok(program: p)
+    then  compile(program: p) -> ok(expression: e)
+    and   e != ""
+  }
+
+  example "build a step traversal with transform": {
+    after from(sourceKind: "step", args: "{\"stepKey\":\"brainstorm\"}") -> ok(program: p)
+    and   get(program: p, field: "shortlisted") -> ok(program: p2)
+    and   first(program: p2) -> ok(program: p3)
+    then  transform(program: p3, kind: "fallback", args: "{\"value\":\"\"}") -> ok(program: p4)
+  }
+
+  always "programs have a source kind": {
+    forall v in programs:
+    v.sourceKind != none
+  }
+
+  never "programs have empty expression after compile": {
+    exists v in programs:
+    v.expression = ""
+  }
+
+  action from {
+    requires: sourceKind != ""
+    ensures ok: sourceKind != none
+  }
+
+  action get {
+    requires: field != ""
+    ensures ok: program != none
+  }
+
+}
