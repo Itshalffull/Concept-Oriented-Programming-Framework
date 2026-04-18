@@ -209,6 +209,7 @@ interface TeamDetailPanelProps {
   onRefresh: () => void;
   onBack: () => void;
   onNavigate: (team: TeamRecord) => void;
+  onDelete: () => void;
 }
 
 const TEAM_ROLES = ['member', 'lead', 'admin', 'observer', 'reviewer', 'approver'] as const;
@@ -259,11 +260,27 @@ const AddMemberForm: React.FC<{ team: TeamRecord; onSubmit: (member: string, rol
   );
 };
 
-const TeamDetailPanel: React.FC<TeamDetailPanelProps> = ({ team, allTeams, onRefresh, onBack, onNavigate }) => {
+const TeamDetailPanel: React.FC<TeamDetailPanelProps> = ({ team, allTeams, onRefresh, onBack, onNavigate, onDelete }) => {
   const invoke = useKernelInvoke();
   const [showAddMember, setShowAddMember] = useState(false);
   const [showCreateChild, setShowCreateChild] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const deleteTeam = useCallback(async () => {
+    setDeleting(true);
+    try {
+      await invoke('ContentNode', 'delete', { node: team.id });
+      onBack();
+      onDelete();
+    } catch (err) {
+      setStatus('Delete failed: ' + (err instanceof Error ? err.message : String(err)));
+      setConfirmDelete(false);
+    } finally {
+      setDeleting(false);
+    }
+  }, [invoke, team.id, onBack, onDelete]);
 
   const addMember = useCallback(async (member: string, role: string) => {
     const currentMembers = team.members ?? [];
@@ -418,6 +435,42 @@ const TeamDetailPanel: React.FC<TeamDetailPanelProps> = ({ team, allTeams, onRef
             onSubmit={createChild}
             onCancel={() => setShowCreateChild(false)}
           />
+        )}
+      </div>
+
+      {/* Danger zone */}
+      <div style={{ marginTop: 'var(--spacing-xl)', paddingTop: 'var(--spacing-md)', borderTop: '1px solid var(--palette-outline-variant)' }}>
+        {confirmDelete ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', background: 'var(--palette-error-container, #fdecea)', padding: '8px 12px', borderRadius: 'var(--radius-sm)' }}>
+            <span style={{ fontSize: '0.8rem', flex: 1, color: 'var(--palette-on-error-container, #b71c1c)' }}>
+              Delete &ldquo;{team.name}&rdquo;? This cannot be undone.
+            </span>
+            <button
+              onClick={() => void deleteTeam()}
+              disabled={deleting}
+              data-part="button"
+              style={{ fontSize: '0.8rem', padding: '4px 10px', background: 'var(--palette-error)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontWeight: 600 }}
+            >
+              {deleting ? 'Deleting…' : 'Delete'}
+            </button>
+            <button
+              onClick={() => setConfirmDelete(false)}
+              data-part="button"
+              data-variant="ghost"
+              style={{ fontSize: '0.8rem', padding: '4px 10px' }}
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setConfirmDelete(true)}
+            data-part="button"
+            data-variant="ghost"
+            style={{ fontSize: '0.8rem', color: 'var(--palette-error)', padding: '4px 8px' }}
+          >
+            Delete Team
+          </button>
         )}
       </div>
     </div>
@@ -818,6 +871,8 @@ export const GovernanceOrgEditorView: React.FC = () => {
   const [showRunDialog, setShowRunDialog] = useState(false);
   const [runsRefreshKey, setRunsRefreshKey] = useState(0);
   const [lastRunId, setLastRunId] = useState<string | null>(null);
+  const [confirmDeleteSpec, setConfirmDeleteSpec] = useState(false);
+  const [deletingSpec, setDeletingSpec] = useState(false);
 
   // Load teams via ContentNode schema filter
   const loadTeams = useCallback(async () => {
@@ -918,6 +973,20 @@ export const GovernanceOrgEditorView: React.FC = () => {
     setShowCreateSpec(false);
     setRefreshKey(k => k + 1);
     setSelectedSpec({ spec: nodeId, name: values.name.trim(), status: 'draft', steps: [] });
+  }, [invoke]);
+
+  const deleteSpec = useCallback(async (specId: string) => {
+    setDeletingSpec(true);
+    try {
+      await invoke('ContentNode', 'delete', { node: specId });
+      setSelectedSpec(null);
+      setConfirmDeleteSpec(false);
+      setRefreshKey(k => k + 1);
+    } catch {
+      /* silent — keep confirm open so user sees nothing happened */
+    } finally {
+      setDeletingSpec(false);
+    }
   }, [invoke]);
 
   const MODES: { id: Mode; label: string }[] = [
@@ -1075,6 +1144,7 @@ export const GovernanceOrgEditorView: React.FC = () => {
                 onRefresh={() => setRefreshKey(k => k + 1)}
                 onBack={() => setSelectedTeam(null)}
                 onNavigate={t => setSelectedTeam(t)}
+                onDelete={() => setRefreshKey(k => k + 1)}
               />
             ) : teams.length > 0 ? (
               <div>
@@ -1109,7 +1179,7 @@ export const GovernanceOrgEditorView: React.FC = () => {
                 {/* Spec header */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-md)', flexShrink: 0, flexWrap: 'wrap' }}>
                   <button
-                    onClick={() => { setSelectedSpec(null); setLastRunId(null); }}
+                    onClick={() => { setSelectedSpec(null); setLastRunId(null); setConfirmDeleteSpec(false); }}
                     data-part="button"
                     data-variant="ghost"
                     style={{ fontSize: '0.8rem', padding: '4px 8px' }}
@@ -1130,6 +1200,35 @@ export const GovernanceOrgEditorView: React.FC = () => {
                       >
                         View last run →
                       </a>
+                    )}
+                    {confirmDeleteSpec ? (
+                      <>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--palette-error)' }}>Delete this spec?</span>
+                        <button
+                          onClick={() => void deleteSpec(selectedSpec.spec)}
+                          disabled={deletingSpec}
+                          style={{ fontSize: '0.75rem', padding: '4px 10px', background: 'var(--palette-error)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontWeight: 600 }}
+                        >
+                          {deletingSpec ? 'Deleting…' : 'Delete'}
+                        </button>
+                        <button
+                          onClick={() => setConfirmDeleteSpec(false)}
+                          data-part="button"
+                          data-variant="ghost"
+                          style={{ fontSize: '0.75rem', padding: '4px 8px' }}
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmDeleteSpec(true)}
+                        data-part="button"
+                        data-variant="ghost"
+                        style={{ fontSize: '0.75rem', padding: '4px 8px', color: 'var(--palette-error)' }}
+                      >
+                        Delete
+                      </button>
                     )}
                     <button
                       onClick={() => setShowRunDialog(true)}
