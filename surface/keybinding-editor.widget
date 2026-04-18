@@ -350,6 +350,44 @@ widget keybinding-editor {
     never "list is empty on first render when no search or category filter is active": {
       modifiedFilterActive = false
     }
+
+    # KB-15: View-mode row click navigates to edit route; edit-mode click selects in-pane.
+    # These two behaviors are mutually exclusive — selection model depends on mode prop.
+    "listItem click in view mode pushes /admin/keybinding-editor/edit?binding=<id> via router.push";
+    "listItem click in view mode does not call onSelectBinding when onSelectBinding is not provided";
+    "listItem click in edit mode sets localContext to the binding id without any URL navigation";
+
+    # KB-16: Customize CTA and row-click affordance hint.
+    "customizeCta is visible in view mode toolbar and absent in edit and create modes";
+    "rowClickHint is rendered inside the scrollable list container below the last listItem";
+    "rowClickHint is visible in view mode when filteredBindings.length > 0";
+    "rowClickHint is absent in edit and create modes";
+
+    always "customizeCta present only in view mode": {
+      mode = "view"
+    }
+
+    never "customizeCta present in edit mode": {
+      mode = "edit"
+    }
+
+    never "rowClickHint visible when list is empty": {
+      filteredBindings.count = 0
+    }
+
+    never "rowClickHint visible in edit mode": {
+      mode = "edit"
+    }
+
+    action SELECT_BINDING_VIEW {
+      requires: mode = "view"
+      ensures ok: state = "idle"
+    }
+
+    action SELECT_BINDING_EDIT {
+      requires: mode = "edit"
+      ensures ok: state = "idle"
+    }
   }
 
 }

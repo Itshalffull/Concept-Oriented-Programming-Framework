@@ -302,6 +302,68 @@ widget governance-org-editor {
       requires: state = "structure-empty"
       ensures ok: state = "structure-selected"
     }
+
+    # Back-navigation contracts — detail panels must expose a back affordance.
+    "detailBackBtn is present in structure-selected and absent in structure-empty";
+    "routeBackBtn is present in routes-selected and absent in routes-empty";
+
+    always "detailBackBtn visible only in structure-selected": {
+      state = "structure-selected"
+    }
+
+    never "detailBackBtn visible in structure-empty": {
+      state = "structure-empty"
+    }
+
+    always "routeBackBtn visible only in routes-selected": {
+      state = "routes-selected"
+    }
+
+    never "routeBackBtn visible in routes-empty": {
+      state = "routes-empty"
+    }
+
+    action detailBackBtn {
+      requires: state = "structure-selected"
+      ensures ok: state = "structure-empty"
+    }
+
+    action routeBackBtn {
+      requires: state = "routes-selected"
+      ensures ok: state = "routes-empty"
+    }
+
+    # Hierarchical tree — children render indented under their parent.
+    "treeItem children render with 16px additional left padding per depth level";
+    "treeItem root-level items (depth=0) render with the ◉ prefix glyph";
+    "treeItem child items (depth>0) render with the ⤷ prefix glyph";
+    never "orphaned child teams appear at root depth": {
+      exists t in teams: t.parent != null and t.renderDepth = 0
+    }
+
+    # Role picker — member addition uses a <select>, not a free-text input.
+    "memberRoleSelect is a <select> element with options: member, lead, admin, observer, reviewer, approver";
+    "memberRoleSelect default value is 'member'";
+    never "memberRoleInput rendered as a plain text input": {
+      exists f in addMemberForm.fields: f.key = "role" and f.type = "text"
+    }
+
+    # Sub-team navigation — clicking a child team navigates to its own detail panel.
+    "subTeamItem click sets selectedTeam to the child team without leaving structure-selected";
+    action subTeamItem {
+      requires: state = "structure-selected"
+      ensures ok: state = "structure-selected"
+    }
+
+    # Routes tab — spec detail embeds FlowBuilder widget, not a read-only table.
+    "specDetailPanel renders FlowBuilder when routes-selected";
+    "specDetailPanel renders EmptyState when routes-empty";
+    always "flowBuilder visible only in routes-selected": {
+      state = "routes-selected"
+    }
+    never "flowBuilder visible in routes-empty": {
+      state = "routes-empty"
+    }
   }
 
 }
