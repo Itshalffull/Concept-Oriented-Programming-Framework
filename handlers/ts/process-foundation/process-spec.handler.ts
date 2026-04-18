@@ -503,6 +503,7 @@ export const processSpecHandler = {
     const idx = steps.findIndex(s => s.stepId === stepId);
     if (idx === -1) return { variant: 'not_found', stepId };
     if (input.label !== undefined) steps[idx].stepLabel = String(input.label);
+    if (input.stepLabel !== undefined) steps[idx].stepLabel = String(input.stepLabel);
     if (input.config !== undefined) steps[idx].config = String(input.config);
     await fbSaveSteps(storage, specId, steps);
     return { variant: 'ok', stepId, spec: specId };
