@@ -238,6 +238,48 @@ export function useVariableProgram() {
 
   return { resolveExpression };
 }
+
+// ---------------------------------------------------------------------------
+// Standalone resolveExpression — usable outside React components
+// ---------------------------------------------------------------------------
+
+/**
+ * Standalone async helper that resolves a VariableProgram expression string
+ * to a concrete value. Uses fetch directly (no React hook dependency) so it
+ * can be called from useEffect bodies, event handlers, or non-component code.
+ * Falls back to returning the original expression on any error.
+ */
+export async function resolveExpression(expression: string): Promise<string> {
+  if (!expression || !isVariableExpression(expression)) return expression;
+  try {
+    const parseRes = await fetch('/api/invoke', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ concept: 'VariableProgram', action: 'parse', input: { expression } }),
+    });
+    const parseData = await parseRes.json() as { variant?: string; program?: string };
+    if (parseData.variant !== 'ok' || !parseData.program) return expression;
+
+    const urlParams: Record<string, string> = {};
+    if (typeof window !== 'undefined') {
+      new URLSearchParams(window.location.search).forEach((v, k) => { urlParams[k] = v; });
+      const parts = window.location.pathname.split('/').filter(Boolean);
+      if (parts.length > 0) urlParams['id'] = parts[parts.length - 1];
+    }
+    const contextJson = JSON.stringify({ pageId: urlParams['id'] ?? null, urlParams, session: {}, stepOutputs: {} });
+
+    const resolveRes = await fetch('/api/invoke', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ concept: 'VariableProgram', action: 'resolve', input: { program: parseData.program, context: contextJson } }),
+    });
+    const resolveData = await resolveRes.json() as { variant?: string; value?: string };
+    return resolveData.variant === 'ok' && typeof resolveData.value === 'string' ? resolveData.value : expression;
+  } catch {
+    return expression;
+  }
+}
+
 // isVariableProgramExpression — expression detection
 // ---------------------------------------------------------------------------
 
