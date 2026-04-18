@@ -1471,14 +1471,16 @@ export function KeybindingEditor({
                 No keybindings match your filters.
               </p>
             ) : (
-              filteredBindings.map(renderListItem)
+              <>
+                {filteredBindings.map(renderListItem)}
+                {mode === 'view' && (
+                  <p style={{ padding: '6px 12px', fontSize: '0.75rem', color: 'var(--color-text-muted, #888)', margin: 0 }}>
+                    Click a binding to edit it
+                  </p>
+                )}
+              </>
             )}
           </div>
-          {mode === 'view' && filteredBindings.length > 0 && (
-            <p style={{ padding: '6px 12px', fontSize: '0.75rem', color: 'var(--color-text-muted, #888)', margin: 0 }}>
-              Click a binding to edit it
-            </p>
-          )}
         </div>
 
         {/* ---- Detail pane (edit/create only) ---- */}
