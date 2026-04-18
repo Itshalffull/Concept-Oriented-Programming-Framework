@@ -1,0 +1,353 @@
+@version(1)
+widget variable-picker-widget {
+
+  purpose {
+    Author-facing dialog for selecting a VariableProgram expression in any
+    authoring surface -- step config fields, form field defaults, filter
+    bindings, slot source configs, and similar expression slots. Presents
+    a three-panel layout: a source-kind list on the left, a property/relation
+    tree in the centre, and a type-annotated live-preview pane on the right.
+    The bottom bar shows the resolved expression string and allows direct
+    manual editing. Confirms by compiling the expression and calling onSelect;
+    cancels without side effects.
+  }
+
+  anatomy {
+    root:               container    { Modal container that wraps the entire picker dialog }
+    header:             text         { Title bar displaying "Choose a variable" }
+    sourceList:         container    { Left panel listing available variable source kinds }
+    sourceItem:         action       { Individual source-kind row in the source list }
+    propertyPanel:      container    { Centre panel containing the property and relation tree }
+    propertyItem:       action       { Individual property row in the tree; leaf or expandable relation }
+    propertyTypeLabel:  text         { Type annotation displayed to the right of each property name }
+    expandButton:       action       { Chevron control that expands a relation node in the property tree }
+    previewPane:        container    { Right panel showing the resolved expression and live value }
+    expressionDisplay:  text         { Resolved expression string shown in the preview pane }
+    typeIndicatorBadge: presentation { Inferred return type badge displayed in the preview pane }
+    livePreviewValue:   text         { Live resolved value when a runtime context is available }
+    expressionInput:    interactive  { Bottom-bar text input allowing direct expression editing }
+    cancelButton:       action       { Dismisses the picker without selecting an expression }
+    confirmButton:      action       { Compiles the expression and calls onSelect; enabled only when selected }
+  }
+
+  states {
+    idle [initial] {
+      on SOURCE_CLICK  -> browsing;
+      on CANCEL        -> confirmed;
+      on INPUT_FOCUS   -> editing;
+    }
+
+    browsing {
+      on PROPERTY_CLICK_LEAF     -> selected;
+      on PROPERTY_CLICK_BRANCH   -> browsing;
+      on SOURCE_CLICK            -> browsing;
+      on EXPAND_CLICK            -> browsing;
+      on INPUT_FOCUS             -> editing;
+      on CANCEL                  -> confirmed;
+    }
+
+    selected {
+      on CONFIRM_HOVER   -> resolving;
+      on CONFIRM_CLICK   -> confirmed;
+      on SOURCE_CLICK    -> browsing;
+      on PROPERTY_CLICK_LEAF   -> selected;
+      on PROPERTY_CLICK_BRANCH -> browsing;
+      on INPUT_FOCUS     -> editing;
+      on CANCEL          -> confirmed;
+    }
+
+    editing {
+      on INPUT_BLUR_VALID   -> browsing;
+      on INPUT_BLUR_INVALID -> browsing;
+      on CANCEL             -> confirmed;
+    }
+
+    resolving {
+      on PREVIEW_RESOLVED -> selected;
+      on CANCEL           -> confirmed;
+      entry [startPreviewFetch];
+      exit  [clearPreviewSpinner];
+    }
+
+    confirmed {
+      entry [dispatchOnSelect];
+    }
+  }
+
+  accessibility {
+    role: dialog;
+    modal: true;
+    keyboard {
+      Escape      -> CANCEL;
+      Enter       -> CONFIRM_CLICK;
+      ArrowUp     -> NAVIGATE_PREV;
+      ArrowDown   -> NAVIGATE_NEXT;
+      ArrowRight  -> EXPAND_CLICK;
+      ArrowLeft   -> COLLAPSE;
+      Tab         -> FOCUS_NEXT;
+    }
+    focus {
+      trap: true;
+      initial: sourceList;
+      roving: true;
+      returnOnClose: true;
+    }
+    aria {
+      root -> {
+        role:       "dialog";
+        aria-modal: "true";
+        aria-label: "Choose a variable";
+      };
+      header -> {
+        role: "heading";
+        aria-level: "2";
+      };
+      sourceList -> {
+        role:       "listbox";
+        aria-label: "Variable sources";
+      };
+      sourceItem -> {
+        role:        "option";
+        aria-selected: if self.active then "true" else "false";
+      };
+      propertyPanel -> {
+        role:       "tree";
+        aria-label: "Variable properties";
+      };
+      propertyItem -> {
+        role:          "treeitem";
+        aria-expanded: if self.expandable then if self.expanded then "true" else "false" else "false";
+        aria-selected: if self.selected then "true" else "false";
+        aria-level:    self.depth;
+      };
+      expandButton -> {
+        role:       "button";
+        aria-label: concat("Expand ", self.propertyName);
+      };
+      previewPane -> {
+        role:       "region";
+        aria-label: "Expression preview";
+        aria-live:  "polite";
+      };
+      expressionInput -> {
+        role:        "textbox";
+        aria-label:  "Expression";
+        aria-describedby: expressionDisplay;
+      };
+      cancelButton -> {
+        role:       "button";
+        aria-label: "Cancel";
+      };
+      confirmButton -> {
+        role:         "button";
+        aria-label:   "Use this variable";
+        aria-disabled: if state == "idle" or state == "browsing" or state == "editing" or state == "resolving" then "true" else "false";
+      };
+    }
+  }
+
+  props {
+    availableSources:   list String = []
+    currentExpression:  option String
+    runtimeContext:     option Object
+    onSelect:           option Function
+    onCancel:           option Function
+  }
+
+  connect {
+    root -> {
+      data-part:  "root";
+      data-state: state;
+      role:       "dialog";
+      aria-modal: "true";
+      aria-label: "Choose a variable";
+    }
+
+    header -> {
+      data-part: "header";
+      role:      "heading";
+      text:      "Choose a variable";
+    }
+
+    sourceList -> {
+      data-part:  "source-list";
+      role:       "listbox";
+      aria-label: "Variable sources";
+      onKeyDown-ArrowUp:   send(NAVIGATE_PREV);
+      onKeyDown-ArrowDown: send(NAVIGATE_NEXT);
+    }
+
+    sourceItem -> {
+      data-part:     "source-item";
+      role:          "option";
+      aria-selected: if self.active then "true" else "false";
+      onClick:       send(SOURCE_CLICK, { sourceId: self.id });
+      onKeyDown-Enter: send(SOURCE_CLICK, { sourceId: self.id });
+    }
+
+    propertyPanel -> {
+      data-part:  "property-panel";
+      role:       "tree";
+      aria-label: "Variable properties";
+      onKeyDown-ArrowUp:    send(NAVIGATE_PREV);
+      onKeyDown-ArrowDown:  send(NAVIGATE_NEXT);
+      onKeyDown-ArrowRight: send(EXPAND_CLICK);
+      onKeyDown-ArrowLeft:  send(COLLAPSE);
+    }
+
+    propertyItem -> {
+      data-part:     "property-item";
+      role:          "treeitem";
+      aria-expanded: if self.expandable then if self.expanded then "true" else "false" else "false";
+      aria-selected: if self.selected then "true" else "false";
+      onClick:       if self.expandable then send(PROPERTY_CLICK_BRANCH, { propertyPath: self.path }) else send(PROPERTY_CLICK_LEAF, { propertyPath: self.path });
+      onKeyDown-Enter: if self.expandable then send(PROPERTY_CLICK_BRANCH, { propertyPath: self.path }) else send(PROPERTY_CLICK_LEAF, { propertyPath: self.path });
+    }
+
+    propertyTypeLabel -> {
+      data-part: "property-type-label";
+      text:      self.typeName;
+    }
+
+    expandButton -> {
+      data-part: "expand-button";
+      role:      "button";
+      aria-label: concat("Expand ", self.propertyName);
+      onClick:   send(EXPAND_CLICK, { propertyPath: self.path });
+    }
+
+    previewPane -> {
+      data-part:  "preview-pane";
+      data-state: if state == "resolving" then "loading" else "idle";
+      role:       "region";
+      aria-label: "Expression preview";
+      aria-live:  "polite";
+      aria-busy:  if state == "resolving" then "true" else "false";
+      onPointerEnter: if state == "selected" then send(CONFIRM_HOVER) else noop;
+    }
+
+    expressionDisplay -> {
+      data-part: "expression-display";
+      text:      if ?currentExpression then ?currentExpression else "";
+    }
+
+    typeIndicatorBadge -> {
+      data-part: "type-indicator-badge";
+    }
+
+    livePreviewValue -> {
+      data-part: "live-preview-value";
+      visible:   if ?runtimeContext then true else false;
+    }
+
+    expressionInput -> {
+      data-part:   "expression-input";
+      role:        "textbox";
+      aria-label:  "Expression";
+      value:       if ?currentExpression then ?currentExpression else "";
+      placeholder: "e.g. $page.assignee.email";
+      onFocus:     send(INPUT_FOCUS);
+      onBlur:      send(INPUT_BLUR_VALID);
+      onInput:     noop;
+    }
+
+    cancelButton -> {
+      data-part: "cancel-button";
+      role:      "button";
+      onClick:   send(CANCEL);
+    }
+
+    confirmButton -> {
+      data-part:     "confirm-button";
+      role:          "button";
+      disabled:      if state == "idle" or state == "browsing" or state == "editing" or state == "resolving" then true else false;
+      aria-disabled: if state == "idle" or state == "browsing" or state == "editing" or state == "resolving" then "true" else "false";
+      onClick:       if state == "selected" then send(CONFIRM_CLICK) else noop;
+      onPointerEnter: if state == "selected" then send(CONFIRM_HOVER) else noop;
+    }
+  }
+
+  affordance {
+    serves: expression-picker;
+    specificity: 9;
+    when { expressionType: "variable-program" }
+    bind {
+      currentExpression: boundExpression;
+      availableSources:  allowedSourceKinds;
+    }
+  }
+
+  compose {
+    _focusTrap: widget("focus-trap", { active: true })
+    _portal:    widget("portal",     { target: "body" })
+  }
+
+  invariant {
+    example "source click transitions idle to browsing": {
+      after sourceItem.click() -> ok
+      then state = "browsing"
+    }
+
+    example "leaf property click transitions browsing to selected": {
+      after propertyItem.click() -> ok
+      then state = "selected"
+    }
+
+    example "cancel transitions to confirmed": {
+      after cancelButton.click() -> ok
+      then state = "confirmed"
+    }
+
+    example "confirm click from selected transitions to confirmed": {
+      after confirmButton.click() -> ok
+      then state = "confirmed"
+    }
+
+    example "expressionInput focus transitions to editing": {
+      after expressionInput.focus() -> ok
+      then state = "editing"
+    }
+
+    example "confirmButton hover in selected triggers resolving": {
+      after confirmButton.pointerenter() -> ok
+      then state = "resolving"
+    }
+
+    always "idle and browsing states are distinct": {
+      forall s in { "idle", "browsing" }:
+      s.length > 0
+    }
+
+    always "selected and confirmed states are distinct": {
+      forall s in { "selected", "confirmed" }:
+      s.length > 0
+    }
+
+    never "confirmed state reached without prior selection or cancellation": {
+      exists s in { "none" }:
+      s = "confirmed"
+    }
+
+    action confirmButton {
+      requires: state = "selected"
+      ensures ok: state = "confirmed"
+    }
+
+    action cancelButton {
+      requires: state = "browsing"
+      ensures ok: state = "confirmed"
+    }
+
+    action sourceItem {
+      requires: state = "idle"
+      ensures ok: state = "browsing"
+    }
+
+    "confirmButton is disabled in idle, browsing, editing, and resolving states";
+    "expressionInput value updates as the user clicks through the source and property trees";
+    "previewPane shows a loading spinner during the resolving state";
+    "sourceList always shows at least one source when availableSources is non-empty";
+    "Focus is trapped inside root while the picker is open";
+  }
+
+}
