@@ -17,6 +17,20 @@ function nextId(): string {
   return `pspec-${Date.now()}-${++idCounter}`;
 }
 
+/**
+ * Returns true if an ISO 8601 duration string represents a zero-length duration
+ * (e.g. "PT0S", "PT0M", "P0D", "P0Y0M0DT0H0M0S").  Steps with a zero-duration
+ * timeout are considered already expired when they are inserted into a spec.
+ */
+function isZeroDuration(iso: string): boolean {
+  // Strip the leading 'P' (and optional 'T') then check all numeric parts
+  const withoutP = iso.replace(/^P/, '').replace(/T/, '');
+  // Match all numeric values in the duration
+  const numbers = withoutP.match(/\d+(\.\d+)?/g);
+  if (!numbers) return true; // no numbers at all → zero
+  return numbers.every((n) => parseFloat(n) === 0);
+}
+
 function validateStepsAndEdges(
   stepsRaw: string,
   edgesRaw: string,
@@ -296,8 +310,23 @@ export const processSpecHandler = {
       return { variant: 'invalid', message: 'Step must have a step_type' };
     }
 
+    // Validate step_type is a recognised value
+    const allowedStepTypes = new Set([
+      'human', 'automation', 'llm', 'approval', 'manual',
+      'subprocess', 'webhook_wait', 'vote', 'brainstorm',
+    ]);
+    if (!allowedStepTypes.has(stepType)) {
+      return { variant: 'invalid', message: `Unknown step_type: ${stepType}` };
+    }
+
     // Extract optional timeout (null if absent)
     const timeout = (step.timeout as string | undefined) ?? null;
+
+    // Check for immediately-expired timeout (zero-duration ISO 8601 values)
+    // e.g. "PT0S", "PT0M", "P0D" mean the step would be expired on insertion
+    if (timeout !== null && isZeroDuration(timeout)) {
+      return { variant: 'timed_out', message: `Step timeout "${timeout}" has already elapsed` };
+    }
 
     // Load the existing spec
     const rec = await storage.get('process-spec', specId);

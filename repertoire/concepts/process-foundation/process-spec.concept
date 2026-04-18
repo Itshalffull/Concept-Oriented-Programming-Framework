@@ -102,18 +102,24 @@ concept ProcessSpec [P] {
         The step JSON is malformed, the step key is missing or duplicates an
         existing step key, or the spec is not in draft status.
       }
+      -> timed_out(message: String) {
+        The step declares a timeout (ISO 8601 duration) that has already elapsed
+        relative to when the step would begin executing, making the step
+        immediately expired upon insertion.
+      }
       fixture create_ok { name: "hire-process", steps: "[{\"key\":\"screen\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" }
-      fixture addStep_with_timeout { spec: $create_ok.spec, step: "{\"key\":\"vote\",\"step_type\":\"vote\",\"config\":\"{}\",\"timeout\":\"P7D\"}", index: 1 } after create_ok
-      fixture addStep_vote { spec: $create_ok.spec, step: "{\"key\":\"vote\",\"step_type\":\"vote\",\"config\":\"{\\\"mode\\\":\\\"approval\\\",\\\"threshold\\\":3}\"}", index: 1 } after create_ok
+      fixture addStep_with_timeout { spec: $create_ok.spec, step: "{\"key\":\"waiting\",\"step_type\":\"webhook_wait\",\"config\":\"{}\",\"timeout\":\"P7D\"}", index: 1 } after create_ok
+      fixture addStep_vote { spec: $create_ok.spec, step: "{\"key\":\"vote\",\"step_type\":\"vote\",\"config\":\"{\\\"mode\\\":\\\"approval\\\",\\\"options\\\":[\\\"yes\\\",\\\"no\\\"],\\\"threshold\\\":\\\"majority\\\",\\\"close_mode\\\":\\\"quorum\\\"}\"}", index: 1 } after create_ok
       fixture addStep_brainstorm { spec: $create_ok.spec, step: "{\"key\":\"brainstorm\",\"step_type\":\"brainstorm\",\"config\":\"{\\\"anonymous\\\":false,\\\"shortlist_size\\\":5,\\\"timeout\\\":\\\"P14D\\\"}\"}", index: 1 } after create_ok
-      fixture addStep_invalid_no_key { spec: $create_ok.spec, step: "{\"step_type\":\"human\",\"config\":\"{}\"}", index: 0 } -> invalid after create_ok
+      fixture addStep_timed_out { spec: $create_ok.spec, step: "{\"key\":\"expired\",\"step_type\":\"human\",\"config\":\"{}\",\"timeout\":\"PT0S\"}", index: 0 } after create_ok -> timed_out
+      fixture addStep_invalid_no_key { spec: $create_ok.spec, step: "{\"step_type\":\"human\",\"config\":\"{}\"}", index: 0 } after create_ok -> invalid
       fixture addStep_not_found { spec: "nonexistent-spec", step: "{\"key\":\"s\",\"step_type\":\"human\",\"config\":\"{}\"}", index: 0 } -> not_found
     }
   }
 
   example "create then get": {
-    after create(name: "onboard", steps: s, edges: e) -> ok(spec: x)
-    then get(spec: x) -> ok(spec: x, name: "onboard", version: 1, status: "draft", steps: s, edges: e)
+    after create(name: "onboard", steps: "[{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]") -> ok(spec: x)
+    then get(spec: x) -> ok(spec: x, name: "onboard", version: 1, status: "draft")
   }
 
 

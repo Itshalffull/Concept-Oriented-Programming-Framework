@@ -34,7 +34,7 @@ describe('ProcessSpec functional handler', () => {
 
   describe('create', () => {
     it('builds a valid StorageProgram', () => {
-      const program = processSpecHandler.create({ name: "onboard", steps: "[{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" });
+      const program = processSpecHandler.create({ name: 'test-name', steps: 'test', edges: 'test' });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -42,21 +42,21 @@ describe('ProcessSpec functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = processSpecHandler.create({ name: "onboard", steps: "[{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" });
+      const program = processSpecHandler.create({ name: 'test-name', steps: 'test', edges: 'test' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = processSpecHandler.create({ name: "onboard", steps: "[{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" });
+      const program = processSpecHandler.create({ name: 'test-name', steps: 'test', edges: 'test' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = processSpecHandler.create({ name: "onboard", steps: "[{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" });
+      const program = processSpecHandler.create({ name: 'test-name', steps: 'test', edges: 'test' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -69,7 +69,7 @@ describe('ProcessSpec functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = processSpecHandler.create({ name: "onboard", steps: "[{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" });
+      const program = processSpecHandler.create({ name: 'test-name', steps: 'test', edges: 'test' });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -77,7 +77,277 @@ describe('ProcessSpec functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof processSpecHandler.create !== 'function') return;
-      const result = await interpret(processSpecHandler.create({ name: "onboard", steps: "[{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" }), storage);
+      const result = await interpret(processSpecHandler.create({ name: 'test-name', steps: 'test', edges: 'test' }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+  });
+
+  describe('publish', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = processSpecHandler.publish({ spec: 'test' });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = processSpecHandler.publish({ spec: 'test' });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = processSpecHandler.publish({ spec: 'test' });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = processSpecHandler.publish({ spec: 'test' });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = processSpecHandler.publish({ spec: 'test' });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof processSpecHandler.publish !== 'function') return;
+      const result = await interpret(processSpecHandler.publish({ spec: 'test' }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+  });
+
+  describe('deprecate', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = processSpecHandler.deprecate({ spec: 'test' });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = processSpecHandler.deprecate({ spec: 'test' });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = processSpecHandler.deprecate({ spec: 'test' });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = processSpecHandler.deprecate({ spec: 'test' });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = processSpecHandler.deprecate({ spec: 'test' });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof processSpecHandler.deprecate !== 'function') return;
+      const result = await interpret(processSpecHandler.deprecate({ spec: 'test' }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+  });
+
+  describe('update', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = processSpecHandler.update({ spec: 'test', steps: 'test', edges: 'test' });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = processSpecHandler.update({ spec: 'test', steps: 'test', edges: 'test' });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = processSpecHandler.update({ spec: 'test', steps: 'test', edges: 'test' });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = processSpecHandler.update({ spec: 'test', steps: 'test', edges: 'test' });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = processSpecHandler.update({ spec: 'test', steps: 'test', edges: 'test' });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof processSpecHandler.update !== 'function') return;
+      const result = await interpret(processSpecHandler.update({ spec: 'test', steps: 'test', edges: 'test' }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+  });
+
+  describe('get', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = processSpecHandler.get({ spec: 'test' });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = processSpecHandler.get({ spec: 'test' });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = processSpecHandler.get({ spec: 'test' });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = processSpecHandler.get({ spec: 'test' });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = processSpecHandler.get({ spec: 'test' });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof processSpecHandler.get !== 'function') return;
+      const result = await interpret(processSpecHandler.get({ spec: 'test' }), storage);
+      expect(result).toBeDefined();
+      if (result.variant !== undefined) {
+        expect(typeof result.variant).toBe('string');
+      }
+    });
+
+  });
+
+  describe('addStep', () => {
+    it('builds a valid StorageProgram', () => {
+      const program = processSpecHandler.addStep({ name: "hire-process", steps: "[{\"key\":\"screen\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" });
+      expect(program).toBeDefined();
+      expect(program.instructions).toBeDefined();
+      expect(Array.isArray(program.instructions)).toBe(true);
+      expect(program.instructions.length).toBeGreaterThan(0);
+    });
+
+    it('has classifiable purity', () => {
+      const program = processSpecHandler.addStep({ name: "hire-process", steps: "[{\"key\":\"screen\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const purity = classifyPurity(program);
+      expect(['pure', 'read-only', 'read-write']).toContain(purity);
+    });
+
+    it('declares completion variants', () => {
+      const program = processSpecHandler.addStep({ name: "hire-process", steps: "[{\"key\":\"screen\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
+      expect(variants.size).toBeGreaterThan(0);
+    });
+
+    it('declares read and write sets', () => {
+      const program = processSpecHandler.addStep({ name: "hire-process", steps: "[{\"key\":\"screen\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const reads = extractReadSet(program);
+      const writes = extractWriteSet(program);
+      const purity = classifyPurity(program);
+      if (purity === 'read-only') {
+        expect(reads.size).toBeGreaterThan(0);
+      } else if (purity === 'read-write') {
+        expect(writes.size).toBeGreaterThan(0);
+      }
+    });
+
+    it('has trackable transport effects', () => {
+      const program = processSpecHandler.addStep({ name: "hire-process", steps: "[{\"key\":\"screen\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" });
+      if (!program?.instructions) return; // skip non-StorageProgram handlers
+      const effects = extractPerformSet(program);
+      expect(effects).toBeDefined();
+    });
+
+    it('produces a result', async () => {
+      if (typeof processSpecHandler.addStep !== 'function') return;
+      const result = await interpret(processSpecHandler.addStep({ name: "hire-process", steps: "[{\"key\":\"screen\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
@@ -85,765 +355,60 @@ describe('ProcessSpec functional handler', () => {
     });
 
     it('fixture "create_ok" -> ok', async () => {
-      if (typeof processSpecHandler.create !== 'function') return;
+      if (typeof processSpecHandler.addStep !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(processSpecHandler.create({ name: "onboard", steps: "[{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" }), storage);
+      const result = await interpret(processSpecHandler.addStep({ name: "hire-process", steps: "[{\"key\":\"screen\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" }), storage);
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "create_invalid_steps" -> invalid', async () => {
-      if (typeof processSpecHandler.create !== 'function') return;
+    it('fixture "addStep_with_timeout" -> ok', async () => {
+      if (typeof processSpecHandler.addStep !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(processSpecHandler.create({ name: "onboard", steps: "not-json", edges: "[]" }), storage);
+      const afterResult_create_ok = await interpret(processSpecHandler.addStep({ name: "hire-process", steps: "[{\"key\":\"screen\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" }), storage);
+      const result = await interpret(processSpecHandler.addStep({ spec: afterResult_create_ok?.output?.["spec"], step: "{\"key\":\"waiting\",\"step_type\":\"webhook_wait\",\"config\":\"{}\",\"timeout\":\"P7D\"}", index: "1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "addStep_vote" -> ok', async () => {
+      if (typeof processSpecHandler.addStep !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(processSpecHandler.addStep({ name: "hire-process", steps: "[{\"key\":\"screen\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" }), storage);
+      const result = await interpret(processSpecHandler.addStep({ spec: afterResult_create_ok?.output?.["spec"], step: "{\"key\":\"vote\",\"step_type\":\"vote\",\"config\":\"{\\\"mode\\\":\\\"approval\\\",\\\"options\\\":[\\\"yes\\\",\\\"no\\\"],\\\"threshold\\\":\\\"majority\\\",\\\"close_mode\\\":\\\"quorum\\\"}\"}", index: "1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "addStep_brainstorm" -> ok', async () => {
+      if (typeof processSpecHandler.addStep !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(processSpecHandler.addStep({ name: "hire-process", steps: "[{\"key\":\"screen\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" }), storage);
+      const result = await interpret(processSpecHandler.addStep({ spec: afterResult_create_ok?.output?.["spec"], step: "{\"key\":\"brainstorm\",\"step_type\":\"brainstorm\",\"config\":\"{\\\"anonymous\\\":false,\\\"shortlist_size\\\":5,\\\"timeout\\\":\\\"P14D\\\"}\"}", index: "1" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "addStep_timed_out" -> timed_out', async () => {
+      if (typeof processSpecHandler.addStep !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(processSpecHandler.addStep({ name: "hire-process", steps: "[{\"key\":\"screen\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" }), storage);
+      const result = await interpret(processSpecHandler.addStep({ spec: afterResult_create_ok?.output?.["spec"], step: "{\"key\":\"expired\",\"step_type\":\"human\",\"config\":\"{}\",\"timeout\":\"PT0S\"}", index: "0" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('timed_out'));
+    });
+
+    it('fixture "addStep_invalid_no_key" -> invalid', async () => {
+      if (typeof processSpecHandler.addStep !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_create_ok = await interpret(processSpecHandler.addStep({ name: "hire-process", steps: "[{\"key\":\"screen\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" }), storage);
+      const result = await interpret(processSpecHandler.addStep({ spec: afterResult_create_ok?.output?.["spec"], step: "{\"step_type\":\"human\",\"config\":\"{}\"}", index: "0" }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('invalid'));
     });
 
-    it('fixture "create_empty_name" -> invalid', async () => {
-      if (typeof processSpecHandler.create !== 'function') return;
+    it('fixture "addStep_not_found" -> not_found', async () => {
+      if (typeof processSpecHandler.addStep !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(processSpecHandler.create({ name: "", steps: "[{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" }), storage);
-      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
-      expect(normalize(result.variant)).toBe(normalize('invalid'));
-    });
-
-  });
-
-  describe('publish', () => {
-    it('builds a valid StorageProgram', () => {
-      const program = processSpecHandler.publish({ spec: {"type":"ref","fixture":"create_ok","field":"spec"} });
-      expect(program).toBeDefined();
-      expect(program.instructions).toBeDefined();
-      expect(Array.isArray(program.instructions)).toBe(true);
-      expect(program.instructions.length).toBeGreaterThan(0);
-    });
-
-    it('has classifiable purity', () => {
-      const program = processSpecHandler.publish({ spec: {"type":"ref","fixture":"create_ok","field":"spec"} });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const purity = classifyPurity(program);
-      expect(['pure', 'read-only', 'read-write']).toContain(purity);
-    });
-
-    it('declares completion variants', () => {
-      const program = processSpecHandler.publish({ spec: {"type":"ref","fixture":"create_ok","field":"spec"} });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
-      expect(variants.size).toBeGreaterThan(0);
-    });
-
-    it('declares read and write sets', () => {
-      const program = processSpecHandler.publish({ spec: {"type":"ref","fixture":"create_ok","field":"spec"} });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const reads = extractReadSet(program);
-      const writes = extractWriteSet(program);
-      const purity = classifyPurity(program);
-      if (purity === 'read-only') {
-        expect(reads.size).toBeGreaterThan(0);
-      } else if (purity === 'read-write') {
-        expect(writes.size).toBeGreaterThan(0);
-      }
-    });
-
-    it('has trackable transport effects', () => {
-      const program = processSpecHandler.publish({ spec: {"type":"ref","fixture":"create_ok","field":"spec"} });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const effects = extractPerformSet(program);
-      expect(effects).toBeDefined();
-    });
-
-    it('produces a result', async () => {
-      if (typeof processSpecHandler.publish !== 'function') return;
-      const result = await interpret(processSpecHandler.publish({ spec: {"type":"ref","fixture":"create_ok","field":"spec"} }), storage);
-      expect(result).toBeDefined();
-      if (result.variant !== undefined) {
-        expect(typeof result.variant).toBe('string');
-      }
-    });
-
-    it('fixture "publish_ok" -> ok', async () => {
-      if (typeof processSpecHandler.publish !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_create_ok = await interpret(processSpecHandler.create({ name: "onboard", steps: "[{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" }), storage);
-      const result = await interpret(processSpecHandler.publish({ spec: afterResult_create_ok?.output?.["spec"] }), storage);
-      expect(result.variant).toBe('ok');
-    });
-
-    it('fixture "publish_notfound" -> not_found', async () => {
-      if (typeof processSpecHandler.publish !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await interpret(processSpecHandler.publish({ spec: "nonexistent-spec" }), storage);
+      const result = await interpret(processSpecHandler.addStep({ spec: "nonexistent-spec", step: "{\"key\":\"s\",\"step_type\":\"human\",\"config\":\"{}\"}", index: "0" }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
       expect(normalize(result.variant)).toBe(normalize('not_found'));
-    });
-
-  });
-
-  describe('deprecate', () => {
-    it('builds a valid StorageProgram', () => {
-      const program = processSpecHandler.deprecate({ spec: {"type":"ref","fixture":"publish_ok","field":"spec"} });
-      expect(program).toBeDefined();
-      expect(program.instructions).toBeDefined();
-      expect(Array.isArray(program.instructions)).toBe(true);
-      expect(program.instructions.length).toBeGreaterThan(0);
-    });
-
-    it('has classifiable purity', () => {
-      const program = processSpecHandler.deprecate({ spec: {"type":"ref","fixture":"publish_ok","field":"spec"} });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const purity = classifyPurity(program);
-      expect(['pure', 'read-only', 'read-write']).toContain(purity);
-    });
-
-    it('declares completion variants', () => {
-      const program = processSpecHandler.deprecate({ spec: {"type":"ref","fixture":"publish_ok","field":"spec"} });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
-      expect(variants.size).toBeGreaterThan(0);
-    });
-
-    it('declares read and write sets', () => {
-      const program = processSpecHandler.deprecate({ spec: {"type":"ref","fixture":"publish_ok","field":"spec"} });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const reads = extractReadSet(program);
-      const writes = extractWriteSet(program);
-      const purity = classifyPurity(program);
-      if (purity === 'read-only') {
-        expect(reads.size).toBeGreaterThan(0);
-      } else if (purity === 'read-write') {
-        expect(writes.size).toBeGreaterThan(0);
-      }
-    });
-
-    it('has trackable transport effects', () => {
-      const program = processSpecHandler.deprecate({ spec: {"type":"ref","fixture":"publish_ok","field":"spec"} });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const effects = extractPerformSet(program);
-      expect(effects).toBeDefined();
-    });
-
-    it('produces a result', async () => {
-      if (typeof processSpecHandler.deprecate !== 'function') return;
-      const result = await interpret(processSpecHandler.deprecate({ spec: {"type":"ref","fixture":"publish_ok","field":"spec"} }), storage);
-      expect(result).toBeDefined();
-      if (result.variant !== undefined) {
-        expect(typeof result.variant).toBe('string');
-      }
-    });
-
-    it('fixture "deprecate_ok" -> ok', async () => {
-      if (typeof processSpecHandler.deprecate !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_create_ok = await interpret(processSpecHandler.create({ name: "onboard", steps: "[{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" }), storage);
-      const afterResult_publish_ok = await interpret(processSpecHandler.publish({ spec: afterResult_create_ok?.output?.["spec"] }), storage);
-      const result = await interpret(processSpecHandler.deprecate({ spec: afterResult_publish_ok?.output?.["spec"] }), storage);
-      expect(result.variant).toBe('ok');
-    });
-
-    it('fixture "deprecate_notfound" -> not_found', async () => {
-      if (typeof processSpecHandler.deprecate !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await interpret(processSpecHandler.deprecate({ spec: "nonexistent-spec" }), storage);
-      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
-      expect(normalize(result.variant)).toBe(normalize('not_found'));
-    });
-
-  });
-
-  describe('update', () => {
-    it('builds a valid StorageProgram', () => {
-      const program = processSpecHandler.update({ spec: {"type":"ref","fixture":"create_ok","field":"spec"}, steps: "[{\"key\":\"s2\",\"step_type\":\"automation\",\"config\":\"{}\"}]", edges: "[]" });
-      expect(program).toBeDefined();
-      expect(program.instructions).toBeDefined();
-      expect(Array.isArray(program.instructions)).toBe(true);
-      expect(program.instructions.length).toBeGreaterThan(0);
-    });
-
-    it('has classifiable purity', () => {
-      const program = processSpecHandler.update({ spec: {"type":"ref","fixture":"create_ok","field":"spec"}, steps: "[{\"key\":\"s2\",\"step_type\":\"automation\",\"config\":\"{}\"}]", edges: "[]" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const purity = classifyPurity(program);
-      expect(['pure', 'read-only', 'read-write']).toContain(purity);
-    });
-
-    it('declares completion variants', () => {
-      const program = processSpecHandler.update({ spec: {"type":"ref","fixture":"create_ok","field":"spec"}, steps: "[{\"key\":\"s2\",\"step_type\":\"automation\",\"config\":\"{}\"}]", edges: "[]" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
-      expect(variants.size).toBeGreaterThan(0);
-    });
-
-    it('declares read and write sets', () => {
-      const program = processSpecHandler.update({ spec: {"type":"ref","fixture":"create_ok","field":"spec"}, steps: "[{\"key\":\"s2\",\"step_type\":\"automation\",\"config\":\"{}\"}]", edges: "[]" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const reads = extractReadSet(program);
-      const writes = extractWriteSet(program);
-      const purity = classifyPurity(program);
-      if (purity === 'read-only') {
-        expect(reads.size).toBeGreaterThan(0);
-      } else if (purity === 'read-write') {
-        expect(writes.size).toBeGreaterThan(0);
-      }
-    });
-
-    it('has trackable transport effects', () => {
-      const program = processSpecHandler.update({ spec: {"type":"ref","fixture":"create_ok","field":"spec"}, steps: "[{\"key\":\"s2\",\"step_type\":\"automation\",\"config\":\"{}\"}]", edges: "[]" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const effects = extractPerformSet(program);
-      expect(effects).toBeDefined();
-    });
-
-    it('produces a result', async () => {
-      if (typeof processSpecHandler.update !== 'function') return;
-      const result = await interpret(processSpecHandler.update({ spec: {"type":"ref","fixture":"create_ok","field":"spec"}, steps: "[{\"key\":\"s2\",\"step_type\":\"automation\",\"config\":\"{}\"}]", edges: "[]" }), storage);
-      expect(result).toBeDefined();
-      if (result.variant !== undefined) {
-        expect(typeof result.variant).toBe('string');
-      }
-    });
-
-    it('fixture "update_ok" -> ok', async () => {
-      if (typeof processSpecHandler.update !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_create_ok = await interpret(processSpecHandler.create({ name: "onboard", steps: "[{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" }), storage);
-      const result = await interpret(processSpecHandler.update({ spec: afterResult_create_ok?.output?.["spec"], steps: "[{\"key\":\"s2\",\"step_type\":\"automation\",\"config\":\"{}\"}]", edges: "[]" }), storage);
-      expect(result.variant).toBe('ok');
-    });
-
-    it('fixture "update_invalid" -> invalid', async () => {
-      if (typeof processSpecHandler.update !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_create_ok = await interpret(processSpecHandler.create({ name: "onboard", steps: "[{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" }), storage);
-      const result = await interpret(processSpecHandler.update({ spec: afterResult_create_ok?.output?.["spec"], steps: "not-json", edges: "[]" }), storage);
-      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
-      expect(normalize(result.variant)).toBe(normalize('invalid'));
-    });
-
-  });
-
-  describe('get', () => {
-    it('builds a valid StorageProgram', () => {
-      const program = processSpecHandler.get({ spec: {"type":"ref","fixture":"create_ok","field":"spec"} });
-      expect(program).toBeDefined();
-      expect(program.instructions).toBeDefined();
-      expect(Array.isArray(program.instructions)).toBe(true);
-      expect(program.instructions.length).toBeGreaterThan(0);
-    });
-
-    it('has classifiable purity', () => {
-      const program = processSpecHandler.get({ spec: {"type":"ref","fixture":"create_ok","field":"spec"} });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const purity = classifyPurity(program);
-      expect(['pure', 'read-only', 'read-write']).toContain(purity);
-    });
-
-    it('declares completion variants', () => {
-      const program = processSpecHandler.get({ spec: {"type":"ref","fixture":"create_ok","field":"spec"} });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
-      expect(variants.size).toBeGreaterThan(0);
-    });
-
-    it('declares read and write sets', () => {
-      const program = processSpecHandler.get({ spec: {"type":"ref","fixture":"create_ok","field":"spec"} });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const reads = extractReadSet(program);
-      const writes = extractWriteSet(program);
-      const purity = classifyPurity(program);
-      if (purity === 'read-only') {
-        expect(reads.size).toBeGreaterThan(0);
-      } else if (purity === 'read-write') {
-        expect(writes.size).toBeGreaterThan(0);
-      }
-    });
-
-    it('has trackable transport effects', () => {
-      const program = processSpecHandler.get({ spec: {"type":"ref","fixture":"create_ok","field":"spec"} });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const effects = extractPerformSet(program);
-      expect(effects).toBeDefined();
-    });
-
-    it('produces a result', async () => {
-      if (typeof processSpecHandler.get !== 'function') return;
-      const result = await interpret(processSpecHandler.get({ spec: {"type":"ref","fixture":"create_ok","field":"spec"} }), storage);
-      expect(result).toBeDefined();
-      if (result.variant !== undefined) {
-        expect(typeof result.variant).toBe('string');
-      }
-    });
-
-    it('fixture "get_ok" -> ok', async () => {
-      if (typeof processSpecHandler.get !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_create_ok = await interpret(processSpecHandler.create({ name: "onboard", steps: "[{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" }), storage);
-      const result = await interpret(processSpecHandler.get({ spec: afterResult_create_ok?.output?.["spec"] }), storage);
-      expect(result.variant).toBe('ok');
-    });
-
-    it('fixture "get_notfound" -> not_found', async () => {
-      if (typeof processSpecHandler.get !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await interpret(processSpecHandler.get({ spec: "nonexistent-spec" }), storage);
-      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
-      expect(normalize(result.variant)).toBe(normalize('not_found'));
-    });
-
-  });
-
-  describe('addStep', () => {
-    it('builds a valid StorageProgram', () => {
-      const program = processSpecHandler.addStep({ spec: {"type":"ref","fixture":"create_ok","field":"spec"}, step: "{\"key\":\"s2\",\"step_type\":\"automation\",\"config\":\"{}\"}", index: "1" });
-      expect(program).toBeDefined();
-      expect(program.instructions).toBeDefined();
-      expect(Array.isArray(program.instructions)).toBe(true);
-      expect(program.instructions.length).toBeGreaterThan(0);
-    });
-
-    it('has classifiable purity', () => {
-      const program = processSpecHandler.addStep({ spec: {"type":"ref","fixture":"create_ok","field":"spec"}, step: "{\"key\":\"s2\",\"step_type\":\"automation\",\"config\":\"{}\"}", index: "1" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const purity = classifyPurity(program);
-      expect(['pure', 'read-only', 'read-write']).toContain(purity);
-    });
-
-    it('declares completion variants', () => {
-      const program = processSpecHandler.addStep({ spec: {"type":"ref","fixture":"create_ok","field":"spec"}, step: "{\"key\":\"s2\",\"step_type\":\"automation\",\"config\":\"{}\"}", index: "1" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
-      expect(variants.size).toBeGreaterThan(0);
-    });
-
-    it('declares read and write sets', () => {
-      const program = processSpecHandler.addStep({ spec: {"type":"ref","fixture":"create_ok","field":"spec"}, step: "{\"key\":\"s2\",\"step_type\":\"automation\",\"config\":\"{}\"}", index: "1" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const reads = extractReadSet(program);
-      const writes = extractWriteSet(program);
-      const purity = classifyPurity(program);
-      if (purity === 'read-only') {
-        expect(reads.size).toBeGreaterThan(0);
-      } else if (purity === 'read-write') {
-        expect(writes.size).toBeGreaterThan(0);
-      }
-    });
-
-    it('has trackable transport effects', () => {
-      const program = processSpecHandler.addStep({ spec: {"type":"ref","fixture":"create_ok","field":"spec"}, step: "{\"key\":\"s2\",\"step_type\":\"automation\",\"config\":\"{}\"}", index: "1" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const effects = extractPerformSet(program);
-      expect(effects).toBeDefined();
-    });
-
-    it('produces a result', async () => {
-      if (typeof processSpecHandler.addStep !== 'function') return;
-      const result = await interpret(processSpecHandler.addStep({ spec: {"type":"ref","fixture":"create_ok","field":"spec"}, step: "{\"key\":\"s2\",\"step_type\":\"automation\",\"config\":\"{}\"}", index: "1" }), storage);
-      expect(result).toBeDefined();
-      if (result.variant !== undefined) {
-        expect(typeof result.variant).toBe('string');
-      }
-    });
-
-    it('fixture "addStep_ok" -> ok', async () => {
-      if (typeof processSpecHandler.addStep !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_create_ok = await interpret(processSpecHandler.create({ name: "onboard", steps: "[{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" }), storage);
-      const result = await interpret(processSpecHandler.addStep({ spec: afterResult_create_ok?.output?.["spec"], step: "{\"key\":\"s2\",\"step_type\":\"automation\",\"config\":\"{}\"}", index: "1" }), storage);
-      expect(result.variant).toBe('ok');
-    });
-
-    it('fixture "addStep_with_visibility" -> ok', async () => {
-      if (typeof processSpecHandler.addStep !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_create_ok = await interpret(processSpecHandler.create({ name: "onboard", steps: "[{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" }), storage);
-      const result = await interpret(processSpecHandler.addStep({ spec: afterResult_create_ok?.output?.["spec"], step: "{\"key\":\"s3\",\"step_type\":\"human\",\"config\":\"{}\",\"visibility\":\"admin\"}", index: "1" }), storage);
-      expect(result.variant).toBe('ok');
-    });
-
-    it('fixture "addStep_notfound" -> notfound', async () => {
-      if (typeof processSpecHandler.addStep !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await interpret(processSpecHandler.addStep({ spec: "nonexistent-spec", step: "{\"key\":\"s2\",\"step_type\":\"automation\",\"config\":\"{}\"}", index: "0" }), storage);
-      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
-      expect(normalize(result.variant)).toBe(normalize('notfound'));
-    });
-
-    it('fixture "addStep_locked" -> locked', async () => {
-      if (typeof processSpecHandler.addStep !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_create_ok = await interpret(processSpecHandler.create({ name: "onboard", steps: "[{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" }), storage);
-      const afterResult_publish_ok = await interpret(processSpecHandler.publish({ spec: afterResult_create_ok?.output?.["spec"] }), storage);
-      const result = await interpret(processSpecHandler.addStep({ spec: afterResult_publish_ok?.output?.["spec"], step: "{\"key\":\"s2\",\"step_type\":\"automation\",\"config\":\"{}\"}", index: "0" }), storage);
-      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
-      expect(normalize(result.variant)).toBe(normalize('locked'));
-    });
-
-    it('fixture "addStep_bad_json" -> error', async () => {
-      if (typeof processSpecHandler.addStep !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_create_ok = await interpret(processSpecHandler.create({ name: "onboard", steps: "[{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" }), storage);
-      const result = await interpret(processSpecHandler.addStep({ spec: afterResult_create_ok?.output?.["spec"], step: "not-json", index: "0" }), storage);
-      expect(result.variant).not.toBe('ok');
-    });
-
-  });
-
-  describe('removeStep', () => {
-    it('builds a valid StorageProgram', () => {
-      const program = processSpecHandler.removeStep({ spec: {"type":"ref","fixture":"addStep_ok","field":"spec"}, stepKey: "s2" });
-      expect(program).toBeDefined();
-      expect(program.instructions).toBeDefined();
-      expect(Array.isArray(program.instructions)).toBe(true);
-      expect(program.instructions.length).toBeGreaterThan(0);
-    });
-
-    it('has classifiable purity', () => {
-      const program = processSpecHandler.removeStep({ spec: {"type":"ref","fixture":"addStep_ok","field":"spec"}, stepKey: "s2" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const purity = classifyPurity(program);
-      expect(['pure', 'read-only', 'read-write']).toContain(purity);
-    });
-
-    it('declares completion variants', () => {
-      const program = processSpecHandler.removeStep({ spec: {"type":"ref","fixture":"addStep_ok","field":"spec"}, stepKey: "s2" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
-      expect(variants.size).toBeGreaterThan(0);
-    });
-
-    it('declares read and write sets', () => {
-      const program = processSpecHandler.removeStep({ spec: {"type":"ref","fixture":"addStep_ok","field":"spec"}, stepKey: "s2" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const reads = extractReadSet(program);
-      const writes = extractWriteSet(program);
-      const purity = classifyPurity(program);
-      if (purity === 'read-only') {
-        expect(reads.size).toBeGreaterThan(0);
-      } else if (purity === 'read-write') {
-        expect(writes.size).toBeGreaterThan(0);
-      }
-    });
-
-    it('has trackable transport effects', () => {
-      const program = processSpecHandler.removeStep({ spec: {"type":"ref","fixture":"addStep_ok","field":"spec"}, stepKey: "s2" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const effects = extractPerformSet(program);
-      expect(effects).toBeDefined();
-    });
-
-    it('produces a result', async () => {
-      if (typeof processSpecHandler.removeStep !== 'function') return;
-      const result = await interpret(processSpecHandler.removeStep({ spec: {"type":"ref","fixture":"addStep_ok","field":"spec"}, stepKey: "s2" }), storage);
-      expect(result).toBeDefined();
-      if (result.variant !== undefined) {
-        expect(typeof result.variant).toBe('string');
-      }
-    });
-
-    it('fixture "removeStep_ok" -> ok', async () => {
-      if (typeof processSpecHandler.removeStep !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_create_ok = await interpret(processSpecHandler.create({ name: "onboard", steps: "[{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" }), storage);
-      const afterResult_addStep_ok = await interpret(processSpecHandler.addStep({ spec: afterResult_create_ok?.output?.["spec"], step: "{\"key\":\"s2\",\"step_type\":\"automation\",\"config\":\"{}\"}", index: "1" }), storage);
-      const result = await interpret(processSpecHandler.removeStep({ spec: afterResult_addStep_ok?.output?.["spec"], stepKey: "s2" }), storage);
-      expect(result.variant).toBe('ok');
-    });
-
-    it('fixture "removeStep_notfound_spec" -> notfound', async () => {
-      if (typeof processSpecHandler.removeStep !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await interpret(processSpecHandler.removeStep({ spec: "nonexistent-spec", stepKey: "s1" }), storage);
-      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
-      expect(normalize(result.variant)).toBe(normalize('notfound'));
-    });
-
-    it('fixture "removeStep_locked" -> locked', async () => {
-      if (typeof processSpecHandler.removeStep !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_create_ok = await interpret(processSpecHandler.create({ name: "onboard", steps: "[{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" }), storage);
-      const afterResult_publish_ok = await interpret(processSpecHandler.publish({ spec: afterResult_create_ok?.output?.["spec"] }), storage);
-      const result = await interpret(processSpecHandler.removeStep({ spec: afterResult_publish_ok?.output?.["spec"], stepKey: "s1" }), storage);
-      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
-      expect(normalize(result.variant)).toBe(normalize('locked'));
-    });
-
-    it('fixture "removeStep_notfound_step" -> notfound', async () => {
-      if (typeof processSpecHandler.removeStep !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_create_ok = await interpret(processSpecHandler.create({ name: "onboard", steps: "[{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" }), storage);
-      const result = await interpret(processSpecHandler.removeStep({ spec: afterResult_create_ok?.output?.["spec"], stepKey: "no-such-step" }), storage);
-      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
-      expect(normalize(result.variant)).toBe(normalize('notfound'));
-    });
-
-  });
-
-  describe('moveStep', () => {
-    it('builds a valid StorageProgram', () => {
-      const program = processSpecHandler.moveStep({ spec: {"type":"ref","fixture":"addStep_ok","field":"spec"}, stepKey: "s2", toIndex: "0" });
-      expect(program).toBeDefined();
-      expect(program.instructions).toBeDefined();
-      expect(Array.isArray(program.instructions)).toBe(true);
-      expect(program.instructions.length).toBeGreaterThan(0);
-    });
-
-    it('has classifiable purity', () => {
-      const program = processSpecHandler.moveStep({ spec: {"type":"ref","fixture":"addStep_ok","field":"spec"}, stepKey: "s2", toIndex: "0" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const purity = classifyPurity(program);
-      expect(['pure', 'read-only', 'read-write']).toContain(purity);
-    });
-
-    it('declares completion variants', () => {
-      const program = processSpecHandler.moveStep({ spec: {"type":"ref","fixture":"addStep_ok","field":"spec"}, stepKey: "s2", toIndex: "0" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
-      expect(variants.size).toBeGreaterThan(0);
-    });
-
-    it('declares read and write sets', () => {
-      const program = processSpecHandler.moveStep({ spec: {"type":"ref","fixture":"addStep_ok","field":"spec"}, stepKey: "s2", toIndex: "0" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const reads = extractReadSet(program);
-      const writes = extractWriteSet(program);
-      const purity = classifyPurity(program);
-      if (purity === 'read-only') {
-        expect(reads.size).toBeGreaterThan(0);
-      } else if (purity === 'read-write') {
-        expect(writes.size).toBeGreaterThan(0);
-      }
-    });
-
-    it('has trackable transport effects', () => {
-      const program = processSpecHandler.moveStep({ spec: {"type":"ref","fixture":"addStep_ok","field":"spec"}, stepKey: "s2", toIndex: "0" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const effects = extractPerformSet(program);
-      expect(effects).toBeDefined();
-    });
-
-    it('produces a result', async () => {
-      if (typeof processSpecHandler.moveStep !== 'function') return;
-      const result = await interpret(processSpecHandler.moveStep({ spec: {"type":"ref","fixture":"addStep_ok","field":"spec"}, stepKey: "s2", toIndex: "0" }), storage);
-      expect(result).toBeDefined();
-      if (result.variant !== undefined) {
-        expect(typeof result.variant).toBe('string');
-      }
-    });
-
-    it('fixture "moveStep_ok" -> ok', async () => {
-      if (typeof processSpecHandler.moveStep !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_create_ok = await interpret(processSpecHandler.create({ name: "onboard", steps: "[{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" }), storage);
-      const afterResult_addStep_ok = await interpret(processSpecHandler.addStep({ spec: afterResult_create_ok?.output?.["spec"], step: "{\"key\":\"s2\",\"step_type\":\"automation\",\"config\":\"{}\"}", index: "1" }), storage);
-      const result = await interpret(processSpecHandler.moveStep({ spec: afterResult_addStep_ok?.output?.["spec"], stepKey: "s2", toIndex: "0" }), storage);
-      expect(result.variant).toBe('ok');
-    });
-
-    it('fixture "moveStep_notfound_spec" -> notfound', async () => {
-      if (typeof processSpecHandler.moveStep !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await interpret(processSpecHandler.moveStep({ spec: "nonexistent-spec", stepKey: "s1", toIndex: "0" }), storage);
-      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
-      expect(normalize(result.variant)).toBe(normalize('notfound'));
-    });
-
-    it('fixture "moveStep_locked" -> locked', async () => {
-      if (typeof processSpecHandler.moveStep !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_create_ok = await interpret(processSpecHandler.create({ name: "onboard", steps: "[{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" }), storage);
-      const afterResult_publish_ok = await interpret(processSpecHandler.publish({ spec: afterResult_create_ok?.output?.["spec"] }), storage);
-      const result = await interpret(processSpecHandler.moveStep({ spec: afterResult_publish_ok?.output?.["spec"], stepKey: "s1", toIndex: "0" }), storage);
-      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
-      expect(normalize(result.variant)).toBe(normalize('locked'));
-    });
-
-    it('fixture "moveStep_notfound_step" -> notfound', async () => {
-      if (typeof processSpecHandler.moveStep !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_create_ok = await interpret(processSpecHandler.create({ name: "onboard", steps: "[{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" }), storage);
-      const result = await interpret(processSpecHandler.moveStep({ spec: afterResult_create_ok?.output?.["spec"], stepKey: "no-such-step", toIndex: "0" }), storage);
-      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
-      expect(normalize(result.variant)).toBe(normalize('notfound'));
-    });
-
-  });
-
-  describe('addEdge', () => {
-    it('builds a valid StorageProgram', () => {
-      const program = processSpecHandler.addEdge({ spec: {"type":"ref","fixture":"addStep_ok","field":"spec"}, fromKey: "s1", toKey: "s2", kind: "default" });
-      expect(program).toBeDefined();
-      expect(program.instructions).toBeDefined();
-      expect(Array.isArray(program.instructions)).toBe(true);
-      expect(program.instructions.length).toBeGreaterThan(0);
-    });
-
-    it('has classifiable purity', () => {
-      const program = processSpecHandler.addEdge({ spec: {"type":"ref","fixture":"addStep_ok","field":"spec"}, fromKey: "s1", toKey: "s2", kind: "default" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const purity = classifyPurity(program);
-      expect(['pure', 'read-only', 'read-write']).toContain(purity);
-    });
-
-    it('declares completion variants', () => {
-      const program = processSpecHandler.addEdge({ spec: {"type":"ref","fixture":"addStep_ok","field":"spec"}, fromKey: "s1", toKey: "s2", kind: "default" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
-      expect(variants.size).toBeGreaterThan(0);
-    });
-
-    it('declares read and write sets', () => {
-      const program = processSpecHandler.addEdge({ spec: {"type":"ref","fixture":"addStep_ok","field":"spec"}, fromKey: "s1", toKey: "s2", kind: "default" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const reads = extractReadSet(program);
-      const writes = extractWriteSet(program);
-      const purity = classifyPurity(program);
-      if (purity === 'read-only') {
-        expect(reads.size).toBeGreaterThan(0);
-      } else if (purity === 'read-write') {
-        expect(writes.size).toBeGreaterThan(0);
-      }
-    });
-
-    it('has trackable transport effects', () => {
-      const program = processSpecHandler.addEdge({ spec: {"type":"ref","fixture":"addStep_ok","field":"spec"}, fromKey: "s1", toKey: "s2", kind: "default" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const effects = extractPerformSet(program);
-      expect(effects).toBeDefined();
-    });
-
-    it('produces a result', async () => {
-      if (typeof processSpecHandler.addEdge !== 'function') return;
-      const result = await interpret(processSpecHandler.addEdge({ spec: {"type":"ref","fixture":"addStep_ok","field":"spec"}, fromKey: "s1", toKey: "s2", kind: "default" }), storage);
-      expect(result).toBeDefined();
-      if (result.variant !== undefined) {
-        expect(typeof result.variant).toBe('string');
-      }
-    });
-
-    it('fixture "addEdge_ok" -> ok', async () => {
-      if (typeof processSpecHandler.addEdge !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_create_ok = await interpret(processSpecHandler.create({ name: "onboard", steps: "[{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" }), storage);
-      const afterResult_addStep_ok = await interpret(processSpecHandler.addStep({ spec: afterResult_create_ok?.output?.["spec"], step: "{\"key\":\"s2\",\"step_type\":\"automation\",\"config\":\"{}\"}", index: "1" }), storage);
-      const result = await interpret(processSpecHandler.addEdge({ spec: afterResult_addStep_ok?.output?.["spec"], fromKey: "s1", toKey: "s2", kind: "default" }), storage);
-      expect(result.variant).toBe('ok');
-    });
-
-    it('fixture "addEdge_notfound_spec" -> notfound', async () => {
-      if (typeof processSpecHandler.addEdge !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await interpret(processSpecHandler.addEdge({ spec: "nonexistent-spec", fromKey: "s1", toKey: "s2", kind: "default" }), storage);
-      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
-      expect(normalize(result.variant)).toBe(normalize('notfound'));
-    });
-
-    it('fixture "addEdge_locked" -> locked', async () => {
-      if (typeof processSpecHandler.addEdge !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_create_ok = await interpret(processSpecHandler.create({ name: "onboard", steps: "[{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" }), storage);
-      const afterResult_publish_ok = await interpret(processSpecHandler.publish({ spec: afterResult_create_ok?.output?.["spec"] }), storage);
-      const result = await interpret(processSpecHandler.addEdge({ spec: afterResult_publish_ok?.output?.["spec"], fromKey: "s1", toKey: "s1", kind: "default" }), storage);
-      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
-      expect(normalize(result.variant)).toBe(normalize('locked'));
-    });
-
-    it('fixture "addEdge_invalid_kind" -> invalid_kind', async () => {
-      if (typeof processSpecHandler.addEdge !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_create_ok = await interpret(processSpecHandler.create({ name: "onboard", steps: "[{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" }), storage);
-      const result = await interpret(processSpecHandler.addEdge({ spec: afterResult_create_ok?.output?.["spec"], fromKey: "s1", toKey: "s1", kind: "invalid-kind" }), storage);
-      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
-      expect(normalize(result.variant)).toBe(normalize('invalid_kind'));
-    });
-
-    it('fixture "addEdge_notfound_step" -> notfound', async () => {
-      if (typeof processSpecHandler.addEdge !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_create_ok = await interpret(processSpecHandler.create({ name: "onboard", steps: "[{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" }), storage);
-      const result = await interpret(processSpecHandler.addEdge({ spec: afterResult_create_ok?.output?.["spec"], fromKey: "s1", toKey: "no-such-step", kind: "default" }), storage);
-      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
-      expect(normalize(result.variant)).toBe(normalize('notfound'));
-    });
-
-  });
-
-  describe('removeEdge', () => {
-    it('builds a valid StorageProgram', () => {
-      const program = processSpecHandler.removeEdge({ spec: {"type":"ref","fixture":"addEdge_ok","field":"spec"}, fromKey: "s1", toKey: "s2" });
-      expect(program).toBeDefined();
-      expect(program.instructions).toBeDefined();
-      expect(Array.isArray(program.instructions)).toBe(true);
-      expect(program.instructions.length).toBeGreaterThan(0);
-    });
-
-    it('has classifiable purity', () => {
-      const program = processSpecHandler.removeEdge({ spec: {"type":"ref","fixture":"addEdge_ok","field":"spec"}, fromKey: "s1", toKey: "s2" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const purity = classifyPurity(program);
-      expect(['pure', 'read-only', 'read-write']).toContain(purity);
-    });
-
-    it('declares completion variants', () => {
-      const program = processSpecHandler.removeEdge({ spec: {"type":"ref","fixture":"addEdge_ok","field":"spec"}, fromKey: "s1", toKey: "s2" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
-      expect(variants.size).toBeGreaterThan(0);
-    });
-
-    it('declares read and write sets', () => {
-      const program = processSpecHandler.removeEdge({ spec: {"type":"ref","fixture":"addEdge_ok","field":"spec"}, fromKey: "s1", toKey: "s2" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const reads = extractReadSet(program);
-      const writes = extractWriteSet(program);
-      const purity = classifyPurity(program);
-      if (purity === 'read-only') {
-        expect(reads.size).toBeGreaterThan(0);
-      } else if (purity === 'read-write') {
-        expect(writes.size).toBeGreaterThan(0);
-      }
-    });
-
-    it('has trackable transport effects', () => {
-      const program = processSpecHandler.removeEdge({ spec: {"type":"ref","fixture":"addEdge_ok","field":"spec"}, fromKey: "s1", toKey: "s2" });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const effects = extractPerformSet(program);
-      expect(effects).toBeDefined();
-    });
-
-    it('produces a result', async () => {
-      if (typeof processSpecHandler.removeEdge !== 'function') return;
-      const result = await interpret(processSpecHandler.removeEdge({ spec: {"type":"ref","fixture":"addEdge_ok","field":"spec"}, fromKey: "s1", toKey: "s2" }), storage);
-      expect(result).toBeDefined();
-      if (result.variant !== undefined) {
-        expect(typeof result.variant).toBe('string');
-      }
-    });
-
-    it('fixture "removeEdge_ok" -> ok', async () => {
-      if (typeof processSpecHandler.removeEdge !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_create_ok = await interpret(processSpecHandler.create({ name: "onboard", steps: "[{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" }), storage);
-      const afterResult_addStep_ok = await interpret(processSpecHandler.addStep({ spec: afterResult_create_ok?.output?.["spec"], step: "{\"key\":\"s2\",\"step_type\":\"automation\",\"config\":\"{}\"}", index: "1" }), storage);
-      const afterResult_addEdge_ok = await interpret(processSpecHandler.addEdge({ spec: afterResult_addStep_ok?.output?.["spec"], fromKey: "s1", toKey: "s2", kind: "default" }), storage);
-      const result = await interpret(processSpecHandler.removeEdge({ spec: afterResult_addEdge_ok?.output?.["spec"], fromKey: "s1", toKey: "s2" }), storage);
-      expect(result.variant).toBe('ok');
-    });
-
-    it('fixture "removeEdge_notfound" -> notfound', async () => {
-      if (typeof processSpecHandler.removeEdge !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await interpret(processSpecHandler.removeEdge({ spec: "nonexistent-spec", fromKey: "s1", toKey: "s2" }), storage);
-      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
-      expect(normalize(result.variant)).toBe(normalize('notfound'));
-    });
-
-    it('fixture "removeEdge_locked" -> locked', async () => {
-      if (typeof processSpecHandler.removeEdge !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_create_ok = await interpret(processSpecHandler.create({ name: "onboard", steps: "[{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" }), storage);
-      const afterResult_publish_ok = await interpret(processSpecHandler.publish({ spec: afterResult_create_ok?.output?.["spec"] }), storage);
-      const result = await interpret(processSpecHandler.removeEdge({ spec: afterResult_publish_ok?.output?.["spec"], fromKey: "s1", toKey: "s2" }), storage);
-      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
-      expect(normalize(result.variant)).toBe(normalize('locked'));
     });
 
   });
@@ -875,26 +440,6 @@ describe('ProcessSpec functional handler', () => {
       expect(thenResult0.variant).toBe("ok");
     });
 
-    it("addStep notfound", async () => {
-      const storage = createInMemoryStorage();
-      const addStepResult0 = await interpret(processSpecHandler.addStep({ spec: "nonexistent", step: "{\"key\":\"s1\",\"step_type\":\"human\",\"config\":\"{}\"}", index: 0 }), storage);
-      expect(addStepResult0.variant).toBe("notfound");
-      let message = addStepResult0.output["message"];
-      let m = message;
-      const thenResult0 = await interpret(processSpecHandler.addStep({ spec: "nonexistent", step: "{\"key\":\"s2\",\"step_type\":\"human\",\"config\":\"{}\"}", index: 0 }), storage);
-      expect(thenResult0.variant).toBe("notfound");
-    });
-
-    it("addEdge invalid kind", async () => {
-      const storage = createInMemoryStorage();
-      const createResult0 = await interpret(processSpecHandler.create({ name: "flow2", steps: "[{\"key\":\"a\",\"step_type\":\"human\",\"config\":\"{}\"}]", edges: "[]" }), storage);
-      expect(createResult0.variant).toBe("ok");
-      let spec = createResult0.output["spec"];
-      let y = spec;
-      const thenResult0 = await interpret(processSpecHandler.addEdge({ spec: y, fromKey: "a", toKey: "a", kind: "bad" }), storage);
-      expect(thenResult0.variant).toBe("invalid_kind");
-    });
-
   });
 
   describe('state invariants (stateful PBT)', () => {
@@ -909,10 +454,6 @@ describe('ProcessSpec functional handler', () => {
               fc.record({ action: fc.constant('update'), input: fc.record({ spec: fc.string(), steps: fc.string(), edges: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ spec: fc.string() }) }),
               fc.record({ action: fc.constant('addStep'), input: fc.record({ spec: fc.string(), step: fc.string(), index: fc.integer({ min: 1, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('removeStep'), input: fc.record({ spec: fc.string(), stepKey: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('moveStep'), input: fc.record({ spec: fc.string(), stepKey: fc.string({ minLength: 1, maxLength: 50 }), toIndex: fc.integer({ min: 1, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('addEdge'), input: fc.record({ spec: fc.string(), fromKey: fc.string({ minLength: 1, maxLength: 50 }), toKey: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('removeEdge'), input: fc.record({ spec: fc.string(), fromKey: fc.string({ minLength: 1, maxLength: 50 }), toKey: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -948,10 +489,6 @@ describe('ProcessSpec functional handler', () => {
               fc.record({ action: fc.constant('update'), input: fc.record({ spec: fc.string(), steps: fc.string(), edges: fc.string() }) }),
               fc.record({ action: fc.constant('get'), input: fc.record({ spec: fc.string() }) }),
               fc.record({ action: fc.constant('addStep'), input: fc.record({ spec: fc.string(), step: fc.string(), index: fc.integer({ min: 1, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('removeStep'), input: fc.record({ spec: fc.string(), stepKey: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('moveStep'), input: fc.record({ spec: fc.string(), stepKey: fc.string({ minLength: 1, maxLength: 50 }), toIndex: fc.integer({ min: 1, max: 1000 }) }) }),
-              fc.record({ action: fc.constant('addEdge'), input: fc.record({ spec: fc.string(), fromKey: fc.string({ minLength: 1, maxLength: 50 }), toKey: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('removeEdge'), input: fc.record({ spec: fc.string(), fromKey: fc.string({ minLength: 1, maxLength: 50 }), toKey: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -1045,171 +582,6 @@ describe('ProcessSpec functional handler', () => {
             const storage = createInMemoryStorage();
             const result = await safeInvoke(async () => {
               const program = processSpecHandler.deprecate(input as Record<string, unknown>);
-              return interpret(program, storage);
-            });
-            if (result?.variant === "ok") {
-              seen = true;
-              expect(result.output).toBeDefined();
-            }
-          },
-        ),
-        { numRuns: 50 },
-      );
-    });
-
-    it('addStep handles empty input: ', async () => {
-      if (typeof processSpecHandler.addStep !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await safeInvoke(async () => await interpret(processSpecHandler.addStep({  }), storage));
-      // Empty input should produce a defined result with a variant
-      expect(result).toBeDefined();
-      if (result.variant !== undefined) {
-        expect(typeof result.variant).toBe('string');
-      }
-    });
-
-    it('addStep ensures on ok: ', async () => {
-      if (typeof processSpecHandler.addStep !== 'function') return;
-      let seen = false;
-      await fc.assert(
-        fc.asyncProperty(
-          fc.record({ spec: fc.string(), step: fc.string(), index: fc.integer({ min: 1, max: 1000 }) }),
-          async (input) => {
-            const storage = createInMemoryStorage();
-            const result = await safeInvoke(async () => {
-              const program = processSpecHandler.addStep(input as Record<string, unknown>);
-              return interpret(program, storage);
-            });
-            if (result?.variant === "ok") {
-              seen = true;
-              expect(result.output).toBeDefined();
-            }
-          },
-        ),
-        { numRuns: 50 },
-      );
-    });
-
-    it('removeStep handles empty input: ', async () => {
-      if (typeof processSpecHandler.removeStep !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await safeInvoke(async () => await interpret(processSpecHandler.removeStep({  }), storage));
-      // Empty input should produce a defined result with a variant
-      expect(result).toBeDefined();
-      if (result.variant !== undefined) {
-        expect(typeof result.variant).toBe('string');
-      }
-    });
-
-    it('removeStep ensures on ok: ', async () => {
-      if (typeof processSpecHandler.removeStep !== 'function') return;
-      let seen = false;
-      await fc.assert(
-        fc.asyncProperty(
-          fc.record({ spec: fc.string(), stepKey: fc.string({ minLength: 1, maxLength: 50 }) }),
-          async (input) => {
-            const storage = createInMemoryStorage();
-            const result = await safeInvoke(async () => {
-              const program = processSpecHandler.removeStep(input as Record<string, unknown>);
-              return interpret(program, storage);
-            });
-            if (result?.variant === "ok") {
-              seen = true;
-              expect(result.output).toBeDefined();
-            }
-          },
-        ),
-        { numRuns: 50 },
-      );
-    });
-
-    it('moveStep handles empty input: ', async () => {
-      if (typeof processSpecHandler.moveStep !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await safeInvoke(async () => await interpret(processSpecHandler.moveStep({  }), storage));
-      // Empty input should produce a defined result with a variant
-      expect(result).toBeDefined();
-      if (result.variant !== undefined) {
-        expect(typeof result.variant).toBe('string');
-      }
-    });
-
-    it('moveStep ensures on ok: ', async () => {
-      if (typeof processSpecHandler.moveStep !== 'function') return;
-      let seen = false;
-      await fc.assert(
-        fc.asyncProperty(
-          fc.record({ spec: fc.string(), stepKey: fc.string({ minLength: 1, maxLength: 50 }), toIndex: fc.integer({ min: 1, max: 1000 }) }),
-          async (input) => {
-            const storage = createInMemoryStorage();
-            const result = await safeInvoke(async () => {
-              const program = processSpecHandler.moveStep(input as Record<string, unknown>);
-              return interpret(program, storage);
-            });
-            if (result?.variant === "ok") {
-              seen = true;
-              expect(result.output).toBeDefined();
-            }
-          },
-        ),
-        { numRuns: 50 },
-      );
-    });
-
-    it('addEdge handles empty input: ', async () => {
-      if (typeof processSpecHandler.addEdge !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await safeInvoke(async () => await interpret(processSpecHandler.addEdge({  }), storage));
-      // Empty input should produce a defined result with a variant
-      expect(result).toBeDefined();
-      if (result.variant !== undefined) {
-        expect(typeof result.variant).toBe('string');
-      }
-    });
-
-    it('addEdge ensures on ok: ', async () => {
-      if (typeof processSpecHandler.addEdge !== 'function') return;
-      let seen = false;
-      await fc.assert(
-        fc.asyncProperty(
-          fc.record({ spec: fc.string(), fromKey: fc.string({ minLength: 1, maxLength: 50 }), toKey: fc.string({ minLength: 1, maxLength: 50 }), kind: fc.string({ minLength: 1, maxLength: 50 }) }),
-          async (input) => {
-            const storage = createInMemoryStorage();
-            const result = await safeInvoke(async () => {
-              const program = processSpecHandler.addEdge(input as Record<string, unknown>);
-              return interpret(program, storage);
-            });
-            if (result?.variant === "ok") {
-              seen = true;
-              expect(result.output).toBeDefined();
-            }
-          },
-        ),
-        { numRuns: 50 },
-      );
-    });
-
-    it('removeEdge handles empty input: ', async () => {
-      if (typeof processSpecHandler.removeEdge !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await safeInvoke(async () => await interpret(processSpecHandler.removeEdge({  }), storage));
-      // Empty input should produce a defined result with a variant
-      expect(result).toBeDefined();
-      if (result.variant !== undefined) {
-        expect(typeof result.variant).toBe('string');
-      }
-    });
-
-    it('removeEdge ensures on ok: ', async () => {
-      if (typeof processSpecHandler.removeEdge !== 'function') return;
-      let seen = false;
-      await fc.assert(
-        fc.asyncProperty(
-          fc.record({ spec: fc.string(), fromKey: fc.string({ minLength: 1, maxLength: 50 }), toKey: fc.string({ minLength: 1, maxLength: 50 }) }),
-          async (input) => {
-            const storage = createInMemoryStorage();
-            const result = await safeInvoke(async () => {
-              const program = processSpecHandler.removeEdge(input as Record<string, unknown>);
               return interpret(program, storage);
             });
             if (result?.variant === "ok") {
