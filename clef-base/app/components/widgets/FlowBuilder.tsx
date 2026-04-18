@@ -30,7 +30,6 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { useKernelInvoke } from '../../../lib/clef-provider';
-import { ActionButton } from './ActionButton';
 import {
   ConceptActionPicker,
   type ConceptActionPickerValue,
@@ -86,6 +85,9 @@ export interface FlowBuilderProps {
   onStepSelected?: (stepId: string | null) => void;
   mode?: 'create' | 'edit';
   context?: { processSpecId?: string; steps?: StepRecord[] } | null;
+  onSave?: () => void | Promise<void>;
+  onPublish?: () => void | Promise<void>;
+  onCancel?: () => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -742,6 +744,7 @@ interface StepInspectorPaneProps {
   processSpecId: string;
   stepId: string | null;
   interactionState: InteractionState;
+  onClose?: () => void;
 }
 
 type InspectorTab = 'action' | 'io-mapping' | 'error';
@@ -757,6 +760,7 @@ const StepInspectorPane: React.FC<StepInspectorPaneProps> = ({
   processSpecId,
   stepId,
   interactionState,
+  onClose,
 }) => {
   const invoke = useKernelInvoke();
   const [activeTab, setActiveTab] = useState<InspectorTab>('action');
@@ -820,6 +824,7 @@ const StepInspectorPane: React.FC<StepInspectorPaneProps> = ({
         aria-label="Step configuration"
         style={{
           display: 'flex',
+          alignItems: 'center',
           borderBottom: '1px solid var(--palette-outline-variant)',
           padding: '0 var(--spacing-xs)',
         }}
@@ -858,6 +863,26 @@ const StepInspectorPane: React.FC<StepInspectorPaneProps> = ({
             {tab === 'action' ? 'Action' : tab === 'io-mapping' ? 'I/O' : 'Error'}
           </button>
         ))}
+        {onClose && (
+          <button
+            onClick={onClose}
+            aria-label="Close inspector"
+            title="Close"
+            style={{
+              marginLeft: 'auto',
+              padding: '2px 6px',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: 'var(--palette-on-surface-variant)',
+              fontSize: '14px',
+              lineHeight: 1,
+              flexShrink: 0,
+            }}
+          >
+            ✕
+          </button>
+        )}
       </div>
 
       {/* Tab panels */}
@@ -1859,6 +1884,9 @@ export const FlowBuilder: React.FC<FlowBuilderProps> = ({
   onStepSelected,
   mode = 'edit',
   context,
+  onSave,
+  onPublish,
+  onCancel: onCancelProp,
 }) => {
   const invoke = useKernelInvoke();
   const isCreate = mode === 'create';
@@ -2248,40 +2276,28 @@ export const FlowBuilder: React.FC<FlowBuilderProps> = ({
 
           <div style={{ flex: 1 }} />
 
-          {/* Save / Publish / Cancel — ActionBinding-mediated */}
+          {/* Save / Publish / Cancel */}
           {isCreate ? (
-            <ActionButton
-              binding="process-spec-create"
-              context={{ spec: processSpecId, steps }}
-              label="Create Flow"
-              buttonVariant="primary"
-              onSuccess={() => {/* created */}}
-            />
+            <button data-part="button" data-variant="filled" onClick={() => void onSave?.()}>
+              Create Flow
+            </button>
           ) : (
             <>
-              <ActionButton
-                binding="process-spec-save"
-                context={{ spec: processSpecId }}
-                label="Save"
-                buttonVariant="default"
-                onSuccess={() => {/* saved */}}
-              />
-              <ActionButton
-                binding="process-spec-publish"
-                context={{ spec: processSpecId }}
-                label="Publish"
-                buttonVariant="primary"
-                onSuccess={() => {/* published */}}
-              />
+              {onSave && (
+                <button data-part="button" data-variant="outlined" onClick={() => void onSave()}>
+                  Save
+                </button>
+              )}
+              {onPublish && (
+                <button data-part="button" data-variant="filled" onClick={() => void onPublish()}>
+                  Publish
+                </button>
+              )}
             </>
           )}
-          <ActionButton
-            binding="process-spec-cancel"
-            context={{ spec: processSpecId }}
-            label="Cancel"
-            buttonVariant="ghost"
-            onSuccess={() => handleEscape()}
-          />
+          <button data-part="button" data-variant="ghost" onClick={() => { onCancelProp?.(); handleEscape(); }}>
+            Cancel
+          </button>
         </div>
 
         {/* Center view — anatomy part: centerPane */}
@@ -2337,6 +2353,7 @@ export const FlowBuilder: React.FC<FlowBuilderProps> = ({
         processSpecId={processSpecId}
         stepId={selectedStepId}
         interactionState={interactionState}
+        onClose={handleEscape}
       />
     </div>
   );

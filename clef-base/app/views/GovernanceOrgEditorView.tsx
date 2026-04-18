@@ -42,7 +42,7 @@ interface RoleRecord {
 
 interface InlineFormProps {
   title: string;
-  fields: { key: string; label: string; placeholder?: string; type?: string }[];
+  fields: { key: string; label: string; placeholder?: string; type?: string; required?: boolean }[];
   onSubmit: (values: Record<string, string>) => Promise<void>;
   onCancel: () => void;
   submitLabel?: string;
@@ -84,13 +84,14 @@ const InlineForm: React.FC<InlineFormProps> = ({ title, fields, onSubmit, onCanc
             htmlFor={`field-${field.key}`}
             style={{ display: 'block', fontSize: '0.75rem', color: 'var(--palette-on-surface-variant)', marginBottom: 4 }}
           >
-            {field.label}
+            {field.label}{field.required && <span style={{ color: 'var(--palette-error)', marginLeft: 2 }}>*</span>}
           </label>
           <input
             id={`field-${field.key}`}
             type={field.type ?? 'text'}
             placeholder={field.placeholder ?? field.label}
             value={values[field.key] ?? ''}
+            required={field.required}
             onChange={e => setValues(v => ({ ...v, [field.key]: e.target.value }))}
             style={{
               width: '100%',
@@ -828,7 +829,7 @@ export const GovernanceOrgEditorView: React.FC = () => {
         try { rows = JSON.parse(result.items as string ?? '[]'); } catch { /* empty */ }
         const parsed: TeamRecord[] = rows.map(n => ({
           id: n.node as string,
-          name: (n.name ?? n.node) as string,
+          name: ((n.name as string) || (n.node as string)) as string,
           domain: n.domain as string | undefined,
           purpose: n.purpose as string | undefined,
           parent: (n.parent ?? null) as string | null,
@@ -856,7 +857,7 @@ export const GovernanceOrgEditorView: React.FC = () => {
         try { rows = JSON.parse(result.items as string ?? '[]'); } catch { /* empty */ }
         const parsed: ProcessSpecRecord[] = rows.map(n => ({
           spec: n.node as string,
-          name: (n.name ?? n.spec_name ?? n.node) as string,
+          name: (((n.name as string) || (n.spec_name as string) || (n.node as string))) as string,
           status: (n.run_status ?? n.status ?? 'draft') as string,
           steps: [],
         }));
@@ -877,14 +878,15 @@ export const GovernanceOrgEditorView: React.FC = () => {
   }, [mode, refreshKey, loadTeams, loadSpecs]);
 
   const createTeam = useCallback(async (values: Record<string, string>) => {
+    if (!values.name?.trim()) throw new Error('Team Name is required');
     const nodeId = `team-${Date.now()}`;
     const createResult = await invoke('ContentNode', 'create', {
       node: nodeId,
       type: 'team',
       content: JSON.stringify({
-        name: values.name,
-        domain: values.domain || undefined,
-        purpose: values.purpose || undefined,
+        name: values.name.trim(),
+        domain: values.domain?.trim() || undefined,
+        purpose: values.purpose?.trim() || undefined,
         members: [],
       }),
     });
@@ -894,16 +896,18 @@ export const GovernanceOrgEditorView: React.FC = () => {
     await invoke('Schema', 'applyTo', { entity_id: nodeId, schema: 'team' });
     setShowCreateTeam(false);
     setRefreshKey(k => k + 1);
+    setSelectedTeam({ id: nodeId, name: values.name.trim(), domain: values.domain?.trim(), purpose: values.purpose?.trim(), members: [] });
   }, [invoke]);
 
   const createSpec = useCallback(async (values: Record<string, string>) => {
+    if (!values.name?.trim()) throw new Error('Spec Name is required');
     const nodeId = `spec-${Date.now()}`;
     const createResult = await invoke('ContentNode', 'create', {
       node: nodeId,
       type: 'process-spec',
       content: JSON.stringify({
-        name: values.name,
-        description: values.description || undefined,
+        name: values.name.trim(),
+        description: values.description?.trim() || undefined,
         status: 'draft',
       }),
     });
@@ -913,6 +917,7 @@ export const GovernanceOrgEditorView: React.FC = () => {
     await invoke('Schema', 'applyTo', { entity_id: nodeId, schema: 'process-spec' });
     setShowCreateSpec(false);
     setRefreshKey(k => k + 1);
+    setSelectedSpec({ spec: nodeId, name: values.name.trim(), status: 'draft', steps: [] });
   }, [invoke]);
 
   const MODES: { id: Mode; label: string }[] = [
@@ -998,7 +1003,7 @@ export const GovernanceOrgEditorView: React.FC = () => {
                 <InlineForm
                   title="New Top-level Team"
                   fields={[
-                    { key: 'name', label: 'Team Name', placeholder: 'Engineering' },
+                    { key: 'name', label: 'Team Name', placeholder: 'Engineering', required: true },
                     { key: 'domain', label: 'Domain (optional)', placeholder: 'Product' },
                     { key: 'purpose', label: 'Purpose (optional)', placeholder: 'Build the product' },
                   ]}
@@ -1024,7 +1029,7 @@ export const GovernanceOrgEditorView: React.FC = () => {
                 <InlineForm
                   title="New Process Spec"
                   fields={[
-                    { key: 'name', label: 'Spec Name', placeholder: 'Onboarding' },
+                    { key: 'name', label: 'Spec Name', placeholder: 'Onboarding', required: true },
                     { key: 'description', label: 'Description (optional)', placeholder: 'Employee onboarding process' },
                   ]}
                   onSubmit={createSpec}
@@ -1143,7 +1148,19 @@ export const GovernanceOrgEditorView: React.FC = () => {
 
                 {/* FlowBuilder — step authoring */}
                 <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
-                  <FlowBuilder processSpecId={selectedSpec.spec} initialView="steps" />
+                  <FlowBuilder
+                    processSpecId={selectedSpec.spec}
+                    initialView="steps"
+                    onSave={async () => {
+                      // Individual step configs auto-save via ProcessSpec/putStep;
+                      // this refreshes the runs list to reflect any pending changes.
+                      setRunsRefreshKey(k => k + 1);
+                    }}
+                    onPublish={async () => {
+                      await invoke('ProcessSpec', 'publish', { spec: selectedSpec.spec });
+                      setRefreshKey(k => k + 1);
+                    }}
+                  />
                 </div>
 
                 {/* Recent runs panel */}

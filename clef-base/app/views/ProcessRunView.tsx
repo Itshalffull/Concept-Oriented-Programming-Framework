@@ -88,6 +88,8 @@ export const ProcessRunView: React.FC<ProcessRunViewProps> = ({ runId }) => {
 
   const [run, setRun] = useState<RunRecord | null>(null);
   const [stepRuns, setStepRuns] = useState<StepRunRecord[]>([]);
+  const [specName, setSpecName] = useState<string | null>(null);
+  const [stepLabelMap, setStepLabelMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -111,13 +113,40 @@ export const ProcessRunView: React.FC<ProcessRunViewProps> = ({ runId }) => {
     Promise.all([
       invoke('ProcessRun', 'get', { run: runId }),
       invoke('StepRun', 'list', { run_ref: runId }),
-    ]).then(([runResult, stepsResult]) => {
+    ]).then(async ([runResult, stepsResult]) => {
       if (cancelled) return;
       if (!runResult || (runResult as Record<string, unknown>).variant === 'not_found') {
         setNotFound(true);
         setRun(null);
       } else if ((runResult as Record<string, unknown>).variant === 'ok') {
-        setRun(runResult as RunRecord);
+        const r = runResult as RunRecord;
+        setRun(r);
+        // Resolve spec name + step labels from ContentNode + ProcessSpec
+        if (r.spec_ref) {
+          try {
+            const [nodeResult, stepsResult] = await Promise.all([
+              invoke('ContentNode', 'get', { node: r.spec_ref }),
+              invoke('ProcessSpec', 'getSteps', { spec: r.spec_ref }),
+            ]);
+            if (!cancelled && (nodeResult as Record<string, unknown>).variant === 'ok') {
+              const content = (nodeResult as Record<string, unknown>).content as string | undefined;
+              if (content) {
+                const parsed = JSON.parse(content) as Record<string, unknown>;
+                setSpecName((parsed.name as string) || null);
+              }
+            }
+            if (!cancelled && (stepsResult as Record<string, unknown>).variant === 'ok') {
+              const rawSteps = (stepsResult as Record<string, unknown>).steps;
+              if (Array.isArray(rawSteps)) {
+                const map: Record<string, string> = {};
+                for (const s of rawSteps as Array<Record<string, unknown>>) {
+                  if (s.stepId && s.stepLabel) map[s.stepId as string] = s.stepLabel as string;
+                }
+                setStepLabelMap(map);
+              }
+            }
+          } catch { /* non-fatal */ }
+        }
       }
       if (stepsResult && (stepsResult as Record<string, unknown>).variant === 'ok') {
         const sr = stepsResult as Record<string, unknown>;
@@ -144,11 +173,15 @@ export const ProcessRunView: React.FC<ProcessRunViewProps> = ({ runId }) => {
     {
       key: 'step_key',
       label: 'Step',
-      render: (val) => (
-        <code style={{ fontSize: 'var(--typography-code-sm-size)', fontWeight: focusedStepKey === String(val) ? 700 : undefined }}>
-          {String(val ?? '—')}
-        </code>
-      ),
+      render: (val) => {
+        const key = String(val ?? '');
+        const label = stepLabelMap[key] || key || '—';
+        return (
+          <span style={{ fontSize: 'var(--typography-code-sm-size)', fontWeight: focusedStepKey === key ? 700 : undefined }}>
+            {label}
+          </span>
+        );
+      },
     },
     {
       key: 'step_type',
@@ -223,7 +256,7 @@ export const ProcessRunView: React.FC<ProcessRunViewProps> = ({ runId }) => {
           <h1 style={{ fontFamily: 'var(--typography-font-family-mono)', fontSize: '18px' }}>{runId}</h1>
           {run.spec_ref && (
             <p style={{ color: 'var(--palette-on-surface-variant)', marginTop: '2px', fontSize: 'var(--typography-body-sm-size)' }}>
-              {run.spec_ref}
+              {specName ?? run.spec_ref}
             </p>
           )}
         </div>
@@ -293,7 +326,7 @@ export const ProcessRunView: React.FC<ProcessRunViewProps> = ({ runId }) => {
                 { label: 'Spec', value: run.spec_ref ? (
                   <button style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--palette-primary)', fontFamily: 'var(--typography-font-family-mono)', fontSize: 'var(--typography-code-sm-size)' }}
                     onClick={() => navigateToHref(`/admin/processes/${encodeURIComponent(run.spec_ref!)}`)}>
-                    {run.spec_ref}
+                    {specName ?? run.spec_ref}
                   </button>
                 ) : '—' },
                 { label: 'Status', value: run.status ? <Badge variant={STATUS_VARIANT[run.status] ?? 'secondary'}>{run.status}</Badge> : '—' },
@@ -343,11 +376,10 @@ export const ProcessRunView: React.FC<ProcessRunViewProps> = ({ runId }) => {
                         padding: '4px 10px', borderRadius: 'var(--radius-sm)',
                         background: colorMap[status] ?? 'var(--palette-surface-variant)',
                         color: status === 'pending' ? 'var(--palette-on-surface-variant)' : 'white',
-                        fontSize: '12px', fontFamily: 'var(--typography-font-family-mono)',
-                        cursor: 'pointer', border: 'none', outline: 'none',
+                        fontSize: '12px', cursor: 'pointer', border: 'none', outline: 'none',
                       }}
                     >
-                      {step.step_key}
+                      {(step.step_key && stepLabelMap[step.step_key]) || step.step_key}
                     </button>
                   );
                 })}
@@ -377,7 +409,9 @@ export const ProcessRunView: React.FC<ProcessRunViewProps> = ({ runId }) => {
               <Card variant="outlined" style={{ marginBottom: 'var(--spacing-lg)', borderLeft: `4px solid ${status === 'completed' ? 'var(--palette-success, #2e7d32)' : status === 'failed' ? 'var(--palette-error)' : status === 'active' ? 'var(--palette-primary)' : 'var(--palette-outline)'}` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--spacing-md)' }}>
                   <div>
-                    <code style={{ fontSize: '14px', fontWeight: 700 }}>{focused.step_key}</code>
+                    <span style={{ fontSize: '14px', fontWeight: 700 }}>
+                      {(focused.step_key && stepLabelMap[focused.step_key]) || focused.step_key}
+                    </span>
                     <div style={{ marginTop: '4px', display: 'flex', gap: 'var(--spacing-xs)', flexWrap: 'wrap' }}>
                       <Badge variant={STEP_STATUS_VARIANT[status] ?? 'secondary'}>{status}</Badge>
                       {focused.step_type && <Badge variant="secondary">{focused.step_type}</Badge>}
