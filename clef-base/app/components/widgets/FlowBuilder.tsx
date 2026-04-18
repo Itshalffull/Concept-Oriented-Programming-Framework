@@ -52,7 +52,7 @@ type ViewState = 'steps' | 'graph';
 
 /** Node type entries shown in the left palette */
 interface PaletteEntry {
-  nodeType: 'trigger' | 'action' | 'branch' | 'catch' | 'logic' | 'manual' | 'vote' | 'brainstorm' | 'contest' | 'consent-agenda';
+  nodeType: 'trigger' | 'action' | 'branch' | 'catch' | 'logic' | 'manual' | 'vote' | 'brainstorm' | 'contest' | 'consent-agenda' | 'content-creation';
   label: string;
   description: string;
 }
@@ -105,6 +105,7 @@ const PALETTE_ENTRIES: PaletteEntry[] = [
   { nodeType: 'brainstorm',     label: 'Brainstorm',     description: 'Open idea collection with endorsement and shortlisting' },
   { nodeType: 'contest',        label: 'Contest',        description: 'Proposal contest — participants submit and sponsor proposals' },
   { nodeType: 'consent-agenda', label: 'Consent Agenda', description: 'Sociocratic consent round through objection and integration' },
+  { nodeType: 'content-creation', label: 'Content Creation', description: 'Participant creates a content node of a specified schema' },
 ];
 
 // ---------------------------------------------------------------------------
@@ -118,7 +119,7 @@ interface StepsViewProps {
   steps: StepRecord[];
   edges: EdgeRecord[];
   onSelect: (stepId: string) => void;
-  onInsertAt: (index: number) => void;
+  onInsertAt: (index: number, kindOverride?: string) => void;
   onToggleCollapse: (stepId: string) => void;
   onReorder: (fromIndex: number, toIndex: number) => void;
   onAddBranchStep: (fromStepId: string, edgeLabel: string) => void;
@@ -417,6 +418,11 @@ const STEP_KIND_ICON: Record<string, string> = {
   branch:  '◇',
   catch:   '⚠',
   logic:   'λ',
+  vote:             'V',
+  brainstorm:       'B',
+  contest:          'C',
+  'consent-agenda': 'CA',
+  'content-creation': 'CC',
 };
 
 const STEP_KIND_COLOR: Record<string, string> = {
@@ -430,6 +436,7 @@ const STEP_KIND_COLOR: Record<string, string> = {
   brainstorm:        'var(--palette-tertiary)',
   contest:           'var(--palette-error)',
   'consent-agenda':  'var(--palette-primary)',
+  'content-creation': 'var(--palette-secondary)',
 };
 
 interface FlowchartEditorHostProps {
@@ -770,6 +777,14 @@ const StepKindInspector: React.FC<StepKindInspectorProps> = ({
         </>
       )}
 
+      {stepKind === 'content-creation' && (
+        <>
+          <SimpleConfigField label="Schema ID" fieldKey="schemaId" placeholder="e.g. meeting-notes" value={str('schemaId')} onChange={handleFieldChange} />
+          <SimpleConfigField label="Content type label" fieldKey="contentTypeName" placeholder="e.g. Meeting Notes" value={str('contentTypeName')} onChange={handleFieldChange} />
+          <SimpleConfigField label="Required fields (comma-separated)" fieldKey="requiredFields" placeholder="e.g. title,date,attendees" value={str('requiredFields')} onChange={handleFieldChange} />
+        </>
+      )}
+
       <button
         onClick={() => handleSave(localConfig)}
         disabled={saving}
@@ -939,6 +954,7 @@ const StepInspectorPane: React.FC<StepInspectorPaneProps> = ({
             <option value="brainstorm">💡 Brainstorm</option>
             <option value="contest">🏆 Contest</option>
             <option value="consent-agenda">✅ Consent Agenda</option>
+            <option value="content-creation">Content Creation</option>
           </select>
         </div>
       </div>
@@ -2033,6 +2049,7 @@ export const FlowBuilder: React.FC<FlowBuilderProps> = ({
   const [edges, setEdges] = useState<EdgeRecord[]>([]);
   const [collapsedBranches, setCollapsedBranches] = useState<string[]>([]);
   const [dragPayload, setDragPayload] = useState<{ nodeType: string } | null>(null);
+  const [selectedPaletteNodeType, setSelectedPaletteNodeType] = useState<string>('action');
   const [savedToast, setSavedToast] = useState(false);
 
   // ---- Shared helper: refresh steps + edges from kernel ----
@@ -2121,6 +2138,7 @@ export const FlowBuilder: React.FC<FlowBuilderProps> = ({
   const handlePaletteDragStart = useCallback((nodeType: string) => {
     if (!processSpecId) return;
     setDragPayload({ nodeType });
+    setSelectedPaletteNodeType(nodeType);
     setInteractionState('dragging-from-palette');
   }, [processSpecId]);
 
@@ -2151,12 +2169,12 @@ export const FlowBuilder: React.FC<FlowBuilderProps> = ({
   }, [selectedStepId]);
 
   // ---- Insert at index (main line) ----
-  const handleInsertAt = useCallback(async (index: number) => {
+  const handleInsertAt = useCallback(async (index: number, kindOverride?: string) => {
     if (!processSpecId) return;
     try {
       const result = await invoke('ProcessSpec', 'addStep', {
         spec: processSpecId,
-        stepKind: 'action',
+        stepKind: kindOverride ?? selectedPaletteNodeType,
         atIndex: index,
       });
       if (result && (result as Record<string, unknown>).variant === 'ok') {
@@ -2297,13 +2315,19 @@ export const FlowBuilder: React.FC<FlowBuilderProps> = ({
             }
             draggable={processSpecId !== '' ? true : false}
             tabIndex={0}
+            onClick={() => {
+              if (!processSpecId) return;
+              setSelectedPaletteNodeType(entry.nodeType);
+              void handleInsertAt(steps.length, entry.nodeType);
+            }}
             onPointerDown={() => {
               if (processSpecId) handlePaletteDragStart(entry.nodeType);
             }}
             onKeyDown={(e) => {
               if ((e.key === 'Enter' || e.key === ' ') && processSpecId) {
                 e.preventDefault();
-                handlePaletteDragStart(entry.nodeType);
+                setSelectedPaletteNodeType(entry.nodeType);
+                void handleInsertAt(steps.length, entry.nodeType);
               }
             }}
             onDragEnd={handleDragCancel}
