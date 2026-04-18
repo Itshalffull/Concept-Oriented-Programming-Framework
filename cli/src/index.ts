@@ -7,6 +7,10 @@ import { conceptScaffoldGenHandler } from '../../handlers/ts/framework/concept-s
 import { handlerScaffoldGenHandler } from '../../handlers/ts/framework/handler-scaffold-gen.handler.js';
 import { parseConceptFile } from '../../handlers/ts/framework/spec-parser.handler.js';
 import { parseSyncFile } from '../../handlers/ts/framework/sync-parser.handler.js';
+import { parseWidgetFile } from '../../handlers/ts/framework/widget-spec-parser.js';
+import { parseViewFile } from '../../handlers/ts/framework/view-spec-parser.js';
+import { parseDerivedFile } from '../../handlers/ts/framework/derived-parser.js';
+import { parseThemeFile } from '../../handlers/ts/framework/theme-spec-parser.js';
 import { syncScaffoldGenHandler } from '../../handlers/ts/framework/sync-scaffold-gen.handler.js';
 import { createStorageFactory } from '../../runtime/adapters/storage-factory.js';
 import { verifyCommand } from './verify/verify.command.js';
@@ -118,31 +122,76 @@ export function buildCli(): Command {
   const program = new Command();
   program.name('clef');
 
+  const SPEC_EXTENSIONS = ['.concept', '.widget', '.sync', '.view', '.derived', '.theme'] as const;
+  type SpecExt = typeof SPEC_EXTENSIONS[number];
+
+  function parseByExtension(source: string, ext: SpecExt): { name: string; kind: string } {
+    switch (ext) {
+      case '.concept': { const a = parseConceptFile(source); return { name: a.name, kind: 'concept' }; }
+      case '.widget':  { const a = parseWidgetFile(source);  return { name: a.name, kind: 'widget' }; }
+      case '.sync':    { const a = parseSyncFile(source);     return { name: (a as Record<string, unknown>).name as string ?? '(sync)', kind: 'sync' }; }
+      case '.view':    { const a = parseViewFile(source);     return { name: (a as Record<string, unknown>).name as string ?? '(view)', kind: 'view' }; }
+      case '.derived': { const a = parseDerivedFile(source);  return { name: (a as Record<string, unknown>).name as string ?? '(derived)', kind: 'derived' }; }
+      case '.theme':   { const a = parseThemeFile(source);    return { name: (a as Record<string, unknown>).name as string ?? '(theme)', kind: 'theme' }; }
+    }
+  }
+
+  function detectExt(path?: string): SpecExt | null {
+    if (!path) return null;
+    for (const ext of SPEC_EXTENSIONS) {
+      if (path.endsWith(ext)) return ext;
+    }
+    return null;
+  }
+
   program
     .command('check')
-    .description('Validate one concept file or all concept files in the workspace.')
-    .argument('[target]', 'Concept file path or inline source')
+    .description('Validate spec files: .concept .widget .sync .view .derived .theme')
+    .argument('[target]', 'Spec file path (any supported extension), or inline concept source')
     .option('--json', 'Output JSON')
-    .action((target?: string, options?: { json?: boolean }) => {
-      const files = target
-        ? [readSourceArgument(target)]
-        : collectFiles(resolve(ROOT, 'specs'), '.concept')
-            .concat(collectFiles(resolve(ROOT, 'repertoire'), '.concept'))
-            .map((file) => ({ source: readFileSync(file, 'utf8'), path: file }));
+    .option('--ext <extension>', 'Force file type when passing inline source (e.g. --ext .widget)')
+    .action((target?: string, options?: { json?: boolean; ext?: string }) => {
+      type FileEntry = { source: string; path?: string };
+      let files: FileEntry[];
 
-      const results = files.map(({ source, path }) => ({
-        path: path ? relative(ROOT, path) : '<inline>',
-        ast: parseConceptFile(source),
-      }));
+      if (target) {
+        files = [readSourceArgument(target)];
+      } else {
+        const searchRoots = ['specs', 'syncs', 'surface', 'repertoire', 'bind', 'score']
+          .map(d => resolve(ROOT, d));
+        files = SPEC_EXTENSIONS.flatMap(ext =>
+          searchRoots.flatMap(root => collectFiles(root, ext))
+        ).map(path => ({ source: readFileSync(path, 'utf8'), path }));
+      }
+
+      type CheckResult = { path: string; kind: string; name: string; ok: boolean; error?: string };
+      const results: CheckResult[] = files.map(({ source, path }) => {
+        const relPath = path ? relative(ROOT, path) : '<inline>';
+        const ext = (options?.ext ?? detectExt(path) ?? '.concept') as SpecExt;
+        try {
+          const parsed = parseByExtension(source, ext);
+          return { path: relPath, kind: parsed.kind, name: parsed.name, ok: true };
+        } catch (err) {
+          return { path: relPath, kind: ext.slice(1), name: '?', ok: false, error: (err as Error).message };
+        }
+      });
 
       if (options?.json) {
         console.log(JSON.stringify(results, null, 2));
         return;
       }
 
-      for (const result of results) {
-        console.log(`ok ${result.path} -> ${result.ast.name}`);
+      let failed = 0;
+      for (const r of results) {
+        if (r.ok) {
+          console.log(`ok   ${r.kind.padEnd(8)} ${r.path} -> ${r.name}`);
+        } else {
+          console.error(`fail ${r.kind.padEnd(8)} ${r.path}`);
+          console.error(`     ${r.error}`);
+          failed++;
+        }
       }
+      if (failed > 0) process.exit(1);
     });
 
   const specParser = new Command('spec-parser').description('Parse concept files into structured ASTs.');
