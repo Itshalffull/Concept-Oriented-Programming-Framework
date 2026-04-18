@@ -9,8 +9,10 @@
 // input, control prop, or navigate href).
 //
 // All six actions are implemented in functional (StorageProgram) style.
-// resolve() performs in-memory expression evaluation and JSON parsing —
-// logic that is fully pure (no storage writes) after the binding lookup.
+// resolve() dispatches through VariableProgram for typed access-path
+// evaluation, falling back to the inline evaluator for backward
+// compatibility when VariableProgram is unavailable or the program
+// cannot be fully resolved without live source providers.
 // ============================================================
 
 import type { FunctionalConceptHandler } from '../../runtime/functional-handler.ts';
@@ -19,6 +21,9 @@ import {
   mapBindings, type StorageProgram,
 } from '../../runtime/storage-program.ts';
 import { autoInterpret } from '../../runtime/functional-compat.ts';
+import { variableProgramHandler } from './variable-program/variable-program.handler.ts';
+import { createInMemoryStorage } from '../../runtime/adapters/storage.ts';
+import type { ConceptStorage } from '../../runtime/types.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
@@ -325,4 +330,184 @@ const _handler: FunctionalConceptHandler = {
   },
 };
 
-export const paramBindingHandler = autoInterpret(_handler);
+// -----------------------------------------------------------------------
+// VariableProgram integration
+//
+// Maps a ParamBinding source kind + sourceExpression to a canonical
+// VariableProgram expression string. Returns null for source kinds
+// that have no VariableProgram equivalent (e.g. "literal").
+// -----------------------------------------------------------------------
+
+function toVariableProgramExpression(sourceKind: string, sourceExpression: string): string | null {
+  switch (sourceKind) {
+    // field  → $page.{field}
+    case 'field':
+      return `$page.${sourceExpression}`;
+    // url-param → $url.{name}
+    case 'url-param':
+      return `$url.${sourceExpression}`;
+    // relation → $page.{relation} (follow traversal on the current page)
+    case 'relation':
+      return `$page.${sourceExpression}`;
+    // control → $ctx.{controlKey}
+    case 'control':
+      return `$ctx.${sourceExpression}`;
+    default:
+      // literal and unknown source kinds — no VP mapping
+      return null;
+  }
+}
+
+/**
+ * Try to resolve a binding's source expression through VariableProgram.
+ * Returns the resolved string value on success, or null if VariableProgram
+ * cannot fully resolve the expression (provider missing, parse error, etc.)
+ * so that the caller can fall back to inline resolution.
+ */
+async function tryVariableProgramResolve(
+  rec: ParamBindingRecord,
+  dataStr: string,
+): Promise<string | null> {
+  const expression = toVariableProgramExpression(rec.sourceKind, rec.sourceExpression);
+  if (expression === null) return null;
+
+  // Use a fresh scratch storage for the VariableProgram session.
+  // parse() stores the program record; resolve() reads it back.
+  const vpStorage: ConceptStorage = createInMemoryStorage();
+
+  // Step 1 — parse the expression into a VariableProgram
+  let parseResult: Record<string, unknown>;
+  try {
+    parseResult = await (variableProgramHandler as Record<string, Function>).parse(
+      { expression },
+      vpStorage,
+    ) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+
+  if (!parseResult || parseResult.variant !== 'ok') {
+    // parse_error or unexpected variant — fall back
+    return null;
+  }
+
+  const programId = parseResult.program as string;
+
+  // Step 2 — resolve the program against the data context
+  let resolveResult: Record<string, unknown>;
+  try {
+    resolveResult = await (variableProgramHandler as Record<string, Function>).resolve(
+      { program: programId, context: dataStr },
+      vpStorage,
+    ) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+
+  if (!resolveResult || resolveResult.variant !== 'ok') {
+    // not_found, type_error, provider_not_found — fall back
+    return null;
+  }
+
+  const value = resolveResult.value as string;
+
+  // If the value is a platform-dispatch placeholder (provider not yet registered
+  // in the scratch storage), treat it as unresolved and fall back.
+  if (typeof value === 'string' && (value.startsWith('__provider:') || value.startsWith('__transform:'))) {
+    return null;
+  }
+
+  return value;
+}
+
+// Build the base handler from autoInterpret (all actions functional).
+// The resolve action is overridden below with an imperative version that
+// routes through VariableProgram before falling back to inline evaluation.
+const _baseHandler = autoInterpret(_handler);
+
+// Override resolve() so that when called in imperative compat mode
+// (input, storage) it tries VariableProgram first and falls back to the
+// original inline evaluation when VP cannot fully resolve the expression.
+// When called in functional mode (input only) it delegates to the
+// underlying StorageProgram produced by _handler.resolve — preserving
+// the functional calling convention.
+export const paramBindingHandler = {
+  ..._baseHandler,
+
+  resolve(input: Record<string, unknown>, storage?: ConceptStorage) {
+    // Functional mode — no storage provided; delegate to the functional program.
+    if (storage === undefined) {
+      return (_handler as Record<string, Function>).resolve(input);
+    }
+
+    // Imperative compat mode — try VariableProgram first, then fall back.
+    return resolveImperative(input, storage);
+  },
+};
+
+async function resolveImperative(
+  input: Record<string, unknown>,
+  storage: ConceptStorage,
+): Promise<Record<string, unknown>> {
+  const bindingId = input.binding as string;
+  const dataStr   = input.data as string;
+
+  // Fetch the binding record from storage
+  const record = await storage.get('paramBinding', bindingId);
+  if (!record) {
+    return { variant: 'notfound', message: `No binding exists with id "${bindingId}"` };
+  }
+  const rec = record as unknown as ParamBindingRecord;
+
+  // --- VariableProgram path ---
+  let vpValue: string | null = null;
+  try {
+    vpValue = await tryVariableProgramResolve(rec, dataStr);
+  } catch {
+    vpValue = null;
+  }
+
+  if (vpValue !== null) {
+    // Apply transform if present
+    const transform = rec.transformExpression;
+    if (transform && transform.trim() !== '') {
+      const transformed = applyTransform(vpValue, transform);
+      if (transformed === undefined) {
+        return { variant: 'invalid', message: `Unknown transform "${transform}"` };
+      }
+      return { variant: 'ok', binding: bindingId, resolvedValue: transformed };
+    }
+    return { variant: 'ok', binding: bindingId, resolvedValue: vpValue };
+  }
+
+  // --- Inline fallback (original logic) ---
+  // Safely parse JSON data
+  let parsed: Record<string, unknown>;
+  try {
+    parsed = JSON.parse(dataStr) as Record<string, unknown>;
+  } catch {
+    return { variant: 'invalid', message: 'Data is not valid JSON' };
+  }
+
+  const raw = evaluatePath(parsed, rec.sourceExpression);
+  if (raw == null) {
+    return {
+      variant: 'invalid',
+      message: `Source expression "${rec.sourceExpression}" resolved to null/undefined`,
+    };
+  }
+
+  const strValue = String(raw);
+
+  // Apply transform if present
+  const transform = rec.transformExpression;
+  if (transform && transform.trim() !== '') {
+    const transformed = applyTransform(strValue, transform);
+    if (transformed === undefined) {
+      return { variant: 'invalid', message: `Unknown transform "${transform}"` };
+    }
+    return { variant: 'ok', binding: bindingId, resolvedValue: transformed };
+  }
+
+  return { variant: 'ok', binding: bindingId, resolvedValue: strValue };
+}
