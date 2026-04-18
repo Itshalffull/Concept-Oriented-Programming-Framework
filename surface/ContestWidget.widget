@@ -1,0 +1,414 @@
+@version(1)
+widget ContestWidget {
+
+  purpose {
+    Participant-facing proposal contest surface rendered in the bottom zone
+    of a Process Street participant view when step_type is "contest". Allows
+    any participant to draft and submit a proposal, sponsor eligible proposals
+    submitted by others, and follow each proposal through its lifecycle.
+    Facilitators and sponsors can activate and advance proposals toward a
+    final Passed or Failed decision. The widget progresses through four
+    externally meaningful phases: open (accepting new submissions),
+    reviewing (proposals in flight through the lifecycle), decided (at least
+    one proposal has reached a terminal status), and completed (the step is
+    done and a result summary is displayed). A transient busy overlay fires
+    around every API call to prevent concurrent mutations.
+  }
+
+  anatomy {
+    root:            container    { Top-level wrapper for the contest step; carries data-state reflecting FSM phase }
+    header:          container    { Phase-dependent title bar: "Submit a Proposal" in open phase, "Proposals Under Review" in reviewing/decided, "Contest Closed" in completed }
+    headerTitle:     text         { Human-readable headline that changes with the FSM phase }
+    prompt:          text         { Motion or question text passed in via the prompt prop }
+    proposalForm:    container    { Form for drafting and submitting a new proposal; visible only in open phase }
+    titleInput:      interactive  { Single-line text input for the proposal title }
+    descriptionInput: interactive { Multi-line textarea for the proposal body }
+    submitButton:    action       { Submits the draft proposal via Proposal/create }
+    proposalList:    container    { Scrollable ordered list of all submitted proposals }
+    proposalItem:    container    { Individual proposal row: title, status badge, proposer identity, and action buttons }
+    statusBadge:     presentation { Coloured pill reflecting the proposal lifecycle status }
+    proposerLabel:   text         { Name of the participant who submitted the proposal }
+    sponsorButton:   action       { Sponsor button rendered per proposal for eligible non-proposers }
+    activateButton:  action       { Activate button rendered per proposal for the facilitator }
+    advanceButton:   action       { Mark Passed / Failed button rendered per proposal for the facilitator }
+    conflictWarning: container    { Warning banner shown when detectConflicts returns one or more conflicts for a proposal }
+    result:          container    { Completed-state summary showing the winning or passed proposal }
+    busyOverlay:     overlay      { Transient overlay shown during in-flight API calls to prevent concurrent mutations }
+  }
+
+  states {
+    // Primary phase machine
+    phase {
+      open [initial] {
+        on SUBMISSION_CLOSED  -> reviewing;
+        on PROPOSAL_SPONSORED -> reviewing;
+        on API_START          -> busy;
+      }
+
+      reviewing {
+        on PROPOSAL_ADVANCED  -> decided;
+        on API_START          -> busy;
+      }
+
+      decided {
+        on STEP_COMPLETED -> completed;
+        on API_START      -> busy;
+      }
+
+      completed {
+      }
+
+      busy {
+        on API_DONE_OPEN      -> open;
+        on API_DONE_REVIEWING -> reviewing;
+        on API_DONE_DECIDED   -> decided;
+        on API_DONE_COMPLETED -> completed;
+        entry [showBusyOverlay];
+        exit  [hideBusyOverlay];
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Enter     -> SUBMIT_PROPOSAL;
+      Tab       -> FOCUS_NEXT;
+      Shift+Tab -> FOCUS_PREV;
+      Escape    -> CANCEL_FORM;
+    }
+    focus {
+      trap: false;
+      initial: titleInput;
+      roving: true;
+      returnOnClose: proposalList;
+    }
+    aria {
+      root -> {
+        role:      "region";
+        aria-label: "Proposal contest";
+        aria-busy: if state == "busy" then "true" else "false";
+      };
+      proposalForm -> {
+        role:      "form";
+        aria-label: "Submit a proposal";
+      };
+      titleInput -> {
+        role:       "textbox";
+        aria-label: "Proposal title";
+        aria-required: "true";
+      };
+      descriptionInput -> {
+        role:        "textbox";
+        aria-label:  "Proposal description";
+        aria-multiline: "true";
+        aria-required:  "true";
+      };
+      submitButton -> {
+        role:       "button";
+        aria-label: "Submit proposal";
+        aria-disabled: if state == "busy" then "true" else "false";
+      };
+      proposalList -> {
+        role:       "list";
+        aria-label: "Submitted proposals";
+        aria-live:  "polite";
+      };
+      proposalItem -> {
+        role: "listitem";
+      };
+      statusBadge -> {
+        aria-label: concat("Status: ", self.status);
+        aria-live:  "polite";
+      };
+      sponsorButton -> {
+        role:       "button";
+        aria-label: "Sponsor this proposal";
+        aria-disabled: if state == "busy" then "true" else "false";
+      };
+      activateButton -> {
+        role:       "button";
+        aria-label: "Activate proposal";
+        aria-disabled: if state == "busy" then "true" else "false";
+      };
+      advanceButton -> {
+        role:       "button";
+        aria-label: "Advance proposal status";
+        aria-disabled: if state == "busy" then "true" else "false";
+      };
+      conflictWarning -> {
+        role:      "alert";
+        aria-live: "assertive";
+        aria-label: "Conflict detected";
+      };
+      result -> {
+        role:      "region";
+        aria-label: "Contest result";
+      };
+      busyOverlay -> {
+        aria-hidden: "true";
+      };
+    }
+  }
+
+  props {
+    stepRunId:           String
+    processRunId:        String
+    currentUserId:       String
+    isFacilitator:       Bool = false
+    prompt:              String = ""
+    initialStatus:       String = "open"
+    existingProposalIds: list String
+  }
+
+  connect {
+    root -> {
+      data-part:       "root";
+      data-state:      state;
+      role:            "region";
+      aria-label:      "Proposal contest";
+      aria-busy:       if state == "busy" then "true" else "false";
+    }
+
+    header -> {
+      data-part:  "header";
+    }
+
+    headerTitle -> {
+      data-part: "header-title";
+      text:      if state == "completed" then "Contest Closed"
+                 else if state == "decided" then "Proposals Under Review"
+                 else if state == "reviewing" then "Proposals Under Review"
+                 else "Submit a Proposal";
+    }
+
+    prompt -> {
+      data-part: "prompt";
+      text:      ?prompt;
+    }
+
+    proposalForm -> {
+      data-part:  "proposal-form";
+      role:       "form";
+      aria-label: "Submit a proposal";
+      hidden:     if state == "completed" then true else false;
+      data-state: if state == "open" then "visible" else "hidden";
+    }
+
+    titleInput -> {
+      data-part:     "title-input";
+      aria-label:    "Proposal title";
+      aria-required: "true";
+      disabled:      if state == "busy" then true else false;
+    }
+
+    descriptionInput -> {
+      data-part:      "description-input";
+      aria-label:     "Proposal description";
+      aria-multiline: "true";
+      aria-required:  "true";
+      disabled:       if state == "busy" then true else false;
+    }
+
+    submitButton -> {
+      data-part:     "submit-button";
+      role:          "button";
+      aria-label:    "Submit proposal";
+      disabled:      if state == "busy" then true else false;
+      aria-disabled: if state == "busy" then "true" else "false";
+      onClick:       send(SUBMIT_PROPOSAL);
+    }
+
+    proposalList -> {
+      data-part:  "proposal-list";
+      role:       "list";
+      aria-label: "Submitted proposals";
+      aria-live:  "polite";
+    }
+
+    proposalItem -> {
+      data-part:       "proposal-item";
+      role:            "listitem";
+      data-proposal-id: self.id;
+      data-status:     self.status;
+    }
+
+    statusBadge -> {
+      data-part:   "status-badge";
+      aria-label:  concat("Status: ", self.status);
+      aria-live:   "polite";
+      data-status: self.status;
+      text:        self.status;
+    }
+
+    proposerLabel -> {
+      data-part: "proposer-label";
+      text:      self.proposerName;
+    }
+
+    sponsorButton -> {
+      data-part:     "sponsor-button";
+      role:          "button";
+      aria-label:    "Sponsor this proposal";
+      hidden:        if self.proposerId == ?currentUserId then true else false;
+      disabled:      if state == "busy" then true else false;
+      aria-disabled: if state == "busy" then "true" else "false";
+      onClick:       send(SPONSOR_PROPOSAL, { proposalId: self.id });
+    }
+
+    activateButton -> {
+      data-part:     "activate-button";
+      role:          "button";
+      aria-label:    "Activate proposal";
+      hidden:        if not ?isFacilitator then true else false;
+      disabled:      if state == "busy" then true else false;
+      aria-disabled: if state == "busy" then "true" else "false";
+      onClick:       send(ACTIVATE_PROPOSAL, { proposalId: self.id });
+    }
+
+    advanceButton -> {
+      data-part:     "advance-button";
+      role:          "button";
+      aria-label:    "Advance proposal status";
+      hidden:        if not ?isFacilitator then true else false;
+      disabled:      if state == "busy" then true else false;
+      aria-disabled: if state == "busy" then "true" else "false";
+      onClick:       send(ADVANCE_PROPOSAL, { proposalId: self.id });
+    }
+
+    conflictWarning -> {
+      data-part:  "conflict-warning";
+      role:       "alert";
+      aria-live:  "assertive";
+      aria-label: "Conflict detected";
+      hidden:     if self.conflicts then false else true;
+    }
+
+    result -> {
+      data-part:  "result";
+      role:       "region";
+      aria-label: "Contest result";
+      hidden:     if state == "completed" then false else true;
+    }
+
+    busyOverlay -> {
+      data-part:   "busy-overlay";
+      aria-hidden: "true";
+      hidden:      if state == "busy" then false else true;
+    }
+  }
+
+  affordance {
+    serves: action;
+    specificity: 8;
+    when { stepType: "contest" }
+    bind {
+      stepRunId:     stepRunId;
+      processRunId:  processRunId;
+      currentUserId: currentUserId;
+      isFacilitator: isFacilitator;
+    }
+  }
+
+  invariant {
+    example "submitting a proposal fires SUBMIT_PROPOSAL event": {
+      after submitButton.click() -> ok
+      then root.data-state = "open"
+      and proposalList.visible = true
+    }
+
+    example "PROPOSAL_SPONSORED transitions open to reviewing": {
+      after PROPOSAL_SPONSORED() -> ok
+      then root.data-state = "reviewing"
+    }
+
+    example "SUBMISSION_CLOSED transitions open to reviewing": {
+      after SUBMISSION_CLOSED() -> ok
+      then root.data-state = "reviewing"
+    }
+
+    example "PROPOSAL_ADVANCED transitions reviewing to decided": {
+      after PROPOSAL_ADVANCED() -> ok
+      then root.data-state = "decided"
+    }
+
+    example "STEP_COMPLETED transitions decided to completed": {
+      after STEP_COMPLETED() -> ok
+      then root.data-state = "completed"
+      and result.hidden = false
+    }
+
+    example "API_START enters busy and shows overlay": {
+      after API_START() -> ok
+      then root.data-state = "busy"
+      and busyOverlay.hidden = false
+    }
+
+    always "proposalForm never visible in completed phase": {
+      forall s in {"completed"}:
+      proposalForm.hidden = true
+    }
+
+    always "result panel hidden outside completed phase": {
+      forall s in {"open", "reviewing", "decided", "busy"}:
+      result.hidden = true
+    }
+
+    always "all interactive buttons disabled during busy": {
+      forall b in {sponsorButton, activateButton, advanceButton, submitButton}:
+      b.disabled = true
+    }
+
+    always "all states are reachable from open": {
+      forall s in states:
+      s.reachable = true
+    }
+
+    never "proposalForm visible in completed state": {
+      exists f in proposalForm:
+        f.hidden = false and state = "completed"
+    }
+
+    never "sponsorButton visible when proposer matches current user": {
+      exists s in sponsorButton:
+        s.hidden = false and self.isOwnProposal = true
+    }
+
+    never "activateButton visible when isFacilitator is false": {
+      exists a in activateButton:
+        a.hidden = false and isFacilitator = false
+    }
+
+    never "advanceButton visible when isFacilitator is false": {
+      exists a in advanceButton:
+        a.hidden = false and isFacilitator = false
+    }
+
+    action submitButton {
+      requires: state = "open"
+      ensures ok: state = "open"
+    }
+
+    action sponsorButton {
+      requires: state = "open"
+      ensures ok: state = "reviewing"
+    }
+
+    action activateButton {
+      requires: state = "reviewing"
+      ensures ok: state = "reviewing"
+    }
+
+    action advanceButton {
+      requires: state = "reviewing"
+      ensures ok: state = "decided"
+    }
+
+    "statusBadge data-status must match self.status for each proposalItem";
+    "conflictWarning is shown per proposalItem only when Proposal/detectConflicts returns a non-empty conflicts list";
+    "existingProposalIds are pre-seeded into proposalList on mount via the sync with BrainstormBoard";
+    "busy overlay has aria-hidden true and must not be focusable by assistive technology";
+  }
+
+}
