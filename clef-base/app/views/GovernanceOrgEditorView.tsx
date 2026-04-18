@@ -5,6 +5,7 @@ import { useKernelInvoke } from '../../lib/clef-provider';
 import { Badge } from '../components/widgets/Badge';
 import { EmptyState } from '../components/widgets/EmptyState';
 import { TreeDisplay } from '../components/widgets/TreeDisplay';
+import { FlowBuilder } from '../components/widgets/FlowBuilder';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -149,35 +150,50 @@ const TeamTree: React.FC<TeamTreeProps> = ({ teams, selectedId, onSelect }) => {
       </div>
     );
   }
+
+  const renderNode = (team: TeamRecord, depth: number): React.ReactNode => {
+    const children = teams.filter(t => t.parent === team.id);
+    return (
+      <li key={team.id}>
+        <button
+          onClick={() => onSelect(team)}
+          style={{
+            display: 'block',
+            width: '100%',
+            textAlign: 'left',
+            paddingTop: 7,
+            paddingBottom: 7,
+            paddingRight: 12,
+            paddingLeft: 12 + depth * 16,
+            border: 'none',
+            background: selectedId === team.id ? 'var(--palette-primary-container)' : 'transparent',
+            color: selectedId === team.id ? 'var(--palette-on-primary-container)' : 'var(--palette-on-surface)',
+            borderRadius: 'var(--radius-sm)',
+            cursor: 'pointer',
+            fontSize: '0.875rem',
+            fontWeight: selectedId === team.id ? 600 : 400,
+          }}
+        >
+          {depth > 0 ? '⤷ ' : '◉ '}{team.name}
+          {team.domain && (
+            <span style={{ fontSize: '0.7rem', color: 'var(--palette-on-surface-variant)', display: 'block' }}>
+              {team.domain}
+            </span>
+          )}
+        </button>
+        {children.length > 0 && (
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            {children.map(c => renderNode(c, depth + 1))}
+          </ul>
+        )}
+      </li>
+    );
+  };
+
+  const roots = teams.filter(t => !t.parent);
   return (
     <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-      {teams.map(team => (
-        <li key={team.id}>
-          <button
-            onClick={() => onSelect(team)}
-            style={{
-              display: 'block',
-              width: '100%',
-              textAlign: 'left',
-              padding: '8px 12px',
-              border: 'none',
-              background: selectedId === team.id ? 'var(--palette-primary-container)' : 'transparent',
-              color: selectedId === team.id ? 'var(--palette-on-primary-container)' : 'var(--palette-on-surface)',
-              borderRadius: 'var(--radius-sm)',
-              cursor: 'pointer',
-              fontSize: '0.875rem',
-              fontWeight: selectedId === team.id ? 600 : 400,
-            }}
-          >
-            ◉ {team.name}
-            {team.domain && (
-              <span style={{ fontSize: '0.7rem', color: 'var(--palette-on-surface-variant)', display: 'block' }}>
-                {team.domain}
-              </span>
-            )}
-          </button>
-        </li>
-      ))}
+      {roots.map(t => renderNode(t, 0))}
     </ul>
   );
 };
@@ -190,32 +206,79 @@ interface TeamDetailPanelProps {
   team: TeamRecord;
   allTeams: TeamRecord[];
   onRefresh: () => void;
+  onBack: () => void;
+  onNavigate: (team: TeamRecord) => void;
 }
 
-const TeamDetailPanel: React.FC<TeamDetailPanelProps> = ({ team, allTeams, onRefresh }) => {
+const TEAM_ROLES = ['member', 'lead', 'admin', 'observer', 'reviewer', 'approver'] as const;
+
+const AddMemberForm: React.FC<{ team: TeamRecord; onSubmit: (member: string, role: string) => Promise<void>; onCancel: () => void }> = ({ team, onSubmit, onCancel }) => {
+  const [member, setMember] = useState('');
+  const [role, setRole] = useState<string>('member');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!member.trim()) { setError('Member ID is required'); return; }
+    setBusy(true);
+    setError(null);
+    try { await onSubmit(member.trim(), role); }
+    catch (err) { setError(err instanceof Error ? err.message : 'Failed'); }
+    finally { setBusy(false); }
+  };
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%', padding: '6px 10px',
+    border: '1px solid var(--palette-outline)',
+    borderRadius: 'var(--radius-sm)', fontSize: '0.875rem',
+    background: 'var(--palette-surface)', color: 'var(--palette-on-surface)',
+    boxSizing: 'border-box',
+  };
+
+  return (
+    <form onSubmit={handleSubmit} style={{ background: 'var(--palette-surface-container)', border: '1px solid var(--palette-outline-variant)', borderRadius: 'var(--radius-card)', padding: 'var(--spacing-lg)', marginTop: 'var(--spacing-md)' }}>
+      <div style={{ fontWeight: 600, marginBottom: 'var(--spacing-md)', fontSize: '0.875rem' }}>Add Member to {team.name}</div>
+      <div style={{ marginBottom: 'var(--spacing-md)' }}>
+        <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--palette-on-surface-variant)', marginBottom: 4 }}>Member ID / Username</label>
+        <input type="text" placeholder="user@example.com" value={member} onChange={e => setMember(e.target.value)} style={inputStyle} />
+      </div>
+      <div style={{ marginBottom: 'var(--spacing-md)' }}>
+        <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--palette-on-surface-variant)', marginBottom: 4 }}>Role</label>
+        <select value={role} onChange={e => setRole(e.target.value)} style={inputStyle}>
+          {TEAM_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+        </select>
+      </div>
+      {error && <div style={{ color: 'var(--palette-error)', fontSize: '0.75rem', marginBottom: 'var(--spacing-sm)' }}>{error}</div>}
+      <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
+        <button type="submit" disabled={busy} data-part="button" data-variant="primary">{busy ? 'Adding…' : 'Add'}</button>
+        <button type="button" onClick={onCancel} data-part="button" data-variant="ghost">Cancel</button>
+      </div>
+    </form>
+  );
+};
+
+const TeamDetailPanel: React.FC<TeamDetailPanelProps> = ({ team, allTeams, onRefresh, onBack, onNavigate }) => {
   const invoke = useKernelInvoke();
   const [showAddMember, setShowAddMember] = useState(false);
   const [showCreateChild, setShowCreateChild] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
 
-  const addMember = useCallback(async (values: Record<string, string>) => {
-    if (!values.member?.trim()) {
-      throw new Error('Member ID is required');
-    }
+  const addMember = useCallback(async (member: string, role: string) => {
     const currentMembers = team.members ?? [];
-    if (currentMembers.includes(values.member.trim())) {
-      throw new Error(`${values.member} is already a member`);
+    if (currentMembers.includes(member)) {
+      throw new Error(`${member} is already a member`);
     }
-    values = { ...values, member: values.member.trim() };
     const updatedContent = JSON.stringify({
       name: team.name,
       domain: team.domain,
       purpose: team.purpose,
-      members: [...currentMembers, values.member],
+      members: [...currentMembers, member],
+      memberRoles: { ...(team as Record<string, unknown>).memberRoles as Record<string, string> ?? {}, [member]: role },
     });
     const result = await invoke('ContentNode', 'update', { node: team.id, content: updatedContent });
     if (result.variant === 'ok') {
-      setStatus(`Added ${values.member} to ${team.name}`);
+      setStatus(`Added ${member} (${role}) to ${team.name}`);
       setShowAddMember(false);
       onRefresh();
     } else {
@@ -246,6 +309,14 @@ const TeamDetailPanel: React.FC<TeamDetailPanelProps> = ({ team, allTeams, onRef
 
   return (
     <div>
+      <button
+        onClick={onBack}
+        data-part="button"
+        data-variant="ghost"
+        style={{ fontSize: '0.8rem', marginBottom: 'var(--spacing-md)', padding: '4px 8px' }}
+      >
+        ← All Teams
+      </button>
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-lg)' }}>
         <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>◉ {team.name}</h2>
         {team.domain && <Badge variant="secondary">{team.domain}</Badge>}
@@ -292,15 +363,10 @@ const TeamDetailPanel: React.FC<TeamDetailPanelProps> = ({ team, allTeams, onRef
         )}
 
         {showAddMember && (
-          <InlineForm
-            title="Add Member"
-            fields={[
-              { key: 'member', label: 'Member ID / Username', placeholder: 'user@example.com' },
-              { key: 'role', label: 'Role in team', placeholder: 'member' },
-            ]}
+          <AddMemberForm
+            team={team}
             onSubmit={addMember}
             onCancel={() => setShowAddMember(false)}
-            submitLabel="Add"
           />
         )}
       </div>
@@ -328,9 +394,14 @@ const TeamDetailPanel: React.FC<TeamDetailPanelProps> = ({ team, allTeams, onRef
         ) : (
           <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 var(--spacing-md)' }}>
             {allTeams.filter(t => t.parent === team.id).map(child => (
-              <li key={child.id} style={{ padding: '4px 0', borderBottom: '1px solid var(--palette-outline-variant)', fontSize: '0.875rem' }}>
-                ⤷ {child.name}
-                {child.domain && <span style={{ color: 'var(--palette-on-surface-variant)', marginLeft: 8 }}>{child.domain}</span>}
+              <li key={child.id} style={{ borderBottom: '1px solid var(--palette-outline-variant)' }}>
+                <button
+                  onClick={() => onNavigate(child)}
+                  style={{ display: 'block', width: '100%', textAlign: 'left', padding: '6px 4px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--palette-on-surface)' }}
+                >
+                  ⤷ {child.name}
+                  {child.domain && <span style={{ color: 'var(--palette-on-surface-variant)', marginLeft: 8 }}>{child.domain}</span>}
+                </button>
               </li>
             ))}
           </ul>
@@ -751,6 +822,8 @@ export const GovernanceOrgEditorView: React.FC = () => {
                 team={selectedTeam}
                 allTeams={teams}
                 onRefresh={() => setRefreshKey(k => k + 1)}
+                onBack={() => setSelectedTeam(null)}
+                onNavigate={t => setSelectedTeam(t)}
               />
             ) : teams.length > 0 ? (
               <div>
@@ -781,21 +854,30 @@ export const GovernanceOrgEditorView: React.FC = () => {
           {/* Routes mode */}
           {mode === 'routes' && (
             selectedSpec ? (
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-lg)' }}>
-                  <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)', marginBottom: 'var(--spacing-md)', flexShrink: 0 }}>
+                  <button
+                    onClick={() => setSelectedSpec(null)}
+                    data-part="button"
+                    data-variant="ghost"
+                    style={{ fontSize: '0.8rem', padding: '4px 8px' }}
+                  >
+                    ← All Specs
+                  </button>
+                  <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700 }}>
                     ⤷ {selectedSpec.name ?? selectedSpec.spec}
                   </h2>
                   <Badge variant={selectedSpec.status === 'active' ? 'success' : 'secondary'}>
                     {selectedSpec.status ?? 'draft'}
                   </Badge>
                 </div>
-
-                <ProcessSpecDetail specId={selectedSpec.spec} />
+                <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+                  <FlowBuilder processSpecId={selectedSpec.spec} initialView="steps" />
+                </div>
               </div>
             ) : (
               <EmptyState
-                title="Select a process spec"
+                title="Select a governance process spec"
                 description="Choose a process spec from the sidebar to view and edit its steps and routing edges."
               />
             )
