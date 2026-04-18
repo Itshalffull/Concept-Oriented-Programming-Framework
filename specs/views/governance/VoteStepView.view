@@ -1,0 +1,60 @@
+view "vote-step-view" {
+  shell: "vote-step-view"
+
+  features {
+    filter
+    projection
+    interaction
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"Vote\",\"action\":\"getSession\",\"params\":{\"sessionId\":\"{{step.config.voteSessionId}}\"}}"
+    }
+    filter: {
+      node: "{\"type\":\"and\",\"children\":[{\"type\":\"eq\",\"field\":\"sessionId\",\"value\":\"$step.config.voteSessionId\"},{\"type\":\"eq\",\"field\":\"userId\",\"value\":\"$session.userId\"}]}"
+    }
+    projection: {
+      fields: "[{\"key\":\"choices\",\"label\":\"Choices\",\"computed\":\"[\\\"yes\\\",\\\"no\\\",\\\"abstain\\\"]\"},{\"key\":\"myVote\",\"label\":\"My Vote\",\"computed\":\"rows.find(v => v.voter === session.userId)?.choice ?? null\"},{\"key\":\"totalVotes\",\"label\":\"Total Votes\",\"computed\":\"rows.length\"},{\"key\":\"quorum\",\"label\":\"Quorum\",\"computed\":\"step.config.quorum ?? null\"},{\"key\":\"deadline\",\"label\":\"Deadline\",\"computed\":\"row.deadline\"},{\"key\":\"outcome\",\"label\":\"Outcome\",\"computed\":\"row.outcome ?? null\"}]"
+    }
+    interaction: {
+      castVote: "{\"concept\":\"Vote\",\"action\":\"castVote\",\"trigger\":\"submitButton\",\"label\":\"Cast Vote\",\"inputs\":{\"session\":\"$step.config.voteSessionId\",\"voter\":\"$session.userId\",\"choice\":\"selectedChoice\",\"weight\":1.0},\"guard\":\"myVote === null\"}",
+      changeVote: "{\"concept\":\"Vote\",\"action\":\"castVote\",\"trigger\":\"changeLink\",\"label\":\"Change Vote\",\"inputs\":{\"session\":\"$step.config.voteSessionId\",\"voter\":\"$session.userId\",\"choice\":\"selectedChoice\",\"weight\":1.0},\"guard\":\"myVote !== null && $step.config.allowChange === true\"}"
+    }
+    presentation: {
+      displayType: "vote-session",
+      hints: "{\"showQuorumGauge\":true,\"showDeadlineChip\":true,\"showOutcomeBadge\":true,\"pollIntervalMs\":5000,\"choices\":[\"yes\",\"no\",\"abstain\"]}"
+    }
+  }
+
+  purpose {
+    Displays the voting session for a Vote governance process step. Each
+    participant sees the available choices (Yes / No / Abstain), their own
+    current vote, the running total, quorum requirement, deadline, and final
+    outcome once tallied. The castVote interaction is shown when the
+    participant has not yet voted; the changeVote interaction is shown only
+    when the step is configured with allowChange=true and the participant has
+    already cast a vote. Polls every 5 seconds while the step is active.
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+
+    always "invokes only Vote actions": {
+      forall ia in invokedActions:
+      ia startsWith "Vote/"
+    }
+
+    always "all invoke variants covered": {
+      uncoveredVariants = []
+    }
+
+    always "filter fields exist in source": {
+      forall f in filterFields:
+      f in sourceFields
+    }
+  }
+}
