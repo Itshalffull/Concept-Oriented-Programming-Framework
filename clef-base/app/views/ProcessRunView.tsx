@@ -11,7 +11,6 @@ import { Card } from '../components/widgets/Card';
 import { Badge } from '../components/widgets/Badge';
 import { EmptyState } from '../components/widgets/EmptyState';
 import { DataTable, type ColumnDef } from '../components/widgets/DataTable';
-import { ActionButton } from '../components/widgets/ActionButton';
 import { useKernelInvoke, useNavigator } from '../../lib/clef-provider';
 
 type TabMode = 'overview' | 'do' | 'variables';
@@ -92,6 +91,17 @@ export const ProcessRunView: React.FC<ProcessRunViewProps> = ({ runId }) => {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [actionBusy, setActionBusy] = useState(false);
+
+  const handleRunAction = useCallback(async (action: 'cancel' | 'resume' | 'complete') => {
+    setActionBusy(true);
+    try {
+      await invoke('ProcessRun', action, { run: runId });
+      setRefreshKey(k => k + 1);
+    } finally {
+      setActionBusy(false);
+    }
+  }, [invoke, runId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -203,6 +213,7 @@ export const ProcessRunView: React.FC<ProcessRunViewProps> = ({ runId }) => {
 
   const canCancel = run.status === 'running' || run.status === 'suspended';
   const canResume = run.status === 'suspended';
+  const canComplete = run.status === 'running';
 
   return (
     <div>
@@ -220,23 +231,38 @@ export const ProcessRunView: React.FC<ProcessRunViewProps> = ({ runId }) => {
           {run.status && (
             <Badge variant={STATUS_VARIANT[run.status] ?? 'secondary'}>{run.status}</Badge>
           )}
+          {canComplete && (
+            <button
+              data-part="button"
+              data-variant="filled"
+              disabled={actionBusy}
+              onClick={() => void handleRunAction('complete')}
+            >
+              {actionBusy ? '…' : 'Mark Complete'}
+            </button>
+          )}
           {canResume && (
-            <ActionButton
-              binding="process-resume"
-              context={{ run: runId }}
-              label="Resume"
-              buttonVariant="secondary"
-              onSuccess={() => setRefreshKey(k => k + 1)}
-            />
+            <button
+              data-part="button"
+              data-variant="secondary"
+              disabled={actionBusy}
+              onClick={() => handleRunAction('resume')}
+            >
+              {actionBusy ? '…' : 'Resume'}
+            </button>
           )}
           {canCancel && (
-            <ActionButton
-              binding="process-cancel"
-              context={{ run: runId }}
-              label="Cancel"
-              buttonVariant="ghost"
-              onSuccess={() => setRefreshKey(k => k + 1)}
-            />
+            <button
+              data-part="button"
+              data-variant="ghost"
+              disabled={actionBusy}
+              onClick={() => {
+                if (!confirm('Cancel this process run?')) return;
+                void handleRunAction('cancel');
+              }}
+            >
+              {actionBusy ? '…' : 'Cancel'}
+            </button>
           )}
         </div>
       </div>
