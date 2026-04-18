@@ -331,9 +331,10 @@ export default async function AdminPage({
   }
 
   if (slug[0] === 'keybinding-editor' && slug[1] === 'edit') {
+    const bindingId = typeof resolvedSearch.binding === 'string' ? resolvedSearch.binding : null;
     return (
       <HostedPage>
-        <KeybindingEditor mode="edit" context={null} />
+        <KeybindingEditor mode="edit" context={bindingId} />
       </HostedPage>
     );
   }

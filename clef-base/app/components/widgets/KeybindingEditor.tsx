@@ -88,6 +88,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { useRouter } from 'next/navigation';
 import { useKernelInvoke } from '../../../lib/clef-provider';
 import { recorderActive } from '../../../lib/useKeyBindings';
 import { isMac, renderChord } from './KeybindingHint';
@@ -485,8 +486,14 @@ export function KeybindingEditor({
   // Selected binding (for detail pane)
   // ------------------------------------------------------------------
 
-  const selectedBinding = context
-    ? augmentedBindings.find((b) => b.binding === context) ?? null
+  const router = useRouter();
+  // localContext tracks the selected binding id in edit/create modes.
+  // Initialized from props.context; updated when the user clicks a list row.
+  const [localContext, setLocalContext] = useState<string | null>(context ?? null);
+  useEffect(() => { setLocalContext(context ?? null); }, [context]);
+
+  const selectedBinding = localContext
+    ? augmentedBindings.find((b) => b.binding === localContext) ?? null
     : null;
 
   // ------------------------------------------------------------------
@@ -854,7 +861,7 @@ export function KeybindingEditor({
   // ------------------------------------------------------------------
 
   function renderListItem(b: KeyBindingRecord): React.ReactElement {
-    const isSelected = b.binding === context;
+    const isSelected = b.binding === localContext;
     const isFromPreset = b.fromPreset === true;
     const isUserModified = b.isModified === true;
     return (
@@ -878,8 +885,14 @@ export function KeybindingEditor({
           borderBottom: '1px solid var(--color-border-subtle, #eee)',
         }}
         onClick={() => {
-          if (mode === 'view' && onSelectBinding) {
-            onSelectBinding(b.binding);
+          if (mode === 'view') {
+            if (onSelectBinding) {
+              onSelectBinding(b.binding);
+            } else {
+              router.push(`/admin/keybinding-editor/edit?binding=${encodeURIComponent(b.binding)}`);
+            }
+          } else if (mode === 'edit') {
+            setLocalContext(b.binding);
           }
         }}
         onKeyDown={(e) => {
