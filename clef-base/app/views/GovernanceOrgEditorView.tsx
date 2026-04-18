@@ -5,6 +5,7 @@ import { useKernelInvoke } from '../../lib/clef-provider';
 import { ViewRenderer } from '../components/ViewRenderer';
 import { Badge } from '../components/widgets/Badge';
 import { EmptyState } from '../components/widgets/EmptyState';
+import { TreeDisplay } from '../components/widgets/TreeDisplay';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -344,7 +345,7 @@ const RoutesSidebar: React.FC<RoutesSidepanelProps> = ({ specs, selectedId, onSe
   if (specs.length === 0) {
     return (
       <div style={{ padding: 'var(--spacing-md)', color: 'var(--palette-on-surface-variant)', fontSize: '0.875rem' }}>
-        No process specs. Go to Processes to create one.
+        No process specs yet. Use + to create one.
       </div>
     );
   }
@@ -397,6 +398,7 @@ export const GovernanceOrgEditorView: React.FC = () => {
   const [loadingTeams, setLoadingTeams] = useState(false);
   const [loadingSpecs, setLoadingSpecs] = useState(false);
   const [showCreateTeam, setShowCreateTeam] = useState(false);
+  const [showCreateSpec, setShowCreateSpec] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
   // Load teams via ContentNode schema filter
@@ -412,6 +414,7 @@ export const GovernanceOrgEditorView: React.FC = () => {
           name: (n.name ?? n.node) as string,
           domain: n.domain as string | undefined,
           purpose: n.purpose as string | undefined,
+          parent: (n.parent ?? null) as string | null,
           members: (n.members ?? []) as string[],
         }));
         setTeams(parsed);
@@ -426,13 +429,21 @@ export const GovernanceOrgEditorView: React.FC = () => {
     }
   }, [invoke]);
 
-  // Load process specs
+  // Load process specs via ContentNode schema filter
   const loadSpecs = useCallback(async () => {
     setLoadingSpecs(true);
     try {
-      const result = await invoke('ProcessSpec', 'list', {});
-      if (result.variant === 'ok' && Array.isArray(result.specs)) {
-        setSpecs(result.specs as ProcessSpecRecord[]);
+      const result = await invoke('ContentNode', 'listBySchema', { schema: 'process-spec' });
+      if (result.variant === 'ok') {
+        let rows: Record<string, unknown>[] = [];
+        try { rows = JSON.parse(result.items as string ?? '[]'); } catch { /* empty */ }
+        const parsed: ProcessSpecRecord[] = rows.map(n => ({
+          spec: n.node as string,
+          name: (n.name ?? n.spec_name ?? n.node) as string,
+          status: (n.run_status ?? n.status ?? 'draft') as string,
+          steps: [],
+        }));
+        setSpecs(parsed);
       } else {
         setSpecs([]);
       }
@@ -468,6 +479,25 @@ export const GovernanceOrgEditorView: React.FC = () => {
     setRefreshKey(k => k + 1);
   }, [invoke]);
 
+  const createSpec = useCallback(async (values: Record<string, string>) => {
+    const nodeId = `spec-${Date.now()}`;
+    const createResult = await invoke('ContentNode', 'create', {
+      node: nodeId,
+      type: 'process-spec',
+      content: JSON.stringify({
+        name: values.name,
+        description: values.description || undefined,
+        status: 'draft',
+      }),
+    });
+    if (createResult.variant !== 'ok') {
+      throw new Error((createResult.message as string) ?? 'Failed to create process spec');
+    }
+    await invoke('Schema', 'applyTo', { entity_id: nodeId, schema: 'process-spec' });
+    setShowCreateSpec(false);
+    setRefreshKey(k => k + 1);
+  }, [invoke]);
+
   const MODES: { id: Mode; label: string }[] = [
     { id: 'structure', label: 'Structure' },
     { id: 'routes', label: 'Routes' },
@@ -481,7 +511,7 @@ export const GovernanceOrgEditorView: React.FC = () => {
         {MODES.map(m => (
           <button
             key={m.id}
-            onClick={() => setMode(m.id)}
+            onClick={() => { setMode(m.id); setSelectedTeam(null); setSelectedSpec(null); }}
             style={{
               padding: '10px 20px',
               border: 'none',
@@ -517,10 +547,13 @@ export const GovernanceOrgEditorView: React.FC = () => {
             <span style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.08em', color: 'var(--palette-on-surface-variant)', textTransform: 'uppercase' }}>
               {mode === 'structure' ? 'Teams' : mode === 'routes' ? 'Process Specs' : 'Roles & Routes'}
             </span>
-            {mode === 'structure' && (
+            {(mode === 'structure' || mode === 'routes') && (
               <button
-                onClick={() => setShowCreateTeam(v => !v)}
-                title="Create team"
+                onClick={() => {
+                  if (mode === 'structure') setShowCreateTeam(v => !v);
+                  else setShowCreateSpec(v => !v);
+                }}
+                title={mode === 'structure' ? 'Create team' : 'Create process spec'}
                 style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--palette-primary)', fontWeight: 700, fontSize: '1rem', lineHeight: 1 }}
               >
                 +
@@ -555,15 +588,28 @@ export const GovernanceOrgEditorView: React.FC = () => {
           )}
 
           {mode === 'routes' && (
-            loadingSpecs ? (
-              <div style={{ fontSize: '0.875rem', color: 'var(--palette-on-surface-variant)' }}>Loading…</div>
-            ) : (
-              <RoutesSidebar
-                specs={specs}
-                selectedId={selectedSpec?.spec ?? null}
-                onSelect={s => setSelectedSpec(s)}
-              />
-            )
+            <>
+              {showCreateSpec && (
+                <InlineForm
+                  title="New Process Spec"
+                  fields={[
+                    { key: 'name', label: 'Spec Name', placeholder: 'Onboarding' },
+                    { key: 'description', label: 'Description (optional)', placeholder: 'Employee onboarding process' },
+                  ]}
+                  onSubmit={createSpec}
+                  onCancel={() => setShowCreateSpec(false)}
+                />
+              )}
+              {loadingSpecs ? (
+                <div style={{ fontSize: '0.875rem', color: 'var(--palette-on-surface-variant)' }}>Loading…</div>
+              ) : (
+                <RoutesSidebar
+                  specs={specs}
+                  selectedId={selectedSpec?.spec ?? null}
+                  onSelect={s => setSelectedSpec(s)}
+                />
+              )}
+            </>
           )}
 
           {mode === 'permissions' && (
@@ -591,10 +637,28 @@ export const GovernanceOrgEditorView: React.FC = () => {
                 team={selectedTeam}
                 onRefresh={() => setRefreshKey(k => k + 1)}
               />
+            ) : teams.length > 0 ? (
+              <div>
+                <div style={{ fontWeight: 700, fontSize: '1rem', marginBottom: 'var(--spacing-lg)', color: 'var(--palette-on-surface)' }}>
+                  Organisation Chart
+                </div>
+                <TreeDisplay
+                  data={teams as unknown as Record<string, unknown>[]}
+                  fields={[
+                    { key: 'id', label: 'ID' },
+                    { key: 'name', label: 'Team' },
+                    { key: 'domain', label: 'Domain' },
+                  ]}
+                  onRowClick={row => {
+                    const t = teams.find(t => t.id === row.id);
+                    if (t) setSelectedTeam(t);
+                  }}
+                />
+              </div>
             ) : (
               <EmptyState
-                title="Select a team"
-                description="Choose a team from the sidebar to view members, proposals, and roles. Create a new team with the + button."
+                title="No teams yet"
+                description="Create your first team with the + button in the sidebar."
               />
             )
           )}
