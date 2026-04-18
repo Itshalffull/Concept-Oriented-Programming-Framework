@@ -2,42 +2,48 @@
 widget approval-tracker {
 
   purpose {
-    M-of-N sign-off progress display for governance approval steps. A progress arc
-    fills as signers complete their approvals. An avatar list names each eligible
-    signer and marks who has already signed with a timestamp. A sign button lets
-    the current user add their approval; the button is disabled when the user has
-    already signed or when the required count is already met. The widget transitions
-    from awaiting to complete when the signed count reaches or exceeds the required
-    count. The concept action invoked by the sign button is configured by the parent
-    work-item-card via its connect block; this widget does not hardcode a binding.
+    M-of-N approval arc display with signer avatars and a sign-off action. A progress
+    arc fills as approvals are collected. A threshold tick marks the required count. An
+    avatar list names each eligible signer and indicates who has already signed. The
+    current user can add their sign-off via the sign button, which is hidden once they
+    have already signed or when the approval is no longer open. The widget transitions
+    from open to approved when the signed count reaches the required count, and to
+    declined when the approval is explicitly rejected. The sign button is connected to
+    Approval/signOff so the host need not hardcode the binding.
   }
 
   anatomy {
-    root:          container    { Outer wrapper; reflects awaiting or complete state }
-    progressArc:   presentation { Arc showing signed-of-required progress }
-    requiredLabel: text         { Text summarising progress, e.g. "2 of 3 signed" }
-    signerList:    container    { List of signer entries }
-    signerAvatar:  container    { Individual signer row with name and signed timestamp }
+    root:          container    { Outer wrapper; reflects approval state via data-state }
+    arc:           presentation { Background arc track for the approval progress }
+    progressFill:  presentation { Foreground arc segment representing approvals received }
+    thresholdTick: presentation { Marker on the arc at the required approval count position }
+    signersZone:   container    { List of signer avatar entries }
+    signerAvatar:  container    { Individual signer row with name and signed indicator }
     signButton:    action       { Button the current user activates to add their sign-off }
+    countText:     text         { Numeric summary such as "2 of 3 approved" }
   }
 
   states {
-    awaiting [initial] {
-      on SIGN_OFF_COMPLETE -> complete;
+    open [initial] {
+      on APPROVE -> approved;
+      on DECLINE -> declined;
     }
-    complete {
-      on SIGN_OFF_REVOKED -> awaiting;
+    approved {
+      on REVOKE  -> open;
+    }
+    declined {
+      on REOPEN  -> open;
     }
   }
 
   accessibility {
-    role: region;
+    role: group;
     modal: false;
     keyboard {
       Tab       -> FOCUS_NEXT;
       Shift+Tab -> FOCUS_PREV;
-      Enter     -> SIGN;
-      Space     -> SIGN;
+      Enter     -> SIGN_OFF;
+      Space     -> SIGN_OFF;
     }
     focus {
       trap: false;
@@ -46,119 +52,149 @@ widget approval-tracker {
     }
     aria {
       root -> {
-        role: "region";
-        aria-label: if state.approval == "complete" then "Approval complete"
-                    else concat(?signed, " of ", ?required, " approvals");
-        aria-live: "polite";
+        role: "group";
+        aria-label: if state.approval == "approved" then "Approval complete"
+                    else if state.approval == "declined" then "Approval declined"
+                    else concat(?approved, " of ", ?required, " approvals");
       };
-      progressArc -> {
+      arc -> {
         aria-hidden: "true";
       };
-      signerList -> {
+      progressFill -> {
+        aria-hidden: "true";
+      };
+      thresholdTick -> {
+        aria-hidden: "true";
+      };
+      signersZone -> {
         role: "list";
         aria-label: "Signers";
       };
       signerAvatar -> {
         role: "listitem";
-        aria-label: if self.signed_at then concat(self.name, " - signed")
-                    else concat(self.name, " - pending");
       };
       signButton -> {
         role: "button";
-        aria-disabled: if ?already_signed then "true"
-                       else if state.approval == "complete" then "true"
-                       else "false";
-        aria-label: if ?already_signed then "Already signed"
-                    else if state.approval == "complete" then "Approval complete"
-                    else "Sign off";
+        aria-label: "Sign off";
+        aria-hidden: if ?mySignature then "true"
+                     else if state.approval != "open" then "true"
+                     else "false";
       };
     }
   }
 
   props {
-    required:       Int = 1
-    signed:         Int = 0
-    signers:        list SignerInfo = []
-    can_sign:       Bool = false
-    already_signed: Bool = false
+    required:    Int = 1
+    approved:    Int = 0
+    signers:     list String = []
+    mySignature: option Bool
+    approvalId:  String = ""
   }
 
   connect {
     root -> {
       data-part:     "root";
       data-state:    state.approval;
-      data-signed:   ?signed;
+      data-approved: ?approved;
       data-required: ?required;
-      role:          "region";
-      aria-live:     "polite";
+      role:          "group";
     }
 
-    progressArc -> {
-      data-part:   "progress-arc";
-      data-share:  if ?required > 0 then ?signed / ?required else 0;
+    arc -> {
+      data-part:   "arc";
       aria-hidden: "true";
     }
 
-    requiredLabel -> {
-      data-part: "required-label";
-      text:      if state.approval == "complete"
-                 then concat(?signed, " of ", ?required, " signed - complete")
-                 else concat(?signed, " of ", ?required, " signed");
+    progressFill -> {
+      data-part:  "progress-fill";
+      data-share: if ?required > 0 then ?approved / ?required else 0;
+      aria-hidden: "true";
     }
 
-    signerList -> {
-      data-part: "signer-list";
+    thresholdTick -> {
+      data-part:     "threshold-tick";
+      data-position: if ?required > 0 then ?required / ?required else 1;
+      aria-hidden:   "true";
+    }
+
+    signersZone -> {
+      data-part: "signers-zone";
       role:      "list";
     }
 
     signerAvatar -> {
-      data-part:      "signer-avatar";
-      data-signer-id: self.id;
-      data-signed:    if self.signed_at then "true" else "false";
-      data-signed-at: self.signed_at;
-      aria-label:     if self.signed_at then concat(self.name, " - signed")
-                      else concat(self.name, " - pending");
+      data-part:   "signer-avatar";
+      data-signer: self.name;
     }
 
     signButton -> {
       data-part:       "sign-button";
-      disabled:        if ?already_signed then true
-                       else if state.approval == "complete" then true
-                       else if ?can_sign then false else true;
-      aria-disabled:   if ?already_signed then "true"
-                       else if state.approval == "complete" then "true"
-                       else "false";
-      tabindex:        if ?can_sign then "0" else "-1";
-      onClick:         send(SIGN);
-      onKeyDown-Enter: send(SIGN);
-      onKeyDown-Space: send(SIGN);
+      hidden:          if ?mySignature then true
+                       else if state.approval != "open" then true
+                       else false;
+      aria-label:      "Sign off";
+      onClick:         send(SIGN_OFF, { approval: ?approvalId });
+      onKeyDown-Enter: send(SIGN_OFF, { approval: ?approvalId });
+      onKeyDown-Space: send(SIGN_OFF, { approval: ?approvalId });
+    }
+
+    countText -> {
+      data-part: "count-text";
+      text:      if state.approval == "approved"
+                 then concat(?approved, " of ", ?required, " approved - complete")
+                 else concat(?approved, " of ", ?required, " approved");
     }
   }
 
   invariant {
-    "data-state on root must mirror the FSM approval state at all times: awaiting or complete";
-    "progressArc aria-hidden must be true because the arc is a purely presentational element";
-    "signButton must be disabled when already_signed is true regardless of the approval state";
-    "signButton must be disabled when the approval state is complete regardless of can_sign";
-    "signButton must be disabled when can_sign is false";
-    "requiredLabel text must read complete suffix when the approval state is complete";
-    "signerAvatar data-signed must be true when the signer has a signed_at timestamp";
-    "signerAvatar data-signed must be false when the signer does not have a signed_at timestamp";
-    "signButton dispatches SIGN on Enter key press";
-    "signButton dispatches SIGN on Space key press";
-    "Both states must be reachable: awaiting is initial, complete is reached when SIGN_OFF_COMPLETE fires";
+    "data-state on root must mirror the FSM approval state: open, approved, or declined";
+    "arc aria-hidden must be true because the arc track is purely presentational";
+    "progressFill aria-hidden must be true because the fill arc is purely presentational";
+    "signButton must be hidden when mySignature is true regardless of approval state";
+    "signButton must be hidden when the approval state is approved or declined";
+    "signButton aria-label must always read Sign off";
+    "All three states must be reachable: open is initial, approved on APPROVE, declined on DECLINE";
 
-    always "progress arc is decorative" {
-      progressArc.aria-hidden = "true"
+    example "open to approved": {
+      after signButton.click() -> ok
+      then root.data-state = "approved"
+      and signButton.hidden = true
     }
 
-    never "sign button enabled when already signed" {
-      signButton.disabled = false
+    example "open to declined": {
+      after root.decline() -> ok
+      then root.data-state = "declined"
+      and signButton.hidden = true
+    }
+
+    example "revoke returns approved to open": {
+      after root.revoke() -> ok
+      then root.data-state = "open"
+    }
+
+    always "arc is decorative" {
+      arc.aria-hidden = "true"
+    }
+
+    always "progress fill is decorative" {
+      progressFill.aria-hidden = "true"
+    }
+
+    always "threshold tick is decorative" {
+      thresholdTick.aria-hidden = "true"
+    }
+
+    never "sign button visible when already signed" {
+      signButton.hidden = false
+    }
+
+    never "sign button visible in approved state" {
+      signButton.aria-hidden = "false"
     }
 
     action signButton {
-      requires: state.approval = "awaiting"
-      ensures ok: state.approval = "awaiting"
+      requires: state.approval = "open"
+      ensures ok: state.approval = "open"
     }
   }
 

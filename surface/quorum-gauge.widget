@@ -2,40 +2,40 @@
 widget quorum-gauge {
 
   purpose {
-    Arc gauge visualising voter participation relative to the total eligible
-    electorate. The filled arc segment grows as participants join. A threshold
-    marker on the arc track shows the fraction required for quorum. Three states
-    cover the common conditions: participation is still below the quorum threshold,
-    quorum has been met, and the poll is closed. The widget is read-only display;
-    it does not record participation itself.
+    Progress arc gauge showing voter participation (participated / eligible) against
+    a quorum threshold. The arc fill grows as more eligible voters participate. A
+    threshold tick marks the fraction required for quorum. Three states reflect the
+    current participation level: below-quorum when participation has not yet reached
+    the threshold, at-quorum when participation exactly meets it, and above-quorum
+    when participation exceeds it. The widget is read-only display; it does not
+    record participation itself.
   }
 
   anatomy {
-    root:              container    { Outer wrapper; reflects participation state }
-    arcTrack:          presentation { Background arc representing the full eligible population }
-    arcFill:           presentation { Foreground arc segment representing participation so far }
-    participatedCount: text         { Number of eligible voters who have participated }
-    eligibleCount:     text         { Total number of eligible voters }
-    thresholdMarker:   presentation { Marker on the arc indicating the quorum threshold angle }
-    label:             text         { Descriptive label beneath the gauge }
+    root:          container    { Outer wrapper; reflects participation state via data-state }
+    arc:           presentation { Background arc representing the full eligible population }
+    progressFill:  presentation { Foreground arc segment representing participation so far }
+    thresholdTick: presentation { Marker on the arc at the quorum threshold angle }
+    label:         text         { Descriptive label summarising participation status }
+    countText:     text         { Numeric summary such as "N of M participated" }
   }
 
   states {
     belowQuorum [initial] {
-      on QUORUM_MET  -> quorumMet;
-      on POLL_CLOSED -> closed;
+      on REACH_QUORUM  -> atQuorum;
     }
-    quorumMet {
-      on QUORUM_LOST -> belowQuorum;
-      on POLL_CLOSED -> closed;
+    atQuorum {
+      on EXCEED_QUORUM -> aboveQuorum;
+      on DROP_QUORUM   -> belowQuorum;
     }
-    closed {
-      on POLL_REOPENED -> belowQuorum;
+    aboveQuorum {
+      on DROP_TO_AT    -> atQuorum;
+      on DROP_QUORUM   -> belowQuorum;
     }
   }
 
   accessibility {
-    role: img;
+    role: meter;
     modal: false;
     keyboard {
       Tab -> FOCUS_NEXT;
@@ -47,104 +47,117 @@ widget quorum-gauge {
     }
     aria {
       root -> {
-        role: "img";
-        aria-label: if state.participation == "closed" then concat(?participated, " of ", ?eligible, " participated - closed")
-                    else if state.participation == "quorumMet" then concat(?participated, " of ", ?eligible, " participated - quorum met")
-                    else concat(?participated, " of ", ?eligible, " participated - quorum not yet met");
-        aria-roledescription: "quorum participation gauge";
+        role: "meter";
+        aria-valuenow: ?participated;
+        aria-valuemin: "0";
+        aria-valuemax: ?eligible;
+        aria-label: if ?label then ?label else "Quorum participation";
       };
-      arcTrack -> {
+      arc -> {
         aria-hidden: "true";
       };
-      arcFill -> {
+      progressFill -> {
         aria-hidden: "true";
       };
-      thresholdMarker -> {
+      thresholdTick -> {
         aria-hidden: "true";
       };
     }
   }
 
   props {
-    participated:     Int = 0
-    eligible:         Int = 1
-    quorum_threshold: Float = 0.5
-    closed:           Bool = false
+    participated: Int = 0
+    eligible:     Int = 1
+    threshold:    Int = 1
+    label:        option String
   }
 
   connect {
     root -> {
       data-part:         "root";
-      data-state:        state.participation;
+      data-state:        state.quorum;
       data-participated: ?participated;
       data-eligible:     ?eligible;
-      data-threshold:    ?quorum_threshold;
-      data-closed:       if ?closed then "true" else "false";
-      role:              "img";
+      data-threshold:    ?threshold;
+      role:              "meter";
+      aria-valuenow:     ?participated;
+      aria-valuemin:     "0";
+      aria-valuemax:     ?eligible;
     }
 
-    arcTrack -> {
-      data-part:   "arc-track";
+    arc -> {
+      data-part:   "arc";
       aria-hidden: "true";
     }
 
-    arcFill -> {
-      data-part:   "arc-fill";
-      data-share:  if ?eligible > 0 then ?participated / ?eligible else 0;
+    progressFill -> {
+      data-part:  "progress-fill";
+      data-share: if ?eligible > 0 then ?participated / ?eligible else 0;
       aria-hidden: "true";
     }
 
-    participatedCount -> {
-      data-part: "participated-count";
-      text:      ?participated;
-    }
-
-    eligibleCount -> {
-      data-part: "eligible-count";
-      text:      ?eligible;
-    }
-
-    thresholdMarker -> {
-      data-part:      "threshold-marker";
-      data-threshold: ?quorum_threshold;
-      aria-hidden:    "true";
+    thresholdTick -> {
+      data-part:     "threshold-tick";
+      data-position: if ?eligible > 0 then ?threshold / ?eligible else 1;
+      aria-hidden:   "true";
     }
 
     label -> {
       data-part: "label";
-      text:      if state.participation == "closed" then "Voting closed"
-                 else if state.participation == "quorumMet" then "Quorum met"
-                 else "Quorum not yet met";
+      text:      if ?label then ?label
+                 else if state.quorum == "aboveQuorum" then "Above quorum"
+                 else if state.quorum == "atQuorum" then "Quorum reached"
+                 else "Below quorum";
+    }
+
+    countText -> {
+      data-part: "count-text";
+      text:      concat(?participated, " of ", ?eligible, " participated");
     }
   }
 
   invariant {
-    "data-state on root must mirror the FSM participation state at all times: belowQuorum, quorumMet, or closed";
-    "arcFill data-share must be the ratio of participated to eligible, or 0 when eligible is 0";
-    "arcFill aria-hidden must be true because the fill arc is a purely presentational element";
-    "arcTrack aria-hidden must be true because the track arc is a purely presentational element";
-    "thresholdMarker aria-hidden must be true because the marker is a purely presentational element";
-    "label text must read Quorum met in the quorumMet state";
-    "label text must read Voting closed in the closed state";
-    "label text must read Quorum not yet met in the belowQuorum state";
-    "root aria-label must summarise participated count, eligible count, and quorum outcome";
-    "All three states must be reachable: belowQuorum is initial, quorumMet on QUORUM_MET, closed on POLL_CLOSED";
+    "data-state on root must mirror the FSM quorum state: belowQuorum, atQuorum, or aboveQuorum";
+    "progressFill aria-hidden must be true because the fill arc is purely presentational";
+    "arc aria-hidden must be true because the track arc is purely presentational";
+    "thresholdTick aria-hidden must be true because the threshold marker is purely presentational";
+    "root aria-valuenow must equal the participated prop at all times";
+    "thresholdTick data-position must be the ratio of threshold to eligible";
 
-    always "arc fill is decorative" {
-      arcFill.aria-hidden = "true"
+    example "reach quorum transitions state": {
+      after root.reachQuorum() -> ok
+      then root.data-state = "atQuorum"
     }
 
-    always "threshold marker is decorative" {
-      thresholdMarker.aria-hidden = "true"
+    example "exceed quorum transitions state": {
+      after root.exceedQuorum() -> ok
+      then root.data-state = "aboveQuorum"
     }
 
-    never "arc track shown to assistive tech" {
-      arcTrack.aria-hidden = "false"
+    example "drop quorum returns to belowQuorum": {
+      after root.dropQuorum() -> ok
+      then root.data-state = "belowQuorum"
+    }
+
+    always "progress fill is decorative" {
+      progressFill.aria-hidden = "true"
+    }
+
+    always "arc track is decorative" {
+      arc.aria-hidden = "true"
+    }
+
+    always "threshold tick is decorative" {
+      thresholdTick.aria-hidden = "true"
+    }
+
+    never "arc shown to assistive tech" {
+      arc.aria-hidden = "false"
     }
 
     action root {
-      requires: state.participation = "belowQuorum"
-      ensures ok: state.participation = "quorumMet"
+      requires: state.quorum = "belowQuorum"
+      ensures ok: state.quorum = "atQuorum"
     }
   }
 

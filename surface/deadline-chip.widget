@@ -2,42 +2,43 @@
 widget deadline-chip {
 
   purpose {
-    Compact chip showing how much time remains before a governance step closes.
-    Urgency escalates through three time-based states: ample (more than 24 hours
-    remaining), warning (1-24 hours), and critical (under 1 hour). When the
-    deadline has passed or the step is explicitly closed the chip enters an
-    expired state. State transitions are driven by elapsed time or by the
-    closed prop being set to true; the widget does not poll a clock itself.
-    The parent is responsible for updating closes_at or closed in response to
-    real-time events.
+    Compact countdown chip displaying the time remaining before a governance deadline.
+    Urgency escalates automatically through four states driven by TICK events from the
+    host: ample (more than 24 hours remaining), warning (2-24 hours), critical (under
+    2 hours), and expired (past the deadline or explicitly closed). The countdown text
+    is a live region so assistive technology announces changes without interrupting the
+    user. The widget does not poll a clock internally; the parent is responsible for
+    sending TICK events and updating the deadline prop.
   }
 
   anatomy {
     root:          container    { Outer chip wrapper; carries urgency state for styling }
-    icon:          presentation { Clock or alert icon encoding urgency level }
-    timeRemaining: text         { Human-readable countdown string }
-    urgencyRing:   presentation { Colored ring reinforcing urgency through color }
+    icon:          presentation { Clock or alert icon encoding the current urgency level }
+    countdownText: text         { Live countdown string, e.g. "1h 23m remaining" }
+    label:         text         { Optional descriptive label beneath the countdown }
   }
 
   states {
     ample [initial] {
-      on WARN      -> warning;
-      on EXPIRE    -> expired;
+      on TICK   -> warning;
+      on EXPIRE -> expired;
     }
     warning {
-      on CRITICISE -> critical;
-      on EXPIRE    -> expired;
+      on TICK   -> critical;
+      on EXPIRE -> expired;
+      on RESET  -> ample;
     }
     critical {
-      on EXPIRE    -> expired;
+      on EXPIRE -> expired;
+      on RESET  -> ample;
     }
     expired {
-      on REOPEN    -> ample;
+      on REOPEN -> ample;
     }
   }
 
   accessibility {
-    role: status;
+    role: timer;
     modal: false;
     keyboard {
       Tab -> FOCUS_NEXT;
@@ -49,89 +50,103 @@ widget deadline-chip {
     }
     aria {
       root -> {
-        role: "status";
-        aria-live: "polite";
-        aria-label: if state.urgency == "expired" then "Voting closed"
-                    else if state.urgency == "critical" then concat("Critical: ", self.remaining, " remaining")
-                    else if state.urgency == "warning" then concat("Warning: ", self.remaining, " remaining")
-                    else concat(self.remaining, " remaining");
-        aria-atomic: "true";
+        role: "timer";
+        aria-label: if ?label then ?label else "Deadline countdown";
       };
       icon -> {
         aria-hidden: "true";
       };
-      urgencyRing -> {
-        aria-hidden: "true";
+      countdownText -> {
+        role: "status";
+        aria-live: "polite";
+        aria-atomic: "true";
+      };
+      label -> {
+        aria-hidden: if ?label then "false" else "true";
       };
     }
   }
 
   props {
-    closes_at: option String
-    closed:    Bool = false
+    deadline: String = ""
+    label:    option String
   }
 
   connect {
     root -> {
-      data-part:      "root";
-      data-state:     state.urgency;
-      data-closed:    if ?closed then "true" else "false";
-      data-closes-at: ?closes_at;
-      role:           "status";
-      aria-live:      "polite";
-      aria-atomic:    "true";
+      data-part:     "root";
+      data-state:    state.urgency;
+      data-deadline: ?deadline;
+      role:          "timer";
     }
 
     icon -> {
-      data-part:     "icon";
+      data-part:      "icon";
       data-icon-kind: if state.urgency == "expired" then "expired"
                       else if state.urgency == "critical" then "alert"
                       else if state.urgency == "warning" then "clock-warn"
                       else "clock";
-      aria-hidden:   "true";
+      aria-hidden:    "true";
     }
 
-    timeRemaining -> {
-      data-part: "time-remaining";
-      text:      if state.urgency == "expired" then "Closed"
-                 else self.remaining;
+    countdownText -> {
+      data-part:   "countdown-text";
+      aria-live:   "polite";
+      aria-atomic: "true";
+      text:        if state.urgency == "expired" then "Expired"
+                   else self.remaining;
     }
 
-    urgencyRing -> {
-      data-part:    "urgency-ring";
-      data-urgency: state.urgency;
-      aria-hidden:  "true";
+    label -> {
+      data-part: "label";
+      text:      ?label;
+      hidden:    if ?label then false else true;
     }
   }
 
   invariant {
-    "data-state on root must mirror the FSM urgency state at all times: ample, warning, critical, or expired";
-    "icon aria-hidden must be true in all states because the icon is a purely presentational element";
-    "urgencyRing aria-hidden must be true in all states because the ring is a purely presentational element";
-    "timeRemaining text must read Closed when the urgency state is expired";
-    "icon data-icon-kind must be clock in the ample state";
-    "icon data-icon-kind must be clock-warn in the warning state";
-    "icon data-icon-kind must be alert in the critical state";
-    "icon data-icon-kind must be expired in the expired state";
-    "root aria-atomic must be true so assistive tech announces the full label on change";
-    "root aria-live must be polite so deadline changes are announced without interruption";
-    "All four states must be reachable: ample is initial, warning via WARN, critical via CRITICISE, expired via EXPIRE";
+    "data-state on root must mirror the FSM urgency state: ample, warning, critical, or expired";
+    "icon aria-hidden must be true in all states because the icon is purely presentational";
+    "countdownText aria-live must be polite so announcements do not interrupt the user";
+    "countdownText text must read Expired when the urgency state is expired";
+    "All four states must be reachable: ample is initial, warning via TICK, critical via second TICK, expired via EXPIRE";
+
+    example "ample to warning on TICK": {
+      after root.tick() -> ok
+      then root.data-state = "warning"
+    }
+
+    example "warning to critical on TICK": {
+      after root.tick() -> ok
+      then root.data-state = "critical"
+    }
+
+    example "expire from critical": {
+      after root.expire() -> ok
+      then root.data-state = "expired"
+      and countdownText.text = "Expired"
+    }
+
+    example "reopen returns to ample": {
+      after root.reopen() -> ok
+      then root.data-state = "ample"
+    }
 
     always "icon is decorative" {
       icon.aria-hidden = "true"
     }
 
-    always "urgency ring is decorative" {
-      urgencyRing.aria-hidden = "true"
+    always "countdown text is live" {
+      countdownText.aria-live = "polite"
     }
 
-    never "expired state without prior ample" {
-      state.urgency = "expired"
+    never "expired with non-expired countdown text" {
+      countdownText.aria-hidden = "true"
     }
 
     action root {
-      requires: state.urgency != "expired"
-      ensures ok: state.urgency = "expired"
+      requires: state.urgency = "ample"
+      ensures ok: state.urgency = "warning"
     }
   }
 

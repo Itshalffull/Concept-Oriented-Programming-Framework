@@ -2,35 +2,35 @@
 widget vote-result-bar {
 
   purpose {
-    N-way tally bar showing the distribution of votes across two or more options.
-    Works for binary contests (yes/no) and multi-option polls alike. Each option
-    renders a proportional fill bar with its label and raw count. An optional
-    threshold marker indicates the minimum share required to pass. The option the
-    current user voted for is visually highlighted so voters can quickly locate
-    their own choice. The widget is a static display primitive; it does not collect
-    votes itself.
+    N-way tally bar display showing the proportional distribution of votes across
+    two or more options. Each option renders a labelled fill bar whose width reflects
+    its share of the total. An optional threshold marker line marks the share required
+    to pass. When voting has settled the winning option is highlighted via a winner
+    badge. The widget is a static display primitive; it does not collect votes itself.
+    It supports live (updating), settled (final), and tied (no single winner) states.
   }
 
   anatomy {
-    root:            container    { Outer wrapper; reflects voting state and highlight }
-    barList:         container    { Ordered list of per-option bars }
-    barItem:         container    { Row for a single vote option }
-    barFill:         presentation { Proportional fill element expressing vote share }
-    barLabel:        text         { Human-readable option label }
-    barCount:        text         { Raw vote count for this option }
-    thresholdMarker: presentation { Vertical line marking the pass threshold on the bar track }
+    root:            container    { Outer wrapper; reflects tally state via data-state }
+    barsZone:        container    { Ordered list of per-option bar rows }
+    bar:             container    { Row for a single vote option }
+    label:           text         { Human-readable option name }
+    fill:            presentation { Proportional fill element expressing vote share }
+    count:           text         { Raw vote count for this option }
+    thresholdMarker: presentation { Vertical marker line at the pass threshold position }
+    winnerBadge:     presentation { Badge highlighting the winning option in settled state }
   }
 
   states {
-    empty [initial] {
-      on VOTES_CAST -> active;
+    live [initial] {
+      on SETTLE -> settled;
+      on TIE    -> tied;
     }
-    active {
-      on VOTING_CLOSED -> closed;
-      on ALL_VOTES_RETRACTED -> empty;
+    settled {
+      on REOPEN -> live;
     }
-    closed {
-      on VOTING_REOPENED -> active;
+    tied {
+      on REOPEN -> live;
     }
   }
 
@@ -48,109 +48,133 @@ widget vote-result-bar {
     aria {
       root -> {
         role: "img";
-        aria-label: if state.tally == "empty" then "No votes cast yet"
-                    else if state.tally == "closed" then "Final tally - voting closed"
-                    else "Vote tally - voting in progress";
+        aria-label: if state.tally == "settled" then "Final vote tally"
+                    else if state.tally == "tied" then "Vote tally - tied"
+                    else "Live vote tally";
         aria-roledescription: "vote tally chart";
       };
-      barList -> {
+      barsZone -> {
         role: "list";
         aria-label: "Vote options";
       };
-      barItem -> {
+      bar -> {
         role: "listitem";
-        aria-label: concat(self.label, ": ", self.count, " votes");
       };
-      barFill -> {
+      fill -> {
         aria-hidden: "true";
       };
       thresholdMarker -> {
+        aria-hidden: "true";
+      };
+      winnerBadge -> {
         aria-hidden: "true";
       };
     }
   }
 
   props {
-    options:   list VoteOption = []
+    options:   list String = []
+    counts:    list Int = []
     total:     Int = 0
-    threshold: option Int
-    highlight: option String
+    threshold: option String
+    winner:    option String
   }
 
   connect {
     root -> {
-      data-part:      "root";
-      data-state:     state.tally;
-      data-total:     ?total;
-      data-highlight: ?highlight;
-      role:           "img";
+      data-part:   "root";
+      data-state:  state.tally;
+      data-total:  ?total;
+      data-winner: ?winner;
+      role:        "img";
     }
 
-    barList -> {
-      data-part: "bar-list";
+    barsZone -> {
+      data-part: "bars-zone";
       role:      "list";
     }
 
-    barItem -> {
-      data-part:      "bar-item";
-      data-label:     self.label;
-      data-count:     self.count;
-      data-color:     self.color;
-      data-highlight: if ?highlight == self.label then "true" else "false";
-      aria-label:     concat(self.label, ": ", self.count, " votes");
+    bar -> {
+      data-part:      "bar";
+      data-option:    self.option;
+      data-is-winner: if ?winner == self.option then "true" else "false";
     }
 
-    barFill -> {
-      data-part:   "bar-fill";
+    label -> {
+      data-part: "label";
+      text:      self.option;
+    }
+
+    fill -> {
+      data-part:   "fill";
       data-share:  if ?total > 0 then self.count / ?total else 0;
       aria-hidden: "true";
     }
 
-    barLabel -> {
-      data-part: "bar-label";
-      text:      self.label;
-    }
-
-    barCount -> {
-      data-part: "bar-count";
+    count -> {
+      data-part: "count";
       text:      self.count;
     }
 
     thresholdMarker -> {
-      data-part:      "threshold-marker";
-      data-threshold: ?threshold;
-      hidden:         if ?threshold then false else true;
-      aria-hidden:    "true";
+      data-part:   "threshold-marker";
+      hidden:      if ?threshold then false else true;
+      aria-hidden: "true";
+    }
+
+    winnerBadge -> {
+      data-part:   "winner-badge";
+      hidden:      if state.tally == "settled" then false else true;
+      aria-hidden: "true";
     }
   }
 
   invariant {
-    "data-state on root must mirror the FSM tally state at all times: empty, active, or closed";
-    "barFill aria-hidden must be true in all states because fill elements are purely presentational";
+    "data-state on root must mirror the FSM tally state: live, settled, or tied";
+    "fill aria-hidden must be true in all states because fill elements are purely presentational";
     "thresholdMarker must be hidden when the threshold prop is absent";
-    "thresholdMarker must be visible and carry data-threshold when the threshold prop is set";
-    "barItem data-highlight must be true only for the option whose label matches the highlight prop";
-    "barItem data-highlight must be false for every option when the highlight prop is absent";
-    "barCount text must equal the count field of the corresponding option";
-    "barLabel text must equal the label field of the corresponding option";
-    "root role must be img so the tally is treated as a single accessible graphic";
-    "All three states must be reachable: empty is initial, active is reached on VOTES_CAST, closed on VOTING_CLOSED";
+    "winnerBadge must only be visible in the settled state";
+    "bars sum to 100 percent of total votes when total is greater than zero";
 
-    always "bar fills are decorative" {
-      barFill.aria-hidden = "true"
+    example "settle transitions tally to settled": {
+      after root.settle() -> ok
+      then root.data-state = "settled"
+      and winnerBadge.hidden = false
+    }
+
+    example "tie transitions tally to tied": {
+      after root.tie() -> ok
+      then root.data-state = "tied"
+    }
+
+    example "reopen returns settled to live": {
+      after root.reopen() -> ok
+      then root.data-state = "live"
+    }
+
+    always "fill elements are decorative" {
+      fill.aria-hidden = "true"
     }
 
     always "threshold marker is decorative" {
       thresholdMarker.aria-hidden = "true"
     }
 
-    never "bar list hidden" {
-      barList.hidden = true
+    always "winner badge is decorative" {
+      winnerBadge.aria-hidden = "true"
+    }
+
+    never "winner badge visible outside settled" {
+      winnerBadge.hidden = false
+    }
+
+    never "threshold marker shown when no threshold set" {
+      thresholdMarker.hidden = false
     }
 
     action root {
-      requires: state.tally = "active"
-      ensures ok: state.tally = "closed"
+      requires: state.tally = "live"
+      ensures ok: state.tally = "settled"
     }
   }
 
