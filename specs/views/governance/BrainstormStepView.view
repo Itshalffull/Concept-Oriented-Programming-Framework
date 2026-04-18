@@ -1,0 +1,58 @@
+view "brainstorm-step-view" {
+  shell: "brainstorm-step-view"
+
+  features {
+    filter
+    projection
+    interaction
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"BrainstormBoard\",\"action\":\"getIdeas\",\"params\":{\"boardId\":\"{{step.config.boardId}}\"}}"
+    }
+    filter: {
+      node: "{\"type\":\"eq\",\"field\":\"boardId\",\"value\":\"$step.config.boardId\"}"
+    }
+    projection: {
+      fields: "[{\"key\":\"idea_ref\",\"label\":\"Idea\"},{\"key\":\"submitter_ref\",\"label\":\"Submitter\",\"hidden\":\"$step.config.anonymous === true && phase !== 'closed'\"},{\"key\":\"endorsements\",\"label\":\"Endorsements\"},{\"key\":\"is_fork\",\"label\":\"Fork\"},{\"key\":\"parent_ref\",\"label\":\"Parent Idea\"},{\"key\":\"branch_count\",\"label\":\"Branches\"},{\"key\":\"phase\",\"label\":\"Phase\"}]"
+    }
+    interaction: {
+      createForm: "{\"concept\":\"BrainstormBoard\",\"action\":\"submitIdea\",\"label\":\"Submit Idea\",\"fields\":[{\"key\":\"idea_ref\",\"auto\":\"uuid\"},{\"key\":\"submitter_ref\",\"auto\":\"session.userId\"}]}",
+      rowActions: "[{\"key\":\"endorseIdea\",\"concept\":\"BrainstormBoard\",\"action\":\"endorseIdea\",\"label\":\"Endorse\",\"inputs\":{\"board\":\"boardId\",\"idea_ref\":\"row.idea_ref\",\"voter_ref\":\"session.userId\"}},{\"key\":\"forkIdea\",\"concept\":\"BrainstormBoard\",\"action\":\"forkIdea\",\"label\":\"Fork\",\"modalWidget\":\"VersionSelectorWidget\"},{\"key\":\"closeSubmission\",\"concept\":\"BrainstormBoard\",\"action\":\"closeSubmission\",\"label\":\"Close Submission\",\"role\":\"facilitator\"},{\"key\":\"shortlist\",\"concept\":\"BrainstormBoard\",\"action\":\"shortlist\",\"label\":\"Shortlist\",\"role\":\"facilitator\"},{\"key\":\"close\",\"concept\":\"BrainstormBoard\",\"action\":\"close\",\"label\":\"Close\",\"role\":\"facilitator\"}]"
+    }
+    presentation: {
+      displayType: "brainstorm-idea-list",
+      hints: "{\"showVersionBadge\":true,\"pollIntervalMs\":5000,\"anonymous\":\"$step.config.anonymous\"}"
+    }
+  }
+
+  purpose {
+    Displays the idea list for a BrainstormBoard process step. Participants
+    see ideas submitted by others (submitter hidden when anonymous mode is
+    active and phase is not closed), can endorse ideas inline, and fork them
+    via the VersionSelectorWidget modal. Facilitators have additional shortlist
+    and close controls. Polls every 5 seconds while the step is active.
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+
+    always "invokes only BrainstormBoard actions": {
+      forall ia in invokedActions:
+      ia startsWith "BrainstormBoard/"
+    }
+
+    always "all invoke variants covered": {
+      uncoveredVariants = []
+    }
+
+    always "filter fields exist in source": {
+      forall f in filterFields:
+      f in sourceFields
+    }
+  }
+}
