@@ -1409,6 +1409,7 @@ export function KeybindingEditor({
             background: showOnlyModified
               ? 'var(--color-accent-subtle, #e8f0fe)'
               : 'var(--color-surface, #fff)',
+            color: 'var(--color-text, #111)',
             cursor: 'pointer',
             fontSize: '0.875rem',
             fontWeight: showOnlyModified ? 600 : 400,
@@ -1419,6 +1420,25 @@ export function KeybindingEditor({
 
         {/* Preset picker (KB-14) */}
         {renderPresetPicker()}
+
+        {/* In view mode: link to edit mode */}
+        {mode === 'view' && (
+          <a
+            href="/admin/keybinding-editor/edit"
+            style={{
+              marginLeft: 'auto',
+              padding: '4px 10px',
+              fontSize: '0.875rem',
+              color: 'var(--color-primary, #1a73e8)',
+              textDecoration: 'none',
+              border: '1px solid var(--color-primary, #1a73e8)',
+              borderRadius: '4px',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Customize →
+          </a>
+        )}
       </div>
 
       {/* ---- Main content row ---- */}
@@ -1454,6 +1474,11 @@ export function KeybindingEditor({
               filteredBindings.map(renderListItem)
             )}
           </div>
+          {mode === 'view' && filteredBindings.length > 0 && (
+            <p style={{ padding: '6px 12px', fontSize: '0.75rem', color: 'var(--color-text-muted, #888)', margin: 0 }}>
+              Click a binding to edit it
+            </p>
+          )}
         </div>
 
         {/* ---- Detail pane (edit/create only) ---- */}
