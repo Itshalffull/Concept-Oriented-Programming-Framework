@@ -17,6 +17,7 @@ import { validateField, parseValidationRules } from '../../../lib/form-validatio
 import { getVisibleFields, parseConditions } from '../../../lib/form-conditions';
 import type { FieldCondition } from '../../../lib/form-conditions';
 import { useKernelInvoke } from '../../../lib/clef-provider';
+import { isVariableProgramExpression, resolveExpression } from '../../../lib/variable-program';
 
 // ─── FormSpec types ────────────────────────────────────────────────────────────
 
@@ -66,6 +67,13 @@ export interface FieldDefinition {
   options?: string[];
   mutability?: 'editable' | 'readonly' | 'system';
   sortOrder?: number;
+  /**
+   * Default value for this field when rendering a create-mode form.
+   * May be a literal string or a VariableProgram expression (starts with `$` or `'`).
+   * VariableProgram expressions are resolved against the current runtime context
+   * (session, URL params, page context) when the form mounts.
+   */
+  defaultValue?: string;
 }
 
 // ─── FormRendererProps ────────────────────────────────────────────────────────
@@ -557,6 +565,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
   const [loadError, setLoadError] = useState<string | null>(null);
 
   // ── Form state ──
+  // Initialised from props; VariableProgram defaults are merged in after load (see load effect).
   const [values, setValues] = useState<Record<string, unknown>>(initialValues);
   const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
@@ -595,9 +604,41 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
         // Sort by sortOrder if available
         defs.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 
+        // Resolve VariableProgram default values for fields not covered by initialValues.
+        // Each field with a defaultValue that is a VariableProgram expression
+        // (starts with `$` or `'`) is resolved against the current runtime context.
+        // Literal defaultValues are used as-is. Fields already present in
+        // initialValues are never overwritten.
+        const resolvedDefaults: Record<string, unknown> = {};
+        await Promise.all(
+          defs
+            .filter((def) => def.defaultValue !== undefined && !(def.id in initialValues))
+            .map(async (def) => {
+              const raw = def.defaultValue!;
+              if (isVariableProgramExpression(raw)) {
+                try {
+                  resolvedDefaults[def.id] = await resolveExpression(raw);
+                } catch {
+                  // Resolution failed — use the raw expression string as fallback
+                  // so that literal defaults continue to work even when the
+                  // VariableProgram kernel concept is unavailable.
+                  resolvedDefaults[def.id] = raw;
+                }
+              } else {
+                // Literal default value — use directly.
+                resolvedDefaults[def.id] = raw;
+              }
+            }),
+        );
+
         if (!cancelled) {
           setFormSpec(spec);
           setFieldDefs(defs);
+          // Seed the values state with resolved defaults. initialValues always wins
+          // over resolved defaults (already excluded above).
+          if (Object.keys(resolvedDefaults).length > 0) {
+            setValues((prev) => ({ ...resolvedDefaults, ...prev }));
+          }
         }
       } catch (err) {
         if (!cancelled) {
@@ -829,7 +870,7 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
   const isLastStep = !hasSteps || currentStep === steps.length - 1;
 
   return (
-    <div data-part="form-renderer" data-schema-id={schemaId} data-mode={mode} data-keybinding-scope="app.form">
+    <div data-part="form-renderer" data-schema-id={schemaId} data-mode={mode}>
       {!compact && hasSteps && (
         <StepBar steps={steps} currentStep={currentStep} compact={compact} />
       )}
