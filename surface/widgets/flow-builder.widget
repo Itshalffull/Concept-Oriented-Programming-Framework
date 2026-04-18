@@ -15,12 +15,18 @@ widget flow-builder {
   }
 
   anatomy {
-    root:        container    { Outermost application shell; owns the three-pane layout }
-    palette:     container    { Left pane listing draggable node type entries }
-    paletteItem: action       { A single draggable node type (trigger, action, logic, or catch) }
-    viewToggle:  action       { Toggle control that switches the center pane between Steps and Graph views }
-    centerPane:  container    { Center pane that hosts either flow-steps-view or FlowchartEditor }
-    inspector:   container    { Right pane displaying configuration for the currently selected step }
+    root:              container    { Outermost application shell; owns the three-pane layout }
+    palette:           container    { Left pane listing draggable node type entries }
+    paletteItem:       action       { A single draggable node type (trigger, action, logic, or catch) }
+    viewToggle:        action       { Toggle control that switches the center pane between Steps and Graph views }
+    centerPane:        container    { Center pane that hosts either flow-steps-view or FlowchartEditor }
+    stepRow:           container    { One step entry in the linear steps list }
+    branchArmSection:  container    { Fork region rendered under a branch step; holds both true and false arms }
+    branchArmTrue:     container    { The true-path arm of a branch step; contains arm steps and an add-step button }
+    branchArmFalse:    container    { The false-path arm of a branch step; contains arm steps and an add-step button }
+    addBranchStep:     action       { Button to append a new step to a specific branch arm (true or false) }
+    insertHandle:      action       { Click target between steps in the linear list that inserts a new step at that position }
+    inspector:         container    { Right pane displaying configuration for the currently selected step }
   }
 
   states {
@@ -171,6 +177,44 @@ widget flow-builder {
       data-view: state.view;
     }
 
+    stepRow -> {
+      data-part:    "step-row";
+      data-step-id: self.stepId;
+      data-kind:    self.stepKind;
+      onClick:      send(SELECT_STEP, { stepId: self.stepId });
+      tabIndex:     "0";
+    }
+
+    branchArmSection -> {
+      data-part:     "branch-arm-section";
+      data-step-id:  self.stepId;
+    }
+
+    branchArmTrue -> {
+      data-part:     "branch-arm";
+      data-edge:     "true";
+      data-step-id:  self.stepId;
+    }
+
+    branchArmFalse -> {
+      data-part:     "branch-arm";
+      data-edge:     "false";
+      data-step-id:  self.stepId;
+    }
+
+    addBranchStep -> {
+      data-part:     "add-branch-step";
+      data-edge:     self.edgeLabel;
+      data-from:     self.fromStepId;
+      onClick:       send(ADD_BRANCH_STEP, { fromStepId: self.fromStepId, edgeLabel: self.edgeLabel });
+    }
+
+    insertHandle -> {
+      data-part:  "insert-handle";
+      data-index: self.index;
+      onClick:    send(INSERT_AT, { index: self.index });
+    }
+
     inspector -> {
       data-part:         "inspector";
       data-state:        state.interaction;
@@ -244,6 +288,16 @@ widget flow-builder {
       then root -> { data-state: "idle" }
     }
 
+    example "add branch step fires ADD_BRANCH_STEP with correct edge label": {
+      after addBranchStep.click (when: self.edgeLabel == "true" and self.fromStepId == "step-b1") -> ok
+      then root -> { data-state: "idle" }
+    }
+
+    example "empty steps list shows insert-at-0 handle": {
+      after send(RESET_STEPS) -> ok
+      then insertHandle -> { data-index: "0" }
+    }
+
     forall s in states.interaction:
       s.reachable = true
 
@@ -274,6 +328,19 @@ widget flow-builder {
       state.interaction == "idle" and inspector -> { hidden: false }
     }
 
+    always "branchArmTrue data-edge is always true": {
+      branchArmTrue -> { data-edge: "true" }
+    }
+
+    always "branchArmFalse data-edge is always false": {
+      branchArmFalse -> { data-edge: "false" }
+    }
+
+    never "branch arm step appears in main step list": {
+      "A step that is reachable via a true/false edge from a branch step must appear
+       only inside its parent branchArmSection, never as a top-level stepRow";
+    }
+
     action viewToggle.click {
       requires: state.interaction != "dragging-from-palette"
       ensures ok: state.view != state.view
@@ -282,6 +349,16 @@ widget flow-builder {
     action paletteItem.pointerDown {
       requires: ?processSpecId != ""
       ensures ok: state.interaction == "dragging-from-palette"
+    }
+
+    action addBranchStep.click {
+      requires: ?processSpecId != "" and self.fromStepId != "" and (self.edgeLabel == "true" or self.edgeLabel == "false")
+      ensures ok: state.interaction == "idle"
+    }
+
+    action insertHandle.click {
+      requires: ?processSpecId != ""
+      ensures ok: state.interaction == "idle"
     }
 
     "selectedStepId must be preserved across TOGGLE_VIEW transitions in both directions";
