@@ -1,0 +1,13 @@
+# Policy compliance check — /admin/governance/policies/check
+# Governance sidebar entry for evaluating policy clauses against an action+subject.
+# Card: MAG-985
+
+concept: DestinationCatalog
+action: register
+entries:
+  - destination: policy-check
+    name: policy-check
+    surface: PolicyCompliancePanel
+    href: /admin/governance/policies/check
+    icon: "✓"
+    group: Governance

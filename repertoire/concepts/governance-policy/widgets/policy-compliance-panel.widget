@@ -1,0 +1,319 @@
+@version(1)
+widget policy-compliance-panel {
+
+  purpose {
+    Shows policy pass/fail status for the current action being evaluated.
+    Surfaces which PolicyClauses are satisfied, which are violated, and the
+    overall enforcement outcome (allow / warn / block) for the current subject.
+    Embedded in process step runner UI and governance action confirmation dialogs.
+    Automatically triggers policy evaluation on mount when autoEvaluate is enabled,
+    and exposes a reset affordance so dialogs can re-run checks after corrections.
+  }
+
+  anatomy {
+    root:          container    { Outermost wrapper for the full compliance panel }
+    header:        container    { Title row containing the panel label and enforcement outcome badge }
+    outcomeBadge:  presentation { Badge displaying the enforcement outcome: Allowed, Warn, or Blocked }
+    clauseList:    container    { Scrollable list of all evaluated policy clause rows }
+    clauseRow:     container    { One row per PolicyClause showing deontic, aim, and pass/fail indicator }
+    deonticChip:   presentation { Colored chip showing the clause deontic: May (blue), Must (orange), MustNot (red) }
+    clauseAim:     text         { Text describing the aim of the policy clause }
+    passIndicator: presentation { Green checkmark shown when the clause is satisfied }
+    failIndicator: presentation { Red cross shown when the clause is violated }
+    warnBanner:    container    { Alert banner shown when enforcement outcome is warn }
+    blockBanner:   container    { Alert banner shown when enforcement outcome is block }
+    emptyState:    container    { Placeholder shown when no policies apply to the current action context }
+  }
+
+  states {
+    idle [initial] {
+      on EVALUATE -> checking;
+    }
+
+    checking {
+      on EVALUATION_COMPLETE -> allowed;
+      on WARN_DETECTED       -> warned;
+      on BLOCK_DETECTED      -> blocked;
+      on NO_POLICIES         -> empty;
+      entry [runPolicyCheck];
+    }
+
+    allowed {
+      on RESET -> idle;
+    }
+
+    warned {
+      on RESET -> idle;
+    }
+
+    blocked {
+      on RESET -> idle;
+    }
+
+    empty {
+      on RESET -> idle;
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Tab       -> FOCUS_NEXT;
+      Shift+Tab -> FOCUS_PREV;
+    }
+    focus {
+      trap: false;
+      initial: root;
+      roving: false;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Policy compliance check";
+      };
+      outcomeBadge -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: if state == "allowed" then "Outcome: Allowed"
+                    else if state == "warned" then "Outcome: Warning"
+                    else if state == "blocked" then "Outcome: Blocked"
+                    else "Outcome: Pending";
+      };
+      clauseList -> {
+        role: "tree";
+        aria-label: "Policy clauses";
+      };
+      clauseRow -> {
+        role: "treeitem";
+        aria-label: concat(self.deontic, " - ", self.aim, ": ", if self.satisfied then "satisfied" else "violated");
+      };
+      warnBanner -> {
+        role: "alert";
+        aria-live: "polite";
+        aria-label: "Warning: non-blocking policy violation detected";
+      };
+      blockBanner -> {
+        role: "alert";
+        aria-live: "assertive";
+        aria-label: "Blocked: policy hard stop — action cannot proceed";
+      };
+      emptyState -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: "No policies apply to this action context";
+      };
+    }
+  }
+
+  props {
+    actionContext:  String = ""
+    subjectId:      String = ""
+    resourceId:     option String
+    autoEvaluate:   Bool = true
+  }
+
+  connect {
+    root -> {
+      data-part:    "root";
+      data-state:   if state == "idle"     then "idle"
+                    else if state == "checking" then "checking"
+                    else if state == "allowed"  then "allowed"
+                    else if state == "warned"   then "warned"
+                    else if state == "blocked"  then "blocked"
+                    else "empty";
+      data-outcome: if state == "allowed" then "allow"
+                    else if state == "warned"  then "warn"
+                    else if state == "blocked" then "block"
+                    else "none";
+      role:         "region";
+      aria-label:   "Policy compliance check";
+    }
+
+    header -> {
+      data-part: "header";
+    }
+
+    outcomeBadge -> {
+      data-part:    "outcome-badge";
+      data-outcome: if state == "allowed" then "allow"
+                    else if state == "warned"  then "warn"
+                    else if state == "blocked" then "block"
+                    else "none";
+      text:         if state == "allowed" then "Allowed"
+                    else if state == "warned"  then "Warn"
+                    else if state == "blocked" then "Blocked"
+                    else if state == "checking" then "Checking..."
+                    else "";
+      role:         "status";
+      aria-live:    "polite";
+    }
+
+    clauseList -> {
+      data-part: "clause-list";
+      role:      "tree";
+      hidden:    if state == "idle" or state == "checking" or state == "empty" then true else false;
+    }
+
+    clauseRow -> {
+      data-part:      "clause-row";
+      data-deontic:   self.deontic;
+      data-satisfied: if self.satisfied then "true" else "false";
+      role:           "treeitem";
+      aria-label:     concat(self.deontic, " - ", self.aim, ": ", if self.satisfied then "satisfied" else "violated");
+    }
+
+    deonticChip -> {
+      data-part:    "deontic-chip";
+      data-deontic: self.deontic;
+      text:         self.deontic;
+    }
+
+    clauseAim -> {
+      data-part: "clause-aim";
+      text:      self.aim;
+    }
+
+    passIndicator -> {
+      data-part: "pass-indicator";
+      hidden:    if self.satisfied then false else true;
+    }
+
+    failIndicator -> {
+      data-part: "fail-indicator";
+      hidden:    if self.satisfied then true else false;
+    }
+
+    warnBanner -> {
+      data-part: "warn-banner";
+      role:      "alert";
+      aria-live: "polite";
+      hidden:    if state == "warned" then false else true;
+    }
+
+    blockBanner -> {
+      data-part: "block-banner";
+      role:      "alert";
+      aria-live: "assertive";
+      hidden:    if state == "blocked" then false else true;
+    }
+
+    emptyState -> {
+      data-part: "empty-state";
+      role:      "status";
+      aria-live: "polite";
+      hidden:    if state == "empty" then false else true;
+    }
+  }
+
+  invariant {
+    example "evaluate transitions from idle to checking": {
+      after transition(from: "idle", event: "EVALUATE") -> ok
+      then state = "checking"
+    }
+
+    example "evaluation complete transitions checking to allowed": {
+      after transition(from: "checking", event: "EVALUATION_COMPLETE") -> ok
+      then state = "allowed"
+    }
+
+    example "warn detected transitions checking to warned": {
+      after transition(from: "checking", event: "WARN_DETECTED") -> ok
+      then state = "warned"
+    }
+
+    example "block detected transitions checking to blocked": {
+      after transition(from: "checking", event: "BLOCK_DETECTED") -> ok
+      then state = "blocked"
+    }
+
+    example "no policies transitions checking to empty": {
+      after transition(from: "checking", event: "NO_POLICIES") -> ok
+      then state = "empty"
+    }
+
+    example "reset from allowed returns to idle": {
+      after transition(from: "allowed", event: "RESET") -> ok
+      then state = "idle"
+    }
+
+    example "reset from warned returns to idle": {
+      after transition(from: "warned", event: "RESET") -> ok
+      then state = "idle"
+    }
+
+    example "reset from blocked returns to idle": {
+      after transition(from: "blocked", event: "RESET") -> ok
+      then state = "idle"
+    }
+
+    always "all FSM states are reachable": {
+      forall s in states: s.reachable = true
+    }
+
+    always "FSM is deterministic": {
+      forall s in states: s.transitions_count <= 4
+    }
+
+    always "blockBanner visible only in blocked": {
+      state = "blocked"
+    }
+
+    always "warnBanner visible only in warned": {
+      state = "warned"
+    }
+
+    never "idle is a terminal state": {
+      exists s in states: s.name = "idle" and s.transitions_count = 0
+    }
+
+    never "passIndicator and failIndicator both visible simultaneously": {
+      exists r in clauseRows: r.satisfied = true and r.satisfied = false
+    }
+
+    never "clauseList visible in idle": {
+      state = "idle"
+    }
+
+    never "clauseList visible in checking": {
+      state = "checking"
+    }
+
+    never "emptyState visible in allowed": {
+      state = "allowed"
+    }
+
+    always "emptyState visible only in empty": {
+      state = "empty"
+    }
+
+    "outcomeBadge data-outcome must match the FSM state (allow/warn/block/none)";
+    "clauseList must be hidden when state is idle or checking";
+    "emptyState must be hidden when state is allowed, warned, or blocked";
+
+    action EVALUATE {
+      requires: state = "idle"
+      ensures ok: state = "checking"
+    }
+
+    action EVALUATION_COMPLETE {
+      requires: state = "checking"
+      ensures ok: state = "allowed"
+    }
+
+    action WARN_DETECTED {
+      requires: state = "checking"
+      ensures ok: state = "warned"
+    }
+
+    action BLOCK_DETECTED {
+      requires: state = "checking"
+      ensures ok: state = "blocked"
+    }
+
+    "outcomeBadge data-outcome must match the current FSM state";
+    "clauseList must be empty (no rows rendered) when state is idle or checking";
+    "deonticChip color must correspond to deontic: May=blue, Must=orange, MustNot=red";
+  }
+
+}
