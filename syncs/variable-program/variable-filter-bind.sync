@@ -1,0 +1,37 @@
+# Variable-program → filter param resolution sync
+#
+# When a FilterSpec with declared parameter expressions is fetched (as happens
+# during view resolution), resolve every param expression through VariableProgram
+# (parse then resolve) and call FilterSpec/bind with the resulting concrete bindings
+# map. This replaces the bespoke $step.* substitution mechanism with the full
+# VariableProgram grammar:
+#
+#   $session.userId   → VariableProgram/parse → resolve with session context
+#   $url.projectId    → VariableProgram/parse → resolve with URL context
+#   $page.assignee    → VariableProgram/parse → resolve with page context
+#   $step.config.boardId → VariableProgram/parse → resolve with step context
+#
+# The runtime context JSON is supplied by the ViewShell config string that the
+# view resolution flow already produces, which contains the session, URL, and
+# page context packed for the current request.
+
+sync VariableFilterBind [eager]
+  purpose: "When a FilterSpec with declared parameter expressions is loaded during view resolution, parse each parameter expression through VariableProgram and resolve it against the runtime context from the resolved view config, then call FilterSpec/bind with the resulting concrete bindings map so downstream query compilation receives a fully substituted, evaluable filter tree."
+when {
+  ViewShell/resolve: [ name: ?viewName ]
+    => ok(view: ?view; config: ?runtimeContext)
+  FilterSpec/get: [ name: ?filterName ]
+    => ok(filter: ?filter; tree: _; sourceType: _; fieldRefs: _)
+}
+where {
+  ViewShell: { ?view filter: ?filterName }
+  FilterSpec: { ?filter parameters: ?paramExpression }
+  guard(?paramExpression != "")
+  VariableProgram/parse: [ expression: ?paramExpression ]
+    => ok(program: ?program)
+  VariableProgram/resolve: [ program: ?program; context: ?runtimeContext ]
+    => ok(value: ?resolvedBindings)
+}
+then {
+  FilterSpec/bind: [ name: ?filterName; bindings: ?resolvedBindings ]
+}
