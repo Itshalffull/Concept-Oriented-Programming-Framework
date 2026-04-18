@@ -28,7 +28,7 @@
  * Section 16.12 — widget spec states / connect blocks.
  */
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useKernelInvoke } from '../../../lib/clef-provider';
 import { ActionButton } from './ActionButton';
 import {
@@ -352,133 +352,288 @@ const StepsView: React.FC<StepsViewProps> = ({
 // FlowchartEditorHost — Canvas host for the Graph pane
 // ---------------------------------------------------------------------------
 
+const STEP_KIND_ICON: Record<string, string> = {
+  trigger: '▶',
+  action:  '⚡',
+  branch:  '◇',
+  catch:   '⚠',
+  logic:   'λ',
+};
+
+const STEP_KIND_COLOR: Record<string, string> = {
+  trigger: 'var(--palette-primary)',
+  action:  'var(--palette-secondary)',
+  branch:  '#c07000',
+  catch:   'var(--palette-error)',
+  logic:   '#5c6ac4',
+};
+
 interface FlowchartEditorHostProps {
   processSpecId: string;
+  steps: StepRecord[];
   selectedNodeId: string | null;
   onNodeSelected: (nodeId: string) => void;
 }
 
-/**
- * FlowchartEditorHost wraps the Canvas concept's host region for the graph
- * pane. Canvas/mount is called with the processSpecId as the canvas scope;
- * Canvas nodes map 1:1 to ProcessSpec steps. Node selection events are
- * surfaced upward so the inspector stays in sync across both views.
- *
- * The host element uses data-part="flowchart-editor-host" so the kernel's
- * Canvas concept can locate it via DOM attachment.
- */
 const FlowchartEditorHost: React.FC<FlowchartEditorHostProps> = ({
   processSpecId,
+  steps,
   selectedNodeId,
   onNodeSelected,
 }) => {
-  const invoke = useKernelInvoke();
-  const hostRef = useRef<HTMLDivElement>(null);
-  const [mounted, setMounted] = useState(false);
-
-  // Mount the canvas on the kernel side
-  useEffect(() => {
-    if (!processSpecId) return;
-    let cancelled = false;
-
-    invoke('Canvas', 'mount', { canvas: processSpecId, scope: 'process-spec' })
-      .then((result) => {
-        if (cancelled) return;
-        if (result && (result as Record<string, unknown>).variant === 'ok') {
-          setMounted(true);
-        }
-      })
-      .catch(() => {
-        // Canvas may not be seeded; render placeholder without blocking
-        if (!cancelled) setMounted(true);
-      });
-
-    return () => {
-      cancelled = true;
-      // Canvas/unmount is fire-and-forget on cleanup
-      invoke('Canvas', 'unmount', { canvas: processSpecId }).catch(() => {});
-    };
-  }, [processSpecId, invoke]);
-
-  // Sync selection into the canvas
-  useEffect(() => {
-    if (!mounted || !selectedNodeId) return;
-    invoke('Canvas', 'selectNode', { canvas: processSpecId, node: selectedNodeId }).catch(() => {});
-  }, [mounted, processSpecId, selectedNodeId, invoke]);
-
-  // Click handler — read node from data attribute and surface upward
-  const handleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const target = e.target as HTMLElement;
-    const nodeEl = target.closest('[data-canvas-node]') as HTMLElement | null;
-    if (nodeEl) {
-      const nodeId = nodeEl.dataset.canvasNode;
-      if (nodeId) onNodeSelected(nodeId);
-    }
-  }, [onNodeSelected]);
+  const sorted = [...steps].sort((a, b) => a.stepIndex - b.stepIndex);
 
   return (
     <div
-      ref={hostRef}
       data-part="flowchart-editor-host"
       data-canvas-id={processSpecId}
       data-selected-node={selectedNodeId ?? undefined}
       role="region"
       aria-label="Graph view"
-      onClick={handleClick}
       style={{
         flex: 1,
         background: 'var(--palette-surface-variant)',
         borderRadius: 'var(--radius-sm)',
-        overflow: 'hidden',
-        position: 'relative',
+        overflow: 'auto',
         minHeight: 0,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center',
+        padding: 'var(--spacing-md)',
+        gap: 0,
       }}
     >
-      {mounted ? (
+      {sorted.length === 0 ? (
         <div
-          data-part="canvas-viewport"
           style={{
-            width: '100%',
-            height: '100%',
-            position: 'relative',
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'var(--palette-on-surface-variant)',
+            fontSize: 'var(--typography-body-sm-size)',
+            gap: 'var(--spacing-xs)',
           }}
         >
-          {/* Canvas nodes are injected here by the Canvas kernel concept
-              via DOM mutation (data-canvas-node attributes). The kernel
-              uses Canvas/getNodes to populate this region after mount. */}
-          <div
-            data-part="canvas-nodes-container"
-            style={{ width: '100%', height: '100%' }}
-          />
-
-          {/* Placeholder overlay when no nodes are present */}
-          <div
-            data-part="canvas-empty-hint"
-            style={{
-              position: 'absolute',
-              inset: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              pointerEvents: 'none',
-              color: 'var(--palette-on-surface-variant)',
-              fontSize: 'var(--typography-body-sm-size)',
-              gap: 'var(--spacing-xs)',
-            }}
-          >
-            <span style={{ fontSize: '24px', opacity: 0.4 }}>⬡</span>
-            <span>Graph view — drag steps onto the canvas</span>
-          </div>
+          <span style={{ fontSize: '24px', opacity: 0.4 }}>◇</span>
+          <span>Add steps in the Steps view to build the flow</span>
         </div>
       ) : (
-        <span style={{ color: 'var(--palette-on-surface-variant)', fontSize: 'var(--typography-body-sm-size)' }}>
-          Loading canvas…
+        sorted.map((step, idx) => {
+          const isSelected = step.stepId === selectedNodeId;
+          const kindColor = STEP_KIND_COLOR[step.stepKind] ?? 'var(--palette-on-surface-variant)';
+          const icon = STEP_KIND_ICON[step.stepKind] ?? '●';
+          return (
+            <div key={step.stepId} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '320px' }}>
+              {idx > 0 && (
+                <div style={{ width: 2, height: 20, background: 'var(--palette-outline-variant)', flexShrink: 0 }} />
+              )}
+              <button
+                data-canvas-node={step.stepId}
+                onClick={() => onNodeSelected(step.stepId)}
+                aria-label={`${step.stepKind} step: ${step.stepLabel}`}
+                aria-pressed={isSelected ? 'true' : 'false'}
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--spacing-xs)',
+                  padding: '8px 12px',
+                  borderRadius: 'var(--radius-sm)',
+                  border: isSelected
+                    ? `2px solid ${kindColor}`
+                    : '2px solid var(--palette-outline-variant)',
+                  background: isSelected ? 'var(--palette-surface)' : 'var(--palette-surface)',
+                  boxShadow: isSelected ? `0 0 0 3px ${kindColor}33` : undefined,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  color: 'var(--palette-on-surface)',
+                }}
+              >
+                <span style={{ fontSize: '13px', color: kindColor, flexShrink: 0 }}>{icon}</span>
+                <span style={{ fontSize: '10px', color: kindColor, textTransform: 'uppercase', letterSpacing: '0.08em', flexShrink: 0, minWidth: 44 }}>
+                  {step.stepKind}
+                </span>
+                <span style={{ fontSize: 'var(--typography-body-sm-size)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {step.stepLabel}
+                </span>
+              </button>
+            </div>
+          );
+        })
+      )}
+    </div>
+  );
+};
+
+// ---------------------------------------------------------------------------
+// StepKindInspector — Action tab content differentiated by step kind
+// ---------------------------------------------------------------------------
+
+interface StepKindInspectorProps {
+  stepId: string;
+  stepKind: string;
+  stepConfig: Record<string, unknown>;
+  processSpecId: string;
+  onConfigChange: (updated: Record<string, unknown>) => void;
+}
+
+const SimpleConfigField: React.FC<{
+  label: string;
+  fieldKey: string;
+  placeholder?: string;
+  multiline?: boolean;
+  value: string;
+  onChange: (key: string, val: string) => void;
+}> = ({ label, fieldKey, placeholder, multiline, value, onChange }) => (
+  <div style={{ marginBottom: 'var(--spacing-sm)' }}>
+    <label
+      style={{ display: 'block', fontSize: '11px', color: 'var(--palette-on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}
+    >
+      {label}
+    </label>
+    {multiline ? (
+      <textarea
+        rows={3}
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(fieldKey, e.target.value)}
+        style={{ width: '100%', fontSize: 'var(--typography-body-sm-size)', resize: 'vertical', padding: '4px 6px', borderRadius: 'var(--radius-xs)', border: '1px solid var(--palette-outline-variant)', background: 'var(--palette-surface-container)', color: 'var(--palette-on-surface)', fontFamily: 'var(--typography-code-family)', boxSizing: 'border-box' }}
+      />
+    ) : (
+      <input
+        type="text"
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(fieldKey, e.target.value)}
+        style={{ width: '100%', fontSize: 'var(--typography-body-sm-size)', padding: '4px 6px', borderRadius: 'var(--radius-xs)', border: '1px solid var(--palette-outline-variant)', background: 'var(--palette-surface-container)', color: 'var(--palette-on-surface)', boxSizing: 'border-box' }}
+      />
+    )}
+  </div>
+);
+
+const StepKindInspector: React.FC<StepKindInspectorProps> = ({
+  stepId, stepKind, stepConfig, processSpecId, onConfigChange,
+}) => {
+  const invoke = useKernelInvoke();
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [localConfig, setLocalConfig] = useState<Record<string, unknown>>(stepConfig);
+
+  useEffect(() => { setLocalConfig(stepConfig); }, [stepConfig]);
+
+  const handleFieldChange = useCallback((key: string, val: string) => {
+    setLocalConfig(prev => ({ ...prev, [key]: val }));
+  }, []);
+
+  const handleSave = useCallback(async (config: Record<string, unknown>) => {
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const result = await invoke('ProcessSpec', 'updateStep', {
+        spec: processSpecId,
+        stepId,
+        config: JSON.stringify(config),
+      });
+      if (result && (result as Record<string, unknown>).variant === 'ok') {
+        onConfigChange(config);
+      } else {
+        setSaveError('Save failed');
+      }
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Save failed');
+    } finally {
+      setSaving(false);
+    }
+  }, [invoke, processSpecId, stepId, onConfigChange]);
+
+  const str = (key: string) => String(localConfig[key] ?? '');
+
+  const kindLabel: Record<string, string> = { trigger: 'Trigger', action: 'Action', branch: 'Branch', catch: 'Catch', logic: 'Logic' };
+
+  return (
+    <div>
+      <div style={{ marginBottom: 'var(--spacing-sm)', display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span style={{ fontSize: '10px', background: 'var(--palette-surface-variant)', color: STEP_KIND_COLOR[stepKind] ?? 'var(--palette-on-surface-variant)', padding: '2px 6px', borderRadius: 'var(--radius-xs)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          {kindLabel[stepKind] ?? stepKind}
         </span>
+        <code style={{ fontSize: '11px', color: 'var(--palette-on-surface-variant)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{stepId}</code>
+      </div>
+
+      {stepKind === 'trigger' && (
+        <>
+          <SimpleConfigField label="Event name" fieldKey="eventName" placeholder="e.g. form.submitted" value={str('eventName')} onChange={handleFieldChange} />
+          <SimpleConfigField label="Condition" fieldKey="condition" placeholder="Optional filter expression" multiline value={str('condition')} onChange={handleFieldChange} />
+        </>
+      )}
+
+      {stepKind === 'action' && (
+        <>
+          <div style={{ marginBottom: 'var(--spacing-sm)' }}>
+            <label style={{ display: 'block', fontSize: '11px', color: 'var(--palette-on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>
+              Concept / Action
+            </label>
+            <ConceptActionPicker
+              value={str('conceptAction') ? (() => {
+                const sep = str('conceptAction').indexOf('/');
+                return sep > 0 ? { concept: str('conceptAction').slice(0, sep), action: str('conceptAction').slice(sep + 1) } : undefined;
+              })() : undefined}
+              onChange={(val) => handleFieldChange('conceptAction', `${val.concept}/${val.action}`)}
+              filter="all"
+              placeholder="Search concepts and actions…"
+            />
+            <p style={{ fontSize: '11px', color: 'var(--palette-on-surface-variant)', marginTop: 4, marginBottom: 0 }}>
+              Input parameters are configured in the I/O tab.
+            </p>
+          </div>
+        </>
+      )}
+
+      {stepKind === 'branch' && (
+        <>
+          <SimpleConfigField label="Condition expression" fieldKey="condition" placeholder="e.g. input.status == 'approved'" multiline value={str('condition')} onChange={handleFieldChange} />
+          <SimpleConfigField label="True branch label" fieldKey="trueLabel" placeholder="Yes" value={str('trueLabel')} onChange={handleFieldChange} />
+          <SimpleConfigField label="False branch label" fieldKey="falseLabel" placeholder="No" value={str('falseLabel')} onChange={handleFieldChange} />
+        </>
+      )}
+
+      {stepKind === 'catch' && (
+        <>
+          <SimpleConfigField label="Error variant to catch" fieldKey="catchVariant" placeholder="e.g. not_found (leave empty to catch all)" value={str('catchVariant')} onChange={handleFieldChange} />
+          <div style={{ marginBottom: 'var(--spacing-sm)' }}>
+            <label style={{ display: 'block', fontSize: '11px', color: 'var(--palette-on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>
+              Recovery action
+            </label>
+            <ConceptActionPicker
+              value={str('recoveryAction') ? (() => {
+                const sep = str('recoveryAction').indexOf('/');
+                return sep > 0 ? { concept: str('recoveryAction').slice(0, sep), action: str('recoveryAction').slice(sep + 1) } : undefined;
+              })() : undefined}
+              onChange={(val) => handleFieldChange('recoveryAction', `${val.concept}/${val.action}`)}
+              filter="all"
+              placeholder="Search concepts and actions…"
+            />
+          </div>
+        </>
+      )}
+
+      {stepKind === 'logic' && (
+        <>
+          <SimpleConfigField label="Transform expression" fieldKey="expression" placeholder="e.g. { result: input.items.filter(x => x.active) }" multiline value={str('expression')} onChange={handleFieldChange} />
+          <SimpleConfigField label="Output variable name" fieldKey="outputVar" placeholder="e.g. filteredItems" value={str('outputVar')} onChange={handleFieldChange} />
+        </>
+      )}
+
+      <button
+        onClick={() => handleSave(localConfig)}
+        disabled={saving}
+        style={{ marginTop: 'var(--spacing-xs)', padding: '4px 12px', borderRadius: 'var(--radius-xs)', border: 'none', background: 'var(--palette-primary)', color: 'var(--palette-on-primary)', fontSize: '12px', cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1 }}
+      >
+        {saving ? 'Saving…' : 'Save'}
+      </button>
+      {saveError && (
+        <p role="alert" style={{ fontSize: '11px', color: 'var(--palette-error)', marginTop: 4 }}>{saveError}</p>
       )}
     </div>
   );
@@ -623,56 +778,16 @@ const StepInspectorPane: React.FC<StepInspectorPaneProps> = ({
             </p>
           ) : (
             <>
-              {/* action-editor slot — Action tab */}
+              {/* action-editor slot — Action tab, content varies by stepKind */}
               {activeTab === 'action' && (
                 <div data-slot="action-editor">
-                  <div style={{ marginBottom: 'var(--spacing-sm)' }}>
-                    <div style={{ fontSize: '11px', color: 'var(--palette-on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>
-                      Step kind
-                    </div>
-                    <code style={{ fontSize: 'var(--typography-code-sm-size)' }}>{stepKind}</code>
-                  </div>
-
-                  <div style={{ marginBottom: 'var(--spacing-sm)' }}>
-                    <div style={{ fontSize: '11px', color: 'var(--palette-on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>
-                      Step ID
-                    </div>
-                    <code style={{ fontSize: 'var(--typography-code-sm-size)' }}>{stepId}</code>
-                  </div>
-
-                  {/* Action binding label / concept:action fields */}
-                  <div style={{ marginBottom: 'var(--spacing-sm)' }}>
-                    <label
-                      htmlFor={`action-binding-${stepId}`}
-                      style={{ display: 'block', fontSize: '11px', color: 'var(--palette-on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}
-                    >
-                      Concept/Action
-                    </label>
-                    <ActionBindingPicker
-                      id={`action-binding-${stepId}`}
-                      processSpecId={processSpecId}
-                      stepId={stepId}
-                      initialValue={String(stepConfig.conceptAction ?? '')}
-                      onSaved={(val) => setStepConfig(prev => ({ ...prev, conceptAction: val }))}
-                    />
-                  </div>
-
-                  {/* Config JSON editor */}
-                  <div>
-                    <label
-                      htmlFor={`config-${stepId}`}
-                      style={{ display: 'block', fontSize: '11px', color: 'var(--palette-on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}
-                    >
-                      Config (JSON)
-                    </label>
-                    <ConfigEditor
-                      id={`config-${stepId}`}
-                      processSpecId={processSpecId}
-                      stepId={stepId}
-                      initialValue={JSON.stringify(stepConfig, null, 2)}
-                      onSaved={(parsed) => setStepConfig(parsed)}
-                    />
-                  </div>
+                  <StepKindInspector
+                    stepId={stepId}
+                    stepKind={stepKind}
+                    stepConfig={stepConfig}
+                    processSpecId={processSpecId}
+                    onConfigChange={(updated) => setStepConfig(updated)}
+                  />
                 </div>
               )}
 
@@ -1996,6 +2111,7 @@ export const FlowBuilder: React.FC<FlowBuilderProps> = ({
               borderRadius: 'var(--radius-sm)',
               border: '1px solid var(--palette-outline-variant)',
               background: 'var(--palette-surface-variant)',
+              color: 'var(--palette-on-surface-variant)',
               cursor: 'pointer',
               fontSize: '12px',
               display: 'flex',
@@ -2095,6 +2211,7 @@ export const FlowBuilder: React.FC<FlowBuilderProps> = ({
           {viewState === 'graph' && (
             <FlowchartEditorHost
               processSpecId={processSpecId}
+              steps={steps}
               selectedNodeId={selectedStepId}
               onNodeSelected={handleSelectGraphNode}
             />
