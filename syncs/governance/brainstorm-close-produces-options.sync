@@ -1,17 +1,17 @@
-# When a brainstorm board closes, complete the bound StepRun with the shortlisted idea refs as output.
+# When a brainstorm board closes, complete the bound StepRun with the shortlisted
+# idea refs as output so the process pipeline can advance to the next step.
 # Brainstorm step pipeline — Section 6.x.
 
 sync BrainstormCloseProducesOptions [eager]
+  purpose: "Complete the brainstorm StepRun with shortlisted ContentNode refs as output when the board closes, advancing the process to the next step"
 when {
   BrainstormBoard/close: [ board: ?board ]
-    => [ board: ?board; output: ?output ]
-}
-where {
-  Property: { ?board key: "stepRef"; value: ?step_ref }
+    => [ step_run: ?step_run; shortlisted_refs: ?shortlisted_refs ]
 }
 then {
   StepRun/complete: [
-    step: ?step_ref;
-    output: ?output
+    stepRun: ?step_run;
+    variant: "ok";
+    output: ?shortlisted_refs
   ]
 }

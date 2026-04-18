@@ -1,18 +1,21 @@
-# When a vote step starts after a brainstorm step, load the shortlisted refs as contest options.
+# When a vote StepRun starts and the prior step was a brainstorm step, load the
+# shortlisted refs produced by BrainstormBoard/close as options for the vote.
 # Brainstorm-to-vote pipeline handoff — Section 6.x.
 
 sync ContestOptionsFromBrainstorm [eager]
+  purpose: "Seed a vote with brainstorm shortlist options when the prior step was a brainstorm, wiring the two steps together in the process pipeline"
 when {
-  StepRun/start: [ run_ref: ?run_ref; step_key: ?step_key; step_type: "vote" ]
-    => [ step: ?step; run_ref: ?run_ref; step_key: ?step_key ]
+  StepRun/start: [ step_type: "vote"; prior_step_run: ?prior_step_run; vote_id: ?vote_id ]
+    => [ step_run: ?step_run ]
 }
 where {
-  Property: { ?step key: "priorStepType"; value: "brainstorm" };
-  Property: { ?step key: "brainstormOutput"; value: ?options }
+  filter(?step_type == "vote")
+  not(StepRun/getOutput: [ stepRun: ?prior_step_run ] => [ prior_step_type: "brainstorm" ])
+  StepRun/getOutput: [ stepRun: ?prior_step_run ] => [ prior_output: ?prior_output ]
 }
 then {
-  Vote/configure: [
-    step_ref: ?step;
-    options: ?options
+  Vote/setOptions: [
+    vote: ?vote_id;
+    options: ?prior_output
   ]
 }

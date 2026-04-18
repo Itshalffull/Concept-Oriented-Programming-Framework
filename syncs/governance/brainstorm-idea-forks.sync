@@ -1,15 +1,17 @@
-# When a participant forks an idea in a brainstorm board, create a version branch on the idea ContentNode.
+# When a participant forks an idea in a brainstorm board, attach the forked idea as a child
+# branch in the version tree of the original idea ContentNode.
 # Brainstorm version tree — Section 6.x.
 
 sync BrainstormIdeaForks [eager]
+  purpose: "Hang a forked idea as a versioned child branch on the original idea's ContentNode so the variant lives in the version tree"
 when {
-  BrainstormBoard/forkIdea: [ board: ?board; parent_idea_ref: ?parent_ref; fork_idea_ref: ?fork_ref; submitter_ref: ?submitter ]
-    => [ board: ?board; fork_idea_ref: ?fork_ref ]
+  BrainstormBoard/forkIdea: [ board: ?board_id; original_idea: ?original_idea_id ]
+    => [ forked_idea_id: ?forked_idea_id; original_idea_id: ?original_idea_id; board_id: ?board_id ]
 }
 then {
   Branch/create: [
-    source: ?parent_ref;
-    name: concat("fork-", ?fork_ref);
-    created_by: ?submitter
+    node: ?forked_idea_id;
+    parent: ?original_idea_id;
+    label: "fork"
   ]
 }
