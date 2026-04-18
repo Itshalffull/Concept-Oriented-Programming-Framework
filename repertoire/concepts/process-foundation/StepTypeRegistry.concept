@@ -1,0 +1,164 @@
+@version(1)
+@category("process")
+concept StepTypeRegistry [R] {
+
+  purpose {
+    Authoritative registry mapping process step kind identifiers to their
+    UI descriptor records. Enables FlowBuilder to populate its palette,
+    kind picker, and inspector form schema from registered descriptors,
+    and lets ProcessRunView resolve the correct StepInteractionSlot widget
+    for each step at runtime — all without hardcoding step types in core files.
+  }
+
+  state {
+    registry: set R
+    descriptor: R -> {
+      kind: String,
+      label: String,
+      icon: String,
+      description: String,
+      paletteSection: String,
+      kernelConcept: option String,
+      defaultConfig: String,
+      configSchema: String,
+      interactionWidget: String
+    }
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+
+    action registerType(descriptor: String) {
+      -> ok(kind: String) {
+        Stores the full descriptor under its kind identifier so FlowBuilder
+        and ProcessRunView can discover and use this step type.
+      }
+      -> duplicate(kind: String) {
+        A descriptor with this kind identifier is already registered.
+        Call update to replace an existing entry.
+      }
+      -> error(message: String) {
+        The descriptor JSON is malformed or missing required fields
+        (kind, label, icon, description, paletteSection, interactionWidget).
+      }
+
+      fixture register_ok {
+        descriptor: "{\"kind\":\"vote\",\"label\":\"Vote\",\"icon\":\"🗳️\",\"description\":\"Collective decision by vote\",\"paletteSection\":\"Governance\",\"kernelConcept\":\"Vote\",\"defaultConfig\":{},\"configSchema\":{},\"interactionWidget\":\"step:vote\"}"
+      }
+      fixture register_second {
+        descriptor: "{\"kind\":\"brainstorm\",\"label\":\"Brainstorm\",\"icon\":\"💡\",\"description\":\"Open ideation session\",\"paletteSection\":\"Content\",\"kernelConcept\":\"BrainstormBoard\",\"defaultConfig\":{},\"configSchema\":{},\"interactionWidget\":\"step:brainstorm\"}"
+      } after register_ok
+      fixture register_duplicate {
+        descriptor: "{\"kind\":\"vote\",\"label\":\"Vote Again\",\"icon\":\"🗳️\",\"description\":\"Duplicate\",\"paletteSection\":\"Governance\",\"kernelConcept\":\"Vote\",\"defaultConfig\":{},\"configSchema\":{},\"interactionWidget\":\"step:vote\"}"
+      } after register_ok -> duplicate
+      fixture register_missing_kind {
+        descriptor: "{\"label\":\"No Kind\",\"icon\":\"?\",\"description\":\"Missing kind field\",\"paletteSection\":\"Core\",\"interactionWidget\":\"step:unknown\"}"
+      } -> error
+      fixture register_bad_json {
+        descriptor: "not-valid-json"
+      } -> error
+
+      reversal: unregister
+    }
+
+    action update(kind: String, descriptor: String) {
+      -> ok(kind: String) {
+        Replaces the descriptor for the given kind with the new values,
+        allowing corrections or additions to existing step type definitions.
+      }
+      -> not_found(kind: String) {
+        No descriptor is registered under this kind identifier.
+      }
+      -> error(message: String) {
+        The replacement descriptor JSON is malformed or missing required fields.
+      }
+
+      fixture update_ok {
+        kind: "vote",
+        descriptor: "{\"kind\":\"vote\",\"label\":\"Vote (updated)\",\"icon\":\"🗳️\",\"description\":\"Updated vote step\",\"paletteSection\":\"Governance\",\"kernelConcept\":\"Vote\",\"defaultConfig\":{\"quorum\":0.5},\"configSchema\":{},\"interactionWidget\":\"step:vote\"}"
+      } after register_ok
+      fixture update_not_found {
+        kind: "nonexistent",
+        descriptor: "{\"kind\":\"nonexistent\",\"label\":\"X\",\"icon\":\"?\",\"description\":\".\",\"paletteSection\":\"Core\",\"interactionWidget\":\"step:x\"}"
+      } -> not_found
+      fixture update_bad_json {
+        kind: "vote",
+        descriptor: "bad-json"
+      } after register_ok -> error
+    }
+
+    action unregister(kind: String) {
+      -> ok(kind: String) {
+        Removes the descriptor for the given kind from the registry.
+      }
+      -> not_found(kind: String) {
+        No descriptor is registered under this kind identifier.
+      }
+
+      fixture unregister_ok { kind: "vote" } after register_ok
+      fixture unregister_not_found { kind: "unknown-kind" } -> not_found
+    }
+
+    action get(kind: String) {
+      -> ok(kind: String, descriptor: String) {
+        Returns the full descriptor JSON for the requested kind identifier.
+      }
+      -> not_found(kind: String) {
+        No descriptor is registered under this kind identifier.
+      }
+
+      fixture get_ok { kind: $register_ok.kind } after register_ok
+      fixture get_not_found { kind: "no-such-kind" } -> not_found
+    }
+
+    action list() {
+      -> ok(descriptors: String) {
+        Returns a JSON array of all registered step type descriptors,
+        suitable for populating a FlowBuilder palette.
+      }
+
+      fixture list_ok {} after register_ok
+    }
+
+    action listBySection(section: String) {
+      -> ok(descriptors: String) {
+        Returns a JSON array of descriptors whose paletteSection matches
+        the requested section string, for rendering a grouped palette panel.
+      }
+
+      fixture list_by_section_governance { section: "Governance" } after register_ok
+      fixture list_by_section_after_two { section: "Governance" } after register_second
+    }
+
+  }
+
+  example "registerType then get returns descriptor": {
+    after registerType(descriptor: "{\"kind\":\"manual\",\"label\":\"Manual\",\"icon\":\"✋\",\"description\":\"A human completes this step\",\"paletteSection\":\"Core\",\"defaultConfig\":{},\"configSchema\":{},\"interactionWidget\":\"step:manual\"}") -> ok(kind: k)
+    then get(kind: k) -> ok(kind: "manual")
+  }
+
+  example "registerType duplicate returns duplicate variant": {
+    after registerType(descriptor: "{\"kind\":\"vote\",\"label\":\"Vote\",\"icon\":\"🗳️\",\"description\":\"Collective decision\",\"paletteSection\":\"Governance\",\"defaultConfig\":{},\"configSchema\":{},\"interactionWidget\":\"step:vote\"}") -> ok
+    then registerType(descriptor: "{\"kind\":\"vote\",\"label\":\"Vote\",\"icon\":\"🗳️\",\"description\":\"Collective decision\",\"paletteSection\":\"Governance\",\"defaultConfig\":{},\"configSchema\":{},\"interactionWidget\":\"step:vote\"}") -> duplicate
+  }
+
+  example "registerType then unregister then get returns not_found": {
+    after registerType(descriptor: "{\"kind\":\"approval\",\"label\":\"Approval\",\"icon\":\"✅\",\"description\":\"Request sign-off\",\"paletteSection\":\"Governance\",\"defaultConfig\":{},\"configSchema\":{},\"interactionWidget\":\"step:approval\"}") -> ok(kind: k)
+    then unregister(kind: k) -> ok
+  }
+
+  always "every registered entry has a non-empty kind": {
+    forall r in registry:
+    r.kind != ""
+  }
+
+  never "duplicate kinds in registry": {
+    exists r1 in registry:
+    exists r2 in registry:
+    r1 != r2 and r1.kind = r2.kind
+  }
+
+}
