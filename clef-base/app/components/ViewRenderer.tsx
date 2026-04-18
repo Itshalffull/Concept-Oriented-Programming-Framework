@@ -19,9 +19,6 @@
  */
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { usePageHasCreateSignal } from '../../lib/page-create-context';
-import { useInvokeWithFeedback } from '../../lib/useInvocation';
-import { InvocationStatusIndicator } from './widgets/InvocationStatusIndicator';
 import { Card } from './widgets/Card';
 import { Badge } from './widgets/Badge';
 import { EmptyState } from './widgets/EmptyState';
@@ -45,7 +42,6 @@ import {
   getDisplayInteractor,
   mapWidgetToLayout,
 } from '../../lib/widget-selection';
-import { getLabelVisualizationColorToken } from '../../lib/visualization-colors';
 import {
   evaluateFilterNode,
   buildFilterTree,
@@ -56,6 +52,7 @@ import {
 import { ViewEditorToolbar, type FilterCondition, type SortKey as ToolbarSortKey, type GroupConfig as ToolbarGroupConfig, type FieldVisibilityConfig } from './widgets/ViewEditorToolbar';
 import { ViewTabBar } from './widgets/ViewTabBar';
 import { type FieldDef } from './widgets/FieldPickerDropdown';
+import { interpolateWithFlatContext } from '../../../handlers/ts/view/data-source-interpolator';
 
 interface ViewConfig {
   view: string;
@@ -136,13 +133,6 @@ interface ControlsConfig {
       required?: boolean;
       placeholder?: string;
     }>;
-    /**
-     * Schema ID for content-native Tier 1b / Tier 2 create routing.
-     * When set, CreateForm probes Property/get(schemaId, "displayWidget") to
-     * trigger content-native create (ContentNode/createWithSchema + navigate
-     * to block editor). Falls through to FormSpec/resolve for Tier 2.
-     */
-    schemaId?: string;
   };
   rowClick?: {
     navigateTo: string;
@@ -151,15 +141,6 @@ interface ControlsConfig {
   bulk?: {
     actions: BulkActionConfig[];
   };
-  /**
-   * ActionBinding id for the board card-move operation. When present, the board
-   * display enables drag-and-drop: dropping a card onto a column invokes this
-   * binding with context { rowId, field, value }. When absent, drag-to-move is
-   * disabled and a visual indicator is shown (see BoardDisplay).
-   *
-   * Seed: ActionBinding.board.seeds.yaml — "board-card-move"
-   */
-  moveBinding?: string;
 }
 
 interface ViewRendererProps {
@@ -184,12 +165,17 @@ interface ViewRendererProps {
   inlineGroupConfig?: GroupConfig;
 }
 
-/** Resolve {{var}} template placeholders in an object using context */
+/**
+ * Resolve {{var}} template placeholders in an object using context.
+ * Delegates to the VariableProgram interpolation engine so that all template
+ * resolution goes through a single, consistent code path. Tokens that cannot
+ * be resolved are left unreplaced (backward-compatible).
+ */
 function resolveTemplates(obj: Record<string, unknown>, context: Record<string, string>): Record<string, unknown> {
   const resolved: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(obj)) {
     if (typeof value === 'string') {
-      resolved[key] = value.replace(/\{\{(\w+)\}\}/g, (_, varName) => context[varName] ?? '');
+      resolved[key] = interpolateWithFlatContext(value, context);
     } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
       resolved[key] = resolveTemplates(value as Record<string, unknown>, context);
     } else {
@@ -198,6 +184,16 @@ function resolveTemplates(obj: Record<string, unknown>, context: Record<string, 
   }
   return resolved;
 }
+
+// Schema color map for visual differentiation
+const SCHEMA_COLORS: Record<string, string> = {
+  Concept: '#6366f1', Schema: '#10b981', Sync: '#f59e0b', Suite: '#ec4899',
+  Workflow: '#8b5cf6', Theme: '#06b6d4', View: '#3b82f6', Widget: '#14b8a6',
+  AutomationRule: '#f97316', Taxonomy: '#84cc16', DisplayMode: '#0ea5e9',
+  VersionSpace: '#a855f7', VersionOverride: '#d946ef',
+  Article: '#22c55e', Page: '#22c55e', Media: '#eab308',
+  Comment: '#78716c', File: '#64748b',
+};
 
 /**
  * Extract all unique schema values from data rows for filter UI.
@@ -215,63 +211,6 @@ function extractSchemaValues(data: Record<string, unknown>[]): string[] {
 }
 
 
-const UNCOUNTABLE_NOUNS = new Set(['media', 'data', 'research', 'metadata', 'feedback', 'evidence']);
-
-function toEntityLabel(title: string): { singular: string; plural: string } {
-  // Strip noun-suffixes that name a *page kind* not the entity itself
-  // ("Layout Builder" should produce "Create Layout", not "Create Layout Builder").
-  const base = title.replace(/\s+(Library|Catalog|Browser|Hub|Center|Overview|Builder|Editor)$/i, '').trim();
-  // Words ending in -ss (process, address, class) are already singular —
-  // guard before the regex chain so we don't strip them to "proce", "addre".
-  const baseLc = base.toLowerCase();
-  if (/ss$/.test(baseLc)) {
-    const plural = UNCOUNTABLE_NOUNS.has(baseLc) ? baseLc : `${baseLc}es`;
-    return { singular: base, plural };
-  }
-  // Phrases with prepositions ("Permissions by Subject") only inflect the head noun.
-  const prepMatch = base.match(/^(\S+)\s+((?:by|for|of|per|from|with|in|at|on|via)\s.+)$/i);
-  if (prepMatch) {
-    const headWord = prepMatch[1];
-    const qualifier = prepMatch[2];
-    const singularHead = headWord
-      .replace(/ies$/, 'y')
-      .replace(/(?<![aeiou])s$/i, '')
-      .replace(/([bcdfghjklmnpqrtvwxyz])es$/i, '$1e');
-    const headLc = singularHead.toLowerCase();
-    const alreadyPlural = singularHead === headWord && /s$/i.test(headWord);
-    const pluralHead = UNCOUNTABLE_NOUNS.has(headLc)
-      ? headLc
-      : singularHead !== headWord || alreadyPlural
-        ? headWord.toLowerCase()
-        : /[bcdfghjklmnpqrtvwxyz]y$/i.test(headLc)
-          ? `${headLc.slice(0, -1)}ies`
-          : `${headLc}s`;
-    return {
-      singular: `${singularHead} ${qualifier}`,
-      plural: `${pluralHead} ${qualifier.toLowerCase()}`,
-    };
-  }
-  // Singularize: -ies → -y, -mas → -ma (Latin plurals like Schemas), strip
-  // trailing -s after a consonant, then -es after a consonant (Themes → Theme).
-  const singular = base
-    .replace(/ies$/, 'y')
-    .replace(/([^s])mas$/i, '$1ma')
-    .replace(/(?<![aeiou])s$/i, '')
-    .replace(/([bcdfghjklmnpqrtvwxyz])es$/i, '$1e');
-  const lc = singular.toLowerCase();
-  // singular === base means nothing changed — if it ends in 's' it's already
-  // plural, so use as-is for plural and avoid stacking "ss" (circless, roless).
-  const alreadyPlural = singular === base && /s$/i.test(base);
-  const plural = UNCOUNTABLE_NOUNS.has(lc)
-    ? lc
-    : singular !== base || alreadyPlural
-      ? base.toLowerCase()
-      : /[bcdfghjklmnpqrtvwxyz]y$/i.test(lc)
-        ? `${lc.slice(0, -1)}ies`
-        : `${lc}s`;
-  return { singular, plural };
-}
-
 export const ViewRenderer: React.FC<ViewRendererProps> = ({
   viewId, title: titleOverride, context, children,
   inlineData, inlineLayout, inlineFields, compact, onSelect, inlineGroupConfig,
@@ -280,28 +219,10 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
   const { navigateToHref } = useNavigator();
   const theme = useActiveTheme();
   const [showCreate, setShowCreate] = useState(false);
-  // Prefill values forwarded to CreateForm when the modal is opened from a
-  // calendar cell click. Keys are field names; values are pre-populated strings
-  // (e.g. { date: "2026-04-13" } when the user clicks a day cell).
-  const [createInitialValues, setCreateInitialValues] = useState<Record<string, string>>({});
   const [activeFilters, setActiveFilters] = useState<Record<string, Set<string>>>({});
   const [filtersInitialized, setFiltersInitialized] = useState(false);
   const [resolvedLayout, setResolvedLayout] = useState<string | null>(null);
   const [resolvedWidget, setResolvedWidget] = useState<string | null>(null);
-  // INV-06: per-action invocation feedback via useInvokeWithFeedback + InvocationStatusIndicator
-  const rowActionFeedback = useInvokeWithFeedback();
-  const bulkActionFeedback = useInvokeWithFeedback();
-  // Board drag-and-drop card-move feedback — separate from row action feedback
-  // so the status indicator doesn't conflict with row action indicators.
-  const moveCardFeedback = useInvokeWithFeedback();
-  // Optimistic board data: tracks cards displaced by in-flight drag operations.
-  // When a move is initiated we update displayData locally so the card appears
-  // in the target column immediately. If the action fails we revert.
-  const [optimisticMoves, setOptimisticMoves] = useState<
-    Array<{ rowId: string; field: string; prevValue: unknown; newValue: string }>
-  >([]);
-  // Inline field-save errors (detail/content-body layout) — separate from row/bulk action feedback
-  const [inlineFieldError, setActionError] = useState<string | null>(null);
 
   // Toolbar state — advanced filter conditions, sort keys, group, and field visibility
   // managed by ViewEditorToolbar. Separate from the toggle-group activeFilters system.
@@ -382,7 +303,7 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
   interface HydratedSort { name: string; keys: string }
   interface HydratedProjection { name: string; fields: string }
   interface HydratedPresentation { name: string; displayType: string; hints: string; displayModePolicy: string; defaultDisplayMode: string }
-  interface HydratedInteraction { name: string; createForm: string; rowClick: string; rowActions: string; pickerMode: string; actionBindings?: string }
+  interface HydratedInteraction { name: string; createForm: string; rowClick: string; rowActions: string; pickerMode: string }
 
   const hydratedSpecs = useMemo(() => {
     if (!shellResult?.view) return null;
@@ -405,12 +326,6 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
     }
   }, [shellResult]);
 
-  // The InteractionSpec name for the active view — passed to CreateForm as destinationId
-  // so Tier 1a resolution (create_surface + create_mode_hint) fires for page-mode surfaces.
-  // e.g. "views-list-controls" has create_surface="view-editor" + create_mode_hint="page",
-  // which causes CreateForm to navigate to /admin/view-editor/new instead of opening a modal.
-  const interactionSpecName = hydratedSpecs?.interactionSpec?.name ?? null;
-
   // Build a ViewConfig from the hydrated specs. Each spec field maps to the
   // ViewConfig field that ViewRenderer already knows how to parse — we re-encode
   // the hydrated objects back to the JSON strings ViewConfig expects.
@@ -422,17 +337,12 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
     // Pass it through directly — ViewRenderer will JSON.parse it into DataSourceConfig.
     const dataSourceJson = dataSourceSpec?.config ?? '';
 
-    // Filters: reconstruct FilterConfig[] from the FilterSpec so they are
-    // evaluated at render time.
-    //
-    //  - sourceType=interactive: rebuild from fieldRefs as toggle-group configs
-    //    so the interactive filter UI (Filter toolbar, toggle groups) renders.
-    //  - sourceType=contextual: rebuild the FilterNode from `tree` so views
-    //    like backlinks/similar-entities/unlinked-references/graph-neighbors
-    //    apply their context-bound predicate (e.g. "only rows where `similar_to`
-    //    matches the current entity"). Previously contextual filters were
-    //    silently dropped, so these views showed every ContentNode instead of
-    //    only the related ones.
+    // Filters: for interactive filters (sourceType=interactive), reconstruct
+    // FilterConfig[] from fieldRefs so the existing toggle UI renders correctly.
+    // fieldRefs is a JSON string like '["schemas"]' listing fields referenced in
+    // the filter tree. Each field becomes a toggle-group FilterConfig entry.
+    // Non-interactive filters (system/contextual) are backend-pushed and are
+    // NOT added to the client filter array — they don't appear in the toggle UI.
     let filtersJson = '[]';
     if (filterSpec && filterSpec.sourceType === 'interactive') {
       try {
@@ -443,22 +353,6 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
             type: 'toggle-group' as const,
           }));
           filtersJson = JSON.stringify(filterConfigs);
-        }
-      } catch { /* leave as empty array */ }
-    } else if (filterSpec && filterSpec.sourceType === 'contextual') {
-      try {
-        const tree = JSON.parse(filterSpec.tree ?? '{}');
-        // A contextual FilterNode carries field/operator/context_binding/
-        // fallback_behavior. Wrap it as a single FilterConfig so it flows into
-        // the filters array and gets evaluated downstream.
-        if (tree && typeof tree === 'object' && tree.field) {
-          filtersJson = JSON.stringify([{
-            field: tree.field,
-            source_type: 'contextual',
-            operator: tree.operator,
-            context_binding: tree.context_binding,
-            fallback_behavior: tree.fallback_behavior,
-          }]);
         }
       } catch { /* leave as empty array */ }
     }
@@ -477,41 +371,13 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
     if (interactionSpec) {
       const controlsObj: Record<string, unknown> = {};
       if (interactionSpec.createForm) {
-        try {
-          const parsed = JSON.parse(interactionSpec.createForm);
-          // Only expose controls.create when the form actually declares a concept
-          // to create — an empty {} or null means the view explicitly opts out
-          // (e.g. no-controls) and the Create button should stay hidden instead
-          // of rendering an empty modal on click.
-          if (parsed && typeof parsed === 'object' && parsed.concept) {
-            controlsObj.create = parsed;
-          }
-        } catch { /* ignore */ }
+        try { controlsObj.create = JSON.parse(interactionSpec.createForm); } catch { /* ignore */ }
       }
       if (interactionSpec.rowClick) {
         try { controlsObj.rowClick = JSON.parse(interactionSpec.rowClick); } catch { /* ignore */ }
       }
       if (interactionSpec.rowActions) {
-        try {
-          const parsedRowActions: RowActionConfig[] = JSON.parse(interactionSpec.rowActions);
-          // Enrich each row action with its ActionBinding ID when actionBindings field is present
-          if (interactionSpec.actionBindings) {
-            try {
-              const actionBindings: Array<{ id: string; key?: string; actionKey?: string }> =
-                JSON.parse(interactionSpec.actionBindings as string);
-              controlsObj.rowActions = parsedRowActions.map(ra => {
-                const binding = actionBindings.find(
-                  ab => (ab.key ?? ab.actionKey) === ra.key,
-                );
-                return binding ? { ...ra, actionBindingId: binding.id } : ra;
-              });
-            } catch {
-              controlsObj.rowActions = parsedRowActions;
-            }
-          } else {
-            controlsObj.rowActions = parsedRowActions;
-          }
-        } catch { /* ignore */ }
+        try { controlsObj.rowActions = JSON.parse(interactionSpec.rowActions); } catch { /* ignore */ }
       }
       controlsJson = JSON.stringify(controlsObj);
     }
@@ -603,7 +469,7 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
   // Resolve schemaFilter templates too
   const resolvedSchemaFilter = useMemo(() => {
     if (!schemaFilter || !context) return schemaFilter;
-    return schemaFilter.replace(/\{\{(\w+)\}\}/g, (_, varName) => context[varName] ?? '');
+    return interpolateWithFlatContext(schemaFilter, context);
   }, [schemaFilter, context]);
 
   // Determine the data fetching strategy:
@@ -689,67 +555,12 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
 
     // Legacy mode: raw concept data + client-side enrichment
     if (!rawData) return [];
-    // If the concept action returned a wrapper object like
-    // `{ variant: "ok", items: "[...]" }` or `{ sources: "[...]" }`, unwrap
-    // the JSON-encoded array field instead of treating the wrapper as one row.
-    // Conventional wrapper keys: items, sources, results, nodes, entries, rows.
-    let items: Record<string, unknown>[];
-    if (Array.isArray(rawData)) {
-      items = rawData as Record<string, unknown>[];
-    } else if (rawData && typeof rawData === 'object') {
-      const obj = rawData as Record<string, unknown>;
-      // Conventional wrapper keys that carry JSON-encoded arrays. Empty string
-      // is treated as an empty array (e.g. Backlink/getBacklinks returns
-      // `{ sources: "" }` when an entity has no backlinks, not a literal JSON "[]").
-      const wrapperKey = ['items', 'sources', 'results', 'nodes', 'entries', 'rows']
-        .find((k) => typeof obj[k] === 'string');
-      if (wrapperKey) {
-        const raw = (obj[wrapperKey] as string).trim();
-        if (raw === '') {
-          items = [];
-        } else if (raw.startsWith('[')) {
-          try {
-            const parsed = JSON.parse(raw);
-            items = Array.isArray(parsed) ? parsed : [obj];
-          } catch { items = [obj]; }
-        } else {
-          items = [obj];
-        }
-      } else {
-        // No array wrapper — treat as a single row UNLESS the response is
-        // metadata-only (e.g. `{variant:"ok", message:"No matching memories"}`
-        // from list-style actions that returned nothing). Meta-only responses
-        // appear as ghost rows in data tables, so filter them out: if every
-        // key is a known response meta field, the caller meant "no data".
-        const metaKeys = new Set(['variant', 'message', 'flowId', 'error']);
-        const hasDataKey = Object.keys(obj).some((k) => !metaKeys.has(k));
-        items = hasDataKey ? [obj] : [];
-      }
-    } else {
-      items = [rawData as Record<string, unknown>];
-    }
+    const items = (Array.isArray(rawData) ? rawData : [rawData]) as Record<string, unknown>[];
 
-    if (!isContentNodeData) return items;
+    if (!isContentNodeData || !membershipsData) return items;
 
-    // Build entity_id → schemas[] lookup.
-    //
-    // Schema/listMemberships returns either a raw array (when wrapped by an
-    // outer sync) or a response object `{variant, items: "json-string"}` when
-    // invoked directly. Handle both: unwrap the JSON array field if present,
-    // otherwise accept an array directly.
-    let memberships: Array<Record<string, unknown>> = [];
-    if (Array.isArray(membershipsData)) {
-      memberships = membershipsData;
-    } else if (membershipsData && typeof membershipsData === 'object') {
-      const obj = membershipsData as Record<string, unknown>;
-      const raw = typeof obj.items === 'string' ? obj.items.trim() : '';
-      if (raw.startsWith('[')) {
-        try {
-          const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed)) memberships = parsed;
-        } catch { /* ignore */ }
-      }
-    }
+    // Build entity_id → schemas[] lookup
+    const memberships = Array.isArray(membershipsData) ? membershipsData : [];
     const schemasByEntity = new Map<string, string[]>();
     for (const m of memberships) {
       const entityId = m.entity_id as string;
@@ -760,21 +571,11 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
       schemasByEntity.set(entityId, existing);
     }
 
-    // Enrich each node with its schemas. When no membership is registered,
-    // fall back to the node's `type` field (the schema baked into the
-    // ContentNode record at create time) so the UI surfaces the schema even
-    // before the memberships relation is populated.
-    let enriched: Record<string, unknown>[] = items.map((item) => {
-      const fromMemberships = schemasByEntity.get(item.node as string);
-      if (fromMemberships && fromMemberships.length > 0) {
-        return { ...item, schemas: fromMemberships };
-      }
-      const typeField = item.type;
-      return {
-        ...item,
-        schemas: typeof typeField === 'string' && typeField ? [typeField] : [],
-      };
-    });
+    // Enrich each node with its schemas
+    let enriched: Record<string, unknown>[] = items.map((item) => ({
+      ...item,
+      schemas: schemasByEntity.get(item.node as string) ?? [],
+    }));
 
     // Apply schemaFilter if present — uses FilterNode evaluation with array intersection
     if (resolvedSchemaFilter) {
@@ -787,59 +588,36 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
       resolvedSchemaFilter, hasQueryExpression, queryExecResult,
       useListBySchema, schemaData]);
 
-  // Flatten `content` JSON field into top-level keys so columns can reference nested data.
-  const flatData = useMemo(() => {
-    return allData.map((row: Record<string, unknown>) => {
-      const content = row.content;
-      if (typeof content !== 'string' || !content.startsWith('{')) return row;
-      try {
-        const parsed = JSON.parse(content);
-        if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
-          return { ...parsed, ...row, _contentParsed: true };
-        }
-      } catch { /* not JSON — skip */ }
-      return row;
-    });
-  }, [allData]);
-
-  // Initialize filter state from data + config once data arrives (interactive filters only).
-  // Must run in useEffect (not synchronously during render) to avoid React concurrent-mode
-  // inconsistencies where setState called during render causes displayData_base to be computed
-  // with stale activeFilters on the same render cycle.
-  useEffect(() => {
-    if (flatData.length > 0 && interactiveFilters.length > 0 && !filtersInitialized) {
-      const initial: Record<string, Set<string>> = {};
-      for (const filter of interactiveFilters) {
-        // Special handling for schemas (array field)
-        if (filter.field === 'schemas') {
-          const allValues = extractSchemaValues(flatData);
-          if (filter.defaultOn) {
-            initial[filter.field] = new Set(filter.defaultOn);
-          } else if (filter.defaultOff) {
-            const offSet = new Set(filter.defaultOff);
-            initial[filter.field] = new Set(allValues.filter((v) => !offSet.has(v)));
-          } else {
-            initial[filter.field] = new Set(allValues);
-          }
+  // Initialize filter state from data + config once data arrives (interactive filters only)
+  if (allData.length > 0 && interactiveFilters.length > 0 && !filtersInitialized) {
+    const initial: Record<string, Set<string>> = {};
+    for (const filter of interactiveFilters) {
+      // Special handling for schemas (array field)
+      if (filter.field === 'schemas') {
+        const allValues = extractSchemaValues(allData);
+        if (filter.defaultOn) {
+          initial[filter.field] = new Set(filter.defaultOn);
+        } else if (filter.defaultOff) {
+          const offSet = new Set(filter.defaultOff);
+          initial[filter.field] = new Set(allValues.filter((v) => !offSet.has(v)));
         } else {
-          const allValues = [...new Set(flatData.map((row) => String(row[filter.field] ?? '')))];
-          if (filter.defaultOn) {
-            initial[filter.field] = new Set(filter.defaultOn);
-          } else if (filter.defaultOff) {
-            const offSet = new Set(filter.defaultOff);
-            initial[filter.field] = new Set(allValues.filter((v) => !offSet.has(v)));
-          } else {
-            initial[filter.field] = new Set(allValues);
-          }
+          initial[filter.field] = new Set(allValues);
+        }
+      } else {
+        const allValues = [...new Set(allData.map((row) => String(row[filter.field] ?? '')))];
+        if (filter.defaultOn) {
+          initial[filter.field] = new Set(filter.defaultOn);
+        } else if (filter.defaultOff) {
+          const offSet = new Set(filter.defaultOff);
+          initial[filter.field] = new Set(allValues.filter((v) => !offSet.has(v)));
+        } else {
+          initial[filter.field] = new Set(allValues);
         }
       }
-      setActiveFilters(initial);
-      setFiltersInitialized(true);
     }
-  // interactiveFilters is a derived array (new ref each render) — omit from deps;
-  // flatData change and filtersInitialized gate are sufficient.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [flatData, filtersInitialized]);
+    setActiveFilters(initial);
+    setFiltersInitialized(true);
+  }
 
   // Parse sort keys from view config
   const sortKeys = useMemo(() => parseSortKeys(viewConfig?.sorts), [viewConfig?.sorts]);
@@ -853,40 +631,8 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
   }
 
   // Apply interactive filters then sort, then toolbar conditions
-  const displayData_base = useMemo(() => {
-    let filtered = flatData;
-
-    // Apply contextual filters client-side.
-    // Contextual filters are not in the interactive-filter toggle UI and are not
-    // pushed to the backend via the DataSourceSpec params, so we must evaluate them
-    // here against the fetched rows.  The context_binding path is resolved from the
-    // `context` prop: "context.entity" → context?.entityId.
-    if (contextualFilters.length > 0 && context) {
-      filtered = filtered.filter((row) => {
-        return contextualFilters.every((f) => {
-          // Resolve the bound value from context
-          let boundValue: string | undefined;
-          if (f.context_binding === 'context.entity') {
-            boundValue = context.entityId;
-          } else if (f.context_binding) {
-            // Generic: strip "context." prefix and look up in context object
-            const key = f.context_binding.replace(/^context\./, '');
-            boundValue = context[key];
-          }
-          if (!boundValue) {
-            // Can't resolve — apply fallback_behavior
-            return f.fallback_behavior !== 'hide';
-          }
-          // Apply the filter: default operator is "equals"
-          const rowVal = String(row[f.field] ?? '');
-          switch (f.operator ?? 'equals') {
-            case 'equals': return rowVal === boundValue;
-            case 'contains': return rowVal.includes(boundValue);
-            default: return rowVal === boundValue;
-          }
-        });
-      });
-    }
+  const displayData = useMemo(() => {
+    let filtered = allData;
 
     // Apply interactive toggle-group filters via FilterNode tree evaluation
     if (interactiveFilters.length > 0 && Object.keys(activeFilters).length > 0) {
@@ -894,18 +640,10 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
       filtered = filtered.filter((row) => evaluateFilterNode(filterTree, row));
     }
 
-    // Apply toolbar advanced filter conditions (AND all conditions together).
-    // A condition is "inactive" (skipped) when its field is unset OR when it
-    // uses a non-unary operator but has no value yet — matching the invariant
-    // "unset filter pill does not filter out data". Only pills where BOTH field
-    // and value (or a unary predicate like isEmpty/isNotEmpty) are set apply.
-    const UNARY_OPERATORS = new Set(['isEmpty', 'isNotEmpty']);
-    const activeToolbarConditions = toolbarFilterConditions.filter(
-      (cond) => cond.field !== '' && (UNARY_OPERATORS.has(cond.operator) || cond.value !== '')
-    );
-    if (activeToolbarConditions.length > 0) {
+    // Apply toolbar advanced filter conditions (AND all conditions together)
+    if (toolbarFilterConditions.length > 0) {
       filtered = filtered.filter((row) => {
-        return activeToolbarConditions.every((cond) => {
+        return toolbarFilterConditions.every((cond) => {
           const rawVal = row[cond.field];
           const cellStr = rawVal != null ? String(rawVal) : '';
           const condVal = cond.value;
@@ -938,25 +676,7 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
     }
 
     return filtered;
-  }, [flatData, activeFilters, interactiveFilters, contextualFilters, context, toolbarFilterConditions, toolbarSortKeys, sortKeys]);
-
-  // Apply optimistic board moves on top of the filtered+sorted data so that
-  // dragged cards appear in their target column immediately while the action
-  // is in flight. Optimistic moves are keyed by rowId; when an action
-  // completes (success or failure) the entry is removed and the server data
-  // takes over.
-  const displayData = useMemo(() => {
-    if (optimisticMoves.length === 0) return displayData_base;
-    return displayData_base.map(row => {
-      const move = optimisticMoves.find(m => {
-        if (row.id !== undefined && row.id !== null) return String(row.id) === m.rowId;
-        // Fallback: match by first field value (mirrors rowId() in BoardDisplay)
-        return false;
-      });
-      if (!move) return row;
-      return { ...row, [move.field]: move.newValue };
-    });
-  }, [displayData_base, optimisticMoves]);
+  }, [allData, activeFilters, interactiveFilters, toolbarFilterConditions, toolbarSortKeys, sortKeys]);
 
   const layout = inlineLayout ?? viewConfig?.layout ?? 'table';
   // Toolbar layout override takes precedence over config layout
@@ -980,11 +700,11 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
       return baseFields.map((f) => ({ key: f.key, label: f.label ?? f.key }));
     }
     // Fallback: derive from data keys if no field config
-    if (flatData.length > 0) {
-      return Object.keys(flatData[0]).map((k) => ({ key: k, label: k }));
+    if (allData.length > 0) {
+      return Object.keys(allData[0]).map((k) => ({ key: k, label: k }));
     }
     return [];
-  }, [baseFields, flatData]);
+  }, [baseFields, allData]);
 
   useEffect(() => {
     const interactor = getDisplayInteractor(layout);
@@ -997,7 +717,7 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
     const context = buildDisplayWidgetContext({
       viewId: viewId ?? '',
       layout,
-      rowCount: flatData.length,
+      rowCount: allData.length,
       fieldCount: effectiveFields.length,
       density: theme.density,
       motif: theme.motif,
@@ -1029,7 +749,7 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
       cancelled = true;
     };
   }, [
-    flatData.length,
+    allData.length,
     fields.length,
     invoke,
     layout,
@@ -1062,136 +782,45 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
     });
   }, []);
 
-  // Row click handler — onSelect overrides navigation when in picker mode.
-  //
-  // Template interpolation: `{key}` is replaced with `row[key]`. If the named
-  // field is absent (common when a rowClick template uses a legacy field name
-  // like `{spec}` but the row actually carries `node`), fall back to the row's
-  // canonical identity field in this order: `node`, `id`, `_key`. Without this
-  // fallback, `{spec}` → `""` → navigate to `/admin/processes/` which fails.
+  // Row click handler — onSelect overrides navigation when in picker mode
   const handleRowClick = useCallback((row: Record<string, unknown>) => {
     if (onSelect) {
       onSelect(row);
       return;
     }
     if (!controls.rowClick?.navigateTo) return;
-    const identityFallback = () => {
-      for (const k of ['node', 'id', '_key']) {
-        const v = row[k];
-        if (typeof v === 'string' && v) return v;
-      }
-      return '';
-    };
     let path = controls.rowClick.navigateTo;
-    path = path.replace(/\{(\w+)\}/g, (_, key) => {
-      const raw = row[key];
-      const value = (typeof raw === 'string' && raw) ? raw : (raw != null ? String(raw) : '');
-      return encodeURIComponent(value || identityFallback());
-    });
+    path = path.replace(/\{(\w+)\}/g, (_, key) => encodeURIComponent(String(row[key] ?? '')));
     navigateToHref(path);
   }, [controls.rowClick, navigateToHref, onSelect]);
 
-  // Bulk action handler — invoke a concept action for each selected row.
-  // INV-06: migrated to bulkActionFeedback (useInvokeWithFeedback) so failures
-  // are surfaced via InvocationStatusIndicator rather than a silent state variable.
-  // TODO: migrate to <ActionButtonCompact> when InteractionSpec seeds create ActionBinding records
+  // Bulk action handler — invoke a concept action for each selected row
   const handleBulkAction = useCallback(async (actionKey: string, selectedRows: Record<string, unknown>[]) => {
     const bulkDef = controls.bulk?.actions.find(a => a.key === actionKey);
     if (!bulkDef) return;
     // Find matching row action config to get concept/action/params mapping
     const rowActionDef = controls.rowActions?.find(a => a.key === actionKey);
-    if (!rowActionDef) return;
-
-    for (const row of selectedRows) {
-      const params: Record<string, unknown> = {};
-      for (const [paramKey, rowField] of Object.entries(rowActionDef.params)) {
-        // INV-06 null-safety: skip rows where the mapped field is undefined
-        // rather than propagating undefined into the kernel call.
-        const fieldValue = row[rowField];
-        if (fieldValue === undefined) continue;
-        params[paramKey] = fieldValue;
+    if (rowActionDef) {
+      for (const row of selectedRows) {
+        const params: Record<string, unknown> = {};
+        for (const [paramKey, rowField] of Object.entries(rowActionDef.params)) {
+          params[paramKey] = row[rowField];
+        }
+        await invoke(rowActionDef.concept, rowActionDef.action, params);
       }
-      // bulkActionFeedback.invoke tracks the last invocation id for the indicator.
-      const result = await bulkActionFeedback.invoke(
-        rowActionDef.concept, rowActionDef.action, params,
-      );
-      if (result.variant !== 'ok') return; // stop on first failure; indicator shows error
+      refetch();
     }
-    refetch();
-  }, [controls.bulk?.actions, controls.rowActions, refetch, bulkActionFeedback]);
+  }, [controls.bulk?.actions, controls.rowActions, invoke, refetch]);
 
-  // Row action handler — legacy path; actions with actionBindingId bypass this via ActionButtonCompact in display components.
-  // INV-06: migrated to rowActionFeedback (useInvokeWithFeedback) so failures
-  // surface via InvocationStatusIndicator rather than a silent state variable.
+  // Row action handler — invoke a concept action with params mapped from the row
   const handleRowAction = useCallback(async (action: RowActionConfig, row: Record<string, unknown>) => {
     const params: Record<string, unknown> = {};
     for (const [paramKey, rowField] of Object.entries(action.params)) {
-      // INV-06 null-safety: guard against undefined row fields — skip the param
-      // rather than forwarding undefined into the kernel, which causes silent
-      // failures or unexpected behaviour in the handler.
-      const fieldValue = row[rowField];
-      if (fieldValue === undefined) continue;
-      params[paramKey] = fieldValue;
+      params[paramKey] = row[rowField];
     }
-    const result = await rowActionFeedback.invoke(action.concept, action.action, params);
-    if (result.variant === 'ok') {
-      refetch();
-    }
-  }, [refetch, rowActionFeedback]);
-
-  // Board card-move handler — invoked when a card is dropped onto a different
-  // column. Uses optimistic UI: the card moves locally first, then an
-  // ActionBinding/invoke call persists the change. On failure the optimistic
-  // move is reverted so the card snaps back to its original column.
-  //
-  // The grouping field comes from effectiveGroupConfig — the same field that
-  // BoardDisplay uses to partition cards into columns. We pass it in the
-  // context so the board-card-move binding's parameterMap routes it to
-  // ContentNode/update with { node: rowId, field: groupField, value: newValue }.
-  const handleCardMove = useCallback(async (rowId: string, newGroupValue: string) => {
-    if (!controls.moveBinding) return;
-
-    // Resolve the grouping field from the current group config.
-    const groupField = effectiveGroupConfig?.fields[0]?.field ?? '';
-    if (!groupField) return;
-
-    // Find the row to capture its current group value for rollback.
-    const targetRow = displayData.find(r => {
-      if (r.id !== undefined && r.id !== null) return String(r.id) === rowId;
-      const firstKey = effectiveFields[0]?.key;
-      return firstKey ? String(r[firstKey] ?? '') === rowId : false;
-    });
-    const prevValue = targetRow ? targetRow[groupField] : undefined;
-
-    // Optimistic update — move the card visually before the action completes.
-    setOptimisticMoves(prev => [...prev, { rowId, field: groupField, prevValue, newValue: newGroupValue }]);
-
-    try {
-      const result = await moveCardFeedback.invoke('ActionBinding', 'invoke', {
-        binding: controls.moveBinding,
-        context: JSON.stringify({ rowId, field: groupField, value: newGroupValue }),
-      });
-
-      if (result.variant === 'ok') {
-        // Clear the optimistic move and reload authoritative data.
-        setOptimisticMoves(prev => prev.filter(m => m.rowId !== rowId));
-        refetch();
-      } else {
-        // Revert optimistic move on failure — card snaps back.
-        setOptimisticMoves(prev => prev.filter(m => m.rowId !== rowId));
-      }
-    } catch {
-      // Network error — revert optimistic move.
-      setOptimisticMoves(prev => prev.filter(m => m.rowId !== rowId));
-    }
-  }, [controls.moveBinding, effectiveGroupConfig, displayData, effectiveFields, moveCardFeedback, refetch]);
-
-  // Signal to the global FAB whether this page already provides a create button.
-  // MUST be called unconditionally before any early return — React requires hooks
-  // to be called in the same order on every render. controls.create is undefined
-  // until viewConfig loads, so the signal starts false and updates reactively.
-  const hasCreateAction = !!(controls?.create);
-  usePageHasCreateSignal(hasCreateAction);
+    await invoke(action.concept, action.action, params);
+    refetch();
+  }, [invoke, refetch]);
 
   // Hide view if contextual filters can't be resolved
   if (hasUnresolvedContextualHide) {
@@ -1222,13 +851,13 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
 
   // Render filter controls (interactive filters only, not contextual)
   const renderFilters = () => {
-    if (interactiveFilters.length === 0 || flatData.length === 0) return null;
+    if (interactiveFilters.length === 0 || allData.length === 0) return null;
 
     return interactiveFilters.map((filter) => {
       // For schemas, extract unique values from array fields
       const allValues = filter.field === 'schemas'
-        ? extractSchemaValues(flatData)
-        : [...new Set(flatData.map((row) => String(row[filter.field] ?? '')))].sort();
+        ? extractSchemaValues(allData)
+        : [...new Set(allData.map((row) => String(row[filter.field] ?? '')))].sort();
       const active = activeFilters[filter.field] ?? new Set(allValues);
 
       return (
@@ -1252,11 +881,11 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
           </button>
           {allValues.map((value) => {
             const isOn = active.has(value);
-            const dotColor = getLabelVisualizationColorToken(value);
+            const dotColor = SCHEMA_COLORS[value] ?? '#64748b';
             // Count: for schemas, count nodes that have this schema
             const count = filter.field === 'schemas'
-              ? flatData.filter((row) => Array.isArray(row.schemas) && (row.schemas as string[]).includes(value)).length
-              : flatData.filter((row) => String(row[filter.field] ?? '') === value).length;
+              ? allData.filter((row) => Array.isArray(row.schemas) && (row.schemas as string[]).includes(value)).length
+              : allData.filter((row) => String(row[filter.field] ?? '') === value).length;
             return (
               <button
                 key={value}
@@ -1297,30 +926,13 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
     }
 
     if (dataError) {
-      // INV-06: add a retry button so users can recover from transient query failures
-      // without a full page reload.  The retry action re-triggers the underlying
-      // useConceptQuery by calling the unified refetch() from the active data mode.
-      return (
-        <EmptyState
-          title="Query failed"
-          description={dataError}
-          action={
-            <button
-              data-part="button"
-              data-variant="outlined"
-              onClick={() => refetch()}
-            >
-              Retry
-            </button>
-          }
-        />
-      );
+      return <EmptyState title="Query failed" description={dataError} />;
     }
 
     if (displayData.length === 0) {
       return (
         <EmptyState
-          title={`No ${toEntityLabel(viewTitle).plural} found`}
+          title={`No ${viewTitle.toLowerCase()} found`}
           description={controls.create ? 'Create one to get started.' : 'No data available.'}
           action={controls.create ? (
             <button data-part="button" data-variant="filled" onClick={() => setShowCreate(true)}>
@@ -1337,16 +949,12 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
     const shouldUseDisplayMode = useDisplayMode && !!defaultDisplayMode && !isInlineMode;
     const holisticLayouts = new Set(['graph', 'stat-cards', 'canvas', 'detail', 'content-body', 'calendar', 'timeline', 'tree']);
 
-    // Build a renderItem function for layout components that support it.
-    // Only apply DisplayMode rendering for ContentNode data sources.
-    // Non-ContentNode data sources (DisplayMode, Schema, Theme, etc.) use plain
-    // ProjectionSpec field rendering to avoid meta-circular rendering problems
-    // (e.g., DisplayMode records rendered through an unconfigured ComponentMapping).
-    const isContentNodeSource = dataSource?.concept === 'ContentNode';
-    const renderDisplayModeItem = shouldUseDisplayMode && !holisticLayouts.has(effectiveLayout) && isContentNodeSource
+    // Build a renderItem function for layout components that support it
+    const renderDisplayModeItem = shouldUseDisplayMode && !holisticLayouts.has(effectiveLayout)
       ? (row: Record<string, unknown>, onClick?: () => void) => {
           const rowSchema = (row.schemas as string[])?.[0]
             ?? (row.type as string)
+            ?? dataSource?.concept
             ?? 'ContentNode';
           return (
             <DisplayModeRenderer
@@ -1370,26 +978,12 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
                 const entity = displayData[0] as Record<string, unknown>;
                 const node = entity.node as string;
                 if (node) {
-                  setActionError(null);
-                  try {
-                    let result: Record<string, unknown>;
-                    if (field === 'content') {
-                      result = await invoke('ContentNode', 'update', { node, content: value });
-                    } else if (field === 'metadata') {
-                      result = await invoke('ContentNode', 'setMetadata', { node, metadata: value });
-                    } else if (field === 'title') {
-                      result = await invoke('ContentNode', 'setTitle', { node, title: value });
-                    } else {
-                      return;
-                    }
-                    if (result.variant !== 'ok') {
-                      setActionError(String(result.message ?? `${field} save failed`));
-                      return;
-                    }
-                    refetch();
-                  } catch (err) {
-                    setActionError(err instanceof Error ? err.message : `${field} save failed`);
+                  if (field === 'content') {
+                    await invoke('ContentNode', 'update', { node, content: value });
+                  } else if (field === 'metadata') {
+                    await invoke('ContentNode', 'setMetadata', { node, metadata: value });
                   }
+                  refetch();
                 }
               }
             }}
@@ -1407,17 +1001,8 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
                 const entity = displayData[0] as Record<string, unknown>;
                 const node = entity.node as string;
                 if (node) {
-                  setActionError(null);
-                  try {
-                    const result = await invoke('ContentNode', 'update', { node, content: value });
-                    if (result.variant !== 'ok') {
-                      setActionError(String(result.message ?? 'Content save failed'));
-                      return;
-                    }
-                    refetch();
-                  } catch (err) {
-                    setActionError(err instanceof Error ? err.message : 'Content save failed');
-                  }
+                  await invoke('ContentNode', 'update', { node, content: value });
+                  refetch();
                 }
               }
             }}
@@ -1468,63 +1053,16 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
             onRowAction={handleRowAction}
             groupBy={effectiveGroupConfig?.fields[0]?.field}
             renderItem={renderDisplayModeItem ?? undefined}
-            onCardMove={controls.moveBinding ? handleCardMove : undefined}
           />
         );
 
-      case 'calendar': {
-        // Resolve the date field key using the same heuristic CalendarDisplay uses
-        // internally (formatter: 'date' wins; otherwise regex match on the key name).
-        // This lets ViewRenderer build the correct prefill map without CalendarDisplay
-        // needing to expose its internal dateField selection.
-        const calDateField = (() => {
-          const byFormatter = effectiveFields.find(f => f.formatter === 'date');
-          if (byFormatter) return byFormatter.key;
-          const byName = effectiveFields.find(f =>
-            /date|at|on|time|created|updated|due|start|end/i.test(f.key),
-          );
-          return byName?.key ?? effectiveFields[0]?.key ?? 'date';
-        })();
-
-        // Infer start/end field keys for range prefill. Falls back to the date
-        // field when no dedicated start/end key is found in the projection.
-        const calStartField = effectiveFields.find(
-          f => /start/i.test(f.key) && f.key !== calDateField,
-        )?.key ?? calDateField;
-
-        const calEndField = effectiveFields.find(
-          f => /end/i.test(f.key) && f.key !== calDateField,
-        )?.key ?? calDateField;
-
-        const handleCalendarCreateEvent = controls.create
-          ? (isoDate: string) => {
-              setCreateInitialValues({ [calDateField]: isoDate });
-              setShowCreate(true);
-            }
-          : undefined;
-
-        // Drag-to-select: prefill both start and end time fields. The calendar
-        // passes ISO datetime strings (YYYY-MM-DDTHH:00). Prefill uses the
-        // inferred start/end field keys so the Tier 3 form pre-populates both.
-        const handleCalendarCreateEventRange = controls.create
-          ? (startIso: string, endIso: string) => {
-              setCreateInitialValues({
-                [calStartField]: startIso,
-                [calEndField]: endIso,
-              });
-              setShowCreate(true);
-            }
-          : undefined;
-
+      case 'calendar':
         return (
           <CalendarDisplay
             data={displayData} fields={effectiveFields}
             onRowClick={(onSelect || controls.rowClick) ? handleRowClick : undefined}
-            onCreateEvent={handleCalendarCreateEvent}
-            onCreateEventRange={handleCalendarCreateEventRange}
           />
         );
-      }
 
       case 'timeline':
         return (
@@ -1582,8 +1120,11 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
           <div className="page-header">
             <h1>{viewTitle}</h1>
             <div style={{ display: 'flex', gap: 'var(--spacing-sm)', alignItems: 'center' }}>
-              <Badge variant="info">{displayData.length}{flatData.length !== displayData.length ? `/${flatData.length}` : ''}</Badge>
-
+              <Badge variant="info">{displayData.length}{allData.length !== displayData.length ? `/${allData.length}` : ''}</Badge>
+              <Badge variant="secondary">{effectiveLayout}</Badge>
+              {resolvedWidget && (
+                <Badge variant="info">{resolvedWidget}</Badge>
+              )}
               {/* Save as View — appears when ad-hoc toolbar filters are active */}
               {toolbarFilterConditions.length > 0 && viewId && (
                 <button
@@ -1610,7 +1151,7 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
               )}
               {controls.create && (
                 <button data-part="button" data-variant="filled" onClick={() => setShowCreate(true)}>
-                Create {toEntityLabel(viewTitle).singular}
+                Create {viewTitle.replace(/s$/, '')}
               </button>
             )}
           </div>
@@ -1645,42 +1186,6 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
         />
       )}
 
-      {/* Inline field-save errors (detail / content-body layouts) */}
-      {inlineFieldError && (
-        <div style={{ marginBottom: 'var(--spacing-sm)', padding: 'var(--spacing-xs) var(--spacing-md)', borderRadius: 'var(--radius-sm)', background: 'var(--palette-error-container)', color: 'var(--palette-on-error-container)', fontSize: 'var(--typography-body-sm-size)' }}>
-          {inlineFieldError}
-        </div>
-      )}
-
-      {/* Action feedback — INV-06: InvocationStatusIndicator replaces manual pending/error/success divs */}
-      {rowActionFeedback.invocationId && (
-        <div style={{ marginBottom: 'var(--spacing-sm)' }}>
-          <InvocationStatusIndicator
-            invocationId={rowActionFeedback.invocationId}
-            verbose
-            label={rowActionFeedback.status === 'ok' ? 'Action completed' : undefined}
-          />
-        </div>
-      )}
-      {bulkActionFeedback.invocationId && (
-        <div style={{ marginBottom: 'var(--spacing-sm)' }}>
-          <InvocationStatusIndicator
-            invocationId={bulkActionFeedback.invocationId}
-            verbose
-            label={bulkActionFeedback.status === 'ok' ? 'Bulk action completed' : undefined}
-          />
-        </div>
-      )}
-      {moveCardFeedback.invocationId && (
-        <div style={{ marginBottom: 'var(--spacing-sm)' }}>
-          <InvocationStatusIndicator
-            invocationId={moveCardFeedback.invocationId}
-            verbose
-            label={moveCardFeedback.status === 'ok' ? 'Card moved' : undefined}
-          />
-        </div>
-      )}
-
       {/* Legacy toggle-group filters — shown only when no toolbar-managed filter conditions */}
       {toolbarFilterConditions.length === 0 && renderFilters()}
 
@@ -1691,19 +1196,12 @@ export const ViewRenderer: React.FC<ViewRendererProps> = ({
       {controls.create && (
         <CreateForm
           open={showCreate}
-          onClose={() => {
-            setShowCreate(false);
-            // Clear calendar prefill values so the next open starts fresh.
-            setCreateInitialValues({});
-          }}
+          onClose={() => setShowCreate(false)}
           onCreated={refetch}
           concept={controls.create.concept}
           action={controls.create.action}
-          title={`Create ${toEntityLabel(viewTitle).singular}`}
+          title={`Create ${viewTitle.replace(/s$/, '')}`}
           fields={controls.create.fields as Array<{ name: string; label?: string; type?: 'text' | 'textarea' | 'select'; options?: string[]; required?: boolean; placeholder?: string }>}
-          schemaId={controls.create.schemaId}
-          destinationId={interactionSpecName ?? undefined}
-          initialValues={Object.keys(createInitialValues).length > 0 ? createInitialValues : undefined}
         />
       )}
     </div>

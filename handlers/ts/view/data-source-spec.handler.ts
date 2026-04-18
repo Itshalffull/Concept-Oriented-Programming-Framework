@@ -6,8 +6,9 @@
 // records its kind, serialized config, and the template variable names
 // extracted from that config. Supports create, get, bind, and list.
 //
-// The bind action resolves {{varName}} template placeholders in the
-// stored config string using values from a caller-supplied bindings map.
+// The bind action resolves {{varName}} template placeholders via the
+// VariableProgram expression inference and resolution engine defined in
+// data-source-interpolator.ts. See that module for the full mapping rules.
 // ============================================================
 
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
@@ -23,6 +24,10 @@ import {
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
 import { autoInterpret } from '../../../runtime/functional-compat.ts';
+import {
+  buildContextFromFlatBindings,
+  interpolateDataSourceConfig,
+} from './data-source-interpolator.ts';
 
 type Result = { variant: string; [key: string]: unknown };
 
@@ -44,8 +49,6 @@ const VALID_KINDS = new Set([
   'remote-api',
   'search-index',
   'inline',
-  // Resolves to children of a parent ContentNode ordered by Outline position. Config: {parentRef: String}.
-  'outline-children',
 ]);
 
 // --- Handler ---
@@ -60,15 +63,7 @@ const _handler: FunctionalConceptHandler = {
   create(input: Record<string, unknown>) {
     const name = (input.name as string) ?? '';
     const kind = (input.kind as string) ?? '';
-    // config may arrive as a pre-parsed object (from test generators) or as a
-    // JSON string (from production callers). Normalize to string for storage.
-    const rawConfig = input.config;
-    const config: string =
-      typeof rawConfig === 'string'
-        ? rawConfig
-        : rawConfig != null
-          ? JSON.stringify(rawConfig)
-          : '';
+    const config = (input.config as string) ?? '';
 
     // Validate name
     if (!name || name.trim() === '') {
@@ -84,7 +79,7 @@ const _handler: FunctionalConceptHandler = {
       }) as StorageProgram<Result>;
     }
 
-    // Validate config is parseable JSON (string form)
+    // Validate config is parseable JSON
     let parsedConfig: unknown;
     try {
       parsedConfig = JSON.parse(config);
@@ -93,7 +88,7 @@ const _handler: FunctionalConceptHandler = {
         message: 'config must be valid JSON',
       }) as StorageProgram<Result>;
     }
-    void parsedConfig; // config is valid; we store the normalized string
+    void parsedConfig; // config is valid; we store the original string
 
     const parameters = extractTemplateVars(config);
 
@@ -144,20 +139,16 @@ const _handler: FunctionalConceptHandler = {
 
   bind(input: Record<string, unknown>) {
     const name = (input.name as string) ?? '';
-    // bindings may arrive as a pre-parsed object or as a JSON string.
-    const rawBindings = input.bindings;
+    const bindingsJson = (input.bindings as string) ?? '';
+
+    // Validate bindings is parseable JSON before any storage ops
     let bindingsMap: Record<string, string>;
-    if (rawBindings !== null && typeof rawBindings === 'object') {
-      bindingsMap = rawBindings as Record<string, string>;
-    } else {
-      const bindingsJson = typeof rawBindings === 'string' ? rawBindings : '';
-      try {
-        bindingsMap = JSON.parse(bindingsJson) as Record<string, string>;
-      } catch {
-        return complete(createProgram(), 'error', {
-          message: 'bindings must be valid JSON',
-        }) as StorageProgram<Result>;
-      }
+    try {
+      bindingsMap = JSON.parse(bindingsJson) as Record<string, string>;
+    } catch {
+      return complete(createProgram(), 'error', {
+        message: 'bindings must be valid JSON',
+      }) as StorageProgram<Result>;
     }
 
     // Capture for use in mapBindings closure
@@ -169,18 +160,19 @@ const _handler: FunctionalConceptHandler = {
     return branch(
       p,
       'existing',
-      // Source found — resolve template variables
+      // Source found — resolve template variables via VariableProgram engine
       (b) => {
         let b2 = mapBindings(
           b,
           (bindings) => {
             const existing = bindings.existing as Record<string, unknown>;
             const rawConfig = existing.config as string;
-            // Replace all {{varName}} occurrences with values from the bindings map
-            return rawConfig.replace(/\{\{(\w+)\}\}/g, (_match, varName) => {
-              const replacement = capturedBindings[varName];
-              return replacement !== undefined ? String(replacement) : `{{${varName}}}`;
-            });
+            // Build a VariableResolutionContext from the flat bindings map, then
+            // interpolate every {{varName}} token using VariableProgram expression
+            // inference and resolution. Tokens that cannot be resolved are left
+            // unreplaced for backward compatibility.
+            const ctx = buildContextFromFlatBindings(capturedBindings);
+            return interpolateDataSourceConfig(rawConfig, ctx);
           },
           'resolvedConfig',
         );
