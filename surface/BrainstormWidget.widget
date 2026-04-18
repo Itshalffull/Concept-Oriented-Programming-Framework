@@ -1,0 +1,436 @@
+@version(1)
+widget BrainstormWidget {
+
+  purpose {
+    Participant-facing brainstorm interaction widget rendered in the bottom zone
+    of the Process Street participant view when step_type is "brainstorm". The
+    widget drives three distinct phases of the brainstorm lifecycle: submit
+    (participants draft and endorse ideas), shortlist (facilitator curates the
+    final idea set), and closed (read-only result summary). Participants can
+    fork any idea into a derivative branch. The facilitator sees additional
+    phase-transition controls. A transient busy state disables all inputs while
+    any API call is in flight. Phase transitions are driven by BrainstormBoard
+    concept actions; the widget polls getIdeas to keep the idea list live.
+  }
+
+  requires @1 {
+    fields {
+      board_id:    String;
+      phase:       String;
+      ideas:       list;
+    }
+    actions {
+      submitIdea(board, idea_ref, submitter_ref);
+      forkIdea(board, parent_idea_ref, fork_idea_ref, submitter_ref);
+      endorseIdea(board, idea_ref, voter_ref);
+      closeSubmission(board);
+      shortlist(board, idea_refs);
+      close(board);
+      getIdeas(board);
+    }
+  }
+
+  anatomy {
+    root:                container    { Outer wrapper; carries data-state reflecting the FSM phase and data-phase for the board phase }
+    header:              text         { Phase-dependent title: "Submit your idea" in submit, "Shortlist ideas" in shortlist, "Brainstorm closed" in closed }
+    ideaInput:           interactive  { Text area for drafting a new idea; visible and enabled only during submitting-phase }
+    submitIdeaButton:    action       { "Add" button that dispatches SUBMIT_IDEA; disabled while busy or outside submitting-phase }
+    ideaList:            container    { Scrollable feed of submitted idea rows; aria role=feed }
+    ideaItem:            container    { Individual idea row showing idea text, author attribution, endorsement count, and per-idea actions; aria role=article }
+    endorseButton:       action       { Thumbs-up button per idea that calls endorseIdea; reflects whether the current user has already endorsed }
+    forkButton:          action       { "Fork" button per idea that enters the forking sub-state for that item }
+    forkInput:           interactive  { Inline text input that appears when forkButton is clicked; hidden when state is not forking }
+    forkSubmitButton:    action       { Confirm button that dispatches FORK_SUBMIT with the fork text }
+    forkCancelButton:    action       { Cancel button that dispatches FORK_CANCEL and collapses forkInput }
+    deadline:            text         { "Xd Yh remaining" countdown; hidden when deadline prop is null }
+    facilitatorControls: container    { Control bar visible only to the facilitator; contains closeSubmissionButton, shortlistApplyButton, and closeBoardButton }
+    closeSubmissionButton: action     { Facilitator button that calls closeSubmission and advances phase from submit to shortlist }
+    shortlistApplyButton:  action     { Facilitator button that calls shortlist with the checked idea refs and then calls close }
+    closeBoardButton:    action       { Facilitator button that calls close to finalise the board and move to closed phase }
+    shortlistCheckbox:   interactive  { Per-idea checkbox visible during shortlist-phase; the facilitator uses it to select ideas for the shortlist }
+    result:              container    { Read-only summary shown in closed state: shortlisted idea count and top-endorsed ideas }
+  }
+
+  states {
+    phase {
+      submitting-phase [initial] {
+        on FORK_CLICK         -> forking;
+        on SUBMISSION_CLOSED  -> shortlist-phase;
+        on BOARD_CLOSED       -> closed;
+        on API_START          -> busy;
+      }
+
+      forking {
+        on FORK_SUBMIT        -> submitting-phase;
+        on FORK_CANCEL        -> submitting-phase;
+        on BOARD_CLOSED       -> closed;
+        on API_START          -> busy;
+        entry [expandForkInput];
+        exit  [collapseForkInput];
+      }
+
+      shortlist-phase {
+        on BOARD_CLOSED       -> closed;
+        on API_START          -> busy;
+      }
+
+      closed {
+      }
+
+      busy {
+        on API_DONE           -> submitting-phase;
+        on API_DONE_SHORTLIST -> shortlist-phase;
+        on API_DONE_CLOSED    -> closed;
+        entry [disableAllInputs];
+        exit  [enableAllInputs];
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Tab        -> FOCUS_NEXT;
+      Shift+Tab  -> FOCUS_PREV;
+      Enter      -> ACTIVATE_FOCUSED;
+      Escape     -> FORK_CANCEL;
+    }
+    focus {
+      trap: false;
+      initial: ideaInput;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Brainstorm";
+        aria-busy: if state.phase == "busy" then "true" else "false";
+      };
+      ideaList -> {
+        role: "feed";
+        aria-live: "polite";
+        aria-label: "Ideas";
+      };
+      ideaItem -> {
+        role: "article";
+      };
+      ideaInput -> {
+        role: "textbox";
+        aria-label: "Your idea";
+        aria-multiline: "true";
+        aria-disabled: if state.phase == "submitting-phase" then "false" else "true";
+      };
+      submitIdeaButton -> {
+        role: "button";
+        aria-label: "Add idea";
+        aria-disabled: if state.phase == "submitting-phase" then "false" else "true";
+      };
+      endorseButton -> {
+        role: "button";
+        aria-label: "Endorse this idea";
+        aria-pressed: "false";
+      };
+      forkButton -> {
+        role: "button";
+        aria-label: "Fork this idea";
+      };
+      forkInput -> {
+        role: "textbox";
+        aria-label: "Your forked idea";
+        aria-multiline: "false";
+      };
+      forkSubmitButton -> {
+        role: "button";
+        aria-label: "Submit fork";
+      };
+      forkCancelButton -> {
+        role: "button";
+        aria-label: "Cancel fork";
+      };
+      facilitatorControls -> {
+        role: "group";
+        aria-label: "Facilitator controls";
+        aria-hidden: if ?isFacilitator then "false" else "true";
+      };
+      shortlistCheckbox -> {
+        role: "checkbox";
+        aria-label: "Add to shortlist";
+      };
+      closeBoardButton -> {
+        role: "button";
+        aria-label: "Close board";
+      };
+    }
+  }
+
+  props {
+    boardId:       String
+    stepRunId:     String
+    processRunId:  String
+    currentUserId: String
+    isFacilitator: Bool = false
+    anonymous:     Bool = false
+    shortlistSize: Int = 5
+    deadline:      option String
+    initialPhase:  String = "submit"
+  }
+
+  connect {
+    root -> {
+      data-part:  "root";
+      data-state: state.phase;
+      data-phase: if state.phase == "submitting-phase" then "submit"
+                  else if state.phase == "forking" then "submit"
+                  else if state.phase == "shortlist-phase" then "shortlist"
+                  else if state.phase == "busy" then "busy"
+                  else "closed";
+      aria-busy:  if state.phase == "busy" then "true" else "false";
+    }
+
+    header -> {
+      data-part: "header";
+      text: if state.phase == "shortlist-phase" then "Shortlist ideas"
+            else if state.phase == "closed" then "Brainstorm closed"
+            else "Submit your idea";
+    }
+
+    ideaInput -> {
+      data-part:   "idea-input";
+      aria-label:  "Your idea";
+      disabled:    if state.phase == "submitting-phase" then false else true;
+      hidden:      if state.phase == "submitting-phase" or state.phase == "forking" then false else true;
+      placeholder: "Type your idea here...";
+    }
+
+    submitIdeaButton -> {
+      data-part:     "submit-idea-button";
+      disabled:      if state.phase == "submitting-phase" then false else true;
+      hidden:        if state.phase == "submitting-phase" or state.phase == "forking" then false else true;
+      aria-disabled: if state.phase == "submitting-phase" then "false" else "true";
+      onClick:       send(SUBMIT_IDEA);
+    }
+
+    ideaList -> {
+      data-part:  "idea-list";
+      role:       "feed";
+      aria-live:  "polite";
+      aria-label: "Ideas";
+    }
+
+    ideaItem -> {
+      data-part: "idea-item";
+      role:      "article";
+    }
+
+    endorseButton -> {
+      data-part:    "endorse-button";
+      aria-label:   "Endorse this idea";
+      aria-pressed: "false";
+      onClick:      send(ENDORSE_IDEA);
+    }
+
+    forkButton -> {
+      data-part: "fork-button";
+      aria-label: "Fork this idea";
+      hidden:    if state.phase == "submitting-phase" then false else true;
+      onClick:   send(FORK_CLICK);
+    }
+
+    forkInput -> {
+      data-part:   "fork-input";
+      aria-label:  "Your forked idea";
+      hidden:      if state.phase == "forking" then false else true;
+      autofocus:   if state.phase == "forking" then true else false;
+      placeholder: "Describe your fork...";
+    }
+
+    forkSubmitButton -> {
+      data-part: "fork-submit-button";
+      hidden:    if state.phase == "forking" then false else true;
+      onClick:   send(FORK_SUBMIT);
+    }
+
+    forkCancelButton -> {
+      data-part: "fork-cancel-button";
+      hidden:    if state.phase == "forking" then false else true;
+      onClick:   send(FORK_CANCEL);
+    }
+
+    deadline -> {
+      data-part: "deadline";
+      hidden:    if ?deadline then false else true;
+      text:      ?deadline;
+    }
+
+    facilitatorControls -> {
+      data-part:   "facilitator-controls";
+      hidden:      if ?isFacilitator then false else true;
+      aria-hidden: if ?isFacilitator then "false" else "true";
+    }
+
+    closeSubmissionButton -> {
+      data-part: "close-submission-button";
+      hidden:    if ?isFacilitator and state.phase == "submitting-phase" then false else true;
+      onClick:   send(CLOSE_SUBMISSION);
+    }
+
+    shortlistApplyButton -> {
+      data-part: "shortlist-apply-button";
+      hidden:    if ?isFacilitator and state.phase == "shortlist-phase" then false else true;
+      onClick:   send(SHORTLIST_APPLY);
+    }
+
+    closeBoardButton -> {
+      data-part: "close-board-button";
+      hidden:    if ?isFacilitator and state.phase == "shortlist-phase" then false else true;
+      onClick:   send(BOARD_CLOSED);
+    }
+
+    shortlistCheckbox -> {
+      data-part: "shortlist-checkbox";
+      hidden:    if state.phase == "shortlist-phase" then false else true;
+    }
+
+    result -> {
+      data-part: "result";
+      hidden:    if state.phase == "closed" then false else true;
+    }
+  }
+
+  affordance {
+    serves: group-repeating;
+    specificity: 9;
+    when { stepType: "brainstorm" }
+    bind {
+      boardId:      boardId;
+      initialPhase: phase;
+    }
+  }
+
+  compose {
+    _deadlineChip: widget("deadline-chip", { closes_at: ?deadline, closed: if state.phase == "closed" then true else false });
+  }
+
+  invariant {
+    example "FORK_CLICK from submitting-phase enters forking": {
+      after FORK_CLICK() -> ok
+      then state.phase = "forking"
+    }
+
+    example "FORK_CANCEL returns to submitting-phase": {
+      after FORK_CANCEL() -> ok
+      then state.phase = "submitting-phase"
+    }
+
+    example "FORK_SUBMIT returns to submitting-phase": {
+      after FORK_SUBMIT() -> ok
+      then state.phase = "submitting-phase"
+    }
+
+    example "SUBMISSION_CLOSED advances to shortlist-phase": {
+      after SUBMISSION_CLOSED() -> ok
+      then state.phase = "shortlist-phase"
+    }
+
+    example "BOARD_CLOSED transitions to closed": {
+      after BOARD_CLOSED() -> ok
+      then state.phase = "closed"
+    }
+
+    example "API_START enters busy": {
+      after API_START() -> ok
+      then state.phase = "busy"
+    }
+
+    always "all states are reachable from submitting-phase [initial]": {
+      forall s in states:
+      s.reachable = true
+    }
+
+    always "forkInput hidden outside forking state": {
+      forall s in {"submitting-phase", "shortlist-phase", "closed", "busy"}:
+      forkInput.hidden = true
+    }
+
+    always "ideaInput disabled outside submitting-phase": {
+      forall s in {"shortlist-phase", "closed"}:
+      ideaInput.disabled = true
+    }
+
+    always "submitIdeaButton disabled outside submitting-phase": {
+      forall s in {"shortlist-phase", "closed"}:
+      submitIdeaButton.disabled = true
+    }
+
+    always "facilitatorControls hidden when isFacilitator is false": {
+      facilitatorControls.hidden = true
+    }
+
+    always "shortlistCheckbox hidden outside shortlist-phase": {
+      forall s in {"submitting-phase", "forking", "closed", "busy"}:
+      shortlistCheckbox.hidden = true
+    }
+
+    always "result visible only in closed state": {
+      forall s in {"submitting-phase", "forking", "shortlist-phase", "busy"}:
+      result.hidden = true
+    }
+
+    never "ideaInput enabled in shortlist-phase": {
+      exists e in renderEvents:
+        state.phase = "shortlist-phase" and ideaInput.disabled = false
+    }
+
+    never "ideaInput enabled in closed state": {
+      exists e in renderEvents:
+        state.phase = "closed" and ideaInput.disabled = false
+    }
+
+    never "submitIdeaButton enabled in shortlist-phase": {
+      exists e in renderEvents:
+        state.phase = "shortlist-phase" and submitIdeaButton.disabled = false
+    }
+
+    never "submitIdeaButton enabled in closed state": {
+      exists e in renderEvents:
+        state.phase = "closed" and submitIdeaButton.disabled = false
+    }
+
+    never "forkInput visible outside forking state": {
+      exists e in renderEvents:
+        state.phase != "forking" and forkInput.hidden = false
+    }
+
+    never "facilitatorControls visible when isFacilitator is false": {
+      exists e in renderEvents:
+        facilitatorControls.hidden = false
+    }
+
+    action FORK_CLICK {
+      requires: state.phase = "submitting-phase"
+      ensures ok: state.phase = "forking"
+    }
+
+    action FORK_SUBMIT {
+      requires: state.phase = "forking"
+      ensures ok: state.phase = "submitting-phase"
+    }
+
+    action FORK_CANCEL {
+      requires: state.phase = "forking"
+      ensures ok: state.phase = "submitting-phase"
+    }
+
+    action SUBMISSION_CLOSED {
+      requires: state.phase = "submitting-phase"
+      ensures ok: state.phase = "shortlist-phase"
+    }
+
+    action BOARD_CLOSED {
+      requires: state.phase = "shortlist-phase"
+      ensures ok: state.phase = "closed"
+    }
+  }
+
+}
