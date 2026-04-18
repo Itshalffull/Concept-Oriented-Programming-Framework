@@ -26,10 +26,89 @@ interface FbStep {
   config: string;
 }
 
+/** Returns true when the string looks like a VariableProgram expression. */
+function isVariableExpression(value: unknown): value is string {
+  if (typeof value !== 'string') return false;
+  const trimmed = value.trim();
+  return trimmed.startsWith('$') || trimmed.startsWith("'");
+}
+
+/**
+ * Resolve VariableProgram expressions in a step config input object.
+ *
+ * For each field value that starts with `$` or `'`, calls
+ * VariableProgram/parse then VariableProgram/resolve via the kernel.
+ * On any failure the original expression string is left unchanged
+ * (backward compat — existing steps without expressions are unaffected).
+ *
+ * @param kernel         - Live kernel reference.
+ * @param input          - Assembled step action input record.
+ * @param runtimeContext - Context available at step execution time.
+ */
+async function resolveStepConfigExpressions(
+  kernel: KernelLike,
+  input: Record<string, unknown>,
+  runtimeContext: {
+    runId: string;
+    stepOutputs: Record<string, unknown>;
+  },
+): Promise<Record<string, unknown>> {
+  const contextJson = JSON.stringify({
+    pageId: null,
+    urlParams: {},
+    session: {},
+    stepOutputs: runtimeContext.stepOutputs,
+  });
+
+  const entries = Object.entries(input);
+  const expressionEntries = entries.filter(([, v]) => isVariableExpression(v));
+
+  if (expressionEntries.length === 0) {
+    return input;
+  }
+
+  const resolved = await Promise.all(
+    expressionEntries.map(async ([key, value]) => {
+      const expression = (value as string).trim();
+      try {
+        // Parse the expression into a VariableProgram record.
+        const parseResult = await kernel.invokeConcept('urn:clef/VariableProgram', 'parse', {
+          expression,
+        });
+
+        if (parseResult.variant !== 'ok' || typeof parseResult.program !== 'string') {
+          return [key, value] as [string, unknown];
+        }
+
+        const programId = parseResult.program as string;
+
+        // Resolve the program with the runtime context.
+        const resolveResult = await kernel.invokeConcept('urn:clef/VariableProgram', 'resolve', {
+          program: programId,
+          context: contextJson,
+        });
+
+        if (resolveResult.variant !== 'ok') {
+          return [key, value] as [string, unknown];
+        }
+
+        return [key, resolveResult.value ?? value] as [string, unknown];
+      } catch {
+        // Any unexpected error — keep original expression.
+        return [key, value] as [string, unknown];
+      }
+    }),
+  );
+
+  const resolvedMap = Object.fromEntries(resolved);
+  return { ...input, ...resolvedMap };
+}
+
 async function executeStep(
   kernel: KernelLike,
   step: FbStep,
   scope: Record<string, unknown>,
+  runId: string,
 ): Promise<{ output: Record<string, unknown>; failed?: string; manual?: boolean }> {
   const config = (() => {
     try { return JSON.parse(step.config || '{}') as Record<string, unknown>; }
@@ -44,9 +123,18 @@ async function executeStep(
         const conceptName = conceptAction.slice(0, slash);
         const actionName = conceptAction.slice(slash + 1);
         const rawInput = config.input ?? {};
-        const actionInput: Record<string, unknown> = typeof rawInput === 'string'
+        const rawActionInput: Record<string, unknown> = typeof rawInput === 'string'
           ? (JSON.parse(rawInput) as Record<string, unknown>)
           : (rawInput as Record<string, unknown>);
+
+        // Resolve any VariableProgram expressions in the action input before
+        // dispatching to the concept. Failures leave the original expression
+        // string in place so existing steps are never silently broken.
+        const actionInput = await resolveStepConfigExpressions(kernel, rawActionInput, {
+          runId,
+          stepOutputs: scope,
+        });
+
         const result = await kernel.invokeConcept(`urn:clef/${conceptName}`, actionName, { ...scope, ...actionInput });
         if (result.variant !== 'ok') {
           return { output: {}, failed: `${conceptAction} returned ${result.variant}` };
@@ -111,7 +199,7 @@ export async function interpretRun(runId: string, specRef: string): Promise<void
       if (startResult.variant !== 'ok') continue;
       const stepRunId = startResult.step as string;
 
-      const result = await executeStep(kernel, step, scope).catch((err) => ({
+      const result = await executeStep(kernel, step, scope, runId).catch((err) => ({
         output: {},
         failed: err instanceof Error ? err.message : String(err),
         manual: undefined as boolean | undefined,
