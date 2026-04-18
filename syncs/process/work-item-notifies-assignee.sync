@@ -1,22 +1,23 @@
 # WorkItem offer → assignee notification.
-# When a WorkItem is offered to a participant, send a notification with a
-# badge and toast linking to the governance inbox so they know action is needed.
+# When a WorkItem is offered to a participant, send an in-app notification
+# linking to /admin/inbox so they know action is required.
 
 sync WorkItemNotifiesAssignee [eager]
   purpose {
-    When a WorkItem is offered to a participant, send them a notification
-    with a badge and toast linking to the inbox so they know action is needed.
+    When a WorkItem is offered to a participant, send them an in-app
+    notification with a link to the inbox so they know action is required.
   }
 when {
-  WorkItem/offer: [ assignee: ?assignee; title: ?title; step_ref: ?step_ref ]
-    => ok(item: ?item)
+  WorkItem/offer: [ workItem: ?workItem; assignee: ?assignee; title: ?title ]
+    => ok()
 }
 then {
   Notification/send: [
     recipient: ?assignee;
-    title: concat("Action required: ", ?title);
-    body: "A governance step needs your attention.";
-    link: "/admin/inbox";
-    ref: ?item
+    channel: "in-app";
+    title: "New action required";
+    body: ?title;
+    href: "/admin/inbox";
+    referenceId: ?workItem
   ]
 }
