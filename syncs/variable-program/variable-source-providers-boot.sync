@@ -1,0 +1,144 @@
+# variable-source-providers-boot — Register all 8 built-in VariableSourceProviders
+# with PluginRegistry on kernel boot so VariableProgram/resolve can locate them
+# via PluginRegistry/get("variable-source", kind).
+#
+# Each registration is idempotent per PluginRegistry spec — safe to re-fire
+# on every boot without creating duplicates.
+
+sync RegisterPageVariableSourceProvider [eager]
+  purpose {
+    On kernel boot, register the "page" source provider with PluginRegistry so
+    VariableProgram can resolve $page expressions against the current page's
+    ContentNode record.
+  }
+when {
+  KernelBoot/boot: [ projectRoot: ?projectRoot; manifestPath: ?manifestPath ]
+    => ok(kernel: ?kernel; concepts: ?concepts; syncs: ?syncs)
+}
+then {
+  PluginRegistry/register: [
+    type: "variable-source";
+    name: "page";
+    metadata: "{\"impl\":\"PageVariableProvider\",\"prefix\":\"$page\",\"resolvedType\":\"ContentNode\",\"argSpec\":[]}"
+  ]
+}
+
+sync RegisterUrlVariableSourceProvider [eager]
+  purpose {
+    On kernel boot, register the "url" source provider with PluginRegistry so
+    VariableProgram can resolve $url expressions against URL path and query parameters.
+  }
+when {
+  KernelBoot/boot: [ projectRoot: ?projectRoot; manifestPath: ?manifestPath ]
+    => ok(kernel: ?kernel; concepts: ?concepts; syncs: ?syncs)
+}
+then {
+  PluginRegistry/register: [
+    type: "variable-source";
+    name: "url";
+    metadata: "{\"impl\":\"UrlVariableProvider\",\"prefix\":\"$url\",\"resolvedType\":\"string\",\"argSpec\":[{\"name\":\"param\",\"type\":\"string\",\"required\":true}]}"
+  ]
+}
+
+sync RegisterContentVariableSourceProvider [eager]
+  purpose {
+    On kernel boot, register the "content" source provider with PluginRegistry so
+    VariableProgram can resolve $content expressions against arbitrary ContentNodes by ID.
+  }
+when {
+  KernelBoot/boot: [ projectRoot: ?projectRoot; manifestPath: ?manifestPath ]
+    => ok(kernel: ?kernel; concepts: ?concepts; syncs: ?syncs)
+}
+then {
+  PluginRegistry/register: [
+    type: "variable-source";
+    name: "content";
+    metadata: "{\"impl\":\"ContentVariableProvider\",\"prefix\":\"$content\",\"resolvedType\":\"ContentNode\",\"argSpec\":[{\"name\":\"nodeId\",\"type\":\"string\",\"required\":true}]}"
+  ]
+}
+
+sync RegisterQueryVariableSourceProvider [eager]
+  purpose {
+    On kernel boot, register the "query" source provider with PluginRegistry so
+    VariableProgram can resolve $query expressions against named view query results.
+  }
+when {
+  KernelBoot/boot: [ projectRoot: ?projectRoot; manifestPath: ?manifestPath ]
+    => ok(kernel: ?kernel; concepts: ?concepts; syncs: ?syncs)
+}
+then {
+  PluginRegistry/register: [
+    type: "variable-source";
+    name: "query";
+    metadata: "{\"impl\":\"ViewQueryVariableProvider\",\"prefix\":\"$query\",\"resolvedType\":\"any\",\"argSpec\":[{\"name\":\"name\",\"type\":\"string\",\"required\":true}]}"
+  ]
+}
+
+sync RegisterStepVariableSourceProvider [eager]
+  purpose {
+    On kernel boot, register the "step" source provider with PluginRegistry so
+    VariableProgram can resolve $step expressions against process step outputs.
+  }
+when {
+  KernelBoot/boot: [ projectRoot: ?projectRoot; manifestPath: ?manifestPath ]
+    => ok(kernel: ?kernel; concepts: ?concepts; syncs: ?syncs)
+}
+then {
+  PluginRegistry/register: [
+    type: "variable-source";
+    name: "step";
+    metadata: "{\"impl\":\"ProcessStepVariableProvider\",\"prefix\":\"$step\",\"resolvedType\":\"any\",\"argSpec\":[{\"name\":\"stepKey\",\"type\":\"string\",\"required\":true}]}"
+  ]
+}
+
+sync RegisterSessionVariableSourceProvider [eager]
+  purpose {
+    On kernel boot, register the "session" source provider with PluginRegistry so
+    VariableProgram can resolve $session expressions against the current user session.
+  }
+when {
+  KernelBoot/boot: [ projectRoot: ?projectRoot; manifestPath: ?manifestPath ]
+    => ok(kernel: ?kernel; concepts: ?concepts; syncs: ?syncs)
+}
+then {
+  PluginRegistry/register: [
+    type: "variable-source";
+    name: "session";
+    metadata: "{\"impl\":\"SessionVariableProvider\",\"prefix\":\"$session\",\"resolvedType\":\"Session\",\"argSpec\":[]}"
+  ]
+}
+
+sync RegisterLiteralVariableSourceProvider [eager]
+  purpose {
+    On kernel boot, register the "literal" source provider with PluginRegistry so
+    VariableProgram can resolve single-quoted literal expressions to their constant string value.
+  }
+when {
+  KernelBoot/boot: [ projectRoot: ?projectRoot; manifestPath: ?manifestPath ]
+    => ok(kernel: ?kernel; concepts: ?concepts; syncs: ?syncs)
+}
+then {
+  PluginRegistry/register: [
+    type: "variable-source";
+    name: "literal";
+    metadata: "{\"impl\":\"LiteralVariableProvider\",\"prefix\":\"'\",\"resolvedType\":\"string\",\"argSpec\":[{\"name\":\"value\",\"type\":\"string\",\"required\":true}]}"
+  ]
+}
+
+sync RegisterContextVariableSourceProvider [eager]
+  purpose {
+    On kernel boot, register the "context" source provider with PluginRegistry so
+    VariableProgram can resolve $ctx expressions against ambient context values
+    supplied by the hosting surface or process runtime.
+  }
+when {
+  KernelBoot/boot: [ projectRoot: ?projectRoot; manifestPath: ?manifestPath ]
+    => ok(kernel: ?kernel; concepts: ?concepts; syncs: ?syncs)
+}
+then {
+  PluginRegistry/register: [
+    type: "variable-source";
+    name: "context";
+    metadata: "{\"impl\":\"ContextVariableProvider\",\"prefix\":\"$ctx\",\"resolvedType\":\"any\",\"argSpec\":[{\"name\":\"key\",\"type\":\"string\",\"required\":true}]}"
+  ]
+}

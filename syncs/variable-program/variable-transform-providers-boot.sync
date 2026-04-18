@@ -1,0 +1,78 @@
+# variable-transform-providers-boot — Register all 4 built-in VariableTransformProviders
+# with PluginRegistry on kernel boot so VariableProgram/resolve can locate them
+# via PluginRegistry/get("variable-transform", kind) during the transform pipeline.
+#
+# Each registration is idempotent per PluginRegistry spec — safe to re-fire
+# on every boot without creating duplicates.
+
+sync RegisterFormatTransformProvider [eager]
+  purpose {
+    On kernel boot, register the "format" transform provider with PluginRegistry so
+    VariableProgram can dispatch |format() pipe expressions to FormatTransformProvider,
+    which renders values using Intl date, number, and currency formatters.
+  }
+when {
+  KernelBoot/boot: [ projectRoot: ?projectRoot; manifestPath: ?manifestPath ]
+    => ok(kernel: ?kernel; concepts: ?concepts; syncs: ?syncs)
+}
+then {
+  PluginRegistry/register: [
+    type: "variable-transform";
+    name: "format";
+    metadata: "{\"impl\":\"FormatTransformProvider\",\"argSpec\":[{\"name\":\"pattern\",\"type\":\"string\",\"required\":true}]}"
+  ]
+}
+
+sync RegisterFallbackTransformProvider [eager]
+  purpose {
+    On kernel boot, register the "fallback" transform provider with PluginRegistry so
+    VariableProgram can dispatch |fallback() pipe expressions to FallbackTransformProvider,
+    which substitutes a default value when the resolved value is null, undefined, or empty.
+  }
+when {
+  KernelBoot/boot: [ projectRoot: ?projectRoot; manifestPath: ?manifestPath ]
+    => ok(kernel: ?kernel; concepts: ?concepts; syncs: ?syncs)
+}
+then {
+  PluginRegistry/register: [
+    type: "variable-transform";
+    name: "fallback";
+    metadata: "{\"impl\":\"FallbackTransformProvider\",\"argSpec\":[{\"name\":\"value\",\"type\":\"string\",\"required\":true}]}"
+  ]
+}
+
+sync RegisterCoerceTransformProvider [eager]
+  purpose {
+    On kernel boot, register the "coerce" transform provider with PluginRegistry so
+    VariableProgram can dispatch |as() pipe expressions to CoerceTransformProvider,
+    which converts values to a target type (string, number, boolean, or date).
+  }
+when {
+  KernelBoot/boot: [ projectRoot: ?projectRoot; manifestPath: ?manifestPath ]
+    => ok(kernel: ?kernel; concepts: ?concepts; syncs: ?syncs)
+}
+then {
+  PluginRegistry/register: [
+    type: "variable-transform";
+    name: "coerce";
+    metadata: "{\"impl\":\"CoerceTransformProvider\",\"argSpec\":[{\"name\":\"type\",\"type\":\"string\",\"required\":true}]}"
+  ]
+}
+
+sync RegisterJoinTransformProvider [eager]
+  purpose {
+    On kernel boot, register the "join" transform provider with PluginRegistry so
+    VariableProgram can dispatch |join() pipe expressions to JoinTransformProvider,
+    which collapses array values into a single string with a configurable separator.
+  }
+when {
+  KernelBoot/boot: [ projectRoot: ?projectRoot; manifestPath: ?manifestPath ]
+    => ok(kernel: ?kernel; concepts: ?concepts; syncs: ?syncs)
+}
+then {
+  PluginRegistry/register: [
+    type: "variable-transform";
+    name: "join";
+    metadata: "{\"impl\":\"JoinTransformProvider\",\"argSpec\":[{\"name\":\"sep\",\"type\":\"string\",\"required\":false,\"default\":\", \"}]}"
+  ]
+}
