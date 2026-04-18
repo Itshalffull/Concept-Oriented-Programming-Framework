@@ -1,0 +1,97 @@
+@version(2)
+concept StepTimer [T] {
+  purpose {
+    Schedule and fire timeout completions for timed process steps.
+    Watches active StepRuns that carry a timeout field, computes the
+    deadline from startedAt + ISO 8601 duration, and emits a timed_out
+    signal when the deadline passes. Decouples timeout enforcement from
+    StepRun lifecycle management.
+  }
+
+  state {
+    timers: set T
+    stepRunId: T -> String          // StepRun identifier being watched
+    deadline:  T -> String          // ISO datetime when the step expires
+    fired:     T -> Bool            // whether timed_out has been emitted
+  }
+
+  capabilities {
+    requires persistent-storage
+  }
+
+  actions {
+    action register(stepRunId: String, startedAt: String, timeout: String) {
+      -> ok(stepRunId: String, deadline: String) {
+        Parses the ISO 8601 duration in timeout, adds it to startedAt,
+        and registers a new timer keyed by stepRunId. Returns the computed
+        deadline so callers can log or display it.
+      }
+      -> already_registered(stepRunId: String) {
+        A timer for this stepRunId is already active. The existing deadline
+        is preserved and no duplicate timer is created.
+      }
+      -> invalid_duration(message: String) {
+        The timeout string is not a recognised ISO 8601 duration.
+        Common supported forms: PT30S, PT5M, PT2H, P1D.
+      }
+      fixture register_ok { stepRunId: "run-001", startedAt: "2026-01-01T00:00:00Z", timeout: "PT30M" }
+      fixture register_already_registered { stepRunId: "run-001", startedAt: "2026-01-01T00:00:00Z", timeout: "PT30M" } after register_ok -> already_registered
+      fixture register_invalid_duration { stepRunId: "run-002", startedAt: "2026-01-01T00:00:00Z", timeout: "INVALID" } -> invalid_duration
+    }
+
+    action tick(now: String) {
+      -> ok(fired: list String) {
+        Scans all registered timers whose deadline is at or before now
+        and have not yet fired. Marks each as fired and returns the list
+        of stepRunIds just fired. Returns an empty list when no timers are due.
+      }
+      -> noop() {
+        No timers were registered or all registered timers have already
+        fired. Returned when no scan was needed.
+      }
+      fixture tick_fires_overdue { now: "2026-01-01T01:00:00Z" } after register_ok
+      fixture tick_noop_all_future { now: "2025-01-01T00:00:00Z" } -> noop
+    }
+
+    action cancel(stepRunId: String) {
+      -> ok() {
+        Removes the timer for stepRunId. Called when the step completes
+        normally before its deadline, preventing a spurious timed_out.
+      }
+      -> not_found(message: String) {
+        No active timer exists for this stepRunId.
+      }
+      fixture cancel_ok { stepRunId: $register_ok.stepRunId } after register_ok
+      fixture cancel_not_found { stepRunId: "no-such-run" } -> not_found
+    }
+  }
+
+  example "register then fire via tick": {
+    after register(stepRunId: "run-A", startedAt: "2026-01-01T00:00:00Z", timeout: "PT1M") -> ok(deadline: d)
+    then tick(now: "2026-01-01T01:00:00Z") -> ok(fired: f)
+  }
+
+  example "cancel before deadline": {
+    after register(stepRunId: "run-B", startedAt: "2026-01-01T00:00:00Z", timeout: "PT1H") -> ok(deadline: d)
+    then cancel(stepRunId: "run-B") -> ok()
+  }
+
+  always "timers have required fields": {
+    forall t in timers:
+    t.stepRunId != none
+  }
+
+  never "fired timer missing stepRunId": {
+    exists t in timers:
+    t.fired = true and t.stepRunId = none
+  }
+
+  action register {
+    requires: stepRunId != ""
+    ensures ok: deadline != none
+  }
+
+  action cancel {
+    requires: stepRunId != ""
+  }
+}

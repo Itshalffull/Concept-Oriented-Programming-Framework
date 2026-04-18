@@ -32,9 +32,9 @@ describe('StepTimer functional handler', () => {
     storage = createInMemoryStorage();
   });
 
-  describe('arm', () => {
+  describe('register', () => {
     it('builds a valid StorageProgram', () => {
-      const program = stepTimerHandler.arm({ step_ref: "step-001", deadline: "2026-05-01T00:00:00Z" });
+      const program = stepTimerHandler.register({ stepRunId: "run-001", startedAt: "2026-01-01T00:00:00Z", timeout: "PT30M" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -42,21 +42,21 @@ describe('StepTimer functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = stepTimerHandler.arm({ step_ref: "step-001", deadline: "2026-05-01T00:00:00Z" });
+      const program = stepTimerHandler.register({ stepRunId: "run-001", startedAt: "2026-01-01T00:00:00Z", timeout: "PT30M" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = stepTimerHandler.arm({ step_ref: "step-001", deadline: "2026-05-01T00:00:00Z" });
+      const program = stepTimerHandler.register({ stepRunId: "run-001", startedAt: "2026-01-01T00:00:00Z", timeout: "PT30M" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = stepTimerHandler.arm({ step_ref: "step-001", deadline: "2026-05-01T00:00:00Z" });
+      const program = stepTimerHandler.register({ stepRunId: "run-001", startedAt: "2026-01-01T00:00:00Z", timeout: "PT30M" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -69,28 +69,34 @@ describe('StepTimer functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = stepTimerHandler.arm({ step_ref: "step-001", deadline: "2026-05-01T00:00:00Z" });
+      const program = stepTimerHandler.register({ stepRunId: "run-001", startedAt: "2026-01-01T00:00:00Z", timeout: "PT30M" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('produces a result', async () => {
-      if (typeof stepTimerHandler.arm !== 'function') return;
-      const result = await interpret(stepTimerHandler.arm({ step_ref: "step-001", deadline: "2026-05-01T00:00:00Z" }), storage);
+      if (typeof stepTimerHandler.register !== 'function') return;
+      const result = await interpret(stepTimerHandler.register({ stepRunId: "run-001", startedAt: "2026-01-01T00:00:00Z", timeout: "PT30M" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "arm_ok" -> ok', async () => {
-      if (typeof stepTimerHandler.arm !== 'function') return;
+    it('fixture "register_ok" -> ok', async () => {
+      if (typeof stepTimerHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_disarm_missing = await interpret(stepTimerHandler.disarm({ step_ref: "no-such-step" }), storage);
-      const afterResult_tick_none = await interpret(stepTimerHandler.tick({  }), storage);
-      const _pool = Object.assign({}, (afterResult_disarm_missing?.output ?? {}), (afterResult_tick_none?.output ?? {}));
-      const _fixtureInput = { step_ref: "step-001", deadline: "2026-05-01T00:00:00Z" } as Record<string, unknown>;
+      const result = await interpret(stepTimerHandler.register({ stepRunId: "run-001", startedAt: "2026-01-01T00:00:00Z", timeout: "PT30M" }), storage);
+      expect(result.variant).toBe('ok');
+    });
+
+    it('fixture "register_already_registered" -> already_registered', async () => {
+      if (typeof stepTimerHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const afterResult_register_ok = await interpret(stepTimerHandler.register({ stepRunId: "run-001", startedAt: "2026-01-01T00:00:00Z", timeout: "PT30M" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_ok?.output ?? {}));
+      const _fixtureInput = { stepRunId: "run-001", startedAt: "2026-01-01T00:00:00Z", timeout: "PT30M" } as Record<string, unknown>;
       for (const [k, v] of Object.entries(_pool)) {
         if (k in _fixtureInput && v !== undefined) {
           const cur = _fixtureInput[k];
@@ -98,124 +104,24 @@ describe('StepTimer functional handler', () => {
           if (isPlaceholder) _fixtureInput[k] = v;
         }
       }
-      const result = await interpret(stepTimerHandler.arm({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
-    });
-
-    it('fixture "arm_duplicate" -> ok', async () => {
-      if (typeof stepTimerHandler.arm !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_disarm_missing = await interpret(stepTimerHandler.disarm({ step_ref: "no-such-step" }), storage);
-      const afterResult_tick_none = await interpret(stepTimerHandler.tick({  }), storage);
-      const afterResult_arm_ok = await interpret(stepTimerHandler.arm({ step_ref: "step-001", deadline: "2026-05-01T00:00:00Z" }), storage);
-      const _pool = Object.assign({}, (afterResult_disarm_missing?.output ?? {}), (afterResult_tick_none?.output ?? {}), (afterResult_arm_ok?.output ?? {}));
-      const _fixtureInput = { step_ref: "step-001", deadline: "2026-05-01T00:00:00Z" } as Record<string, unknown>;
-      for (const [k, v] of Object.entries(_pool)) {
-        if (k in _fixtureInput && v !== undefined) {
-          const cur = _fixtureInput[k];
-          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
-          if (isPlaceholder) _fixtureInput[k] = v;
-        }
-      }
-      const result = await interpret(stepTimerHandler.arm({ ..._fixtureInput }), storage);
-      expect(result.variant).toBe('ok');
-    });
-
-    it('fixture "arm_empty_step" -> error', async () => {
-      if (typeof stepTimerHandler.arm !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await interpret(stepTimerHandler.arm({ step_ref: "", deadline: "2026-05-01T00:00:00Z" }), storage);
-      expect(result.variant).not.toBe('ok');
-    });
-
-  });
-
-  describe('fire', () => {
-    it('builds a valid StorageProgram', () => {
-      const program = stepTimerHandler.fire({ timer: {"type":"ref","fixture":"arm_ok","field":"timer"} });
-      expect(program).toBeDefined();
-      expect(program.instructions).toBeDefined();
-      expect(Array.isArray(program.instructions)).toBe(true);
-      expect(program.instructions.length).toBeGreaterThan(0);
-    });
-
-    it('has classifiable purity', () => {
-      const program = stepTimerHandler.fire({ timer: {"type":"ref","fixture":"arm_ok","field":"timer"} });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const purity = classifyPurity(program);
-      expect(['pure', 'read-only', 'read-write']).toContain(purity);
-    });
-
-    it('declares completion variants', () => {
-      const program = stepTimerHandler.fire({ timer: {"type":"ref","fixture":"arm_ok","field":"timer"} });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
-      expect(variants.size).toBeGreaterThan(0);
-    });
-
-    it('declares read and write sets', () => {
-      const program = stepTimerHandler.fire({ timer: {"type":"ref","fixture":"arm_ok","field":"timer"} });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const reads = extractReadSet(program);
-      const writes = extractWriteSet(program);
-      const purity = classifyPurity(program);
-      if (purity === 'read-only') {
-        expect(reads.size).toBeGreaterThan(0);
-      } else if (purity === 'read-write') {
-        expect(writes.size).toBeGreaterThan(0);
-      }
-    });
-
-    it('has trackable transport effects', () => {
-      const program = stepTimerHandler.fire({ timer: {"type":"ref","fixture":"arm_ok","field":"timer"} });
-      if (!program?.instructions) return; // skip non-StorageProgram handlers
-      const effects = extractPerformSet(program);
-      expect(effects).toBeDefined();
-    });
-
-    it('produces a result', async () => {
-      if (typeof stepTimerHandler.fire !== 'function') return;
-      const result = await interpret(stepTimerHandler.fire({ timer: {"type":"ref","fixture":"arm_ok","field":"timer"} }), storage);
-      expect(result).toBeDefined();
-      if (result.variant !== undefined) {
-        expect(typeof result.variant).toBe('string');
-      }
-    });
-
-    it('fixture "fire_ok" -> ok', async () => {
-      if (typeof stepTimerHandler.fire !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_disarm_missing = await interpret(stepTimerHandler.disarm({ step_ref: "no-such-step" }), storage);
-      const afterResult_tick_none = await interpret(stepTimerHandler.tick({  }), storage);
-      const afterResult_arm_ok = await interpret(stepTimerHandler.arm({ step_ref: "step-001", deadline: "2026-05-01T00:00:00Z" }), storage);
-      const result = await interpret(stepTimerHandler.fire({ timer: afterResult_arm_ok?.output?.["timer"] }), storage);
-      expect(result.variant).toBe('ok');
-    });
-
-    it('fixture "fire_already_fired" -> ok', async () => {
-      if (typeof stepTimerHandler.fire !== 'function') return;
-      const storage = createInMemoryStorage();
-      const afterResult_disarm_missing = await interpret(stepTimerHandler.disarm({ step_ref: "no-such-step" }), storage);
-      const afterResult_tick_none = await interpret(stepTimerHandler.tick({  }), storage);
-      const afterResult_arm_ok = await interpret(stepTimerHandler.arm({ step_ref: "step-001", deadline: "2026-05-01T00:00:00Z" }), storage);
-      const afterResult_fire_ok = await interpret(stepTimerHandler.fire({ timer: afterResult_arm_ok?.output?.["timer"] }), storage);
-      const result = await interpret(stepTimerHandler.fire({ timer: afterResult_fire_ok?.output?.["timer"] }), storage);
-      expect(result.variant).toBe('ok');
-    });
-
-    it('fixture "fire_missing" -> not_found', async () => {
-      if (typeof stepTimerHandler.fire !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await interpret(stepTimerHandler.fire({ timer: "nonexistent-timer" }), storage);
+      const result = await interpret(stepTimerHandler.register({ ..._fixtureInput }), storage);
       const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
-      expect(normalize(result.variant)).toBe(normalize('not_found'));
+      expect(normalize(result.variant)).toBe(normalize('already_registered'));
+    });
+
+    it('fixture "register_invalid_duration" -> invalid_duration', async () => {
+      if (typeof stepTimerHandler.register !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(stepTimerHandler.register({ stepRunId: "run-002", startedAt: "2026-01-01T00:00:00Z", timeout: "INVALID" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('invalid_duration'));
     });
 
   });
 
   describe('tick', () => {
     it('builds a valid StorageProgram', () => {
-      const program = stepTimerHandler.tick({  });
+      const program = stepTimerHandler.tick({ now: "2026-01-01T01:00:00Z" });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -223,21 +129,21 @@ describe('StepTimer functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = stepTimerHandler.tick({  });
+      const program = stepTimerHandler.tick({ now: "2026-01-01T01:00:00Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = stepTimerHandler.tick({  });
+      const program = stepTimerHandler.tick({ now: "2026-01-01T01:00:00Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = stepTimerHandler.tick({  });
+      const program = stepTimerHandler.tick({ now: "2026-01-01T01:00:00Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -250,7 +156,7 @@ describe('StepTimer functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = stepTimerHandler.tick({  });
+      const program = stepTimerHandler.tick({ now: "2026-01-01T01:00:00Z" });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
@@ -258,28 +164,43 @@ describe('StepTimer functional handler', () => {
 
     it('produces a result', async () => {
       if (typeof stepTimerHandler.tick !== 'function') return;
-      const result = await interpret(stepTimerHandler.tick({  }), storage);
+      const result = await interpret(stepTimerHandler.tick({ now: "2026-01-01T01:00:00Z" }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "tick_none" -> ok', async () => {
+    it('fixture "tick_fires_overdue" -> ok', async () => {
       if (typeof stepTimerHandler.tick !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_disarm_missing = await interpret(stepTimerHandler.disarm({ step_ref: "no-such-step" }), storage);
-      const _pool = Object.assign({}, (afterResult_disarm_missing?.output ?? {}));
-      const _fixtureInput = { ..._pool } as Record<string, unknown>;
+      const afterResult_register_ok = await interpret(stepTimerHandler.register({ stepRunId: "run-001", startedAt: "2026-01-01T00:00:00Z", timeout: "PT30M" }), storage);
+      const _pool = Object.assign({}, (afterResult_register_ok?.output ?? {}));
+      const _fixtureInput = { now: "2026-01-01T01:00:00Z" } as Record<string, unknown>;
+      for (const [k, v] of Object.entries(_pool)) {
+        if (k in _fixtureInput && v !== undefined) {
+          const cur = _fixtureInput[k];
+          const isPlaceholder = cur === null || cur === undefined || (typeof cur === 'string' && cur.startsWith('test-'));
+          if (isPlaceholder) _fixtureInput[k] = v;
+        }
+      }
       const result = await interpret(stepTimerHandler.tick({ ..._fixtureInput }), storage);
       expect(result.variant).toBe('ok');
     });
 
+    it('fixture "tick_noop_all_future" -> noop', async () => {
+      if (typeof stepTimerHandler.tick !== 'function') return;
+      const storage = createInMemoryStorage();
+      const result = await interpret(stepTimerHandler.tick({ now: "2025-01-01T00:00:00Z" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('noop'));
+    });
+
   });
 
-  describe('disarm', () => {
+  describe('cancel', () => {
     it('builds a valid StorageProgram', () => {
-      const program = stepTimerHandler.disarm({ step_ref: {"type":"ref","fixture":"arm_ok","field":"step_ref"} });
+      const program = stepTimerHandler.cancel({ stepRunId: {"type":"ref","fixture":"register_ok","field":"stepRunId"} });
       expect(program).toBeDefined();
       expect(program.instructions).toBeDefined();
       expect(Array.isArray(program.instructions)).toBe(true);
@@ -287,21 +208,21 @@ describe('StepTimer functional handler', () => {
     });
 
     it('has classifiable purity', () => {
-      const program = stepTimerHandler.disarm({ step_ref: {"type":"ref","fixture":"arm_ok","field":"step_ref"} });
+      const program = stepTimerHandler.cancel({ stepRunId: {"type":"ref","fixture":"register_ok","field":"stepRunId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const purity = classifyPurity(program);
       expect(['pure', 'read-only', 'read-write']).toContain(purity);
     });
 
     it('declares completion variants', () => {
-      const program = stepTimerHandler.disarm({ step_ref: {"type":"ref","fixture":"arm_ok","field":"step_ref"} });
+      const program = stepTimerHandler.cancel({ stepRunId: {"type":"ref","fixture":"register_ok","field":"stepRunId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const variants = program.effects?.completionVariants ?? extractCompletionVariants(program);
       expect(variants.size).toBeGreaterThan(0);
     });
 
     it('declares read and write sets', () => {
-      const program = stepTimerHandler.disarm({ step_ref: {"type":"ref","fixture":"arm_ok","field":"step_ref"} });
+      const program = stepTimerHandler.cancel({ stepRunId: {"type":"ref","fixture":"register_ok","field":"stepRunId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const reads = extractReadSet(program);
       const writes = extractWriteSet(program);
@@ -314,81 +235,58 @@ describe('StepTimer functional handler', () => {
     });
 
     it('has trackable transport effects', () => {
-      const program = stepTimerHandler.disarm({ step_ref: {"type":"ref","fixture":"arm_ok","field":"step_ref"} });
+      const program = stepTimerHandler.cancel({ stepRunId: {"type":"ref","fixture":"register_ok","field":"stepRunId"} });
       if (!program?.instructions) return; // skip non-StorageProgram handlers
       const effects = extractPerformSet(program);
       expect(effects).toBeDefined();
     });
 
     it('produces a result', async () => {
-      if (typeof stepTimerHandler.disarm !== 'function') return;
-      const result = await interpret(stepTimerHandler.disarm({ step_ref: {"type":"ref","fixture":"arm_ok","field":"step_ref"} }), storage);
+      if (typeof stepTimerHandler.cancel !== 'function') return;
+      const result = await interpret(stepTimerHandler.cancel({ stepRunId: {"type":"ref","fixture":"register_ok","field":"stepRunId"} }), storage);
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
         expect(typeof result.variant).toBe('string');
       }
     });
 
-    it('fixture "disarm_ok" -> ok', async () => {
-      if (typeof stepTimerHandler.disarm !== 'function') return;
+    it('fixture "cancel_ok" -> ok', async () => {
+      if (typeof stepTimerHandler.cancel !== 'function') return;
       const storage = createInMemoryStorage();
-      const afterResult_disarm_missing = await interpret(stepTimerHandler.disarm({ step_ref: "no-such-step" }), storage);
-      const afterResult_tick_none = await interpret(stepTimerHandler.tick({  }), storage);
-      const afterResult_arm_ok = await interpret(stepTimerHandler.arm({ step_ref: "step-001", deadline: "2026-05-01T00:00:00Z" }), storage);
-      const result = await interpret(stepTimerHandler.disarm({ step_ref: afterResult_arm_ok?.output?.["step_ref"] }), storage);
+      const afterResult_register_ok = await interpret(stepTimerHandler.register({ stepRunId: "run-001", startedAt: "2026-01-01T00:00:00Z", timeout: "PT30M" }), storage);
+      const result = await interpret(stepTimerHandler.cancel({ stepRunId: afterResult_register_ok?.output?.["stepRunId"] }), storage);
       expect(result.variant).toBe('ok');
     });
 
-    it('fixture "disarm_missing" -> ok', async () => {
-      if (typeof stepTimerHandler.disarm !== 'function') return;
+    it('fixture "cancel_not_found" -> not_found', async () => {
+      if (typeof stepTimerHandler.cancel !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await interpret(stepTimerHandler.disarm({ step_ref: "no-such-step" }), storage);
-      expect(result.variant).toBe('ok');
-    });
-
-    it('fixture "disarm_empty" -> error', async () => {
-      if (typeof stepTimerHandler.disarm !== 'function') return;
-      const storage = createInMemoryStorage();
-      const result = await interpret(stepTimerHandler.disarm({ step_ref: "" }), storage);
-      expect(result.variant).not.toBe('ok');
+      const result = await interpret(stepTimerHandler.cancel({ stepRunId: "no-such-run" }), storage);
+      const normalize = (v: string) => v?.toLowerCase().replace(/_/g, '');
+      expect(normalize(result.variant)).toBe(normalize('not_found'));
     });
 
   });
 
-  describe('register()', () => {
-    it('declares concept name', async () => {
-      if (typeof stepTimerHandler.register !== 'function') return;
-      const storage = createInMemoryStorage();
-      const program = stepTimerHandler.register({});
-      // If it's a StorageProgram, interpret it
-      const result = (program?.instructions && !program.variant)
-        ? await interpret(program, storage)
-        : program;
-      if (!result?.variant) return; // handler does not support register introspection
-      expect(result.variant).toBe('ok');
-      const name = result.output?.name ?? result.name;
-      expect(name).toBe('StepTimer');
-    });
-  });
 
   describe('invariant examples', () => {
-    it("arm then fire", async () => {
+    it("register then fire via tick", async () => {
       const storage = createInMemoryStorage();
-      const armResult0 = await interpret(stepTimerHandler.arm({ step_ref: "step-A", deadline: "2026-05-01T00:00:00Z" }), storage);
-      expect(armResult0.variant).toBe("ok");
-      let timer = armResult0.output["timer"];
-      let t = timer;
-      const thenResult0 = await interpret(stepTimerHandler.fire({ timer: t }), storage);
+      const registerResult0 = await interpret(stepTimerHandler.register({ stepRunId: "run-A", startedAt: "2026-01-01T00:00:00Z", timeout: "PT1M" }), storage);
+      expect(registerResult0.variant).toBe("ok");
+      let deadline = registerResult0.output["deadline"];
+      let d = deadline;
+      const thenResult0 = await interpret(stepTimerHandler.tick({ now: "2026-01-01T01:00:00Z" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
-    it("disarm before fire", async () => {
+    it("cancel before deadline", async () => {
       const storage = createInMemoryStorage();
-      const armResult0 = await interpret(stepTimerHandler.arm({ step_ref: "step-B", deadline: "2026-06-01T00:00:00Z" }), storage);
-      expect(armResult0.variant).toBe("ok");
-      let timer = armResult0.output["timer"];
-      let t = timer;
-      const thenResult0 = await interpret(stepTimerHandler.disarm({ step_ref: "step-B" }), storage);
+      const registerResult0 = await interpret(stepTimerHandler.register({ stepRunId: "run-B", startedAt: "2026-01-01T00:00:00Z", timeout: "PT1H" }), storage);
+      expect(registerResult0.variant).toBe("ok");
+      let deadline = registerResult0.output["deadline"];
+      let d = deadline;
+      const thenResult0 = await interpret(stepTimerHandler.cancel({ stepRunId: "run-B" }), storage);
       expect(thenResult0.variant).toBe("ok");
     });
 
@@ -400,10 +298,9 @@ describe('StepTimer functional handler', () => {
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('arm'), input: fc.record({ step_ref: fc.string({ minLength: 1, maxLength: 50 }), deadline: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('fire'), input: fc.record({ timer: fc.string() }) }),
-              fc.record({ action: fc.constant('tick'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('disarm'), input: fc.record({ step_ref: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ stepRunId: fc.string({ minLength: 1, maxLength: 50 }), startedAt: fc.string({ minLength: 1, maxLength: 50 }), timeout: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('tick'), input: fc.record({ now: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('cancel'), input: fc.record({ stepRunId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -428,15 +325,14 @@ describe('StepTimer functional handler', () => {
       );
     });
 
-    it('never: fired timer has no step_ref', async () => {
+    it('never: fired timer missing stepRunId', async () => {
       await fc.assert(
         fc.asyncProperty(
           fc.array(
             fc.oneof(
-              fc.record({ action: fc.constant('arm'), input: fc.record({ step_ref: fc.string({ minLength: 1, maxLength: 50 }), deadline: fc.string({ minLength: 1, maxLength: 50 }) }) }),
-              fc.record({ action: fc.constant('fire'), input: fc.record({ timer: fc.string() }) }),
-              fc.record({ action: fc.constant('tick'), input: fc.record({  }) }),
-              fc.record({ action: fc.constant('disarm'), input: fc.record({ step_ref: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('register'), input: fc.record({ stepRunId: fc.string({ minLength: 1, maxLength: 50 }), startedAt: fc.string({ minLength: 1, maxLength: 50 }), timeout: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('tick'), input: fc.record({ now: fc.string({ minLength: 1, maxLength: 50 }) }) }),
+              fc.record({ action: fc.constant('cancel'), input: fc.record({ stepRunId: fc.string({ minLength: 1, maxLength: 50 }) }) }),
             ),
             { minLength: 1, maxLength: 5 },
           ),
@@ -453,7 +349,7 @@ describe('StepTimer functional handler', () => {
                 if (result?.variant !== undefined) {
                   expect(typeof result.variant).toBe('string');
                 }
-                // Never: fired timer has no step_ref
+                // Never: fired timer missing stepRunId
               }
             }
           },
@@ -465,10 +361,10 @@ describe('StepTimer functional handler', () => {
   });
 
   describe('action contracts (PBT)', () => {
-    it('arm handles empty input: ', async () => {
-      if (typeof stepTimerHandler.arm !== 'function') return;
+    it('register handles empty input: ', async () => {
+      if (typeof stepTimerHandler.register !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await safeInvoke(async () => await interpret(stepTimerHandler.arm({  }), storage));
+      const result = await safeInvoke(async () => await interpret(stepTimerHandler.register({  }), storage));
       // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
       if (result.variant !== undefined) {
@@ -476,16 +372,16 @@ describe('StepTimer functional handler', () => {
       }
     });
 
-    it('arm ensures on ok: ', async () => {
-      if (typeof stepTimerHandler.arm !== 'function') return;
+    it('register ensures on ok: ', async () => {
+      if (typeof stepTimerHandler.register !== 'function') return;
       let seen = false;
       await fc.assert(
         fc.asyncProperty(
-          fc.record({ step_ref: fc.string({ minLength: 1, maxLength: 50 }), deadline: fc.string({ minLength: 1, maxLength: 50 }) }),
+          fc.record({ stepRunId: fc.string({ minLength: 1, maxLength: 50 }), startedAt: fc.string({ minLength: 1, maxLength: 50 }), timeout: fc.string({ minLength: 1, maxLength: 50 }) }),
           async (input) => {
             const storage = createInMemoryStorage();
             const result = await safeInvoke(async () => {
-              const program = stepTimerHandler.arm(input as Record<string, unknown>);
+              const program = stepTimerHandler.register(input as Record<string, unknown>);
               return interpret(program, storage);
             });
             if (result?.variant === "ok") {
@@ -498,32 +394,10 @@ describe('StepTimer functional handler', () => {
       );
     });
 
-    it('fire ensures on ok: ', async () => {
-      if (typeof stepTimerHandler.fire !== 'function') return;
-      let seen = false;
-      await fc.assert(
-        fc.asyncProperty(
-          fc.record({ timer: fc.string() }),
-          async (input) => {
-            const storage = createInMemoryStorage();
-            const result = await safeInvoke(async () => {
-              const program = stepTimerHandler.fire(input as Record<string, unknown>);
-              return interpret(program, storage);
-            });
-            if (result?.variant === "ok") {
-              seen = true;
-              expect(result.output).toBeDefined();
-            }
-          },
-        ),
-        { numRuns: 50 },
-      );
-    });
-
-    it('disarm handles empty input: ', async () => {
-      if (typeof stepTimerHandler.disarm !== 'function') return;
+    it('cancel handles empty input: ', async () => {
+      if (typeof stepTimerHandler.cancel !== 'function') return;
       const storage = createInMemoryStorage();
-      const result = await safeInvoke(async () => await interpret(stepTimerHandler.disarm({  }), storage));
+      const result = await safeInvoke(async () => await interpret(stepTimerHandler.cancel({  }), storage));
       // Empty input should produce a defined result with a variant
       expect(result).toBeDefined();
       if (result.variant !== undefined) {

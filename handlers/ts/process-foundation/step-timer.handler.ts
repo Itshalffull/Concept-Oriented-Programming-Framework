@@ -1,11 +1,10 @@
 // @clef-handler style=functional
 // StepTimer Concept Implementation
-// Watch active StepRuns that have a timeout set and complete them
-// with timed_out when their deadline has passed. Decouples timeout
-// enforcement from StepRun and ProcessSpec.
+// Schedule and fire timeout completions for timed process steps.
+// Parses ISO 8601 durations, computes deadlines, and fires timed_out signals.
 import type { FunctionalConceptHandler } from '../../../runtime/functional-handler.ts';
 import {
-  createProgram, get, put, find, del, branch, complete, completeFrom, putFrom,
+  createProgram, get, put, find, del, branch, complete, completeFrom,
   mapBindings, traverse,
   type StorageProgram,
 } from '../../../runtime/storage-program.ts';
@@ -18,11 +17,41 @@ function nextId(): string {
   return `timer-${Date.now()}-${++idCounter}`;
 }
 
-/** Returns true if the string is a non-empty, parseable ISO datetime. */
-function isValidIso(deadline: string): boolean {
-  if (!deadline || deadline.trim() === '') return false;
-  const d = new Date(deadline);
-  return !isNaN(d.getTime());
+/**
+ * Parse an ISO 8601 duration string and return the number of milliseconds.
+ * Supports common forms: PTxS, PTxM, PTxH, PxDTxHxMxS, P1D, etc.
+ * Returns null for unrecognised formats.
+ */
+function parseIso8601Duration(duration: string): number | null {
+  if (!duration || typeof duration !== 'string') return null;
+
+  // ISO 8601 duration regex: P[n]Y[n]M[n]DT[n]H[n]M[n]S
+  const re = /^P(?:(\d+(?:\.\d+)?)Y)?(?:(\d+(?:\.\d+)?)M)?(?:(\d+(?:\.\d+)?)W)?(?:(\d+(?:\.\d+)?)D)?(?:T(?:(\d+(?:\.\d+)?)H)?(?:(\d+(?:\.\d+)?)M)?(?:(\d+(?:\.\d+)?)S)?)?$/;
+  const match = re.exec(duration);
+  if (!match) return null;
+
+  const [, years, months, weeks, days, hours, minutes, seconds] = match;
+
+  // All components are optional — check that at least one is present
+  if (!years && !months && !weeks && !days && !hours && !minutes && !seconds) return null;
+
+  const ms =
+    (parseFloat(years   || '0') * 365.25 * 24 * 3600 * 1000) +
+    (parseFloat(months  || '0') * 30.44  * 24 * 3600 * 1000) +
+    (parseFloat(weeks   || '0') * 7      * 24 * 3600 * 1000) +
+    (parseFloat(days    || '0') *          24 * 3600 * 1000) +
+    (parseFloat(hours   || '0') *               3600 * 1000) +
+    (parseFloat(minutes || '0') *                 60 * 1000) +
+    (parseFloat(seconds || '0') *                      1000);
+
+  return ms;
+}
+
+/** Add an ISO 8601 duration to an ISO datetime string and return the result. */
+function addDuration(startedAt: string, durationMs: number): string | null {
+  const d = new Date(startedAt);
+  if (isNaN(d.getTime())) return null;
+  return new Date(d.getTime() + durationMs).toISOString();
 }
 
 /** Coerce an input value to a string safely. */
@@ -45,170 +74,179 @@ const handler: FunctionalConceptHandler = {
     ) as StorageProgram<Result>;
   },
 
-  arm(input: Record<string, unknown>) {
-    const stepRef = toString(input.step_ref);
-    const deadline = toString(input.deadline);
+  // register(stepRunId, startedAt, timeout) -> ok(stepRunId, deadline) | already_registered | invalid_duration
+  // We shadow the PluginRegistry `register` with this method name; the PluginRegistry
+  // register is handled above. The concept action named "register" is routed here.
+  // NOTE: Because both PluginRegistry and the concept action are named "register",
+  // the handler exports a single `register` method. We use the presence of `input.stepRunId`
+  // to distinguish the concept action call from the no-arg PluginRegistry call.
+};
 
-    if (!stepRef || stepRef.trim() === '') {
-      return complete(createProgram(), 'error', { message: 'step_ref is required' }) as StorageProgram<Result>;
-    }
-    if (!isValidIso(deadline)) {
-      return complete(createProgram(), 'error', { message: 'deadline must be a valid ISO datetime' }) as StorageProgram<Result>;
+// Build the final handler with all concept actions implemented.
+const finalHandler: FunctionalConceptHandler = {
+  // PluginRegistry self-registration (no-arg call, no stepRunId present)
+  register(input: Record<string, unknown>) {
+    if (!input.stepRunId) {
+      // PluginRegistry registration — return static metadata
+      let p = createProgram();
+      p = get(p, 'step-timer', '__registered', 'existing');
+      return branch(p, 'existing',
+        (b) => complete(b, 'ok', { name: 'StepTimer' }),
+        (b) => {
+          const b2 = put(b, 'step-timer', '__registered', { value: true });
+          return complete(b2, 'ok', { name: 'StepTimer' });
+        },
+      ) as StorageProgram<Result>;
     }
 
-    // Use step_ref as the index key for O(1) lookup
+    // Concept action: register(stepRunId, startedAt, timeout)
+    const stepRunId = toString(input.stepRunId);
+    const startedAt  = toString(input.startedAt);
+    const timeout    = toString(input.timeout);
+
+    if (!stepRunId || stepRunId.trim() === '') {
+      return complete(createProgram(), 'invalid_duration', { message: 'stepRunId is required' }) as StorageProgram<Result>;
+    }
+
+    const durationMs = parseIso8601Duration(timeout);
+    if (durationMs === null) {
+      return complete(createProgram(), 'invalid_duration', {
+        message: `Unrecognised ISO 8601 duration: "${timeout}". Supported forms: PT30S, PT5M, PT2H, P1D.`,
+      }) as StorageProgram<Result>;
+    }
+
+    const deadline = addDuration(startedAt, durationMs);
+    if (!deadline) {
+      return complete(createProgram(), 'invalid_duration', {
+        message: `Invalid startedAt datetime: "${startedAt}".`,
+      }) as StorageProgram<Result>;
+    }
+
     let p = createProgram();
-    p = get(p, 'step-timer-by-ref', stepRef, 'existingTimer');
+    // Check for duplicate registration by stepRunId
+    p = get(p, 'step-timer-by-run', stepRunId, 'existing');
 
-    return branch(p, 'existingTimer',
-      // An unfired timer for this step_ref already exists — return it idempotently
-      (b) => completeFrom(b, 'ok', (bindings) => {
-        const existing = bindings.existingTimer as Record<string, unknown>;
-        return { timer: existing.timer_id as string, step_ref: stepRef };
-      }),
+    return branch(p, 'existing',
+      // Timer for this stepRunId already exists
+      (b) => complete(b, 'already_registered', { stepRunId }),
       // No existing timer — create a new one
       (b) => {
         const id = nextId();
         let b2 = put(b, 'step-timer', id, {
           id,
-          step_ref: stepRef,
+          stepRunId,
           deadline,
           fired: false,
         });
-        // Write a step_ref → timer_id index entry for disarm and idempotent arm
-        b2 = put(b2, 'step-timer-by-ref', stepRef, {
+        // Secondary index: stepRunId → timer record for O(1) lookup
+        b2 = put(b2, 'step-timer-by-run', stepRunId, {
           timer_id: id,
-          step_ref: stepRef,
+          stepRunId,
+          deadline,
           fired: false,
         });
-        return complete(b2, 'ok', { timer: id, step_ref: stepRef });
+        return complete(b2, 'ok', { stepRunId, deadline });
       },
     ) as StorageProgram<Result>;
   },
 
-  fire(input: Record<string, unknown>) {
-    const timerId = input.timer as string;
+  // tick(now) -> ok(fired: list String) | noop
+  tick(input: Record<string, unknown>) {
+    const now = toString(input.now);
 
     let p = createProgram();
-    p = get(p, 'step-timer', timerId, 'existing');
-
-    return branch(p, 'existing',
-      (b) => {
-        // Mark as fired — idempotent if already fired
-        const b2 = putFrom(b, 'step-timer', timerId, (bindings) => {
-          const rec = bindings.existing as Record<string, unknown>;
-          if (rec.fired) return rec as Record<string, unknown>;
-          return { ...rec, fired: true } as Record<string, unknown>;
-        });
-        return completeFrom(b2, 'ok', (bindings) => {
-          const rec = bindings.existing as Record<string, unknown>;
-          return { timer: timerId, step_ref: rec.step_ref as string };
-        });
-      },
-      (b) => complete(b, 'not_found', { message: `No timer found with id: ${timerId}` }),
-    ) as StorageProgram<Result>;
-  },
-
-  tick(_input: Record<string, unknown>) {
-    const now = new Date().toISOString();
-
-    let p = createProgram();
-    // Find all unfired timer records (excluding the sentinel __registered record)
+    // Find all unfired timers (sentinel __registered record is never fired=false with a real deadline)
     p = find(p, 'step-timer', { fired: false }, 'unfired');
 
-    // Filter to those whose deadline <= now (i.e. deadline has passed)
+    // Filter: deadline <= now, and exclude the sentinel record (no stepRunId)
     p = mapBindings(p, (bindings) => {
       const unfired = (bindings.unfired || []) as Array<Record<string, unknown>>;
       return unfired.filter((r) => {
-        if (!r.deadline) return false;
+        if (!r.stepRunId || !r.deadline) return false; // skip sentinel
+        if (!now) return false;
         return (r.deadline as string) <= now;
       });
     }, 'expired');
 
-    // For each expired timer, mark fired=true and complete with the timer info
-    p = traverse(p, 'expired', '_timer', (item) => {
-      const entry = item as Record<string, unknown>;
-      const timerId = entry.id as string;
-      let sub = createProgram();
-      // Mark the timer record as fired
-      sub = put(sub, 'step-timer', timerId, { ...entry, fired: true } as Record<string, unknown>);
-      return complete(sub, 'ok', { timer: timerId, step_ref: entry.step_ref as string });
-    }, '_fired', {
-      writes: ['step-timer'],
-      completionVariants: ['ok'],
-    });
+    // If nothing expired, return noop — but we still need to check the count
+    // We do this by checking after mapBindings via a second mapBindings pass
+    // that converts the array into a count, then branch on that.
+    p = mapBindings(p, (bindings) => {
+      const expired = (bindings.expired || []) as unknown[];
+      return expired.length;
+    }, '_expiredCount');
 
-    return completeFrom(p, 'ok', (bindings) => {
-      const fired = (bindings._fired || []) as unknown[];
-      return { fired_count: fired.length };
-    }) as StorageProgram<Result>;
-  },
-
-  disarm(input: Record<string, unknown>) {
-    const stepRef = toString(input.step_ref);
-
-    if (!stepRef || stepRef.trim() === '') {
-      return complete(createProgram(), 'error', { message: 'step_ref is required' }) as StorageProgram<Result>;
-    }
-
-    // Look up the timer by step_ref using the index
-    let p = createProgram();
-    p = get(p, 'step-timer-by-ref', stepRef, 'found');
-
-    return branch(p, 'found',
+    return branch(p, '_expiredCount',
+      // Branch condition: count > 0
       (b) => {
-        // Delete the timer record and the index entry
-        return completeFrom(b, 'ok', (bindings) => {
-          const found = bindings.found as Record<string, unknown>;
-          const timerId = found.timer_id as string;
-          void timerId; // timerId used in del calls below
-          return {};
+        // Mark each expired timer as fired and collect their stepRunIds
+        let b2 = traverse(b, 'expired', '_timer', (item) => {
+          const entry = item as Record<string, unknown>;
+          const timerId = entry.id as string;
+          const stepRunId = entry.stepRunId as string;
+          let sub = createProgram();
+          // Update the main timer record
+          sub = put(sub, 'step-timer', timerId, { ...entry, fired: true } as Record<string, unknown>);
+          // Update the secondary index too
+          sub = put(sub, 'step-timer-by-run', stepRunId, { ...entry, fired: true } as Record<string, unknown>);
+          return complete(sub, 'ok', { stepRunId });
+        }, '_fired', {
+          writes: ['step-timer', 'step-timer-by-run'],
+          completionVariants: ['ok'],
+        });
+
+        return completeFrom(b2, 'ok', (bindings) => {
+          const fired = (bindings._fired || []) as Array<{ output?: { stepRunId?: string } }>;
+          const firedIds = fired.map((r) => {
+            const out = r?.output ?? (r as Record<string, unknown>);
+            return (out as Record<string, unknown>).stepRunId as string;
+          }).filter(Boolean);
+          return { fired: firedIds };
         });
       },
-      // No timer for this step_ref — silently succeed (idempotent)
-      (b) => complete(b, 'ok', {}),
+      // count === 0 — no timers due
+      (b) => complete(b, 'noop', {}),
     ) as StorageProgram<Result>;
   },
-};
 
-// Override disarm to actually issue del instructions within the branch.
-// We use completeFrom + a separate traversal pattern to get the timer ID
-// from bindings before calling del. The technique: bind the found record
-// via mapBindings into a list, then traverse that single-element list
-// with del calls inside the body.
-const finalHandler: FunctionalConceptHandler = {
-  ...handler,
+  // cancel(stepRunId) -> ok | not_found
+  cancel(input: Record<string, unknown>) {
+    const stepRunId = toString(input.stepRunId);
 
-  disarm(input: Record<string, unknown>) {
-    const stepRef = toString(input.step_ref);
-
-    if (!stepRef || stepRef.trim() === '') {
-      return complete(createProgram(), 'error', { message: 'step_ref is required' }) as StorageProgram<Result>;
+    if (!stepRunId || stepRunId.trim() === '') {
+      return complete(createProgram(), 'not_found', { message: 'stepRunId is required' }) as StorageProgram<Result>;
     }
 
     let p = createProgram();
-    p = get(p, 'step-timer-by-ref', stepRef, 'found');
+    p = get(p, 'step-timer-by-run', stepRunId, 'found');
 
-    // Convert the found record into a 0-or-1 element list for traverse
-    p = mapBindings(p, (bindings) => {
-      const found = bindings.found as Record<string, unknown> | null;
-      return found ? [found] : [];
-    }, 'toDelete');
+    // Branch on the found record — truthy means a timer exists, falsy means not_found
+    return branch(p, 'found',
+      // Timer found — delete it and the secondary index entry
+      (b) => {
+        // Convert the found record into a single-element list for traverse-based delete
+        let b2 = mapBindings(b, (bindings) => {
+          const found = bindings.found as Record<string, unknown>;
+          return [found];
+        }, 'toDelete');
 
-    // Traverse the list (0 or 1 items) and delete each timer + index entry
-    p = traverse(p, 'toDelete', '_entry', (item) => {
-      const entry = item as Record<string, unknown>;
-      const timerId = entry.timer_id as string;
-      let sub = createProgram();
-      sub = del(sub, 'step-timer', timerId);
-      sub = del(sub, 'step-timer-by-ref', stepRef);
-      return complete(sub, 'ok', {});
-    }, '_deleted', {
-      writes: ['step-timer', 'step-timer-by-ref'],
-      completionVariants: ['ok'],
-    });
+        b2 = traverse(b2, 'toDelete', '_entry', (item) => {
+          const entry = item as Record<string, unknown>;
+          const timerId = entry.timer_id as string;
+          let sub = createProgram();
+          sub = del(sub, 'step-timer', timerId);
+          sub = del(sub, 'step-timer-by-run', stepRunId);
+          return complete(sub, 'ok', {});
+        }, '_deleted', {
+          writes: ['step-timer', 'step-timer-by-run'],
+          completionVariants: ['ok'],
+        });
 
-    return complete(p, 'ok', {}) as StorageProgram<Result>;
+        return complete(b2, 'ok', {});
+      },
+      // No timer found for this stepRunId
+      (b) => complete(b, 'not_found', { message: `No active timer for stepRunId: "${stepRunId}"` }),
+    ) as StorageProgram<Result>;
   },
 };
 
