@@ -481,7 +481,8 @@ export default async function AdminPage({
   }
 
   // Governance org editor — layout/windowing editor replacing 12 disconnected governance pages.
-  if (path === 'governance') {
+  // Matches /admin/governance and all sub-paths (/admin/governance/processes, etc.).
+  if (slug[0] === 'governance') {
     return (
       <HostedPage>
         <GovernanceOrgEditorView />
