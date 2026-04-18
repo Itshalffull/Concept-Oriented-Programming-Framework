@@ -280,8 +280,87 @@ const handler: FunctionalConceptHandler = {
   },
 };
 
-// Extend handler with addStep — uses imperative override because key insertion
-// index logic and per-step timeout extraction are awkward to express monadically.
+// ---------------------------------------------------------------------------
+// FlowBuilder-compatible step helpers
+// Steps are stored in 'process-spec-fb/<specId>' as a JSON array of StepRecord.
+// This is separate from the legacy 'process-spec/<specId>.steps' format so
+// both APIs can coexist without migration.
+// ---------------------------------------------------------------------------
+
+let fbStepCounter = 0;
+function fbNextStepId(): string {
+  return `fbstep-${Date.now()}-${++fbStepCounter}`;
+}
+
+interface FbStepRecord {
+  stepId: string;
+  stepKind: string;
+  stepLabel: string;
+  stepIndex: number;
+  isCollapsible: boolean;
+  isCollapsed: boolean;
+  parentId: string | null;
+  config: string;
+}
+
+interface FbEdgeRecord {
+  edgeId: string;
+  fromStepId: string;
+  toStepId: string;
+  label: string; // "default" | "true" | "false" | "error" | custom
+}
+
+let fbEdgeCounter = 0;
+function fbNextEdgeId(): string {
+  return `fbedge-${Date.now()}-${++fbEdgeCounter}`;
+}
+
+interface FbGraph {
+  steps: FbStepRecord[];
+  edges: FbEdgeRecord[];
+}
+
+async function fbLoad(storage: any, specId: string): Promise<FbGraph> {
+  const rec = await storage.get('process-spec-fb', specId);
+  if (!rec) return { steps: [], edges: [] };
+  let steps: FbStepRecord[] = [];
+  let edges: FbEdgeRecord[] = [];
+  try { steps = JSON.parse(rec.steps as string ?? '[]'); } catch { /* empty */ }
+  try { edges = JSON.parse(rec.edges as string ?? '[]'); } catch { /* empty */ }
+  return { steps, edges };
+}
+
+async function fbSave(storage: any, specId: string, graph: FbGraph): Promise<void> {
+  graph.steps.forEach((s, i) => { s.stepIndex = i; });
+  await storage.put('process-spec-fb', specId, {
+    steps: JSON.stringify(graph.steps),
+    edges: JSON.stringify(graph.edges),
+  });
+}
+
+// Legacy shims kept for callers that only need steps
+async function fbLoadSteps(storage: any, specId: string): Promise<FbStepRecord[]> {
+  return (await fbLoad(storage, specId)).steps;
+}
+
+async function fbSaveSteps(storage: any, specId: string, steps: FbStepRecord[]): Promise<void> {
+  const graph = await fbLoad(storage, specId);
+  await fbSave(storage, specId, { ...graph, steps });
+}
+
+function defaultLabelForKind(kind: string): string {
+  const labels: Record<string, string> = {
+    trigger: 'Trigger',
+    action: 'Action',
+    branch: 'Branch',
+    catch: 'Catch',
+    logic: 'Logic',
+  };
+  return labels[kind] ?? kind;
+}
+
+// Extend handler with imperative overrides — index logic and FlowBuilder
+// step management are awkward to express monadically.
 const processSpecHandlerBase = autoInterpret(handler);
 
 export const processSpecHandler = {
@@ -289,10 +368,49 @@ export const processSpecHandler = {
 
   async addStep(input: Record<string, unknown>, storage: any) {
     const specId = input.spec as string;
+
+    // FlowBuilder API: { spec, stepKind, atIndex?, fromStepId?, edgeLabel? }
+    if (input.stepKind !== undefined) {
+      const stepKind = String(input.stepKind ?? 'action');
+      const atIndex = typeof input.atIndex === 'number' ? input.atIndex : -1;
+      const fromStepId = input.fromStepId as string | undefined;
+      const edgeLabel = (input.edgeLabel as string | undefined) ?? 'default';
+
+      const graph = await fbLoad(storage, specId);
+      const stepId = fbNextStepId();
+      const newStep: FbStepRecord = {
+        stepId,
+        stepKind,
+        stepLabel: defaultLabelForKind(stepKind),
+        stepIndex: atIndex === -1 ? graph.steps.length : atIndex,
+        isCollapsible: stepKind === 'branch',
+        isCollapsed: false,
+        parentId: null,
+        config: '{}',
+      };
+      const insertIdx = atIndex === -1 || atIndex >= graph.steps.length ? graph.steps.length : atIndex;
+      const newSteps = [...graph.steps.slice(0, insertIdx), newStep, ...graph.steps.slice(insertIdx)];
+
+      // Auto-wire an edge if fromStepId is provided
+      const newEdges = [...graph.edges];
+      if (fromStepId) {
+        newEdges.push({ edgeId: fbNextEdgeId(), fromStepId, toStepId: stepId, label: edgeLabel });
+      } else if (newSteps.length > 1) {
+        // Default: connect from the step immediately before this one
+        const prevStep = newSteps[insertIdx - 1];
+        if (prevStep && prevStep.stepId !== stepId) {
+          newEdges.push({ edgeId: fbNextEdgeId(), fromStepId: prevStep.stepId, toStepId: stepId, label: 'default' });
+        }
+      }
+
+      await fbSave(storage, specId, { steps: newSteps, edges: newEdges });
+      return { variant: 'ok', stepId, spec: specId };
+    }
+
+    // Legacy API: { spec, step (JSON string), index }
     const stepRaw = input.step as string;
     const index = input.index as number;
 
-    // Parse the step JSON
     let step: Record<string, unknown>;
     try {
       step = JSON.parse(stepRaw);
@@ -300,7 +418,6 @@ export const processSpecHandler = {
       return { variant: 'invalid', message: 'Invalid step JSON' };
     }
 
-    // Validate required step fields
     const key = step.key as string | undefined;
     const stepType = step.step_type as string | undefined;
     if (!key || key.trim() === '') {
@@ -310,7 +427,6 @@ export const processSpecHandler = {
       return { variant: 'invalid', message: 'Step must have a step_type' };
     }
 
-    // Validate step_type is a recognised value
     const allowedStepTypes = new Set([
       'human', 'automation', 'llm', 'approval', 'manual',
       'subprocess', 'webhook_wait', 'vote', 'brainstorm',
@@ -319,27 +435,19 @@ export const processSpecHandler = {
       return { variant: 'invalid', message: `Unknown step_type: ${stepType}` };
     }
 
-    // Extract optional timeout (null if absent)
     const timeout = (step.timeout as string | undefined) ?? null;
-
-    // Check for immediately-expired timeout (zero-duration ISO 8601 values)
-    // e.g. "PT0S", "PT0M", "P0D" mean the step would be expired on insertion
     if (timeout !== null && isZeroDuration(timeout)) {
       return { variant: 'timed_out', message: `Step timeout "${timeout}" has already elapsed` };
     }
 
-    // Load the existing spec
     const rec = await storage.get('process-spec', specId);
     if (!rec) {
       return { variant: 'not_found', spec: specId };
     }
-
-    // Only allowed in draft status
     if (rec.status !== 'draft') {
       return { variant: 'invalid', message: 'addStep is only allowed when spec is in draft status' };
     }
 
-    // Parse existing steps
     let existingSteps: Array<Record<string, unknown>>;
     try {
       existingSteps = JSON.parse(rec.steps as string);
@@ -347,12 +455,10 @@ export const processSpecHandler = {
       existingSteps = [];
     }
 
-    // Check for duplicate key
     if (existingSteps.some((s) => s.key === key)) {
       return { variant: 'invalid', message: `Duplicate step key: ${key}` };
     }
 
-    // Build the normalized step record
     const normalizedStep: Record<string, unknown> = {
       key,
       step_type: stepType,
@@ -360,7 +466,6 @@ export const processSpecHandler = {
       timeout,
     };
 
-    // Insert at index, or append if index is -1 or out of bounds
     let newSteps: Array<Record<string, unknown>>;
     if (index === -1 || index >= existingSteps.length) {
       newSteps = [...existingSteps, normalizedStep];
@@ -371,5 +476,106 @@ export const processSpecHandler = {
     const newStepsRaw = JSON.stringify(newSteps);
     await storage.put('process-spec', specId, { ...rec, steps: newStepsRaw });
     return { variant: 'ok', spec: specId, steps: newStepsRaw };
+  },
+
+  async getSteps(input: Record<string, unknown>, storage: any) {
+    const specId = input.spec as string;
+    if (!specId) return { variant: 'invalid', message: 'spec is required' };
+    const steps = await fbLoadSteps(storage, specId);
+    return { variant: 'ok', spec: specId, steps };
+  },
+
+  async getStep(input: Record<string, unknown>, storage: any) {
+    const specId = input.spec as string;
+    const stepId = input.stepId as string;
+    if (!specId || !stepId) return { variant: 'invalid', message: 'spec and stepId are required' };
+    const steps = await fbLoadSteps(storage, specId);
+    const step = steps.find(s => s.stepId === stepId);
+    if (!step) return { variant: 'not_found', stepId };
+    return { variant: 'ok', ...step };
+  },
+
+  async updateStep(input: Record<string, unknown>, storage: any) {
+    const specId = input.spec as string;
+    const stepId = input.stepId as string;
+    if (!specId || !stepId) return { variant: 'invalid', message: 'spec and stepId are required' };
+    const steps = await fbLoadSteps(storage, specId);
+    const idx = steps.findIndex(s => s.stepId === stepId);
+    if (idx === -1) return { variant: 'not_found', stepId };
+    if (input.label !== undefined) steps[idx].stepLabel = String(input.label);
+    if (input.config !== undefined) steps[idx].config = String(input.config);
+    await fbSaveSteps(storage, specId, steps);
+    return { variant: 'ok', stepId, spec: specId };
+  },
+
+  async reorderStep(input: Record<string, unknown>, storage: any) {
+    const specId = input.spec as string;
+    const fromIndex = Number(input.fromIndex ?? -1);
+    const toIndex = Number(input.toIndex ?? -1);
+    if (!specId || fromIndex < 0 || toIndex < 0) {
+      return { variant: 'invalid', message: 'spec, fromIndex, toIndex are required' };
+    }
+    const steps = await fbLoadSteps(storage, specId);
+    if (fromIndex >= steps.length || toIndex >= steps.length) {
+      return { variant: 'invalid', message: 'Index out of bounds' };
+    }
+    const [moved] = steps.splice(fromIndex, 1);
+    steps.splice(toIndex, 0, moved);
+    await fbSaveSteps(storage, specId, steps);
+    return { variant: 'ok', spec: specId };
+  },
+
+  async removeStep(input: Record<string, unknown>, storage: any) {
+    const specId = input.spec as string;
+    const stepId = input.stepId as string;
+    if (!specId || !stepId) return { variant: 'invalid', message: 'spec and stepId are required' };
+    const graph = await fbLoad(storage, specId);
+    const filtered = graph.steps.filter(s => s.stepId !== stepId);
+    if (filtered.length === graph.steps.length) return { variant: 'not_found', stepId };
+    // Remove edges touching this step
+    const filteredEdges = graph.edges.filter(e => e.fromStepId !== stepId && e.toStepId !== stepId);
+    await fbSave(storage, specId, { steps: filtered, edges: filteredEdges });
+    return { variant: 'ok', stepId, spec: specId };
+  },
+
+  async getEdges(input: Record<string, unknown>, storage: any) {
+    const specId = input.spec as string;
+    if (!specId) return { variant: 'invalid', message: 'spec is required' };
+    const graph = await fbLoad(storage, specId);
+    return { variant: 'ok', spec: specId, edges: graph.edges };
+  },
+
+  async addEdge(input: Record<string, unknown>, storage: any) {
+    const specId = input.spec as string;
+    const fromStepId = input.fromStepId as string;
+    const toStepId = input.toStepId as string;
+    const label = (input.label as string | undefined) ?? 'default';
+    if (!specId || !fromStepId || !toStepId) {
+      return { variant: 'invalid', message: 'spec, fromStepId, toStepId are required' };
+    }
+    const graph = await fbLoad(storage, specId);
+    // Prevent duplicate edge for same from+label pair
+    const existing = graph.edges.find(e => e.fromStepId === fromStepId && e.label === label);
+    if (existing) {
+      // Update target
+      existing.toStepId = toStepId;
+      await fbSave(storage, specId, graph);
+      return { variant: 'ok', edgeId: existing.edgeId, spec: specId };
+    }
+    const edgeId = fbNextEdgeId();
+    graph.edges.push({ edgeId, fromStepId, toStepId, label });
+    await fbSave(storage, specId, graph);
+    return { variant: 'ok', edgeId, spec: specId };
+  },
+
+  async removeEdge(input: Record<string, unknown>, storage: any) {
+    const specId = input.spec as string;
+    const edgeId = input.edgeId as string;
+    if (!specId || !edgeId) return { variant: 'invalid', message: 'spec and edgeId are required' };
+    const graph = await fbLoad(storage, specId);
+    const filtered = graph.edges.filter(e => e.edgeId !== edgeId);
+    if (filtered.length === graph.edges.length) return { variant: 'not_found', edgeId };
+    await fbSave(storage, specId, { ...graph, edges: filtered });
+    return { variant: 'ok', edgeId, spec: specId };
   },
 };

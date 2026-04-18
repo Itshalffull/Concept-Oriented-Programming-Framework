@@ -70,8 +70,16 @@ interface StepRecord {
   config?: string;
 }
 
+/** An edge between two steps, fetched from ProcessSpec/getEdges */
+interface EdgeRecord {
+  edgeId: string;
+  fromStepId: string;
+  toStepId: string;
+  label: string; // "default" | "true" | "false" | "error" | custom
+}
+
 export interface FlowBuilderProps {
-  processSpecId: string;
+  processSpecId?: string;
   /** Controlled: initial view mode */
   initialView?: ViewState;
   /** Controlled: caller can observe selection changes */
@@ -101,10 +109,12 @@ interface StepsViewProps {
   selectedStepId: string | null;
   collapsedBranches: string[];
   steps: StepRecord[];
+  edges: EdgeRecord[];
   onSelect: (stepId: string) => void;
   onInsertAt: (index: number) => void;
   onToggleCollapse: (stepId: string) => void;
   onReorder: (fromIndex: number, toIndex: number) => void;
+  onAddBranchStep: (fromStepId: string, edgeLabel: string) => void;
 }
 
 const StepsView: React.FC<StepsViewProps> = ({
@@ -112,9 +122,11 @@ const StepsView: React.FC<StepsViewProps> = ({
   selectedStepId,
   collapsedBranches,
   steps,
+  edges,
   onSelect,
   onInsertAt,
   onToggleCollapse,
+  onAddBranchStep,
 }) => {
   if (steps.length === 0) {
     return (
@@ -152,7 +164,26 @@ const StepsView: React.FC<StepsViewProps> = ({
     );
   }
 
-  const topLevel = steps.filter(s => !s.parentId);
+  // Build a set of step IDs that are arms of a branch (connected via true/false edges).
+  // These are rendered inline under their parent branch instead of in the main list.
+  const armStepIds = new Set<string>();
+  for (const edge of edges) {
+    if (edge.label === 'true' || edge.label === 'false') {
+      armStepIds.add(edge.toStepId);
+    }
+  }
+
+  // Main-line steps: top-level (no parentId) and not a branch arm
+  const mainLineSteps = steps.filter(s => !s.parentId && !armStepIds.has(s.stepId));
+
+  // Get steps connected to a given step via a specific edge label
+  const getArmSteps = (branchStepId: string, label: 'true' | 'false'): StepRecord[] => {
+    const connected = edges
+      .filter(e => e.fromStepId === branchStepId && e.label === label)
+      .map(e => steps.find(s => s.stepId === e.toStepId))
+      .filter(Boolean) as StepRecord[];
+    return connected;
+  };
 
   return (
     <div
@@ -176,26 +207,18 @@ const StepsView: React.FC<StepsViewProps> = ({
             data-index={0}
             onClick={() => onInsertAt(0)}
             aria-label="Insert step before position 0"
-            style={{
-              width: '100%',
-              height: '8px',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              position: 'relative',
-              outline: 'none',
-            }}
+            style={{ width: '100%', height: '8px', background: 'none', border: 'none', cursor: 'pointer', outline: 'none' }}
             tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === '+' || e.key === 'Enter') onInsertAt(0);
-            }}
+            onKeyDown={(e) => { if (e.key === '+' || e.key === 'Enter') onInsertAt(0); }}
           />
         </li>
 
-        {topLevel.map((step, idx) => {
+        {mainLineSteps.map((step, idx) => {
           const isSelected = step.stepId === selectedStepId;
           const isCollapsed = collapsedBranches.includes(step.stepId);
-          const children = steps.filter(s => s.parentId === step.stepId);
+          const isBranch = step.stepKind === 'branch';
+          const trueArmSteps = isBranch ? getArmSteps(step.stepId, 'true') : [];
+          const falseArmSteps = isBranch ? getArmSteps(step.stepId, 'false') : [];
 
           return (
             <React.Fragment key={step.stepId}>
@@ -207,12 +230,10 @@ const StepsView: React.FC<StepsViewProps> = ({
                 role="listitem"
                 aria-current={isSelected ? 'true' : 'false'}
                 aria-label={`${step.stepKind} step: ${step.stepLabel}`}
-                aria-expanded={step.isCollapsible ? (!isCollapsed ? 'true' : 'false') : undefined}
+                aria-expanded={isBranch ? (!isCollapsed ? 'true' : 'false') : undefined}
                 tabIndex={0}
                 onClick={() => onSelect(step.stepId)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') onSelect(step.stepId);
-                }}
+                onKeyDown={(e) => { if (e.key === 'Enter') onSelect(step.stepId); }}
                 style={{
                   borderRadius: 'var(--radius-sm)',
                   border: `1px solid ${isSelected ? 'var(--palette-primary)' : 'var(--palette-outline-variant)'}`,
@@ -221,103 +242,142 @@ const StepsView: React.FC<StepsViewProps> = ({
                   outline: 'none',
                 }}
               >
-                {/* Step header */}
-                <div
-                  data-part="step-header"
-                  data-step-id={step.stepId}
-                  role="group"
-                  aria-label={`Step header: ${step.stepLabel}`}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 'var(--spacing-xs)',
-                    padding: '6px var(--spacing-sm)',
-                  }}
-                >
-                  {/* Drag handle */}
-                  <span
-                    data-part="reorder-handle"
-                    data-step-id={step.stepId}
-                    draggable
-                    aria-label={`Reorder step: ${step.stepLabel}`}
-                    aria-roledescription="drag handle"
-                    role="button"
-                    tabIndex={0}
-                    style={{ cursor: 'grab', opacity: 0.5, fontSize: '10px', userSelect: 'none' }}
-                  >
-                    ⠿
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)', padding: '6px var(--spacing-sm)' }}>
+                  <span draggable aria-roledescription="drag handle" role="button" tabIndex={0}
+                    style={{ cursor: 'grab', opacity: 0.5, fontSize: '10px', userSelect: 'none' }}>⠿</span>
+                  <span style={{
+                    fontSize: '10px', padding: '1px 5px', borderRadius: 'var(--radius-xs, 2px)',
+                    background: STEP_KIND_COLOR[step.stepKind] ? `${STEP_KIND_COLOR[step.stepKind]}22` : 'var(--palette-secondary-container)',
+                    color: STEP_KIND_COLOR[step.stepKind] ?? 'var(--palette-on-secondary-container)',
+                    fontFamily: 'var(--typography-font-family-mono)', textTransform: 'uppercase', letterSpacing: '0.05em',
+                  }}>
+                    {STEP_KIND_ICON[step.stepKind] ?? ''} {step.stepKind}
                   </span>
-
-                  {/* Kind badge */}
-                  <span
-                    style={{
-                      fontSize: '10px',
-                      padding: '1px 5px',
-                      borderRadius: 'var(--radius-xs, 2px)',
-                      background: 'var(--palette-secondary-container)',
-                      color: 'var(--palette-on-secondary-container)',
-                      fontFamily: 'var(--typography-font-family-mono)',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                    }}
-                  >
-                    {step.stepKind}
-                  </span>
-
-                  {/* Label */}
                   <span style={{ flex: 1, fontSize: 'var(--typography-body-sm-size)', fontWeight: isSelected ? 600 : undefined }}>
                     {step.stepLabel}
                   </span>
-
-                  {/* Collapse toggle for branch steps */}
-                  {step.isCollapsible && (
+                  {isBranch && (
                     <button
                       data-part="collapse-toggle"
-                      data-step-id={step.stepId}
-                      aria-label={isCollapsed ? 'Expand branch' : 'Collapse branch'}
+                      aria-label={isCollapsed ? 'Expand branch arms' : 'Collapse branch arms'}
                       aria-expanded={isCollapsed ? 'false' : 'true'}
                       onClick={(e) => { e.stopPropagation(); onToggleCollapse(step.stepId); }}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '10px' }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '10px', color: 'var(--palette-on-surface-variant)' }}
                     >
                       {isCollapsed ? '▶' : '▼'}
                     </button>
                   )}
                 </div>
+              </li>
 
-                {/* Nested children */}
-                {!isCollapsed && children.length > 0 && (
-                  <ol
-                    role="list"
-                    style={{ listStyle: 'none', margin: '0 0 4px 20px', padding: 0, display: 'flex', flexDirection: 'column', gap: '2px' }}
+              {/* Branch arms — rendered inline below the branch step */}
+              {isBranch && !isCollapsed && (
+                <li style={{ listStyle: 'none' }}>
+                  <div
+                    data-part="branch-arms"
+                    data-step-id={step.stepId}
+                    style={{ display: 'flex', gap: 6, marginLeft: 12, marginTop: 2, marginBottom: 2 }}
                   >
-                    {children.map((child) => (
-                      <li
-                        key={child.stepId}
-                        data-part="step-item"
-                        data-step-id={child.stepId}
-                        data-step-kind={child.stepKind}
-                        data-collapsed="false"
-                        role="listitem"
-                        aria-current={child.stepId === selectedStepId ? 'true' : 'false'}
-                        aria-label={`${child.stepKind} step: ${child.stepLabel}`}
-                        tabIndex={0}
-                        onClick={(e) => { e.stopPropagation(); onSelect(child.stepId); }}
+                    {/* True arm */}
+                    <div
+                      data-part="branch-arm"
+                      data-arm="true"
+                      style={{
+                        flex: 1, borderLeft: '2px solid #4caf50', paddingLeft: 8,
+                        background: 'var(--palette-surface-variant)', borderRadius: '0 var(--radius-sm) var(--radius-sm) 0',
+                        padding: '6px 8px',
+                      }}
+                    >
+                      <div style={{ fontSize: '10px', color: '#4caf50', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, fontWeight: 600 }}>
+                        ✓ True path
+                      </div>
+                      {trueArmSteps.map((child) => (
+                        <div
+                          key={child.stepId}
+                          data-part="arm-step-item"
+                          data-step-id={child.stepId}
+                          role="button"
+                          tabIndex={0}
+                          aria-current={child.stepId === selectedStepId ? 'true' : 'false'}
+                          aria-label={`${child.stepKind} step: ${child.stepLabel}`}
+                          onClick={(e) => { e.stopPropagation(); onSelect(child.stepId); }}
+                          onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); onSelect(child.stepId); } }}
+                          style={{
+                            borderRadius: 'var(--radius-sm)', border: `1px solid ${child.stepId === selectedStepId ? 'var(--palette-primary)' : 'var(--palette-outline-variant)'}`,
+                            background: child.stepId === selectedStepId ? 'var(--palette-primary-container)' : 'var(--palette-surface)',
+                            padding: '4px 8px', cursor: 'pointer', fontSize: 'var(--typography-body-sm-size)',
+                            display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2,
+                          }}
+                        >
+                          <span style={{ fontSize: '10px', color: STEP_KIND_COLOR[child.stepKind] ?? 'var(--palette-on-surface-variant)' }}>{STEP_KIND_ICON[child.stepKind]}</span>
+                          <span>{child.stepLabel}</span>
+                        </div>
+                      ))}
+                      <button
+                        data-part="add-branch-step"
+                        data-arm="true"
+                        onClick={(e) => { e.stopPropagation(); onAddBranchStep(step.stepId, 'true'); }}
                         style={{
-                          borderRadius: 'var(--radius-sm)',
-                          border: `1px solid ${child.stepId === selectedStepId ? 'var(--palette-primary)' : 'var(--palette-outline-variant)'}`,
-                          background: child.stepId === selectedStepId ? 'var(--palette-primary-container)' : 'var(--palette-surface-variant)',
-                          padding: '4px var(--spacing-sm)',
-                          cursor: 'pointer',
-                          fontSize: 'var(--typography-body-sm-size)',
+                          width: '100%', marginTop: 2, padding: '3px 8px', background: 'none',
+                          border: '1px dashed #4caf5088', borderRadius: 'var(--radius-xs)', cursor: 'pointer',
+                          fontSize: '11px', color: '#4caf50', textAlign: 'left',
                         }}
                       >
-                        <span style={{ opacity: 0.6, fontSize: '10px', marginRight: 4 }}>{child.stepKind}</span>
-                        {child.stepLabel}
-                      </li>
-                    ))}
-                  </ol>
-                )}
-              </li>
+                        ⊕ Add True step
+                      </button>
+                    </div>
+
+                    {/* False arm */}
+                    <div
+                      data-part="branch-arm"
+                      data-arm="false"
+                      style={{
+                        flex: 1, borderLeft: '2px solid var(--palette-error)', paddingLeft: 8,
+                        background: 'var(--palette-surface-variant)', borderRadius: '0 var(--radius-sm) var(--radius-sm) 0',
+                        padding: '6px 8px',
+                      }}
+                    >
+                      <div style={{ fontSize: '10px', color: 'var(--palette-error)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4, fontWeight: 600 }}>
+                        ✗ False path
+                      </div>
+                      {falseArmSteps.map((child) => (
+                        <div
+                          key={child.stepId}
+                          data-part="arm-step-item"
+                          data-step-id={child.stepId}
+                          role="button"
+                          tabIndex={0}
+                          aria-current={child.stepId === selectedStepId ? 'true' : 'false'}
+                          aria-label={`${child.stepKind} step: ${child.stepLabel}`}
+                          onClick={(e) => { e.stopPropagation(); onSelect(child.stepId); }}
+                          onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); onSelect(child.stepId); } }}
+                          style={{
+                            borderRadius: 'var(--radius-sm)', border: `1px solid ${child.stepId === selectedStepId ? 'var(--palette-primary)' : 'var(--palette-outline-variant)'}`,
+                            background: child.stepId === selectedStepId ? 'var(--palette-primary-container)' : 'var(--palette-surface)',
+                            padding: '4px 8px', cursor: 'pointer', fontSize: 'var(--typography-body-sm-size)',
+                            display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2,
+                          }}
+                        >
+                          <span style={{ fontSize: '10px', color: STEP_KIND_COLOR[child.stepKind] ?? 'var(--palette-on-surface-variant)' }}>{STEP_KIND_ICON[child.stepKind]}</span>
+                          <span>{child.stepLabel}</span>
+                        </div>
+                      ))}
+                      <button
+                        data-part="add-branch-step"
+                        data-arm="false"
+                        onClick={(e) => { e.stopPropagation(); onAddBranchStep(step.stepId, 'false'); }}
+                        style={{
+                          width: '100%', marginTop: 2, padding: '3px 8px', background: 'none',
+                          border: '1px dashed var(--palette-error-container, #f4433644)', borderRadius: 'var(--radius-xs)', cursor: 'pointer',
+                          fontSize: '11px', color: 'var(--palette-error)', textAlign: 'left',
+                        }}
+                      >
+                        ⊕ Add False step
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              )}
 
               {/* Insert handle after this step */}
               <li>
@@ -326,18 +386,9 @@ const StepsView: React.FC<StepsViewProps> = ({
                   data-index={idx + 1}
                   onClick={() => onInsertAt(idx + 1)}
                   aria-label={`Insert step after position ${idx + 1}`}
-                  style={{
-                    width: '100%',
-                    height: '8px',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    outline: 'none',
-                  }}
+                  style={{ width: '100%', height: '8px', background: 'none', border: 'none', cursor: 'pointer', outline: 'none' }}
                   tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === '+' || e.key === 'Enter') onInsertAt(idx + 1);
-                  }}
+                  onKeyDown={(e) => { if (e.key === '+' || e.key === 'Enter') onInsertAt(idx + 1); }}
                 />
               </li>
             </React.Fragment>
@@ -371,6 +422,7 @@ const STEP_KIND_COLOR: Record<string, string> = {
 interface FlowchartEditorHostProps {
   processSpecId: string;
   steps: StepRecord[];
+  edges: EdgeRecord[];
   selectedNodeId: string | null;
   onNodeSelected: (nodeId: string) => void;
 }
@@ -378,10 +430,59 @@ interface FlowchartEditorHostProps {
 const FlowchartEditorHost: React.FC<FlowchartEditorHostProps> = ({
   processSpecId,
   steps,
+  edges,
   selectedNodeId,
   onNodeSelected,
 }) => {
-  const sorted = [...steps].sort((a, b) => a.stepIndex - b.stepIndex);
+  // Steps that are arm children of a branch — shown inline under the branch node
+  const armStepIds = new Set<string>();
+  for (const edge of edges) {
+    if (edge.label === 'true' || edge.label === 'false') armStepIds.add(edge.toStepId);
+  }
+
+  const sorted = [...steps]
+    .filter(s => !armStepIds.has(s.stepId))
+    .sort((a, b) => a.stepIndex - b.stepIndex);
+
+  const getOutgoing = (stepId: string) => edges.filter(e => e.fromStepId === stepId);
+  const stepById = (id: string) => steps.find(s => s.stepId === id);
+
+  const renderNode = (step: StepRecord, compact = false) => {
+    const isSelected = step.stepId === selectedNodeId;
+    const kindColor = STEP_KIND_COLOR[step.stepKind] ?? 'var(--palette-on-surface-variant)';
+    const icon = STEP_KIND_ICON[step.stepKind] ?? '●';
+    return (
+      <button
+        key={step.stepId}
+        data-canvas-node={step.stepId}
+        onClick={() => onNodeSelected(step.stepId)}
+        aria-label={`${step.stepKind} step: ${step.stepLabel}`}
+        aria-pressed={isSelected ? 'true' : 'false'}
+        style={{
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--spacing-xs)',
+          padding: compact ? '5px 10px' : '8px 12px',
+          borderRadius: 'var(--radius-sm)',
+          border: isSelected ? `2px solid ${kindColor}` : '2px solid var(--palette-outline-variant)',
+          background: 'var(--palette-surface)',
+          boxShadow: isSelected ? `0 0 0 3px ${kindColor}33` : undefined,
+          cursor: 'pointer',
+          textAlign: 'left',
+          color: 'var(--palette-on-surface)',
+        }}
+      >
+        <span style={{ fontSize: compact ? '11px' : '13px', color: kindColor, flexShrink: 0 }}>{icon}</span>
+        <span style={{ fontSize: '10px', color: kindColor, textTransform: 'uppercase', letterSpacing: '0.08em', flexShrink: 0, minWidth: compact ? 36 : 44 }}>
+          {step.stepKind}
+        </span>
+        <span style={{ fontSize: 'var(--typography-body-sm-size)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {step.stepLabel}
+        </span>
+      </button>
+    );
+  };
 
   return (
     <div
@@ -404,61 +505,55 @@ const FlowchartEditorHost: React.FC<FlowchartEditorHostProps> = ({
       }}
     >
       {sorted.length === 0 ? (
-        <div
-          style={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'var(--palette-on-surface-variant)',
-            fontSize: 'var(--typography-body-sm-size)',
-            gap: 'var(--spacing-xs)',
-          }}
-        >
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--palette-on-surface-variant)', fontSize: 'var(--typography-body-sm-size)', gap: 'var(--spacing-xs)' }}>
           <span style={{ fontSize: '24px', opacity: 0.4 }}>◇</span>
           <span>Add steps in the Steps view to build the flow</span>
         </div>
       ) : (
         sorted.map((step, idx) => {
-          const isSelected = step.stepId === selectedNodeId;
-          const kindColor = STEP_KIND_COLOR[step.stepKind] ?? 'var(--palette-on-surface-variant)';
-          const icon = STEP_KIND_ICON[step.stepKind] ?? '●';
+          const outgoing = getOutgoing(step.stepId);
+          const trueEdge = outgoing.find(e => e.label === 'true');
+          const falseEdge = outgoing.find(e => e.label === 'false');
+          const isBranch = step.stepKind === 'branch' && (trueEdge || falseEdge);
+          const trueTarget = trueEdge ? stepById(trueEdge.toStepId) : undefined;
+          const falseTarget = falseEdge ? stepById(falseEdge.toStepId) : undefined;
+
           return (
-            <div key={step.stepId} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '320px' }}>
+            <div key={step.stepId} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '480px' }}>
               {idx > 0 && (
-                <div style={{ width: 2, height: 20, background: 'var(--palette-outline-variant)', flexShrink: 0 }} />
+                <div style={{ width: 2, height: 16, background: 'var(--palette-outline-variant)', flexShrink: 0 }} />
               )}
-              <button
-                data-canvas-node={step.stepId}
-                onClick={() => onNodeSelected(step.stepId)}
-                aria-label={`${step.stepKind} step: ${step.stepLabel}`}
-                aria-pressed={isSelected ? 'true' : 'false'}
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 'var(--spacing-xs)',
-                  padding: '8px 12px',
-                  borderRadius: 'var(--radius-sm)',
-                  border: isSelected
-                    ? `2px solid ${kindColor}`
-                    : '2px solid var(--palette-outline-variant)',
-                  background: isSelected ? 'var(--palette-surface)' : 'var(--palette-surface)',
-                  boxShadow: isSelected ? `0 0 0 3px ${kindColor}33` : undefined,
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  color: 'var(--palette-on-surface)',
-                }}
-              >
-                <span style={{ fontSize: '13px', color: kindColor, flexShrink: 0 }}>{icon}</span>
-                <span style={{ fontSize: '10px', color: kindColor, textTransform: 'uppercase', letterSpacing: '0.08em', flexShrink: 0, minWidth: 44 }}>
-                  {step.stepKind}
-                </span>
-                <span style={{ fontSize: 'var(--typography-body-sm-size)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {step.stepLabel}
-                </span>
-              </button>
+
+              {/* Step node */}
+              {renderNode(step)}
+
+              {/* Branch fork: two arms side by side */}
+              {isBranch && (
+                <div style={{ display: 'flex', width: '100%', gap: 6, marginTop: 0 }}>
+                  {/* True arm */}
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <div style={{ width: 2, height: 12, background: '#4caf50', flexShrink: 0 }} />
+                    <div style={{ fontSize: '10px', color: '#4caf50', fontWeight: 600, marginBottom: 4 }}>✓ True</div>
+                    {trueTarget ? renderNode(trueTarget, true) : (
+                      <div style={{ width: '100%', padding: '4px 8px', background: '#4caf5011', border: '1px dashed #4caf5066', borderRadius: 'var(--radius-xs)', fontSize: '11px', color: '#4caf50', textAlign: 'center' }}>
+                        empty
+                      </div>
+                    )}
+                  </div>
+                  {/* Divider */}
+                  <div style={{ width: 1, background: 'var(--palette-outline-variant)', flexShrink: 0, alignSelf: 'stretch' }} />
+                  {/* False arm */}
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <div style={{ width: 2, height: 12, background: 'var(--palette-error, #f44336)', flexShrink: 0 }} />
+                    <div style={{ fontSize: '10px', color: 'var(--palette-error, #f44336)', fontWeight: 600, marginBottom: 4 }}>✗ False</div>
+                    {falseTarget ? renderNode(falseTarget, true) : (
+                      <div style={{ width: '100%', padding: '4px 8px', background: '#f4433611', border: '1px dashed #f4433666', borderRadius: 'var(--radius-xs)', fontSize: '11px', color: 'var(--palette-error, #f44336)', textAlign: 'center' }}>
+                        empty
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           );
         })
@@ -1759,7 +1854,7 @@ const ErrorBranchEditor: React.FC<ErrorBranchEditorProps> = ({
 // ---------------------------------------------------------------------------
 
 export const FlowBuilder: React.FC<FlowBuilderProps> = ({
-  processSpecId,
+  processSpecId: processSpecIdProp,
   initialView = 'steps',
   onStepSelected,
   mode = 'edit',
@@ -1767,6 +1862,7 @@ export const FlowBuilder: React.FC<FlowBuilderProps> = ({
 }) => {
   const invoke = useKernelInvoke();
   const isCreate = mode === 'create';
+  const processSpecId = processSpecIdProp ?? '';
 
   // ---- FSM state ----
   const [interactionState, setInteractionState] = useState<InteractionState>('idle');
@@ -1780,30 +1876,57 @@ export const FlowBuilder: React.FC<FlowBuilderProps> = ({
       ? [{ stepId: 'start', stepKind: 'trigger', stepLabel: 'Start', stepIndex: 0, isCollapsible: false, isCollapsed: false }]
       : [],
   );
+  const [edges, setEdges] = useState<EdgeRecord[]>([]);
   const [collapsedBranches, setCollapsedBranches] = useState<string[]>([]);
   const [dragPayload, setDragPayload] = useState<{ nodeType: string } | null>(null);
 
-  // ---- Load steps from kernel (skipped in create mode — starts with single "start" node) ----
+  // ---- Shared helper: refresh steps + edges from kernel ----
+  const refreshGraph = useCallback(async () => {
+    const [stepsResult, edgesResult] = await Promise.all([
+      invoke('ProcessSpec', 'getSteps', { spec: processSpecId }),
+      invoke('ProcessSpec', 'getEdges', { spec: processSpecId }),
+    ]);
+    if (stepsResult && (stepsResult as Record<string, unknown>).variant === 'ok') {
+      const r = stepsResult as Record<string, unknown>;
+      try {
+        const raw = Array.isArray(r.steps)
+          ? (r.steps as unknown[])
+          : JSON.parse(String(r.steps ?? '[]')) as unknown[];
+        setSteps(raw as StepRecord[]);
+      } catch { setSteps([]); }
+    }
+    if (edgesResult && (edgesResult as Record<string, unknown>).variant === 'ok') {
+      const r = edgesResult as Record<string, unknown>;
+      const raw = Array.isArray(r.edges) ? (r.edges as EdgeRecord[]) : [];
+      setEdges(raw);
+    }
+  }, [invoke, processSpecId]);
+
+  // ---- Load steps + edges from kernel (skipped in create mode) ----
   useEffect(() => {
     if (isCreate || !processSpecId) return;
     let cancelled = false;
 
-    invoke('ProcessSpec', 'getSteps', { spec: processSpecId })
-      .then((result) => {
-        if (cancelled) return;
-        if (result && (result as Record<string, unknown>).variant === 'ok') {
-          const r = result as Record<string, unknown>;
-          try {
-            const raw = Array.isArray(r.steps)
-              ? (r.steps as unknown[])
-              : JSON.parse(String(r.steps ?? '[]')) as unknown[];
-            setSteps(raw as StepRecord[]);
-          } catch {
-            setSteps([]);
-          }
-        }
-      })
-      .catch(() => { /* non-fatal — steps stay empty */ });
+    Promise.all([
+      invoke('ProcessSpec', 'getSteps', { spec: processSpecId }),
+      invoke('ProcessSpec', 'getEdges', { spec: processSpecId }),
+    ]).then(([stepsResult, edgesResult]) => {
+      if (cancelled) return;
+      if (stepsResult && (stepsResult as Record<string, unknown>).variant === 'ok') {
+        const r = stepsResult as Record<string, unknown>;
+        try {
+          const raw = Array.isArray(r.steps)
+            ? (r.steps as unknown[])
+            : JSON.parse(String(r.steps ?? '[]')) as unknown[];
+          setSteps(raw as StepRecord[]);
+        } catch { setSteps([]); }
+      }
+      if (edgesResult && (edgesResult as Record<string, unknown>).variant === 'ok') {
+        const r = edgesResult as Record<string, unknown>;
+        const raw = Array.isArray(r.edges) ? (r.edges as EdgeRecord[]) : [];
+        setEdges(raw);
+      }
+    }).catch(() => { /* non-fatal */ });
 
     return () => { cancelled = true; };
   }, [processSpecId, invoke, isCreate]);
@@ -1848,7 +1971,6 @@ export const FlowBuilder: React.FC<FlowBuilderProps> = ({
 
   const handleDropOnSteps = useCallback(async (index: number) => {
     if (!dragPayload || !processSpecId) return;
-
     try {
       const result = await invoke('ProcessSpec', 'addStep', {
         spec: processSpecId,
@@ -1856,36 +1978,24 @@ export const FlowBuilder: React.FC<FlowBuilderProps> = ({
         atIndex: index,
       });
       if (result && (result as Record<string, unknown>).variant === 'ok') {
-        const r = result as Record<string, unknown>;
-        const newStepId = String(r.stepId ?? '');
-        // Refresh steps
-        const stepsResult = await invoke('ProcessSpec', 'getSteps', { spec: processSpecId });
-        if (stepsResult && (stepsResult as Record<string, unknown>).variant === 'ok') {
-          const sr = stepsResult as Record<string, unknown>;
-          try {
-            const raw = Array.isArray(sr.steps)
-              ? (sr.steps as unknown[])
-              : JSON.parse(String(sr.steps ?? '[]')) as unknown[];
-            setSteps(raw as StepRecord[]);
-          } catch { /* ignore */ }
-        }
+        const newStepId = String((result as Record<string, unknown>).stepId ?? '');
+        await refreshGraph();
         if (newStepId) {
           setSelectedStepId(newStepId);
           setInteractionState('step-selected');
         }
       }
     } catch { /* non-fatal */ }
-
     setDragPayload(null);
     setInteractionState(selectedStepId ? 'step-selected' : 'idle');
-  }, [invoke, processSpecId, dragPayload, selectedStepId]);
+  }, [invoke, processSpecId, dragPayload, selectedStepId, refreshGraph]);
 
   const handleDragCancel = useCallback(() => {
     setDragPayload(null);
     setInteractionState(selectedStepId ? 'step-selected' : 'idle');
   }, [selectedStepId]);
 
-  // ---- Insert at index ----
+  // ---- Insert at index (main line) ----
   const handleInsertAt = useCallback(async (index: number) => {
     if (!processSpecId) return;
     try {
@@ -1895,47 +2005,45 @@ export const FlowBuilder: React.FC<FlowBuilderProps> = ({
         atIndex: index,
       });
       if (result && (result as Record<string, unknown>).variant === 'ok') {
-        const r = result as Record<string, unknown>;
-        const newStepId = String(r.stepId ?? '');
-        const stepsResult = await invoke('ProcessSpec', 'getSteps', { spec: processSpecId });
-        if (stepsResult && (stepsResult as Record<string, unknown>).variant === 'ok') {
-          const sr = stepsResult as Record<string, unknown>;
-          try {
-            const raw = Array.isArray(sr.steps)
-              ? (sr.steps as unknown[])
-              : JSON.parse(String(sr.steps ?? '[]')) as unknown[];
-            setSteps(raw as StepRecord[]);
-          } catch { /* ignore */ }
-        }
+        const newStepId = String((result as Record<string, unknown>).stepId ?? '');
+        await refreshGraph();
         if (newStepId) {
           setSelectedStepId(newStepId);
           setInteractionState('step-selected');
         }
       }
     } catch { /* non-fatal */ }
-  }, [invoke, processSpecId]);
+  }, [invoke, processSpecId, refreshGraph]);
+
+  // ---- Add step to a branch arm (true/false path) ----
+  const handleAddBranchStep = useCallback(async (fromStepId: string, edgeLabel: string) => {
+    if (!processSpecId) return;
+    try {
+      const result = await invoke('ProcessSpec', 'addStep', {
+        spec: processSpecId,
+        stepKind: 'action',
+        fromStepId,
+        edgeLabel,
+      });
+      if (result && (result as Record<string, unknown>).variant === 'ok') {
+        const newStepId = String((result as Record<string, unknown>).stepId ?? '');
+        await refreshGraph();
+        if (newStepId) {
+          setSelectedStepId(newStepId);
+          setInteractionState('step-selected');
+        }
+      }
+    } catch { /* non-fatal */ }
+  }, [invoke, processSpecId, refreshGraph]);
 
   // ---- Reorder ----
   const handleReorder = useCallback(async (fromIndex: number, toIndex: number) => {
     if (!processSpecId) return;
     try {
-      await invoke('ProcessSpec', 'moveStep', {
-        spec: processSpecId,
-        fromIndex,
-        toIndex,
-      });
-      const stepsResult = await invoke('ProcessSpec', 'getSteps', { spec: processSpecId });
-      if (stepsResult && (stepsResult as Record<string, unknown>).variant === 'ok') {
-        const sr = stepsResult as Record<string, unknown>;
-        try {
-          const raw = Array.isArray(sr.steps)
-            ? (sr.steps as unknown[])
-            : JSON.parse(String(sr.steps ?? '[]')) as unknown[];
-          setSteps(raw as StepRecord[]);
-        } catch { /* ignore */ }
-      }
+      await invoke('ProcessSpec', 'moveStep', { spec: processSpecId, fromIndex, toIndex });
+      await refreshGraph();
     } catch { /* non-fatal */ }
-  }, [invoke, processSpecId]);
+  }, [invoke, processSpecId, refreshGraph]);
 
   // ---- Keyboard handler on root ----
   const handleRootKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -2200,10 +2308,12 @@ export const FlowBuilder: React.FC<FlowBuilderProps> = ({
               selectedStepId={selectedStepId}
               collapsedBranches={collapsedBranches}
               steps={steps}
+              edges={edges}
               onSelect={handleSelectStep}
               onInsertAt={handleInsertAt}
               onToggleCollapse={handleToggleCollapse}
               onReorder={handleReorder}
+              onAddBranchStep={handleAddBranchStep}
             />
           )}
 
@@ -2212,6 +2322,7 @@ export const FlowBuilder: React.FC<FlowBuilderProps> = ({
             <FlowchartEditorHost
               processSpecId={processSpecId}
               steps={steps}
+              edges={edges}
               selectedNodeId={selectedStepId}
               onNodeSelected={handleSelectGraphNode}
             />
