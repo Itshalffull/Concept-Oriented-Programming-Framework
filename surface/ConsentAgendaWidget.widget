@@ -1,0 +1,391 @@
+@version(1)
+widget ConsentAgendaWidget {
+
+  purpose {
+    Participant-facing sociocratic consent process widget rendered in the bottom
+    zone of the Process Street participant view when the active step type is
+    consent-agenda. The widget guides a group through the five canonical
+    sociocratic phases -- Presenting, Clarifying, Reacting, Objection Round, and
+    Decision -- for a specific proposal. Facilitators advance phases and resolve
+    the process; participants raise formal objections during the Objection Round
+    and monitor integration progress. The widget binds to ConsentProcess/advancePhase,
+    ConsentProcess/raiseObjection, ConsentProcess/integrateObjection, and
+    ConsentProcess/resolve. On resolution the widget enters a terminal state of
+    either consented or blocked.
+  }
+
+  anatomy {
+    root:              container    { Outer wrapper; reflects FSM phase state via data-state }
+    header:            text         { Title bar reading "Consent Process" with proposal name }
+    phaseIndicator:    presentation { Horizontal phase progress bar: Presenting, Clarifying, Reacting, Objection Round, Decision }
+    phaseDescription:  text         { Guidance text explaining what participants should do in the current phase }
+    objectionForm:     container    { Form for raising a formal objection: reason textarea, isParamount checkbox, Raise Objection button; visible only in objection-round }
+    objectionReason:   interactive  { Textarea for the objector to enter the reason for their objection }
+    paramountCheckbox: interactive  { Checkbox indicating the objection is paramount (blocks resolution) }
+    raiseButton:       action       { "Raise Objection" submit button inside objectionForm }
+    objectionList:     container    { List of all raised objections with status badges }
+    objectionItem:     container    { Single objection row: objector name, reason, paramount flag, integrated status }
+    integrationInput:  interactive  { Amendment textarea per objection; visible to facilitator only }
+    integrateButton:   action       { "Integrate" button per objection; facilitator only }
+    advancePhaseButton: action      { "Next Phase" button; facilitator only; advances the FSM phase }
+    resolveButton:     action       { "Resolve" button; facilitator only; shown in objection-round after all objections handled }
+    result:            container    { Terminal state panel: "Consented" or "Blocked" plus summary; aria-live assertive }
+  }
+
+  states {
+    phase {
+      presenting [initial] {
+        on PHASE_ADVANCED -> clarifying;
+      }
+
+      clarifying {
+        on PHASE_ADVANCED -> reacting;
+      }
+
+      reacting {
+        on PHASE_ADVANCED -> objection-round;
+      }
+
+      objection-round {
+        on OBJECTION_RAISED  -> integrating;
+        on RESOLVE_CLEAN     -> consented;
+        on RESOLVE_BLOCKED   -> blocked;
+      }
+
+      integrating {
+        on ALL_INTEGRATED -> objection-round;
+      }
+
+      consented {
+      }
+
+      blocked {
+      }
+    }
+
+    api [parallel] {
+      idle [initial] {
+        on API_START -> busy;
+      }
+      busy {
+        on API_DONE -> idle;
+      }
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Tab       -> FOCUS_NEXT;
+      Shift+Tab -> FOCUS_PREV;
+      Enter     -> RAISE_OBJECTION;
+      Escape    -> CANCEL_OBJECTION;
+    }
+    focus {
+      trap: false;
+      initial: phaseDescription;
+      roving: false;
+      returnOnClose: advancePhaseButton;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Consent Process";
+        aria-busy: if state.api == "busy" then "true" else "false";
+      };
+      phaseIndicator -> {
+        role: "progressbar";
+        aria-valuemin: "1";
+        aria-valuemax: "5";
+        aria-valuenow: if state.phase == "presenting" then "1"
+                       else if state.phase == "clarifying" then "2"
+                       else if state.phase == "reacting" then "3"
+                       else if state.phase == "objection-round" then "4"
+                       else if state.phase == "integrating" then "4"
+                       else "5";
+        aria-label: "Consent phase progress";
+      };
+      objectionForm -> {
+        role: "form";
+        aria-label: "Raise an objection";
+        aria-hidden: if state.phase == "objection-round" then "false" else "true";
+      };
+      objectionList -> {
+        role: "list";
+        aria-label: "Raised objections";
+      };
+      objectionItem -> {
+        role: "listitem";
+      };
+      raiseButton -> {
+        role: "button";
+        aria-label: "Raise Objection";
+        aria-disabled: if state.phase == "objection-round" then "false" else "true";
+      };
+      advancePhaseButton -> {
+        role: "button";
+        aria-label: "Advance to next phase";
+        aria-hidden: if ?isFacilitator then "false" else "true";
+      };
+      integrateButton -> {
+        role: "button";
+        aria-label: "Integrate objection";
+        aria-hidden: if ?isFacilitator then "false" else "true";
+      };
+      resolveButton -> {
+        role: "button";
+        aria-label: "Resolve consent process";
+        aria-hidden: if ?isFacilitator and state.phase == "objection-round" then "false" else "true";
+      };
+      result -> {
+        aria-live: "assertive";
+        aria-atomic: "true";
+      };
+    }
+  }
+
+  props {
+    consentProcessId: String = ""
+    stepRunId:        String = ""
+    processRunId:     String = ""
+    currentUserId:    String = ""
+    isFacilitator:    Bool = false
+    proposalTitle:    String = ""
+    initialPhase:     String = "presenting"
+  }
+
+  connect {
+    root -> {
+      data-part:     "root";
+      data-state:    if state.phase == "presenting"       then "presenting"
+                     else if state.phase == "clarifying"  then "clarifying"
+                     else if state.phase == "reacting"    then "reacting"
+                     else if state.phase == "objection-round" then "objection-round"
+                     else if state.phase == "integrating" then "integrating"
+                     else if state.phase == "consented"   then "consented"
+                     else "blocked";
+      data-api:      state.api;
+      data-process:  ?consentProcessId;
+      data-proposal: ?proposalTitle;
+      role:          "region";
+      aria-busy:     if state.api == "busy" then "true" else "false";
+    }
+
+    header -> {
+      data-part: "header";
+      text:      "Consent Process";
+    }
+
+    phaseIndicator -> {
+      data-part:       "phase-indicator";
+      role:            "progressbar";
+      aria-valuemin:   "1";
+      aria-valuemax:   "5";
+      aria-valuenow:   if state.phase == "presenting" then "1"
+                       else if state.phase == "clarifying" then "2"
+                       else if state.phase == "reacting" then "3"
+                       else if state.phase == "objection-round" then "4"
+                       else if state.phase == "integrating" then "4"
+                       else "5";
+      aria-label:      "Consent phase progress";
+      data-phase:      state.phase;
+    }
+
+    phaseDescription -> {
+      data-part: "phase-description";
+      text:      if state.phase == "presenting"      then "The proposer is presenting the proposal. Please listen attentively."
+                 else if state.phase == "clarifying"     then "Ask clarifying questions to understand the proposal. Reactions and objections come later."
+                 else if state.phase == "reacting"       then "Share your reactions, concerns, and appreciations about the proposal."
+                 else if state.phase == "objection-round" then "Raise a formal objection if you see a reason the proposal would harm the group. Otherwise, signal consent."
+                 else if state.phase == "integrating"    then "The facilitator is working with objectors to integrate amendments."
+                 else if state.phase == "consented"      then "The proposal has received consent. No paramount objections remain."
+                 else if state.phase == "blocked"        then "The proposal is blocked. Outstanding paramount objections could not be integrated."
+                 else "";
+    }
+
+    objectionForm -> {
+      data-part:   "objection-form";
+      role:        "form";
+      aria-label:  "Raise an objection";
+      hidden:      if state.phase == "objection-round" then false else true;
+    }
+
+    objectionReason -> {
+      data-part:   "objection-reason";
+      placeholder: "Describe your objection...";
+      hidden:      if state.phase == "objection-round" then false else true;
+      disabled:    if state.phase == "objection-round" then false else true;
+    }
+
+    paramountCheckbox -> {
+      data-part:  "paramount-checkbox";
+      hidden:     if state.phase == "objection-round" then false else true;
+      disabled:   if state.phase == "objection-round" then false else true;
+      aria-label: "This objection is paramount";
+    }
+
+    raiseButton -> {
+      data-part:       "raise-button";
+      hidden:          if state.phase == "objection-round" then false else true;
+      disabled:        if state.phase == "objection-round" then false else true;
+      aria-disabled:   if state.phase == "objection-round" then "false" else "true";
+      onClick:         send(RAISE_OBJECTION);
+      onKeyDown-Enter: send(RAISE_OBJECTION);
+      text:            "Raise Objection";
+    }
+
+    objectionList -> {
+      data-part: "objection-list";
+      role:      "list";
+      hidden:    if state.phase == "objection-round" or state.phase == "integrating" then false else true;
+    }
+
+    objectionItem -> {
+      data-part: "objection-item";
+      role:      "listitem";
+    }
+
+    integrationInput -> {
+      data-part:   "integration-input";
+      hidden:      if ?isFacilitator and state.phase == "integrating" then false else true;
+      disabled:    if ?isFacilitator and state.phase == "integrating" then false else true;
+      placeholder: "Describe the amendment...";
+    }
+
+    integrateButton -> {
+      data-part:       "integrate-button";
+      hidden:          if ?isFacilitator then false else true;
+      disabled:        if ?isFacilitator and state.phase == "integrating" then false else true;
+      aria-hidden:     if ?isFacilitator then "false" else "true";
+      onClick:         send(INTEGRATE_OBJECTION);
+      onKeyDown-Enter: send(INTEGRATE_OBJECTION);
+      text:            "Integrate";
+    }
+
+    advancePhaseButton -> {
+      data-part:       "advance-phase-button";
+      hidden:          if ?isFacilitator then false else true;
+      disabled:        if state.phase == "consented" or state.phase == "blocked" or state.api == "busy" then true else false;
+      aria-hidden:     if ?isFacilitator then "false" else "true";
+      onClick:         send(PHASE_ADVANCED);
+      onKeyDown-Enter: send(PHASE_ADVANCED);
+      text:            "Next Phase";
+    }
+
+    resolveButton -> {
+      data-part:       "resolve-button";
+      hidden:          if ?isFacilitator and state.phase == "objection-round" then false else true;
+      disabled:        if state.phase != "objection-round" then true else false;
+      aria-hidden:     if ?isFacilitator and state.phase == "objection-round" then "false" else "true";
+      onClick:         send(RESOLVE);
+      onKeyDown-Enter: send(RESOLVE);
+      text:            "Resolve";
+    }
+
+    result -> {
+      data-part:    "result";
+      aria-live:    "assertive";
+      aria-atomic:  "true";
+      hidden:       if state.phase == "consented" or state.phase == "blocked" then false else true;
+      data-outcome: if state.phase == "consented" then "consented" else if state.phase == "blocked" then "blocked" else "";
+    }
+  }
+
+  affordance {
+    serves: action;
+    specificity: 9;
+    when { stepType: "consent-agenda" }
+    bind {
+      consentProcessId: processId;
+      currentUserId:    participantId;
+    }
+  }
+
+  invariant {
+    "data-state on root must mirror the FSM state at all times";
+    "objectionForm must be hidden in all states except objection-round";
+    "advancePhaseButton must be hidden when isFacilitator is false";
+    "integrateButton must be hidden when isFacilitator is false";
+    "result must be hidden except when state is consented or blocked";
+
+    example "presenting advances to clarifying": {
+      after advancePhaseButton.click() -> ok
+      then root.data-state = "clarifying"
+    }
+
+    example "clarifying advances to reacting": {
+      after advancePhaseButton.click() -> ok
+      then root.data-state = "reacting"
+    }
+
+    example "reacting advances to objection-round": {
+      after advancePhaseButton.click() -> ok
+      then root.data-state = "objection-round"
+      and objectionForm.hidden = false
+    }
+
+    example "objection raised transitions to integrating": {
+      after raiseButton.click() -> ok
+      then root.data-state = "integrating"
+      and objectionList.hidden = false
+    }
+
+    example "all integrated returns to objection-round": {
+      after integrateButton.click() -> ok
+      then root.data-state = "objection-round"
+    }
+
+    example "resolve clean transitions to consented": {
+      after resolveButton.click() -> ok
+      then root.data-state = "consented"
+      and result.hidden = false
+    }
+
+    example "resolve blocked transitions to blocked": {
+      after resolveButton.click() -> error
+      then root.data-state = "blocked"
+      and result.hidden = false
+    }
+
+    never "objection form visible outside objection-round" {
+      objectionForm.hidden = false
+    }
+
+    never "advance phase button visible to non-facilitator" {
+      advancePhaseButton.hidden = false
+    }
+
+    never "integrate button visible to non-facilitator" {
+      integrateButton.hidden = false
+    }
+
+    never "result visible before terminal state" {
+      result.hidden = false
+    }
+
+    always "result is an assertive live region" {
+      result.aria-live = "assertive"
+    }
+
+    always "phase indicator has progressbar role" {
+      phaseIndicator.role = "progressbar"
+    }
+
+    action advancePhaseButton {
+      requires: state = "presenting"
+      ensures ok: state = "clarifying"
+    }
+
+    action raiseButton {
+      requires: state = "objection-round"
+      ensures ok: state = "integrating"
+    }
+
+    action resolveButton {
+      requires: state = "objection-round"
+      ensures ok: state = "consented"
+    }
+  }
+
+}
