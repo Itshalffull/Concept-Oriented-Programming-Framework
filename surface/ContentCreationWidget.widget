@@ -1,0 +1,222 @@
+@version(1)
+widget ContentCreationWidget {
+
+  purpose {
+    Participant-facing content creation widget rendered in the bottom zone of a
+    Process Street-style process run view when the active step type is
+    content-creation. The widget presents chrome (header, submit button, and result
+    summary) around a formSlot where the ComponentMapping system resolves and mounts
+    the appropriate form level at runtime: a specialized registered creator for the
+    schema type, a custom form declared on the schema, an auto-generated field form,
+    or a generic title-plus-body block editor as a final fallback. The participant
+    fills in the form until required fields are satisfied, then submits to create a new
+    ContentNode bound to the configured schema. On success the step output is stored as
+    the created node ID and the step resolves. Submission errors re-enable the form for
+    retry.
+  }
+
+  anatomy {
+    root:                   container    { Outer wrapper; reflects FSM state via data-state and aria-busy }
+    header:                 text         { Title bar reading Create: {contentTypeName} }
+    formSlot:               container    { Slot where the runtime-resolved form component renders; hidden in submitted state }
+    requiredFieldsIndicator: text        { Progress line reading N of M required fields filled; shown only in filling and error states }
+    submitButton:           action       { Submit primary CTA; aria-disabled when required fields not yet satisfied or state is not filling or error }
+    result:                 container    { Completion summary shown only in submitted state; reads Created: {title} plus an Open page link }
+  }
+
+  states {
+    filling [initial] {
+      on SUBMIT       -> submitting;
+    }
+
+    submitting {
+      on NODE_CREATED  -> submitted;
+      on CREATE_FAILED -> error;
+      entry [disableForm];
+      exit  [enableForm];
+    }
+
+    submitted {
+    }
+
+    error {
+      on RETRY -> filling;
+    }
+  }
+
+  accessibility {
+    role: form;
+    modal: false;
+    keyboard {
+      Enter -> SUBMIT;
+      Escape -> RETRY;
+    }
+    focus {
+      trap: false;
+      initial: formSlot;
+      roving: false;
+      returnOnClose: submitButton;
+    }
+    aria {
+      root -> {
+        role: "form";
+        aria-label: concat("Create ", ?contentTypeName);
+        aria-busy: if state == "submitting" then "true" else "false";
+      };
+      submitButton -> {
+        role: "button";
+        aria-label: "Submit";
+        aria-disabled: if state == "submitting" then "true" else "false";
+      };
+      result -> {
+        aria-live: "polite";
+        aria-atomic: "true";
+      };
+      formSlot -> {
+        role: "region";
+        aria-label: concat(?contentTypeName, " form");
+      };
+    }
+  }
+
+  props {
+    stepRunId:      String = ""
+    processRunId:   String = ""
+    currentUserId:  String = ""
+    contentType:    String = ""
+    contentTypeName: String = ""
+    requiredFields: list String = []
+    initialStatus:  String = "active"
+    initialNodeId:  option String
+  }
+
+  connect {
+    root -> {
+      data-part:  "root";
+      data-state: if state == "filling"    then "filling"
+                  else if state == "submitting" then "submitting"
+                  else if state == "submitted"  then "submitted"
+                  else "error";
+      role:       "form";
+      aria-label: concat("Create ", ?contentTypeName);
+      aria-busy:  if state == "submitting" then "true" else "false";
+    }
+
+    header -> {
+      data-part: "header";
+      text:      concat("Create: ", ?contentTypeName);
+    }
+
+    formSlot -> {
+      data-part:        "form-slot";
+      data-schema:      ?contentType;
+      hidden:           if state == "submitted" then true else false;
+      disabled:         if state == "submitting" then true else false;
+      role:             "region";
+      aria-label:       concat(?contentTypeName, " form");
+    }
+
+    requiredFieldsIndicator -> {
+      data-part: "required-fields-indicator";
+      hidden:    if state == "submitted" or state == "submitting" then true else false;
+    }
+
+    submitButton -> {
+      data-part:       "submit-button";
+      aria-disabled:   if state == "submitting" then "true" else "false";
+      disabled:        if state == "submitting" then true else false;
+      hidden:          if state == "submitted" then true else false;
+      onClick:         send(SUBMIT);
+      onKeyDown-Enter: send(SUBMIT);
+      text:            "Submit";
+    }
+
+    result -> {
+      data-part:   "result";
+      hidden:      if state == "submitted" then false else true;
+      aria-live:   "polite";
+      aria-atomic: "true";
+    }
+  }
+
+  affordance {
+    serves: action;
+    specificity: 8;
+    when { stepType: "content-creation" }
+    bind {
+      contentType:    schemaId;
+      processRunId:   processRunId;
+      currentUserId:  userId;
+    }
+  }
+
+  compose {
+    formSlot: widget("slot-source-editor", { schemaId: ?contentType, mode: "create" });
+  }
+
+  invariant {
+    "formSlot must be hidden in submitted state and visible in filling, submitting, and error states";
+    "result must be visible only in the submitted state";
+    "submitButton must be aria-disabled when the state is submitting";
+    "root aria-busy must be true exactly when the state is submitting";
+    "All four states must be reachable: filling is initial, submitting via SUBMIT, submitted via NODE_CREATED, error via CREATE_FAILED, and error returns to filling via RETRY";
+
+    example "submit transitions filling to submitting": {
+      after submitButton.click() -> ok
+      then root.data-state = "submitting"
+      and submitButton.aria-disabled = "true"
+      and formSlot.disabled = true
+    }
+
+    example "node created transitions submitting to submitted": {
+      after root.nodeCreated() -> ok
+      then root.data-state = "submitted"
+      and result.hidden = false
+      and formSlot.hidden = true
+    }
+
+    example "create failed transitions submitting to error": {
+      after root.createFailed() -> error
+      then root.data-state = "error"
+      and formSlot.hidden = false
+      and submitButton.aria-disabled = "false"
+    }
+
+    example "retry transitions error to filling": {
+      after root.retry() -> ok
+      then root.data-state = "filling"
+      and formSlot.hidden = false
+    }
+
+    never "submit button enabled when submitting" {
+      submitButton.disabled = false
+    }
+
+    never "result visible outside submitted state" {
+      result.hidden = false
+    }
+
+    never "form slot visible when submitted" {
+      formSlot.hidden = false
+    }
+
+    always "result is a live region" {
+      result.aria-live = "polite"
+    }
+
+    always "root reports busy during submission" {
+      root.aria-busy = "false"
+    }
+
+    action submitButton {
+      requires: state = "filling"
+      ensures ok: state = "submitting"
+    }
+
+    action result {
+      requires: state = "submitting"
+      ensures ok: state = "submitted"
+    }
+  }
+
+}
