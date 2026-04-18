@@ -28,6 +28,7 @@ import { PersonaEditorView } from '../../views/PersonaEditorView';
 import { MediaLibraryView } from '../../views/MediaLibraryView';
 import { TaxonomyView } from '../../views/TaxonomyView';
 import { ReconcilersView } from '../../views/ReconcilersView';
+import { GovernanceOrgEditorView } from '../../views/GovernanceOrgEditorView';
 
 export default async function AdminPage({
   params,
@@ -473,6 +474,15 @@ export default async function AdminPage({
     return (
       <HostedPage>
         <MediaLibraryView />
+      </HostedPage>
+    );
+  }
+
+  // Governance org editor — layout/windowing editor replacing 12 disconnected governance pages.
+  if (path === 'governance') {
+    return (
+      <HostedPage>
+        <GovernanceOrgEditorView />
       </HostedPage>
     );
   }

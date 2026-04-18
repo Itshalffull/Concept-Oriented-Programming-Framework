@@ -9,5 +9,5 @@ entries:
     targetConcept: Subject
     targetView: subjects-list
     href: /admin/identity/subjects
-    icon: "id"
+    icon: "🪪"
     group: Identity

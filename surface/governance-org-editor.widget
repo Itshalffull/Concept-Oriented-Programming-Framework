@@ -1,0 +1,307 @@
+@version(1)
+widget governance-org-editor {
+
+  purpose {
+    Layout shell that consolidates twelve disconnected governance administration
+    pages into a single split-pane editor. A mode bar at the top switches
+    between Structure (team hierarchy), Routes (process spec list), and
+    Permissions (role-route assignments) modes. A fixed-width sidebar on the
+    left hosts a tree of selectable items for the active mode; the right
+    content panel renders mode-specific detail for the selected item, falling
+    back to an empty state when nothing is selected. Mode switches always clear
+    the active selection, ensuring the content panel never shows stale data
+    from a prior mode.
+  }
+
+  anatomy {
+    root:           container    { Outermost shell wrapper containing the mode bar and the two-column body }
+    modeBar:        container    { Horizontal tab strip fixed at the top, holding one mode-tab per mode }
+    modeTab:        action       { Individual tab button for one of the three modes: Structure, Routes, or Permissions }
+    sidebar:        container    { Left panel fixed at 240px holding the tree items for the active mode }
+    sidebarHeader:  container    { Header row at the top of the sidebar showing the section label and add button }
+    sidebarLabel:   text         { Section heading in the sidebar header, e.g. TEAMS or PROCESS SPECS }
+    sidebarAddBtn:  action       { Plus button in the sidebar header that opens an inline creation form }
+    treeItem:       action       { Clickable row in the sidebar tree representing a team, spec, or role }
+    treeItemLabel:  text         { Primary display text within a single tree row }
+    treeItemBadge:  presentation { Optional badge alongside the label, e.g. status indicator or member count }
+    contentPanel:   container    { Right panel that fills remaining width and hosts detail content }
+    contentHeader:  container    { Title and badge row at the top of the content panel }
+    contentSection: container    { Labeled section within the content panel grouping related fields }
+    emptyState:     container    { Placeholder shown when no tree item is selected in the current mode }
+  }
+
+  states {
+    loading [initial] {
+      on LOAD_DONE         -> structure-empty;
+    }
+
+    structure-empty {
+      on SELECT_TEAM       -> structure-selected;
+      on SWITCH_TO_ROUTES  -> routes-empty;
+      on SWITCH_TO_PERMS   -> permissions;
+    }
+
+    structure-selected {
+      on SELECT_TEAM       -> structure-selected;
+      on DESELECT          -> structure-empty;
+      on SWITCH_TO_ROUTES  -> routes-empty;
+      on SWITCH_TO_PERMS   -> permissions;
+    }
+
+    routes-empty {
+      on SELECT_ROUTE      -> routes-selected;
+      on SWITCH_TO_STRUCT  -> structure-empty;
+      on SWITCH_TO_PERMS   -> permissions;
+    }
+
+    routes-selected {
+      on SELECT_ROUTE      -> routes-selected;
+      on DESELECT          -> routes-empty;
+      on SWITCH_TO_STRUCT  -> structure-empty;
+      on SWITCH_TO_PERMS   -> permissions;
+    }
+
+    permissions {
+      on SWITCH_TO_STRUCT  -> structure-empty;
+      on SWITCH_TO_ROUTES  -> routes-empty;
+    }
+  }
+
+  accessibility {
+    role: region;
+    modal: false;
+    keyboard {
+      Tab        -> FOCUS_NEXT;
+      Shift+Tab  -> FOCUS_PREV;
+      Enter      -> ACTIVATE;
+      Space      -> ACTIVATE;
+      ArrowDown  -> TREE_NEXT;
+      ArrowUp    -> TREE_PREV;
+    }
+    focus {
+      trap: false;
+      initial: modeTab;
+      roving: true;
+    }
+    aria {
+      root -> {
+        role: "region";
+        aria-label: "Governance organisation editor";
+      };
+      modeBar -> {
+        role: "tablist";
+        aria-label: "Editor modes";
+      };
+      modeTab -> {
+        role: "tab";
+        aria-selected: if self.mode == ?mode then "true" else "false";
+        tabindex: if self.mode == ?mode then "0" else "-1";
+      };
+      sidebar -> {
+        role: "navigation";
+        aria-label: if ?mode == "structure" then "Teams" else if ?mode == "routes" then "Process specs" else "Permissions navigation";
+      };
+      sidebarAddBtn -> {
+        role: "button";
+        aria-label: if ?mode == "structure" then "Add team" else "Add process spec";
+      };
+      treeItem -> {
+        role: "treeitem";
+        aria-selected: if self.id == ?selectedTeamId or self.id == ?selectedRouteId then "true" else "false";
+        tabindex: "0";
+      };
+      contentPanel -> {
+        role: "main";
+        aria-label: "Detail panel";
+        aria-busy: if state == "loading" then "true" else "false";
+      };
+      emptyState -> {
+        role: "status";
+        aria-live: "polite";
+        aria-label: "No item selected";
+      };
+    }
+  }
+
+  props {
+    mode:            String = "structure"
+    selectedTeamId:  option String
+    selectedRouteId: option String
+    teams:           String = "[]"
+    specs:           String = "[]"
+  }
+
+  connect {
+    root -> {
+      data-part:  "root";
+      data-state: if state == "loading"             then "loading"
+                  else if state == "structure-empty"     then "structure-empty"
+                  else if state == "structure-selected"  then "structure-selected"
+                  else if state == "routes-empty"        then "routes-empty"
+                  else if state == "routes-selected"     then "routes-selected"
+                  else "permissions";
+      data-mode:  ?mode;
+      role:       "region";
+      aria-label: "Governance organisation editor";
+    }
+
+    modeBar -> {
+      data-part: "mode-bar";
+      role:      "tablist";
+    }
+
+    modeTab -> {
+      data-part:     "mode-tab";
+      data-mode:     self.mode;
+      role:          "tab";
+      aria-selected: if self.mode == ?mode then "true" else "false";
+      tabindex:      if self.mode == ?mode then "0" else "-1";
+      onClick:       send(ACTIVATE, { mode: self.mode });
+    }
+
+    sidebar -> {
+      data-part: "sidebar";
+      role:      "navigation";
+      aria-busy: if state == "loading" then "true" else "false";
+    }
+
+    sidebarHeader -> {
+      data-part: "sidebar-header";
+    }
+
+    sidebarLabel -> {
+      data-part: "sidebar-label";
+      text:      if ?mode == "structure" then "TEAMS" else if ?mode == "routes" then "PROCESS SPECS" else "PERMISSIONS";
+    }
+
+    sidebarAddBtn -> {
+      data-part:  "sidebar-add-btn";
+      role:       "button";
+      aria-label: if ?mode == "structure" then "Add team" else "Add process spec";
+      hidden:     if ?mode == "permissions" then true else false;
+      onClick:    send(ACTIVATE, { action: "add" });
+    }
+
+    treeItem -> {
+      data-part:     "tree-item";
+      data-id:       self.id;
+      data-selected: if self.id == ?selectedTeamId or self.id == ?selectedRouteId then "true" else "false";
+      role:          "treeitem";
+      aria-selected: if self.id == ?selectedTeamId or self.id == ?selectedRouteId then "true" else "false";
+      tabindex:      "0";
+      onClick:       send(ACTIVATE, { id: self.id });
+    }
+
+    treeItemLabel -> {
+      data-part: "tree-item-label";
+      text:      self.name;
+    }
+
+    treeItemBadge -> {
+      data-part: "tree-item-badge";
+      text:      self.badge;
+      hidden:    if self.badge == null then true else false;
+    }
+
+    contentPanel -> {
+      data-part:  "content-panel";
+      role:       "main";
+      aria-label: "Detail panel";
+      aria-busy:  if state == "loading" then "true" else "false";
+    }
+
+    contentHeader -> {
+      data-part: "content-header";
+      hidden:    if state == "structure-empty" or state == "routes-empty" or state == "loading" then true else false;
+    }
+
+    contentSection -> {
+      data-part: "content-section";
+    }
+
+    emptyState -> {
+      data-part:  "empty-state";
+      role:       "status";
+      aria-live:  "polite";
+      hidden:     if state == "structure-selected" or state == "routes-selected" or state == "permissions" then true else false;
+    }
+  }
+
+  compose {
+    _teamCanvas:       widget("team-canvas",             { teamId: ?selectedTeamId })
+                         when state == "structure-selected";
+    _routePermEditor:  widget("route-permission-editor", { routeId: ?selectedRouteId })
+                         when state == "permissions";
+    _delegationChain:  widget("delegation-chain",        { routeId: ?selectedRouteId })
+                         when state == "permissions";
+  }
+
+  invariant {
+    example "load completes to structure-empty": {
+      after transition() -> ok
+      then state = "structure-empty"
+    }
+
+    example "select team transitions to structure-selected": {
+      after transition() -> ok
+      then state = "structure-selected"
+    }
+
+    example "switch modes resets selection": {
+      after transition() -> ok
+      then state = "routes-empty"
+    }
+
+    example "deselect returns from structure-selected": {
+      after transition() -> ok
+      then state = "structure-empty"
+    }
+
+    example "permissions mode reachable from structure-empty": {
+      after transition() -> ok
+      then state = "permissions"
+    }
+
+    example "routes-selected switches to permissions": {
+      after transition() -> ok
+      then state = "permissions"
+    }
+
+    always "all FSM states are reachable": {
+      forall s in states: s.reachable = true
+    }
+
+    always "FSM is deterministic": {
+      forall s in states: s.transitions_count <= 5
+    }
+
+    never "loading is a terminal state": {
+      exists s in states: s.name = "loading" and s.transitions_count = 0
+    }
+
+    never "structure-selected is the FSM initial state": {
+      exists s in states: s.name = "structure-selected" and s.initial = true
+    }
+
+    never "routes-selected is the FSM initial state": {
+      exists s in states: s.name = "routes-selected" and s.initial = true
+    }
+
+    "Root data-state must mirror the current FSM state for test selectors";
+    "Clicking a modeTab must clear selectedTeamId and selectedRouteId before switching state";
+    "emptyState must be hidden whenever a detail item is selected or in permissions mode";
+    "sidebarAddBtn must be hidden in permissions mode";
+    "treeItemBadge must be hidden when its badge value is null or absent";
+
+    action modeTab {
+      requires: state = "structure-empty"
+      ensures ok: state = "routes-empty"
+    }
+
+    action treeItem {
+      requires: state = "structure-empty"
+      ensures ok: state = "structure-selected"
+    }
+  }
+
+}

@@ -45,7 +45,7 @@ import { proposalHandler } from '../../handlers/ts/app/governance/proposal.handl
 import { policyHandler } from '../../handlers/ts/app/governance/policy.handler';
 import { governanceOfficeHandler } from '../../handlers/ts/app/governance/governance-office.handler';
 import { pilotModeHandler } from '../../handlers/ts/app/governance/pilot-mode.handler';
-import { circleHandler } from '../../handlers/ts/app/governance/circle.handler';
+import { teamHandler } from '../../handlers/ts/app/governance/team.handler';
 // Verification
 import { checkVerificationHandler } from '../../handlers/ts/app/check-verification.handler';
 // Versioning
@@ -325,9 +325,9 @@ const SUPPLEMENTAL_REGISTRY_ENTRIES = [
     storageType: 'standard' as const,
   },
   {
-    uri: 'urn:clef/Circle',
-    handler: circleHandler,
-    storageName: 'circle',
+    uri: 'urn:clef/Team',
+    handler: teamHandler,
+    storageName: 'team',
     storageType: 'standard' as const,
   },
   // Verification

@@ -5,11 +5,11 @@ concept: DestinationCatalog
 action: register
 entries:
   - destination: inbox
-    name: inbox
+    name: Inbox
     targetConcept: WorkItem
     targetView: my-work-items
     href: /admin/inbox
-    icon: "inbox"
+    icon: "☑"
     group: Main
     badge_concept: WorkItem
     badge_action: countPending

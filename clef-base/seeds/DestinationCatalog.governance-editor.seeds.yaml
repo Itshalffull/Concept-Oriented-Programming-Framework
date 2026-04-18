@@ -8,5 +8,5 @@ entries:
     name: governance-editor
     surface: GovernanceOrgEditor
     href: /admin/governance
-    icon: "shield"
+    icon: "⚔"
     group: Governance

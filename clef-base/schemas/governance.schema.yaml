@@ -1,0 +1,36 @@
+# Governance schema definitions for Clef Base ContentNode pool.
+# Teams are ContentNodes with the "team" schema overlay applied via Schema/applyTo.
+# Members are stored as a JSON array property; parent is a Reference to another team node.
+
+schemas:
+  Team:
+    manifest: config
+    fields:
+      name:
+        type: String
+        required: true
+        description: "Display name of the team"
+      domain:
+        type: String
+        required: false
+        description: "Area of accountability or domain this team governs"
+      purpose:
+        type: String
+        required: false
+        description: "Why this team exists (holacratic purpose statement)"
+      parent:
+        type: Reference
+        required: false
+        description: "Parent team node ID in the team hierarchy"
+      members:
+        type: list String
+        required: false
+        description: "Principal IDs of team members"
+      leadLink:
+        type: String
+        required: false
+        description: "Principal ID of the lead link role"
+      repLink:
+        type: String
+        required: false
+        description: "Principal ID of the rep link role"

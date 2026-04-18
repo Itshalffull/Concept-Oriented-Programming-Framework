@@ -103,6 +103,7 @@ const _teamHandler: FunctionalConceptHandler = {
       (elseP) => complete(elseP, 'not_found', { team }),
     ) as StorageProgram<Result>;
   },
+
 };
 
 export const teamHandler = autoInterpret(_teamHandler);
