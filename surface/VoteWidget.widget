@@ -1,0 +1,292 @@
+@version(1)
+widget VoteWidget {
+
+  purpose {
+    Participant-facing voting interaction widget rendered in the bottom zone of a
+    Process Street-style process run view when the active step is a vote step. The
+    widget guides the current user through five states: idle (step active, no vote
+    cast yet), submitting (API call in flight), voted (vote recorded, receipt shown),
+    closed (session closed, tally pending), and tallied (outcome available, terminal).
+    It binds to Vote/castVote and Vote/tally and prevents double-submission by
+    disabling the submit button immediately on click. If allowChange is true, the
+    receipt includes a Change link that transitions the user back to idle so they can
+    revise their choice.
+  }
+
+  anatomy {
+    root:         container    { Outer wrapper; reflects FSM state via data-state }
+    header:       text         { Title bar reading Cast your vote }
+    options:      container    { Radio group holding all vote option entries }
+    option:       interactive  { Individual radio button plus label for a single choice }
+    submitButton: action       { Submit Vote primary CTA; disabled when not in idle state }
+    deadline:     text         { Time-remaining countdown, e.g. deadline: 2d 4h remaining }
+    progress:     container    { N of M members have voted counter plus quorum indicator }
+    receipt:      container    { Confirmation panel shown in voted and closed states }
+    changeLink:   action       { Change link inside receipt; only rendered when allowChange is true }
+    result:       container    { Outcome summary shown in tallied state }
+  }
+
+  states {
+    idle [initial] {
+      on SUBMIT          -> submitting;
+      on STEP_COMPLETED  -> tallied;
+    }
+
+    submitting {
+      on VOTE_RECORDED -> voted;
+      on VOTE_FAILED   -> idle;
+      entry [disableSubmitButton];
+      exit  [enableSubmitButton];
+    }
+
+    voted {
+      on CHANGE          -> idle;
+      on SESSION_CLOSED  -> closed;
+    }
+
+    closed {
+      on TALLY_COMPLETE -> tallied;
+    }
+
+    tallied {
+    }
+  }
+
+  accessibility {
+    role: form;
+    modal: false;
+    keyboard {
+      Space  -> SUBMIT;
+      Enter  -> SUBMIT;
+      Escape -> VOTE_FAILED;
+      ArrowDown -> NAVIGATE_NEXT;
+      ArrowUp   -> NAVIGATE_PREV;
+    }
+    focus {
+      trap: false;
+      initial: options;
+      roving: true;
+      returnOnClose: submitButton;
+    }
+    aria {
+      root -> {
+        role: "form";
+        aria-label: "Cast your vote";
+        aria-busy: if state == "submitting" then "true" else "false";
+      };
+      options -> {
+        role: "radiogroup";
+        aria-label: "Vote options";
+        aria-disabled: if state == "voted" or state == "closed" or state == "tallied" then "true" else "false";
+      };
+      option -> {
+        role: "radio";
+        aria-checked: self.selected;
+        aria-label: self.label;
+      };
+      submitButton -> {
+        role: "button";
+        aria-label: "Submit Vote";
+        aria-busy: if state == "submitting" then "true" else "false";
+        aria-disabled: if state != "idle" then "true" else "false";
+      };
+      receipt -> {
+        aria-live: "polite";
+        aria-atomic: "true";
+      };
+      result -> {
+        aria-live: "assertive";
+        aria-atomic: "true";
+      };
+    }
+  }
+
+  props {
+    voteSessionId:  String = ""
+    processRunId:   String = ""
+    stepRunId:      String = ""
+    currentUserId:  String = ""
+    deadline:       option String
+    quorum:         Int = 50
+    votingMethod:   String = "simple-majority"
+    allowChange:    Bool = false
+    anonymous:      Bool = false
+    initialStatus:  String = "active"
+    initialOutcome: option String
+    initialDetails: option String
+  }
+
+  connect {
+    root -> {
+      data-part:    "root";
+      data-state:   if state == "idle"        then "idle"
+                    else if state == "submitting"  then "submitting"
+                    else if state == "voted"        then "voted"
+                    else if state == "closed"       then "closed"
+                    else "tallied";
+      data-session: ?voteSessionId;
+      data-method:  ?votingMethod;
+      role:         "form";
+      aria-busy:    if state == "submitting" then "true" else "false";
+    }
+
+    header -> {
+      data-part: "header";
+      text:      "Cast your vote";
+    }
+
+    options -> {
+      data-part:     "options";
+      role:          "radiogroup";
+      aria-label:    "Vote options";
+      aria-disabled: if state != "idle" then "true" else "false";
+      hidden:        if state != "idle" then true else false;
+    }
+
+    option -> {
+      data-part:       "option";
+      role:            "radio";
+      aria-checked:    self.selected;
+      tabindex:        if self.selected then "0" else "-1";
+      onKeyDown-Space: send(SUBMIT);
+      onClick:         send(SUBMIT);
+    }
+
+    submitButton -> {
+      data-part:     "submit-button";
+      disabled:      if state != "idle" then true else false;
+      aria-disabled: if state != "idle" then "true" else "false";
+      aria-busy:     if state == "submitting" then "true" else "false";
+      hidden:        if state == "voted" or state == "closed" or state == "tallied" then true else false;
+      onClick:       send(SUBMIT);
+      onKeyDown-Enter: send(SUBMIT);
+      text:          "Submit Vote";
+    }
+
+    deadline -> {
+      data-part:     "deadline";
+      data-deadline: ?deadline;
+      hidden:        if ?deadline then false else true;
+      text:          self.remaining;
+    }
+
+    progress -> {
+      data-part:   "progress";
+      data-quorum: ?quorum;
+    }
+
+    receipt -> {
+      data-part:   "receipt";
+      aria-live:   "polite";
+      aria-atomic: "true";
+      hidden:      if state == "voted" or state == "closed" then false else true;
+    }
+
+    changeLink -> {
+      data-part: "change-link";
+      hidden:    if ?allowChange and state == "voted" then false else true;
+      onClick:   send(CHANGE);
+      onKeyDown-Enter: send(CHANGE);
+      tabindex:  if ?allowChange and state == "voted" then "0" else "-1";
+      text:      "Change";
+    }
+
+    result -> {
+      data-part:    "result";
+      aria-live:    "assertive";
+      aria-atomic:  "true";
+      hidden:       if state == "tallied" then false else true;
+      data-outcome: ?initialOutcome;
+      data-details: ?initialDetails;
+    }
+  }
+
+  affordance {
+    serves: action;
+    specificity: 8;
+    when { stepType: "vote" }
+    bind {
+      voteSessionId: sessionId;
+      currentUserId: voterId;
+    }
+  }
+
+  compose {
+    _deadline: widget("deadline-chip", { deadline: ?deadline });
+    _progress: widget("quorum-gauge",  { threshold: ?quorum });
+  }
+
+  invariant {
+    "data-state on root must mirror the FSM state at all times: idle, submitting, voted, closed, or tallied";
+    "submitButton must be disabled whenever the FSM state is not idle";
+    "options must be hidden whenever the FSM state is not idle";
+    "receipt must be hidden whenever the FSM state is not voted or closed";
+    "result must be hidden whenever the FSM state is not tallied";
+    "changeLink must be hidden unless allowChange is true and state is voted";
+    "receipt aria-live must always be polite so vote-confirmation announcements do not interrupt the user";
+    "result aria-live must always be assertive so outcome announcements are announced immediately";
+    "All five states must be reachable: idle is initial, submitting via SUBMIT, voted via VOTE_RECORDED, closed via SESSION_CLOSED, tallied via TALLY_COMPLETE";
+
+    example "submit transitions idle to submitting": {
+      after submitButton.click() -> ok
+      then root.data-state = "submitting"
+      and submitButton.disabled = true
+    }
+
+    example "vote recorded transitions to voted": {
+      after submitButton.submit() -> ok
+      then root.data-state = "voted"
+      and receipt.hidden = false
+    }
+
+    example "vote failed returns to idle": {
+      after submitButton.submit() -> error
+      then root.data-state = "idle"
+      and submitButton.disabled = false
+    }
+
+    example "change link returns voted to idle": {
+      after changeLink.click() -> ok
+      then root.data-state = "idle"
+      and options.hidden = false
+    }
+
+    example "tally complete reaches tallied state": {
+      after root.tallyComplete() -> ok
+      then root.data-state = "tallied"
+      and result.hidden = false
+      and receipt.hidden = true
+    }
+
+    never "submit button enabled when not idle" {
+      submitButton.disabled = false
+    }
+
+    never "options visible outside idle" {
+      options.hidden = false
+    }
+
+    never "result visible before tallied" {
+      result.hidden = false
+    }
+
+    always "receipt is a live region" {
+      receipt.aria-live = "polite"
+    }
+
+    always "result is an assertive live region" {
+      result.aria-live = "assertive"
+    }
+
+    action submitButton {
+      requires: state = "idle"
+      ensures ok: state = "submitting"
+    }
+
+    action changeLink {
+      requires: state = "voted"
+      ensures ok: state = "idle"
+    }
+  }
+
+}
