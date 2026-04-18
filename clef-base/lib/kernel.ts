@@ -83,6 +83,7 @@ import { REGISTRY_ENTRIES, SYNC_FILES } from '../../generated/kernel-registry';
 import { discoverFromFilesystem, parseSeedsYaml } from '../../handlers/ts/seed-data.handler';
 import { setEntityReflectorKernel } from '../../handlers/ts/app/entity-reflector.handler';
 import { setViewShellKernel } from '../../handlers/ts/view/view-shell.handler';
+import { setProcessInterpreterKernel } from '../../handlers/ts/process-foundation/process-interpreter.handler';
 import { bootstrapIdentity, getIdentityStorage } from './identity';
 import {
   pickActiveTheme,
@@ -551,7 +552,10 @@ export function getKernel(): Kernel {
   // Seed data + populate RuntimeRegistry + reflect entities.
   // Pass `concepts` (ConceptRegistration[]) alongside result.registrations so
   // populateScoreApiIndex can extract action names from handler object keys.
-  _seedPromise = seedData(kernel, result.registrations, result.loadedSyncs, concepts).then(() => bootstrapIdentity(kernel));
+  _seedPromise = seedData(kernel, result.registrations, result.loadedSyncs, concepts).then(() => {
+    setProcessInterpreterKernel(kernel);
+    return bootstrapIdentity(kernel);
+  });
 
   _kernel = kernel;
   return kernel;

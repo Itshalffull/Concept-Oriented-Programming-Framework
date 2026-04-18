@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { canInvokeAdminConcept, getAdminSessionFromRequest } from '@/lib/auth';
 import { getKernel, ensureSeeded } from '@/lib/kernel';
+import { interpretRun } from '../../../../../../handlers/ts/process-foundation/process-interpreter.handler';
 
 // Pilot verb vocabulary that must be gated by PilotMode. Query-only
 // verbs (where, destinations, snapshot, read, views, viewInfo, overlays,
@@ -63,6 +64,18 @@ export async function POST(
     }
 
     const result = await kernel.invokeConcept(`urn:clef/${concept}`, action, input);
+
+    // After ProcessRun/start succeeds, kick off the process interpreter in the background.
+    // The route already awaited ensureSeeded(), so no race with seeding writes.
+    if (concept === 'ProcessRun' && action === 'start'
+        && (result as Record<string, unknown>).variant === 'ok') {
+      const runId = (result as Record<string, unknown>).run as string | undefined;
+      const specRef = (result as Record<string, unknown>).spec_ref as string | undefined;
+      if (runId && specRef) {
+        setImmediate(() => { interpretRun(runId, specRef).catch(() => {}); });
+      }
+    }
+
     return NextResponse.json(result);
   } catch (err) {
     return NextResponse.json({ variant: 'error', message: String(err) }, { status: 500 });
