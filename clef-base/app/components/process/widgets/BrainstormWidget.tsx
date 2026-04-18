@@ -213,7 +213,7 @@ export function BrainstormWidget({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           board: boardId,
-          idea_ref: `idea-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          idea_ref: text,
           submitter_ref: currentUserId,
         }),
       });
@@ -250,8 +250,6 @@ export function BrainstormWidget({
     const text = forkText.trim();
     if (!text) return;
 
-    const forkRef = `idea-fork-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-
     await withBusy('submitting-phase', async () => {
       const res = await fetch('/api/invoke/BrainstormBoard/forkIdea', {
         method: 'POST',
@@ -259,7 +257,7 @@ export function BrainstormWidget({
         body: JSON.stringify({
           board: boardId,
           parent_idea_ref: forkingIdeaRef,
-          fork_idea_ref: forkRef,
+          fork_idea_ref: text,
           submitter_ref: currentUserId,
         }),
       });
