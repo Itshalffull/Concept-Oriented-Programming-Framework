@@ -1,0 +1,58 @@
+view "consent-agenda-step-view" {
+  shell: "consent-agenda-step-view"
+
+  features {
+    filter
+    projection
+    interaction
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"ConsentProcess\",\"action\":\"get\",\"params\":{\"process\":\"{{step.config.consentProcessId}}\"}}"
+    }
+    filter: {
+      node: "{\"type\":\"eq\",\"field\":\"process\",\"value\":\"{{step.config.consentProcessId}}\"}"
+    }
+    projection: {
+      fields: "[{\"key\":\"phase\",\"label\":\"Phase\"},{\"key\":\"objections\",\"label\":\"Objections\",\"subFields\":[{\"key\":\"objector\",\"label\":\"Objector\"},{\"key\":\"reason\",\"label\":\"Reason\"},{\"key\":\"isParamount\",\"label\":\"Paramount\"},{\"key\":\"integrated\",\"label\":\"Integrated\"}]},{\"key\":\"amendments\",\"label\":\"Amendments\"}]"
+    }
+    interaction: {
+      rowActions: "[{\"key\":\"advancePhase\",\"concept\":\"ConsentProcess\",\"action\":\"advancePhase\",\"label\":\"Advance Phase\",\"trigger\":\"advancePhaseButton\",\"role\":\"facilitator\"},{\"key\":\"raiseObjection\",\"concept\":\"ConsentProcess\",\"action\":\"raiseObjection\",\"label\":\"Raise Objection\",\"trigger\":\"raiseButton\"},{\"key\":\"integrateObjection\",\"concept\":\"ConsentProcess\",\"action\":\"integrateObjection\",\"label\":\"Integrate Objection\",\"trigger\":\"integrateButton\",\"role\":\"facilitator\"},{\"key\":\"resolve\",\"concept\":\"ConsentProcess\",\"action\":\"resolve\",\"label\":\"Resolve\",\"trigger\":\"resolveButton\",\"role\":\"facilitator\"}]"
+    }
+    presentation: {
+      displayType: "consent-agenda",
+      hints: "{\"widget\":\"ConsentAgendaWidget\",\"phaseDisplay\":true,\"objectionList\":true,\"amendmentLog\":true}"
+    }
+  }
+
+  purpose {
+    Displays the live state of a consent-process governance step —
+    current phase, outstanding objections (with objector, reason,
+    paramount flag, and integration status), and amendments recorded
+    so far. Facilitators can advance the phase, integrate objections,
+    and resolve the process; any participant can raise an objection
+    during the ObjectionRound phase.
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+
+    always "invokes only ConsentProcess actions": {
+      forall ia in invokedActions:
+      ia startsWith "ConsentProcess/"
+    }
+
+    always "all invoke variants covered": {
+      uncoveredVariants = []
+    }
+
+    always "filter fields exist in source": {
+      forall f in filterFields:
+      f in sourceFields
+    }
+  }
+}
