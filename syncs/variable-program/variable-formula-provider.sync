@@ -1,0 +1,17 @@
+# variable-formula-provider — Register FormulaTransformProvider with PluginRegistry
+# when a formula field is first defined, making the "formula" transform kind
+# available for VariableProgram to dispatch to.
+
+sync RegisterFormulaTransformProvider [eager]
+  purpose: "Register FormulaTransformProvider with PluginRegistry so VariableProgram can dispatch formula transform instructions to it whenever a formula field is defined."
+when {
+  FormulaField/define: [ name: ?name; expression: ?expr; scope: ?scope; attachTo: ?attachTo ]
+    => ok(field: ?field)
+}
+then {
+  PluginRegistry/register: [
+    type: "variable-transform";
+    name: "formula";
+    metadata: { impl: "FormulaTransformProvider"; argSpec: [{ name: "expr", type: "string", required: true }] }
+  ]
+}
