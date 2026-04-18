@@ -1,0 +1,64 @@
+view "contest-step-view" {
+  shell: "contest-step-view"
+
+  features {
+    filter
+    sort
+    projection
+    interaction
+  }
+
+  fixture default {
+    dataSource: {
+      kind: "concept-action",
+      config: "{\"concept\":\"Proposal\",\"action\":\"list\",\"params\":{\"stepRunId\":\"{{step.id}}\"}}"
+    }
+    filter: {
+      node: "{\"type\":\"and\",\"children\":[{\"type\":\"eq\",\"field\":\"stepRunId\",\"value\":\"$step.id\"},{\"type\":\"optional-preseeded\",\"field\":\"id\",\"values\":\"$steps[$step.config.brainstormStepKey].output.shortlisted\",\"condition\":\"$step.config.brainstormStepKey != null\"}]}"
+    }
+    sort: {
+      keys: "[{\"field\":\"createdAt\",\"direction\":\"desc\"}]"
+    }
+    projection: {
+      fields: "[{\"key\":\"id\",\"label\":\"ID\"},{\"key\":\"title\",\"label\":\"Title\"},{\"key\":\"description\",\"label\":\"Description\"},{\"key\":\"proposer\",\"label\":\"Proposer\"},{\"key\":\"status\",\"label\":\"Status\"},{\"key\":\"conflicts\",\"label\":\"Conflicts\"},{\"key\":\"createdAt\",\"label\":\"Created\"},{\"key\":\"isOwnProposal\",\"label\":\"Own\",\"computed\":\"row.proposer === session.userId\"}]"
+    }
+    interaction: {
+      createForm: "{\"concept\":\"Proposal\",\"action\":\"create\",\"label\":\"Submit Proposal\",\"fields\":[{\"key\":\"title\"},{\"key\":\"description\"}],\"hidden\":[{\"key\":\"proposer\",\"auto\":\"session.userId\"},{\"key\":\"actions\",\"value\":[]}]}",
+      rowActions: "[{\"key\":\"sponsorProposal\",\"concept\":\"Proposal\",\"action\":\"sponsor\",\"label\":\"Sponsor\",\"guard\":\"!row.isOwnProposal\",\"inputs\":{\"proposal\":\"row.id\",\"sponsorId\":\"session.userId\"}},{\"key\":\"activateProposal\",\"concept\":\"Proposal\",\"action\":\"activate\",\"label\":\"Activate\",\"role\":\"facilitator\",\"inputs\":{\"proposal\":\"row.id\"}},{\"key\":\"advanceProposalPassed\",\"concept\":\"Proposal\",\"action\":\"advance\",\"label\":\"Mark Passed\",\"role\":\"facilitator\",\"inputs\":{\"proposal\":\"row.id\",\"newStatus\":\"Passed\"}},{\"key\":\"advanceProposalFailed\",\"concept\":\"Proposal\",\"action\":\"advance\",\"label\":\"Mark Failed\",\"role\":\"facilitator\",\"inputs\":{\"proposal\":\"row.id\",\"newStatus\":\"Failed\"}},{\"key\":\"detectConflicts\",\"concept\":\"Proposal\",\"action\":\"detectConflicts\",\"label\":\"Detect Conflicts\",\"auto\":true,\"inputs\":{\"proposal\":\"row.id\"}}]"
+    }
+    presentation: {
+      displayType: "proposal-card-grid",
+      hints: "{\"showStatusBadge\":true,\"statusColors\":{\"Draft\":\"gray\",\"Pending\":\"yellow\",\"Sponsored\":\"blue\",\"Active\":\"green\",\"Passed\":\"emerald\",\"Failed\":\"red\"},\"facilitatorId\":\"$step.config.facilitatorIds\"}"
+    }
+  }
+
+  purpose {
+    Displays competing proposals for a contest governance process step.
+    Participants can submit proposals via the create form; sponsors can back
+    proposals they did not author; facilitators can activate proposals and
+    advance them to Passed or Failed. Conflict detection runs automatically
+    as a pre-flight row action. When a preceding brainstorm step key is
+    configured, the filter pre-seeds the proposal list with shortlisted ideas
+    from that upstream step's output.
+  }
+
+  invariants {
+    always "purity is read-write": {
+      purity = "read-write"
+    }
+
+    always "invokes only Proposal actions": {
+      forall ia in invokedActions:
+      ia startsWith "Proposal/"
+    }
+
+    always "all invoke variants covered": {
+      uncoveredVariants = []
+    }
+
+    always "filter fields exist in source": {
+      forall f in filterFields:
+      f in sourceFields
+    }
+  }
+}
