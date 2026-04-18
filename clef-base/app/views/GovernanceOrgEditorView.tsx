@@ -2,7 +2,6 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { useKernelInvoke } from '../../lib/clef-provider';
-import { ViewRenderer } from '../components/ViewRenderer';
 import { Badge } from '../components/widgets/Badge';
 import { EmptyState } from '../components/widgets/EmptyState';
 import { TreeDisplay } from '../components/widgets/TreeDisplay';
@@ -328,6 +327,99 @@ const TeamDetailPanel: React.FC<TeamDetailPanelProps> = ({ team, onRefresh }) =>
         )}
       </div>
     </div>
+  );
+};
+
+// ---------------------------------------------------------------------------
+// ProcessSpecDetail — inline step/edge viewer for the Routes tab
+// ---------------------------------------------------------------------------
+
+interface StepRow { key: string; label?: string; step_type?: string; description?: string; assignee?: string; }
+interface EdgeRow { from: string; to: string; label?: string; condition?: string; }
+
+const ProcessSpecDetail: React.FC<{ specId: string }> = ({ specId }) => {
+  const invoke = useKernelInvoke();
+  const [steps, setSteps] = useState<StepRow[]>([]);
+  const [edges, setEdges] = useState<EdgeRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    void (async () => {
+      try {
+        const result = await invoke('ProcessSpec', 'get', { spec: specId });
+        if (!active) return;
+        if (result.variant === 'ok') {
+          try { setSteps(JSON.parse(result.steps as string ?? '[]') as StepRow[]); } catch { setSteps([]); }
+          try { setEdges(JSON.parse(result.edges as string ?? '[]') as EdgeRow[]); } catch { setEdges([]); }
+        }
+      } catch { /* silent */ } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => { active = false; };
+  }, [specId, invoke]);
+
+  if (loading) return <div style={{ fontSize: '0.875rem', color: 'var(--palette-on-surface-variant)' }}>Loading…</div>;
+
+  return (
+    <>
+      <div style={{ marginBottom: 'var(--spacing-xl)' }}>
+        <div style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: 'var(--spacing-md)' }}>Step Definitions</div>
+        {steps.length === 0 ? (
+          <div style={{ fontSize: '0.875rem', color: 'var(--palette-on-surface-variant)' }}>No steps defined yet.</div>
+        ) : (
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid var(--color-border-subtle, #eee)', textAlign: 'left' }}>
+                <th style={{ padding: '4px 8px' }}>Key</th>
+                <th style={{ padding: '4px 8px' }}>Label</th>
+                <th style={{ padding: '4px 8px' }}>Type</th>
+                <th style={{ padding: '4px 8px' }}>Assignee</th>
+              </tr>
+            </thead>
+            <tbody>
+              {steps.map((s, i) => (
+                <tr key={i} style={{ borderBottom: '1px solid var(--color-border-subtle, #eee)' }}>
+                  <td style={{ padding: '4px 8px', fontFamily: 'monospace' }}>{s.key}</td>
+                  <td style={{ padding: '4px 8px' }}>{s.label ?? '—'}</td>
+                  <td style={{ padding: '4px 8px' }}>{s.step_type ?? '—'}</td>
+                  <td style={{ padding: '4px 8px' }}>{s.assignee ?? '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+      <div>
+        <div style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: 'var(--spacing-md)' }}>Routing Edges</div>
+        {edges.length === 0 ? (
+          <div style={{ fontSize: '0.875rem', color: 'var(--palette-on-surface-variant)' }}>No routing edges defined yet.</div>
+        ) : (
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid var(--color-border-subtle, #eee)', textAlign: 'left' }}>
+                <th style={{ padding: '4px 8px' }}>From</th>
+                <th style={{ padding: '4px 8px' }}>To</th>
+                <th style={{ padding: '4px 8px' }}>Label</th>
+                <th style={{ padding: '4px 8px' }}>Condition</th>
+              </tr>
+            </thead>
+            <tbody>
+              {edges.map((e, i) => (
+                <tr key={i} style={{ borderBottom: '1px solid var(--color-border-subtle, #eee)' }}>
+                  <td style={{ padding: '4px 8px', fontFamily: 'monospace' }}>{e.from}</td>
+                  <td style={{ padding: '4px 8px', fontFamily: 'monospace' }}>{e.to}</td>
+                  <td style={{ padding: '4px 8px' }}>{e.label ?? '—'}</td>
+                  <td style={{ padding: '4px 8px' }}>{e.condition ?? '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </>
   );
 };
 
@@ -676,15 +768,7 @@ export const GovernanceOrgEditorView: React.FC = () => {
                   </Badge>
                 </div>
 
-                <div style={{ marginBottom: 'var(--spacing-xl)' }}>
-                  <div style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: 'var(--spacing-md)' }}>Step Definitions</div>
-                  <ViewRenderer viewId="process-steps-editor" context={{ spec: selectedSpec.spec }} />
-                </div>
-
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: '0.875rem', marginBottom: 'var(--spacing-md)' }}>Routing Edges</div>
-                  <ViewRenderer viewId="process-edges-editor" context={{ spec: selectedSpec.spec }} />
-                </div>
+                <ProcessSpecDetail specId={selectedSpec.spec} />
               </div>
             ) : (
               <EmptyState
@@ -703,7 +787,17 @@ export const GovernanceOrgEditorView: React.FC = () => {
               <p style={{ color: 'var(--palette-on-surface-variant)', fontSize: '0.875rem', marginBottom: 'var(--spacing-xl)' }}>
                 Governance permissions control which roles can submit proposals, vote, and execute actions for each process route.
               </p>
-              <ViewRenderer viewId="admin" context={{}} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
+                <a href="/admin/governance/permissions" style={{ color: 'var(--color-primary)', textDecoration: 'underline', fontSize: '0.875rem' }}>
+                  → Permissions by Subject
+                </a>
+                <a href="/admin/governance/permissions/by-resource" style={{ color: 'var(--color-primary)', textDecoration: 'underline', fontSize: '0.875rem' }}>
+                  → Permissions by Resource
+                </a>
+                <a href="/admin/governance/permissions/effective" style={{ color: 'var(--color-primary)', textDecoration: 'underline', fontSize: '0.875rem' }}>
+                  → Effective Permissions
+                </a>
+              </div>
             </div>
           )}
         </div>
