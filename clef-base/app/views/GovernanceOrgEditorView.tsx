@@ -188,20 +188,25 @@ const TeamTree: React.FC<TeamTreeProps> = ({ teams, selectedId, onSelect }) => {
 
 interface TeamDetailPanelProps {
   team: TeamRecord;
+  allTeams: TeamRecord[];
   onRefresh: () => void;
 }
 
-const TeamDetailPanel: React.FC<TeamDetailPanelProps> = ({ team, onRefresh }) => {
+const TeamDetailPanel: React.FC<TeamDetailPanelProps> = ({ team, allTeams, onRefresh }) => {
   const invoke = useKernelInvoke();
   const [showAddMember, setShowAddMember] = useState(false);
   const [showCreateChild, setShowCreateChild] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
 
   const addMember = useCallback(async (values: Record<string, string>) => {
+    if (!values.member?.trim()) {
+      throw new Error('Member ID is required');
+    }
     const currentMembers = team.members ?? [];
-    if (currentMembers.includes(values.member)) {
+    if (currentMembers.includes(values.member.trim())) {
       throw new Error(`${values.member} is already a member`);
     }
+    values = { ...values, member: values.member.trim() };
     const updatedContent = JSON.stringify({
       name: team.name,
       domain: team.domain,
@@ -278,7 +283,7 @@ const TeamDetailPanel: React.FC<TeamDetailPanelProps> = ({ team, onRefresh }) =>
           </div>
         ) : (
           <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-            {(team.members ?? []).map(m => (
+            {(team.members ?? []).filter(Boolean).map(m => (
               <li key={m} style={{ padding: '6px 0', borderBottom: '1px solid var(--palette-outline-variant)', fontSize: '0.875rem' }}>
                 👤 {m}
               </li>
@@ -300,10 +305,12 @@ const TeamDetailPanel: React.FC<TeamDetailPanelProps> = ({ team, onRefresh }) =>
         )}
       </div>
 
-      {/* Sub-team creation */}
+      {/* Sub-teams */}
       <div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--spacing-sm)' }}>
-          <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>Sub-teams</span>
+          <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>
+            Sub-teams ({allTeams.filter(t => t.parent === team.id).length})
+          </span>
           <button
             data-part="button"
             data-variant="ghost"
@@ -313,6 +320,21 @@ const TeamDetailPanel: React.FC<TeamDetailPanelProps> = ({ team, onRefresh }) =>
             + Create Sub-team
           </button>
         </div>
+
+        {allTeams.filter(t => t.parent === team.id).length === 0 ? (
+          <div style={{ fontSize: '0.875rem', color: 'var(--palette-on-surface-variant)', padding: '4px 0' }}>
+            No sub-teams yet.
+          </div>
+        ) : (
+          <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 var(--spacing-md)' }}>
+            {allTeams.filter(t => t.parent === team.id).map(child => (
+              <li key={child.id} style={{ padding: '4px 0', borderBottom: '1px solid var(--palette-outline-variant)', fontSize: '0.875rem' }}>
+                ⤷ {child.name}
+                {child.domain && <span style={{ color: 'var(--palette-on-surface-variant)', marginLeft: 8 }}>{child.domain}</span>}
+              </li>
+            ))}
+          </ul>
+        )}
 
         {showCreateChild && (
           <InlineForm
@@ -727,6 +749,7 @@ export const GovernanceOrgEditorView: React.FC = () => {
               <TeamDetailPanel
                 key={selectedTeam.id}
                 team={selectedTeam}
+                allTeams={teams}
                 onRefresh={() => setRefreshKey(k => k + 1)}
               />
             ) : teams.length > 0 ? (
