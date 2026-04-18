@@ -52,7 +52,7 @@ type ViewState = 'steps' | 'graph';
 
 /** Node type entries shown in the left palette */
 interface PaletteEntry {
-  nodeType: 'trigger' | 'action' | 'branch' | 'catch' | 'logic';
+  nodeType: 'trigger' | 'action' | 'branch' | 'catch' | 'logic' | 'manual';
   label: string;
   description: string;
 }
@@ -97,6 +97,7 @@ export interface FlowBuilderProps {
 const PALETTE_ENTRIES: PaletteEntry[] = [
   { nodeType: 'trigger',  label: 'Trigger',  description: 'Entry point that starts the flow' },
   { nodeType: 'action',   label: 'Action',   description: 'Invoke a concept action' },
+  { nodeType: 'manual',   label: 'Manual',   description: 'Human task — pauses for manual completion' },
   { nodeType: 'branch',   label: 'Branch',   description: 'Conditional fork in the flow' },
   { nodeType: 'catch',    label: 'Catch',    description: 'Error handler for upstream steps' },
   { nodeType: 'logic',    label: 'Logic',    description: 'Data transformation or mapping step' },
@@ -408,6 +409,7 @@ const StepsView: React.FC<StepsViewProps> = ({
 const STEP_KIND_ICON: Record<string, string> = {
   trigger: '▶',
   action:  '⚡',
+  manual:  '👤',
   branch:  '◇',
   catch:   '⚠',
   logic:   'λ',
@@ -416,6 +418,7 @@ const STEP_KIND_ICON: Record<string, string> = {
 const STEP_KIND_COLOR: Record<string, string> = {
   trigger: 'var(--palette-primary)',
   action:  'var(--palette-secondary)',
+  manual:  '#2e7d32',
   branch:  '#c07000',
   catch:   'var(--palette-error)',
   logic:   '#5c6ac4',

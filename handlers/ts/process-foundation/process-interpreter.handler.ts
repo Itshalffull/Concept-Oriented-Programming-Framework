@@ -30,7 +30,7 @@ async function executeStep(
   kernel: KernelLike,
   step: FbStep,
   scope: Record<string, unknown>,
-): Promise<{ output: Record<string, unknown>; failed?: string }> {
+): Promise<{ output: Record<string, unknown>; failed?: string; manual?: boolean }> {
   const config = (() => {
     try { return JSON.parse(step.config || '{}') as Record<string, unknown>; }
     catch { return {}; }
@@ -56,6 +56,11 @@ async function executeStep(
     }
   }
 
+  // Manual steps pause the run for human action — caller handles suspension.
+  if (step.stepKind === 'manual') {
+    return { output: {}, manual: true };
+  }
+
   // All other kinds (trigger, branch, logic, catch) and unconfigured action
   // steps complete immediately.
   return { output: {} };
@@ -77,10 +82,25 @@ export async function interpretRun(runId: string, specRef: string): Promise<void
     // No steps defined — leave the run in "running" state for manual completion.
     if (steps.length === 0) return;
 
+    // Load already-completed step runs so we can resume mid-flow.
+    const existingResult = await kernel.invokeConcept('urn:clef/StepRun', 'list', { run_ref: runId });
+    const existingStepRuns: Array<Record<string, unknown>> =
+      existingResult.variant === 'ok' && Array.isArray(existingResult.step_runs)
+        ? (existingResult.step_runs as Array<Record<string, unknown>>)
+        : [];
+    const completedStepKeys = new Set(
+      existingStepRuns
+        .filter(s => s.status === 'completed')
+        .map(s => s.step_key as string),
+    );
+
     const ordered = [...steps].sort((a, b) => a.stepIndex - b.stepIndex);
     const scope: Record<string, unknown> = {};
 
     for (const step of ordered) {
+      // Skip steps already completed in a previous interpreter pass.
+      if (completedStepKeys.has(step.stepId)) continue;
+
       const startResult = await kernel.invokeConcept('urn:clef/StepRun', 'start', {
         run_ref: runId,
         step_key: step.stepId,
@@ -91,29 +111,36 @@ export async function interpretRun(runId: string, specRef: string): Promise<void
       if (startResult.variant !== 'ok') continue;
       const stepRunId = startResult.step as string;
 
-      const { output, failed } = await executeStep(kernel, step, scope).catch((err) => ({
+      const result = await executeStep(kernel, step, scope).catch((err) => ({
         output: {},
         failed: err instanceof Error ? err.message : String(err),
+        manual: undefined as boolean | undefined,
       }));
 
-      if (failed) {
+      if (result.failed) {
         await kernel.invokeConcept('urn:clef/StepRun', 'fail', {
           step: stepRunId,
-          error: failed,
+          error: result.failed,
         }).catch(() => {});
         await kernel.invokeConcept('urn:clef/ProcessRun', 'fail', {
           run: runId,
-          error: `Step "${step.stepLabel}" failed: ${failed}`,
+          error: `Step "${step.stepLabel}" failed: ${result.failed}`,
         }).catch(() => {});
         return;
       }
 
+      if (result.manual) {
+        // Suspend the run — human must advance via ProcessRun/resume.
+        await kernel.invokeConcept('urn:clef/ProcessRun', 'suspend', { run: runId }).catch(() => {});
+        return;
+      }
+
       // Thread step output into the running scope for downstream steps
-      Object.assign(scope, output);
+      Object.assign(scope, result.output);
 
       await kernel.invokeConcept('urn:clef/StepRun', 'complete', {
         step: stepRunId,
-        output: JSON.stringify(output),
+        output: JSON.stringify(result.output),
       }).catch(() => {});
     }
 

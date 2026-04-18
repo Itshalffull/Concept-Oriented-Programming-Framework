@@ -105,6 +105,22 @@ export const ProcessRunView: React.FC<ProcessRunViewProps> = ({ runId }) => {
     }
   }, [invoke, runId]);
 
+  const handleAdvanceStep = useCallback(async () => {
+    const activeStep = stepRuns.find(s => s.status === 'active');
+    if (!activeStep?.id) {
+      // No active step found — just resume to let interpreter continue.
+      return handleRunAction('resume');
+    }
+    setActionBusy(true);
+    try {
+      await invoke('StepRun', 'complete', { step: activeStep.id, output: '{}' });
+      await invoke('ProcessRun', 'resume', { run: runId });
+      setRefreshKey(k => k + 1);
+    } finally {
+      setActionBusy(false);
+    }
+  }, [invoke, runId, stepRuns, handleRunAction]);
+
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -245,7 +261,9 @@ export const ProcessRunView: React.FC<ProcessRunViewProps> = ({ runId }) => {
   }
 
   const canCancel = run.status === 'running' || run.status === 'suspended';
-  const canResume = run.status === 'suspended';
+  const activeManualStep = stepRuns.find(s => s.status === 'active' && s.step_type === 'manual');
+  const canAdvance = run.status === 'suspended';
+  const canResume = run.status === 'suspended' && !activeManualStep;
   const canComplete = run.status === 'running';
 
   return (
@@ -274,12 +292,23 @@ export const ProcessRunView: React.FC<ProcessRunViewProps> = ({ runId }) => {
               {actionBusy ? '…' : 'Mark Complete'}
             </button>
           )}
+          {canAdvance && (
+            <button
+              data-part="button"
+              data-variant="filled"
+              disabled={actionBusy}
+              onClick={() => void handleAdvanceStep()}
+              style={{ background: 'var(--palette-primary)', color: 'var(--palette-on-primary)', border: 'none', borderRadius: 'var(--radius-sm)', padding: '6px 16px', fontWeight: 600, cursor: actionBusy ? 'not-allowed' : 'pointer' }}
+            >
+              {actionBusy ? '…' : activeManualStep ? `✓ Mark "${stepLabelMap[activeManualStep.step_key ?? ''] || activeManualStep.step_key || 'Step'}" Done` : 'Advance'}
+            </button>
+          )}
           {canResume && (
             <button
               data-part="button"
               data-variant="secondary"
               disabled={actionBusy}
-              onClick={() => handleRunAction('resume')}
+              onClick={() => void handleRunAction('resume')}
             >
               {actionBusy ? '…' : 'Resume'}
             </button>
@@ -383,6 +412,28 @@ export const ProcessRunView: React.FC<ProcessRunViewProps> = ({ runId }) => {
                     </button>
                   );
                 })}
+              </div>
+            </div>
+          )}
+
+          {activeManualStep && run.status === 'suspended' && (
+            <div style={{
+              marginTop: 'var(--spacing-lg)',
+              padding: '12px 16px',
+              background: 'var(--palette-primary-container)',
+              borderRadius: 'var(--radius-card)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--spacing-md)',
+            }}>
+              <span style={{ fontSize: '1.2rem' }}>⏳</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>
+                  Awaiting action: {stepLabelMap[activeManualStep.step_key ?? ''] || activeManualStep.step_key}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--palette-on-surface-variant)', marginTop: 2 }}>
+                  This step requires manual completion. Click the button above to advance.
+                </div>
               </div>
             </div>
           )}

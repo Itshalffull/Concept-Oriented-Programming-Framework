@@ -76,6 +76,20 @@ export async function POST(
       }
     }
 
+    // After ProcessRun/resume succeeds, re-kick the interpreter so it continues
+    // from where it left off (skipping already-completed steps).
+    if (concept === 'ProcessRun' && action === 'resume'
+        && (result as Record<string, unknown>).variant === 'ok') {
+      const runId = (input as Record<string, unknown>).run as string | undefined;
+      if (runId) {
+        const runData = await kernel.invokeConcept('urn:clef/ProcessRun', 'get', { run: runId });
+        const specRef = (runData as Record<string, unknown>).spec_ref as string | undefined;
+        if (specRef) {
+          setImmediate(() => { interpretRun(runId, specRef).catch(() => {}); });
+        }
+      }
+    }
+
     return NextResponse.json(result);
   } catch (err) {
     return NextResponse.json({ variant: 'error', message: String(err) }, { status: 500 });
